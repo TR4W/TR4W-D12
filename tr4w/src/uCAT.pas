@@ -97,13 +97,23 @@ var
   flexRadios : TFlexDiscoveredRadios;
   icomRadios : TDiscoveredRadios;
   i          : Integer;
+  a          : Integer;
 begin
   if rt = K4 then
      begin
      k4Radios := TK4Discovery.DiscoverRadios(3000);
      for i := 0 to High(k4Radios) do
         begin
-        Found.Add(k4Radios[i].IPAddress);
+        (* ONE ENTRY PER ADDRESS, each labelled with the radio's hostname:
+          '192.168.73.159=192.168.73.159 (K4Z-SN00199.local)'. A K4 Zero with
+          Wi-Fi and Ethernet up reports both its addresses in one reply. The
+          text before '=' is what the IP field receives. *)
+        for a := 0 to TK4Discovery.AddressCount(k4Radios[i]) - 1 do
+           begin
+           (* ASCII only -- an address, '=' and a K4-SN#####.local host name --
+             so the explicit narrowing to AnsiString cannot lose a character. *)
+           Found.Add(AnsiString(TK4Discovery.FoundEntry(k4Radios[i], a)));
+           end;
         end;
      end
   else if rt = FLEX then

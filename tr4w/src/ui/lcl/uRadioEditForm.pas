@@ -419,9 +419,20 @@ begin
       FForm.btnDiscover.Caption := TC_RADIOEDIT_DISCOVER;
       FForm.btnDiscover.Enabled := True;
 
+      (* AN ENTRY IS EITHER A BARE ADDRESS, or '<address>=<text shown>' (a K4
+        carries its hostname: '192.168.73.159=192.168.73.159 (K4Z-SN00199.local)').
+        What the operator sees is the text; what the IP field receives is
+        always the address. *)
       for i := 0 to FFound.Count - 1 do
          begin
-         AddComboItem(FForm.cbxFound, FFound[i], FFound[i]);
+         if Pos('=', FFound[i]) > 0 then
+            begin
+            AddComboItem(FForm.cbxFound, FFound.ValueFromIndex[i], FFound.Names[i]);
+            end
+         else
+            begin
+            AddComboItem(FForm.cbxFound, FFound[i], FFound[i]);
+            end;
          end;
 
       logger.Debug('[RadioEdit] Discovery populated cbxFound: %d item(s)',
@@ -450,7 +461,7 @@ begin
            now always agree, which is the property that matters when the next
            thing the operator does is press Save. }
          FForm.cbxFound.ItemIndex := 0;
-         FForm.edtIP.Text := FFound[0];
+         FForm.edtIP.Text := SelectedTag(FForm.cbxFound);
 
          if FFound.Count > 1 then
             begin

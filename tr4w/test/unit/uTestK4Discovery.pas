@@ -22,11 +22,17 @@ unit uTestK4Discovery;
      from 192.168.73.159:9100   k4z:0:192.168.73.159 192.168.73.110:199
      from 192.168.73.108:9100   k4:NY4I:192.168.73.108:278
 
-  THE FIRST IS THE DEFECT. A K4 Zero puts two space-separated addresses in the
-  address field. The parser took the whole field as one address, so the setup
-  wizard's "Found" drop-down held a single item reading
-  "192.168.73.159 192.168.73.110" and the IP field was filled with it -- two
-  addresses, neither usable. The radio is the one that sent the datagram. *)
+  THE FIRST IS THE DEFECT. A K4 Zero with Wi-Fi enabled AND Ethernet plugged in
+  puts one address per adapter in the address field, space separated (NY4I,
+  2026-11-19; the reply cannot say which adapter is which). The parser took the
+  whole field as one address, so the setup wizard's "Found" drop-down held a
+  single item reading "192.168.73.159 192.168.73.110" and the IP field was
+  filled with it -- two addresses, neither usable. Each address is its own
+  choice, labelled with the radio's hostname:
+
+     192.168.73.159 (K4Z-SN00199.local)
+     192.168.73.110 (K4Z-SN00199.local)
+     192.168.73.108 (K4-SN00278.local) *)
 
 interface
 
@@ -41,6 +47,7 @@ type
    private
       procedure Test_TheK4ZeroReplyKeepsItsOwnAddress;
       procedure Test_TheK4DReplyWithANameInTheIndexField;
+      procedure Test_EachAddressIsItsOwnFoundEntryWithTheHostname;
       procedure Test_TheSenderIsTheRadioWhenTheReplyNamesIt;
       procedure Test_CommasAndSemicolonsSeparateToo;
       procedure Test_MalformedRepliesAreRefused;
@@ -55,6 +62,7 @@ procedure TK4DiscoveryTests.RunAllTests;
 begin
    Test_TheK4ZeroReplyKeepsItsOwnAddress;
    Test_TheK4DReplyWithANameInTheIndexField;
+   Test_EachAddressIsItsOwnFoundEntryWithTheHostname;
    Test_TheSenderIsTheRadioWhenTheReplyNamesIt;
    Test_CommasAndSemicolonsSeparateToo;
    Test_MalformedRepliesAreRefused;
@@ -72,7 +80,7 @@ begin
    CheckEquals('192.168.73.159', radio.IPAddress,
                'the radio is the FIRST address, not the whole field');
    CheckEquals('192.168.73.110', radio.OtherAddresses,
-               'the second address is kept apart, never offered as the radio');
+               'the second adapter''s address is kept, as its own address');
    CheckEquals('199', radio.SerialNumber, 'the serial is unaffected');
 end;
 
@@ -89,6 +97,36 @@ begin
    CheckEquals('192.168.73.108', radio.IPAddress, 'one address, as before');
    CheckEquals('', radio.OtherAddresses, 'nothing else listed');
    CheckEquals('278', radio.SerialNumber, 'serial 278');
+end;
+
+procedure TK4DiscoveryTests.Test_EachAddressIsItsOwnFoundEntryWithTheHostname;
+var
+   zero, k4d: TK4DiscoveredRadio;
+begin
+   BeginTest('Test_EachAddressIsItsOwnFoundEntryWithTheHostname');
+
+   CheckTrue(TK4Discovery.ParseResponse('k4z:0:192.168.73.159 192.168.73.110:199', zero),
+             'the K4 Zero reply');
+   CheckTrue(TK4Discovery.ParseResponse('k4:NY4I:192.168.73.108:278', k4d), 'the K4D reply');
+
+   CheckEquals(2, TK4Discovery.AddressCount(zero), 'a K4 Zero with two adapters is two addresses');
+   CheckEquals(1, TK4Discovery.AddressCount(k4d), 'a K4 with one is one');
+   CheckEquals('192.168.73.159', TK4Discovery.AddressAt(zero, 0), 'first');
+   CheckEquals('192.168.73.110', TK4Discovery.AddressAt(zero, 1), 'second');
+   CheckEquals('', TK4Discovery.AddressAt(zero, 2), 'nothing past the end');
+   CheckEquals('', TK4Discovery.AddressAt(zero, -1), 'nothing before the start');
+
+   (* The text before '=' is what the IP field receives; after it, what the
+     drop-down shows -- NY4I's requested lines, one per address. *)
+   CheckEquals('192.168.73.159=192.168.73.159 (K4Z-SN00199.local)',
+               TK4Discovery.FoundEntry(zero, 0),
+               'K4 Zero, first adapter');
+   CheckEquals('192.168.73.110=192.168.73.110 (K4Z-SN00199.local)',
+               TK4Discovery.FoundEntry(zero, 1),
+               'K4 Zero, second adapter');
+   CheckEquals('192.168.73.108=192.168.73.108 (K4-SN00278.local)',
+               TK4Discovery.FoundEntry(k4d, 0),
+               'the K4D');
 end;
 
 procedure TK4DiscoveryTests.Test_TheSenderIsTheRadioWhenTheReplyNamesIt;

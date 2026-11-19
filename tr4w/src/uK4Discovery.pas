@@ -39,10 +39,11 @@ type
     RigIndex     : Integer;   // radio index, typically 0
     IPAddress    : string;    // the radio's IP, from the reply
     SerialNumber : string;    // radio serial, e.g. '278'
-    (* Any further addresses the reply carried, space separated, or ''.
-      A K4 Zero answers 'k4z:0:192.168.73.159 192.168.73.110:199': its own
-      address and a second one that is NOT the radio (measured on NY4I's LAN,
-      2026-11-19). Only IPAddress is ever offered as the radio's address. *)
+    (* Any further addresses of the SAME radio, space separated, or ''.
+      A K4 Zero with Wi-Fi enabled AND Ethernet plugged in answers
+      'k4z:0:192.168.73.159 192.168.73.110:199': one address per adapter
+      (NY4I, 2026-11-19; the reply cannot say which is which). Every address is
+      offered, each as its own choice. *)
     OtherAddresses : string;
   end;
   (* THE RESULT IS A DYNAMIC ARRAY OF VALUES, NOT A TList OF New'd RECORDS
@@ -62,14 +63,26 @@ type
     // non-empty IP.  No Indy / network dependency -- unit-testable.
     class function ParseResponse(const Reply: string; var Radio: TK4DiscoveredRadio): Boolean;
 
-    // The datagram's own source address is the radio that answered, so when a
-    // reply lists several addresses and the sender is one of them, that one is
-    // the radio's and the rest are "other". Pure, no network -- unit-testable.
+    // When a reply lists several addresses and the datagram's own source
+    // address is one of them, that one is listed first: it is the address this
+    // PC has just proved it can reach. Pure, no network -- unit-testable.
     class procedure PreferSender(var Radio: TK4DiscoveredRadio; const aSender: string);
 
     // Friendly mDNS-style host name, e.g. K4 serial 278 -> 'K4-SN00278.local'
     // (serial left-padded with zeros to 5 digits; 'K4Z' prefix for a K4 Zero).
     class function Hostname(const Radio: TK4DiscoveredRadio): string;
+
+    // ONE CHOICE PER ADDRESS. A radio with two adapters is two entries in the
+    // wizard's "Found" list. AddressAt(0) is IPAddress; the rest come from
+    // OtherAddresses; '' past the end. Pure, no network -- unit-testable.
+    class function AddressCount(const Radio: TK4DiscoveredRadio): Integer;
+    class function AddressAt(const Radio: TK4DiscoveredRadio; aIndex: Integer): string;
+
+    // The Found-list entry for one address: '<address>=<address> (<hostname>)',
+    // for example '192.168.73.159=192.168.73.159 (K4Z-SN00199.local)'. Before
+    // the '=' is the value the IP field receives; after it, what the drop-down
+    // shows.
+    class function FoundEntry(const Radio: TK4DiscoveredRadio; aIndex: Integer): string;
   end;
 
 implementation
@@ -116,9 +129,10 @@ begin
   Radio.SerialNumber := Trim(Copy(Reply, c3 + 1, Length(Reply) - c3));
 
   (* THE ADDRESS FIELD CAN HOLD SEVERAL ADDRESSES, space separated -- a K4
-    Zero sends its own and a second one. The first is the radio's; the rest
-    are kept apart so they are never mistaken for it (a drop-down item
-    reading "192.168.73.159 192.168.73.110" is not an address). *)
+    Zero with Wi-Fi and Ethernet both up sends one per adapter. They are split
+    so each is its own address (a drop-down item reading "192.168.73.159
+    192.168.73.110" is not an address, and filled the IP field with two). The
+    first stays in IPAddress; the rest are in OtherAddresses. *)
   field := Trim(Copy(Reply, c2 + 1, c3 - c2 - 1));
   for k := 1 to Length(field) do
      begin
@@ -205,6 +219,84 @@ begin
      end;
 
   Result := prefix + '-SN' + sn + '.local';
+end;
+
+class function TK4Discovery.AddressCount(const Radio: TK4DiscoveredRadio): Integer;
+var
+  rest: string;
+  k: Integer;
+begin
+  Result := 0;
+  if Radio.IPAddress = '' then
+     begin
+     Exit;
+     end;
+
+  Result := 1;
+  rest := Radio.OtherAddresses;
+  while rest <> '' do
+     begin
+     Inc(Result);
+     k := Pos(' ', rest);
+     if k = 0 then
+        begin
+        rest := '';
+        end
+     else
+        begin
+        rest := Trim(Copy(rest, k + 1, Length(rest)));
+        end;
+     end;
+end;
+
+class function TK4Discovery.AddressAt(const Radio: TK4DiscoveredRadio;
+                                      aIndex: Integer): string;
+var
+  rest: string;
+  k, n: Integer;
+begin
+  Result := '';
+  if (aIndex < 0) or (aIndex >= AddressCount(Radio)) then
+     begin
+     Exit;
+     end;
+  if aIndex = 0 then
+     begin
+     Result := Radio.IPAddress;
+     Exit;
+     end;
+
+  rest := Radio.OtherAddresses;
+  n := 1;
+  while rest <> '' do
+     begin
+     k := Pos(' ', rest);
+     if k = 0 then
+        begin
+        Result := rest;
+        rest := '';
+        end
+     else
+        begin
+        Result := Copy(rest, 1, k - 1);
+        rest := Trim(Copy(rest, k + 1, Length(rest)));
+        end;
+     if n = aIndex then
+        begin
+        Exit;
+        end;
+     Inc(n);
+     end;
+  Result := '';
+end;
+
+class function TK4Discovery.FoundEntry(const Radio: TK4DiscoveredRadio;
+                                       aIndex: Integer): string;
+var
+  address: string;
+begin
+  address := AddressAt(Radio, aIndex);
+  Result := address + '=' + address + ' (' + Hostname(Radio) + ')';
 end;
 
 class function TK4Discovery.DiscoverRadios(TimeoutMs: Integer): TK4DiscoveredRadios;
@@ -301,7 +393,7 @@ begin
                   if Parsed.OtherAddresses <> '' then
                      begin
                      logger.Info('[K4Discovery] the reply from %s also lists %s -- ' +
-                                 'not offered as the radio', [Parsed.IPAddress, Parsed.OtherAddresses]);
+                                 'one entry for each address', [Parsed.IPAddress, Parsed.OtherAddresses]);
                      end;
                   isDuplicate := False;
                   for i := 0 to High(Result) do
