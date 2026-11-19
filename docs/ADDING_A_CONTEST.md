@@ -590,8 +590,17 @@ class says nothing else about it. **Do not** also give such a QSO 0 in
 `CalculateQSOPoints` or refuse it in `CountsAsMultiplier`.
 
 In `UsesMode`, `eNoMode` and `eData` mean "some submode of aMode": answer True
-for them if you credit any submode, and test the submode only to EXCLUDE one
-you name. Both answers are identity facts -- never ask the station
+for them if you credit any submode. **State the digital submodes your sponsor
+ALLOWS, not the ones it refuses** (NY4I, issue 122, 2026-11-19: *"the contest
+class should indicate the allowed modes. Then if the modes is not valid for
+that contest, it is an X-QSO"*): the Digital arm calls
+`uContestBase.DigitalSubmodeAllowed(aExtMode, RTTY_SUBMODES + [...])`, which
+also passes the "some submode" values (eNoMode and the generic data modes
+eData, eData_R, eData_FM), so a submode added to `ExtendedModeType` later is
+refused until a contest names it. Louisiana and Iowa are the worked examples.
+JTTY (and JS8) go on the list only where the sponsor allows free-form digital
+modes -- never by default. Several older parties still use a deny-list; they
+are not examples to copy. Both answers are identity facts -- never ask the station
 (`Test_BandsAndModesAreAnIdentityFact`). A family base may state the bands its
 whole family shares (CQ WW does); `TContestStateQSOPartyBase` never does.
 `RunsInMode` is NOT this rule. Design doc 8.2v.

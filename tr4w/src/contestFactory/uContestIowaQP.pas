@@ -40,8 +40,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   uContestBase.DigitalSubmodeAllowed): RTTY (and reversed RTTY), PSK31,
   PSK63 (and reversed PSK), JS8 and JTTY. FT8, FT4, JT65, FST4, FST4W,
   MFSK and any submode added later are off-mode -- an automatic X-QSO.
-  eNoMode and eData stay accepted because they mean "some submode", so an
-  old or untyped record is never proven off-mode (Q98 S1).
+  eNoMode and the generic data modes (eData, eData_R, eData_FM) stay
+  accepted because they mean "some submode", so an old or untyped record --
+  or a radio in DATA-R -- is never proven off-mode (Q98 S1).
   "Phone (includes digital phone)": a C4FM or D-STAR QSO is logged as phone
   to score and dupe as phone; a record logged as Digital is digital, since
   the dupe slot (DupeModeOf) sees only the mode, not the submode.

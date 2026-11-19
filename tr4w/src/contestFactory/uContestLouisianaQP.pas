@@ -470,8 +470,9 @@ end;
    RTTY, JTTY and PSK31 are the free-form ("conversational") digital modes
    that can send the exchange (3.3). Every other digital submode -- FT8,
    FT4, JT65, FST4, FST4W, JS8, MFSK, PSK63 -- is an automatic X-QSO
-   (uContestBase.DigitalSubmodeAllowed, which also keeps eNoMode and eData,
-   "some submode", credited). CW, phone and FM are credited whole, as
+   (uContestBase.DigitalSubmodeAllowed, which also keeps eNoMode and the
+   generic data modes eData, eData_R and eData_FM, "some submode",
+   credited). CW, phone and FM are credited whole, as
    before: phone's submodes are not tested. An identity fact: no station is
    asked. *)
 function TContestLouisianaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
