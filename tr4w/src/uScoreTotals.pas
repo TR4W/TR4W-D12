@@ -141,9 +141,9 @@ end;
 procedure AddLoggedQSO(const aQso: ContestExchange;
                        const aMyFacts: TQsoMyFacts);
 begin
-   (* LoggedQSOContest, not ContestIdentity: the host-area X-QSO (Q119)
-      needs the entrant. *)
-   if QSOCountsTowardTotals(LoggedQSOContest(aQso.ceContest), aQso) then
+   (* AS STORED (log schema 10): the view holds what the loader counts, and
+      both read the contest's rule as it was stamped on the record. *)
+   if StoredQSOCountsTowardTotals(aQso) then
       begin
       LoggedQSOs.Add(aQso, aMyFacts);
       end;

@@ -1598,6 +1598,7 @@ begin
       rx.tSysTime.qtDay := 11;
       ActiveContest(Contest);
       CheckTrue(LoggedQSOIsXQSO(rx), 'out of state, a logged W7AZ AZ is an X-QSO');
+      StampOffContest(rx);   (* logged: the rule is stamped, log schema 10 *)
       CheckEquals('X-QSO:', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 6),
                   'and its Cabrillo line says so');
       CheckFalse(QSOCountsTowardTotals(LoggedQSOContest(Contest), rx),

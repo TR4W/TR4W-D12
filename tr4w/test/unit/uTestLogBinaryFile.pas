@@ -454,7 +454,12 @@ begin
    CheckEquals(327, Off(r.YearSentKnown),   'YearSentKnown sits at 327');
    CheckEquals(328, Off(r.YearSent),        'YearSent, a Word, sits at 328');
    CheckEquals(2,   SizeOf(r.YearSent),     'and is two bytes');
-   CheckEquals(330, Off(r.sReserved),       'sReserved, now a string[43], from 330');
+   (* THE CONTEST'S RULE AS STAMPED (log schema 10), one Boolean carved from
+     sReserved's front: byte 330 was its always-zero length byte, so every
+     older record reads False -- and the reader clears it anyway. *)
+   CheckEquals(330, Off(r.ceOffContest),    'ceOffContest sits at 330');
+   CheckEquals(1,   SizeOf(r.ceOffContest), 'and is one byte');
+   CheckEquals(331, Off(r.sReserved),       'sReserved, now a string[42], from 331');
    CheckEquals(374, Off(r.sReserved) + SizeOf(r.sReserved),
                'and ends at 374, where it always did; 374..375 are padding');
 

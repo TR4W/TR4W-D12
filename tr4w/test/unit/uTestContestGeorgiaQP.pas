@@ -999,6 +999,9 @@ begin
       (* The session's object, its station as set-up leaves it. *)
       ActiveContest(Contest);
       CheckTrue(LoggedQSOIsXQSO(rx), 'out of state, a logged W1AW CT is an X-QSO');
+      (* LOGGED: the rule is stamped on the record (log schema 10), and the
+         Cabrillo line reads the stamp. *)
+      StampOffContest(rx);
       CheckEquals('X-QSO:', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 6),
                   'and its Cabrillo line says so');
       CheckFalse(QSOCountsTowardTotals(LoggedQSOContest(Contest), rx),
@@ -1011,12 +1014,14 @@ begin
       (* THE CONTROLS: a Georgia county out of state, and CT in state. *)
       rx.QTHString := 'COBB';
       CheckFalse(LoggedQSOIsXQSO(rx), 'out of state, a logged Cobb QSO is not');
+      StampOffContest(rx);
       CheckEquals('QSO: ', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 5),
                   'a plain QSO: line');
       rx.QTHString := 'CT';
       StationInHostState := True;
       ActiveContest(Contest);
       CheckFalse(LoggedQSOIsXQSO(rx), 'in state, a logged W1AW CT is not an X-QSO');
+      StampOffContest(rx);
       CheckEquals('QSO: ', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 5),
                   'a plain QSO: line in state');
       StationInHostState := False;

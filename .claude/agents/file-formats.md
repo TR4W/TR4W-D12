@@ -47,6 +47,15 @@ behaviour FINDING; report it with the diff.
 logs in `tr4w/test/unit/fixtures/binarylog/`. NY4I: *"that becomes a unit test
 and not the corpus."* Do not put `.trw` fixtures back in the corpus.
 
+**Log schema 10 (2026-11-19): byte 330 is `ceOffContest`** (the contest's
+rule as stamped, `qso.is_off_contest`; `sReserved` is `string[42]` from 331).
+`TLogBinaryReader.ReadNext` CLEARS it and `ImportBinaryLog` marks the new log
+(`LOG_OFF_CONTEST_BACKFILL_KEY`) so the store stamps every row once the
+contest is set up. **The Cabrillo and ADIF writers READ the stored answer**
+(`uContestRegistry.StoredQSOIsXQSO`) and work no rule out; an ADIF import's
+rows are stamped by `LogStoreAppendQSOs`. A CLAIMEDQSO 0 / XQSO=Y on import is
+still the OPERATOR's flag (`ceXQSO`). See docs/LOG_SCHEMA.md.
+
 **The record carries a received year since issue 298 stage 1 (2026-11-12)** --
 `RcvdYear` (Word, 324) and `RcvdYearKnown` (326), carved from `sReserved` like
 `ceXQSO`; still 376 bytes, no earlier offset moved. `TLogBinaryReader.ReadNext`

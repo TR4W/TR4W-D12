@@ -137,6 +137,11 @@ type
       Email: AnsiString;
    end;
 
+   (* A ROUTINE THAT STAMPS A DERIVED VALUE ON A RECORD -- log schema 10. The
+     caller hands in uContestRegistry.StampOffContest; this unit never judges a
+     QSO itself (it cannot see the contest factory, and should not). *)
+   TQsoStamp = procedure(var aQso: ContestExchange);
+
    (* ROWS TO REWRITE, BY ROW ID -- collected during a whole-log pass and
       written afterwards in ONE transaction by TLogRepository.WriteBatch.
       Section 9c, F1 and F4.
@@ -173,6 +178,10 @@ type
    public
       function Count: integer;
       function Row(aIndex: integer): ContestExchange;
+      (* aStamp over every row held, in place -- the store stamps a batch of
+         new QSOs (an ADIF import, a catch-up) as it is about to append it.
+         Nothing when aStamp is nil. *)
+      procedure StampEach(aStamp: TQsoStamp);
    end;
 
    (* ONE FUNCTION-KEY MEMORY THE OPERATOR EDITED, as the log's message table
@@ -610,6 +619,23 @@ type
         the UPDATE touched. DOES NOT COMMIT: the caller commits the fill and
         the mark's removal together. *)
       function BackfillStationFacts(const aFacts: TQsoMyFacts): integer;
+
+      (* THE ONE-SHOT STAMP OF is_off_contest OF A LOG THE SCHEMA-10 MIGRATION
+        (or the .TRW import) MARKED (uLogSchema.LOG_OFF_CONTEST_BACKFILL_KEY).
+        The caller hands in the stamp -- uContestRegistry.StampOffContest,
+        asked after the contest is set up -- because whether the contest
+        credits a row is its question, not this unit's.
+
+        EVERY QSO ROW IS JUDGED AFRESH, oldest first: read whole, stamped, and
+        the rows the stamp marks are written 1, every other row 0. Read in one
+        pass with the cursor closed before any write (a batch's rule). So
+        after a migration each row holds exactly what the exports worked out
+        for it until now, and a run repeated after a crash gives the same.
+
+        Then the mark is deleted. -1: no mark, nothing done; else the rows
+        stamped off-contest. DOES NOT COMMIT: the caller commits the stamp and
+        the mark's removal together. *)
+      function BackfillOffContest(aStamp: TQsoStamp): integer;
 
       (* THE QSOs THIS STATION LOGGED THAT SENT A GIVEN LICENCE YEAR -- issue
         300, the correction Preferences offers after the contest's year
@@ -1392,7 +1418,7 @@ const
       'dxcc_prefix, dxcc_entity, dxcc_code, cty_cq_zone, cty_continent, ' +
       'prefix_mult, dx_mult, domestic_mult, ' +
       'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
-      'qso_points, is_dupe, is_run, is_xqso, is_skipped, sent_in_qtc, ' +
+      'qso_points, is_dupe, is_run, is_xqso, is_off_contest, is_skipped, sent_in_qtc, ' +
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes, ' +
       QSO_MY_COLUMNS;
@@ -1432,7 +1458,7 @@ const
       'dxcc_prefix, dxcc_entity, dxcc_code, cty_cq_zone, cty_continent, ' +
       'prefix_mult, dx_mult, domestic_mult, ' +
       'mult_domestic, mult_dx, mult_prefix, mult_zone, inhibit_mults, ' +
-      'qso_points, is_dupe, is_run, is_xqso, is_skipped, sent_in_qtc, ' +
+      'qso_points, is_dupe, is_run, is_xqso, is_off_contest, is_skipped, sent_in_qtc, ' +
       'name_sent, mp3_recorded, clear_dupe_sheet, clear_mult_sheet, ' +
       'radio_nr, operator_call, deleted, sent_to_server, server_dirty, notes';
 
@@ -1449,7 +1475,7 @@ const
       ':dxcc_prefix, :dxcc_entity, :dxcc_code, :cty_cq_zone, :cty_continent, ' +
       ':prefix_mult, :dx_mult, :domestic_mult, ' +
       ':mult_domestic, :mult_dx, :mult_prefix, :mult_zone, :inhibit_mults, ' +
-      ':qso_points, :is_dupe, :is_run, :is_xqso, :is_skipped, :sent_in_qtc, ' +
+      ':qso_points, :is_dupe, :is_run, :is_xqso, :is_off_contest, :is_skipped, :sent_in_qtc, ' +
       ':name_sent, :mp3_recorded, :clear_dupe_sheet, :clear_mult_sheet, ' +
       ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes, ' +
       ':my_county, :my_grid, :my_state, :my_call, :my_section, :my_park, :my_iota, ' +
@@ -1581,7 +1607,10 @@ type
       qc_prefix_mult, qc_dx_mult, qc_domestic_mult,
       qc_mult_domestic, qc_mult_dx, qc_mult_prefix, qc_mult_zone,
       qc_inhibit_mults,
-      qc_qso_points, qc_is_dupe, qc_is_run, qc_is_xqso, qc_is_skipped,
+      qc_qso_points, qc_is_dupe, qc_is_run, qc_is_xqso,
+      (* is_off_contest, schema 10 -- beside is_xqso, the operator's half. *)
+      qc_is_off_contest,
+      qc_is_skipped,
       qc_sent_in_qtc,
       qc_name_sent, qc_mp3_recorded, qc_clear_dupe_sheet, qc_clear_mult_sheet,
       qc_radio_nr, qc_operator_call, qc_deleted, qc_sent_to_server,
@@ -2119,6 +2148,11 @@ begin
    BindBool(P('is_run'), not rec.ceSearchAndPounce);
 
    BindBool(P('is_xqso'), rec.ceXQSO);
+   (* THE CONTEST'S RULE AS STAMPED -- schema 10. Written as the record holds
+     it: uContestRegistry.StampOffContest sets it where a QSO is logged,
+     rescored, imported or edited, and every other write carries back what
+     ReadRecord read. This unit never judges a QSO. *)
+   BindBool(P('is_off_contest'), rec.ceOffContest);
    (* is_skipped IS WRITTEN AS FALSE AND NEVER READ BACK INTO ITS OWN FIELD.
      The column stays because dropping it is a schema migration for a fact
      nothing consumes; what it MEANT is now ceQSO_Deleted, and the reader folds
@@ -2448,6 +2482,7 @@ begin
    aQso.ceDupe := FieldBool(F(qc_is_dupe));
    aQso.ceSearchAndPounce := not FieldBool(F(qc_is_run));
    aQso.ceXQSO := FieldBool(F(qc_is_xqso));
+   aQso.ceOffContest := FieldBool(F(qc_is_off_contest));
    (* NEVER POPULATED FROM THE DATABASE. What this column meant is folded
      into ceQSO_Deleted below -- see ceQSO_Skiped in VC.pas. *)
    aQso.ceQSO_Skiped := False;
@@ -2769,6 +2804,74 @@ begin
    finally
       q.Free;
    end;
+end;
+
+function TLogRepository.BackfillOffContest(aStamp: TQsoStamp): integer;
+var
+   q: TSQLQuery;
+   qso: ContestExchange;
+   offIds: array of Int64;
+   i: integer;
+begin
+   (* See the declaration. *)
+   Result := -1;
+   if SessionValue(LOG_OFF_CONTEST_BACKFILL_KEY) = '' then
+      begin
+      Exit;
+      end;
+
+   (* READ, AND JUDGE, EVERY QSO ROW -- the sequential cursor's own shape
+     (QSO_COLUMNS then the row id), checked by name through OpenQsoReader. *)
+   SetLength(offIds, 0);
+   if Assigned(aStamp) then
+      begin
+      q := NewReadQuery;
+      try
+         q.SQL.Text := 'SELECT ' + QSO_COLUMNS + ', ' + ROW_ID_COLUMN +
+                       ' FROM qso WHERE record_kind = ''QSO'' ORDER BY id';
+         OpenQsoReader(q, True);
+         try
+            while not q.EOF do
+               begin
+               ReadRecord(q, qso);
+               aStamp(qso);
+               if qso.ceOffContest then
+                  begin
+                  SetLength(offIds, Length(offIds) + 1);
+                  offIds[High(offIds)] := q.Fields[QSO_COLUMN_COUNT].AsLargeInt;
+                  end;
+               q.Next;
+               end;
+         finally
+            q.Close;
+         end;
+      finally
+         q.Free;
+      end;
+      end;
+
+   (* THEN WRITE, the cursor closed: every row back to 0, the stamped ones to
+     1, and the mark gone -- one transaction, which the caller commits. A
+     per-call statement (prepared here), so it begins its own transaction --
+     see ExecuteKeptWrite for why that matters. *)
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := 'UPDATE qso SET is_off_contest = 0 WHERE is_off_contest <> 0';
+      q.ExecSQL;
+      q.SQL.Text := 'UPDATE qso SET is_off_contest = 1 WHERE id = :row_id';
+      for i := 0 to High(offIds) do
+         begin
+         q.ParamByName('row_id').AsLargeInt := offIds[i];
+         q.ExecSQL;
+         end;
+      q.SQL.Text := 'DELETE FROM session_state WHERE key = :key';
+      q.ParamByName('key').AsString := LOG_OFF_CONTEST_BACKFILL_KEY;
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+   Result := Length(offIds);
 end;
 
 const
@@ -3998,6 +4101,20 @@ function TLogQsoList.Row(aIndex: integer): ContestExchange;
 begin
    CheckIndex(aIndex);
    Result := FRows[aIndex];
+end;
+
+procedure TLogQsoList.StampEach(aStamp: TQsoStamp);
+var
+   i: integer;
+begin
+   if not Assigned(aStamp) then
+      begin
+      Exit;
+      end;
+   for i := 0 to FCount - 1 do
+      begin
+      aStamp(FRows[i]);
+      end;
 end;
 
 procedure TLogRowUpdates.Add(aRowId: Int64; const aQso: ContestExchange);

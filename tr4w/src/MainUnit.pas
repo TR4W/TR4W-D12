@@ -8664,10 +8664,11 @@ begin
              rule reads at the final score holds exactly these. Inside the
              outer test it adds only the X-QSO exclusion, as the line it
              replaced did. *)
-          (* OF THE RECORD'S OWN CONTEST (Q98 S1) -- an off-band or off-mode
-             QSO is an X-QSO by its rule and counts nowhere. LoggedQSOContest,
-             not ContestIdentity: a host-area X-QSO (Q119) needs the entrant. *)
-          if QSOCountsTowardTotals(LoggedQSOContest(TempRXData.ceContest), TempRXData) then
+          (* AS STORED (log schema 10) -- an off-band or off-mode QSO, or one
+             the host-area rule refuses, is an X-QSO by the rule STAMPED when
+             it was logged or last rescored, and counts nowhere. The loader
+             reads; it works no rule out. *)
+          if StoredQSOCountsTowardTotals(TempRXData) then
              begin
              TempMode := TempRXData.Mode;
              if TempMode = FM then
@@ -9607,6 +9608,11 @@ begin
         begin
         // LoadingInLogFile := True;
         Sheet.DisposeOfMemoryAndZeroTotals;
+        (* THE SESSION OBJECT'S STATION, REFRESHED ONCE before the pass
+           stamps each row (log schema 10): StampOffContest asks it through
+           LoggedQSOContest, which hands it over as it is, and the host-area
+           rule reads the entrant. *)
+        ActiveContest(Contest);
         end;
      LogSourceRewind;
      1:
@@ -9630,6 +9636,18 @@ begin
            RescoredRXData.ceClearDupeSheet := False;
            end;
 
+        (* THE RESCORE RE-STAMPS THE CONTEST'S RULE -- log schema 10.
+           is_off_contest is derived and stored like qso_points, and this is
+           where both are recomputed: a contest whose rule changed releases
+           (or catches) an old QSO here and nowhere else. Every QSO row,
+           deleted ones included, so an undelete finds it current. The
+           operator's own flag (is_xqso) is never written. A changed stamp is
+           a changed record, so the comparison below writes it back. *)
+        if UpdAction = actRescore then
+           begin
+           StampOffContest(RescoredRXData);
+           end;
+
         if (UpdAction = actRescore)                and
            (RescoredRXData.ceQSO_Deleted = False) then
            begin
@@ -9649,10 +9667,9 @@ begin
            // either, so ClearXQSOScoring clears the stored flags too
            // (CONTEST_OWNERSHIP_DESIGN.md 8.2v). The deleted test was
            // written twice here; once now.
-           (* THE PREDICATE, Q98 S1: the operator's flag OR the record's
-              contest refusing its band or mode -- an edited band
-              re-classifies the QSO here, with nothing written to is_xqso. *)
-           if LoggedQSOIsXQSO(RescoredRXData) then
+           (* THE STORED ANSWER, STAMPED JUST ABOVE (log schema 10): the
+              operator's flag OR the contest's rule as it stands now. *)
+           if StoredQSOIsXQSO(RescoredRXData) then
               begin
               ClearXQSOScoring(RescoredRXData);
               end

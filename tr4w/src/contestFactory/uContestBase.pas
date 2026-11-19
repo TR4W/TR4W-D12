@@ -4108,21 +4108,32 @@ function ContestCreditsModeKey(aContest: TContestBase; aMode: ModeType): boolean
    counts nowhere. A deleted record is judged the same way -- whether it
    counts is QSOCountsTowardTotals's question.
 
+   SINCE LOG SCHEMA 10 ITS ANSWER FOR A LOGGED QSO IS STORED (ceOffContest,
+   qso.is_off_contest) by uContestRegistry.StampOffContest, the one place
+   that asks it of a record; readers read the stored answer.
+
    THE HOST-AREA TERM NEEDS THE ENTRANT, so it is asked only of an object
    that HasStation: the session's (ActiveContest, or
-   uContestRegistry.LoggedQSOContest for a reader holding a record). A
+   uContestRegistry.LoggedQSOContest for a logged record). A
    station-less identity object answers the band and mode terms alone, as
    before Q119 -- it cannot know whether the entrant is in the host area. *)
 function QSOIsOffContest(aContest: TContestBase; const aQso: ContestExchange): boolean;
 
-(* IS aQso AN X-QSO? -- THE PREDICATE (Q98 S1, design 8.2v; Q51).
+(* IS aQso AN X-QSO? -- THE JUDGE (Q98 S1, design 8.2v; Q51).
 
    The operator's statement (ceXQSO, stored -- Edit QSO's checkbox, or a file
    that said CLAIMEDQSO 0) OR the contest's band/mode/host-area rule
-   (QSOIsOffContest, worked out each time it is asked, NEVER stored). Every
-   reader of "is this an X-QSO" asks this (or LoggedQSOIsXQSO,
-   uContestRegistry, for a reader holding only a record); Lint-XQSOReads
-   fails a code read of ceXQSO anywhere else outside its allow-list.
+   (QSOIsOffContest, worked out NOW).
+
+   SINCE LOG SCHEMA 10 (NY4I, 2026-11-19) THE RULE'S ANSWER IS STORED, on the
+   record as ceOffContest (qso.is_off_contest), by
+   uContestRegistry.StampOffContest where a QSO is logged, rescored, imported
+   or edited. So this is asked only where a QSO is being JUDGED -- scoring
+   (ScoreQSO, CountsAsMultiplier, LOGDUPE's multiplier kinds), live entry --
+   and every READER of a logged QSO asks uContestRegistry.StoredQSOIsXQSO,
+   which works nothing out. Lint-XQSOReads fails a read of ceXQSO or
+   ceOffContest outside their owners, and a call of this, QSOIsOffContest or
+   the stamp outside the units that set the stored value.
 
    THE HOST-AREA RULE IS IN IT SINCE Q119 (ruled 2026-10-22, built
    2026-10-23): a QSO Q107 refuses is logged, scores 0, earns no multiplier,
@@ -4763,9 +4774,21 @@ function ApplyQSOPointOverride(const aOverrides: TQSOPointOverrides;
 
    aContest IS THE QSO'S CONTEST (Q98 S1): "not an X-QSO" is QSOIsXQSO, so
    an off-band or off-mode QSO counts nowhere. nil is a classless contest,
-   which credits every band and mode. *)
+   which credits every band and mode.
+
+   SINCE LOG SCHEMA 10 THIS JUDGES: it asks the contest's rule now. Where a
+   QSO is being logged (LOGSUBS2.LogContact) that is right; a STORED row is
+   asked through uContestRegistry.StoredQSOCountsTowardTotals, which reads the
+   rule as it was stamped. nil asks no rule, so (nil, x) is the operator's
+   flag alone -- the loader's contest-blind test. *)
 function QSOCountsTowardTotals(aContest: TContestBase;
                                const aQso: ContestExchange): boolean;
+
+(* A RECORD THAT CAN COUNT AT ALL: a QSO record (rkQSO), not deleted, with a
+   band and a mode. The first half of both QSOCountsTowardTotals and
+   uContestRegistry.StoredQSOCountsTowardTotals, which differ only in how they
+   ask "is it an X-QSO". *)
+function QSORecordCanCount(const aQso: ContestExchange): boolean;
 
 (* OUR SIDE OF ONE LOGGED QSO'S EXCHANGE -- log schema 3, stage 4: the session's
    values (aSession) with the QSO's own recorded station laid over them.
@@ -6750,13 +6773,18 @@ begin
       end;
 end;
 
-function QSOCountsTowardTotals(aContest: TContestBase;
-                               const aQso: ContestExchange): boolean;
+function QSORecordCanCount(const aQso: ContestExchange): boolean;
 begin
    Result := (aQso.ceRecordKind = rkQSO)  and
              (not aQso.ceQSO_Deleted)     and
              (aQso.Band <> NoBand)        and
-             (aQso.Mode <> NoMode)        and
+             (aQso.Mode <> NoMode);
+end;
+
+function QSOCountsTowardTotals(aContest: TContestBase;
+                               const aQso: ContestExchange): boolean;
+begin
+   Result := QSORecordCanCount(aQso) and
              (not QSOIsXQSO(aContest, aQso));
 end;
 

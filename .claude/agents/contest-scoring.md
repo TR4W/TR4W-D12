@@ -417,8 +417,12 @@ only, capped at 250 -- `TalliesLiveQSO` and `LOGDUPE.LiveSessionTally`, the
 live-only tally a reopened log lost, are deleted. Do not bring a session
 count back. `LoadinLog`, the view and the summary sheet
 (`postunit.TallySummaryTotals`, 2026-10-17 -- it had counted flagged X-QSOs)
-share one predicate, `uContestBase.QSOCountsTowardTotals`; never re-test the
-record kind, deleted or `ceXQSO` beside it. A rescored X-QSO keeps no points,
+share one predicate -- since log schema 10 (2026-11-19) the STORED one,
+`uContestRegistry.StoredQSOCountsTowardTotals` (the contest's rule as stamped
+on the row, `is_off_contest`, docs/LOG_SCHEMA.md); live `LogContact` stamps
+first and asks the judge `uContestBase.QSOCountsTowardTotals`, which gives the
+same answer at that moment. Never re-test the record kind, deleted or
+`ceXQSO` beside them. A rescored X-QSO keeps no points,
 dupe or multiplier flag (`uContestBase.ClearXQSOScoring`, Q51), and the
 four-flag clear is ONE routine, `ClearMultiplierFlags`. **A malformed grid is never measured
 (Q37, built 2026-10-17):** `uGridShape.IsGoodLookingGrid` (Tree's

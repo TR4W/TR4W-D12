@@ -274,7 +274,7 @@ uses
    uEditQSO,
    uAppStrings,       (* SLogSearchCallHint, SLogSearchLogUnreadable *)
    uCallSignRoutines, (* ValidCallCharacter *)
-   uContestRegistry,  (* LoggedQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
+   uContestRegistry,  (* StoredQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
    uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
    uMainForm;   (* was TR4WMainForm, the owner -- unused since issue #1; drop it after a build proves name resolution does not depend on it *)
 
@@ -1067,7 +1067,7 @@ begin
 
       LogRowTextFor(FMatches[m].Qso, aRows[i].Text);
       aRows[i].Deleted := FMatches[m].Qso.ceQSO_Deleted;
-      aRows[i].XQSO    := LoggedQSOIsXQSO(FMatches[m].Qso);
+      aRows[i].XQSO    := StoredQSOIsXQSO(FMatches[m].Qso);
       aRows[i].Valid   := True;
       end;
 end;

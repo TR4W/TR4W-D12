@@ -334,6 +334,10 @@ begin
      STX_STRING year itself (ApplyImportedSentYear). *)
    aRecord.YearSent      := 0;
    aRecord.YearSentKnown := False;
+   (* NOR WHETHER ITS CONTEST CREDITS IT (log schema 10): that byte was
+     sReserved's too. The importer marks the new log for the store's one-shot
+     stamp, which judges every row once the contest is set up. *)
+   aRecord.ceOffContest  := False;
 
    Inc(FRecordsRead);
    Result := True;

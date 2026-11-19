@@ -236,6 +236,15 @@ begin
       begin
       Result := GWindowImage.Row(aIndex, aRecord);
       end;
+   (* A RECORD FROM THE SERVER'S LOG ARRIVES HERE, so it is judged here -- log
+     schema 10. The byte it carries is its sender's (zero from a station older
+     than schema 10), and the window reads the stored predicate like every
+     other grid; so this station's contest stamps it on the way in, as the
+     grids judged it before. *)
+   if Result then
+      begin
+      StampOffContest(aRecord);
+      end;
 end;
 
 procedure ReleaseServerLogImage;

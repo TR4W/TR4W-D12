@@ -51,8 +51,9 @@ uses
 // Format (whitespace-separated, per Cabrillo spec):
 //   QSO: <freq> <mode> <date> <time> <mycall> <sent-exch> <hiscall> <rcv-exch>
 //
-// X-QSO records (RXData.ceXQSO = True) get an "X-QSO: " prefix instead of
-// "QSO: " per Issue #750 / Cabrillo spec.
+// X-QSO records (uContestRegistry.StoredQSOIsXQSO: the operator's flag or the
+// contest's rule as stamped) get an "X-QSO: " prefix instead of "QSO: " per
+// Issue #750 / Cabrillo spec.
 // ---------------------------------------------------------------------------
 function BuildSingleQsoCabrilloLine(const RXData: ContestExchange): AnsiString; overload;
 
@@ -117,7 +118,9 @@ var
    sentExch := BuildSentExchangeTextOf(RXData, aFacts, aRecordedSent);
    rcvExch  := BuildRxExchangeText(RXData);
 
-   if LoggedQSOIsXQSO(RXData) then
+   (* AS STORED (log schema 10): the operator's flag or the contest's rule
+      stamped on the record when it was logged or last rescored. *)
+   if StoredQSOIsXQSO(RXData) then
       begin
       sPrefix := 'X-QSO: '
       end

@@ -1982,6 +1982,8 @@ var
    markYearSentBackfill: boolean;
    v9Missing: array of integer;
    markStationFactsBackfill: boolean;
+   offContestMissing: boolean;
+   markOffContestBackfill: boolean;
 begin
    version := PragmaAsInteger('PRAGMA user_version');
 
@@ -2093,6 +2095,28 @@ begin
                          'WHERE name = ''my_source''') <> '') and
          (PragmaAsString('SELECT 1 FROM qso WHERE my_source IS NOT NULL ' +
                          'AND record_kind = ''QSO'' LIMIT 1') <> '');
+      end;
+
+   (* v9 -> v10: IS qso.is_off_contest MISSING, AND DOES THE LOG HOLD A QSO --
+     asked here, before anything changes, for the one-transaction reason. A
+     log with a QSO is marked for the store's one-shot stamp
+     (LOG_OFF_CONTEST_BACKFILL_KEY): whether the contest credits a row is the
+     set-up contest's answer, which this unit cannot ask. Until the stamp runs
+     every row reads 0 -- an ordinary QSO -- which is why the store runs it on
+     the same open, before anything reads the log. A column already present
+     (a log made by this build and stamped back) is neither added nor
+     marked. *)
+   offContestMissing := False;
+   markOffContestBackfill := False;
+   if version < 10 then
+      begin
+      offContestMissing :=
+         PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                        'WHERE name = ''' + string(LOG_V10_QSO_OFF_CONTEST_COLUMN.Name) +
+                        '''')) = '';
+      markOffContestBackfill := offContestMissing and
+                                (PragmaAsString('SELECT 1 FROM qso WHERE ' +
+                                                'record_kind = ''QSO'' LIMIT 1') <> '');
       end;
 
    (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
@@ -2238,6 +2262,22 @@ begin
       FConnection.ExecuteDirect(UTF8Encode(
          'INSERT OR REPLACE INTO session_state (key, value, saved_at) VALUES (''' +
          string(LOG_STATION_FACTS_BACKFILL_KEY) + ''', ''1'', NULL)'));
+      end;
+
+   (* v9 -> v10: qso.is_off_contest, 0 in every existing row until the store's
+     stamp, appended after the schema-9 columns -- and the mark that asks for
+     the stamp, in this same transaction. *)
+   if offContestMissing then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'ALTER TABLE qso ADD COLUMN ' + string(LOG_V10_QSO_OFF_CONTEST_COLUMN.Name) +
+         ' ' + string(LOG_V10_QSO_OFF_CONTEST_COLUMN.Declaration)));
+      end;
+   if markOffContestBackfill then
+      begin
+      FConnection.ExecuteDirect(UTF8Encode(
+         'INSERT OR REPLACE INTO session_state (key, value, saved_at) VALUES (''' +
+         string(LOG_OFF_CONTEST_BACKFILL_KEY) + ''', ''1'', NULL)'));
       end;
 
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,

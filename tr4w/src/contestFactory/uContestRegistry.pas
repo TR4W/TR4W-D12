@@ -366,14 +366,48 @@ type
    TLoggedQSOContestProvider = function(aContest: TContestHandle): TContestBase;
 
 procedure RegisterLoggedQSOContestProvider(aProvider: TLoggedQSOContestProvider);
+(* The provider registered now, nil for none -- so a test that registers its
+   own (to change a contest's rule under a logged QSO) can put it back. *)
+function RegisteredLoggedQSOContestProvider: TLoggedQSOContestProvider;
 function LoggedQSOContest(aContest: TContestHandle): TContestBase;
 
-(* IS A LOGGED RECORD AN X-QSO? -- Q98 S1 (design 8.2v), for a reader that
-   holds only the record: the Cabrillo and ADIF writers, HamScore's line, the
-   score-posting XML, the log grids. uContestBase.QSOIsXQSO of the record's
-   OWN contest (aQso.ceContest) through LoggedQSOContest (Q119 -- it was
-   ContestIdentity, which cannot judge the entrant's host-area rule). *)
+(* WOULD THE RECORD'S OWN CONTEST MAKE IT AN X-QSO NOW? -- THE JUDGE, Q98 S1
+   (design 8.2v): uContestBase.QSOIsXQSO of the record's OWN contest
+   (aQso.ceContest) through LoggedQSOContest (Q119 -- it was ContestIdentity,
+   which cannot judge the entrant's host-area rule).
+
+   NOT FOR A READER SINCE LOG SCHEMA 10 (NY4I, 2026-11-19: "otherwise we have
+   business rules being derived at cabrillo generation"). It works the rule
+   out NOW, and a logged QSO's answer is the one STORED when it was logged
+   (StampOffContest). A reader -- the Cabrillo and ADIF writers, HamScore's
+   line, the score-posting XML, the grids, search, Edit QSO -- asks
+   StoredQSOIsXQSO. Lint-XQSOReads fails a call of this in a reader's unit. *)
 function LoggedQSOIsXQSO(const aQso: ContestExchange): boolean;
+
+(* STAMP THE CONTEST'S OWN RULE ON THE RECORD -- log schema 10. Sets
+   aQso.ceOffContest to uContestBase.QSOIsOffContest of the record's own
+   contest through LoggedQSOContest, so the host-area rule is judged with the
+   entrant. THE ONE WRITER of ceOffContest, and called only where the stored
+   value is SET: a QSO logged (LOGSUBS2.LogContact, and every append the store
+   makes), a rescore (MainUnit.tUpdateLog), Edit QSO's save, a peer's edit
+   arriving (uLogStore), the server's log as it arrives (uGetServerLog), and
+   the store's one-shot stamp of a migrated log. ceXQSO -- the operator's own
+   flag -- is never touched. MAIN THREAD ONLY, as LoggedQSOContest is. *)
+procedure StampOffContest(var aQso: ContestExchange);
+
+(* IS A LOGGED RECORD AN X-QSO? -- THE READER'S QUESTION, log schema 10. The
+   operator's flag (ceXQSO, is_xqso) OR the contest's rule AS STAMPED
+   (ceOffContest, is_off_contest). Reads the record and NOTHING ELSE: no
+   contest is asked, so a rule changed after logging moves nothing until the
+   next rescore re-stamps the log. *)
+function StoredQSOIsXQSO(const aQso: ContestExchange): boolean;
+
+(* DOES A LOGGED RECORD COUNT TOWARD THE TOTALS? -- the reader's form of
+   uContestBase.QSOCountsTowardTotals: a QSO record, not deleted, with a band
+   and a mode, and not StoredQSOIsXQSO. What the loader (MainUnit.LoadinLog),
+   its replay (LOGDUPE), the bonus view (uScoreTotals) and the summary sheet
+   (PostUnit) ask of a stored row. *)
+function StoredQSOCountsTowardTotals(const aQso: ContestExchange): boolean;
 
 implementation
 
@@ -898,9 +932,30 @@ begin
       end;
 end;
 
+function RegisteredLoggedQSOContestProvider: TLoggedQSOContestProvider;
+begin
+   Result := GLoggedQSOContestProvider;
+end;
+
 function LoggedQSOIsXQSO(const aQso: ContestExchange): boolean;
 begin
    Result := QSOIsXQSO(LoggedQSOContest(aQso.ceContest), aQso);
+end;
+
+procedure StampOffContest(var aQso: ContestExchange);
+begin
+   aQso.ceOffContest := QSOIsOffContest(LoggedQSOContest(aQso.ceContest), aQso);
+end;
+
+function StoredQSOIsXQSO(const aQso: ContestExchange): boolean;
+begin
+   Result := aQso.ceXQSO or aQso.ceOffContest;
+end;
+
+function StoredQSOCountsTowardTotals(const aQso: ContestExchange): boolean;
+begin
+   Result := QSORecordCanCount(aQso) and
+             (not StoredQSOIsXQSO(aQso));
 end;
 
 function ContestOfADIFRecordMode(aContest: TContestHandle;

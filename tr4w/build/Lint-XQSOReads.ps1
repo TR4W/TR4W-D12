@@ -1,40 +1,72 @@
 <#
 .SYNOPSIS
-   Fail the build if production code reads the stored X-QSO flag (ceXQSO)
-   anywhere but the few places that own it. "Is this an X-QSO" is ONE
-   predicate: uContestBase.QSOIsXQSO, or uContestRegistry.LoggedQSOIsXQSO for
-   a reader that holds only a record.
+   Fail the build if production code reads a stored X-QSO field (ceXQSO, the
+   operator's flag; ceOffContest, the contest's rule as stamped) anywhere but
+   the few places that own it, OR works the contest's rule out anywhere but
+   the places that SET the stored value. A reader of a logged QSO asks ONE
+   thing: uContestRegistry.StoredQSOIsXQSO (or StoredQSOCountsTowardTotals).
 
 .DESCRIPTION
-   WHY THIS EXISTS -- Q98 stage S1 (docs/CONTEST_OWNERSHIP_DESIGN.md 8.2v).
-   NY4I: "automatic X-QSO is OK". An off-band or off-mode QSO is an X-QSO,
-   and that is DERIVED, never stored: X-QSO = the operator's flag (ceXQSO, the
-   log's is_xqso) OR the record's contest refusing its band or mode. A reader
-   that tests ceXQSO directly sees only half of it -- it would export an
-   off-band QSO as a plain QSO: line, count it in a total, or paint it as an
-   ordinary row -- and nothing else fails, because the flag is a legal
-   Boolean. So the reads are gated, and the predicate is the only way to ask.
+   WHY THIS EXISTS -- Q98 stage S1 (docs/CONTEST_OWNERSHIP_DESIGN.md 8.2v),
+   and log schema 10 (NY4I, 2026-11-19).
 
-   THE ALLOW-LIST -- the field's owners, each with its reason:
+   An X-QSO is the operator's flag (ceXQSO, the log's is_xqso) OR the contest
+   refusing the QSO by its own band/mode/host-area rule. Until schema 10 the
+   second half was DERIVED every time a reader asked; NY4I ruled that it is
+   decided when the QSO is LOGGED and STORED (ceOffContest, is_off_contest),
+   and that every reader simply reads it: "Otherwise we have business rules
+   being derived at cabrillo generation." So there are two fences:
 
-     contestFactory\uContestBase.pas   QSOIsXQSO itself -- the predicate
-     uLogRepository.pas                binds and reads the is_xqso column
-     uEditQSO.pas                      the operator's checkbox: his statement,
-                                       shown and stored as he made it
-     uContestMatrix.pas                prints the STORED flag (xqso=) -- the
-                                       matrix pins what was stored
-     VC.pas                            declares the field
+   FENCE 1 -- THE FIELDS. A reader that tests ceXQSO or ceOffContest by hand
+   sees only half of the answer: it would export an automatic X-QSO as a plain
+   QSO: line, count it in a total, or paint it as an ordinary row -- and
+   nothing else fails, because each field is a legal Boolean.
 
-   uADIF.pas IS ALLOWED ONLY TO WRITE IT -- `ceXQSO := True`, its import arms
-   storing what the file states (CLAIMEDQSO 0, DXLOG_XQSO). Any other mention
-   there is a read and fails.
+     ceXQSO        contestFactory\uContestBase.pas      QSOIsXQSO, the judge
+                   contestFactory\uContestRegistry.pas  StoredQSOIsXQSO
+                   uLogRepository.pas                   binds and reads is_xqso
+                   uEditQSO.pas                         the operator's checkbox
+                   uContestMatrix.pas                   prints the STORED flag
+                   VC.pas                               declares the field
+                   uADIF.pas (WRITE ONLY)               the import arms store
+                                                        what the file states
+     ceOffContest  contestFactory\uContestRegistry.pas  StampOffContest writes
+                                                        it, StoredQSOIsXQSO reads
+                   uLogRepository.pas                   binds and reads
+                                                        is_off_contest
+                   uEditQSO.pas                         greys the box when only
+                                                        the rule says X-QSO
+                   VC.pas                               declares the field
+                   uLogBinaryFile.pas (WRITE ONLY)      a .TRW carries none
 
-   AN ALLOW-LISTED FILE THAT NO LONGER MENTIONS THE FIELD FAILS as stale, so
-   the list only shrinks and the lint has a floor: a parse that finds nothing
-   cannot pass.
+   FENCE 2 -- THE JUDGE. QSOIsOffContest, QSOIsXQSO, LoggedQSOIsXQSO,
+   QSOCountsTowardTotals and StampOffContest work the contest's rule out NOW.
+   They belong only where the stored value is SET -- a QSO logged, the
+   rescore, an import, an edit saved, a record arriving from the network --
+   and in the scoring that runs at those same moments. A call of any of them
+   in another unit is read-time rule evaluation coming back, and fails.
+
+     contestFactory\uContestBase.pas      the rule and the judge; scoring
+     contestFactory\uContestRegistry.pas  LoggedQSOIsXQSO, StampOffContest
+     trdos\logsubs2.pas                   LogContact stamps and counts the
+                                          QSO being logged
+     trdos\logdupe.pas                    the multipliers of a QSO being
+                                          scored
+     MainUnit.pas                         the rescore's stamp; the loader's
+                                          contest-blind (nil) test
+     uEditQSO.pas                         the save re-stamps
+     uLogStore.pas                        every append, a peer's edit, the
+                                          one-shot stamp of a migrated log
+     uGetServerLog.pas                    the server's records as they arrive
+
+   AN ALLOW-LISTED FILE THAT NO LONGER MENTIONS WHAT IT IS LISTED FOR FAILS as
+   stale, so the lists only shrink and the lint has a floor: a parse that
+   finds nothing cannot pass.
 
    READ THROUGH PascalSource.psm1, so a comment or a string literal that names
-   the field is not a mention. src only: a test may read anything.
+   a field or a routine is not a mention, and a look-alike identifier
+   (StoredQSOIsXQSO, ceXQSOx) is not one either. src only: a test may read
+   anything.
 
 .EXAMPLE
    .\Lint-XQSOReads.ps1
@@ -53,27 +85,94 @@ Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
 . (Join-Path $PSScriptRoot 'Get-ScanExclusions.ps1')   # Test-Tr4wScannable -- IDE backup dirs are not source
 
 # --------------------------------------------------------------------------
-# THE ALLOW-LIST. Never grow it without a reason a reviewer would accept: a
-# new reader asks QSOIsXQSO / LoggedQSOIsXQSO.
+# FENCE 1 -- THE STORED FIELDS AND THEIR OWNERS. Never grow a list without a
+# reason a reviewer would accept: a new reader asks StoredQSOIsXQSO.
 # --------------------------------------------------------------------------
-$ALLOWED = [ordered]@{
-   'contestFactory\uContestBase.pas' = 'QSOIsXQSO -- the predicate'
-   'uLogRepository.pas'              = 'binds and reads the is_xqso column'
-   'uEditQSO.pas'                    = 'the operator''s checkbox -- his statement'
-   'uContestMatrix.pas'              = 'prints the STORED flag (xqso=)'
-   'VC.pas'                          = 'declares the field'
-}
-# Files that may WRITE the field and nothing more.
-$WRITE_ONLY = [ordered]@{
-   'uADIF.pas' = 'the import arms store what the file states'
+$FIELDS = [ordered]@{
+   'ceXQSO' = @{
+      Allowed   = [ordered]@{
+         'contestFactory\uContestBase.pas'     = 'QSOIsXQSO -- the judge'
+         'contestFactory\uContestRegistry.pas' = 'StoredQSOIsXQSO -- the reader''s predicate'
+         'uLogRepository.pas'                  = 'binds and reads the is_xqso column'
+         'uEditQSO.pas'                        = 'the operator''s checkbox -- his statement'
+         'uContestMatrix.pas'                  = 'prints the STORED flag (xqso=)'
+         'VC.pas'                              = 'declares the field'
+      }
+      WriteOnly = [ordered]@{
+         'uADIF.pas' = 'the import arms store what the file states'
+      }
+   }
+   'ceOffContest' = @{
+      Allowed   = [ordered]@{
+         'contestFactory\uContestRegistry.pas' = 'StampOffContest writes it; StoredQSOIsXQSO reads it'
+         'uLogRepository.pas'                  = 'binds and reads the is_off_contest column'
+         'uEditQSO.pas'                        = 'greys the X-QSO box when only the rule says so'
+         'VC.pas'                              = 'declares the field'
+      }
+      WriteOnly = [ordered]@{
+         'uLogBinaryFile.pas' = 'a .TRW carries no stamp: the reader clears it'
+      }
+   }
 }
 
-$script:MentionRx = [regex]::new('(?<![\w])ceXQSO(?![\w])', 'IgnoreCase')
-$script:WriteRx   = [regex]::new('(?<![\w])ceXQSO\s*:=', 'IgnoreCase')
+# --------------------------------------------------------------------------
+# FENCE 2 -- THE JUDGE: the routines that work the contest's rule out now,
+# and the units that SET the stored value (or score at that same moment).
+# --------------------------------------------------------------------------
+$JUDGE_ROUTINES = @('QSOIsOffContest', 'QSOIsXQSO', 'LoggedQSOIsXQSO',
+                    'QSOCountsTowardTotals', 'StampOffContest')
+$JUDGES = [ordered]@{
+   'contestFactory\uContestBase.pas'     = 'the rule and the judge; scoring asks them'
+   'contestFactory\uContestRegistry.pas' = 'LoggedQSOIsXQSO and StampOffContest'
+   'trdos\logsubs2.pas'                  = 'LogContact stamps and counts the QSO being logged'
+   'trdos\logdupe.pas'                   = 'the multipliers of a QSO being scored'
+   'MainUnit.pas'                        = 'the rescore stamps; the loader''s contest-blind nil test'
+   'uEditQSO.pas'                        = 'the save re-stamps'
+   'uLogStore.pas'                       = 'every append, a peer''s edit, the one-shot stamp'
+   'uGetServerLog.pas'                   = 'the server''s records as they arrive'
+}
 
-# Every mention in one file's code-only text: line number and whether it is a
-# write (an assignment to the field).
-function Find-XQSOMentions
+function New-WordRegex
+{
+   param([string] $Name, [string] $Tail = '')
+   return [regex]::new('(?<![\w])' + [regex]::Escape($Name) + '(?![\w])' + $Tail, 'IgnoreCase')
+}
+
+# Every mention of field $Field in one file's code-only text: line number and
+# whether it is a write (an assignment to the field).
+function Find-FieldMentions
+{
+   param([string] $Text, [string] $Field)
+
+   $mentionRx = New-WordRegex -Name $Field
+   $writeRx   = New-WordRegex -Name $Field -Tail '\s*:='
+   $hits = @()
+   $lines = $Text -split "`n"
+   for ($i = 0; $i -lt $lines.Count; $i++)
+   {
+      $line = $lines[$i]
+      $mentions = $mentionRx.Matches($line).Count
+      if ($mentions -eq 0)
+      {
+         continue
+      }
+      $writes = $writeRx.Matches($line).Count
+      $hits += [pscustomobject]@{
+         Line   = $i + 1
+         Reads  = $mentions - $writes
+         Writes = $writes
+      }
+   }
+   return $hits
+}
+
+# Built ONCE: the lint reads every line of every file under src.
+$script:JudgeRx = @($JUDGE_ROUTINES | ForEach-Object {
+   [pscustomobject]@{ Name = $_; Rx = (New-WordRegex -Name $_) }
+})
+
+# Every line of one file's code-only text that names a judge routine.
+function Find-JudgeMentions
 {
    param([string] $Text)
 
@@ -81,17 +180,12 @@ function Find-XQSOMentions
    $lines = $Text -split "`n"
    for ($i = 0; $i -lt $lines.Count; $i++)
    {
-      $line = $lines[$i]
-      $mentions = $script:MentionRx.Matches($line).Count
-      if ($mentions -eq 0)
+      foreach ($judge in $script:JudgeRx)
       {
-         continue
-      }
-      $writes = $script:WriteRx.Matches($line).Count
-      $hits += [pscustomobject]@{
-         Line   = $i + 1
-         Reads  = $mentions - $writes
-         Writes = $writes
+         if ($judge.Rx.IsMatch($lines[$i]))
+         {
+            $hits += [pscustomobject]@{ Line = $i + 1; Routine = $judge.Name }
+         }
       }
    }
    return $hits
@@ -107,15 +201,22 @@ function Invoke-FixtureCheck
       'implementation'
       'procedure P(var r: ContestExchange);'
       'begin'
-      '   if r.ceXQSO then'                       # line 5: a read
+      '   if r.ceXQSO then'                                  # line 5: a read
       '      begin'
-      '      r.ceXQSO := True;'                   # line 7: a write
+      '      r.ceXQSO := True;'                              # line 7: a write
       '      end;'
-      '   x := r.ceXQSOx;'                        # line 9: another identifier
+      '   x := r.ceXQSOx;'                                   # line 9: another identifier
       '   // r.ceXQSO in a comment'
-      '   (* r.ceXQSO in a comment *)'
-      '   s := ''r.ceXQSO in a string'';'
-      '   r.CEXQSO := r.ceXQSO or b;'             # line 13: a write AND a read
+      '   (* r.ceXQSO and QSOIsXQSO(c, r) in a comment *)'
+      '   s := ''r.ceXQSO and LoggedQSOIsXQSO(r) in a string'';'
+      '   r.CEXQSO := r.ceXQSO or b;'                        # line 13: a write AND a read
+      '   r.ceOffContest := False;'                          # line 14: a write of the stamp
+      '   if r.ceOffContest then x := 1;'                    # line 15: a read of the stamp
+      '   y := StoredQSOIsXQSO(r);'                          # line 16: the reader's door, not a judge
+      '   z := QSOIsXQSO(c, r);'                             # line 17: the judge
+      '   StampOffContest(r);'                               # line 18: the stamp
+      '   w := StoredQSOCountsTowardTotals(r);'              # line 19: the reader's door, not a judge
+      '   v := qsoisoffcontest(c, r);'                       # line 20: the rule, any case
       'end;'
       'end.'
    )
@@ -124,25 +225,38 @@ function Invoke-FixtureCheck
    {
       [IO.File]::WriteAllText($tmp, ($fixture -join "`r`n"))
       $text = Get-PascalCodeOnlyText -Path $tmp -BlankStrings
-      $got  = @(Find-XQSOMentions -Text $text | ForEach-Object { '{0}:{1}r{2}w' -f $_.Line, $_.Reads, $_.Writes })
+      $gotX = @(Find-FieldMentions -Text $text -Field 'ceXQSO' |
+                ForEach-Object { '{0}:{1}r{2}w' -f $_.Line, $_.Reads, $_.Writes })
+      $gotO = @(Find-FieldMentions -Text $text -Field 'ceOffContest' |
+                ForEach-Object { '{0}:{1}r{2}w' -f $_.Line, $_.Reads, $_.Writes })
+      $gotJ = @(Find-JudgeMentions -Text $text |
+                ForEach-Object { '{0}:{1}' -f $_.Line, $_.Routine })
    }
    finally
    {
       if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force }
    }
-   $expected = @('5:1r0w', '7:0r1w', '13:1r1w')
+   $expectedX = @('5:1r0w', '7:0r1w', '13:1r1w')
+   $expectedO = @('14:0r1w', '15:1r0w')
+   $expectedJ = @('17:QSOIsXQSO', '18:StampOffContest', '20:QSOIsOffContest')
 
    $bad = 0
-   if (($got -join ',') -ne ($expected -join ','))
+   foreach ($case in @(
+         @{ Name = 'ceXQSO';       Got = $gotX; Expected = $expectedX },
+         @{ Name = 'ceOffContest'; Got = $gotO; Expected = $expectedO },
+         @{ Name = 'judge calls';  Got = $gotJ; Expected = $expectedJ }))
    {
-      $bad++
-      Write-Host 'FIXTURE FAIL' -ForegroundColor Red
-      Write-Host ('   expected: {0}' -f ($expected -join ', ')) -ForegroundColor Red
-      Write-Host ('   got     : {0}' -f ($got -join ', ')) -ForegroundColor Red
+      if (($case.Got -join ',') -ne ($case.Expected -join ','))
+      {
+         $bad++
+         Write-Host ('FIXTURE FAIL ({0})' -f $case.Name) -ForegroundColor Red
+         Write-Host ('   expected: {0}' -f ($case.Expected -join ', ')) -ForegroundColor Red
+         Write-Host ('   got     : {0}' -f ($case.Got -join ', ')) -ForegroundColor Red
+      }
    }
-   elseif ($SelfTest)
+   if (($bad -eq 0) -and $SelfTest)
    {
-      Write-Host 'FIXTURE ok   reads, writes, comments, strings and look-alike identifiers told apart'
+      Write-Host 'FIXTURE ok   reads, writes, judge calls, comments, strings and look-alike identifiers told apart'
    }
    $bad += Invoke-PascalSourceSelfTest
    return $bad
@@ -174,34 +288,80 @@ if ($files.Count -eq 0)
 }
 
 $violations = @()
-$seen = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+$seen = @{}
+foreach ($field in $FIELDS.Keys)
+{
+   $seen[$field] = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+}
+$judgesSeen = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+
 foreach ($f in $files)
 {
    $rel  = $f.FullName.Substring($srcRoot.Length).TrimStart('\')
    $text = Get-PascalCodeOnlyText -Path $f.FullName -BlankStrings
-   foreach ($hit in (Find-XQSOMentions -Text $text))
+
+   foreach ($field in $FIELDS.Keys)
    {
-      if ($ALLOWED.Contains($rel))
+      $allowed   = $FIELDS[$field].Allowed
+      $writeOnly = $FIELDS[$field].WriteOnly
+      foreach ($hit in (Find-FieldMentions -Text $text -Field $field))
       {
-         [void]$seen.Add($rel)
-         continue
-      }
-      if ($WRITE_ONLY.Contains($rel))
-      {
-         [void]$seen.Add($rel)
-         if ($hit.Reads -eq 0)
+         if ($allowed.Contains($rel))
          {
+            [void]$seen[$field].Add($rel)
             continue
          }
+         if ($writeOnly.Contains($rel))
+         {
+            [void]$seen[$field].Add($rel)
+            if ($hit.Reads -eq 0)
+            {
+               continue
+            }
+         }
+         $violations += [pscustomobject]@{ File = $rel; Line = $hit.Line; What = ('reads {0}' -f $field) }
       }
-      $violations += [pscustomobject]@{ File = $rel; Line = $hit.Line }
+   }
+
+   foreach ($hit in (Find-JudgeMentions -Text $text))
+   {
+      if ($JUDGES.Contains($rel))
+      {
+         [void]$judgesSeen.Add($rel)
+         continue
+      }
+      $violations += [pscustomobject]@{ File = $rel; Line = $hit.Line; What = ('calls {0} -- works the contest''s rule out at read time' -f $hit.Routine) }
    }
 }
 
-$stale = @(@($ALLOWED.Keys) + @($WRITE_ONLY.Keys) | Where-Object { -not $seen.Contains($_) })
+$stale = @()
+foreach ($field in $FIELDS.Keys)
+{
+   foreach ($owner in (@($FIELDS[$field].Allowed.Keys) + @($FIELDS[$field].WriteOnly.Keys)))
+   {
+      if (-not $seen[$field].Contains($owner))
+      {
+         $stale += ('{0} ({1})' -f $owner, $field)
+      }
+   }
+}
+foreach ($judge in $JUDGES.Keys)
+{
+   if (-not $judgesSeen.Contains($judge))
+   {
+      $stale += ('{0} (judge)' -f $judge)
+   }
+}
 
-Write-Host ('Lint-XQSOReads: {0} file(s) scanned; {1} of {2} allowed owner(s) of ceXQSO found.' -f
-            $files.Count, $seen.Count, ($ALLOWED.Count + $WRITE_ONLY.Count))
+$ownerCount = 0
+$ownerSeen = 0
+foreach ($field in $FIELDS.Keys)
+{
+   $ownerCount += $FIELDS[$field].Allowed.Count + $FIELDS[$field].WriteOnly.Count
+   $ownerSeen  += $seen[$field].Count
+}
+Write-Host ('Lint-XQSOReads: {0} file(s) scanned; {1} of {2} field owner(s) and {3} of {4} judge unit(s) found.' -f
+            $files.Count, $ownerSeen, $ownerCount, $judgesSeen.Count, $JUDGES.Count)
 
 $failed = $false
 if ($violations.Count -gt 0)
@@ -209,12 +369,14 @@ if ($violations.Count -gt 0)
    $failed = $true
    foreach ($v in $violations)
    {
-      Write-Host ('  {0}({1}): reads ceXQSO' -f $v.File, $v.Line) -ForegroundColor Red
+      Write-Host ('  {0}({1}): {2}' -f $v.File, $v.Line, $v.What) -ForegroundColor Red
    }
    Write-Host ''
-   Write-Host ('Lint-XQSOReads FAILED -- {0} read(s) of the stored X-QSO flag.' -f $violations.Count) -ForegroundColor Red
-   Write-Host 'An X-QSO is the operator''s flag OR the contest''s band/mode rule (Q98). Ask' -ForegroundColor Red
-   Write-Host 'uContestBase.QSOIsXQSO, or uContestRegistry.LoggedQSOIsXQSO for a record.' -ForegroundColor Red
+   Write-Host ('Lint-XQSOReads FAILED -- {0} violation(s).' -f $violations.Count) -ForegroundColor Red
+   Write-Host 'An X-QSO is the operator''s flag OR the contest''s rule AS STORED when the QSO' -ForegroundColor Red
+   Write-Host 'was logged or last rescored (log schema 10). A reader asks' -ForegroundColor Red
+   Write-Host 'uContestRegistry.StoredQSOIsXQSO or StoredQSOCountsTowardTotals; only the units' -ForegroundColor Red
+   Write-Host 'that SET the stored value may work the rule out (docs/LOG_SCHEMA.md).' -ForegroundColor Red
 }
 if ($stale.Count -gt 0)
 {
@@ -226,5 +388,5 @@ if ($failed)
 {
    exit 1
 }
-Write-Host 'Lint-XQSOReads: no read of ceXQSO outside its owners.'
+Write-Host 'Lint-XQSOReads: no read of a stored X-QSO field outside its owners, and no rule worked out outside the units that set it.'
 exit 0

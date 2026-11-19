@@ -389,7 +389,7 @@ begin
       db.Open(fn);
       CheckEquals(1, CommitFramesInWal(fn + '-wal'),
                   'the columns, the mark and the stamp: ONE commit');
-      CheckEquals(9, db.SchemaVersion, 'stamped 9');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current (10 since the stored rule)');
       for i := Low(LOG_V9_QSO_COLUMNS) to High(LOG_V9_QSO_COLUMNS) do
          begin
          CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V9_QSO_COLUMNS[i].Name)),

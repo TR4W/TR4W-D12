@@ -166,6 +166,15 @@ var
     save compares the form against, so an untouched set is not rewritten. *)
   EditableMyFacts: TQsoMyFacts;
 
+  (* THE X-QSO BOX IS SHOWING THE CONTEST'S RULE, NOT THE OPERATOR'S FLAG.
+    True when the open QSO is an X-QSO only because the contest's own rule
+    refuses it -- the STORED rule result, ceOffContest (qso.is_off_contest,
+    log schema 10), as it was stamped when the QSO was logged or last
+    rescored. The box is checked and greyed, and the save must NOT write that
+    state into ceXQSO, or a rule that changes later could not release the
+    QSO. *)
+  XQSOIsAutomatic: boolean;
+
 (* OUR STATION AS THE SAVE WILL LEAVE IT: the form's values over the recorded
   ones -- marked edited when the operator changed any, and otherwise exactly
   what was recorded, its source included. ONE answer for the two places that
@@ -403,7 +412,15 @@ begin
    EditQSOSetCheck(FLD_DUPE,    EditableQSORXData.ceDupe);
 
    // Issue #750: X-QSO. Read back on save in the matching block below.
-   EditQSOSetCheck(FLD_XQSO, EditableQSORXData.ceXQSO);
+   (* The operator's flag OR the contest's rule AS STORED -- the same question
+     the Cabrillo and ADIF exports ask (StoredQSOIsXQSO); nothing is worked
+     out here (log schema 10). When only the rule says so, the box is checked
+     but greyed: it is a fact about the contest, not a choice the operator
+     made, and the save leaves the operator's flag alone. *)
+   XQSOIsAutomatic := (not EditableQSORXData.ceXQSO) and
+                      EditableQSORXData.ceOffContest;
+   EditQSOSetCheck(FLD_XQSO, StoredQSOIsXQSO(EditableQSORXData));
+   EditQSOSetEnabled(FLD_XQSO, not XQSOIsAutomatic);
 
    EditQSOSetInt(FLD_NUMBERSEND, EditableQSORXData.NumberSent);
 
@@ -906,7 +923,22 @@ begin
    (multipliers, points, dupe check), and the Cabrillo export emits an
    `X-QSO:` line prefix.  ADIF export emits APP_TR4W_CLAIMEDQSO=0 so a
    round-trip preserves the flag.}
-  EditableQSORXData.ceXQSO := EditQSOGetCheck(FLD_XQSO);
+  if not XQSOIsAutomatic then
+     begin
+     EditableQSORXData.ceXQSO := EditQSOGetCheck(FLD_XQSO);
+     end;
+
+  (* AN EDIT SAVE IS WHERE THE CONTEST'S RULE IS STAMPED AGAIN -- log schema
+     10. The band, the mode, the QTH or our station may have changed, and the
+     rule follows the QSO as edited: an X-QSO by the rule alone is released
+     by an edit that puts it on a contest band, and a QSO edited off one
+     becomes one. Re-stamped on EVERY save rather than only when a field the
+     rule reads changed: which fields those are is the contest's business
+     (the host-area rule reads the QTH), and the stamp is one cheap call.
+     Before anything below reads the record, so HamScore, UDP, the external
+     loggers, the network packet and the stored row all carry the answer.
+     The operator's flag above is never written from it. *)
+  StampOffContest(EditableQSORXData);
 
   // Deleted QSOs send a contactdelete only.
   // Edited (non-deleted) QSOs send a contactreplace so consumers update in place.

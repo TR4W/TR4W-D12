@@ -1766,8 +1766,9 @@ var
 begin
   Result := 0;
   (* THE LOADER'S TEST (MainUnit.LoadinLog): what reaches AddQSOToSheets
-     there reaches this sheet here, and nothing else. *)
-  if not QSOCountsTowardTotals(LoggedQSOContest(aRX.ceContest), aRX) then
+     there reaches this sheet here, and nothing else -- as stored (log
+     schema 10). *)
+  if not StoredQSOCountsTowardTotals(aRX) then
      begin
      Exit;
      end;

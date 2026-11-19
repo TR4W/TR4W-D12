@@ -1292,10 +1292,10 @@ procedure TallySummaryTotals( aNext: TSummaryRecordReader );
         both columns (CONTEST_OWNERSHIP_DESIGN.md 8.2v). A record with no
         band or no mode is now left out of the raw column as well, as the
         loader leaves it out of every total. ceQSO_Skiped was tested here as a
-        SECOND delete flag once; one flag now. LoggedQSOContest, not
-        ContestIdentity, so the host-area X-QSO (Q119) is judged with the
-        entrant. *)
-     if not QSOCountsTowardTotals(LoggedQSOContest(TempRXData.ceContest), TempRXData) then
+        SECOND delete flag once; one flag now. AS STORED since log schema 10:
+        the contest's rule (host-area included) was stamped on the row when
+        it was logged or last rescored, and the summary reads it. *)
+     if not StoredQSOCountsTowardTotals(TempRXData) then
         begin
         Continue;
         end;
@@ -3420,7 +3420,10 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // Issue #750: X-QSO records use the 'X-QSO:' prefix instead of 'QSO:';
                 // only the literal prefix differs (the 2-char-wider prefix shifts later
                 // columns by 2 -- Cabrillo parsers tolerate X-QSO column alignment).
-                if LoggedQSOIsXQSO(TempRXData) then
+                (* AS STORED (log schema 10): the operator's flag or the
+                   contest's rule stamped when the QSO was logged or last
+                   rescored. The Cabrillo writer works no rule out. *)
+                if StoredQSOIsXQSO(TempRXData) then
                    begin
                    sPrefix := 'X-QSO: '
                    end

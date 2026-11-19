@@ -134,7 +134,8 @@ implementation
 
 uses
    uContestRegistry,   (* ContestLegacyNumber -- the first record's contest *)
-   uContestBase;       (* StoreLicenceYear -- the received year, issue 298 *)
+   uContestBase,       (* StoreLicenceYear -- the received year, issue 298 *)
+   uLogSchema;         (* LOG_OFF_CONTEST_BACKFILL_KEY -- the stamp the store owes *)
 
 (* WHAT SQLITE MAY LEAVE BESIDE A DATABASE, and the first of them present:
   uLogDatabase.LOG_SIDECAR_SUFFIXES and LogSidecarPresent. Both lived here
@@ -329,6 +330,16 @@ begin
 
             if aResult.RecordsFailed = 0 then
                begin
+               (* AND THE MARK THAT ASKS THE STORE TO STAMP is_off_contest
+                 (log schema 10), in the import's one transaction. Whether the
+                 contest credits a row is the SET-UP contest's question, and no
+                 contest is set up while a .TRW is converted -- so every row is
+                 written 0 here (the reader clears the byte) and judged once
+                 the store has set the contest up. *)
+               if aResult.QSOs > 0 then
+                  begin
+                  repo.SaveSessionValue(LOG_OFF_CONTEST_BACKFILL_KEY, '1');
+                  end;
                repo.Commit;
                Result := True;
                end;

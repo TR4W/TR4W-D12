@@ -360,6 +360,10 @@ begin
                                14025000, aRX);
    aRX.ceRecordKind := rkQSO;
    aRX.ceContest := Contest;
+   (* THE CONTEST'S RULE STAMPED AS LOGSUBS2.LogContact STAMPS IT (log schema
+      10), so a test that reads the record afterwards -- LoggedQSOIsXQSO, an
+      export line -- sees what a logged QSO carries. *)
+   StampOffContest(aRX);
    Result := False;
    if aAccepted then
       begin

@@ -2941,11 +2941,19 @@ function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
 var
    attempt: integer;
    busy: boolean;
+   stamped: ContestExchange;
 begin
    Result := False;
+   (* EVERY NEW ROW CARRIES ITS CONTEST'S RULE AS IT STANDS NOW -- log schema
+     10. An append IS the moment a QSO is logged, whoever calls: LogContact
+     (which stamped already, to score with it -- the same answer again), a
+     peer's note or QTC record, the contest matrix. One place, so no path
+     that appends can leave the stored value unset. *)
+   stamped := aQso;
+   StampOffContest(stamped);
    for attempt := 1 to LOG_WRITE_ATTEMPTS do
       begin
-      Result := AppendQSOOnce(aQso, attempt = LOG_WRITE_ATTEMPTS, busy);
+      Result := AppendQSOOnce(stamped, attempt = LOG_WRITE_ATTEMPTS, busy);
       if Result or (not busy) then
          begin
          Exit;
@@ -3266,6 +3274,10 @@ begin
          Exit;
          end;
 
+      (* EVERY NEW ROW STAMPED WITH ITS CONTEST'S RULE -- log schema 10, as
+        LogStoreAppendQSO stamps one: an ADIF import's QSOs and a catch-up's
+        are logged here, so this is where their stored value is set. *)
+      aQsos.StampEach(@StampOffContest);
       GRepository.AppendBatch(aQsos, aFailedIndex);
       Result := True;
    except
@@ -3294,6 +3306,7 @@ end;
 function LogStoreUpdateQSOBySessionIds(const aQso: ContestExchange): boolean;
 var
    rebuilt: boolean;
+   stamped: ContestExchange;
 begin
    Result := False;
    if GDisabled then
@@ -3312,9 +3325,18 @@ begin
          end;
       BeginMainWrite;
 
+      (* A PEER'S EDIT IS AN EDIT SAVE, so the rule is stamped here, by THIS
+        station's contest -- log schema 10. The byte the packet carried is
+        the sender's (zero from a station older than schema 10) and is never
+        trusted. Judged as THIS log's contest: the row it rewrites is this
+        log's, whatever contest byte the packet carried (the receive arm
+        restamps it already; this does not depend on that). *)
+      stamped := aQso;
+      stamped.ceContest := GRepository.LogContest;
+      StampOffContest(stamped);
       (* False when the pair is unset or matches nothing, and that is not an
         error -- it means this station has no such QSO. *)
-      Result := GRepository.UpdateQSOBySessionIds(aQso.ceQSOID1, aQso.ceQSOID2, aQso);
+      Result := GRepository.UpdateQSOBySessionIds(stamped.ceQSOID1, stamped.ceQSOID2, stamped);
       if Result then
          begin
          GRepository.Commit;
@@ -4428,6 +4450,33 @@ begin
                logger.Info('[LogStore] schema 9: %d QSO(s) that recorded their station ' +
                            'given this contest''s name, class, check, precedence, ' +
                            'postal code and FOC number, once', [i]);
+               end;
+            end;
+
+         (* AND WHETHER THE CONTEST CREDITS EACH ROW -- log schema 10, for a
+           log the migration or the .TRW import marked. HERE, for the same
+           reason as the two above: the rule is the set-up contest's, and the
+           host-area half needs its entrant, settled above. ActiveContest
+           refreshes the session object's station first, as every scoring
+           request does; StampOffContest then judges each row through
+           LoggedQSOContest -- the question every export asked of the row
+           until now, so the stamp freezes exactly what was exported. Once:
+           the mark goes with the stamp. Read-only leaves the mark, and the
+           rows read as ordinary QSOs until a writable open stamps them. The
+           station is refreshed only when there is a stamp to make: on every
+           other open this costs nothing and touches no object. *)
+         if GRepository.SessionValue(LOG_OFF_CONTEST_BACKFILL_KEY) <> '' then
+            begin
+            ActiveContest(Contest);
+            end;
+         i := GRepository.BackfillOffContest(@StampOffContest);
+         if i >= 0 then
+            begin
+            GRepository.Commit;
+            if logger <> nil then
+               begin
+               logger.Info('[LogStore] schema 10: %d QSO(s) the contest''s own rule ' +
+                           'does not credit stored as such, once', [i]);
                end;
             end;
          end;

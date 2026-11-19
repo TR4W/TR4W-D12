@@ -116,6 +116,10 @@ type
       procedure TestADamagedLogStillStandsTheStoreDown;
       (* NY4I: free the space, press Enter -- no restart. *)
       procedure TestAFreedDiskRecoversWithoutARestart;
+      (* LOG SCHEMA 10 (2026-11-19): every append stores its contest's rule,
+         judged by THIS log's contest whatever byte the record carried; a
+         .TRW migration is marked for the one-shot stamp. *)
+      procedure TestAnAppendStoresTheContestsRule;
       (* A raw connection on FDb holding the write lock, and its release. *)
       function HoldWriteLock: TObject;
       procedure ReleaseWriteLock(var aHolder: TObject);
@@ -131,6 +135,7 @@ implementation
 uses
    SysUtils, utils_text, uLogStore, uLogDatabase, uLogRepository,
    uLogBinaryFile, uLogSource,
+   uLogSchema,  (* LOG_OFF_CONTEST_BACKFILL_KEY -- the .TRW import's stamp mark *)
    sqldb,      (* TSQLQuery -- ScalarFromFile and ReadContestRow *)
    uLogNote,   (* SetNoteText -- a NOTE record, as MainUnit's note command makes *)
    uSettingsModel,  (* Settings -- the two passwords the capture must not write *)
@@ -2070,6 +2075,69 @@ begin
    end;
 end;
 
+(* LOG SCHEMA 10: AN APPEND IS WHERE A QSO IS LOGGED, so the store stamps the
+  contest's rule on every row it appends -- judged by THIS log's contest, not
+  by the byte the record arrived with (a peer's packet, or one from an older
+  station, carries the sender's). A CW QSO appended to the CQ WW SSB log is
+  stored off-contest; a phone QSO that arrives claiming to be off-contest is
+  stored as credited. And the .TRW migration that made the log left the mark
+  that asks for the one-shot stamp of the imported rows, which nothing here
+  has applied yet. *)
+procedure TLogStoreTests.TestAnAppendStoresTheContestsRule;
+var
+   binary: TStringList;
+   last, offMode, inMode: ContestExchange;
+begin
+   BeginTest('an append stores its contest''s rule, judged by this log''s contest');
+
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   try
+      ReadBinaryLog(binary, last);
+
+      offMode := last;
+      offMode.ceRecordKind := rkQSO;
+      offMode.Callsign := 'N0CW';
+      offMode.id := 'test-logstore-off-mode';
+      offMode.Band := Band20;
+      offMode.Mode := CW;
+      offMode.ExtMode := eCW;
+      offMode.ceXQSO := False;
+      offMode.ceOffContest := False;
+      CheckTrue(LogStoreAppendQSO(offMode), 'the CW QSO is logged');
+
+      inMode := last;
+      inMode.ceRecordKind := rkQSO;
+      inMode.Callsign := 'N0SSB';
+      inMode.id := 'test-logstore-in-mode';
+      inMode.Band := Band20;
+      inMode.Mode := Phone;
+      inMode.ExtMode := eUSB;
+      inMode.ceXQSO := False;
+      (* WHAT A SENDER'S BYTE MIGHT SAY: never trusted. *)
+      inMode.ceOffContest := True;
+      CheckTrue(LogStoreAppendQSO(inMode), 'the phone QSO is logged');
+      LogStoreClose;
+
+      CheckEquals(1, ScalarFromFile(FDb,
+                     'SELECT is_off_contest FROM qso WHERE callsign = ''N0CW'''),
+                  'a CW QSO in CQ WW SSB is stored off-contest');
+      CheckEquals(0, ScalarFromFile(FDb,
+                     'SELECT is_off_contest FROM qso WHERE callsign = ''N0SSB'''),
+                  'a phone QSO is stored credited, whatever its record claimed');
+      CheckEquals(0, ScalarFromFile(FDb,
+                     'SELECT is_xqso FROM qso WHERE callsign = ''N0CW'''),
+                  'and the rule wrote no operator flag');
+      CheckEquals(1, ScalarFromFile(FDb,
+                     'SELECT count(key) FROM session_state WHERE key = ''' +
+                     LOG_OFF_CONTEST_BACKFILL_KEY + ''''),
+                  'the .TRW migration marked the log for the one-shot stamp');
+   finally
+      binary.Free;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -2099,6 +2167,7 @@ begin
    TestAFullDiskLeavesTheLogReadable;
    TestADamagedLogStillStandsTheStoreDown;
    TestAFreedDiskRecoversWithoutARestart;
+   TestAnAppendStoresTheContestsRule;
 end;
 
 end.

@@ -1768,6 +1768,18 @@ begin
      RXData.Callsign := PrecedingString(RXData.Callsign,'/')  + '/' + RXData.DomesticQTH;  // n4af 4.41.7
      end;
 
+  (* THE CONTEST'S OWN RULE, STAMPED ON THE QSO NOW -- log schema 10 (NY4I,
+     2026-11-19). Logging is where an automatic X-QSO is decided: off the
+     contest's bands or modes, or a worked station its host-area rule does
+     not credit. Stamped HERE, before anything below reads the record -- the
+     multipliers, the network packet, the UDP / external logger / HamScore
+     post (IsClaimedQso), the totals -- so all of them, and the stored row,
+     carry one answer. A PEER'S QSO is judged here too, by THIS station's
+     contest: the byte its packet carried is never trusted (zero from an older
+     station). contestRules was refreshed just above (ActiveContest), so the
+     object StampOffContest asks holds this session's station. *)
+  StampOffContest(RXData);
+
   // ceClearDupeSheet bypass: county-line / Nfer follow-up records carry
   // this flag so the dupe check below (and the matching one in
   // tUpdateLog(actRescore)) does NOT flag them as dupes.  See
@@ -3231,7 +3243,7 @@ begin
             // IsClaimedQso=0 -- same wire-format meaning as a skipped
             // QSO from the consumer's perspective.  N1MM uses the
             // same convention.
-            #9 + '<IsClaimedQso>' + Format('%d',[IfThen(RxData.ceQSO_Deleted or LoggedQSOIsXQSO(RxData),0,1)]) + '</IsClaimedQso>' + sLineBreak +
+            #9 + '<IsClaimedQso>' + Format('%d',[IfThen(RxData.ceQSO_Deleted or StoredQSOIsXQSO(RxData),0,1)]) + '</IsClaimedQso>' + sLineBreak +
             #9 + '<oldtimestamp>' + sTimestamp + '</oldtimestamp>' + sLineBreak +
             #9 + '<oldcall>' + RXData.Callsign + '</oldcall>' + sLineBreak +
             // SentExchange built from the CQ exchange template, not the

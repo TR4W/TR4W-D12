@@ -251,7 +251,21 @@ const
      rows exported the contest's current value for these six, and the
      backfill freezes exactly that. A never-captured row needs nothing -- it
      falls back to the session, as ever. *)
-   LOG_SCHEMA_VERSION = 9;
+   (* 10 SINCE 2026-11-19 (NY4I: an X-QSO decided by the contest's
+     band/mode/host rule is STORED when the QSO is logged; "otherwise we have
+     business rules being derived at cabrillo generation"): qso.is_off_contest
+     (LOG_V10_QSO_OFF_CONTEST_COLUMN) -- the contest's rule refuses this QSO.
+     A DERIVED AND STORED value like qso_points and the mult_* flags: set
+     where a QSO is logged, rescored, imported or saved from Edit QSO, and read
+     -- never re-derived -- by the exports, the grids, search and Edit QSO.
+     NOT is_xqso: that is the operator's statement and stays his, so a rule
+     that changes can still release a QSO at the next rescore. Schema 9
+     SHIPPED, so a log this build has opened is refused by every earlier
+     build. The migration adds the column (0 in every row) and, when the log
+     holds a QSO, marks it for the store's one-shot stamp
+     (LOG_OFF_CONTEST_BACKFILL_KEY): only the set-up contest can judge a row,
+     and a domain unit cannot see the contest factory. *)
+   LOG_SCHEMA_VERSION = 10;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -333,6 +347,27 @@ const
      crash between the two runs it again harmlessly. The same shape as
      LOG_YEAR_SENT_BACKFILL_KEY. *)
    LOG_STATION_FACTS_BACKFILL_KEY = 'stationFactsBackfillPending';
+
+   (* THE qso COLUMN SCHEMA 10 ADDED -- the contest's own rule refuses this QSO
+     (an AUTOMATIC X-QSO: off the contest's bands or modes, or a worked
+     station its host-area rule does not credit). The LAST column of the
+     CREATE TABLE above, so ADD COLUMN gives a migrated log the same shape as
+     a new one. NOT NULL DEFAULT 0: every row an older build wrote reads 0
+     until the store's one-shot stamp has judged it. UPDATABLE, like
+     qso_points: the rescore and Edit QSO write it, and every other update
+     writes back what the row read. *)
+   LOG_V10_QSO_OFF_CONTEST_COLUMN: TLogAddedColumn = (
+      Name: 'is_off_contest'; Declaration: 'INTEGER NOT NULL DEFAULT 0');
+
+   (* THE session_state KEY THAT SAYS "STAMP is_off_contest ONCE" -- written by
+     the schema-10 migration, in its one transaction, when it added the column
+     to a log that already held a QSO, and by the .TRW import
+     (uLogImport.ImportBinaryLog), whose rows arrive before any contest is set
+     up. Read and deleted by the store (uLogStore) once the contest is set up,
+     in the stamp's own transaction. The stamp judges every row afresh, so a
+     crash between the two runs it again harmlessly. The same shape as
+     LOG_YEAR_SENT_BACKFILL_KEY. *)
+   LOG_OFF_CONTEST_BACKFILL_KEY = 'offContestBackfillPending';
 
    (* EXECUTED IN ORDER, ONE STATEMENT PER ELEMENT.
 
@@ -664,7 +699,14 @@ const
       '    my_check          TEXT,'#10 +
       '    my_prec           TEXT,'#10 +
       '    my_postal_code    TEXT,'#10 +
-      '    my_foc_number     TEXT'#10 +
+      '    my_foc_number     TEXT,'#10 +
+      '    is_off_contest    INTEGER NOT NULL DEFAULT 0'#10 +
+      '    -- SCHEMA 10: is_off_contest, 1 WHEN THE CONTEST''S OWN RULE REFUSES'#10 +
+      '    -- THIS QSO -- off its bands or modes, or a worked station its'#10 +
+      '    -- host-area rule does not credit: an AUTOMATIC X-QSO. Derived and'#10 +
+      '    -- stored like qso_points: set when the QSO is logged, rescored,'#10 +
+      '    -- imported or edited, and READ by every export. NOT is_xqso, which'#10 +
+      '    -- is the operator''s own statement. See LOG_V10_QSO_OFF_CONTEST_COLUMN.'#10 +
       '    -- SCHEMA 9: my_name .. my_foc_number, THE REST OF OUR STATION AS IT'#10 +
       '    -- WAS FOR THIS QSO -- the name, Field Day class, Sweepstakes check'#10 +
       '    -- and precedence, postal code and FOC number this QSO sent, as'#10 +

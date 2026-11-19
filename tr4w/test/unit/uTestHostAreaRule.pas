@@ -578,6 +578,9 @@ begin
       rx.tSysTime.qtMonth := 4;
       rx.tSysTime.qtDay := 8;
       CheckFalse(LoggedQSOIsXQSO(rx), 'in state, W3ED in DC is not an X-QSO');
+      (* LOGGED: the rule stamped as the store stamps it (log schema 10). *)
+      StampOffContest(rx);
+      CheckFalse(rx.ceOffContest, 'and the stamp says the contest credits it');
       CheckEquals('QSO: ', Copy(string(BuildSingleQsoCabrilloLine(rx)), 1, 5),
                   'and its Cabrillo line is a plain QSO:');
    finally

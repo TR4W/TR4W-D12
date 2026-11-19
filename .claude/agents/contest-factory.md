@@ -368,9 +368,16 @@ the target shape, the M-step migration order and the open questions.
   depends on the mode is stated: Vermont credits 30/17/12 m in `UsesBand`
   and refuses all but FT8/FT4 there; base True; or -- since Q119, 2026-10-23 --
   `CreditsWorkedStation` refused, asked ONLY of an object that `HasStation`)
-  -- **DERIVED, NEVER STORED**: an
-  edited band re-classifies, nothing writes `is_xqso`. A reader holding only
-  a record asks `uContestRegistry.LoggedQSOIsXQSO` (the record's own
+  -- ~~DERIVED, NEVER STORED~~ **STORED SINCE LOG SCHEMA 10 (NY4I,
+  2026-11-19)**: the rule's answer is stamped on the record
+  (`ceOffContest`, `qso.is_off_contest`) by `uContestRegistry.StampOffContest`
+  where a QSO is logged, rescored, imported or saved from Edit QSO, and
+  EVERY READER asks `uContestRegistry.StoredQSOIsXQSO` /
+  `StoredQSOCountsTowardTotals` and works no rule out; a changed rule moves
+  nothing until the next rescore; nothing writes `is_xqso` from the rule
+  (`docs/LOG_SCHEMA.md`, log-database.md "SCHEMA 10"). What follows is the
+  JUDGE, asked only at those setting points and in scoring.
+  `uContestRegistry.LoggedQSOIsXQSO` judges a record by its own
   `ceContest`, through `LoggedQSOContest`: the session's object when it is
   the session's contest -- `uContestFactory` registers the provider and
   hands `GActive` as it is -- else the station-less identity, which judges
@@ -381,8 +388,13 @@ the target shape, the M-step migration order and the open questions.
   initial-exchange history stay OUTSIDE, Q44), the loader, the rescore's X
   arm, the Cabrillo `X-QSO:` prefix, ADIF `APP_TR4W_CLAIMEDQSO` 0, HamScore's
   line, the score-posting XML, the five grid fills, the summary sheet; the
-  dupe sheet and the hint ask `ContestCreditsModeKey`. **`Lint-XQSOReads`
-  fails a code read of `ceXQSO` outside its owners.** ~~NOT the host-area rule
+  dupe sheet and the hint ask `ContestCreditsModeKey`. (Since schema 10 the
+  loader, the rescore's X arm, Cabrillo, ADIF, HamScore/XML, the grids and
+  the summary sheet read the STORED answer instead; `ScoreQSO`,
+  `SetMultFlags` and live `LogContact` still judge, at the moment the stamp
+  is set.) **`Lint-XQSOReads` fails a code read of `ceXQSO` or
+  `ceOffContest` outside their owners, and a call of the judge routines
+  outside the setting-point units.** ~~NOT the host-area rule
   (Q119 open).~~ The host-area rule IS in it since Q119 (above). **A RECORD
   RULE THAT REFUSES INPUT IS NOT AN X-QSO**: RTC's serial 0 (2026-10-23,
   NY4I: *"should have never made it past input editing (or import)"*) is

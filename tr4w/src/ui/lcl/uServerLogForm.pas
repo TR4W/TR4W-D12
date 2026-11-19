@@ -140,7 +140,7 @@ uses
   uGetServerLog,      // the download, the rows, the merge, the progress seam
   uAppStrings,        // SServerLogTitle, SServerLogAdd, SServerLogAddMissing
   MainUnit,           // LogRowTextFor, logger
-  uContestRegistry,   // LoggedQSOIsXQSO -- a row greys an X-QSO (Q98 S1)
+  uContestRegistry,   // StoredQSOIsXQSO -- a row greys an X-QSO (Q98 S1)
   uNet,               // NetCanRestock
   uNetLink,           // NetLinkObservers -- how Send follows the link
   VC,                 // ContestExchange
@@ -278,7 +278,7 @@ begin
 
       LogRowTextFor(rec, aRows[i].Text);
       aRows[i].Deleted := rec.ceQSO_Deleted;
-      aRows[i].XQSO    := LoggedQSOIsXQSO(rec);
+      aRows[i].XQSO    := StoredQSOIsXQSO(rec);
       end;
 end;
 

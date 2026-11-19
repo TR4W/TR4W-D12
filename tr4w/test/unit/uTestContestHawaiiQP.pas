@@ -903,8 +903,11 @@ begin
    BeginTest('Test_HawaiiOffBandAndOffModeExports');
    (* OFF-BAND AND OFF-MODE, THROUGH THE EXPORTERS: X-QSO: and
       APP_TR4W_CLAIMEDQSO 0. *)
+   (* EACH RECORD IS STAMPED AS IT IS LOGGED (log schema 10): the exporters
+      read the stored answer and work no rule out. *)
    rx := HIQSO('KH6AA', 'HON', Band30, CW, eCW);
    CheckTrue(LoggedQSOIsXQSO(rx), '30 m is an automatic X-QSO');
+   StampOffContest(rx);
    text := EmitADIFRecord(rx);
    CheckTrue(Pos('<APP_TR4W_CLAIMEDQSO:1>0', text) > 0, 'an off-band QSO is not claimed: ' + text);
    line := string(BuildSingleQsoCabrilloLine(rx));
@@ -912,6 +915,7 @@ begin
 
    rx := HIQSO('KH6AA', 'HON', Band20, FM, eFM);
    CheckTrue(LoggedQSOIsXQSO(rx), 'FM is an automatic X-QSO');
+   StampOffContest(rx);
    text := EmitADIFRecord(rx);
    CheckTrue(Pos('<APP_TR4W_CLAIMEDQSO:1>0', text) > 0, 'an FM QSO is not claimed: ' + text);
    line := string(BuildSingleQsoCabrilloLine(rx));
@@ -920,6 +924,7 @@ begin
    (* EVERY DIGITAL MODE IS A CONTEST MODE: FT8 on 20 m is a QSO, DG. *)
    rx := HIQSO('KH6AA', 'HON', Band20, Digital, eFT8);
    CheckFalse(LoggedQSOIsXQSO(rx), 'FT8 is a digital mode: no X-QSO');
+   StampOffContest(rx);
    line := string(BuildSingleQsoCabrilloLine(rx));
    CheckTrue(Pos('QSO: ', line) = 1, 'a QSO: line: ' + line);
    CheckTrue(Pos(' DG ', line) > 0, 'its mode column is DG: ' + line);

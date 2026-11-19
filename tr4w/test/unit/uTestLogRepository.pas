@@ -228,6 +228,9 @@ begin
    SameBool('ceDupe', a.ceDupe, b.ceDupe);
    SameBool('ceSearchAndPounce', a.ceSearchAndPounce, b.ceSearchAndPounce);
    SameBool('ceXQSO', a.ceXQSO, b.ceXQSO);
+   (* the contest's rule as stamped, schema 10 -- its own column, never
+     folded into the operator's flag above *)
+   SameBool('ceOffContest', a.ceOffContest, b.ceOffContest);
    (* the received year, schema 6 (issue 298) *)
    SameBool('RcvdYearKnown', a.RcvdYearKnown, b.RcvdYearKnown);
    SameInt('RcvdYear', a.RcvdYear, b.RcvdYear);
@@ -971,6 +974,13 @@ begin
    Scrub(fn);
 end;
 
+(* THE STAMP THE SCHEMA-10 WRITE-PATH STEP USES: every QSO is called off-contest,
+  so the one-shot fill has a row to change and therefore really writes. *)
+procedure StampEveryQsoOffContest(var aQso: ContestExchange);
+begin
+   aQso.ceOffContest := True;
+end;
+
 procedure TLogRepositoryTests.TestWholeCorpusLogRoundTrips;
 const
    (* Four sets chosen to span the shapes: a DX zone contest, a domestic QSO
@@ -1434,6 +1444,9 @@ begin
    aQso.ceDupe := not Odd(aSeed);
    aQso.ceSearchAndPounce := Odd(aSeed);
    aQso.ceXQSO := not Odd(aSeed);
+   (* The stamped rule, schema 10: the OPPOSITE of the operator's flag on
+     every seed, so a mapper that crossed the two columns is caught. *)
+   aQso.ceOffContest := Odd(aSeed);
    (* The received year: present on odd seeds, absent (and so 0) on even. *)
    aQso.RcvdYearKnown := Odd(aSeed);
    if aQso.RcvdYearKnown then
@@ -1964,6 +1977,7 @@ begin
          '|| '':'' || IFNULL(sent_to_server, '''') || '':'' || ' +
          'IFNULL(server_dirty, '''') || '':'' || IFNULL(year_sent, '''') ' +
          '|| '':'' || IFNULL(my_prec, '''') ' +
+         '|| '':'' || IFNULL(is_off_contest, '''') ' +
          'AS c FROM qso ORDER BY id)), ' +
          '(SELECT contest_type || '':'' || my_call FROM contest WHERE id = 1), ' +
          '(SELECT group_concat(c, '','') FROM (SELECT command || ''='' || ' +
@@ -2006,7 +2020,7 @@ end;
   in the -wal -- and the reopened file must match the seed exactly. *)
 procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
 const
-   STEPS = 20;
+   STEPS = 21;
    NAMES: array[0..STEPS - 1] of string = (
       'SaveQSO',
       'UpdateQSO',
@@ -2027,7 +2041,8 @@ const
       'MarkServerProgress',
       'BackfillYearSent',
       'CorrectSentYear',
-      'BackfillStationFacts');
+      'BackfillStationFacts',
+      'BackfillOffContest');
 var
    db: TLogDatabase;
    repo: TLogRepository;
@@ -2182,6 +2197,14 @@ begin
                   repo.SaveSessionValue(LOG_STATION_FACTS_BACKFILL_KEY, '1');
                   facts.Prec := 'A';
                   repo.BackfillStationFacts(facts);
+                  end;
+               20:
+                  begin
+                  (* Log schema 10: the mark and the one-shot stamp, neither
+                    committed. The seed is an ordinary QSO (seed 0) and the
+                    stamp calls every QSO off-contest, so the fill writes. *)
+                  repo.SaveSessionValue(LOG_OFF_CONTEST_BACKFILL_KEY, '1');
+                  repo.BackfillOffContest(@StampEveryQsoOffContest);
                   end;
             end;
 

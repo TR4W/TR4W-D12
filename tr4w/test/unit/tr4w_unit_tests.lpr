@@ -792,6 +792,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       backfill, the import and the Sweepstakes sent line. *)
    uStationFactRecord   in '..\..\src\uStationFactRecord.pas',
    uTestLogStationFacts in 'uTestLogStationFacts.pas',
+   (* Log schema 10: the contest's own rule stored on the QSO (is_off_contest)
+      -- the migration, the one-shot stamp, and a write that carries it back. *)
+   uTestLogOffContest   in 'uTestLogOffContest.pas',
    (* Schema 9 phase 2: a Station-page edit of ANY value the open contest
       uses (the generalised issue 300 rule), the contest's use of a value,
       Edit QSO's check of a changed value, and the station-value correction. *)
@@ -1449,6 +1452,7 @@ begin
    RegisterSuite(TLicenseYearScopeTests.Create('LicenseYearScope'));
    RegisterSuite(TLogYearSentTests.Create('LogYearSent'));
    RegisterSuite(TLogStationFactsTests.Create('LogStationFacts'));
+   RegisterSuite(TLogOffContestTests.Create('LogOffContest'));
    RegisterSuite(TStationFactChangeTests.Create('StationFactChange'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));

@@ -150,6 +150,19 @@ netprobe are at 4 now.) Pins: `uTestNetHello` (the version),
 and the year 00; a QSO caught up from the server's log keeps it; and since
 stage 2 a QSO received LIVE through the real NET_QSOINFO arm stores it).
 
+## Log schema 10: byte 330 is `ceOffContest`, and NO receiver trusts it (2026-11-19)
+
+`ContestExchange.ceOffContest` (Boolean, offset **330**, carved from
+`sReserved`, now `string[42]` at 331..373; record 376, packet 384, every
+earlier offset unchanged) is the contest's band/mode/host-area rule as the
+LOGGING station stamped it (`qso.is_off_contest`, docs/LOG_SCHEMA.md). **No
+protocol bump**: every receive path re-stamps with THIS station's contest --
+a live NET_QSOINFO through `LogContact`, a peer's edit in
+`LogStoreUpdateQSOBySessionIds`, a catch-up through `LogStoreAppendQSOs`, a
+server-log row in `uGetServerLog.TryGetServerLogRow` -- so an older station's
+zero byte and a newer station's stamp are judged alike. Both servers store and
+relay the record whole and read none of it.
+
 ## Network protocol 4: the QSO record carries the year its SENDER sent (issue 300, 2026-11-13)
 
 `NET_PROTOCOL_VERSION` = **4**. A QSO row stores the licence year it SENT

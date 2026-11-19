@@ -22,7 +22,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | which contest-scoped `config` rows are written, and which stored ones are statements | `uLogContestStatements.pas`, a leaf so the rules are unit-tested (`uTestLogContestStatements`) |
 | our station as it was for one QSO (the my_* columns, schema 3) | `tr4w/src/domain/uQsoMyFacts.pas`, a leaf (`uTestLogMyFacts`) |
 | import only | `uLogImport.pas`, `uLogBinaryFile.pas` |
-| docs | `docs/SQLITE_MIGRATION_TASKS.md` (**read before touching log storage**), `docs/SQLITE_LOG_SCHEMA_PLAN.md` |
+| docs | **`docs/LOG_SCHEMA.md` -- THE SCHEMA AS IT STANDS** (every column and its class, the reader rule, the version history, the add-a-column checklist; keep it current with every schema change), `docs/SQLITE_MIGRATION_TASKS.md` (**read before touching log storage**), `docs/SQLITE_LOG_SCHEMA_PLAN.md` (plan and decision history, not the definition) |
 
 **The binary `.TRW` is IMPORT-ONLY.** `tAddQSOToLog` writes to the database and
 nowhere else. Anything that assumes a live `.TRW` is stale.
@@ -286,10 +286,11 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
   `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
   message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
   `TestALogSQLiteRolledBackClosesCleanly`.
-- **The pin covers 20 write paths** (17 until issue 300 added
+- **The pin covers 21 write paths** (17 until issue 300 added
   `BackfillYearSent` and `CorrectSentYear`, 2026-11-13; the fingerprint now
   includes `year_sent`; schema 9 added `BackfillStationFacts`, 2026-11-17,
-  and `my_prec`). `SetSentExchange` joined it and left
+  and `my_prec`; schema 10 added `BackfillOffContest`, 2026-11-19, and
+  `is_off_contest`). `SetSentExchange` joined it and left
   again the same day (2026-10-17) when its only caller was deleted; the
   fingerprint still includes `exchange_sent`. `UpdateQSOMyFacts` (the Edit
   QSO write of the my_* columns) joined on 2026-10-18, and the fingerprint
@@ -431,7 +432,7 @@ program. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12g.
 NY4I: *"The QSO record should have all the MY_ values (such as MY_GRID)."*
 Detail, rulings A to E, and measurements: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12h.
 
-- **`LOG_SCHEMA_VERSION` WAS 3 HERE (9 since 2026-11-17; each later schema
+- **`LOG_SCHEMA_VERSION` WAS 3 HERE (10 since 2026-11-19; each later schema
   has its section below). ONCE A
   SCHEMA-3 BUILD HAS OPENED A LOG, NO EARLIER 5.0.x BUILD CAN OPEN IT**
   (accepted by NY4I). `Open` migrates;
@@ -805,6 +806,52 @@ an imported/stamped or a never-captured row), exact old text ('' = NULL), the
 column name checked against `QSO_MY_COLUMNS` (never operator text), and each
 corrected row marked `edited`. `LogStoreCorrectSentStation` does the year and
 every value in ONE transaction. Tests `uTestStationFactChange`.
+
+## SCHEMA 10: THE CONTEST'S RULE IS STORED ON THE QSO (2026-11-19)
+
+NY4I: an X-QSO decided by the contest's band/mode/host rule is STORED when
+the QSO is logged, and the exports simply read it -- *"Otherwise we have
+business rules being derived at cabrillo generation."* Definition and the
+column classes: `docs/LOG_SCHEMA.md`.
+
+- **`qso.is_off_contest`** (`LOG_V10_QSO_OFF_CONTEST_COLUMN`, `INTEGER NOT
+  NULL DEFAULT 0`, last column), `ContestExchange.ceOffContest` (offset 330,
+  carved from `sReserved`, now `string[42]` at 331; still 376 bytes, nothing
+  before 330 moved). DERIVED-AND-STORED like `qso_points`; UPDATABLE (in
+  `QSO_COLUMNS_UPDATABLE`), so any other update writes back what it read.
+- **NOT `is_xqso`.** That is the operator's statement; the stamp never writes
+  it, so a rule change can release a QSO at the next rescore.
+- **ONE writer: `uContestRegistry.StampOffContest`** =
+  `QSOIsOffContest(LoggedQSOContest(ceContest), qso)`. Called ONLY where the
+  stored value is set: `LogContact` (before the multipliers, the packet and
+  the UDP/logger/HamScore post), `LogStoreAppendQSO` and `LogStoreAppendQSOs`
+  (`TLogQsoList.StampEach` -- every insert, import and catch-up included),
+  `LogStoreUpdateQSOBySessionIds` (a peer's edit), `tUpdateLog`'s rescore
+  (every QSO row, deleted ones too, after one `ActiveContest` refresh), Edit
+  QSO's save (every save), and `uGetServerLog.TryGetServerLogRow`.
+- **ONE reader predicate: `uContestRegistry.StoredQSOIsXQSO`** (`is_xqso OR
+  is_off_contest`) and `StoredQSOCountsTowardTotals` -- Cabrillo (PostUnit,
+  uCabrillo), ADIF, the grids, Search, Edit QSO's box, HamScore/UDP
+  `IsClaimedQso`, the loader, its LOGDUPE replay, the bonus view and the
+  summary sheet. `LoggedQSOIsXQSO` is now THE JUDGE (works the rule out now),
+  for setting points and tests only. `Lint-XQSOReads` fences both: reads of
+  `ceXQSO`/`ceOffContest` outside owners, and calls of the judge routines
+  outside the setting-point units.
+- **THE WIRE BYTE IS NEVER TRUSTED**: every receive path stamps with THIS
+  station's contest, so an older station (byte 0) needs no protocol bump.
+- **Migration**: ALTER + the mark `LOG_OFF_CONTEST_BACKFILL_KEY` when the log
+  holds a QSO, one commit. **The store stamps every QSO row once**
+  (`TLogRepository.BackfillOffContest(@StampOffContest)`, after set-up, in
+  `LogStoreApplyContestConfigWith` beside the schema-8/9 fills): read with the
+  cursor closed before writing, 1 for refused rows, 0 for the rest, mark
+  deleted, one commit. **A `.TRW` import writes the same mark** (no contest
+  is set up while it converts). It is the 21st write path in
+  `TestEveryWriteWaitsForItsCommit` (fingerprint has `is_off_contest`).
+- **Known residue**: `TContestBase.CountsTowardBonus` still judges rows in
+  the bonus view (they agree with the stored value except between a rule
+  change and the next rescore). Tests: `uTestLogOffContest`,
+  `uTestAutomaticXQSO` (the rule flipped under a logged QSO), `uTestLogStore`
+  (`TestAnAppendStoresTheContestsRule`), `uTestLogBinaryFile` (offset 330).
 
 ## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)
 

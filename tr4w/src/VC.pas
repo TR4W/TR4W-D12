@@ -2149,7 +2149,24 @@ type
    YearSentKnown False. Write both through uContestBase.StoreSentLicenceYear. *)
 {01}  YearSentKnown:       Boolean;
 {02}  YearSent:            Word;
-{44} sReserved:               string[43]
+(* THE CONTEST'S OWN RULE REFUSES THIS QSO -- log schema 10 (NY4I,
+   2026-11-19: an X-QSO decided by the contest's band/mode/host rule is STORED
+   in the record when the QSO is logged, and every reader reads it). The
+   answer of uContestBase.QSOIsOffContest, stamped by ONE routine,
+   uContestRegistry.StampOffContest, where a QSO is logged, rescored, imported
+   or saved from Edit QSO -- and never worked out at export, search or display.
+   SQLite column is_off_contest. NOT the operator's flag: ceXQSO is HIS
+   statement and stays apart, so a rule that changes later can release a QSO
+   at the next rescore. Readers ask uContestRegistry.StoredQSOIsXQSO.
+
+   TAKEN FROM sReserved LIKE EVERY FIELD BEFORE IT (string[43] -> [42]): THE
+   RECORD STAYS 376 BYTES and nothing before 330 moved. Byte 330 was
+   sReserved's length byte, always zero, so every older record -- a .TRW,
+   SERVERLOG.TRW, a packet from an older station -- reads False here, and no
+   reader of those trusts it anyway: the .TRW reader clears it, and every
+   receive path stamps the QSO with THIS station's contest. *)
+{01}  ceOffContest:        Boolean;
+{43} sReserved:               string[42]
    end;
 {*)}
 

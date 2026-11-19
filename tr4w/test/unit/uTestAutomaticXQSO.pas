@@ -27,10 +27,15 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   makes none, is left out of every total -- and the sent serial still
   advances (Q44). Q51: "x-qso never counts as worked".
 
-  DERIVED, NEVER STORED: X-QSO = the operator's flag (ceXQSO) OR the record's
-  own contest refusing its band or mode (uContestBase.QSOIsXQSO). So an
-  edited band re-classifies the QSO with nothing written, and a corrected
-  band list re-classifies an old log at the next load.
+  STORED SINCE LOG SCHEMA 10 (NY4I, 2026-11-19): X-QSO = the operator's flag
+  (ceXQSO, is_xqso) OR the record's own contest refusing it, as that answer
+  was STAMPED on the record (ceOffContest, is_off_contest) by
+  uContestRegistry.StampOffContest where the QSO was logged, rescored,
+  imported or saved from Edit QSO. A READER asks StoredQSOIsXQSO and works no
+  rule out: a rule changed after logging moves no export until the next
+  rescore re-stamps, and the operator's flag is never written by the rule.
+  It was derived each time it was asked until then -- NY4I: "Otherwise we
+  have business rules being derived at cabrillo generation."
 
   CQ WW SSB IS THE CONTEST HERE, on purpose: it is what NY4I dry-runs first
   (2026-10-22), and it states both halves -- 160-10 m on its family base,
@@ -77,6 +82,11 @@ type
       (* 2026-11-18: ARRL Sweepstakes CW and Phone each credit only their own
          mode (sponsor rule 2.4); NY4I saw CW QSOs scored in SS Phone. *)
       procedure Test_SweepstakesCreditsOnlyItsOwnMode;
+      (* LOG SCHEMA 10 (2026-11-19): the readers read the STORED rule, a
+         rescore re-stamps it, and the operator's flag stands on its own. *)
+      procedure Test_TheExportsReadTheStoredRuleNotTheContest;
+      procedure Test_TheOperatorsFlagStandsWhenTheRuleReleases;
+      procedure Test_EverySettingPointStampsTheRule;
    end;
 
 (* A SOURCE FILE UNDER tr4w/src, as text -- for a test that pins the ORDER of
@@ -148,6 +158,26 @@ end;
 function CQWWSSBRules: TContestBase;
 begin
    Result := ContestIdentity(ContestHandleOf(CQWWSSB));
+end;
+
+(* aQso AS THE LOG HOLDS IT: its contest's rule stamped on it, as every
+   append, the rescore and Edit QSO's save stamp it (log schema 10). What the
+   readers below are handed. *)
+function AsLogged(const aQso: ContestExchange): ContestExchange;
+begin
+   Result := aQso;
+   StampOffContest(Result);
+end;
+
+(* THE CONTEST THAT JUDGES A LOGGED RECORD, CHANGEABLE BY A TEST -- the
+   registered provider swapped for one that answers GFlipJudge, so a test can
+   change a contest's rule under a QSO already logged. *)
+var
+   GFlipJudge: TContestBase = nil;
+
+function FlipJudgeProvider(aContest: TContestHandle): TContestBase;
+begin
+   Result := GFlipJudge;
 end;
 
 procedure TAutomaticXQSOTests.Test_TheContestsRuleMakesAnXQSO;
@@ -325,14 +355,29 @@ var
    qso: ContestExchange;
 begin
    BeginTest('Test_AnEditedBandReclassifiesTheQSO');
-   qso := SSBQSO(Band17, Phone, eUSB);
-   CheckTrue(LoggedQSOIsXQSO(qso), 'logged on 17 m: an X-QSO');
+   (* LOGGED ON 17 m: the rule is stamped, and that is the stored answer. *)
+   qso := AsLogged(SSBQSO(Band17, Phone, eUSB));
+   CheckTrue(qso.ceOffContest, 'logged on 17 m: the contest''s rule refuses it, stamped');
+   CheckTrue(StoredQSOIsXQSO(qso), 'so it is an X-QSO');
+   CheckTrue(LoggedQSOIsXQSO(qso), 'which is what the rule says now, too');
+
+   (* EDITED TO 20 m BUT NOT YET SAVED: the record still carries what was
+     stamped; the judge, asked now, would credit it. *)
    qso.Band := Band20;
-   CheckFalse(LoggedQSOIsXQSO(qso), 'edited to 20 m: an ordinary QSO, nothing written');
-   CheckFalse(qso.ceXQSO, 'and the stored flag was never set');
+   CheckFalse(LoggedQSOIsXQSO(qso), 'on 20 m the rule credits it');
+   CheckTrue(StoredQSOIsXQSO(qso), 'but a reader reads the stamp until the save');
+
+   (* SAVED -- Edit QSO's save stamps again: an ordinary QSO, and the
+     operator's flag was never written. *)
+   StampOffContest(qso);
+   CheckFalse(StoredQSOIsXQSO(qso), 'saved on 20 m: an ordinary QSO');
+   CheckFalse(qso.ceXQSO, 'and the operator''s flag was never set');
+
    qso.Mode := CW;
    qso.ExtMode := eCW;
-   CheckTrue(LoggedQSOIsXQSO(qso), 'edited to CW: an X-QSO again');
+   StampOffContest(qso);
+   CheckTrue(StoredQSOIsXQSO(qso), 'edited to CW and saved: an X-QSO again');
+   CheckFalse(qso.ceXQSO, 'still by the rule alone');
 end;
 
 procedure TAutomaticXQSOTests.Test_TheRecordsOwnContestDecides;
@@ -353,14 +398,20 @@ var
    text: string;
 begin
    BeginTest('Test_ADIFMarksAnAutomaticXQSO');
-   text := EmitADIFRecord(SSBQSO(Band20, CW, eCW));
+   text := EmitADIFRecord(AsLogged(SSBQSO(Band20, CW, eCW)));
    CheckTrue(Pos('<APP_TR4W_CLAIMEDQSO:1>0', text) > 0,
              'an off-mode QSO is not claimed: ' + text);
-   text := EmitADIFRecord(SSBQSO(Band12, Phone, eUSB));
+   text := EmitADIFRecord(AsLogged(SSBQSO(Band12, Phone, eUSB)));
    CheckTrue(Pos('<APP_TR4W_CLAIMEDQSO:1>0', text) > 0,
              'an off-band QSO is not claimed: ' + text);
-   text := EmitADIFRecord(InBandPhone);
+   text := EmitADIFRecord(AsLogged(InBandPhone));
    CheckTrue(Pos('CLAIMEDQSO', text) = 0, 'an in-band phone QSO carries no marker: ' + text);
+   (* THE WRITER READS THE STAMP AND WORKS NO RULE OUT: the same off-mode
+     record that was never stamped -- no setting point has seen it -- is
+     written as an ordinary QSO. *)
+   text := EmitADIFRecord(SSBQSO(Band20, CW, eCW));
+   CheckTrue(Pos('CLAIMEDQSO', text) = 0,
+             'an off-mode record no setting point has stamped carries no marker: ' + text);
 end;
 
 procedure TAutomaticXQSOTests.Test_HamScoreLineIsAnXQSOLine;
@@ -368,9 +419,9 @@ var
    line: string;
 begin
    BeginTest('Test_HamScoreLineIsAnXQSOLine');
-   line := string(BuildSingleQsoCabrilloLine(SSBQSO(Band20, CW, eCW)));
+   line := string(BuildSingleQsoCabrilloLine(AsLogged(SSBQSO(Band20, CW, eCW))));
    CheckTrue(Pos('X-QSO: ', line) = 1, 'an off-mode QSO goes as an X-QSO: line: ' + line);
-   line := string(BuildSingleQsoCabrilloLine(InBandPhone));
+   line := string(BuildSingleQsoCabrilloLine(AsLogged(InBandPhone)));
    CheckTrue(Pos('QSO: ', line) = 1, 'an in-band QSO goes as a QSO: line: ' + line);
 end;
 
@@ -421,10 +472,10 @@ begin
    ResetLoggedQSOs;
    try
       before := LoggedQSOView.Count;
-      AddLoggedQSO(SSBQSO(Band20, CW, eCW));
-      AddLoggedQSO(SSBQSO(Band17, Phone, eUSB));
+      AddLoggedQSO(AsLogged(SSBQSO(Band20, CW, eCW)));
+      AddLoggedQSO(AsLogged(SSBQSO(Band17, Phone, eUSB)));
       CheckEquals(before, LoggedQSOView.Count, 'no X-QSO reaches the view a bonus reads');
-      AddLoggedQSO(InBandPhone);
+      AddLoggedQSO(AsLogged(InBandPhone));
       CheckEquals(before + 1, LoggedQSOView.Count, 'the control: an in-band QSO does');
    finally
       ResetLoggedQSOs;
@@ -455,12 +506,13 @@ var
 begin
    BeginTest('Test_TheSummarySheetCountsNoXQSO');
    SetLength(GRecords, 3);
-   GRecords[0] := InBandPhone;
+   (* AS THE LOG HOLDS THEM: each stamped with its contest's rule. *)
+   GRecords[0] := AsLogged(InBandPhone);
    GRecords[0].QSOPoints := 3;
    (* Points stored as an old log could hold them: none may reach the sheet. *)
-   GRecords[1] := SSBQSO(Band20, CW, eCW);
+   GRecords[1] := AsLogged(SSBQSO(Band20, CW, eCW));
    GRecords[1].QSOPoints := 3;
-   GRecords[2] := SSBQSO(Band17, Phone, eUSB);
+   GRecords[2] := AsLogged(SSBQSO(Band17, Phone, eUSB));
    GRecords[2].QSOPoints := 3;
 
    savedContest := Contest;
@@ -551,14 +603,21 @@ var
 begin
    BeginTest('Test_TheLoaderAndTheRescoreAskThePredicate');
    text := SourceText('MainUnit.pas');
-   (* LoggedQSOContest since Q119: the record's contest, judged with the
-      entrant when it is the session's (the host-area X-QSO). *)
-   CheckTrue(Pos('if QSOCountsTowardTotals(LoggedQSOContest(TempRXData.ceContest), TempRXData) then', text) > 0,
-             'the loader asks QSOCountsTowardTotals of the record''s contest');
-   CheckTrue(Pos('if LoggedQSOIsXQSO(RescoredRXData) then', text) > 0,
-             'the rescore''s X arm asks LoggedQSOIsXQSO');
+   (* LOG SCHEMA 10: the loader READS the stamped rule; the rescore stamps it
+      again first and then decides its X arm by the stored answer. *)
+   CheckTrue(Pos('if StoredQSOCountsTowardTotals(TempRXData) then', text) > 0,
+             'the loader counts a record by its stored answer');
+   CheckTrue(Pos('if QSOCountsTowardTotals(LoggedQSOContest(TempRXData.ceContest), TempRXData) then', text) = 0,
+             'and no longer works the rule out at load');
+   CheckTrue(Pos('StampOffContest(RescoredRXData);', text) > 0,
+             'the rescore re-stamps the rule');
+   CheckTrue(Pos('if StoredQSOIsXQSO(RescoredRXData) then', text) > 0,
+             'and its X arm reads the stored answer');
+   CheckTrue(Pos('StampOffContest(RescoredRXData);', text) <
+             Pos('if StoredQSOIsXQSO(RescoredRXData) then', text),
+             'stamped BEFORE the X arm reads it');
    CheckTrue(Pos('if RescoredRXData.ceXQSO then', text) = 0,
-             'and no longer the stored flag alone');
+             'and no longer the operator''s flag alone');
    CheckTrue(Pos('if QSOCountsTowardTotals(nil, TempRXData) then', text) > 0,
              'the loader feeds the initial-exchange history by the contest-blind test');
    (* ISSUE 267: on EVERY load, not only start-up's -- D7's latch is gone. *)
@@ -765,6 +824,172 @@ begin
              'and leaves before the several-QTH loop');
 end;
 
+(* LOG SCHEMA 10 -- THE READERS READ THE STORED RULE (NY4I, 2026-11-19).
+
+  A CW QSO is logged under CQ WW SSB's rule: stamped off-contest, and every
+  reader -- the ADIF writer, HamScore's Cabrillo line, the totals -- says
+  X-QSO. Then the contest's rule CHANGES under it (the provider that judges a
+  logged record now answers CQ WW CW's rule, which credits CW). The judge,
+  asked now, credits the QSO; the readers do NOT move, because they work no
+  rule out. Only the rescore's stamp moves them -- and then they all follow. *)
+procedure TAutomaticXQSOTests.Test_TheExportsReadTheStoredRuleNotTheContest;
+var
+   saved: TLoggedQSOContestProvider;
+   qso: ContestExchange;
+   text: string;
+   line: string;
+begin
+   BeginTest('Test_TheExportsReadTheStoredRuleNotTheContest');
+   saved := RegisteredLoggedQSOContestProvider;
+   try
+      RegisterLoggedQSOContestProvider(@FlipJudgeProvider);
+
+      (* LOGGED UNDER CQ WW SSB'S RULE. *)
+      GFlipJudge := CQWWSSBRules;
+      qso := SSBQSO(Band20, CW, eCW);
+      StampOffContest(qso);
+      CheckTrue(qso.ceOffContest, 'logged: the rule refuses a CW QSO, stamped');
+      CheckFalse(qso.ceXQSO, 'the operator''s flag is untouched');
+      CheckTrue(StoredQSOIsXQSO(qso), 'an X-QSO as stored');
+      text := EmitADIFRecord(qso);
+      CheckTrue(Pos('<APP_TR4W_CLAIMEDQSO:1>0', text) > 0, 'the ADIF says not claimed: ' + text);
+      line := string(BuildSingleQsoCabrilloLine(qso));
+      CheckTrue(Pos('X-QSO: ', line) = 1, 'the Cabrillo line is X-QSO: ' + line);
+      CheckFalse(StoredQSOCountsTowardTotals(qso), 'and it counts toward no total');
+
+      (* THE CONTEST'S RULE CHANGES UNDER THE LOGGED QSO. *)
+      GFlipJudge := ContestIdentity(ContestHandleOf(CQWWCW));
+      CheckFalse(LoggedQSOIsXQSO(qso), 'the judge, asked now, credits the CW QSO');
+      CheckTrue(StoredQSOIsXQSO(qso), 'the stored answer stands until a rescore');
+      text := EmitADIFRecord(qso);
+      CheckTrue(Pos('<APP_TR4W_CLAIMEDQSO:1>0', text) > 0,
+                'the ADIF writer reads the stamp, not the rule: ' + text);
+      line := string(BuildSingleQsoCabrilloLine(qso));
+      CheckTrue(Pos('X-QSO: ', line) = 1,
+                'the Cabrillo line reads the stamp, not the rule: ' + line);
+      CheckFalse(StoredQSOCountsTowardTotals(qso), 'nor do the totals move');
+
+      (* THE RESCORE STAMPS AGAIN: now every reader follows the new rule. *)
+      StampOffContest(qso);
+      CheckFalse(qso.ceOffContest, 'rescored: the new rule credits it');
+      CheckFalse(StoredQSOIsXQSO(qso), 'an ordinary QSO');
+      text := EmitADIFRecord(qso);
+      CheckTrue(Pos('CLAIMEDQSO', text) = 0, 'the ADIF carries no marker now: ' + text);
+      line := string(BuildSingleQsoCabrilloLine(qso));
+      CheckTrue(Pos('QSO: ', line) = 1, 'the Cabrillo line is QSO: now: ' + line);
+      CheckTrue(StoredQSOCountsTowardTotals(qso), 'and it counts');
+   finally
+      RegisterLoggedQSOContestProvider(saved);
+      GFlipJudge := nil;
+   end;
+end;
+
+(* THE OPERATOR'S FLAG IS HIS AND STAYS HIS. A QSO he marked X-QSO stays one
+  when the contest's rule releases it, and a rule that refuses a QSO never
+  writes his flag -- which is what lets a changed rule release a QSO at all. *)
+procedure TAutomaticXQSOTests.Test_TheOperatorsFlagStandsWhenTheRuleReleases;
+var
+   saved: TLoggedQSOContestProvider;
+   qso: ContestExchange;
+   line: string;
+begin
+   BeginTest('Test_TheOperatorsFlagStandsWhenTheRuleReleases');
+   saved := RegisteredLoggedQSOContestProvider;
+   try
+      RegisterLoggedQSOContestProvider(@FlipJudgeProvider);
+
+      (* OFF-MODE BY THE RULE, AND FLAGGED BY THE OPERATOR TOO. *)
+      GFlipJudge := CQWWSSBRules;
+      qso := SSBQSO(Band20, CW, eCW);
+      qso.ceXQSO := True;
+      StampOffContest(qso);
+      CheckTrue(qso.ceOffContest, 'the rule refuses it');
+      CheckTrue(StoredQSOIsXQSO(qso), 'an X-QSO');
+
+      (* THE RULE RELEASES IT AND THE RESCORE STAMPS THAT: still an X-QSO,
+         because the operator said so. *)
+      GFlipJudge := ContestIdentity(ContestHandleOf(CQWWCW));
+      StampOffContest(qso);
+      CheckFalse(qso.ceOffContest, 'the rule no longer refuses it');
+      CheckTrue(qso.ceXQSO, 'the operator''s flag is untouched by the stamp');
+      CheckTrue(StoredQSOIsXQSO(qso), 'so it is still an X-QSO');
+      line := string(BuildSingleQsoCabrilloLine(qso));
+      CheckTrue(Pos('X-QSO: ', line) = 1, 'and exports as one: ' + line);
+      CheckFalse(StoredQSOCountsTowardTotals(qso), 'and counts toward no total');
+
+      (* AND A QSO ONLY THE RULE REFUSED: released, it never gained a flag. *)
+      GFlipJudge := CQWWSSBRules;
+      qso := AsLogged(SSBQSO(Band20, CW, eCW));
+      CheckFalse(qso.ceXQSO, 'the rule''s X-QSO writes no operator flag');
+      GFlipJudge := ContestIdentity(ContestHandleOf(CQWWCW));
+      StampOffContest(qso);
+      CheckFalse(StoredQSOIsXQSO(qso), 'so the changed rule releases it');
+   finally
+      RegisterLoggedQSOContestProvider(saved);
+      GFlipJudge := nil;
+   end;
+end;
+
+(* EVERY PLACE THAT SETS THE STORED RULE STAMPS IT BEFORE ANYTHING READS THE
+  RECORD -- read from the source, because LogContact, Edit QSO's save and the
+  store's open cannot be driven whole headless (see the header). The lint
+  (Lint-XQSOReads) fences the other direction: no other unit works the rule
+  out. *)
+procedure TAutomaticXQSOTests.Test_EverySettingPointStampsTheRule;
+var
+   text: string;
+   body: string;
+   p: integer;
+   e: integer;
+   s: integer;
+begin
+   BeginTest('Test_EverySettingPointStampsTheRule');
+
+   (* LOGSUBS2.LogContact: before the multipliers, the network packet and the
+      UDP / external logger / HamScore post. *)
+   text := SourceText('trdos' + PathDelim + 'logsubs2.pas');
+   p := Pos(LOG_CONTACT_DECLARATION, text);
+   p := PosEx(LOG_CONTACT_DECLARATION, text, p + 1);
+   e := PosEx('procedure LogContactToUDP(RXData: ContestExchange);' + sLineBreak, text, p);
+   CheckTrue((p > 0) and (e > p), 'LogContact''s body is found');
+   body := Copy(text, p, e - p);
+   s := Pos('StampOffContest(RXData);', body);
+   CheckTrue(s > 0, 'LogContact stamps the rule');
+   CheckTrue(s < Pos('VisibleLog.ProcessMultipliers(RXData);', body), 'before the multipliers');
+   CheckTrue(s < Pos('SendRecordToServer(', body), 'before the network packet');
+   CheckTrue(s < Pos('PostLoggedQso(', body), 'before the UDP, logger and HamScore post');
+   CheckTrue(s < Pos('if not tAddQSOToLog(RXData) then', body), 'and before the append');
+
+   (* uEditQSO: the save stamps before it posts, sends or writes -- and the
+      operator's flag is read back only when the box was his to tick. *)
+   text := SourceText('uEditQSO.pas');
+   s := Pos('StampOffContest(EditableQSORXData);', text);
+   CheckTrue(s > 0, 'Edit QSO''s save stamps the rule');
+   CheckTrue(s < Pos('SendRecordToServer(NET_EDITEDQSO_ID, EditableQSORXData);', text),
+             'before the edit goes to the network');
+   CheckTrue(s < Pos('LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData', text),
+             'and before it is written');
+   CheckTrue(Pos('if not XQSOIsAutomatic then', text) > 0,
+             'a greyed box never writes the operator''s flag');
+   CheckTrue(Pos('EditableQSORXData.ceOffContest;', text) > 0,
+             'and the box greys from the STORED rule');
+
+   (* uLogStore: every append, a batch append, a peer's edit, and the
+      one-shot stamp of a migrated log. *)
+   text := SourceText('uLogStore.pas');
+   s := Pos('StampOffContest(stamped);', text);
+   CheckTrue(s > 0, 'an append is stamped');
+   CheckTrue(PosEx('StampOffContest(stamped);', text, s + 1) > s, 'and a peer''s edit');
+   CheckTrue(Pos('aQsos.StampEach(@StampOffContest);', text) > 0, 'and a batch append');
+   CheckTrue(Pos('GRepository.BackfillOffContest(@StampOffContest);', text) > 0,
+             'and a migrated log, once');
+
+   (* uGetServerLog: the server's records as they arrive. *)
+   text := SourceText('uGetServerLog.pas');
+   CheckTrue(Pos('StampOffContest(aRecord);', text) > 0,
+             'a record from the server''s log is stamped as it arrives');
+end;
+
 procedure TAutomaticXQSOTests.RunAllTests;
 begin
    Test_ARefusedSaveKeepsTheEntryAndItsReason;
@@ -782,6 +1007,9 @@ begin
    Test_TheSummarySheetCountsNoXQSO;
    Test_LogContactCountsNoXQSOButAdvancesTheSerial;
    Test_TheLoaderAndTheRescoreAskThePredicate;
+   Test_TheExportsReadTheStoredRuleNotTheContest;
+   Test_TheOperatorsFlagStandsWhenTheRuleReleases;
+   Test_EverySettingPointStampsTheRule;
 end;
 
 end.

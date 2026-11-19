@@ -93,7 +93,7 @@ implementation
 
 uses
    uEditQSO,
-   uContestRegistry,  (* LoggedQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
+   uContestRegistry,  (* StoredQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
    uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
    uMainForm;   (* was TR4WMainForm, the owner -- ShowModalOverWin32Parent owns it now; drop after a build proves name resolution does not depend on it *)
 
@@ -270,7 +270,7 @@ begin
       begin
       LogRowTextFor(qsos[i], aRows[Low(aRows) + i].Text);
       aRows[Low(aRows) + i].Deleted := qsos[i].ceQSO_Deleted;
-      aRows[Low(aRows) + i].XQSO    := LoggedQSOIsXQSO(qsos[i]);
+      aRows[Low(aRows) + i].XQSO    := StoredQSOIsXQSO(qsos[i]);
       aRows[Low(aRows) + i].Valid   := True;
       end;
 end;
