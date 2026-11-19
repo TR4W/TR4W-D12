@@ -36,6 +36,7 @@ type
       procedure Test_AnIdThatDoesNotFitIsRefusedNotTruncated;
       procedure Test_OnlyPrintableAsciiIsSent;
       procedure Test_TheVersionJudgement;
+      procedure Test_TheBuildJudgement;
       procedure Test_ThePeersTable;
       procedure Test_TheServersOwnHelloIsNotAStation;
       procedure Test_OneNoticePerStationAndContest;
@@ -153,6 +154,23 @@ begin
               'and so is a NUL, which would end the text early');
    CheckTrue(BuildHello(NET_PROTOCOL_VERSION, 1, '5', 'A B~', h),
              'a blank and a tilde are printable');
+end;
+
+(* ISSUE 120 ITEM 4: two builds are compared as text; a difference is a report,
+  never a refusal (the wire protocol is judged by JudgeProtocol alone). *)
+procedure TTestNetHello.Test_TheBuildJudgement;
+begin
+   BeginTest('Test_TheBuildJudgement');
+   CheckTrue(JudgeAppVersion('5.0.44', '5.0.44') = avSame, 'equal');
+   CheckTrue(JudgeAppVersion('5.0.44', ' 5.0.44 ') = avSame, 'blanks do not count');
+   CheckTrue(JudgeAppVersion('5.0.44', '5.0.44A') = avDiffers, 'a suffix is another build');
+   CheckTrue(JudgeAppVersion('5.0.44', '5.0.43') = avDiffers, 'older');
+   CheckTrue(JudgeAppVersion('5.0.44', '5.1.0') = avDiffers, 'newer');
+   CheckTrue(JudgeAppVersion('5.0.44', '') = avUnannounced, 'nothing said');
+   CheckTrue(JudgeAppVersion('', '') = avUnannounced, 'nothing said by either');
+   CheckTrue(Pos(#1, VersionNoticeKey('5.0.43')) = 1,
+             'the notice key cannot be a contest id');
+   CheckTrue(VersionNoticeKey('5.0.43') <> VersionNoticeKey('5.0.44'), 'one key per version');
 end;
 
 procedure TTestNetHello.Test_TheVersionJudgement;
@@ -389,6 +407,7 @@ begin
    Test_AnIdThatDoesNotFitIsRefusedNotTruncated;
    Test_OnlyPrintableAsciiIsSent;
    Test_TheVersionJudgement;
+   Test_TheBuildJudgement;
    Test_ThePeersTable;
    Test_TheServersOwnHelloIsNotAStation;
    Test_OneNoticePerStationAndContest;

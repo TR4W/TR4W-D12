@@ -74,9 +74,12 @@ type
       procedure Test_ChangingContestWithNoLinkSendsNothing;
       procedure Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest;
       procedure Test_ThePeerContestGateIsAheadOfEveryLoggingCall;
+      procedure Test_APeerOnAnotherBuildIsReportedOncePerVersionAndNeverRefused;
    private
       (* A PEER'S HELLO, or the server's (aStation 0), through the real arm. *)
       procedure FeedHello(const aStation: Byte; const aContestId: string);
+      procedure FeedHelloVersion(const aStation: Byte; const aContestId: string;
+                                 const aVersion: string);
       (* A QSO or an edit from aSender, through the real arm. *)
       procedure FeedQSO(const aMessage: Word; const aSender: Byte;
                         const aLoggedBy: AnsiChar; const aByte: TContestHandle);
@@ -85,7 +88,7 @@ type
 implementation
 
 uses
-   SysUtils, Classes,
+   SysUtils, Classes, Version,
    TF, uContestBase, uContestRegistry, uContestNames, uContestChoices,
    uSettingsModel,
    uCFG,                  (* registers the CONTEST setting's vocabulary *)
@@ -391,11 +394,17 @@ begin
 end;
 
 procedure TContestByIdTests.FeedHello(const aStation: Byte; const aContestId: string);
+begin
+   FeedHelloVersion(aStation, aContestId, Version.TR4W_CURRENTVERSION_NUMBER);
+end;
+
+procedure TContestByIdTests.FeedHelloVersion(const aStation: Byte; const aContestId: string;
+                                             const aVersion: string);
 var
    hello: THelloMessage;
    desync: boolean;
 begin
-   CheckTrue(BuildHello(NET_PROTOCOL_VERSION, aStation, '5.0.99', aContestId, hello),
+   CheckTrue(BuildHello(NET_PROTOCOL_VERSION, aStation, aVersion, aContestId, hello),
              'the hello for "' + aContestId + '" can be built');
    THelloMessagePtr(@NetBuffer[1])^ := hello;
    CheckEquals(SizeOf(THelloMessage), ConsumeNetBuffer(SizeOf(THelloMessage), desync),
@@ -783,6 +792,52 @@ begin
    CheckTrue((gate > 0) and (log > gate), 'NET_EDITEDQSO: the gate stands before the update');
 end;
 
+(* ISSUE 120 ITEM 4 (NY4I: "Clients should all be same version as server or
+  report it"). A station that announces another build is REPORTED -- one notice
+  per (station, version) per link, through the real HELLO arm -- and never
+  refused: its contest is still taken. The same build, and a station that sent
+  no version, raise nothing. *)
+procedure TContestByIdTests.Test_APeerOnAnotherBuildIsReportedOncePerVersionAndNeverRefused;
+var
+   ours: string;
+begin
+   BeginTest('Test_APeerOnAnotherBuildIsReportedOncePerVersionAndNeverRefused');
+   ours := Version.TR4W_CURRENTVERSION_NUMBER;
+   NetPeers.Clear;
+   GNoticeTexts := TStringList.Create;
+   PeerContestNoticeSink := RecordNotice;
+   try
+      FeedHelloVersion(2, ContestId(Contest), ours);
+      CheckEquals(0, GNoticeTexts.Count, 'the same build is not reported');
+      FeedHelloVersion(3, ContestId(Contest), '');
+      CheckEquals(0, GNoticeTexts.Count, 'a station that sent no version is not reported');
+
+      FeedHelloVersion(4, ContestId(Contest), '5.0.1');
+      CheckEquals(1, GNoticeTexts.Count, 'another build is reported');
+      CheckTrue(Pos('Station D', GNoticeTexts[0]) = 1, 'naming the station: ' + GNoticeTexts[0]);
+      CheckTrue(Pos('5.0.1', GNoticeTexts[0]) > 0, 'and its version: ' + GNoticeTexts[0]);
+      CheckTrue(Pos(ours, GNoticeTexts[0]) > 0, 'and this one: ' + GNoticeTexts[0]);
+      CheckEquals(ContestId(Contest), NetPeers.ContestIdOf(4),
+                  'it is not refused: its HELLO was taken');
+
+      FeedHelloVersion(4, ContestId(Contest), '5.0.1');
+      CheckEquals(1, GNoticeTexts.Count, 'the same station and version again: once');
+      FeedHelloVersion(4, ContestId(Contest), '5.0.2');
+      CheckEquals(2, GNoticeTexts.Count, 'the same station on a third build: its own report');
+      FeedHelloVersion(5, ContestId(Contest), '5.0.1');
+      CheckEquals(3, GNoticeTexts.Count, 'another station on that build: its own report');
+
+      NetPeers.Clear;
+      FeedHelloVersion(4, ContestId(Contest), '5.0.1');
+      CheckEquals(4, GNoticeTexts.Count, 'a new link reports again');
+   finally
+      PeerContestNoticeSink := nil;
+      GNoticeTexts.Free;
+      GNoticeTexts := nil;
+      NetPeers.Clear;
+   end;
+end;
+
 procedure TContestByIdTests.RunAllTests;
 begin
    Test_TheFixtureHasAHandleAboveTheLegacyRange;
@@ -804,6 +859,7 @@ begin
    Test_ChangingContestWithNoLinkSendsNothing;
    Test_APeerOnAnotherContestIsRefusedAndReportedOncePerContest;
    Test_ThePeerContestGateIsAheadOfEveryLoggingCall;
+   Test_APeerOnAnotherBuildIsReportedOncePerVersionAndNeverRefused;
 end;
 
 end.

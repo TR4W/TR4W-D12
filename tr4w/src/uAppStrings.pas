@@ -438,6 +438,14 @@ resourcestring
       'Station %s is on %s, this station is on %s -- its QSOs are NOT being ' +
       'logged here. All stations must run the same contest.';
 
+   (* A PEER ON ANOTHER BUILD -- issue 120 item 4, NY4I 2026-11-19: "Clients
+     should all be same version as server or report it". Said once per station
+     and version per link; nothing is refused. %s: the station letter, its
+     version, this station's version. *)
+   SPeerOnAnotherVersion =
+      'Station %s runs TR4W %s, this station runs %s. All stations should ' +
+      'run the same version.';
+
    (* CATCHING UP AFTER A LINK THAT WAS DOWN (Phase 1, C5, 2026-10-27). Said once
      per link, when the QSOs logged and the edits made while this station was
      disconnected have been handed to the server. %d: how many QSOs, then how

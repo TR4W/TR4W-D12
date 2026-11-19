@@ -118,7 +118,7 @@ function ScalarOfLogFile(const aFileName, aSql: string): Int64;
 implementation
 
 uses
-   sqldb, FileUtil, utils_text, TF, uNet, uNetHello, uLogStore, uLogDatabase,
+   sqldb, FileUtil, utils_text, TF, Version, uNet, uNetHello, uLogStore, uLogDatabase,
    uLogRepository, uContestRegistry, PostUnit;
 
 constructor TStubLink.Create;
@@ -465,7 +465,8 @@ var
    hello: THelloMessage;
    desync: boolean;
 begin
-   CheckTrue(BuildHello(NET_PROTOCOL_VERSION, aStation, '5.0.99', aContestId, hello),
+   CheckTrue(BuildHello(NET_PROTOCOL_VERSION, aStation, TR4W_CURRENTVERSION_NUMBER,
+             aContestId, hello),
              'the hello can be built');
    THelloMessagePtr(@NetBuffer[1])^ := hello;
    CheckEquals(SizeOf(THelloMessage), ConsumeNetBuffer(SizeOf(THelloMessage), desync),

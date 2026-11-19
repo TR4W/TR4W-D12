@@ -114,6 +114,24 @@ type
       pcNoHello        // the sender has announced nothing
    );
 
+   TAppVersionVerdict = (
+      avSame,          // the same program version
+      avDiffers,       // another build: a report, never a refusal
+      avUnannounced    // the other end did not say (an empty text)
+   );
+
+(* Is the other end the same BUILD as this one?  Issue 120 item 4 (NY4I:
+  "Clients should all be same version as server or report it"). The versions
+  are compared as text, ignoring case and blanks. A difference is REPORTED by
+  the caller and never refuses anything: the wire protocol (JudgeProtocol)
+  still decides who may talk; this is only about two builds that may disagree
+  on meaning (a new extended mode, a setting) while speaking the same wire. *)
+function JudgeAppVersion(const aOurs, aTheirs: string): TAppVersionVerdict;
+
+(* The key FirstNotice is asked with for a version report, so it cannot be
+  mistaken for a contest id (a contest id has no control character). *)
+function VersionNoticeKey(const aTheirs: string): string;
+
 (* May these two ends talk?  Equal versions only; the other two answers say
   WHICH end is behind, which is what the operator's message needs. *)
 function JudgeProtocol(const aOurs, aTheirs: Word): TProtocolVerdict;
@@ -338,6 +356,27 @@ begin
       begin
       Result := FProtocol[aOrdinal];
       end;
+end;
+
+function JudgeAppVersion(const aOurs, aTheirs: string): TAppVersionVerdict;
+begin
+   if Trim(aTheirs) = '' then
+      begin
+      Result := avUnannounced;
+      end
+   else if UnicodeSameText(Trim(aOurs), Trim(aTheirs)) then
+      begin
+      Result := avSame;
+      end
+   else
+      begin
+      Result := avDiffers;
+      end;
+end;
+
+function VersionNoticeKey(const aTheirs: string): string;
+begin
+   Result := #1 + 'version ' + Trim(aTheirs);
 end;
 
 function TNetPeers.FirstNotice(const aOrdinal: integer;

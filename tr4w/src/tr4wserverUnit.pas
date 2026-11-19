@@ -1361,6 +1361,19 @@ begin
      end;
 
   ClientsSoocketsArray[slot].clHello := aHello;
+
+  (* A STATION ON ANOTHER BUILD THAN THIS SERVER IS REPORTED, NOT REFUSED
+    (issue 120 item 4; NY4I: "Clients should all be same version as server or
+    report it"). The server is built from the same tree, so it compares the
+    station's program version with its own. One line per accepted HELLO; the
+    protocol (JudgeProtocol above) alone decides who may talk. *)
+  if JudgeAppVersion(TR4W_CURRENTVERSION_NUMBER, HelloAppVersion(aHello)) = avDiffers then
+     begin
+     logger.Error('[Net] station %s runs TR4W %s but this server was built from ' +
+                  'TR4W %s: all stations should run the same version',
+                  [ComputerIDLetter(AnsiChar(aHello.hmComputerID)),
+                   HelloAppVersion(aHello), TR4W_CURRENTVERSION_NUMBER]);
+     end;
   logger.Info('[Net] station %s hello: protocol %d, version %s, contest "%s"',
               [ComputerIDLetter(AnsiChar(aHello.hmComputerID)), aHello.hmProtocol,
                HelloAppVersion(aHello), HelloContestId(aHello)]);

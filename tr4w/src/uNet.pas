@@ -708,6 +708,40 @@ begin
       end;
 end;
 
+(* A STATION ON ANOTHER BUILD IS REPORTED, NEVER REFUSED (issue 120 item 4).
+  One Error line and one operator notice per (station, version) per link,
+  through the notice latch the contest report uses. The server's own version
+  is not compared: it has a number series of its own (1.41), not the
+  program's. *)
+procedure ReportPeerVersion(const aHello: THelloMessage);
+var
+   theirs, peer, notice: string;
+begin
+   theirs := HelloAppVersion(aHello);
+   if JudgeAppVersion(TR4W_CURRENTVERSION_NUMBER, theirs) <> avDiffers then
+      begin
+      Exit;
+      end;
+   peer := string(ComputerIDLetter(AnsiChar(aHello.hmComputerID)));
+   if not GPeers.FirstNotice(aHello.hmComputerID, VersionNoticeKey(theirs)) then
+      begin
+      Exit;
+      end;
+   logger.Error('[Net] station %s runs TR4W %s and this station runs %s: all ' +
+                'stations should run the same version',
+                [peer, theirs, TR4W_CURRENTVERSION_NUMBER]);
+   notice := SysUtils.Format(SPeerOnAnotherVersion,
+                             [peer, theirs, TR4W_CURRENTVERSION_NUMBER]);
+   if Assigned(PeerContestNoticeSink) then
+      begin
+      PeerContestNoticeSink(notice);
+      end
+   else
+      begin
+      QuickDisplay(notice);
+      end;
+end;
+
 (* A HELLO: THE SERVER'S OWN (computer id 0) OR A STATION'S, relayed. *)
 procedure HandleHelloReceived(const aHello: THelloMessage);
 begin
@@ -739,6 +773,7 @@ begin
                   [ComputerIDLetter(AnsiChar(aHello.hmComputerID)),
                    HelloContestId(aHello), HelloAppVersion(aHello),
                    aHello.hmProtocol]);
+      ReportPeerVersion(aHello);
       end
    else
       begin
