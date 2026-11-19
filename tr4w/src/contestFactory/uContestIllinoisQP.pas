@@ -182,8 +182,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     validator reads as the enumeration's county name for all 102 (it drops
     blanks and spells "St." as Saint: Rock Island, St. Clair, JoDaviess).
     An ADIF file that writes "IL-QSO-PARTY" (DXLog's Cabrillo spelling) does
-    not match on import; NY4I's answer confirmed the names but not this, so
-    it is still open (issue 119).
+    NOT match on import, by NY4I's ruling (issue 119, 2026-11-19): "that
+    would be non-compliant ADIF so ignore it. We could report an invalid
+    contest ID." No FormerADIFContestIds; the record keeps the contest it was
+    given and ImportFromADIF's report names the id (uADIF sets
+    TADIFRecordTemps.UnmatchedContestId for any CONTEST_ID no contest
+    answers to).
 
   SUBMISSION -- "Electronic logs should be sent as attachments to
     n9jf@arrl.net."

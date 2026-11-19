@@ -619,6 +619,14 @@ type
       MyPostalCode: string;
 
       FromWSJTX: boolean;
+
+      (* A NON-BLANK CONTEST_ID NO CONTEST ANSWERS TO, as the record wrote it
+         ('' when it named one, or none). The record keeps the contest it was
+         given; the import REPORTS the id (issue 119, NY4I 2026-11-19: an
+         ADIF id spelled like a Cabrillo name, IL-QSO-PARTY, "would be
+         non-compliant ADIF so ignore it. We could report an invalid contest
+         ID"). Not the contest's to interpret -- it is never handed one. *)
+      UnmatchedContestId: string;
    end;
 
    (* WHAT THE IMPORT KNOWS ABOUT THE SESSION IT RUNS IN.

@@ -1471,6 +1471,7 @@ begin
    temps.MyName       := '';
    temps.MyPostalCode := '';
    temps.FromWSJTX  := False;
+   temps.UnmatchedContestId := '';
 end;
 
 const
@@ -1634,6 +1635,12 @@ begin
                   begin
                   exch.ceContest := contest;
                   contestFromId := True;
+                  end
+               else if Trim(fieldValue) <> '' then
+                  begin
+                  (* NAMES NO CONTEST: the record keeps the contest it was
+                     given, and the import reports the id (issue 119). *)
+                  temps.UnmatchedContestId := fieldValue;
                   end;
                end;
 

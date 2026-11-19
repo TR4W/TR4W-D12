@@ -361,6 +361,13 @@ procedure OpenUrl(const url: string);
 function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
                          out aMyFacts: TQsoMyFacts;
                          out aSentExchange: AnsiString): boolean; overload;
+(* AND aUnmatchedContestId: a non-blank CONTEST_ID no contest answers to, as
+  written ('' otherwise) -- the import reports it (issue 119). The record
+  keeps the contest it was given. *)
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
+                         out aMyFacts: TQsoMyFacts;
+                         out aSentExchange: AnsiString;
+                         out aUnmatchedContestId: string): boolean; overload;
 (* WITHOUT THEM -- WSJT-X's logged QSO, which is a QSO logged HERE, NOW, and so
   has its station captured live by the store (uLogStore.CaptureMyFactsNow),
   not read from the message. *)
@@ -10845,6 +10852,16 @@ function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
                          out aMyFacts: TQsoMyFacts;
                          out aSentExchange: AnsiString): boolean;
 var
+  ignoredContestId: string;
+begin
+  Result := ParseADIFRecord(sADIF, exch, aMyFacts, aSentExchange, ignoredContestId);
+end;
+
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
+                         out aMyFacts: TQsoMyFacts;
+                         out aSentExchange: AnsiString;
+                         out aUnmatchedContestId: string): boolean;
+var
   fields  : TADIFFieldList;
   temps   : TADIFRecordTemps;
   session : TADIFImportSession;
@@ -10857,6 +10874,7 @@ begin
   // managed to parse -- same forgiving behaviour as the legacy
   // implementation, which logged at error but kept the partial exch.
   ApplyADIFFieldsToExchange(fields, exch, temps);
+  aUnmatchedContestId := temps.UnmatchedContestId;
 
   (* THE RECORD'S OWN STATION AND SENT EXCHANGE, read from the tags it
     carries -- never this station's, and never rebuilt (stage 2, D3). *)
@@ -10933,6 +10951,11 @@ var
   (* THE RECORD'S OWN station and sent exchange, collected with it. *)
   recordMyFacts: TQsoMyFacts;
   recordSentExchange: AnsiString;
+  (* CONTEST_IDs NO CONTEST ANSWERS TO (issue 119): the record's, how many
+    records carried one, and the first such id, for the report. *)
+  recordUnmatchedContestId: string;
+  UnmatchedContestIdCount: integer;
+  FirstUnmatchedContestId: string;
   (* OUR STATION AND THE IMPORT (NY4I, 2026-10-18): this contest's values at
     import time, what the records that name ours say, and the answer. *)
   contestMyFacts: TQsoMyFacts;
@@ -11035,6 +11058,23 @@ var
       end;
   end;
 
+  (* AN UNKNOWN CONTEST_ID IS REPORTED, NOT MATCHED (issue 119, NY4I
+    2026-11-19: an id with dashes, IL-QSO-PARTY, "would be non-compliant ADIF
+    so ignore it. We could report an invalid contest ID"). Such a record
+    keeps the contest open here. A clause both reports end with, in plain
+    English as the rest of this report is. Empty when none. *)
+  function UnmatchedContestIdClause: string;
+  begin
+    Result := '';
+    if UnmatchedContestIdCount > 0 then
+      begin
+      Result := ' ' + string(IntToStr(UnmatchedContestIdCount)) +
+                ' record(s) carry an invalid CONTEST_ID, one no contest TR4W ' +
+                'knows answers to (e.g. "' + FirstUnmatchedContestId + '"); ' +
+                'such a record is read as this contest''s.';
+      end;
+  end;
+
   (* NOTHING WAS IMPORTED, SAID LOUDLY AND IN FULL -- NY4I, 2026-10-14: "all
     or nothing, with ample notification". The sentence names the file, the
     record that failed (its number in the file, its call and its time) and
@@ -11058,7 +11098,7 @@ var
       logNow := ' The contest log is not being written -- see tr4w.log.';
       end;
     aReport := 'NOTHING was imported from ' + adifFileName + ': ' + aWhy + '.' +
-               logNow + SkippedClause;
+               logNow + SkippedClause + UnmatchedContestIdClause;
     logger.Error('[Import] %s', [aReport]);
     SetTextInQuickCommandWindow('ADIF import FAILED -- nothing was imported');
     showwarning(aReport);
@@ -11104,6 +11144,8 @@ begin
   Result := True;
   aReport := '';
   FoundEOH := false;
+  UnmatchedContestIdCount := 0;
+  FirstUnmatchedContestId := '';
   // TR4W's own GetOpenFileNameA wrapper, not VCL's TOpenDialog.  This restores
   // the house pattern that was here before -- it survived in comments at the
   // ProcessMenu call site -- and is the last thing keeping Vcl.Dialogs linked.
@@ -11218,8 +11260,18 @@ begin
           begin
           ClearContestExchange(TempRXData);
           if ParseADIFRecord(sBuffer, TempRXData, recordMyFacts,
-                             recordSentExchange) then // processed a record if true
+                             recordSentExchange, recordUnmatchedContestId) then // processed a record if true
              begin
+             (* AN INVALID CONTEST_ID: counted for the report (issue 119). *)
+             if recordUnmatchedContestId <> '' then
+                begin
+                if UnmatchedContestIdCount = 0 then
+                   begin
+                   FirstUnmatchedContestId := recordUnmatchedContestId;
+                   end;
+                Inc(UnmatchedContestIdCount);
+                end;
+
              // State-QP rover (KG1S/MON): strip suffix for country lookup so
              // the /M tail isn't misread as a GB prefix indicator.  Without
              // this wrapper the post-ParseADIFRecord lookup overwrites the
@@ -11430,7 +11482,8 @@ begin
   RescoreLog;
   DisplayLoadedQSOs;
   aReport := string(IntToStr(QSOCounter)) + ' QSO(s) imported from ' +
-             adifFileName + ' in one transaction.' + SkippedClause;
+             adifFileName + ' in one transaction.' + SkippedClause +
+             UnmatchedContestIdClause;
   (* AND WHAT IT DID WITH OUR STATION -- reported every time a record named
     it or was given the contest's (NY4I, 2026-10-18). *)
   if myFactsNote <> '' then
@@ -11441,7 +11494,7 @@ begin
   (* SKIPPED LINES ARE SAID TO THE OPERATOR TOO. They are not a failure --
     they never were -- but each one is something in the file that is not in
     the log, and the count above does not show it. *)
-  if LinesSkipped > 0 then
+  if (LinesSkipped > 0) or (UnmatchedContestIdCount > 0) then
      begin
      showwarning(aReport);
      end;
