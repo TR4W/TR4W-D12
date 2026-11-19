@@ -60,6 +60,9 @@ type
       hfConnectionLost,          (* after connect: NOT provable *)
       hfResponseTooLarge,        (* an answer began, so the server saw the request *)
       hfCancelled,
+      hfPostRedirected,          (* shared layer (issue 255): a POST was answered with a redirect.
+                                    It is NEVER followed -- the request WAS sent and the server may
+                                    have acted on it -- so this is reported, with the target *)
       hfOther);
 
    (* One request, in. The caller-facing THttpRequest stays as it is and the
@@ -92,6 +95,14 @@ type
       IOMs:            integer;
       MaxResponseBytes: Int64;   (* 0 = unlimited. Applies to the collected Body only. *)
       constructor Create;
+      (* WHETHER A TRANSPORT MAY FOLLOW A REDIRECT FOR THIS REQUEST (issue 255,
+        NY4I). Never for a POST, whatever FollowRedirects says: the transports
+        disagreed about a redirected POST (FPC re-POSTs the body on 301/302/307/
+        308, WinHTTP turns 301/302 into a body-less GET), and either way the
+        first request was already sent. A POST's 3xx is returned as the answer,
+        with its Location, and the shared layer reports it. Both transports ask
+        THIS, so they cannot differ. *)
+      function MayFollowRedirects: boolean;
    end;
 
    (* One answer, out. *)
@@ -107,7 +118,9 @@ type
       ETag:         string;      (* the ETag response header, '' when absent *)
       LastModified: string;      (* the Last-Modified response header, '' when absent *)
       ContentType:  string;      (* the Content-Type response header, '' when absent *)
-      FinalURL:     string;      (* the address that ANSWERED, set only when a redirect
+      Location:     string;      (* the Location response header, '' when absent: where a redirect
+                                    that was NOT followed points (issue 255), as the server wrote it *)
+      FinalURL:     string;     (* the address that ANSWERED, set only when a redirect
                                     was followed (so it differs from the request's URL);
                                     '' when there was none or the transport cannot say.
                                     Informational: nothing decides on it. *)
@@ -230,6 +243,11 @@ begin
    Result := inherited Write(Buffer, Count);
 end;
 
+function THttpWireRequest.MayFollowRedirects: boolean;
+begin
+   Result := FollowRedirects and (not UnicodeSameText(Method, 'POST'));
+end;
+
 constructor THttpWireRequest.Create;
 begin
    inherited Create;
@@ -255,6 +273,7 @@ begin
    ETag         := '';
    LastModified := '';
    ContentType  := '';
+   Location     := '';
    FinalURL     := '';
    Body         := '';
 end;
@@ -289,7 +308,8 @@ begin
          end;
    else
       (* hfNone, hfTlsLibraryFault, hfIOTimedOut, hfConnectionLost,
-        hfResponseTooLarge, hfCancelled, hfOther: a request may have left. *)
+        hfResponseTooLarge, hfCancelled, hfPostRedirected, hfOther: a request
+        may have left (hfPostRedirected: it DID, and was answered). *)
       begin
       Result := False;
       end;

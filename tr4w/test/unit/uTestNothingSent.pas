@@ -284,7 +284,7 @@ var
 begin
    BeginTest('a failure that may have been sent keeps the conservative answer: uncertain for a POST');
    for kind in [hfNone, hfOther, hfConnectionLost, hfIOTimedOut, hfTlsLibraryFault,
-                hfResponseTooLarge, hfCancelled] do
+                hfResponseTooLarge, hfCancelled, hfPostRedirected] do
       begin
       DeliverBoth(kind, club, wrl);
       CheckTrue(club.Outcome = doUncertain, 'Club Log ' + HttpFailureName(kind) + ': uncertain');

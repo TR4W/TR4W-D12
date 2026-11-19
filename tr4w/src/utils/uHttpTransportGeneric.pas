@@ -144,8 +144,8 @@ begin
 
    http := TFPHTTPClient.Create(nil);
    try
-      http.AllowRedirect   := aRequest.FollowRedirects;
-      if aRequest.FollowRedirects then
+      http.AllowRedirect   := aRequest.MayFollowRedirects;
+      if aRequest.MayFollowRedirects then
          begin
          note := TRedirectNote.Create;
          http.OnRedirect := note.Redirected;
@@ -238,6 +238,7 @@ begin
             aResult.ETag         := FromWire(http.GetHeader(http.ResponseHeaders, 'ETag'));
             aResult.LastModified := FromWire(http.GetHeader(http.ResponseHeaders, 'Last-Modified'));
             aResult.ContentType  := FromWire(http.GetHeader(http.ResponseHeaders, 'Content-Type'));
+            aResult.Location := FromWire(http.GetHeader(http.ResponseHeaders, 'Location'));
             if note <> nil then
                begin
                aResult.FinalURL := note.Final;

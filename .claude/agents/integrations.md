@@ -388,9 +388,17 @@ expired self-signed placeholder certificate and could never verify; a saved copy
 `SCORE_POSTING_OLD_DEFAULT_URL` is moved once by `TScoreSettings.MigrateOldDefaultUrl` (called at
 the end of `TR4WSettings.FromJSON`; published flag `PostingUrlDefaultMigrated`, command name
 `SCORE POSTING URL DEFAULT MIGRATED`; the HamScore mechanism of issue 250). Any other saved value is
-kept. **A POST across a redirect differs by transport (measured, `Test_APostAcrossARedirect`): the
-generic transport keeps POST and body on 301/302/307/308; WinHTTP turns 301 and 302 into a body-less
-GET.** `docs/HTTP_TRANSPORT_DESIGN.md` section 12 has the table; redirect policy is unchanged.
+kept. **A POST IS NEVER REDIRECTED (issue 255, NY4I, 2026-11-19).** Measured earlier
+(`Test_APostAcrossARedirect`), the transports disagreed: generic kept POST and body on
+301/302/307/308, WinHTTP turned 301 and 302 into a body-less GET. NY4I: never follow a redirect on a
+POST, report it, ask the user to file a GitHub issue. `THttpWireRequest.MayFollowRedirects` (False for
+POST whatever `FollowRedirects` says) is asked by BOTH transports, so a POST's 3xx comes back as the
+answer with `THttpWireResult.Location`; `THttpRequest.Send` turns it into `Failure = hfPostRedirected`
+(`StatusCode` kept, `NothingSent` False, `FailReason` = `SPostRedirected` naming status and target and the
+issues page) ONLY for a caller that asked to follow (`THttpPost`: score post, HamScore, SCP). Club Log, WRL
+and Cloudlog never asked and still see a 3xx as an ordinary status. The score post shows the text in the
+Get Scores status; HamScore and SCP carry it in their log / `errorResult`. GET redirects and the
+https-to-http refusal are unchanged. `docs/HTTP_TRANSPORT_DESIGN.md` section 12.
 Never point a posting URL at an address that redirects while WinHTTP can be the transport.
 
 ## What the HTTP layer logs, and TLS that cannot start (NY4I, 2026-11-05)

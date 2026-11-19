@@ -58,6 +58,10 @@ unit uHttpTransportWinHttp;
    8  redirects: WINHTTP_OPTION_REDIRECT_POLICY_NEVER when FollowRedirects is
       False; otherwise the DISALLOW_HTTPS_TO_HTTP policy, which is WinHTTP's own
       default and is exactly "a redirect from https to http is never followed".
+      A POST is NEVER followed (issue 255, THttpWireRequest.MayFollowRedirects):
+      WinHTTP turns a 301/302 POST into a body-less GET, so a redirected POST is
+      returned as the 3xx answer, with its Location, and reported by the shared
+      layer.
       A refused downgrade surfaces as ERROR_WINHTTP_REDIRECT_FAILED, which is
       hfOther: the first request WAS sent. The redirect limit is 16, FPC's.
    9  no decompression (the option is never set, and WinHTTP's default is off),
@@ -626,7 +630,7 @@ begin
       end;
 
    (* Contract line 8. *)
-   if aWire.FollowRedirects then
+   if aWire.MayFollowRedirects then
       begin
       policy := WINHTTP_OPTION_REDIRECT_POLICY_DISALLOW_HTTPS_TO_HTTP;
       end
@@ -639,7 +643,7 @@ begin
       FailSetup(aResult, 'could not set the redirect policy');
       Exit;
       end;
-   if aWire.FollowRedirects then
+   if aWire.MayFollowRedirects then
       begin
       if not SetDwordOption(aRequest, WINHTTP_OPTION_MAX_HTTP_AUTOMATIC_REDIRECTS,
                             MAX_REDIRECTS) then
@@ -732,7 +736,7 @@ begin
                                       WINHTTP_ADDREQ_FLAG_ADD or
                                       WINHTTP_ADDREQ_FLAG_REPLACE) then
          begin
-         FailWith(aResult, GetLastError, aWire.FollowRedirects, 'WinHttpAddRequestHeaders');
+         FailWith(aResult, GetLastError, aWire.MayFollowRedirects, 'WinHttpAddRequestHeaders');
          Exit;
          end;
       end;
@@ -748,12 +752,12 @@ begin
 
    if not WinHttpSendRequest(aRequest, nil, 0, bodyPtr, bodyLen, bodyLen, 0) then
       begin
-      FailWith(aResult, GetLastError, aWire.FollowRedirects, 'WinHttpSendRequest');
+      FailWith(aResult, GetLastError, aWire.MayFollowRedirects, 'WinHttpSendRequest');
       Exit;
       end;
    if not WinHttpReceiveResponse(aRequest, nil) then
       begin
-      FailWith(aResult, GetLastError, aWire.FollowRedirects, 'WinHttpReceiveResponse');
+      FailWith(aResult, GetLastError, aWire.MayFollowRedirects, 'WinHttpReceiveResponse');
       Exit;
       end;
 
@@ -765,7 +769,8 @@ begin
    aResult.ETag         := QueryHeaderText(aRequest, WINHTTP_QUERY_CUSTOM, 'ETag');
    aResult.LastModified := QueryHeaderText(aRequest, WINHTTP_QUERY_CUSTOM, 'Last-Modified');
    aResult.ContentType  := QueryHeaderText(aRequest, WINHTTP_QUERY_CUSTOM, 'Content-Type');
-   if aWire.FollowRedirects then
+   aResult.Location     := QueryHeaderText(aRequest, WINHTTP_QUERY_CUSTOM, 'Location');
+   if aWire.MayFollowRedirects then
       begin
       aResult.FinalURL := RedirectedTo(aWire.URL, QueryRequestUrl(aRequest));
       end;
@@ -801,7 +806,7 @@ begin
             if not WinHttpReadData(aRequest, @chunk[0], READ_CHUNK, @got) then
                begin
                err := GetLastError;
-               FailWith(aResult, err, aWire.FollowRedirects, 'WinHttpReadData');
+               FailWith(aResult, err, aWire.MayFollowRedirects, 'WinHttpReadData');
                (* Bytes of the answer were arriving, so the request was sent:
                  whatever the code, nothing here is a "not sent" kind. *)
                if NothingSent(aResult.Failure) then
@@ -881,14 +886,14 @@ begin
             end;
          if session = nil then
             begin
-            FailWith(aResult, GetLastError, aRequest.FollowRedirects, 'WinHttpOpen');
+            FailWith(aResult, GetLastError, aRequest.MayFollowRedirects, 'WinHttpOpen');
             Exit;
             end;
 
          connection := WinHttpConnect(session, PWideChar(host), port, 0);
          if connection = nil then
             begin
-            FailWith(aResult, GetLastError, aRequest.FollowRedirects, 'WinHttpConnect');
+            FailWith(aResult, GetLastError, aRequest.MayFollowRedirects, 'WinHttpConnect');
             Exit;
             end;
 
@@ -903,7 +908,7 @@ begin
                                        nil, flags);
          if request = nil then
             begin
-            FailWith(aResult, GetLastError, aRequest.FollowRedirects, 'WinHttpOpenRequest');
+            FailWith(aResult, GetLastError, aRequest.MayFollowRedirects, 'WinHttpOpenRequest');
             Exit;
             end;
 

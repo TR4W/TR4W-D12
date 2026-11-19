@@ -1014,12 +1014,31 @@ begin
    MaxResponseBytes := 0;
 end;
 
+const
+   (* Where the operator is asked to report it. Not a resourcestring: an address
+     is not translated. *)
+   SPostRedirectedIssueUrl = 'https://github.com/TR4W/TR4W-D12/issues';
+
+function IsPostMethod(const aMethod: string): boolean;
+begin
+   Result := UnicodeSameText(aMethod, 'POST');
+end;
+
+(* The statuses that ask a client to go somewhere else and repeat the request.
+  (A set would be wrong: a Pascal set holds 0..255.) 304 and 300 are not one. *)
+function IsRedirectStatus(aStatus: integer): boolean;
+begin
+   Result := (aStatus = 301) or (aStatus = 302) or (aStatus = 303) or
+             (aStatus = 307) or (aStatus = 308);
+end;
+
 function THttpRequest.Send: boolean;
 var
    wire:    THttpWireRequest;
    res:     THttpWireResult;
    useTLS:  boolean;
    refusalLogged: boolean;
+   ran:     boolean;
 begin
    Result     := False;
    Response   := '';
@@ -1070,14 +1089,36 @@ begin
       wire.BearerToken      := BearerToken;
       wire.Body             := ToWire(Body);
       wire.HasBody          := True;
+      (* ISSUE 255, NY4I: A POST IS NEVER REDIRECTED. The transports refuse to
+        follow one whatever this says (THttpWireRequest.MayFollowRedirects), so a
+        3xx comes back as the answer and is reported below -- but only for a
+        caller that ASKED to follow (THttpPost). A caller that never asked
+        (Club Log, WRL, Cloudlog) keeps seeing a 3xx as an ordinary status. *)
       wire.FollowRedirects  := FollowRedirects;
       wire.AcceptAnyStatus  := True;
       wire.ConnectMs        := ConnectMs;
       wire.IOMs             := IOMs;
       wire.MaxResponseBytes := MaxResponseBytes;
 
-      if RunTransport(wire, nil, res, BearerToken, Password, VerifyServer,
-                      Destination, Failure, FailReason, refusalLogged) then
+      ran := RunTransport(wire, nil, res, BearerToken, Password, VerifyServer,
+                          Destination, Failure, FailReason, refusalLogged);
+      if ran and FollowRedirects and IsPostMethod(Method) and
+         IsRedirectStatus(res.StatusCode) then
+         begin
+         (* The server answered, so the request WAS sent and may have been acted
+           on: not a "nothing sent" failure (a retry could double-post), and no
+           automatic re-send. The text names the target and asks for an issue. *)
+         StatusCode := res.StatusCode;
+         Failure    := hfPostRedirected;
+         FailReason := UnicodeFormat(SPostRedirected,
+                          [res.StatusCode,
+                           ScrubBoth(res.Location, BearerToken, Password),
+                           SPostRedirectedIssueUrl]);
+         logger.Error('[HTTP] POST %s was answered %d with a redirect to %s -- not followed',
+                      [ScrubBoth(URL, BearerToken, Password), res.StatusCode,
+                       ScrubBoth(res.Location, BearerToken, Password)]);
+         end
+      else if ran then
          begin
          (* Post allows EVERY status code (AcceptAnyStatus), so a 400 does not
            fail: Send returns True, StatusCode holds 400 and Response holds the

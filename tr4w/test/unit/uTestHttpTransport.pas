@@ -654,15 +654,13 @@ begin
    end;
 end;
 
-(* ISSUE 253: DOES A POST SURVIVE A REDIRECT? The score post goes through
-  THttpPost, which follows redirects, and the server answers 301 for
-  https://contestonlinescore.com/post (no slash). For each redirect status this
-  POSTs a body to /rNNN, which redirects to /echo, and records what /echo
-  received: the method on the request line and the body bytes.
-
-  WHAT THE FPC CLIENT DOES IS READ FROM ITS SOURCE (fphttpclient.pp,
-  RedirectForcesGET: only 303 forces GET) and pinned here; WHAT WINHTTP DOES
-  IS WHATEVER THIS TEST OBSERVES, pinned per transport so a change is noticed. *)
+(* ISSUES 253 AND 255: A POST IS NEVER FOLLOWED. It was measured (issue 253)
+  that the FPC client re-POSTs the body on 301/302/307/308 and WinHTTP turns
+  301/302 into a body-less GET. NY4I chose (issue 255) to follow neither: a
+  POST is never redirected and the failure is reported. So for each redirect
+  status this POSTs a body to /rNNN (Location /echo) with FollowRedirects ON
+  and pins, for EVERY transport, that the 3xx itself comes back with its
+  Location and the server saw exactly one request: the POST. *)
 procedure THttpTransportTests.Test_APostAcrossARedirect;
 const
    CODES: array[0..4] of integer = (301, 302, 303, 307, 308);
@@ -673,10 +671,9 @@ var
    port:   Word;
    i:      integer;
    sent:   RawByteString;
-   keeps:  boolean;
    gotLine: string;
 begin
-   BeginTest(FTag + 'issue 253: what a POST and its body become across 301, 302, 303, 307 and 308');
+   BeginTest(FTag + 'issue 255: a POST is NEVER followed even with FollowRedirects on: it gets the 3xx and its Location, one request, across 301, 302, 303, 307 and 308');
    sent := ToWire('a=1&b=two');
    port := StartServer;
    t    := NewTransport;
@@ -690,42 +687,24 @@ begin
             req.ContentType     := 'application/x-www-form-urlencoded';
             req.Body            := sent;
             req.HasBody         := True;
-            req.FollowRedirects := True;
+            (* ISSUE 255 (NY4I chose "never follow a redirect on a POST"): the
+              shared layer gives a POST FollowRedirects = False, and this pins
+              what BOTH transports then do with it -- hand back the 3xx itself,
+              with its Location, having sent exactly ONE request. The old
+              expectations (FPC re-POSTs on 301/302/307/308; WinHTTP turns
+              301/302 into a body-less GET) are exactly the disagreement that
+              decision removes, so they are gone, not kept. *)
+            req.FollowRedirects := True;   (* asked for, and REFUSED for a POST *)
             t.Execute(req, nil, res);
             CheckTrue(res.Failure = hfNone, IntToStr(CODES[i]) + ' answered: ' + res.Detail);
-            CheckEquals(200, res.StatusCode, IntToStr(CODES[i]) + ': the redirect was followed to /echo');
-            CheckEquals(Url(port, '/echo'), res.FinalURL, IntToStr(CODES[i]) + ': final address');
+            CheckEquals(CODES[i], res.StatusCode, IntToStr(CODES[i]) + ': the redirect itself is the answer');
+            CheckEquals('/echo', res.Location, IntToStr(CODES[i]) + ': the target the server named');
+            CheckEquals('', res.FinalURL, IntToStr(CODES[i]) + ': nothing was followed');
+            CheckEquals(1, FHits, IntToStr(CODES[i]) + ': one request reached the server');
             gotLine := Copy(FHeaders, 1, Pos(' http/', FHeaders) - 1);
-            CheckEquals('/echo', FPath, IntToStr(CODES[i]) + ': the last request was /echo');
-            (* The expectation per transport and status. *)
-            (* Only 303 becomes a GET in the FPC client. (A set of 301..308
-              would be wrong: a Pascal set holds 0..255.) *)
-            keeps := CODES[i] <> 303;
-            if FUseWinHttp then
-               begin
-               (* WinHTTP, as MEASURED by this test on the first run. *)
-               keeps := (CODES[i] = 307) or (CODES[i] = 308);
-               end;
-            if keeps then
-               begin
-               CheckEquals('post /echo', gotLine, IntToStr(CODES[i]) + ': still a POST');
-               CheckTrue(FBody = sent, IntToStr(CODES[i]) + ': the body arrived at /echo');
-               end
-            else
-               begin
-               CheckEquals('get /echo', gotLine, IntToStr(CODES[i]) + ': turned into a GET');
-               if FUseWinHttp then
-                  begin
-                  CheckEquals('', string(FBody), IntToStr(CODES[i]) + ': and the body was dropped');
-                  end
-               else
-                  begin
-                  (* MEASURED: the FPC client keeps RequestBody and sends it
-                    with the GET (a GET carrying the form body). Only 303
-                    reaches this arm for the generic transport. *)
-                  CheckTrue(FBody = sent, IntToStr(CODES[i]) + ': FPC still sends the body, on the GET');
-                  end;
-               end;
+            CheckEquals('post /r' + IntToStr(CODES[i]), gotLine, IntToStr(CODES[i]) + ': the one request was the POST');
+            CheckTrue(FBody = sent, IntToStr(CODES[i]) + ': with its body');
+            FHits := 0;
          finally
             res.Free;
             req.Free;
@@ -743,16 +722,34 @@ procedure THttpTransportTests.Test_ThePostVerbCarriesItsBodyAcrossA301;
 var
    post: THttpPost;
 begin
-   BeginTest('issue 253: THttpPost follows a 301 and the body arrives at the redirected URL (active transport)');
+   BeginTest('issue 255: THttpPost does NOT follow a 301: it fails as hfPostRedirected, names the target and asks for an issue (active transport)');
    post := THttpPost.Create(Url(StartServer, '/r301'));
    try
       post.AllowInsecure := True;
       post.Body          := 'a=1&b=two';
-      CheckTrue(post.Send, 'sent: ' + post.FailReason);
-      CheckEquals(200, post.StatusCode, 'followed');
-      CheckEquals('/echo', FPath, 'the redirected URL answered');
-      CheckEquals('post /echo', Copy(FHeaders, 1, Pos(' http/', FHeaders) - 1), 'still a POST');
-      CheckEquals('a=1&b=two', string(FBody), 'with its body');
+      CheckFalse(post.Send, 'a redirected POST is a failure');
+      CheckTrue(post.Failure = hfPostRedirected, 'its own kind: ' + HttpFailureName(post.Failure));
+      CheckFalse(post.NothingSent, 'the request was sent, so it is not a retry-safe failure');
+      CheckEquals(301, post.StatusCode, 'the status is kept');
+      CheckEquals(1, FHits, 'nothing was re-sent anywhere');
+      CheckEquals('/r301', FPath, 'only the original address was contacted');
+      CheckTrue(Pos('/echo', post.FailReason) > 0, 'the message names the redirect target: ' + post.FailReason);
+      CheckTrue(Pos('301', post.FailReason) > 0, 'and the status');
+      CheckTrue(Pos('https://github.com/TR4W/TR4W-D12/issues', post.FailReason) > 0, 'and where to file the issue');
+      post.Free;
+      post := nil;
+
+      (* A POST caller that never asked to follow (Club Log, WRL, Cloudlog) is
+        unchanged: the 3xx is an ordinary status for its own classification. *)
+      FHits := 0;
+      post := THttpPost.Create(Url(FServer.Bindings[0].Port, '/r302'));
+      post.AllowInsecure   := True;
+      post.FollowRedirects := False;
+      post.Body            := 'a=1';
+      CheckTrue(post.Send, 'not asked to follow: the 302 is an answer: ' + post.FailReason);
+      CheckTrue(post.Failure = hfNone, 'no failure kind');
+      CheckEquals(302, post.StatusCode, 'the status');
+      CheckEquals(1, FHits, 'one request');
    finally
       post.Free;
       StopServer;
@@ -1318,6 +1315,8 @@ begin
       finally
          post.Free;
       end;
+      (* Unchanged by issue 255: the caller's choice still reaches the wire. It is
+        the TRANSPORT that refuses to follow a POST (MayFollowRedirects). *)
       CheckTrue(fake.Last.FollowRedirects, 'redirects followed');
       CheckTrue(fake.Last.MaxResponseBytes = 0, 'unlimited');
       CheckEquals('a=b', string(fake.Last.Body), 'form body');

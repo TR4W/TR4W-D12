@@ -43,7 +43,8 @@ uses
   Classes,
   SysUtils,
   uHTTPDownload,
-  uCTYDAT,              // Issue #930 -- ctyGetCountryID / ctyGetCQZone / ctyGetITUZone (native Pascal, no cty.dll)
+  uHttpTransport,       // hfPostRedirected (issue 255)
+  uCTYDAT,             // Issue #930 -- ctyGetCountryID / ctyGetCQZone / ctyGetITUZone (native Pascal, no cty.dll)
   Tree
   ,
   uScoreBreakdown,      // TBreakdownTotals -- GatherBreakdownTotals fills one
@@ -193,7 +194,17 @@ begin
       else
          begin
          logger.Warn('Score post: server returned %d for %s', [post.StatusCode, sURL]);
-         ShowGetScoresStatus(TC_FAILEDTOCONNECTTOGETSCORESORG);
+         if post.Failure = hfPostRedirected then
+            begin
+            (* Issue 255: the post is never re-sent to a redirect target. The
+              operator is told which address the server named and where to
+              report it, in the score window rather than a dialog. *)
+            ShowGetScoresStatus(post.FailReason);
+            end
+         else
+            begin
+            ShowGetScoresStatus(TC_FAILEDTOCONNECTTOGETSCORESORG);
+            end;
          end;
 
    except

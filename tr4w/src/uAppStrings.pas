@@ -225,6 +225,15 @@ resourcestring
       'proceed without checking.';
    SDownloadRenameFailed  = 'the file downloaded but could not be saved under its final name.';
 
+   (* A POST that is answered with a redirect is NEVER followed (issue 255): the
+     program does not know whether the server acted on it, and re-sending could
+     post twice. It is unusual, and the project wants to hear about it. %d is
+     the status, the first %s the address the server named, the second where
+     to report it. *)
+   SPostRedirected =
+      'the server answered the upload with a redirect (status %d) to %s. ' +
+      'TR4W does not follow a redirect on an upload, and the upload was not repeated. ' +
+      'This is unexpected: please file an issue at %s and include this message.';
    { The operator notice for a missing CA bundle (issue 221). A background
      upload cannot show a dialog of its own, so the delivery worker hands this
      text to its owner, which shows it once. %0:s is the list of places looked,

@@ -181,6 +181,7 @@ begin
       hfNone,
       hfAuthPolicy,
       hfResponseTooLarge,
+      hfPostRedirected,
       hfOther:
          begin
          (* No sentence of our own: the transport's words ARE the answer. *)
