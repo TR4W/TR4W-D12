@@ -927,6 +927,25 @@ resourcestring
      (issue 116, 2026-11-18), where the row read 'Prefixes'. *)
    STotalsProvinceMults = 'Provinces';
 
+   (* THE TOTALS GRID'S MULTIPLIER ROW WHEN THE PREFIX SHEET HOLDS CLUB
+     STATIONS -- the Vermont QSO Party's approved club stations (issue 270,
+     2026-11-19), keyed on the club's call, where the row read 'Prefixes'. *)
+   STotalsClubStationMults = 'Clubs';
+
+   (* THE VERMONT QSO PARTY'S CLUB-STATION FILE IS NOT THIS YEAR'S -- issue
+     270 (NY4I, 2026-11-19: "inform the user we found a file but it appears
+     to be for last year's contest and they should renew one at the contest
+     URL"). Shown when the contest is opened. %0:s the file, %1:d the year its
+     header states, %2:s the sponsor's page. *)
+   SVermontClubFileStale = '%0:s is the Vermont QSO Party club-station list for %1:d: ' +
+      'it appears to be last year''s. Club stations will not count until you ' +
+      'get a current list from %2:s';
+
+   (* ...AND ITS HEADER STATES NO YEAR, so no QSO can be matched to it. %0:s
+     the file, %1:s the sponsor's page. *)
+   SVermontClubFileNoYear = '%0:s states no contest year (a line YEAR 2027), so its ' +
+      'Vermont QSO Party club stations will not count. Get a current list from %1:s';
+
    (* THE TOTALS GRID'S ZONE ROW AND THE LOG'S ZONE COLUMN WHEN THE "ZONE" IS
      THE YEAR OF FIRST LICENSE -- the European HF Championship and KVP
      (2026-11-11), whose year is kept in the zone slot. The row read 'Zones'

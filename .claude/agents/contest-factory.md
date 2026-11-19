@@ -433,7 +433,21 @@ the target shape, the M-step migration order and the open questions.
   corpus's `arrl_ss_ssb_2024_w4ta` QSO 206 (N0TST, 160 m CW) became an
   X-QSO with it. **A mode rule is
   `UsesMode`, never a 0-point arm in `CalculateQSOPoints` or
-  `CountsAsMultiplier`** -- those never see an off-mode QSO. `uTestAutomaticXQSO` pins it all;
+  `CountsAsMultiplier`** -- those never see an off-mode QSO. **A CLASS STATES
+  THE DIGITAL SUBMODES IT ALLOWS, not the ones it refuses** (NY4I, issue
+  122, 2026-11-19: "the contest class should indicate the allowed modes"):
+  its `UsesMode` Digital arm calls `uContestBase.DigitalSubmodeAllowed(ext,
+  allowed)` (`TExtendedModeSet`, `RTTY_SUBMODES`), which also passes the
+  "some submode" values -- eNoMode and the three generic data modes
+  (eData, eData_R from CAT's DATA-R, eData_FM), so a submode appended later
+  (JTTY was) is refused until a contest names it. Louisiana (RTTY, JTTY,
+  PSK31) and Iowa (RTTY, PSK31/63, JS8, JTTY) use it; the deny-list parties
+  (Missouri, Illinois, Nebraska, Wisconsin, Mississippi, Vermont) were NOT
+  migrated -- they credit JTTY and JS8 today, so an allow-list is a rule
+  change for their sponsors to settle. JTTY is approved only where a
+  sponsor's rule allows free-form digital (NY4I: Iowa and Winter Field Day;
+  WFD's rules are not in `docs/ContestRules` and its class states no modes).
+  `uTestAutomaticXQSO` pins it all;
   `tools/contest-factory-q98/classify_matrix.py` classifies a stage's
   matrix movement against its prediction.
 - **Multipliers and dupes: the sheet keeps the state, the class declares
@@ -1251,8 +1265,18 @@ the target shape, the M-step migration order and the open questions.
   the session-long window, before `LoadValues`, from `ContestIdentity(Contest)`;
   the row stays closed. Louisiana is the first, `WIRES TB-WIRES POTA`;
   `OVERLAY_SPONSORS` in `uTestContestUI.Test_OnlyNamedContestsAddCabrilloOverlays`
-  is the exact set. The chosen overlay is stored in the GLOBAL header section,
-  not per contest). **uNewContest names no contest**: `ClasslessPrompts`
+  is the exact set. ~~The chosen overlay is stored in the GLOBAL header
+  section~~ -- since 2026-11-19 (NY4I: Cabrillo header fields are "a contest
+  item seeded by the station default") it is the contest-scoped
+  `Settings.Contest.CategoryOverlay` (CATEGORY-OVERLAY), read by
+  `uCbrSum.CabrilloTagText` and committed by the summary window through
+  `ApplyContestEdit` + `LogStoreRecordContestStatement`, as the five
+  categories are (Q61); `uCbrSum.OverlayChoiceToCommit` is the decision);
+  `ContestOpenNotice(aCurrentYear)` (issue 270, base `''`: what the operator
+  is told when the contest opens -- asked once by
+  `LOGDUPE.ShowContestOpenNotice` at the end of `SheetInitAndLoad`, shown
+  as a notice and logged; the year is the engine's clock, display only; the
+  Vermont QSO Party's stale club-station file is the first). **uNewContest names no contest**: `ClasslessPrompts`
   was deleted with RSGB 1.8's and UA4W's classes (2026-10-14). `uTestContestDisplay`
   pins every seam and compares every contest's prompts with a table
   generated from the dialog's own arms.
@@ -1360,6 +1384,16 @@ the target shape, the M-step migration order and the open questions.
   (`UsesBand` cannot see the mode). (4) ONE QSO CARRIES ONE DOMESTIC KEY --
   "a county also earns its state" (DXLog's MULT1 + MULT2) cannot be built
   without a new seam; do not fake it with bonus points or the prefix kind.
+  (#317 built that seam since, and it carries ONE extra key a QSO.) (5) THE
+  CLUB-STATION MULTIPLIER (issue 270, 2026-11-19) is on the PREFIX sheet,
+  keyed on the club call (CW Open's whole-call key), because #317's one key
+  is already the county's VT and an in-state first club QSO earns three.
+  The list is the OPERATOR'S FILE `vtqp_club_stations.txt`
+  (`uAppPaths.PreferredDataFilePath`; `YEAR 2027` header, one call a line,
+  `ParseVermontClubStations`), credited only to a QSO made in the file's
+  year; a stale or yearless file is `ContestOpenNotice`'s. Read lazily on
+  the object, main thread only; `UseClubStationLines` is the seam a test
+  hands lines to.
 - **NEW HAMPSHIRE (2026-11-10, #112)**: a multiplier scope that differs by
   entrant goes in `DescribeSession`, stating `MultByBand` BOTH ways (Arizona's
   pattern), and the real-engine test must apply that answer per half (guide

@@ -144,6 +144,26 @@ function CategoryValuesFor(const aTag: CabrilloTags): TArray<string>;
 function OverlayValuesWith(const aBase: array of string;
                            const aSponsor: TArray<string>): TArray<string>;
 
+(* WHAT THE OVERLAY ROW COMMITS -- issue 122 (NY4I, 2026-11-19: "all Cabrillo
+  fields are taken from the global record but when the contest is set, they
+  are saved with the contest ... a contest item seeded by the station
+  default"). The overlay is Settings.Contest.CategoryOverlay, a
+  contest-scoped setting like the five categories (Q61): the station's value
+  is its default and a choice made in the summary window is this contest's
+  statement, recorded in its log. Until then it was a copy in the global
+  header store, so a POTA chosen in a Louisiana log showed in every contest.
+
+  aSelected is whether the row has an item selected; aChosen its text;
+  aCurrent the setting now. TRUE WITH aValue when the setting should become
+  aValue: an item is selected and it differs from aCurrent (blanks trimmed
+  -- the blank "no overlay" item is a choice). Nothing selected changes
+  nothing, as for the categories (a closed list holding a value it does not
+  offer is left alone). *)
+function OverlayChoiceToCommit(aSelected: boolean;
+                               const aChosen: string;
+                               const aCurrent: string;
+                               out aValue: string): boolean;
+
 (* IS THIS ONE OF THE NINE CATEGORY-* TAGS? Their header line is written even
   when the value is blank; every other tag's is left out when blank. *)
 function CabrilloTagIsCategory(const aTag: CabrilloTags): boolean;
@@ -180,7 +200,10 @@ const
     // seeded with the official five, accepting anything typed (NY4I,
     // 2026-09-01).  It was a plain edit, which offered the operator nothing.
     (ctrTag: '_CATEGORY-TRANSMITTER';   ctrCFG:False; ctrSave: True; ctrList: True;  ctrOpen: True),
-    (ctrTag: '_CATEGORY-OVERLAY';       ctrCFG:True;  ctrSave: True; ctrList:  True; ctrOpen: False),  // Issue #976: persist + restore selection
+    // NOT SAVED HERE EITHER since issue 122 (2026-11-19): the overlay is the
+    // contest-scoped Settings.Contest.CategoryOverlay, as the five above. A
+    // '_CATEGORY-OVERLAY' left in settings\tr4w.json is inert.
+    (ctrTag: '_CATEGORY-OVERLAY';       ctrCFG:True;  ctrSave: False; ctrList:  True; ctrOpen: False),
     (ctrTag: '_CERTIFICATE';            ctrCFG:True;  ctrSave: True; ctrList: False; ctrOpen: False),
     (ctrTag: '_OPERATORS';              ctrCFG:True;  ctrSave: False; ctrList: False; ctrOpen: False), // derived from the log, not stored
     (ctrTag: '_CLUB';                   ctrCFG:False; ctrSave: True;  ctrList: False; ctrOpen: False),
@@ -315,6 +338,15 @@ begin
    Result[High(Result)] := '';
 end;
 
+function OverlayChoiceToCommit(aSelected: boolean;
+                               const aChosen: string;
+                               const aCurrent: string;
+                               out aValue: string): boolean;
+begin
+   aValue := Trim(aChosen);
+   Result := aSelected and (aValue <> Trim(aCurrent));
+end;
+
 function CabrilloTagIsCategory(const aTag: CabrilloTags): boolean;
 begin
    Result := aTag in [ctCategoryAssisted..ctCategoryOverlay];
@@ -435,6 +467,13 @@ begin
       ctCategoryPower:
          begin
          Result := tCategoryPowerSA[Settings.Contest.CategoryPower];
+         Exit;
+         end;
+      (* AND THE OVERLAY -- issue 122: a contest item seeded by the station
+        default; see OverlayChoiceToCommit. *)
+      ctCategoryOverlay:
+         begin
+         Result := Trim(Settings.Contest.CategoryOverlay);
          Exit;
          end;
    end;

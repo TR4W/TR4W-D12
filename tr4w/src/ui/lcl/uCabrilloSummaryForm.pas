@@ -100,6 +100,7 @@ type
                                aCurrent: integer);
       procedure CommitCategories;
       procedure CommitCategoryPower;
+      procedure CommitOverlay;
    public
       { AnsiString, NOT string.  Every LCL caption and edit is a
         TTranslateString, which is an AnsiString; declaring these as the
@@ -378,6 +379,17 @@ begin
                TComboBox(FRow[tag]).ItemIndex := idx;
                end;
             end
+         else if tag = ctCategoryOverlay then
+            begin
+            (* THE CONTEST'S OVERLAY -- issue 122: the setting (this contest's
+              statement, else the station default), selected by TEXT after
+              FillOverlayItems put the contest's own values in the list. A
+              value the list does not offer is left unselected; '' selects
+              the blank "no overlay" item. *)
+            TComboBox(FRow[tag]).ItemIndex :=
+               TComboBox(FRow[tag]).Items.IndexOf(
+                  AnsiString(Trim(Settings.Contest.CategoryOverlay)));
+            end
          else if CabrilloTagsArray[tag].ctrSave then
             begin
             { Issue #976: restore the saved value into a ctrSave drop-down
@@ -585,7 +597,29 @@ begin
                   Ord(Settings.Contest.CategoryMode));
    CommitCategory(ctCategoryOperator, 'CATEGORY-OPERATOR', tCategoryOperatorSA,
                   Ord(Settings.Contest.CategoryOperator));
+   CommitOverlay;
    CommitCategoryPower;
+end;
+
+(* THE OVERLAY ROW WRITES THIS CONTEST'S SETTING -- issue 122 (NY4I,
+  2026-11-19: Cabrillo header fields are "a contest item seeded by the
+  station default"). The same route as the categories (ApplyContestEdit,
+  then the log at once); the decision is uCbrSum.OverlayChoiceToCommit. *)
+procedure TfrmCabrilloSummary.CommitOverlay;
+var
+   value: string;
+begin
+   if not OverlayChoiceToCommit(TagItemIndex(ctCategoryOverlay) >= 0,
+                                string(TagText(ctCategoryOverlay)),
+                                Settings.Contest.CategoryOverlay,
+                                value) then
+      begin
+      Exit;
+      end;
+   if ApplyContestEdit('CATEGORY-OVERLAY', value) then
+      begin
+      LogStoreRecordContestStatement('CATEGORY-OVERLAY');
+      end;
 end;
 
 function TfrmCabrilloSummary.TagText(const aTag: CabrilloTags): AnsiString;

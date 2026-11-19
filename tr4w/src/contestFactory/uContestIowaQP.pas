@@ -33,14 +33,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   stay refused: "That only mode that could be accepted is JTTY ... we need
   to add that as a new sub-mode." JTTY is WSJT-X 3.3's keyboard mode
   (eJTTY), which carries free text, so the full exchange can be sent.
-  Built as the coordinator read it: JTTY is the ONLY digital submode Iowa
-  accepts; every other stated submode (FT8, FT4, JT65, FST4, FST4W, RTTY,
-  PSK, JS8, MFSK ...) is off-mode -- an automatic X-QSO. eNoMode and eData
-  stay accepted because they mean "some submode", so an old or untyped
-  record is never proven off-mode (Q98 S1; Vermont's precedent).
-  The narrower reading ("of the WSJT-X modes", keeping the rule's "other
-  digital modes" -- RTTY, PSK, JS8) is NY4I's to confirm; it is the old
-  deny-list in UsesMode.
+  NY4I, issue 120, 2026-11-19, correcting that reading: "the only WSJTX
+  mode that would be accepted is JTTY", and "JS8CALL is allowed too since it
+  supports a free-form exchange"; the rules' "other digital modes" stand.
+  So the class states its ALLOWED digital submodes (issue 122's ruling,
+  uContestBase.DigitalSubmodeAllowed): RTTY (and reversed RTTY), PSK31,
+  PSK63 (and reversed PSK), JS8 and JTTY. FT8, FT4, JT65, FST4, FST4W,
+  MFSK and any submode added later are off-mode -- an automatic X-QSO.
+  eNoMode and the generic data modes (eData, eData_R, eData_FM) stay
+  accepted because they mean "some submode", so an old or untyped record --
+  or a radio in DATA-R -- is never proven off-mode (Q98 S1).
   "Phone (includes digital phone)": a C4FM or D-STAR QSO is logged as phone
   to score and dupe as phone; a record logged as Digital is digital, since
   the dupe slot (DupeModeOf) sees only the mode, not the submode.
@@ -277,9 +279,10 @@ begin
          end;
       Digital:
          begin
-         (* JTTY only (NY4I, 2026-11-18 -- the header); eNoMode and eData
-           are "some submode", never proven off-mode. *)
-         Result := aExtMode in [eJTTY, eNoMode, eData];
+         (* The free-form modes that can pass the full exchange (NY4I,
+            2026-11-19 -- the header). *)
+         Result := DigitalSubmodeAllowed(aExtMode,
+                      RTTY_SUBMODES + [ePSK31, ePSK63, ePSK_R, eJS8, eJTTY]);
          end;
       else
          begin

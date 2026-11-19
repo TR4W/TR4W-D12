@@ -72,12 +72,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     The same list as DXLog's.
 
   MODES -- phone, CW and digital; 3.3: "Digital -- includes RTTY and any
-    digital mode that supports the required exchange". UsesMode credits CW,
-    phone, FM and every digital submode but the WSJT-X structured-message
-    modes, which cannot send the exchange (FT8, FT4, JT65, FST4, FST4W --
-    Missouri's set, issue 260); such a QSO is logged and is an automatic
-    X-QSO (Q98). Whether that is the right list was asked on issue 122
-    (2026-11-18, question 5) and is not yet answered. 9.2: "NO repeater contacts": a repeater QSO cannot be told
+    digital mode that supports the required exchange". NY4I, issue 122,
+    2026-11-19: the class states the ALLOWED modes, and "for th eLA QSO
+    PArty ... that would be CW, Phone (including FM, AM, SSB[USB,LSB]),
+    RTTY, JTTY, PSK31" -- the free-form exchange modes. UsesMode credits CW,
+    phone, FM and the digital submodes RTTY (and reversed RTTY), JTTY and
+    PSK31; any other digital submode (FT8, FT4, JT65, FST4, FST4W, JS8,
+    MFSK, PSK63, reversed PSK) is logged and is an automatic X-QSO (Q98).
+    9.2: "NO repeater contacts": a repeater QSO cannot be told
     from a simplex one in the log; not enforced.
 
   DUPES -- 9.4: "All fixed stations may be worked once on CW/Digital and
@@ -126,9 +128,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       multiplier -- CountsAsMultiplier with DomesticMultiplierIsHostState
       (North Dakota's form; DXLog's MULT2 excludes K-for-LA the same way).
       The QSO still scores.
-    DECISION -- DC IS MARYLAND (NY4I's default, issue 122): the rules count
-      "States", and DC is none; DXLog refuses DC outright, which would refuse
-      the QSO. `Dc > Md = DC` keeps it loggable.
+    DC IS MARYLAND -- NY4I, issue 122, 2026-11-19: "this contest considers
+      DC as MD so we should use the appropriate DOM file without DC". The
+      in-state file includes s50.dom, which has no DC entry, and maps DC to
+      Md ahead of it (`Dc > Md = DC`), so DC is no multiplier of its own and
+      a DC station is logged as Maryland; dc.dom is not included. DXLog
+      refuses DC outright, which would refuse the QSO.
     9.1 -- "Multipliers: CW/Digital and Phone contacts count as separate
       multipliers": CW AND DIGITAL ARE ONE MULTIPLIER MODE. MultiplierModeOf
       files Digital under CW (the seam built for this contest,
@@ -458,11 +463,18 @@ begin
                        Band6, Band2];
 end;
 
-(* PHONE, CW AND DIGITAL THAT CAN SEND THE EXCHANGE -- 3.3 "any digital mode
-   that supports the required exchange". The submode is tested only to
-   EXCLUDE the WSJT-X structured-message modes (Missouri's set, issue 260);
-   eNoMode and eData mean "some submode", so an old record is never proven
-   off-mode. An identity fact: no station is asked. *)
+(* THE MODES THIS CONTEST ALLOWS -- NY4I, issue 122, 2026-11-19: "the
+   contest class should indicate the allowed modes. Then if the modes is not
+   valid for that contest, it is an X-QSO. So for the LA QSO Party, that
+   would be CW, Phone (including FM, AM, SSB[USB,LSB]), RTTY, JTTY, PSK31."
+   RTTY, JTTY and PSK31 are the free-form ("conversational") digital modes
+   that can send the exchange (3.3). Every other digital submode -- FT8,
+   FT4, JT65, FST4, FST4W, JS8, MFSK, PSK63 -- is an automatic X-QSO
+   (uContestBase.DigitalSubmodeAllowed, which also keeps eNoMode and the
+   generic data modes eData, eData_R and eData_FM, "some submode",
+   credited). CW, phone and FM are credited whole, as
+   before: phone's submodes are not tested. An identity fact: no station is
+   asked. *)
 function TContestLouisianaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
@@ -472,7 +484,7 @@ begin
          end;
       Digital:
          begin
-         Result := not (aExtMode in [eFT8, eFT4, eJT65, eFST4, eFST4W]);
+         Result := DigitalSubmodeAllowed(aExtMode, RTTY_SUBMODES + [eJTTY, ePSK31]);
          end;
       else
          begin

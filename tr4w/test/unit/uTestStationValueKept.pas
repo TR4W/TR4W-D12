@@ -453,8 +453,12 @@ procedure TStationValueKeptTests.Test_AContestParameterEditLeavesTheFileAlone;
 var
    fn, choice: string;
    before: RawByteString;
+   savedOverlay: string;
+   overlayWasStated: boolean;
 begin
    BeginTest('a contest-parameter edit changes the contest and leaves tr4w.json alone');
+   savedOverlay := Settings.Contest.CategoryOverlay;
+   overlayWasStated := Settings.CommandIsStated('CATEGORY-OVERLAY');
    if not Redirect then
       begin
       Exit;
@@ -476,6 +480,15 @@ begin
       CheckTrue(Settings.CommandIsStated('CATEGORY-OPERATOR'), 'as the operator''s statement');
       CheckTrue(before = FileBytes(fn), 'nothing was written to tr4w.json');
 
+      (* THE OVERLAY ROW, THE SAME DOOR (issue 122): a sponsor's value, then
+         the blank "no overlay" choice, each the contest's. *)
+      CheckTrue(ApplyContestEdit('CATEGORY-OVERLAY', 'POTA'), 'the overlay edit is taken');
+      CheckEquals('POTA', Settings.Contest.CategoryOverlay, 'the contest''s overlay changed');
+      CheckTrue(Settings.CommandIsStated('CATEGORY-OVERLAY'), 'as the operator''s statement');
+      CheckTrue(ApplyContestEdit('CATEGORY-OVERLAY', ''), 'the blank choice is taken too');
+      CheckEquals('', Settings.Contest.CategoryOverlay, 'and clears it');
+      CheckTrue(before = FileBytes(fn), 'nothing was written to tr4w.json');
+
       (* And a station-scoped value through the same door is the contest's. *)
       CheckTrue(ApplyContestEdit('MY CALL', 'NE4C'), 'MY CALL for this contest');
       CheckEquals('NE4C', Settings.My.Call, 'in force');
@@ -485,6 +498,8 @@ begin
       SaveSettings(fn, Settings);
       CheckTrue(before = FileBytes(fn), 'a later save writes the station''s values unchanged');
    finally
+      Settings.Contest.CategoryOverlay := savedOverlay;
+      Settings.SetCommandStated('CATEGORY-OVERLAY', overlayWasStated);
       Restore;
    end;
 end;

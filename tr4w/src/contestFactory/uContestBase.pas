@@ -3812,6 +3812,17 @@ type
          translation reaches the screen. *)
       function CallEntryFrequencyWarning(aFreqKHz: integer): string; virtual;
 
+      (* WHAT THE OPERATOR SHOULD BE TOLD WHEN THE CONTEST IS OPENED, or ''
+         for nothing -- issue 270 (NY4I, 2026-11-19: a stale operator-supplied
+         file must not be silent; "inform the user we found a file but it
+         appears to be for last year's contest"). Asked ONCE, by
+         LOGDUPE.SheetInitAndLoad after the log's side files are read, of
+         the active contest (it holds the station); the engine shows the
+         answer as a notice and logs it. aCurrentYear is the calendar year
+         now, from the engine: a class reads no clock, and this answer is
+         display only -- no rule is decided by it. THE BASE SAYS NOTHING. *)
+      function ContestOpenNotice(aCurrentYear: integer): string; virtual;
+
       (* Hands the contest the station it is operating as.
 
          PUSHED IN, NOT READ. An earlier version had the base reach into LOGWIND
@@ -4222,6 +4233,43 @@ function DomesticMultiplierIsDX(const aMultiplier: string): boolean;
    state matches nothing. *)
 function DomesticMultiplierIsHostState(const aMultiplier: string;
                                        const aHostState: string): boolean;
+
+type
+   (* A SET OF SUBMODES -- what a contest's DigitalSubmodeAllowed list is. *)
+   TExtendedModeSet = set of ExtendedModeType;
+
+const
+   (* RTTY, normal or reversed: one mode to every sponsor that names RTTY. *)
+   RTTY_SUBMODES: TExtendedModeSet = [eRTTY, eRTTY_R];
+
+(* IS THIS DIGITAL SUBMODE ONE THE CONTEST ALLOWS? -- issue 122 (NY4I,
+   2026-11-19: "Rather than a list of excluded modes, the contest class should
+   indicate the allowed modes. Then if the modes is not valid for that
+   contest, it is an X-QSO ... It seems this could be generalized.").
+
+   A contest's UsesMode calls this for its Digital arm with the submodes its
+   sponsor allows; everything else is refused, so a submode added to
+   ExtendedModeType later (JTTY was) is NOT credited until a contest names
+   it. eNoMode and eData are ALWAYS allowed: they mean "some submode" (the
+   UsesMode contract), so an old or untyped record is never proven off-mode.
+
+   AND SO ARE eData_R AND eData_FM: radio data modes (DATA-R from CAT,
+   rmDATARev; DATA-FM from ADIF) whose real submode was never recorded --
+   uADIF.IsGenericDataMode's three. A live RTTY QSO on a radio in DATA-R
+   arrives as eData_R, and refusing it would make an X-QSO of a QSO the
+   operator made in an allowed mode.
+
+   A deny-list contest (Missouri, Illinois, Nebraska, Wisconsin,
+   Mississippi, Vermont) is NOT migrated by this: their lists credit every
+   submode they do not name, JTTY and JS8 included, and an allow-list would
+   change that. Each moves on its own sponsor's word. *)
+function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
+                               const aAllowed: TExtendedModeSet): boolean;
+
+(* THE NOTICE aContest GIVES WHEN IT IS OPENED -- see
+   TContestBase.ContestOpenNotice (issue 270). nil (no contest) says
+   nothing. *)
+function ContestOpenNoticeOf(aContest: TContestBase; aCurrentYear: integer): string;
 
 (* THE PREFIX MULTIPLIER KEY aQso EARNS IN aContest -- see
    TContestBase.PrefixMultiplierKey. nil answers False, leaving the prefix as
@@ -5271,6 +5319,25 @@ function DomesticMultiplierIsHostState(const aMultiplier: string;
 begin
    Result := (Trim(aHostState) <> '') and
              UnicodeSameText(Trim(aMultiplier), Trim(aHostState));
+end;
+
+function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
+                               const aAllowed: TExtendedModeSet): boolean;
+begin
+   Result := (aExtMode in [eNoMode, eData, eData_R, eData_FM]) or
+             (aExtMode in aAllowed);
+end;
+
+function ContestOpenNoticeOf(aContest: TContestBase; aCurrentYear: integer): string;
+begin
+   if aContest = nil then
+      begin
+      Result := '';
+      end
+   else
+      begin
+      Result := aContest.ContestOpenNotice(aCurrentYear);
+      end;
 end;
 
 function ContestPrefixMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
@@ -8224,6 +8291,11 @@ begin
 end;
 
 function TContestBase.CallEntryFrequencyWarning(aFreqKHz: integer): string;
+begin
+   Result := '';
+end;
+
+function TContestBase.ContestOpenNotice(aCurrentYear: integer): string;
 begin
    Result := '';
 end;
