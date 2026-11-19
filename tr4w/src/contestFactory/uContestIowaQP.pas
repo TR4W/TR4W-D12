@@ -28,9 +28,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   70 cm, but only suggests frequencies).
   Phone 1 point ("Phone (includes digital phone)"), CW 2, digital 2.
   Digital: "FT modes are allowed as long as the FULL Iowa QSO Party exchange
-  is completed by BOTH parties ... WSJT-x (FT8 and FT4) will NOT work",
-  so the WSJT-X submodes (FT8, FT4, JT65, FST4, FST4W) are off-mode -- an
-  automatic X-QSO -- as Missouri's are. JS8 and the rest count.
+  is completed by BOTH parties ... WSJT-x (FT8 and FT4) will NOT work".
+  NY4I, issue 120, 2026-11-18, answering whether the WSJT-X modes should
+  stay refused: "That only mode that could be accepted is JTTY ... we need
+  to add that as a new sub-mode." JTTY is WSJT-X 3.3's keyboard mode
+  (eJTTY), which carries free text, so the full exchange can be sent.
+  Built as the coordinator read it: JTTY is the ONLY digital submode Iowa
+  accepts; every other stated submode (FT8, FT4, JT65, FST4, FST4W, RTTY,
+  PSK, JS8, MFSK ...) is off-mode -- an automatic X-QSO. eNoMode and eData
+  stay accepted because they mean "some submode", so an old or untyped
+  record is never proven off-mode (Q98 S1; Vermont's precedent).
+  The narrower reading ("of the WSJT-X modes", keeping the rule's "other
+  digital modes" -- RTTY, PSK, JS8) is NY4I's to confirm; it is the old
+  deny-list in UsesMode.
   "Phone (includes digital phone)": a C4FM or D-STAR QSO is logged as phone
   to score and dupe as phone; a record logged as Digital is digital, since
   the dupe slot (DupeModeOf) sees only the mode, not the submode.
@@ -267,7 +277,9 @@ begin
          end;
       Digital:
          begin
-         Result := not (aExtMode in [eFT8, eFT4, eJT65, eFST4, eFST4W]);
+         (* JTTY only (NY4I, 2026-11-18 -- the header); eNoMode and eData
+           are "some submode", never proven off-mode. *)
+         Result := aExtMode in [eJTTY, eNoMode, eData];
          end;
       else
          begin

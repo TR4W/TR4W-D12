@@ -31,7 +31,8 @@ Use that fixture for a new party rather than copying the session save/restore
 and QSO-entry routines. See `docs/QSO_PARTY_ADDITIONS.md` for its ownership and
 the exchange-dependent string-key timing found while adding Alabama (#114).
 When a party awards its host state in addition to a received county
-(#317: Alabama, West Virginia, Kentucky, Vermont), override
+(#317: Alabama, West Virginia, Kentucky, Vermont, Illinois -- the full list
+is `uTestAdditionalDomesticMultiplier`'s `PartyCase`), override
 `TContestBase.AdditionalDomesticMultiplierKey` with one line,
 `Result := InStateCountyEarnsHostState(aQso, aKey);` (the party base's
 helper), and give the in-state `.dom` a host line with a display name and
@@ -274,7 +275,7 @@ public seams in `public`. Copy the declaration layout of your template.
 
 | override | how | what holds you to it |
 |---|---|---|
-| `GetHostState` | the two-letter state | abstract on the party base: a party that omits it raises `EAbstractError` when asked |
+| `GetHostState` | the two-letter state -- or, for a host area of SEVERAL states or provinces, all of them blank-separated (`'AB SK MB'`; see "A multi-province host" below) | abstract on the party base: a party that omits it raises `EAbstractError` when asked; `uTestContestFactory.Test_EveryStatePartyNamesItsState` holds every code to a two-letter ADIF subdivision and several codes to its closed `MULTI_PROVINCE_PARTIES` list |
 | `GetInStateDomesticFileName` | **exactly** `begin Result := '<base>'; end;` -- one literal | `Lint-DomCoverage` reads this literal and fails if it cannot, or if `<base>.dom` or `<base>_cty.dom` is not in `target/dom` |
 | `GetDomesticFileName` | `'<base>_cty'` | `Test_EveryQSOPartyNamesBothDomesticFiles` |
 | `GetCountyLineCountiesMax` | the rules' maximum (Georgia: 2); `0` forbids county lines | none; the base allows any number |
@@ -308,6 +309,29 @@ state:**
 - **A Canadian host states `WritesADIFCounty` False** -- ADIF's `CNTY`
   enumeration defines nothing for Canada (British Columbia, Ontario,
   Quebec). The party base still writes `STATE`.
+- **A multi-province host** (the Canadian Prairies, `uContestCanadianPrairiesQP`,
+  issue 117, 2026-11-18; Atlantic Canada, `uContestAtlanticCanadaQP`,
+  issue 116, the same day) is still a party
+  on the base: its "host area" is the keys of its county file, as for any
+  party. The class states:
+  - `GetHostState` as every code, blank-separated (`'AB SK MB'`). That is
+    also the New Contest box's `HostStates`, so an outside entrant typing
+    one of them is refused with nothing more to state;
+  - a county file whose every line names the county's OWN code with `>`
+    (`AIR > Ab = AIR,^Airdrie-Cochrane`). In the area a county counts as
+    that code; out of it each county is its own multiplier, as usual. The
+    party base writes ADIF `STATE` from that `>` code
+    (`ADIFCountyState` -> `CountyFileHostState`, read once through
+    `uDomFileKeys.DomFileOnDiskKeyTargets`); a key the file does not hold
+    gets no STATE;
+  - `WritesADIFCounty` False (a Canadian host), its own `GetQSOPartyArea`
+    (`'AB/SK/MB'`, the box's words), its own New Contest prompt, and its id
+    added to `MULTI_PROVINCE_PARTIES` in `uTestContestFactory`.
+  `uTestContestExport.Test_EveryPartyAndOnlyAPartyWritesAState` checks every
+  county key of every party's county file is written with one of its host's
+  codes. A unit test that exports through the identity sets
+  `uAppPaths.ShippedDomDirOverride := ShippedDomDir` (restored in a
+  `finally`): the test binary's working directory has no `dom` folder.
 - **A US party whose multipliers are not ADIF counties maps them:
   `TContestBase.ADIFCountyName(aQso, aDomesticName)`** (#118, 2026-11-17).
   PostUnit's CNTY block writes `<state>,<ADIFCountyName>`; the base answers
@@ -325,7 +349,18 @@ state:**
   (`CreditsWorkedStation`), takes WSJT-X's GRIDSQUARE in `ApplyADIFImport`,
   and writes the grid in its Cabrillo and SRX columns. WSJT-X's hand-off
   copies the received QTH into `DomesticQTH`, so test the QTH's shape, not
-  "no DomesticQTH".
+  "no DomesticQTH". The "[report] GRID" words are
+  `uGridShape.TryParseReportAndGrid` (you pass what a grid is).
+- **A grid that IS a multiplier, scored apart from the rest** is the South
+  Dakota QSO Party's (`uContestSouthDakotaQP`, #129): the grid is the PREFIX
+  (string-key) multiplier through `PrefixMultiplierKey` (True with `''` for a
+  QSO with no grid, never False), and **the class sets `aExch.Prefix` itself
+  in `ParseReceivedExchange`** -- the engine asks `PrefixMultiplierKey`
+  (`LOGEDIT.SetDXQTHAndPrefix`) BEFORE the exchange is parsed, so a key read
+  from the parsed exchange is not known there. A score with a second product
+  (digital points x grids) reads `TScoreTotals.DigitalQSOPoints` in
+  `CombineWithMultipliers`, and the contest joins
+  `uTestDigitalQSOPoints.READS_DIGITAL_QSO_POINTS`.
 - **Your base name may not be free.** `hawaii.dom` is the Hawaii-state line
   `s50.dom` includes, so the Hawaii party's files are `hawaiiqp.dom` and
   `hawaiiqp_cty.dom`. `ls tr4w/target/dom` before you name yours.
@@ -740,7 +775,8 @@ or exception list. A cross-contest test that seems to need your contest named
 derives the answer from the class instead: `uTestContestExport.
 Test_EveryPartyAndOnlyAPartyWritesAState` once named British Columbia as the
 party that writes no `CNTY`, and since Ontario it judges every party by its
-host (`IsADIFPrimarySubdivision('VE', HostState)`). If you find another such
+host (`uTestQSOPartyRules.HostIsCanadian(HostState)` -- every code a
+Canadian province -- since the multi-province hosts). If you find another such
 name, make that test derive it, in your commit.
 
 ### Only when it applies
@@ -1028,6 +1064,7 @@ comment; read it there.
 | `MarksDupes` | True | Internet Sprint and the Youth Championship of Russia say False |
 | `DupeKeyIncludesReceivedQTH` | False | **True on the party base (Q118)**: the same call, band and mode is a new QSO when it sent a different county -- the rover rule |
 | `DupeModeOf(aMode)` | the mode itself | groups modes for the DUPE sheet only (New England: Digital is CW). **FM needs no answer**: the dupe sheet already files FM under Phone (`uSortedStringList.DupeSlot`), so "SSB and FM are one phone contact" is true for every contest without a line in yours |
+| `MultiplierModeOf(aMode)` | the mode itself | groups modes for the MULTIPLIER sheet (issue 122, the Louisiana QSO Party: "CW/Digital and Phone contacts count as separate multipliers" -- Digital is CW). Separate from `DupeModeOf` on purpose (Illinois groups for dupes only). Matters only where multipliers count by mode (`cfMultByMode`). Asked only through `LOGDUPE.MultiplierSlotMode`, which every sheet write and `MultiplierSheetMode` (every "new in this mode" read, the remaining-multipliers and totals windows) use; per-mode breakdowns (summary sheet, score posting, matrix) show digital under CW; FM is already Phone's slot. A contest that states it joins `uTestMultiplierMode.GROUPS_MULTIPLIER_MODES` |
 | `UsesDomesticFile`; `DomesticMultiplierFromQTH`, `DomesticMultiplierHint`, `HasGridSquareMultiplier`, `HasGridFieldMultiplier`, `DomesticQTHReplacesDXMultiplier`, `DomesticQTHIsNeverAGrid` | False; look the text up in the file | a `.dom` contest states the first; a grid/DOK/RDA/IOTA contest states its shape (helpers in `uDomesticKey`). `HasDomesticMultiplier` is composed from them; only a shape with no flag of its own (IOTA, WAG, DARC 10 m) overrides it. Pinned in `uTestDomesticMultiplier` |
 | `UnmappedHintIsTheMultiplier` | False | a domestic-file contest whose remembered field IS its multiplier though the file does not list it (YOTA's age). Otherwise a remembered text the file maps nothing in heads "Mult needs for" with the call (issue 209). Pinned in `uTestStatusAndNotice` |
 | `IsValidDomesticMultiplier(aMultiplier)` | non-empty; two characters or more where a grid is the multiplier | whether the "Mult needs for" header and strip may show a text (issue 209). **No absolute length**: a one-character key (MWC's `W`) is a multiplier. Override only for a rule of your own; no class does today. Pinned in `uTestStatusAndNotice` |
@@ -1103,6 +1140,9 @@ cannot decide; `uTestNewContestHome` walks the registry), `GetTotalsDisplay`,
 `GetSummarySheet`, `GetReportsRunningScore`, `CanonicalReceivedExchange` /
 `CanonicalSentExchange`, `ScorePostingMultiplierType`,
 `GetPermittedOperatingAids`, `GetOffersQTCs`, `GetOffersParkTools`,
+`GetCabrilloOverlayCategories` (the CATEGORY-OVERLAY values the sponsor's
+rules name, in its spelling -- the Cabrillo summary adds the ones its standard
+list lacks, for this contest only; Louisiana is the worked example, issue 122),
 `GetShowsContestStatus`, `GetMaximumContestDates`, `GetBandStepIncludesWARC`,
 `GetPowerFieldIsFOCNumber`, `CallEntryFrequencyWarning`. Base: what the UI does
 for any contest. `GetTotalsDisplay` labels the totals grid's domestic AND (since

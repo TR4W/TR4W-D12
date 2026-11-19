@@ -1,0 +1,25 @@
+Atlantic Canada QSO Party -- entries used by a station in New Brunswick, Nova Scotia, Prince Edward Island or Newfoundland and Labrador
+The 47 counties and divisions, each counting as its province, then DC as Maryland, the 50 states and the other 9 provinces and territories.
+The county file comes FIRST, so a county code wins over any state alias spelled the same.
+DC is mapped to Md before s50.dom: the sponsor rules say count DC as MD.
+The provinces are written here and P12/P13 are not included: their call-area aliases would let the rover strip take a call such as
+W1AW/VE1, and NB, NS, PE and NL are not received exchanges here (an Atlantic Canada station sends its five-letter code), so those
+four carry a display name only. The class keeps a county's province on the PREFIX sheet, per band and mode, not here.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+INCLUDE FILE acqp_cty.dom
+Dc > Md = DC
+INCLUDE FILE s50.dom
+Qc = QC,^Quebec
+On = ON,^Ontario
+Mb = MB,^Manitoba
+Sk = SK,^Saskatchewan
+Ab = AB,^Alberta
+Bc = BC,^British Columbia
+Nt = NT,^Northwest Territories
+Nu = NU,^Nunavut
+Yt = YT,^Yukon
+Nb = ^New Brunswick
+Ns = ^Nova Scotia
+Pe = ^Prince Edward Island
+Nl = ^Newfoundland and Labrador

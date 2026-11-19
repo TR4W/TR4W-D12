@@ -1,0 +1,91 @@
+Mississippi QSO Party -- the 82 Mississippi counties, each its own multiplier.
+Codes from the county table docs/ContestRules/QSOParties/Mississippi/MS-QSO-PARTY-Counties.txt (DXLog.net MSQP.txt; see its header).
+All 82 codes and names agree with the sponsor's County Check List, MSQP-Counties.pdf in the same folder (checked 2026-11-18).
+Names are the counties; each is the ADIF county name once blanks are dropped.
+No county maps to the state: the rules count Mississippi counties as multipliers of their own for every entrant.
+The nine Mississippi grids are NOT here: an FT4/FT8 QSO earns a grid on the prefix sheet (the class).
+No INCLUDE here: an out-of-state entrant table holds only the counties (the host-area rule reads it).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+ADA = ADA,^Adams
+ALC = ALC,^Alcorn
+AMI = AMI,^Amite
+ATT = ATT,^Attala
+BEN = BEN,^Benton
+BOL = BOL,^Bolivar
+CAL = CAL,^Calhoun
+CAR = CAR,^Carroll
+CHI = CHI,^Chickasaw
+CHO = CHO,^Choctaw
+CLA = CLA,^Clay
+CLB = CLB,^Claiborne
+CLK = CLK,^Clarke
+COA = COA,^Coahoma
+COP = COP,^Copiah
+COV = COV,^Covington
+DES = DES,^DeSoto
+FOR = FOR,^Forrest
+FRA = FRA,^Franklin
+GEO = GEO,^George
+GRE = GRE,^Grenada
+GRN = GRN,^Greene
+HAN = HAN,^Hancock
+HAR = HAR,^Harrison
+HIN = HIN,^Hinds
+HOL = HOL,^Holmes
+HUM = HUM,^Humphreys
+ISS = ISS,^Issaquena
+ITA = ITA,^Itawamba
+JAC = JAC,^Jackson
+JAS = JAS,^Jasper
+JDV = JDV,^Jefferson Davis
+JEF = JEF,^Jefferson
+JON = JON,^Jones
+KEM = KEM,^Kemper
+LAF = LAF,^Lafayette
+LAM = LAM,^Lamar
+LAU = LAU,^Lauderdale
+LAW = LAW,^Lawrence
+LEA = LEA,^Leake
+LEE = LEE,^Lee
+LEF = LEF,^Leflore
+LIN = LIN,^Lincoln
+LOW = LOW,^Lowndes
+MAD = MAD,^Madison
+MAR = MAR,^Marshall
+MGY = MGY,^Montgomery
+MON = MON,^Monroe
+MRN = MRN,^Marion
+NES = NES,^Neshoba
+NEW = NEW,^Newton
+NOX = NOX,^Noxubee
+OKT = OKT,^Oktibbeha
+PAN = PAN,^Panola
+PEA = PEA,^Pearl River
+PER = PER,^Perry
+PIK = PIK,^Pike
+PON = PON,^Pontotoc
+PRE = PRE,^Prentiss
+QUI = QUI,^Quitman
+RAN = RAN,^Rankin
+SCO = SCO,^Scott
+SHA = SHA,^Sharkey
+SIM = SIM,^Simpson
+SMI = SMI,^Smith
+STO = STO,^Stone
+SUN = SUN,^Sunflower
+TAL = TAL,^Tallahatchie
+TAT = TAT,^Tate
+TIP = TIP,^Tippah
+TIS = TIS,^Tishomingo
+TUN = TUN,^Tunica
+UNI = UNI,^Union
+WAL = WAL,^Walthall
+WAR = WAR,^Warren
+WAS = WAS,^Washington
+WAY = WAY,^Wayne
+WEB = WEB,^Webster
+WIL = WIL,^Wilkinson
+WIN = WIN,^Winston
+YAL = YAL,^Yalobusha
+YAZ = YAZ,^Yazoo

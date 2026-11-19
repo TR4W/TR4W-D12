@@ -1,0 +1,160 @@
+South Dakota QSO Party rules, retrieved 2026-11-18
+Source: https://sdqsoparty.com/ (301 redirect to https://pdarc.org/sd-qso-party),
+the Prairie Dog Amateur Radio Club's page. Rules.html beside this file is the
+page as fetched; this is its text, the site navigation and contact form removed.
+The page gives no revision date; it presents the October 9-10, 2027 running.
+Cabrillo: SD-QSO-PARTY -- the rules state none; DXLog SDQP.txt
+CABRILLO_CONTEST_NAME, per NY4I's naming strategy (#131).
+ADIF Contest_ID: SD-QSO-PARTY, in the ADIF 3.1.8 Contest_ID enumeration
+(checked with adifmt v0.1.23, 2026-11-18).
+WA7BNM: not looked up (the calendar bars automated access).
+NY4I's rulings: GitHub issue 129, comments 6857555807 and 6858796866.
+
+SPONSOR TEXT
+South Dakota QSO Party - October 9 & 10, 2027
+Whether you are an experienced contest operator, or a beginner experiencing your first contest, you are encouraged to participate in this fun event!  For South Dakota Hams, the contest offers an opportunity to build your logged contacts quickly and to have fun promoting the Mount Rushmore State.  For those from everywhere else around the globe, this contest gives you an opportunity to work South Dakota stations from around the state.
+The South Dakota QSO Party is a participant in the State QSO Party Challenge. If you are an in-state operator please spot yourself at: http://qsopartyhub.com/sdqp-spots.php
+CONTEST RULES
+1 PM Central Daylight Time Saturday to 1 PM Central Daylight Time Sunday.  GMT is 1800z.  This is an annual contest planned to be held on the 2nd full weekend of October each year.
+OBJECT:  Stations outside South Dakota work as many South Dakota stations and counties as possible. Stations inside South Dakota work everyone.
+EXCHANGE: Stations outside South Dakota send signal report and state, province or DXCC country. South Dakota stations send signal report and county. Digital exchanges are standard FT exchanges.
+MODE: Modes are phone, CW, digital, and mixed. Stations may be worked only once per mode per band – 160m thru 70cm (no WARC bands). Repeater contacts do not qualify.
+QSO POINTS: Phone and digital contacts are worth 1 point. CW contacts are worth 2 points.
+WØOJY BONUS: Stations that work the Sponsoring Club (WØOJY) station during the event may claim an extra 100 points. The extra points shall be added to the total. The sponsoring station 100 point bonus may only be used once. Additional contacts with that station count as regular contacts.  Only W0OJY will operate as Multi-Multi and will not be eligible for the In-State Log Drawing.
+MULTIPLIERS: Stations outside South Dakota multiply QSO points by total South Dakota counties worked. Stations inside South Dakota multiply QSO points by the total of the South Dakota counties worked, US States, Provinces and DXCC countries. South Dakota counties may only be used ONCE as a multiplier. Digital contacts multiply qso points by grids.
+FINAL SCORE CALCULATION: QSO Points x Multipliers = Total + Bonus = Grand Total (Example 50 contacts SSB x 20 counties = 1,000 points + 100 bonus = 1,100 points grand total).
+CLASSES: In-State Multi-Op Fixed (CW/Phone/Digital/Mixed), (QRP/Low/High) In-State Single-Op Fixed (CW/Phone/Digital/Mixed) (QRP/Low/High), In-State Multi-Op Rover/Portable (CW/Phone/Digital/Mixed) (QRP/Low/High),
+In-State Single-Op Rover/Portable (CW/Phone/Digital/Mixed) (QRP/Low/High),
+Out of State Single-Op Fixed (CW/Phone/Digital/Mixed) (QRP/Low/High)
+DX – Single-Op Any Mode (CW/Phone) and Power
+SPOTTING: In-State Operators please spot yourself at http://qsopartyhub.com/sdqp-spots.php for those participating in the State Party QSO Challenge.
+MAXIMUM POWER: All modes:  High power (greater than 150 watts), Low power (150 watts or less) and QRP (5 watts or less).
+MOBILES: South Dakota Mobile (Rover/Portable) stations are considered a new contact each time they change counties. County line contacts will count as multiple contacts for both, but must be logged separately.
+MULTI-OP:  When two or more operators use the same callsign at any time during the QSO Party contest period, regardless of category. Logs must be combined into a single entry. The “Call Used” should be the callsign used by all operators. The call signs of each operator should be included in the “Operator(s) Call” to receive proper credit.
+SOUTH DAKOTA QSO PARTY SUGGESTED FREQUENCIES:
+Band    CW                         PH/SSB    PH/FM
+160m    1.830                      1.855
+80m      3.540                      3.840
+40m      7.040 or 7.100        7.210
+20m      14.040 or 14.100    14.285
+15m      21.040                     21.330
+10m      28.040                     28.415
+6m        50.040                     50.150     52.550
+2m        144.060                  144.250    146.550
+1.25m                                  222.150    223.450
+70cm     432.105                 432.150    446.550
+Award Categories
+Certificates will be mailed to the high scorer in each off the following categories:
+In-State SD Multi-op Phone Fixed High Power
+In-State SD Multi-op Phone Fixed Low Power
+In-State SD Multi-op Phone Fixed QRP Power
+In-State SD Multi-op CW Fixed High Power
+In-State SD Multi-op CW Fixed Low Power
+In-State SD Multi-op CW Fixed QRP Power
+In-State SD Multi-op Digital Fixed High Power
+In-State SD Multi-op Digital Fixed Low Power
+In-State SD Multi-op Digital Fixed QRP Power
+In-State SD Multi-op Mixed Fixed High Power
+In-State SD Multi-op Mixed Fixed Low Power
+In-State SD Multi-op Mixed Fixed QRP Power
+In-State SD Multi-op Mobile (Rover)/Portable High Power
+In-State SD Multi-op Mobile (Rover)/Portable Low Power
+In-State SD Multi-op Mobile (Rover)/Portable QRP Power
+In-State SD Single-op Phone Fixed High Power
+In-State SD Single-op Phone Fixed Low Power
+In-State SD Single-op Phone Fixed QRP Power
+In-State SD Single-op CW Fixed High Power
+In-State SD Single-op CW Fixed Low Power
+In-State SD Single-op CW Fixed QRP Power
+In-State SD Single-op Digital Fixed High Power
+In-State SD Single-op Digital Fixed Low Power
+In-State SD Single-op Digital Fixed QRP Power
+In-State SD Single-op Mixed Fixed High Power
+In-State SD Single-op Mixed Fixed Low Power
+In-State SD Single-op Mixed Fixed QRP Power
+In-State SD Single-op Mobile (Rover)/Portable High Power
+In-State SD Single-op Mobile (Rover)/Portable Low Power
+In-State SD Single-op Mobile (Rover)/Portable QRP Power
+Out of State Single-op Phone Fixed High Power
+Out of State Single-op Phone Fixed Low Power
+Out of State Single-op Phone Fixed QRP Power
+Out of State Single-op CW Fixed High Power
+Out of State Single-op CW Fixed Low Power
+Out of State Single-op CW Fixed QRP Power
+Out of State Single-op Digital Fixed High Power
+Out of State Single-op Digital Fixed Low Power
+Out of State Single-op Digital Fixed QRP Power
+Out of State Single-op Mixed Fixed High Power
+Out of State Single-op Mixed Fixed Low Power
+Out of State Single-op Mixed Fixed QRP Power
+DX High Score – Any Power & Mode (CW/Phone)
+Contest results will be posted on this website.
+In-State Incentive Award
+The Prairie Dog Amateur Radio Club sponsors an in-state incentive award with the goal of increasing in-state participation. Whether a “big-gun”, a QRP operator or a very casual operator, you have the same opportunity to win the drawing if you turn in a qualifying log.
+The prize for SDQP In-State Incentive Drawing will be a $100 gift certificate from DX Engineering,  Gigaparts, Ham Radio Outlet, or Main Trading Company .
+Rules:
+  SDQP rules as posted on SDQP website apply.
+  Any entry class may be used as defined by SDQP rules. The callsign used for Multi-Op will only be eligible for one chance for the In-State Log drawing. Should a Multi-Op station win the In-State Log Drawing, only one prize would be issued to that team.
+  Operators may be licensed and reside anywhere but must operate and log QSOs within the state of South Dakota, no closer than 100 feet to the state boundaries, borders.
+  All operators that submit an in-state log with no less than 100 valid QSOs will be entered. Their name/call will be assigned a random number and go into the drawing pool list which will be maintained by SDQP coordinator.
+The drawing:
+  Drawing is to be held during first PDARC meeting after log receipt deadline date for that calendar year SDQP.
+  A copy of the participants' random numbers and associated call signs will be given to the presiding officer at the meeting where the drawing is held.
+  A random person in attendance at the meeting will choose a number from the total serial numbers assigned. i.e., If 138 log serial numbers are assigned, the person must choose a number from 1-138 inclusive.
+  The presiding officer and coordinator will reference the serial number list to identify the winning recipient.
+  Recipient will be posted on the SDQP website, notified by email using the email address the log was submitted with or QRZ.com information if necessary. If the recipient cannot be contacted within 14 days, a new drawing will be held.
+Log Info
+N3FJP has built a program for the SD QSO Party both in and out of state!  Please visit www.n3fjp.com for more info and to download.
+N1MM Logger+ also has a contest setup file available for the SD QSO Party which is listed as QSOP SD!  Please visit https://n1mmwp.hamdocs.com/  for more info.
+LOG SUBMISSION
+Please submit logs in Cabrillo format and Include your callsign and claimed score.
+Logs are to be sent via email to Bill Nixon at w0ej@arrl.net.
+Logs Are Due by 08:00 hours Central Daylight Time(13:00z) on October 23, 2027.
+Any logs submitted past the due date will not be considered for scoring.
+While highly discouraged, paper logs may be submitted to the address below but must be received by 08:00 hours Central Daylight Time – 13:00z hours GMT on October 23, 2027.  Please include your callsign and claimed score.
+QSL requests may be sent to WØEJ at the following address:
+W0EJ
+WILLIAM R NIXON
+30902 Niles School RD
+Springfield, SD 57062
+USA
+Questions:  Contact Bill Nixon email at w0ej@goldenwest.net or if necessary by telephone at 605-369-2100. Please leave a message if calling as calls are screened.
+State QSO Party Challenge
+The annual State QSO Party Challenge recognizes all radio amateurs’ participation in the U.S. State and Canadian Province QSO parties.  Check it out at StateQSOParty.com.
+ About Prairie Dog Amateur Radio Club
+Counties
+Counties: A contact into each of the South Dakota Counties is a multiplier.  Counties may only be used ONCE as a multiplier
+Bonus Station: The Bonus Station W0OJY is worth 100 points and will be added to the final total of points after calculation.  The bonus station may only be worked once regardless of mode.
+AURO Aurora, SD                HYDE Hyde,SD
+BEAD Beadle, SD                JERA Jerauld,SD
+BENN Bennett, SD               JKSN Jackson,SD
+BONH Bon Homme, SD       JONE Jones,SD
+BROO Brookings, SD           KING Kingsbury,SD
+BRUL Brule, SD                    LAKE Lake,SD
+BRWN Brown, SD                 LAWR Lawrence,SD
+BUFF Buffalo, SD                 LINC Lincoln,SD
+BUTT Butte, SD                    LYMA Lyman,SD
+CAMP Campbell, SD            MCOO McCook,SD
+CHAR Charles Mix, SD        MCPH McPherson,SD
+CLAY Clay, SD                     MEAD  Meade, SD
+CLRK Clark, SD                   MELL Mellette,SD
+CODI Codington, SD            MINE Miner,SD
+CORS Corson, SD               MINN Minnehaha,SD
+CUST Custer, SD                 MOOD Moody,SD
+DAVI Davison, SD                MRSH Marshall,SD
+DAY  Day, SD                       PENN Pennington,SD
+DEUE Deuel, SD                  PERK Perkins, SD
+DEWY  Dewey, SD               POTT Potter, SD
+DGLS Douglas, SD              ROBE Roberts, SD
+EDMU  Edmunds, SD          SANB Sanborn, SD
+FALL Fall River, SD             OGLA Oglala Lakota (Former Shannon county), SD
+FAUL Faulk, SD                   SPIN Spink, SD
+GRAN  Grant, SD                STAN Stanley, SD
+GREG  Gregory, SD            SULL Sully, SD
+HAAK Haakon, SD              TODD Todd, SD
+HAML Hamlin, SD               TRIP Tripp, SD
+HAND Hand, SD                 TURN Turner, SD
+HNSN Hanson, SD             UNIO Union, SD
+HRDG Harding, SD            WALW Walworth, SD
+HUGH Hughes, SD            YANK Yankton, SD
+HUTC Hutchinson, SD       ZIEB Ziebach, SD

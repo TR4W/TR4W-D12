@@ -139,6 +139,8 @@ unit uContestStateQSOPartyBase;
 interface
 
 uses
+   (* TStringList -- the multi-province district-to-province map. *)
+   Classes,
    VC,
    (* TLogLogger -- ReportNoTableForYear writes to its caller's logger. *)
    Log4D,
@@ -168,6 +170,15 @@ type
          ONE year table. Main thread only, as the score is. *)
       FReportedNoTableForYear: boolean;
       FReportedNoTableYear: integer;
+
+      (* A MULTI-PROVINCE PARTY'S COUNTY FILE AS KEY=PROVINCE -- read once, on
+         the first ADIF STATE asked, by CountyFileHostState; nil until a read
+         found the file (a missing file is asked again next time, so a test
+         that points the dom directory at the tree is not stuck with an
+         empty map). Owned and freed here. MAIN THREAD ONLY, as the export
+         that asks it is: the identity object is shared, and this is its
+         one lazily written field. *)
+      FCountyHostStates: TStringList;
    protected
       (* AN IN-STATE ENTRANT'S HOST-COUNTY QSO ALSO EARNS THE HOST STATE --
          issue #317. A HELPER a party CALLS from its
@@ -220,8 +231,39 @@ type
          string is CLAUDE.md note 9 exactly.
 
          Abstract turns that into a compile error instead: a state party that
-         does not override this cannot be instantiated. *)
+         does not override this cannot be instantiated.
+
+         THE VALUE IS ADIF CODES: the host's two-letter state or province
+         ('GA', 'BC'), or -- for a party whose host area is SEVERAL provinces
+         or states -- all of them, blank-separated ('AB SK MB', the Canadian
+         Prairies; 'NB NS PE NL', Atlantic Canada next). 2026-11-18, issue
+         117. Blank-separated because that is the New Contest box's
+         HostStates contract already (the 7QP states its eight there), so an
+         outside entrant typing one of them is refused with no other change.
+         Such a party's county file names each county's own code with '>'
+         ('AIR > Ab = AIR'), and the ADIF STATE of a county is that code
+         (ADIFCountyState, CountyFileHostState). The registry walks
+         (uTestContestFactory.Test_EveryStatePartyNamesItsState, a closed
+         list of multi-province parties; uTestContestExport.
+         Test_EveryPartyAndOnlyAPartyWritesAState) hold every code to a
+         two-letter ADIF primary subdivision and every county to one of
+         them. *)
       function GetHostState: string; override; abstract;
+
+      (* DOES THE HOST AREA SPAN SEVERAL STATES OR PROVINCES? -- more than
+         one code in HostState. The one question ADIFCountyState branches
+         on; a single-host party's answer is False and its export is
+         unchanged. *)
+      function HostSpansSeveralStates: boolean;
+
+      (* THE ADIF STATE OF ONE OF A MULTI-PROVINCE PARTY'S COUNTIES -- the
+         '>' target its county file (DomesticFileName) gives aKey, upper-
+         cased, when that target is one of HostState's codes; '' otherwise
+         (an unknown key, a file with no target for it, a target that is not
+         one of the host's codes: no value is invented). The file is read
+         through uAppPaths.ShippedDomFilePath and uDomFileKeys.
+         DomFileOnDiskKeyTargets, once; see FCountyHostStates. *)
+      function CountyFileHostState(const aKey: string): string;
 
       (* THE AREA THE NEW CONTEST PROMPT NAMES IS THE HOST STATE -- M10 S5.
 
@@ -325,6 +367,9 @@ type
                                      const aRule: string;
                                      const aSource: string);
    public
+      (* Frees the multi-province map (FCountyHostStates). *)
+      destructor Destroy; override;
+
       property CountyLineCountiesMax: integer read GetCountyLineCountiesMax;
       property CountyLineAllowed: boolean read GetCountyLineAllowed;
 
@@ -371,7 +416,11 @@ type
          else is judged by uADIF.ADIFStateOfPartyQSO. A typed QTH the table
          does not know (a DX station's 'KP4') is no county, so it gets
          neither STATE nor CNTY (issue #134, 2026-10-27). British Columbia overrides
-         WritesADIFCounty -- ADIF has no Canadian county enumeration. *)
+         WritesADIFCounty -- ADIF has no Canadian county enumeration.
+         A MULTI-PROVINCE host (HostSpansSeveralStates) answers the county's
+         own province from its county file instead of HostState
+         (CountyFileHostState, 2026-11-18, issue 117); the key is resolved
+         exactly as above. *)
       function ADIFCountyState(const aQso: ContestExchange): string; override;
       function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
       function WritesADIFCounty: boolean; override;
@@ -457,6 +506,8 @@ uses
    SysUtils,        (* Format *)
    uTR4WStrings,    (* TC_TOOMANYCOUNTIES *)
    uAppStrings,     (* SExchangeOutOfStateWorksHostOnly *)
+   uAppPaths,       (* ShippedDomFilePath -- a multi-province county file *)
+   uDomFileKeys,    (* DomFileOnDiskKeyTargets, DOM_EXTENSION *)
    uADIF;           (* ADIFStateOfPartyQSO -- Q76/Q89 *)
 
 function TContestStateQSOPartyBase.CallWithoutRoverCounty(const aCall: string): string;
@@ -689,14 +740,61 @@ begin
          key := typed;
          end;
       end;
-   if (key <> '') and (Length(key) <> 2) then
+   if (key = '') or (Length(key) = 2) then
       begin
-      Result := HostState;
+      Result := '';
+      end
+   else if HostSpansSeveralStates then
+      begin
+      (* Which of the host's provinces: the county file says (issue 117). *)
+      Result := CountyFileHostState(key);
       end
    else
       begin
+      Result := HostState;
+      end;
+end;
+
+function TContestStateQSOPartyBase.HostSpansSeveralStates: boolean;
+begin
+   Result := Pos(' ', Trim(HostState)) > 0;
+end;
+
+function TContestStateQSOPartyBase.CountyFileHostState(const aKey: string): string;
+var
+   map: TStringList;
+begin
+   Result := '';
+   if FCountyHostStates = nil then
+      begin
+      map := TStringList.Create;
+      if DomFileOnDiskKeyTargets(
+            ShippedDomFilePath(DomesticFileName + string(DOM_EXTENSION)), map) then
+         begin
+         FCountyHostStates := map;
+         end
+      else
+         begin
+         (* No file: nothing cached, asked again next time -- see the field. *)
+         map.Free;
+         Exit;
+         end;
+      end;
+
+   Result := string(FCountyHostStates.Values[AnsiString(UpperCase(Trim(aKey)))]);
+   (* ONE two-letter code, and one of the host's: a malformed target
+      ('AB SK') is no province. *)
+   if (Length(Result) <> 2) or
+      (Pos(' ' + Result + ' ', ' ' + UpperCase(Trim(HostState)) + ' ') = 0) then
+      begin
       Result := '';
       end;
+end;
+
+destructor TContestStateQSOPartyBase.Destroy;
+begin
+   FCountyHostStates.Free;
+   inherited Destroy;
 end;
 
 function TContestStateQSOPartyBase.ADIFWorkedStationState(const aQso: ContestExchange): string;

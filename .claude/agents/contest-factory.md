@@ -414,7 +414,12 @@ the target shape, the M-step migration order and the open questions.
   `TContestCQWWBase`, CW / Phone (FM refused until Q120(a)) on the leaves,
   and CQ WW RTTY 80-10 m, RTTY only. Georgia (CW, phone, FM; no digital),
   Nebraska (every mode but FT8/FT4) and URC (RTTY only) state their own
-  modes since the merge into contestFactory (2026-10-23). **A mode rule is
+  modes since the merge into contestFactory (2026-10-23). ARRL Sweepstakes
+  states its modes on each leaf since 2026-11-18 (sponsor rule 2.4,
+  `docs/ContestRules/ARRL/ARRL-SS-Rules.txt`): CW only / Phone only, FM NOT
+  credited in Phone until NY4I rules; its bands are still unstated. The
+  corpus's `arrl_ss_ssb_2024_w4ta` QSO 206 (N0TST, 160 m CW) became an
+  X-QSO with it. **A mode rule is
   `UsesMode`, never a 0-point arm in `CalculateQSOPoints` or
   `CountsAsMultiplier`** -- those never see an off-mode QSO. `uTestAutomaticXQSO` pins it all;
   `tools/contest-factory-q98/classify_matrix.py` classifies a stage's
@@ -436,6 +441,31 @@ the target shape, the M-step migration order and the open questions.
   through `uCallsigns.ContestDupeSlot` (nil-safe `ContestDupeModeOf` keeps
   the keys Both/NoMode), never the multiplier sheets;
   `uTestContestNewEnglandQP`'s walk holds every other contest to identity.
+  **The multiplier sheet's twin is `MultiplierModeOf(aMode)`** (issue 122,
+  2026-11-18, base: the mode itself; nil-safe `ContestMultiplierModeOf`):
+  the Louisiana QSO Party answers CW for Digital (rule 9.1, "CW/Digital and
+  Phone contacts count as separate multipliers"). It is asked ONLY through
+  `LOGDUPE.MultiplierSlotMode` (over `ContestIdentity(Contest)`), which EVERY
+  write to `mo` uses (`AddQSOToSheets`' four flags and the #317 key,
+  `CountWorkedMultipliers`, `TAdditionalDomesticMultiplierReplay.Feed`) and
+  which `MultiplierSheetMode` reads through (SetMultFlags, the #317 test, the
+  spot hint, `LOGWIND`'s `MultMode` for the remaining-multipliers window,
+  `uTotal`'s per-mode cell) -- a mapping on the read side alone
+  over-counts. A new write or read of the sheet goes through them. NOT
+  mapped, on purpose: per-mode BREAKDOWNS that walk every slot (PostUnit's
+  summary sheet, `uGetScores`, the matrix) -- they show a grouping contest's
+  digital multipliers under CW. Never inherit it from `DupeModeOf` (Illinois
+  groups for dupes only). `uTestMultiplierMode.GROUPS_MULTIPLIER_MODES` is
+  the closed list. Mississippi (#123) did NOT need the mirror (built
+  2026-11-18): `TDupesArray` has one digital slot, so no `DupeModeOf` can
+  split RTTY from FT4/8, and the party base's received-QTH dupe key already
+  does -- an FT QSO's QTH is a grid, an RTTY QSO's a county/state/country
+  (`uTestContestMississippiQP.Test_RealEngineFourDupeModes`). Its gaps: an FT
+  QSO with no QTH asks the call-only sheet, and the call window shows DUPE
+  before the exchange (Q118). Its in-state "grids / 4" is the class's own
+  `CombineWithMultipliers` over the prefix count -- no engine seam; the
+  four-character square is the leaf `uGridShape.FourCharacterGridSquareOf`
+  (lifted from South Dakota).
   A multiplier KIND's arm stays in the sheet until Q4 -- except the
   PREFIX kind's, below.
   **#88 round 3 (2026-10-26)**: the received-QTH dupe key is every state
@@ -931,7 +961,15 @@ the target shape, the M-step migration order and the open questions.
   header): Digital + grid shape (two letters A-Z, two digits, ZZ00 a fake)
   parsed before `inherited`, points but no multiplier, WSJT-X's GRIDSQUARE
   through `ApplyADIFImport`; uWSJTX copies the QTH into `DomesticQTH`, so
-  test the QTH's SHAPE. `Test_EveryPartyAndOnlyAPartyWritesAState`
+  test the QTH's SHAPE. **A GRID THAT IS A MULTIPLIER is South Dakota's**
+  (`uContestSouthDakotaQP`, #129, 2026-11-18): a Digital QSO's four-character
+  Maidenhead square on the PREFIX sheet (`PrefixMultiplierKey`, True with
+  `''` otherwise), the key set by the class in `ParseReceivedExchange`
+  because `SetDXQTHAndPrefix` runs before the parse; digital QSOs earn only
+  the grid, CW/phone never one (`CountsAsMultiplier`); the score is
+  (points - `TScoreTotals.DigitalQSOPoints`) x (domestic + DX) +
+  `DigitalQSOPoints` x grids. Both grid parties read "[report] GRID" through
+  `uGridShape.TryParseReportAndGrid`. `Test_EveryPartyAndOnlyAPartyWritesAState`
   holds CNTY only for a US-host state party (judged by
   `IsADIFPrimarySubdivision('VE', HostState)`, not by name) and, for every
   contest whose OWN class does not state `WritesADIFCounty`
@@ -1193,7 +1231,16 @@ the target shape, the M-step migration order and the open questions.
   `TContestARRLDXBase`, `TContestARRLSSBase` and every other
   `uContestARRL*` class; IARU HF and ARRL Kids Day NOT stated, on no
   sponsor word; the `ARRL_PORTAL` list in
-  `uTestContestUI.Test_OnlyARRLContestsOfferTheARRLLogPortal` is the exact set). **uNewContest names no contest**: `ClasslessPrompts`
+  `uTestContestUI.Test_OnlyARRLContestsOfferTheARRLLogPortal` is the exact set);
+  `CabrilloOverlayCategories` (issue 122, 2026-11-18, base empty: the
+  CATEGORY-OVERLAY values a sponsor names, in its spelling -- the Cabrillo
+  summary offers the standard list, then those it lacks, then the blank,
+  composed by `uCbrSum.OverlayValuesWith` and REFILLED at every opening of
+  the session-long window, before `LoadValues`, from `ContestIdentity(Contest)`;
+  the row stays closed. Louisiana is the first, `WIRES TB-WIRES POTA`;
+  `OVERLAY_SPONSORS` in `uTestContestUI.Test_OnlyNamedContestsAddCabrilloOverlays`
+  is the exact set. The chosen overlay is stored in the GLOBAL header section,
+  not per contest). **uNewContest names no contest**: `ClasslessPrompts`
   was deleted with RSGB 1.8's and UA4W's classes (2026-10-14). `uTestContestDisplay`
   pins every seam and compares every contest's prompts with a table
   generated from the dialog's own arms.
@@ -1263,6 +1310,26 @@ the target shape, the M-step migration order and the open questions.
   the header block and asks `ActiveContest` (identity for "no contest").
   `uTestScore3830Report` pins it; no oracle writes this report. State a
   contest's columns only from its actual 3830 form.
+- **A PARTY'S HOST MAY BE SEVERAL PROVINCES (2026-11-18, the Canadian
+  Prairies, #117; Atlantic Canada #116 the same day).** `HostState` is ADIF codes,
+  blank-separated (`'AB SK MB'`); the county file names each county's own
+  code with `>`, and the party base writes ADIF STATE from it
+  (`HostSpansSeveralStates` -> `CountyFileHostState`, a lazily read map on
+  the object, main thread only, through `uDomFileKeys.DomFileOnDiskKeyTargets`
+  and `uAppPaths.ShippedDomFilePath`). A single-code host is unchanged. The
+  multi-code parties are a closed list (`uTestContestFactory`
+  `MULTI_PROVINCE_PARTIES`); `Test_EveryPartyAndOnlyAPartyWritesAState`
+  checks every county of every party's file. A test exporting through the
+  identity sets `uAppPaths.ShippedDomDirOverride` (the test exe's working
+  directory has no `dom`). ADDING_A_CONTEST A3 "A multi-province host".
+  **A MULTIPLIER PER BAND AND MODE BESIDE ONES PER BAND needs no seam**
+  (Atlantic Canada, #116): the sheet has ONE mode scope
+  (`Settings.Mult.ByMode`), so the in-region Atlantic province rides the
+  PREFIX sheet with the mode in its key (`NSCW`/`NSPH`, set in the class's
+  `ParseReceivedExchange` -- South Dakota's pattern) and the class's
+  `CountsAsMultiplier` refuses it on the domestic sheet. The county-line
+  drain (`MainUnit.DrainPendingMultiQSORefs`) re-asks `SetPrefix` after
+  the QTH lookup since then, so each leg carries its own key.
 - **THE VERMONT QSO PARTY (2026-11-10, #130) SETTLED FOUR THINGS A PARTY
   WILL MEET AGAIN.** (1) A DX station that sends RST ONLY needs no override:
   under `RSTDomesticOrDXQTHExchange` a DX call typed `599` is taken with its

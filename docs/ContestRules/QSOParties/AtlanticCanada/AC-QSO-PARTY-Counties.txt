@@ -1,0 +1,67 @@
+Atlantic Canada QSO Party -- the 47 county and division multiplier codes (issue 116)
+
+SOURCE OF THE CODES: the sponsor's rules (ACQP-Rules-B-V26.0.1.pdf, V 26.0.1, last updated 2026-05-01)
+do NOT list them. They give the counts -- "Nova Scotia (NS- 18), New Brunswick (NB- 15), Prince Edward
+Island (PE-3), and Newfoundland (NL-11 Divisions)", 47 -- and say "County/division codes may be found on
+the resources page of the contest website" (https://acqp.ca/resources/), which refuses automated fetches.
+So the codes are transcribed from DXLog.net's ACQP.txt ("Updated 2026-09-06", its "AC exchanges"
+comment lines), whose counts match the sponsor's exactly: NL 11, PE 3, NB 15, NS 18.
+
+SOURCE OF THE NAMES: neither the PDF nor DXLog names them. The names are from the ham2k qso-parties
+data (acqp.counties.json, MIT licence, marked "Updated for 2026, but not verified"). Unverified
+against the sponsor -- a question on issue 116.
+
+The province is the code's first two letters (the rules: "5-letter province + county/division code").
+The sponsor's own Cabrillo example writes "VE1RPX 59 NLKGS"; NLKGS is not in this list (KGS is a
+county of PE, NB and NS only), so the example is taken as stale, not as a 48th code.
+
+code   province  name
+NLASJ  NL        Division 1 Avalon Peninsula - St. John's
+NLBMT  NL        Division 2 Burin Peninsula - Marystown
+NLSCB  NL        Division 3 South Coast - Channel-Port aux Basques
+NLSGS  NL        Division 4 St. George's - Stephenville
+NLHCB  NL        Division 5 Humber District - Corner Brook
+NLGFW  NL        Division 6 Central Newfoundland - Grand Falls-Windsor
+NLBTC  NL        Division 7 Bonavista/Trinity - Clarenville
+NLNDL  NL        Division 8 Notre Dame Bay - Lewisporte
+NLNSA  NL        Division 9 Northern Peninsula - St. Anthony
+NLLGB  NL        Division 10 Labrador - Happy Valley-Goose Bay
+NLLNN  NL        Division 11 Nunatsiavut - Nain
+PEKGS  PE        Kings County
+PEQNS  PE        Queens County
+PEPRN  PE        Prince County
+NBALB  NB        Albert County
+NBCAR  NB        Carleton County
+NBCHA  NB        Charlotte County
+NBGLO  NB        Gloucester County
+NBKEN  NB        Kent County
+NBKGS  NB        Kings County
+NBMAD  NB        Madawaska County
+NBNOR  NB        Northumberland County
+NBQNS  NB        Queens County
+NBRES  NB        Restigouche County
+NBSJC  NB        Saint John County
+NBSUN  NB        Sunbury County
+NBVIC  NB        Victoria County
+NBWES  NB        Westmorland County
+NBYOR  NB        York County
+NSANP  NS        Annapolis County
+NSATG  NS        Antigonish County
+NSCBR  NS        Cape Breton County
+NSCOL  NS        Colchester County
+NSCMB  NS        Cumberland County
+NSDIG  NS        Digby County
+NSGUY  NS        Guysborough County
+NSHRM  NS        Halifax County
+NSHNT  NS        Hants County
+NSINV  NS        Inverness County
+NSKGS  NS        Kings County
+NSLUN  NS        Lunenburg County
+NSPIC  NS        Pictou County
+NSQNS  NS        Queens County
+NSRIC  NS        Richmond County
+NSSHL  NS        Shelburne County
+NSVIC  NS        Victoria County
+NSYAR  NS        Yarmouth County
+
+Totals: NL 11, PE 3, NB 15, NS 18 = 47.

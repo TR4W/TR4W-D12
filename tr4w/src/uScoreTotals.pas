@@ -158,6 +158,8 @@ begin
    FillChar(aTotals, SizeOf(aTotals), 0);
 
    aTotals.QSOPoints := TotalQSOPoints;
+   (* Its digital share -- issue 129; LOGDUPE sums both in one routine. *)
+   aTotals.DigitalQSOPoints := TotalDigitalQSOPoints;
    if Settings.Qtc.Enable then
       begin
       aTotals.QTCPoints := TotalNumberQTCsProcessed;

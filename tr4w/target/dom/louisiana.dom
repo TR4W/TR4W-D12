@@ -1,0 +1,15 @@
+Entries for the Louisiana QSO Party used by in-state (Louisiana) stations
+The 64 Louisiana parishes (each its own multiplier), the US states with DC counted as Maryland, and the 13 Canadian provinces and territories.
+DXCC countries other than the USA, Canada, Hawaii and Alaska are the class's DX multiplier, not entries here.
+The parish file comes FIRST, so a parish code wins over any state or province alias spelled the same.
+DC is mapped to Md before s50.dom: the rules count States, and NY4I's default on issue 122 counts DC as Maryland.
+Louisiana itself is not a multiplier for an in-state entrant ("States (other than Louisiana)"): the class refuses it.
+s50.dom is included BEFORE p13.dom: p13 also spells Newfoundland LA, and the first alias added wins, so LA stays Louisiana.
+NF and LB are read as NL (the last line): rule 8.2.3 counts the 13 provinces, Maritime regions not separately.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+INCLUDE FILE louisiana_cty.dom
+Dc > Md = DC
+INCLUDE FILE s50.dom
+INCLUDE FILE p13.dom
+Nl = NF,LB

@@ -1,0 +1,25 @@
+Canadian Prairies QSO Party -- entries used by a station in Alberta, Saskatchewan or Manitoba
+The 65 districts, each counting as its province, then DC as Maryland, the 50 states and the other 10 provinces and territories.
+The district file comes FIRST, so a district code wins over any state alias spelled the same.
+DC is mapped to Md before s50.dom: the sponsor chart says DC counts as MD.
+The provinces are written here and P12/P13 are not included: their call-area aliases (VE1 to VY2) would let the rover strip take
+a call such as W1AW/VE6, and AB, SK and MB are not received exchanges here (a prairie station sends its district), so those three
+carry a display name only. NF and LB are read as NL.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+INCLUDE FILE cpqp_cty.dom
+Dc > Md = DC
+INCLUDE FILE s50.dom
+Bc = BC,^British Columbia
+On = ON,^Ontario
+Qc = QC,^Quebec
+Nb = NB,^New Brunswick
+Ns = NS,^Nova Scotia
+Pe = PE,^Prince Edward Island
+Nl = NL,NF,LB,^Newfoundland and Labrador
+Nt = NT,^Northwest Territories
+Nu = NU,^Nunavut
+Yt = YT,^Yukon
+Ab = ^Alberta
+Sk = ^Saskatchewan
+Mb = ^Manitoba

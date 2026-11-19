@@ -57,6 +57,31 @@ function DomFileDeclaresKey(const aLines: TStrings; const aKey: string): boolean
 function DomFileOnDiskDeclaresKey(const aPath, aKey: string): boolean;
 
 (* ---------------------------------------------------------------------------
+  THE '>' TARGET A LINE GIVES ITS KEY -- 'AIR > Ab = AIR,^Airdrie' gives 'AB'.
+  2026-11-18, for the parties whose host area is several provinces (the
+  Canadian Prairies, issue 117; Atlantic Canada, issue 116 next).
+
+  WHY IT EXISTS: ADIF STATE PER DISTRICT. Such a party's county file maps
+  each district to its province with '>' (what an in-area entrant counts it
+  as), so the file already says which province each district is in; the ADIF
+  export asks it here rather than keep a second copy of the same table.
+
+  The rule is EnumDOMFILE's for the multiplier half of the key: the text
+  before the first '=', after the first '>', trimmed; upper-cased here,
+  because the answer is an ADIF code. '' for a line with no '=' or no '>'
+  (an INCLUDE, a header sentence, 'KEY = alias'). *)
+function DomFileLineTarget(const aLine: string): string;
+
+(* Every 'KEY > Target' line of aLines, as KEY=TARGET in aTargets (cleared
+  first), the FIRST line naming a key winning -- the loader's own rule. A
+  line with no target adds nothing. *)
+procedure DomFileKeyTargets(const aLines: TStrings; aTargets: TStrings);
+
+(* The same, of the file at aPath. False, with aTargets cleared, when there
+  is no such file. *)
+function DomFileOnDiskKeyTargets(const aPath: string; aTargets: TStrings): boolean;
+
+(* ---------------------------------------------------------------------------
   THE ALIASES A LINE GIVES -- the RIGHT side of 'MULTIPLIER = alias, alias',
   which is what a received QTH is matched against. 2026-10-23.
 
@@ -167,6 +192,70 @@ begin
         AnsiString file name, and a path is the one value here that crosses. *)
       lines.LoadFromFile(AnsiString(aPath));
       Result := DomFileDeclaresKey(lines, aKey);
+   finally
+      lines.Free;
+      end;
+end;
+
+function DomFileLineTarget(const aLine: string): string;
+var
+   p: integer;
+begin
+   Result := '';
+   p := Pos('=', aLine);
+   if p = 0 then
+      begin
+      Exit;
+      end;
+
+   Result := Copy(aLine, 1, p - 1);
+   p := Pos('>', Result);
+   if p = 0 then
+      begin
+      Result := '';
+      Exit;
+      end;
+   Result := UpperCase(Trim(Copy(Result, p + 1, Length(Result) - p)));
+end;
+
+procedure DomFileKeyTargets(const aLines: TStrings; aTargets: TStrings);
+var
+   key: string;
+   target: string;
+   i: integer;
+begin
+   aTargets.Clear;
+   for i := 0 to aLines.Count - 1 do
+      begin
+      key := DomFileLineKey(aLines[i]);
+      target := DomFileLineTarget(aLines[i]);
+      if (key <> '')                     and
+         (target <> '')                  and
+         (aTargets.IndexOfName(AnsiString(key)) < 0) then
+         begin
+         (* EXPLICIT: TStrings holds AnsiString; a key and a target are
+            ASCII codes. *)
+         aTargets.Add(AnsiString(key + '=' + target));
+         end;
+      end;
+end;
+
+function DomFileOnDiskKeyTargets(const aPath: string; aTargets: TStrings): boolean;
+var
+   lines: TStringList;
+begin
+   aTargets.Clear;
+   Result := FileExists(aPath);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   lines := TStringList.Create;
+   try
+      (* EXPLICIT AT THE BOUNDARY -- see DomFileOnDiskDeclaresKey. *)
+      lines.LoadFromFile(AnsiString(aPath));
+      DomFileKeyTargets(lines, aTargets);
    finally
       lines.Free;
       end;

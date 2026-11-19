@@ -199,8 +199,18 @@ function PreferredDataFilePath(const aName: string): string;
 
   NOT the per-contest override. A <log stem>.DOM beside the contest replaces
   the domestic file a contest LOADS, and LogCfg looks for that first; it is
-  not a shipped file and this does not look for it. *)
+  not a shipped file and this does not look for it.
+
+  ShippedDomDirOverride, when not empty, is the directory looked in instead
+  (with or without a trailing separator). The program never writes it: a
+  unit test points it at the tree's target/dom, because the test binary's
+  working directory has no dom folder (2026-11-18, the multi-province
+  parties' district-to-province lookup). LOGSTUFF's DomesticQTHRefusalDomDir
+  is the older seam of the same kind, for the refusal path only. *)
 function ShippedDomFilePath(const aName: string): string;
+
+var
+   ShippedDomDirOverride: string = '';
 
 (* WHAT A COMPLETE INSTALL HAS THAT THIS COPY DOES NOT, one name per line:
   'dom' + PathDelim for the domestic-file folder, 'CTY.DAT', 'TRMASTER.DTA'.
@@ -826,7 +836,14 @@ end;
 
 function ShippedDomFilePath(const aName: string): string;
 begin
-   Result := ExistingDataFile(DataFilePath('dom' + PathDelim + aName));
+   if ShippedDomDirOverride <> '' then
+      begin
+      Result := ExistingDataFile(IncludeTrailingPathDelimiter(ShippedDomDirOverride) + aName);
+      end
+   else
+      begin
+      Result := ExistingDataFile(DataFilePath('dom' + PathDelim + aName));
+      end;
 end;
 
 function MissingInstallParts: string;

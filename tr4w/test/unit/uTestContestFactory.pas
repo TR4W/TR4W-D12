@@ -51,7 +51,9 @@ uses
       cross-contest invariant here uses (Q108 S1). *)
    uTestRegisteredContests,
    (* InSameFederalOkrug -- the CQ-M rule lifted out of LOGSTUFF at M7b. *)
-   uCallSignRoutines;
+   uCallSignRoutines,
+   (* HostStateCodes, IsADIFHostStateCode -- a party's host, one reading. *)
+   uTestQSOPartyRules;
 
 const
    (* THE TEN "RAREST OF NC" COUNTIES, TRANSCRIBED A SECOND TIME ON PURPOSE.
@@ -239,13 +241,29 @@ end;
    would answer '' and the ADIF exporter would emit no STATE -- a legal-looking
    blank. TContestStateQSOPartyBase makes the getter abstract so that cannot
    compile; this proves the answer is also the right SHAPE, for every party
-   present, and that nothing OUTSIDE the hierarchy claims to be one. *)
+   present, and that nothing OUTSIDE the hierarchy claims to be one.
+
+   THE SHAPE, RESTATED 2026-11-18 (issue 117) AS THE PROPERTY IT PROTECTS:
+   every code HostState names is a two-letter ADIF primary subdivision (the
+   USA, Alaska, Hawaii or Canada), so the export has a STATE to write. One
+   code for a single-state party; SEVERAL, blank-separated, only for a party
+   whose host area is several provinces -- and those are a CLOSED LIST,
+   MULTI_PROVINCE_PARTIES, checked both ways, so a party cannot drift into
+   naming several by accident and the list cannot outlive its members. *)
 procedure TContestFactoryTests.Test_EveryStatePartyNamesItsState;
+const
+   (* THE PARTIES WHOSE HOST AREA IS SEVERAL PROVINCES. Atlantic Canada
+      (issue 116, AC-QSO-PARTY) joins it with its class. *)
+   MULTI_PROVINCE_PARTIES: array[0..1] of string = ('CP-QSO-PARTY', 'AC-QSO-PARTY');
 var
    contests: TContestIdentityList;
    k: integer;
    obj: TContestBase;
    parties: integer;
+   codes: THostStateCodes;
+   c: integer;
+   listed: boolean;
+   handle: TContestHandle;
 begin
    BeginTest('Test_EveryStatePartyNamesItsState');
    parties := 0;
@@ -262,9 +280,26 @@ begin
             CheckTrue(obj.IsUSQSOParty,
                       ContestWho(obj) + ' is a state party class but'
                       + ' does not say so');
-            CheckEquals(2, Length(obj.HostState),
-                        ContestWho(obj) + ' HostState is not a'
-                        + ' two-letter code: ' + obj.HostState);
+            codes := HostStateCodes(obj.HostState);
+            CheckTrue(Length(codes) >= 1,
+                      ContestWho(obj) + ' names no host state');
+            for c := 0 to High(codes) do
+               begin
+               CheckTrue(IsADIFHostStateCode(codes[c]),
+                         ContestWho(obj) + ' HostState holds ' + codes[c] +
+                         ', not a two-letter ADIF state or province: ' + obj.HostState);
+               end;
+            listed := False;
+            for c := 0 to High(MULTI_PROVINCE_PARTIES) do
+               begin
+               if ContestId(HandleOf(obj)) = MULTI_PROVINCE_PARTIES[c] then
+                  begin
+                  listed := True;
+                  end;
+               end;
+            CheckEquals(Ord(listed), Ord(Length(codes) > 1),
+                        ContestWho(obj) + ': several host codes exactly for a' +
+                        ' listed multi-province party: ' + obj.HostState);
             end
          else if IsLegacyContest(obj, SEVENQP) then
             begin
@@ -301,6 +336,19 @@ begin
    CheckTrue(parties >= 2,
              'expected at least Florida and Michigan, found '
              + IntToStr(parties));
+
+   (* AND THE LIST OUTLIVES NO MEMBER: each is registered, on the base, and
+      names several codes. *)
+   for c := 0 to High(MULTI_PROVINCE_PARTIES) do
+      begin
+      CheckTrue(FindContestById(MULTI_PROVINCE_PARTIES[c], handle),
+                MULTI_PROVINCE_PARTIES[c] + ' is registered');
+      obj := ContestIdentity(handle);
+      CheckTrue(obj is TContestStateQSOPartyBase,
+                MULTI_PROVINCE_PARTIES[c] + ' is a state party');
+      CheckTrue(Length(HostStateCodes(obj.HostState)) > 1,
+                MULTI_PROVINCE_PARTIES[c] + ' names several host codes');
+      end;
 end;
 
 (* THE INVARIANT NY4I ASKED FOR: one stored value, two readings. The boolean is

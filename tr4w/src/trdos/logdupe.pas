@@ -292,6 +292,13 @@ var
 
   TotalNamesSent                        : integer;
   TotalQSOPoints                        : LONGINT {= 0};
+  (* THE DIGITAL QSOs' SHARE OF TotalQSOPoints -- issue 129, 2026-11-18.
+     Summed by AddToTotalQSOPoints beside TotalQSOPoints and nowhere else,
+     reset with it, so it is always a part of it. A contest that scores its
+     digital QSOs against a multiplier of their own (the South Dakota QSO
+     Party: digital points x grids) reads it through
+     TScoreTotals.DigitalQSOPoints. Nothing is stored. *)
+  TotalDigitalQSOPoints                 : LONGINT {= 0};
   (* ~~LiveSessionTally~~ stood here (it was MOQSOPartyPeakHourCount):
      Missouri's peak-hour count, kept while the program ran and never by the
      log's loader. Deleted at Q32 (2026-10-17) -- the Missouri class counts
@@ -310,6 +317,16 @@ function BigEntryAddress(Entry: FourBytes): integer;
 function CallNotInPossibleCallList(Call: CallString; PossCallList: PossibleCallRecord): boolean;
 
 procedure ClearContestExchange(var Exchange: ContestExchange);
+
+(* ADD aQso's POINTS TO THE LOG'S TOTALS -- the one statement of "a scored
+   QSO's points count": TotalQSOPoints for the scored band (every band, or
+   the one a single-band entry scores -- SingleBand), and, for a Digital
+   QSO, TotalDigitalQSOPoints too. The log's loader (MainUnit.LoadinLog)
+   and live entry (LOGSUBS2.LogContact) each call it where they summed
+   TotalQSOPoints themselves until issue 129, so neither the place nor the
+   condition of either moved. *)
+procedure AddToTotalQSOPoints(const aQso: ContestExchange);
+
 procedure CreateGridSquareList(Call: CallString; Band: BandType);
 
 //function FindProperPartialCallAddress(Call: CallString): integer;
@@ -430,6 +447,21 @@ function MultiplierKindsCredited(aContest: TContestBase;
   disagree with it. *)
 function MultiplierSheetBand(aKind: RemainingMultiplierType; aBand: BandType): BandType;
 function MultiplierSheetMode(aMode: ModeType): ModeType;
+
+(* THE MODE SLOT A QSO IN aMode IS WRITTEN TO AND READ FROM on the multiplier
+  sheet -- the session's contest's multiplier mode (TContestBase.
+  MultiplierModeOf, asked of ContestIdentity, as uCallsigns.ContestDupeSlot
+  asks DupeModeOf; issue 122: the Louisiana QSO Party answers CW for
+  Digital). EVERY write to `mo` passes it (AddQSOToSheets, the worked counts,
+  TAdditionalDomesticMultiplierReplay) and MultiplierSheetMode reads through
+  it (SetMultFlags, the #317 test, the spot hint, LOGWIND's MultMode,
+  uTotal's per-mode cell), so a write and a read can never key different
+  slots. A per-mode BREAKDOWN that walks every slot (PostUnit's summary
+  sheet, uGetScores, the matrix) is deliberately not mapped: it shows a
+  grouping contest's digital multipliers under CW. Both and NoMode are keys
+  and stay as they are. Every contest but the closed list in
+  uTestMultiplierMode answers aMode, so for them nothing moves. *)
+function MultiplierSlotMode(aMode: ModeType): ModeType;
 
 (* THE TEXT A WORKED COUNT IS KEYED ON for a domestic multiplier: the key
   itself, or its two-character grid FIELD where the contest's multiplier is
@@ -968,6 +1000,18 @@ begin
   Exchange.ceContest := Contest;
 end;
 
+procedure AddToTotalQSOPoints(const aQso: ContestExchange);
+begin
+  if (SingleBand = aQso.Band) or (SingleBand = AllBands) then
+     begin
+     TotalQSOPoints := TotalQSOPoints + aQso.QSOPoints;
+     if aQso.Mode = Digital then
+        begin
+        TotalDigitalQSOPoints := TotalDigitalQSOPoints + aQso.QSOPoints;
+        end;
+     end;
+end;
+
 (* GetNumber IS GONE -- M11 S4, 2026-10-14. Its only caller was GetDXQTH's
   PACC arm, and it moved with that arm, verbatim, into TContestPACC as
   PACCCallAreaDigit. *)
@@ -1089,6 +1133,7 @@ var
   credited                              : ContestExchange;
   kinds                                 : TMultiplierKinds;
   additionalKey                         : string;
+  slotMode                              : ModeType;
 begin
 
   if RXData.ceSearchAndPounce then
@@ -1104,27 +1149,31 @@ begin
 //    if RXData.DomesticMult or RXData.DXMult or RXData.PrefixMult or RXData.ZoneMult then
      begin
 
+     (* THE CONTEST'S MULTIPLIER MODE, the slot SetMultFlags read -- issue
+        122. The QSO's own Mode for every contest but the closed list. *)
+     slotMode := MultiplierSlotMode(RXData.Mode);
+
      if RXData.DomesticMult then
         begin
         //        TempDOMBand := RXData.Band;
         //        if Contest in [RDA, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB] then TempDOMBand := All;
         //        mo.SetDmMult(RXData.DomMultQTH, TempDOMBand, RXData.Mode);
-              mo.SetDmMult(RXData.DomMultQTH, RXData.Band, RXData.Mode);
+              mo.SetDmMult(RXData.DomMultQTH, RXData.Band, slotMode);
         end;
 
      if RXData.DXMult then
         begin
-        mo.SetDXMult(RXData.QTH.Country, RXData.Band, RXData.Mode);
+        mo.SetDXMult(RXData.QTH.Country, RXData.Band, slotMode);
         end;
 
      if RXData.PrefixMult then
         begin
-        mo.SetPxMult(RXData.Prefix, RXData.Band, RXData.Mode);
+        mo.SetPxMult(RXData.Prefix, RXData.Band, slotMode);
         end;
 
      if RXData.ZoneMult then
         begin
-        mo.SetZnMult(RXData.Zone, RXData.Band, RXData.Mode);
+        mo.SetZnMult(RXData.Zone, RXData.Band, slotMode);
         end;
 
      (* THE SECOND DOMESTIC KEY (#317), which has no stored flag and is
@@ -1148,7 +1197,7 @@ begin
         the key is credited, new or not: the worked count below needs it. *)
      if AdditionalDomesticMultiplierNewOnSheet(mo, contestRules, credited, kinds, additionalKey) then
         begin
-        mo.SetDmMult(additionalKey, credited.Band, credited.Mode);
+        mo.SetDmMult(additionalKey, credited.Band, slotMode);
         end;
 
      (* A dupe counts nothing (CountWorkedMultipliers). *)
@@ -1210,6 +1259,7 @@ begin
      end;
 
   TotalQSOPoints := 0;
+  TotalDigitalQSOPoints := 0;
   (* THE VIEW A BONUS RULE READS GOES WITH THE TOTALS -- see uScoreTotals. *)
   ResetLoggedQSOs;
   TotalNamesSent := 0;
@@ -1582,11 +1632,17 @@ begin
      end;
 end;
 
+function MultiplierSlotMode(aMode: ModeType): ModeType;
+begin
+  Result := ContestMultiplierModeOf(ContestIdentity(Contest), aMode);
+end;
+
 function MultiplierSheetMode(aMode: ModeType): ModeType;
 begin
   if Settings.Mult.ByMode then
      begin
-     Result := aMode;
+     (* The contest's multiplier mode -- issue 122; aMode for every other. *)
+     Result := MultiplierSlotMode(aMode);
      end
   else
      begin
@@ -1723,16 +1779,17 @@ begin
   (* AddQSOToSheets' DOMESTIC HALF, IN ITS ORDER: the stored county first
      (Vermont's VT can be received as itself, so the host key can reach the
      sheet without a second key), then the second key. *)
+  (* In the contest's multiplier mode, as AddQSOToSheets writes (issue 122). *)
   if aRX.DomesticMult then
      begin
-     FSheet.SetDmMult(aRX.DomMultQTH, aRX.Band, aRX.Mode);
+     FSheet.SetDmMult(aRX.DomMultQTH, aRX.Band, MultiplierSlotMode(aRX.Mode));
      end;
   credited := CreditedSheetCopy(aRX);
   if AdditionalDomesticMultiplierNewOnSheet(FSheet, FContest, credited,
                                             MultiplierKindsCredited(FContest, credited),
                                             key) then
      begin
-     FSheet.SetDmMult(key, credited.Band, credited.Mode);
+     FSheet.SetDmMult(key, credited.Band, MultiplierSlotMode(credited.Mode));
      Result := 1;
      end;
 end;
@@ -1806,6 +1863,8 @@ end;
 
 procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExchange;
   aKinds: TMultiplierKinds; const aAdditionalDomesticKey: string);
+var
+  slotMode: ModeType;
 begin
   if aRX.ceClearMultSheet or aRX.ceDupe then
      begin
@@ -1817,29 +1876,32 @@ begin
      Exit;
      end;
 
-  (* THE REAL BAND AND MODE: mo.CountWorked fills the AllBands / Both cells
-     too, and the reader's key applies the scope -- as the bits do. *)
+  (* THE REAL BAND AND THE CONTEST'S MULTIPLIER MODE (issue 122; the QSO's
+     own mode for every other contest): mo.CountWorked fills the AllBands /
+     Both cells too, and the reader's key applies the scope -- as the bits
+     do. *)
+  slotMode := MultiplierSlotMode(aRX.Mode);
   if rmDomestic in aKinds then
      begin
      mo.CountWorked(rmDomestic, DomesticMultiplierCountKey(aContest, string(aRX.DomMultQTH)),
-                    aRX.Band, aRX.Mode);
+                    aRX.Band, slotMode);
      if aAdditionalDomesticKey <> '' then
         begin
         mo.CountWorked(rmDomestic, DomesticMultiplierCountKey(aContest, aAdditionalDomesticKey),
-                       aRX.Band, aRX.Mode);
+                       aRX.Band, slotMode);
         end;
      end;
   if rmDX in aKinds then
      begin
-     mo.CountWorked(rmDX, IntToStr(aRX.QTH.Country), aRX.Band, aRX.Mode);
+     mo.CountWorked(rmDX, IntToStr(aRX.QTH.Country), aRX.Band, slotMode);
      end;
   if rmPrefix in aKinds then
      begin
-     mo.CountWorked(rmPrefix, string(aRX.Prefix), aRX.Band, aRX.Mode);
+     mo.CountWorked(rmPrefix, string(aRX.Prefix), aRX.Band, slotMode);
      end;
   if rmZone in aKinds then
      begin
-     mo.CountWorked(rmZone, IntToStr(aRX.Zone), aRX.Band, aRX.Mode);
+     mo.CountWorked(rmZone, IntToStr(aRX.Zone), aRX.Band, slotMode);
      end;
 end;
 

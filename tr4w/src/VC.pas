@@ -1519,8 +1519,13 @@ type
     );
   PBandType = ^BandType;
   (* ****** If you add any new non-Data extended modes, please update MainUnit.GetModeFromExtendedMode *)
+  (* APPEND ONLY. A member's ORDINAL is stored: the .TRW record's byte, the
+    multi-op ContestExchange packet and Edit QSO's item index all carry it.
+    eJTTY (WSJT-X 3.3's keyboard mode, issue 120, NY4I 2026-11-18) is last
+    for that reason. *)
   ExtendedModeType = (eNoMode, eCW, eRTTY, eFT8, eFT4, eJT65, ePSK31, ePSK63, eSSB, eFM, eAM,
-                      eMFSK, eJS8, eUSB, eLSB, eData, eCW_R, eData_R, eRTTY_R, eFM_N, eAM_N,eData_FM, eC4FM, eDStar, ePSK_R, eWFM, eFST4, eFST4W);
+                      eMFSK, eJS8, eUSB, eLSB, eData, eCW_R, eData_R, eRTTY_R, eFM_N, eAM_N,eData_FM, eC4FM, eDStar, ePSK_R, eWFM, eFST4, eFST4W,
+                      eJTTY);
 
   ModeType = (CW, Digital, Phone, Both, NoMode, FM); { Use for TR }
            //AM, CW, CW-R, DATA-L, DATA-U, FM, LSB, USB, RTTY, RTTY-R, WBFM
@@ -1659,7 +1664,8 @@ const
   ExtendedModeStringArray               : array[ExtendedModeType] of string =
                                               ('NoMode', 'CW', 'RTTY', 'FT8', 'FT4', 'JT65', 'PSK31', 'PSK63', 'SSB', 'FM', 'AM',
                                                'MFSK', 'JS8', 'USB', 'LSB', 'DATA', 'CW-R', 'DATA-R', 'RTTY-R', 'FM-N', 'AM-N',
-                                               'DATA-FM', 'C4FM', 'D-STAR', 'PSK-R', 'WFM', 'FST4', 'FST4W');
+                                               'DATA-FM', 'C4FM', 'D-STAR', 'PSK-R', 'WFM', 'FST4', 'FST4W',
+                                               'JTTY');
 
   (* The band as the operator sees it -- right-aligned in four columns,
     which is why the shorter ones carry leading spaces. *)

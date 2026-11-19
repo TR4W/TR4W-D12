@@ -91,6 +91,7 @@ type
       procedure FillCategoryItems(const aTag: CabrilloTags;
                                   const aCombo: TComboBox);
       procedure ApplyErmakCategories;
+      procedure FillOverlayItems;
       procedure LoadValues;
       procedure SaveValues;
       procedure CommitCategory(const aTag: CabrilloTags;
@@ -130,7 +131,7 @@ implementation
 uses
    LCLType,               { VK_ESCAPE }
    VC,                    { ErmakSpecification, ERMAKSECTION, CABRILLOSECTION }
-   PostUnit,              { ErmakOverlayCategory, NumberErmakOverlayCategories }
+   PostUnit,              (* ErmakOverlayCategory, OverlayCategory, Contest *)
    uCabrilloHeader,       { the header store, settings\tr4w.json }
    uOperatorList,         (* OperatorListFromLog -- the OPERATORS row *)
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
@@ -144,6 +145,8 @@ uses
    (* LogStoreRecordContestStatement -- a category change is written into the
      contest database when it is made (Q61). *)
    uLogStore,
+   (* ContestIdentity -- the session contest's sponsor overlays, issue 122 *)
+   uContestRegistry,
    uAppStrings;           (* SCategoryPowerChangedRescored *)
 
 var
@@ -269,8 +272,6 @@ end;
   part of ERMAK that is commented out is its own report window, not this.  See
   the banner in uErmak.pas. }
 procedure TfrmCabrilloSummary.ApplyErmakCategories;
-var
-   i: integer;
 begin
    if not ErmakSpecification then
       begin
@@ -290,19 +291,50 @@ begin
       TComboBox(FRow[ctCategoryBand]).Items.Add('10M-15M-20M');
       TComboBox(FRow[ctCategoryBand]).Items.Add('80M-40M-160M');
       end;
+   (* ERMAK's overlay list is FillOverlayItems', which runs at every opening. *)
+end;
 
-   { REPLACED, not appended -- CB_RESETCONTENT stood here. }
-   if FRow[ctCategoryOverlay] is TComboBox then
+(* THE OVERLAY ROW, REFILLED AT EVERY OPENING -- issue 122. The window lives
+  for the session and BuildRows runs once, but the overlays a sponsor names
+  belong to the contest open NOW (ContestIdentity(Contest).
+  CabrilloOverlayCategories), so they are asked here, before LoadValues
+  restores the saved choice -- a saved POTA must be in the list to be
+  selected again. The base list is ERMAK's where that specification is in
+  force (it REPLACED the standard list -- CB_RESETCONTENT stood here), else
+  the standard one; uCbrSum.OverlayValuesWith composes them, blank last. *)
+procedure TfrmCabrilloSummary.FillOverlayItems;
+var
+   values : TArray<string>;
+   cbo    : TComboBox;
+   i      : integer;
+begin
+   if not (FRow[ctCategoryOverlay] is TComboBox) then
       begin
-      TComboBox(FRow[ctCategoryOverlay]).Items.Clear;
-      for i := 0 to NumberErmakOverlayCategories - 1 do
-         begin
-         TComboBox(FRow[ctCategoryOverlay]).Items.Add(AnsiString(ErmakOverlayCategory[i]));
-         end;
-      (* AND THE BLANK "no overlay" CHOICE, LAST, which the Clear above took
-        out with the standard list -- see uCbrSum.CategoryValuesFor. *)
-      TComboBox(FRow[ctCategoryOverlay]).Items.Add('');
+      Exit;
       end;
+   cbo := TComboBox(FRow[ctCategoryOverlay]);
+
+   if ErmakSpecification then
+      begin
+      values := OverlayValuesWith(ErmakOverlayCategory,
+                                  ContestIdentity(Contest).CabrilloOverlayCategories);
+      end
+   else
+      begin
+      values := OverlayValuesWith(OverlayCategory,
+                                  ContestIdentity(Contest).CabrilloOverlayCategories);
+      end;
+
+   cbo.Items.BeginUpdate;
+   try
+      cbo.Items.Clear;
+      for i := 0 to High(values) do
+         begin
+         cbo.Items.Add(AnsiString(values[i]));
+         end;
+   finally
+      cbo.Items.EndUpdate;
+   end;
 end;
 
 procedure TfrmCabrilloSummary.LoadValues;
@@ -645,6 +677,7 @@ begin
 
    { Every opening: the contest, and so the header section, may have changed
      since the last one. }
+   FillOverlayItems;
    LoadValues;
 
    ApplyContentMinimumSize(Self);

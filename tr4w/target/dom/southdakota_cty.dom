@@ -1,0 +1,72 @@
+South Dakota QSO Party -- the 66 South Dakota counties, each its own multiplier.
+Four-letter codes from the sponsor's rules page (docs/ContestRules/QSOParties/SouthDakota/SD-QSO-PARTY-Counties.txt, retrieved 2026-11-18); the same 66 codes as DXLog.net's SDQP.txt.
+No county maps to the state: the rules count South Dakota counties as multipliers of their own for every entrant, once.
+No INCLUDE here: an out-of-state entrant's table holds only the counties (the host-area rule reads it).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+AURO = AURO,^Aurora
+BEAD = BEAD,^Beadle
+BENN = BENN,^Bennett
+BONH = BONH,^Bon Homme
+BROO = BROO,^Brookings
+BRUL = BRUL,^Brule
+BRWN = BRWN,^Brown
+BUFF = BUFF,^Buffalo
+BUTT = BUTT,^Butte
+CAMP = CAMP,^Campbell
+CHAR = CHAR,^Charles Mix
+CLAY = CLAY,^Clay
+CLRK = CLRK,^Clark
+CODI = CODI,^Codington
+CORS = CORS,^Corson
+CUST = CUST,^Custer
+DAVI = DAVI,^Davison
+DAY = DAY,^Day
+DEUE = DEUE,^Deuel
+DEWY = DEWY,^Dewey
+DGLS = DGLS,^Douglas
+EDMU = EDMU,^Edmunds
+FALL = FALL,^Fall River
+FAUL = FAUL,^Faulk
+GRAN = GRAN,^Grant
+GREG = GREG,^Gregory
+HAAK = HAAK,^Haakon
+HAML = HAML,^Hamlin
+HAND = HAND,^Hand
+HNSN = HNSN,^Hanson
+HRDG = HRDG,^Harding
+HUGH = HUGH,^Hughes
+HUTC = HUTC,^Hutchinson
+HYDE = HYDE,^Hyde
+JERA = JERA,^Jerauld
+JKSN = JKSN,^Jackson
+JONE = JONE,^Jones
+KING = KING,^Kingsbury
+LAKE = LAKE,^Lake
+LAWR = LAWR,^Lawrence
+LINC = LINC,^Lincoln
+LYMA = LYMA,^Lyman
+MCOO = MCOO,^McCook
+MCPH = MCPH,^McPherson
+MEAD = MEAD,^Meade
+MELL = MELL,^Mellette
+MINE = MINE,^Miner
+MINN = MINN,^Minnehaha
+MOOD = MOOD,^Moody
+MRSH = MRSH,^Marshall
+OGLA = OGLA,^Oglala Lakota
+PENN = PENN,^Pennington
+PERK = PERK,^Perkins
+POTT = POTT,^Potter
+ROBE = ROBE,^Roberts
+SANB = SANB,^Sanborn
+SPIN = SPIN,^Spink
+STAN = STAN,^Stanley
+SULL = SULL,^Sully
+TODD = TODD,^Todd
+TRIP = TRIP,^Tripp
+TURN = TURN,^Turner
+UNIO = UNIO,^Union
+WALW = WALW,^Walworth
+YANK = YANK,^Yankton
+ZIEB = ZIEB,^Ziebach

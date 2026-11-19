@@ -372,6 +372,8 @@ uses
    uADIFExchange,
    (* FormatCabrilloMode *)
    uCabrilloFormat,
+   (* TryParseReportAndGrid -- the "[report] GRID" words. *)
+   uGridShape,
    (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
    uDXMultiplierKey,
    (* SExchangeOutOfStateWorksHostOnly, the New Contest district texts. *)
@@ -457,35 +459,27 @@ begin
 end;
 
 (* "[report] GRID": one word, the grid; or two, a signed whole-number report
-   and the grid. The report, when given, is the received report. *)
+   and the grid. The report, when given, is the received report. The words
+   are read by uGridShape.TryParseReportAndGrid (lifted from here for the
+   South Dakota QSO Party, issue 129); the grid is this sponsor's. *)
 function TryParseGridExchange(const aText: string; var aExch: ContestExchange): boolean;
 var
-   words: TWords;
+   grid: string;
+   hasReport: boolean;
    report: integer;
 begin
-   Result := False;
-   words := WordsOf(aText);
-   if (Length(words) < 1) or (Length(words) > 2) then
+   Result := TryParseReportAndGrid(aText, @IsHawaiiQPGridText, grid, hasReport, report);
+   if not Result then
       begin
       Exit;
       end;
-   if not IsHawaiiQPGridText(words[High(words)]) then
+   if hasReport then
       begin
-      Exit;
-      end;
-   if Length(words) = 2 then
-      begin
-      if not TryStrToInt(words[0], report) or
-         (report < Low(SmallInt)) or (report > High(SmallInt)) then
-         begin
-         Exit;
-         end;
       aExch.RSTReceived := report;
       end;
-   aExch.QTHString := ShortString(UpperCase(words[High(words)]));
+   aExch.QTHString := ShortString(grid);
    aExch.DomesticQTH := '';
    aExch.DomMultQTH := '';
-   Result := True;
 end;
 
 function TContestHawaiiQP.GetDisplayName: string;

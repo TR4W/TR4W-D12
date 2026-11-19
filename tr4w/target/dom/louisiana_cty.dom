@@ -1,0 +1,71 @@
+Louisiana QSO Party -- the 64 Louisiana parishes, each its own multiplier.
+Codes from the sponsor's parish table (docs/ContestRules/QSOParties/Louisiana/LA-QSO-PARTY-Parishes.txt); the same 64 codes as DXLog.net LAQP.txt.
+Names are the sponsor's spellings; the class maps SJB to ADIF's county name St John the Baptist (ADIFCountyName).
+No parish maps to the state: the rules count parishes as multipliers of their own for every entrant.
+No INCLUDE here: an out-of-state entrant's table holds only the parishes (the host-area rule reads it).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+ACAD = ACAD,^Acadia
+ALLE = ALLE,^Allen
+ASCE = ASCE,^Ascension
+ASSU = ASSU,^Assumption
+AVOY = AVOY,^Avoyelles
+BEAU = BEAU,^Beauregard
+BIEN = BIEN,^Bienville
+BOSS = BOSS,^Bossier
+CADD = CADD,^Caddo
+CALC = CALC,^Calcasieu
+CALD = CALD,^Caldwell
+CAME = CAME,^Cameron
+CATA = CATA,^Catahoula
+CLAI = CLAI,^Claiborne
+CONC = CONC,^Concordia
+DESO = DESO,^De Soto
+EBR = EBR,^East Baton Rouge
+ECAR = ECAR,^East Carroll
+EFEL = EFEL,^East Feliciana
+EVAN = EVAN,^Evangeline
+FRAN = FRAN,^Franklin
+GRAN = GRAN,^Grant
+IBER = IBER,^Iberia
+IBVL = IBVL,^Iberville
+JACK = JACK,^Jackson
+JEFF = JEFF,^Jefferson
+JFDV = JFDV,^Jefferson Davis
+LAFA = LAFA,^Lafayette
+LAFO = LAFO,^Lafourche
+LASA = LASA,^La Salle
+LINC = LINC,^Lincoln
+LIVI = LIVI,^Livingston
+MADI = MADI,^Madison
+MORE = MORE,^Morehouse
+NATC = NATC,^Natchitoches
+ORLE = ORLE,^Orleans
+OUAC = OUAC,^Ouachita
+PCP = PCP,^Pointe Coupee
+PLAQ = PLAQ,^Plaquemines
+RAPI = RAPI,^Rapides
+REDR = REDR,^Red River
+RICH = RICH,^Richland
+SABI = SABI,^Sabine
+SBND = SBND,^St. Bernard
+SCHL = SCHL,^St. Charles
+SHEL = SHEL,^St. Helena
+SJAM = SJAM,^St. James
+SJB = SJB,^St. John Baptist
+SLAN = SLAN,^St. Landry
+SMAR = SMAR,^St. Mary
+SMT = SMT,^St. Martin
+STAM = STAM,^St. Tammany
+TANG = TANG,^Tangipahoa
+TENS = TENS,^Tensas
+TERR = TERR,^Terrebonne
+UNIO = UNIO,^Union
+VERM = VERM,^Vermilion
+VERN = VERN,^Vernon
+WASH = WASH,^Washington
+WBR = WBR,^West Baton Rouge
+WCAR = WCAR,^West Carroll
+WEBS = WEBS,^Webster
+WFEL = WFEL,^West Feliciana
+WINN = WINN,^Winn

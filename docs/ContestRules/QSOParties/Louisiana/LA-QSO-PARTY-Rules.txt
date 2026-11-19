@@ -1,0 +1,101 @@
+Louisiana QSO Party Rules
+
+Source: https://laqp.w5gad.org/rules (the sponsor's site; http://laqp.org is named in rule 7.2.1 but did not answer); text from the HTML as served, saved beside this file as Rules.html
+Fetched: 2026-11-18
+The page states "Revised February 18, 2026 KJ5BYZ" (and the 2024 and 2025 revisions before it).
+Sponsor: the Jefferson Amateur Radio Club and the Louisiana Contest Club.
+WA7BNM ID: 250 (https://www.contestcalendar.com/contestdetails.php?ref=250) -- from issue 122's 2026-10-26 research, not re-read (the calendar bars automated access).
+Cabrillo Name: LA-QSO-PARTY -- the rules state none; DXLog.net LAQP.txt CABRILLO_CONTEST_NAME=LA-QSO-PARTY.
+ADIF Name: LA-QSO-PARTY -- in the ADIF 3.1.8 Contest_ID enumeration (adifmt v0.1.23, 2026-11-18).
+The parish table is a separate sponsor page: LA-QSO-PARTY-Parishes.txt (Abbreviations.html as served).
+laqp-rules-sections-7-9.md is NY4I's earlier paste of sections 7 to 9; this page carries the same text and the rest.
+GitHub issue 122.
+
+==============================================================================
+1. Object: For Amateurs to exchange QSO information with as many Louisiana stations as possible on the 160, 80, 40, 20, 15, 10, 6 and 2 meter bands. It is also an opportunity for county hunters to work rare or otherwise inactive Louisiana Parishes.
+1.1 Louisiana stations work everyone.
+1.2 Non-Louisiana stations work Louisiana stations only.
+2. Contest Period: The Louisiana QSO Party will run from 14:00 UTC April 4, 2026 to 02:00 UTC April 5, 2026
+2.1 All stations may work the entire contest period or any part thereof.
+3. Suggested Frequencies +/-:
+3.1 CW
+3.1.1 HF: 1.840, 3.540, 7.040, 14.040, 21.040, 28.040 VHF: 50.095, 144.050
+3.2 Phone
+3.2.1 HF: 1.865, 3.865, 7.255, 14.255, 21.365, 28.465 VHF: 50.135, 144.210
+3.3 Digital – includes RTTY and any digital mode that supports the required exchange
+3.3.1 In the standard digital sub-bands
+3.4 No WARC band contacts
+4. Classes: Non-Louisiana and Louisiana
+Non-Louisiana stations compete only against other Non-Louisiana stations. Louisiana stations compete only against other Louisiana stations.
+4.1 CATEGORY-OPERATOR: Cabrillo tag is ignored and everyone is lumped together regardless of the number of operators
+5. Categories: There will be twelve main categories:
+5.1 NON-Louisiana
+5.1.1 Phone only
+5.1.2 CW/Digital only
+5.1.3 Mixed mode
+5.2 Louisiana fixed stations
+5.2.1 Phone only
+5.2.2 CW/Digital only
+5.2.3 Mixed mode
+5.3 Rover (inside Louisiana)
+5.3.1 Phone only
+5.3.2 CW/Digital only
+5.3.3 Mixed mode
+5.4 Overlay – For Louisiana and Non-Louisiana Stations
+5.4.1 CATEGORY-OVERLAY: WIRES (antennas made of wires only, no aluminum tubing)
+5.4.2 CATEGORY-OVERLAY: TB-WIRES (tribander for 10/ 15/20M and wires for 40/80/160
+5.4.3 CATEGORY:OVERLAY: POTA (POTA, Campground, Federal Wildlife Refuge)
+6. Power:
+6.1 Participants in each of the categories above may chose to operate at one of the power levels:
+6.1.1 High Power – up to 1500 watts or the maximum allowed in your country, whichever is less
+6.1.2 Low power – up to 100 watts
+6.1.3 QRP – up to 5 watts
+6.2 If ANY contacts are made at a higher power level, then the entire log shall be classified at that higher power level
+6.3 Power output shall be measured at the last amplified gain stage before the antenna
+7. Contest Exchange:
+7.1 Non-Louisiana stations send call, signal report and state/province/country
+7.2 Louisiana stations send call, signal report and parish abbreviation
+7.2.1 Official list of Louisiana parishes and abbreviations is available at: laqp.org
+8. Scoring:
+8.1 QSO Points
+8.1.1 Count two (2) points for each complete PHONE QSO
+8.1.2 Count four (4) points for each complete CW/Digital QSO
+8.2 Multipliers
+8.2.1 For Non-Louisiana stations, multipliers are Louisiana Parishes (64 possible per band/mode)
+8.2.2 For Louisiana stations, multipliers are: Louisiana Parishes, States (other than Louisiana), Provinces, and DXCC, per band/mode
+8.2.3 For purpose of multipliers, the following 13 Canadian provinces shall be recognized: AB, BC, MB, NB, NL, NS, NT, NU, ON, PE, QC, SK, and YT. To be more in line with other state QSO parties, Maritime regions will not be recognized as multipliers.
+8.3 Final Score
+8.3.1 Non Louisiana Stations: Multiply QSO points by total multipliers (sum of Louisiana Parishes per band/mode)
+8.3.2 Louisiana Stations: Multiply QSO points by total multipliers (sum of Louisiana parishes, States (other than Louisiana), Canadian Provinces and DXCC, per band/mode)
+8.3.3 Rovers: Multiply QSO points by total multipliers (sum of Louisiana parishes, States (other than Louisiana), Canadian Provinces and DXCC, per band/mode), PLUS 50 points per Parish activated
+9. Miscellaneous:
+9.1 Multipliers: CW/Digital and Phone contacts count as separate multipliers
+9.2 NO repeater contacts may be claimed for QSO or multiplier credit
+9.3 There are NOT separate assisted / non-assisted categories. Please feel free to spot other stations (no self spotting, though)
+9.4 All fixed stations may be worked once on CW/Digital and once on Phone PER BAND
+9.4.1 Rovers may be worked once on CW/Digital and once on Phone per band, in EACH parish activated
+9.4.2 Rovers must clearly indicate parish of operation
+9.4.3 Rovers who are PRECISELY on a parish line may give contacts for both parishes, however, a separate and complete QSO and log entry must be made for each contact
+9.5 Any station working N5LCC, the Louisiana Contest Club station, may claim a one-time 100 POINT BONUS. You may contact N5LCC additional times but will not receive additional points.
+9.6 QSOs are cross-checked. A QSO where the other operator did not submit a log is counted for scoring. QSOs that are "broken" or where the QSO is not in the submitted log for the other operator are not counted. QSOs that do not match a CATEGORY-MODE of SSB or CW/DIGITAL in the Cabrillo file are not counted. Any station may have multiple different QTHs, but Louisiana stations will not receive the parish bonus points unless their CATEGORY-STATION is ROVER (and they are in Louisiana).
+9.7 See http://www.arrl.org/general-rules-for-all-arrl-contests . Where a conflict occurs between ARRL rules and LaQP rules, then ARRL rules shall take precedence.
+10. Log Submission:
+10.1 To upload a Cabrillo log go to the https://laqp.contesting.com/
+10.2 To create a Cabrillo file online: http://www.b4h.net/cabforms/
+10.3 By uploading a log or creating a log online, you agree that the LAQP Contest Committee may use your e-mail address to:
+10.3.1: Send you an acknowledgement and confirmation that your log has been received and entered
+10.3.2: Ask you a question about your log
+10.3.3: Send you an invitation to operate in next year’s LAQP
+10.3.4: The LAQP Contest Committee will not publish or share your e-mail address with anyone for any reason.
+10.4 The deadline for log submission is 10 days from the day of the LAQP. Logs received after that time will not be considered for awards
+10.5 All logs generated using a computer must submit an ASCII text file of the log in ARRL (Cabrillo) format.
+10.6 By submitting a log, you agree that your score, and possibly your entire log – except your e-mail address – may be made public
+10.7 By submitting a log, you agree that all decisions by the LAQP Contest Committee are final
+10.8 Claimed scores will be checked against QSO count and multipliers and scores corrected as necessary
+11. Awards:
+#### What to say here about certificates??? No awards give.
+12. Contact Us:
+12.1 Please direct any questions to: laqp@w5gad.org
+Revised Feb 19, 2024 WM5H, W5WZ
+Revised March 27, 2025 W5WZ, N5YS
+Revised February 18, 2026 KJ5BYZ

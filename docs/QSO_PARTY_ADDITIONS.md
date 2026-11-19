@@ -106,11 +106,67 @@ worked through the party base's new `QSOCreditsHostCounty`, lifted out of
 `InStateCountyEarnsHostState`). `CountyFileDifference` takes an optional
 `> Ks`-style mapping. Matrix records are still to be frozen.
 
-Waiting: Atlantic Canada #116 and Hawaii #118 (the sponsor sites answer 403;
-rules requested), Canadian Prairies #117 (district count; shared multi-province
-host change with #116), Illinois #119 (IL-as-state and DC questions), Louisiana
-#122 (the CW+digital multiplier-mode seam), Mississippi #123 (six questions),
-South Dakota #129 (a split-score totals seam).
+Waiting: Hawaii #118 (the sponsor site answers 403; rules requested), Canadian
+Prairies #117 (district count; shared multi-province host change with #116).
+
+Atlantic Canada #116 -- built 2026-11-18, uncommitted (`uContestAtlanticCanadaQP`,
+`acqp.dom`, `acqp_cty.dom`; NY4I saved the V 26.0.1 rules PDF in
+`docs/ContestRules/QSOParties/AtlanticCanada`, which does NOT list the 47
+codes -- `AC-QSO-PARTY-Counties.txt` takes them from DXLog). The second
+multi-province party (`'NB NS PE NL'`); the in-region province per band and
+mode is the prefix key (no engine seam); ten 5-point bonus stations once per
+band and mode. Engine one-liner: the county-line drain re-asks `SetPrefix`.
+Matrix record not yet frozen. Questions on #116.
+
+**Mississippi #123 -- built 2026-11-18, uncommitted** (`uContestMississippiQP`,
+`mississippi.dom`, `mississippi_cty.dom`; the 2026 rules PDF NY4I saved is in
+`docs/ContestRules/QSOParties/Mississippi`, with `MS-QSO-PARTY-Counties.txt`
+transcribed from DXLog -- arrlmiss.org answered 403; the sponsor's County
+Check List NY4I attached, `MSQP-Counties.pdf`, agrees on all 82). NY4I's
+answers of 2026-11-18 applied: 1st Saturday of April, an FT8/FT4 QSO with no
+grid scores 0. Still his: PSK/JS8 as X-QSOs, a blank FT exchange, the FT sent
+column with no MY GRID, and "show both" grid counts (needs a display seam in
+uTotal/PostUnit/uScore3830Report). NO NEW ENGINE SEAM: the
+FT4/FT8 grids are the prefix multiplier (South Dakota's shape; out of state
+only the nine MS grids are credited), the in-state grids / 4 rounded up is the
+class's `CombineWithMultipliers`, and the four dupe modes (CW, SSB, RTTY,
+FT4/8) fall out of the party base's received-QTH dupe key (pinned through the
+real engine). Lifted `uGridShape.FourCharacterGridSquareOf` from South
+Dakota. Not built: the mobile's sum of per-county scores (#133). Matrix record
+not yet frozen.
+
+**Louisiana #122 -- built 2026-11-18, uncommitted** (`uContestLouisianaQP`,
+`louisiana.dom`, `louisiana_cty.dom` from the sponsor's parish page; the full
+rules page, revised 2026-02-18, is saved in `docs/ContestRules/QSOParties/
+Louisiana`). NEW SEAM for rule 9.1 ("CW/Digital and Phone contacts count as
+separate multipliers"): `TContestBase.MultiplierModeOf` (base: the mode),
+asked only through `LOGDUPE.MultiplierSlotMode`, which every write to the
+multiplier sheet and `MultiplierSheetMode` (every read) use; Louisiana alone
+answers CW for Digital, pinned by `uTestMultiplierMode`
+(`GROUPS_MULTIPLIER_MODES`). Not built: the rover's +50 per parish (#133),
+rule 9.6's CATEGORY-MODE check (the sponsor's), the WIRES/POTA overlays (no
+per-contest overlay seam). Matrix record not yet frozen.
+
+**Illinois #119 -- built 2026-11-18, uncommitted** (`uContestIllinoisQP`,
+`illinois.dom`, and `illinois_cty.dom` REWRITTEN from the sponsor's county
+chart -- the tracked legacy file had broken keys `Island` and `Clair`; the
+stray `illinois.txt` beside it is deleted). NY4I's rulings: an Illinois
+entrant's county QSO also earns IL as a state (#317's opt-in, Alabama's one
+line), and a station sending IL is IL; DC is Maryland; the third full weekend
+of October (Sunday 1700Z-0100Z); a non-IL station works only IL stations;
+the bonus stations assumed every year; standard RY/DG; county codes only
+(LEE the one three-letter code); FM is phone, 1 point. No new seam: digital
+is CW for dupes (`DupeModeOf`), DXCC capped at 5
+(`SummedMultipliersWithKindCapped`). ADIF id `IL QSO PARTY` (the enumeration's
+spelling); whether an import naming `IL-QSO-PARTY` should also match is still
+open. Matrix record not yet frozen.
+
+**South Dakota #129 -- built 2026-11-18, uncommitted** (`uContestSouthDakotaQP`,
+`southdakota.dom`, `southdakota_cty.dom`; sponsor page saved in
+`docs/ContestRules/QSOParties/SouthDakota/`). The split-score seam is
+`TScoreTotals.DigitalQSOPoints`, summed by `LOGDUPE.AddToTotalQSOPoints` and
+pinned by `uTestDigitalQSOPoints`; the digital grid is the prefix sheet's key.
+Matrix record not yet frozen.
 
 These remain requests, not claimed implementations. Regional Canadian
 events require their actual multi-province eligibility, not an assumed

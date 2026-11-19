@@ -1,0 +1,13 @@
+# Sweepstakes states its modes (Q98, sponsor rule 2.4, NY4I 2026-11-18): the off-mode CW QSO's ADIF record changes (the claimed-QSO app field)
+#
+# ARRL Sweepstakes Rules v2.2, rule 2.4: "Use only CW during the CW weekend and Phone during the
+# Phone weekend." (docs/ContestRules/ARRL/ARRL-SS-Rules.txt). TContestARRLSSSSB credits Phone only, so
+# QSO 206 of this log (N0TST, 160 m CW, dated 2025-01-11, a test-looking entry) is now an automatic
+# X-QSO: logged, 0 points, no multiplier. ref.cbr / ref.adi are D7-written and are NEVER regenerated,
+# so the change is pinned here exactly. QSO points 408 -> 406, CLAIMED-SCORE 30192 -> 30044 (406 x 74;
+# OK stays a multiplier through AC5M, QSO 186).
+#
+# Read by run-golden-diff.sh: the lines below the comments are EXACTLY the changed lines golden_diff.py
+# must report for ref.adi vs cand.adi -- any other difference in this artifact is a FAIL.
+-<CALL:5>N0TST <BAND:4>160m <QSO_DATE:8>20250111 <TIME_ON:6>201454 <TIME_OFF:6>201454 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:11>ARRL-SS-SSB <MODE:2>CW <QTH:2>OK <PRECEDENCE:1>M <CHECK:2>23 <SRX:5>00093 <STX:5>00206 <OPERATOR:4>W4TA <STX_STRING:12>206 M 13 WCF <SRX_STRING:9>93M OK 23 <ARRL_SECT:2>OK <EOR>
++<CALL:5>N0TST <BAND:4>160m <QSO_DATE:8>20250111 <TIME_ON:6>201454 <TIME_OFF:6>201454 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:11>ARRL-SS-SSB <MODE:2>CW <QTH:2>OK <PRECEDENCE:1>M <CHECK:2>23 <SRX:5>00093 <STX:5>00206 <OPERATOR:4>W4TA <APP_TR4W_CLAIMEDQSO:1>0 <STX_STRING:12>206 M 13 WCF <SRX_STRING:9>93M OK 23 <ARRL_SECT:2>OK <EOR>

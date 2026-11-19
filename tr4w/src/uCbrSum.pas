@@ -133,6 +133,17 @@ type
   a drop-down's positions still match the enum's ordinals. *)
 function CategoryValuesFor(const aTag: CabrilloTags): TArray<string>;
 
+(* THE CATEGORY-OVERLAY DROP-DOWN FOR ONE CONTEST -- issue 122 (NY4I,
+  2026-11-18: a sponsor's overlays must be offered "for this contest", and
+  only once the contest is known). aBase is the standard list (PostUnit's
+  OverlayCategory, or ERMAK's), in its old positions; then each of
+  aSponsor -- the contest's CabrilloOverlayCategories -- that aBase does not
+  already hold (compared without case; a blank is skipped); then the one
+  blank "no overlay" choice, LAST, as every category list ends.
+  CategoryValuesFor(ctCategoryOverlay) is this with no sponsor values. *)
+function OverlayValuesWith(const aBase: array of string;
+                           const aSponsor: TArray<string>): TArray<string>;
+
 (* IS THIS ONE OF THE NINE CATEGORY-* TAGS? Their header line is written even
   when the value is blank; every other tag's is left out when blank. *)
 function CabrilloTagIsCategory(const aTag: CabrilloTags): boolean;
@@ -218,6 +229,7 @@ procedure FocusCabrilloSummaryWindow;
 implementation
 
 uses
+  SysUtils,                 (* Trim, SameText -- OverlayValuesWith *)
   uCabrilloHeader,          { the header store, settings\tr4w.json }
   uOperatorList,            (* OperatorListFromLog -- the OPERATORS answer *)
   uCabrilloSummaryForm;
@@ -265,8 +277,42 @@ begin
       ctCategoryTransmitter: Result := ValuesWithBlank(TransmitterCategory);
       ctCategoryStation:     Result := ValuesWithBlank(StationCategory);
       ctCategoryTime:        Result := ValuesWithBlank(TimeCategory);
-      ctCategoryOverlay:     Result := ValuesWithBlank(OverlayCategory);
+      ctCategoryOverlay:     Result := OverlayValuesWith(OverlayCategory, nil);
    end;
+end;
+
+function OverlayValuesWith(const aBase: array of string;
+                           const aSponsor: TArray<string>): TArray<string>;
+var
+   i, j  : integer;
+   value : string;
+   held  : boolean;
+begin
+   Result := ValuesOf(aBase);
+   for i := 0 to High(aSponsor) do
+      begin
+      value := Trim(aSponsor[i]);
+      if value = '' then
+         begin
+         Continue;
+         end;
+      held := False;
+      for j := 0 to High(Result) do
+         begin
+         if SameText(Result[j], value) then
+            begin
+            held := True;
+            Break;
+            end;
+         end;
+      if not held then
+         begin
+         SetLength(Result, Length(Result) + 1);
+         Result[High(Result)] := value;
+         end;
+      end;
+   SetLength(Result, Length(Result) + 1);
+   Result[High(Result)] := '';
 end;
 
 function CabrilloTagIsCategory(const aTag: CabrilloTags): boolean;

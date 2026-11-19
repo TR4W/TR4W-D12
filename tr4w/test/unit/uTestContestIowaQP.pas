@@ -20,6 +20,7 @@ type
       procedure Test_InStateTable;
       procedure Test_Score;
       procedure Test_RealEngineAndExports;
+      procedure Test_JTTYIsTheWSJTXModeThatCounts;
    end;
 
 implementation
@@ -28,7 +29,7 @@ uses
    SysUtils, VC, uSettingsModel, uContestBase, uContestRegistry,
    uContestStateQSOPartyBase, uContestIowaQP, uTestContestObjects,
    uTestQSOPartyRules, uTestQSOPartyEngine, uMults, LogEdit, LogStuff,
-   uPendingCounties, PostUnit, MainUnit;
+   uPendingCounties, PostUnit, MainUnit, uADIF;
 
 function PartyHandle: TContestHandle;
 begin
@@ -113,14 +114,14 @@ begin
                   expected := 1;
                   end;
                if (mode = Digital) and
-                  not (ext in [eFT8, eFT4, eJT65, eFST4, eFST4W]) then
+                  (ext in [eJTTY, eNoMode, eData]) then
                   begin
                   expected := 2;
                   end;
                qso := IAQSO('K0AAA', Band20, mode, ext);
                party.ScoreQSO(qso);
                CheckEquals(expected, Integer(qso.QSOPoints),
-                  'phone 1, CW and digital 2, no WSJT-X');
+                  'phone 1, CW 2, digital 2 for JTTY only (NY4I, 2026-11-18)');
                CheckTrue(party.UsesMode(mode, ext) = (expected > 0), 'mode and submode eligibility');
                end;
             end;
@@ -210,7 +211,10 @@ begin
       CheckTrue(LoggedQSOIsXQSO(rx), 'WSJT-X FT8 cannot pass the exchange: an automatic X-QSO');
       CheckFalse(rx.DomesticMult, 'and it earns no county');
       engine.Enter('W0JS', '599 POL', Band20, Digital, eJS8, accepted, rx);
-      CheckTrue(accepted and rx.DomesticMult, 'JS8 counts, and the FT8 QSO marked nothing');
+      CheckTrue(LoggedQSOIsXQSO(rx), 'JS8 too: JTTY is the only digital mode (NY4I, 2026-11-18)');
+      CheckFalse(rx.DomesticMult, 'and it earns no county');
+      engine.Enter('W0JT', '599 POL', Band20, Digital, eJTTY, accepted, rx);
+      CheckTrue(accepted and rx.DomesticMult, 'JTTY counts, and the FT8 and JS8 QSOs marked nothing');
       CheckEquals(2, Integer(rx.QSOPoints), 'digital 2 points');
       engine.Enter('W0OFF', '599 LIN', Band30, CW, eCW, accepted, rx);
       CheckTrue(LoggedQSOIsXQSO(rx), '30 m is excluded');
@@ -279,12 +283,56 @@ begin
    end;
 end;
 
+(* NY4I, issue 120, 2026-11-18, answering whether the WSJT-X modes stay
+   refused: "That only mode that could be accepted is JTTY". JTTY is the only
+   stated digital submode that counts; eNoMode and eData ("some submode") are
+   never proven off-mode. The second half takes JTTY the way it arrives:
+   WSJT-X's own LOGGEDADIF record, MODE MFSK + SUBMODE JTTY. *)
+procedure TContestIowaQPTests.Test_JTTYIsTheWSJTXModeThatCounts;
+var
+   party: TContestBase;
+   qso: ContestExchange;
+   records: TContestExchangeArray;
+   ext: ExtendedModeType;
+begin
+   BeginTest('Test_IowaJTTYIsTheWSJTXModeThatCounts');
+   party := Make(PartyHandle, WithHostAreaTable(NoStation));
+   try
+      CheckTrue(party.UsesMode(Digital, eJTTY), 'JTTY is accepted (NY4I, 2026-11-18)');
+      qso := IAQSO('K0AAA', Band20, Digital, eJTTY);
+      party.ScoreQSO(qso);
+      CheckEquals(2, Integer(qso.QSOPoints), 'a JTTY QSO is a 2-point digital QSO');
+      for ext in [eFT8, eFT4, eJT65, eFST4, eFST4W, eRTTY, ePSK31, ePSK63, eJS8, eMFSK] do
+         begin
+         CheckFalse(party.UsesMode(Digital, ext),
+            ExtendedModeStringArray[ext] + ' is off-mode: JTTY only');
+         end;
+      for ext in [eNoMode, eData] do
+         begin
+         CheckTrue(party.UsesMode(Digital, ext),
+            ExtendedModeStringArray[ext] + ' is "some submode", never proven off-mode');
+         end;
+
+      CheckEquals(1, ImportADIFFromString(
+         '<CALL:5>K0AAA <MODE:4>MFSK <SUBMODE:4>JTTY <BAND:3>20m ' +
+         '<QSO_DATE:8>20260919 <TIME_ON:6>150000 <EOR>', records),
+         'one WSJT-X record');
+      CheckTrue(records[0].Mode = Digital, 'WSJT-X''s JTTY imports as Digital');
+      CheckEquals(Integer(eJTTY), Integer(records[0].ExtMode), 'and as eJTTY');
+      CheckTrue(party.UsesMode(records[0].Mode, records[0].ExtMode),
+         'so Iowa credits the imported QSO');
+   finally
+      party.Free;
+   end;
+end;
+
 procedure TContestIowaQPTests.RunAllTests;
 begin
    Test_IdentityAndScoring;
    Test_InStateTable;
    Test_Score;
    Test_RealEngineAndExports;
+   Test_JTTYIsTheWSJTXModeThatCounts;
 end;
 
 end.

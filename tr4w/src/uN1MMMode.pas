@@ -66,7 +66,8 @@ const
       (* ePSK_R   *) 'PSK',
       (* eWFM     *) 'FM',
       (* eFST4    *) 'FST4',
-      (* eFST4W   *) 'FST4W'
+      (* eFST4W   *) 'FST4W',
+      (* eJTTY    *) 'JTTY'   (* WSJT-X's own mode name, as for FT8 and FST4 *)
       );
 
 function N1MMSidebandForFreq(aFreqHz: LongInt): string;

@@ -77,6 +77,7 @@ begin
    CheckEquals('FT4',   N1MMModeName(Digital, eFT4, 14080000),    'eFT4');
    CheckEquals('FST4',  N1MMModeName(Digital, eFST4, 14080000),   'eFST4');
    CheckEquals('FST4W', N1MMModeName(Digital, eFST4W, 14080000),  'eFST4W');
+   CheckEquals('JTTY',  N1MMModeName(Digital, eJTTY, 14080000),   'eJTTY');
    CheckEquals('JT65',  N1MMModeName(Digital, eJT65, 14076000),   'eJT65');
    CheckEquals('PSK31', N1MMModeName(Digital, ePSK31, 14070000),  'ePSK31');
    CheckEquals('PSK63', N1MMModeName(Digital, ePSK63, 14070000),  'ePSK63');

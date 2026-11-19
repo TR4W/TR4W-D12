@@ -35,6 +35,12 @@ S1['CQ-WW-SSB'] = ({1, 3, 4, 5, 6, 8, 9, 11, 13, 16, 12}, KEYS, True, True)
 # Not in the design's S4a row (it is S5's contest): every base QSO but 4
 # (40 m RTTY), and every key, which moves to Digital/eRTTY.
 S1['CQ-WW-RTTY'] = (ALL_BASE - {4}, KEYS, True, True)
+# ARRL Sweepstakes states its modes (2026-11-18, rule 2.4); its bands are NOT
+# stated, so 30 m / 6 m / 2 m stay credited. SS Phone: the CW, FM and digital
+# base QSOs, and every key but 23 (the one phone key), which moves to phone.
+# SS CW: the phone, FM and digital base QSOs, and key 23, which moves to CW.
+S1['ARRL-SS-SSB'] = ({1, 3, 4, 5, 6, 8, 9, 11, 13, 16}, KEYS - {23}, True, True)
+S1['ARRL-SS-CW'] = ({2, 3, 4, 5, 7, 10, 12, 14, 15, 17}, {23}, True, True)
 
 
 def parse(path):

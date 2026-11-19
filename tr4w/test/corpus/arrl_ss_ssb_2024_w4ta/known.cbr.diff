@@ -1,0 +1,14 @@
+# Sweepstakes states its modes (Q98, sponsor rule 2.4, NY4I 2026-11-18): the CW QSO in the SSB contest is an X-QSO and the claimed score drops
+#
+# ARRL Sweepstakes Rules v2.2, rule 2.4: "Use only CW during the CW weekend and Phone during the
+# Phone weekend." (docs/ContestRules/ARRL/ARRL-SS-Rules.txt). TContestARRLSSSSB credits Phone only, so
+# QSO 206 of this log (N0TST, 160 m CW, dated 2025-01-11, a test-looking entry) is now an automatic
+# X-QSO: logged, 0 points, no multiplier. ref.cbr / ref.adi are D7-written and are NEVER regenerated,
+# so the change is pinned here exactly. QSO points 408 -> 406, CLAIMED-SCORE 30192 -> 30044 (406 x 74;
+# OK stays a multiplier through AC5M, QSO 186).
+#
+# Read by run-golden-diff.sh: the lines below the comments are EXACTLY the changed lines golden_diff.py
+# must report for ref.cbr vs cand.cbr -- any other difference in this artifact is a FAIL.
+-CLAIMED-SCORE: 30192
+-QSO:  1800 CW 2025-01-11 2014 W4TA    206  M 13 WCF N0TST          93   M 23 OK       +X-QSO:  1800 CW 2025-01-11 2014 W4TA    206  M 13 WCF N0TST          93   M 23 OK       
++CLAIMED-SCORE: 30044

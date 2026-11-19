@@ -68,8 +68,10 @@ the record on every load, rescore and live QSO.**
 ## A QSO CAN EARN TWO DOMESTIC KEYS (issue #317, 2026-11-13)
 
 An in-state entrant's host-county QSO earns the county AND the host state in
-Alabama (per mode), West Virginia (overall), Kentucky (overall) and Vermont
-(per mode). The record carries ONE domestic key; the state is
+Alabama (per mode), West Virginia (overall), Kentucky (overall), Vermont
+(per mode) and Illinois (overall; like Vermont, a station may also send IL
+itself) -- the closed list is `uTestAdditionalDomesticMultiplier`'s
+`PartyCase`. The record carries ONE domestic key; the state is
 `TContestBase.AdditionalDomesticMultiplierKey` (base False, nil-safe
 `ContestAdditionalDomesticMultiplierKey`), each leaf one line calling
 `TContestStateQSOPartyBase.InStateCountyEarnsHostState` (in host state, the
@@ -395,6 +397,15 @@ read-only `TLoggedQSOView` of the log, kept in memory beside the totals
 ~130 us a row). Every reader of the score
 -- display, summary, Cabrillo `CLAIMED-SCORE`, XML report, both posting
 clients -- reads `TotalScore`. **Do not put a formula or a bonus back in it.**
+**THE POINTS ARE SUMMED IN ONE ROUTINE, `LOGDUPE.AddToTotalQSOPoints`**
+(issue 129, 2026-11-18): the loader (`LoadinLog`, inside its X-QSO test) and
+live `LogContact` (outside it -- an X-QSO scores 0) each call it where they
+summed `TotalQSOPoints` themselves; it applies `SingleBand` and also sums
+`TotalDigitalQSOPoints`, the Digital QSOs' share, which `GatherScoreTotals`
+hands over as `TScoreTotals.DigitalQSOPoints` (nothing stored). The South
+Dakota QSO Party's split score is its one reader;
+`uTestDigitalQSOPoints.Test_OnlyItsReadersScoreDifferently` holds the
+readers to a closed list. Never sum `TotalQSOPoints` anywhere else.
 The one contest still named there, with its reason: RSGB 1.8 MHz, whose
 per-QSO arm reads the multiplier sheet (`mo.isdmmult`), which no class can be
 handed (design Q33). Off the main thread `TotalScore` returns the last
@@ -468,11 +479,26 @@ RXData, kind)` per kind -- the class's `CountsAsMultiplier` (BC/NY/Indiana
 -- and only then the sheet whether the multiplier is NEW. The need-multiplier
 hint's call-to-domestic-multiplier (`LogEdit.GetMultArray`) is the class's
 `DomesticMultiplierFromCall`, handed the engine's lookups. **Do not put a
-contest test back in the sheet.** **`SetPrefix` IS NO LONGER A KIND ARM
+contest test back in the sheet.** **WHICH MODE SLOT a multiplier lives in is
+the contest's too (issue 122, 2026-11-18):** `LOGDUPE.MultiplierSlotMode`
+asks `TContestBase.MultiplierModeOf` (Louisiana: Digital is CW) and is the
+mode EVERY write to `mo` passes (`AddQSOToSheets`, `CountWorkedMultipliers`,
+the #317 replay); `MultiplierSheetMode`, the read key, goes through it, and
+`LOGWIND`'s `MultMode` and `uTotal`'s `TempMode` are
+`MultiplierSheetMode(ActiveMode)`. A new write or read of the sheet with a
+mode must use one of the two, or a grouping contest writes one slot and reads
+another. Per-mode BREAKDOWNS that walk every slot (PostUnit's summary sheet,
+`uGetScores`, the matrix) are deliberately not mapped and show a grouping
+contest's digital multipliers under CW. Pinned by `uTestMultiplierMode`. **`SetPrefix` IS NO LONGER A KIND ARM
 (M11 S3 part 1, 2026-10-14):** it asks the class's `PrefixMultiplierKey`
 through `ContestPrefixMultiplierKey(ActiveContest(Contest), ...)`, once per
 QSO, and assigns only on True (False leaves a stored prefix alone -- the
-rescore depends on it). ZoneCont's three prefix computations are the leaf
+rescore depends on it). **The county-line drain asks it too** (issue 116,
+2026-11-18): `MainUnit.DrainPendingMultiQSORefs` calls `SetPrefix(TempRX)`
+after `FoundDomesticQTH`, so a leg whose key comes from its QTH (the Atlantic
+Canada province) carries its own key, not the first leg's; pinned by a source
+read in `uTestContestAtlanticCanadaQP` (the drain cannot run headless).
+ZoneCont's three prefix computations are the leaf
 `uPrefixMultiplierKey` now. **`PrefixMultType` IS DELETED (M11 S3 part 2,
 2026-10-14)** -- enum, trait, session field, `WritePrefixMult`, the
 `DescribeSession` statements and the matrix's `active.prefixmult` line.

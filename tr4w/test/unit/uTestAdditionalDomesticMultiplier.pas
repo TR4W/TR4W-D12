@@ -3,7 +3,7 @@
 
    An in-state entrant's host-county QSO earns the county AND the host state
    in Alabama, West Virginia, Kentucky, Iowa (issue 120), South Carolina
-   (issue 111) and Vermont. The state is a second
+   (issue 111), Illinois (issue 119) and Vermont. The state is a second
    key on the DOMESTIC sheet (TContestBase.AdditionalDomesticMultiplierKey,
    asked by LOGDUPE.AddQSOToSheets through
    AdditionalDomesticMultiplierCredited). Nothing is stored, so what this
@@ -69,7 +69,7 @@ uses
    Classes, SysUtils, uContestBase, uContestRegistry,
    uContestAlabamaQP, uContestWestVirginiaQP, uContestKentuckyQP,
    uContestVermontQP, uContestArkansasQP, uContestNewJerseyQP, uContestIowaQP,
-   uContestSouthCarolinaQP,
+   uContestSouthCarolinaQP, uContestIllinoisQP,
    uTestContestObjects, uTestRegisteredContests, uTestQSOPartyEngine,
    uDomFileKeys, uMults, LogDupe, LogStuff, MainUnit,
    uContestFactory,   (* ActiveContest -- the live question's contest (#318) *)
@@ -87,7 +87,7 @@ type
    end;
 
 const
-   PARTY_COUNT = 6;
+   PARTY_COUNT = 7;
 
 function PartyCase(aIndex: integer): TPartyCase;
 begin
@@ -135,6 +135,16 @@ begin
          Result.CountyFile := 'southcarolina_cty.dom';
          Result.CountyA := 'CHAR';
          Result.CountyB := 'RICH';
+         end;
+      5:
+         begin
+         (* Issue 119, NY4I: an Illinois entrant's QSO with an Illinois
+            county also earns IL as a state, once overall. *)
+         Result.Id := IL_QSO_PARTY_CONTEST_ID;
+         Result.Host := 'IL';
+         Result.CountyFile := 'illinois_cty.dom';
+         Result.CountyA := 'COOK';
+         Result.CountyB := 'PEOR';
          end;
       else
          begin
@@ -273,7 +283,7 @@ end;
 
 procedure TAdditionalDomesticMultiplierTests.Test_InStateListsHoldTheHostKey;
 const
-   EXPECTED: array[0..PARTY_COUNT - 1] of integer = (130, 118, 184, 162, 110, 77);
+   EXPECTED: array[0..PARTY_COUNT - 1] of integer = (130, 118, 184, 162, 110, 165, 77);
 var
    i: integer;
    party: TPartyCase;
@@ -496,7 +506,9 @@ begin
                   end;
                if party.Id <> VT_QSO_PARTY_CONTEST_ID then
                   begin
-                  (* No alias: the host key is reached ONLY through a county. *)
+                  (* No alias: the host key is reached ONLY through a county.
+                     Illinois accepts IL sent itself too, but RunSession never
+                     sends it, so the equality holds for its session. *)
                   CheckTrue(hostWorked = countyWorked, Format('%s: the state is worked in scope %d/%d ' +
                      'exactly when a county is', [party.Id, Ord(sb), Ord(sm)]));
                   end;

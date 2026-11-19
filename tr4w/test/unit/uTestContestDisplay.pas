@@ -1306,8 +1306,29 @@ begin
          end;
       (* THE PREFIX ROW SAYS PREFIXES EVERYWHERE BUT THE CW OPEN (issue 277)
         -- a contest that labels it otherwise is added to the arm above, on
-        its sponsor's rule, never by widening this test. *)
-      if c <> CWOPEN then
+        its sponsor's rule, never by widening this test. The South Dakota QSO
+        Party (issue 129) keeps its digital GRIDS on the prefix sheet: its
+        row says so; so does the Mississippi QSO Party's (issue 123), for its
+        FT4/FT8 grids. *)
+      if (ContestId(HandleOf(identities[k])) = 'SD-QSO-PARTY') or
+         (ContestId(HandleOf(identities[k])) = 'MS-QSO-PARTY') then
+         begin
+         CheckEquals(STotalsGridMults, d.PrefixMultsCaption, who + ': grids');
+         CheckEquals('Grids', d.PrefixMultsCaption, who + ': the English caption');
+         CheckEquals('CW Grids', d.PrefixMultsCaptionCW, who + ' on CW');
+         CheckEquals('Ph Grids', d.PrefixMultsCaptionPhone, who + ' on phone');
+         end
+      (* THE ATLANTIC CANADA QSO PARTY (issue 116) keeps an in-region
+        entrant's Atlantic province, per band and mode, on the prefix sheet:
+        its row says PROVINCES. *)
+      else if ContestId(HandleOf(identities[k])) = 'AC-QSO-PARTY' then
+         begin
+         CheckEquals(STotalsProvinceMults, d.PrefixMultsCaption, who + ': provinces');
+         CheckEquals('Provinces', d.PrefixMultsCaption, who + ': the English caption');
+         CheckEquals('CW Provs', d.PrefixMultsCaptionCW, who + ' on CW');
+         CheckEquals('Ph Provs', d.PrefixMultsCaptionPhone, who + ' on phone');
+         end
+      else if c <> CWOPEN then
          begin
          CheckEquals(TC_PREFIX, d.PrefixMultsCaption, who + ' prefix label');
          CheckEquals('CW Pfxs', d.PrefixMultsCaptionCW, who + ' CW prefix label');

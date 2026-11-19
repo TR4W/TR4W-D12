@@ -1,0 +1,15 @@
+Entries for the South Dakota QSO Party used by in-state (South Dakota) stations
+The 66 South Dakota counties (each its own multiplier), the 50 states with DC counted as Maryland, and the 13 Canadian provinces and territories.
+DXCC countries other than the USA, Canada, Hawaii and Alaska are the class's DX multiplier, not entries here.
+The county file comes FIRST, so a county code wins over any state or province alias spelled the same.
+DC is mapped to Md before s50.dom (the rules count US States; DC is no state -- a decision recorded in uContestSouthDakotaQP).
+SD stays on the list from s50.dom: the rules name US States and DXLog accepts SD (a question for NY4I in issue 129).
+NF and LB are read as NL (the last line).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+https://pdarc.org/sd-qso-party
+
+INCLUDE FILE southdakota_cty.dom
+Dc > Md = DC
+INCLUDE FILE s50.dom
+INCLUDE FILE p13.dom
+Nl = NF,LB

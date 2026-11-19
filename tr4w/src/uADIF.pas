@@ -115,7 +115,10 @@ type
       tAdifDARC_DOK, tAdifAPP_TR4W_FOC_NUM,
       (* OUR NAME AND POSTAL CODE, AS THE RECORD STATES THEM -- log schema 9.
         Read into the row's my_name and my_postal_code (MyFactsFromADIF). *)
-      tAdifMY_NAME, tAdifMY_POSTAL_CODE);
+      tAdifMY_NAME, tAdifMY_POSTAL_CODE,
+      (* A SUBMODE ADIF 3.1.6 DOES NOT LIST, which TR4W writes here beside a
+        valid MODE (JTTY, issue 120). See ADIFAppSubModeForExtMode. *)
+      tAdifAPP_TR4W_SUBMODE);
 
 // =========================================================================
 // Lexer
@@ -163,6 +166,10 @@ function GetADIFSubMode(sSubMode: string): ModeAndExtendedModeType;
   D-STAR ...) and are not ADIF modes.  SubMode is '' when none is written. *)
 function ADIFModeForExtMode(aExtMode: ExtendedModeType): string;
 function ADIFSubModeForExtMode(aExtMode: ExtendedModeType): string;
+
+(* The submode ADIF 3.1.6 cannot name, written as APP_TR4W_SUBMODE beside
+  the MODE above ('' for every mode it can): JTTY only (issue 120). *)
+function ADIFAppSubModeForExtMode(aExtMode: ExtendedModeType): string;
 
 (* The (MODE, SUBMODE) ADIF pair for one QSO: ExtMode when it has one, else
   the base Mode (Digital with no ExtMode is RTTY).  Public so every sender of
@@ -982,7 +989,8 @@ begin
    Result.msmExtendedMode := eNoMode;
    case AnsiIndexText(AnsiUpperCase(sSubMode),
                       ['FT4', 'JS8', 'USB', 'LSB', 'PSK31',
-                       'PSK63', 'C4FM', 'DSTAR', 'FST4', 'FST4W']) of
+                       'PSK63', 'C4FM', 'DSTAR', 'FST4', 'FST4W',
+                       'JTTY']) of
       0:                              // FT4
          begin
          Result.msmMode := Digital;
@@ -1032,6 +1040,15 @@ begin
          begin
          Result.msmMode := Digital;
          Result.msmExtendedMode := eFST4W;
+         end;
+      10:                             // JTTY -- NOT an ADIF 3.1.6 submode
+         begin
+         (* WSJT-X 3.3 writes MODE MFSK, SUBMODE JTTY (AdifQso::base_mode),
+           and that is what its LOGGEDADIF message hands us. TR4W's own
+           export writes the name in APP_TR4W_SUBMODE instead, which comes
+           back through here too. *)
+         Result.msmMode := Digital;
+         Result.msmExtendedMode := eJTTY;
          end;
    else
       Result.msmMode := NoMode;
@@ -1084,7 +1101,8 @@ const
        (Mode: 'PSK';          SubMode: ''),        // ePSK_R
        (Mode: 'FM';           SubMode: ''),        // eWFM
        (Mode: 'MFSK';         SubMode: 'FST4'),    // eFST4
-       (Mode: 'MFSK';         SubMode: 'FST4W'));  // eFST4W
+       (Mode: 'MFSK';         SubMode: 'FST4W'),   // eFST4W
+       (Mode: 'MFSK';         SubMode: ''));       // eJTTY -- see below
 
 function ADIFModeForExtMode(aExtMode: ExtendedModeType): string;
 begin
@@ -1094,6 +1112,25 @@ end;
 function ADIFSubModeForExtMode(aExtMode: ExtendedModeType): string;
 begin
    Result := ADIFModePairs[aExtMode].SubMode;
+end;
+
+(* JTTY IS NOT AN ADIF 3.1.6 SUBMODE (issue 120, 2026-11-18). WSJT-X 3.3
+  writes MODE MFSK + SUBMODE JTTY, which the ADIF validator refuses as a
+  compliance error ("not a valid SUBMODE for MODE 'MFSK'"). So TR4W writes
+  the valid MODE MFSK with no SUBMODE, and names the submode in
+  APP_TR4W_SUBMODE -- an application field, always legal -- so its own
+  import restores eJTTY, the APP_TR4W_MODE_ASSUMED pattern. The day ADIF
+  lists JTTY, this answers '' for it and ADIFModePairs gains the SUBMODE. *)
+function ADIFAppSubModeForExtMode(aExtMode: ExtendedModeType): string;
+begin
+   if aExtMode = eJTTY then
+      begin
+      Result := 'JTTY';
+      end
+   else
+      begin
+      Result := '';
+      end;
 end;
 
 (* RANGE COMPARISONS ON Char, not `in [...]`: the string is a UnicodeString and
@@ -1439,7 +1476,7 @@ end;
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..64] of string = (
+   ADIF_FIELD_NAMES : array[0..65] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -1466,7 +1503,9 @@ const
       'APP_TR4W_MODE_ASSUMED',
       'DARC_DOK', 'APP_TR4W_FOC_NUM',
       // Our name and postal code (schema 9) -- order must match the enum
-      'MY_NAME', 'MY_POSTAL_CODE');
+      'MY_NAME', 'MY_POSTAL_CODE',
+      // A submode ADIF 3.1.6 does not list (issue 120) -- order must match
+      'APP_TR4W_SUBMODE');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -1542,11 +1581,13 @@ var
    haveRoverCall        : Boolean;
    contestFromId        : Boolean;
    modeAssumed          : Boolean;
+   appSubMode           : string;
 begin
    Result := True;
    InitADIFRecordTemps(temps);
    haveRoverCall := False;
    modeAssumed := False;
+   appSubMode := '';
    contestFromId := False;
 
    for i := 0 to High(fields) do
@@ -1807,6 +1848,10 @@ begin
             tAdifAPP_TR4W_MODE_ASSUMED:
                modeAssumed := UpperCase(Trim(fieldValue)) = 'Y';
 
+            (* Applied after the loop, for the same reason. *)
+            tAdifAPP_TR4W_SUBMODE:
+               appSubMode := Trim(fieldValue);
+
          else
             // Unknown / unhandled field.  Silently accept anything
             // prefixed with APP_ (third-party extensions).  Log others.
@@ -1834,6 +1879,20 @@ begin
    if modeAssumed and (exch.ExtMode = eRTTY) then
       begin
       exch.ExtMode := eData;
+      end;
+
+   (* THE SUBMODE ADIF CANNOT NAME, RESTORED (issue 120). TR4W wrote MODE
+     MFSK with no SUBMODE and the name here; only that pairing is undone, so
+     a stray field beside another mode, or beside a real SUBMODE, changes
+     nothing. *)
+   if (appSubMode <> '') and (exch.ExtMode = eMFSK) then
+      begin
+      msm := GetADIFSubMode(appSubMode);
+      if msm.msmMode <> NoMode then
+         begin
+         exch.Mode    := msm.msmMode;
+         exch.ExtMode := msm.msmExtendedMode;
+         end;
       end;
 
    (* ONE ID, TWO CONTESTS: TOLD APART BY THE MODE, ONCE THE WHOLE RECORD IS
@@ -2434,6 +2493,10 @@ begin
       begin
       Result := Result + EmitADIFField('SUBMODE', subModeStr);
       end;
+   (* The submode ADIF 3.1.6 cannot name (JTTY), beside the valid MODE; ''
+     writes nothing (EmitADIFField omits an empty value). *)
+   Result := Result + EmitADIFField('APP_TR4W_SUBMODE',
+                                    ADIFAppSubModeForExtMode(rec.ExtMode));
 
    // FREQ (locale-independent, '.' separator)
    Result := Result + EmitADIFField('FREQ', freqStr);

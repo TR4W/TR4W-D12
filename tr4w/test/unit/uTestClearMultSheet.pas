@@ -229,10 +229,7 @@ begin
             (not rx.ceQSO_Deleted)       and
             QSOCountsTowardTotals(LoggedQSOContest(rx.ceContest), rx) then
             begin
-            if (SingleBand = rx.Band) or (SingleBand = AllBands) then
-               begin
-               TotalQSOPoints := TotalQSOPoints + rx.QSOPoints;
-               end;
+            AddToTotalQSOPoints(rx);
             Sheet.AddQSOToSheets(@rx, True);
             AddLoggedQSO(rx, facts);
             end;

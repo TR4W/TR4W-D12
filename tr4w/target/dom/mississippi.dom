@@ -1,0 +1,15 @@
+Entries for the Mississippi QSO Party used by in-state (Mississippi) stations
+The 82 Mississippi counties (each its own multiplier), the US states with DC counted as Maryland, and the 13 Canadian provinces and territories.
+DXCC countries other than the USA, Canada, Hawaii and Alaska are the class DX multiplier, not entries here; FT4/FT8 grids are its prefix multiplier.
+The county file comes FIRST, so a county code wins over any state or province alias spelled the same.
+DC is mapped to Md before s50.dom: the rules count 49 remaining States, and NY4I counts DC as Maryland (issue 123).
+Mississippi itself is not a multiplier for an in-state entrant (the remaining States): the class refuses it.
+s50.dom is included BEFORE p13.dom: p13 also spells Newfoundland LA, and the first alias added wins, so LA stays Louisiana.
+NF and LB are read as NL (the last line): the rules count the 13 provinces and territories.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+INCLUDE FILE mississippi_cty.dom
+Dc > Md = DC
+INCLUDE FILE s50.dom
+INCLUDE FILE p13.dom
+Nl = NF,LB

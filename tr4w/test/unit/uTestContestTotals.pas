@@ -1395,8 +1395,14 @@ begin
          100 points once per band and mode, after multiplying. Kansas at
          issue 121: "a one-time bonus of 100 points for contacting KS0KS".
          South Carolina at issue 111 (rules 9.3): W4CAE 350, WW4SF and K4YTZ
-         250, once per band per mode. *)
-      CheckEquals('AR-QSO-PARTY|BCQP|KS-QSO-PARTY|KY-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|SC-QSO-PARTY|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
+         250, once per band per mode. South Dakota at issue 129: "work the
+         Sponsoring Club (W0OJY) station ... extra 100 points ... may only be
+         used once". Illinois at issue 119: W9AWE and W9OAB, "a 100 point
+         bonus added to the final score. Total of 200 points possible".
+         Louisiana at issue 122 (rule 9.5): "Any station working N5LCC ...
+         may claim a one-time 100 POINT BONUS". Atlantic Canada at issue
+         116: ten bonus calls, "5 Bonus points once per band and mode". *)
+      CheckEquals('AC-QSO-PARTY|AR-QSO-PARTY|BCQP|IL-QSO-PARTY|KS-QSO-PARTY|KY-QSO-PARTY|LA-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|SC-QSO-PARTY|SD-QSO-PARTY|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
                   'the contests that declare bonus stations');
    finally
       declaring.Free;

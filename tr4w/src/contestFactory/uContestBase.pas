@@ -925,6 +925,15 @@ type
          the points of that band only (LOGDUPE's TotalQSOPoints). *)
       QSOPoints: longint;
 
+      (* THE DIGITAL QSOs' SHARE OF QSOPoints -- issue 129 (2026-11-18), for
+         a contest whose digital QSOs take a multiplier of their own (the
+         South Dakota QSO Party: CW/phone points x geographic multipliers,
+         plus digital points x grids). The same band rule as QSOPoints, so
+         QSOPoints - DigitalQSOPoints is the CW and phone points
+         (LOGDUPE's TotalDigitalQSOPoints, summed by AddToTotalQSOPoints).
+         Read by no base formula: a contest that does not ask is unchanged. *)
+      DigitalQSOPoints: longint;
+
       (* QTCs counted as points: TotalNumberQTCsProcessed when QTCs are
          enabled, else 0. Every contest with QTCs on has always added them. *)
       QTCPoints: longint;
@@ -1945,6 +1954,7 @@ type
       function GetOffersQTCs: boolean; virtual;
       function GetOffersParkTools: boolean; virtual;
       function GetSubmitsLogToARRL: boolean; virtual;
+      function GetCabrilloOverlayCategories: TArray<string>; virtual;
       function GetZoneColumnHeading: string; virtual;
       function GetMyZoneIsAStationZone: boolean; virtual;
       function GetReceivedYearKind: TReceivedYearKind; virtual;
@@ -2927,6 +2937,32 @@ type
          ContestIdentity: the answer must not depend on the station. *)
       function DupeModeOf(aMode: ModeType): ModeType; virtual;
 
+      (* WHICH MODE A QSO IN aMode COUNTS ITS MULTIPLIERS IN -- aMode itself
+         (the base): where the contest counts multipliers by mode, CW,
+         digital and phone are three separate multiplier modes, as they
+         always were. A contest whose sponsor groups modes for multipliers
+         answers the mode it groups aMode under: the Louisiana QSO Party
+         (issue 122, rule 9.1: "CW/Digital and Phone contacts count as
+         separate multipliers") answers CW for Digital, so a parish worked on
+         CW and again on RTTY on one band is ONE multiplier.
+
+         THE MULTIPLIER SHEET'S TWIN OF DupeModeOf, and never the same
+         answer by inheritance: a contest may group modes for dupes and not
+         for multipliers. Asked ONLY through LOGDUPE.MultiplierSlotMode
+         (ContestMultiplierModeOf over ContestIdentity), which every write
+         to the sheet and every "is it new / how many in this mode" read
+         uses (MultiplierSheetMode: SetMultFlags, the spot hint, the
+         remaining-multipliers window, the totals window) -- so the sheet is
+         written and read in one slot. A per-mode BREAKDOWN of the sheet's
+         totals (the summary sheet, score posting, the matrix) reads every
+         slot and shows a grouping contest's digital multipliers under CW. It changes nothing where the session does not
+         count multipliers by mode (the read key is then Both). Never the
+         points, never the dupe sheet. The QSO's OWN logged mode is what is
+         asked, so live entry, the loader and the rescore build one sheet.
+         Asked of ContestIdentity: the answer must not depend on the station.
+         uTestMultiplierMode holds every other contest to identity. *)
+      function MultiplierModeOf(aMode: ModeType): ModeType; virtual;
+
       (* WHOSE COUNTY IS THIS QSO'S QTH? -- the state (or province) of the
          party county the QSO's QTH names, '' when it names none (a state, a
          province, DX, nothing). Read by ADIFWorkedStationState, below, and
@@ -3671,6 +3707,18 @@ type
          Digi, the three VHF runnings, the RTTY Roundup and Field Day. The
          base does not. *)
       property SubmitsLogToARRL: boolean read GetSubmitsLogToARRL;
+
+      (* THE CATEGORY-OVERLAY VALUES THIS CONTEST'S SPONSOR NAMES -- the
+         Cabrillo summary offers them after the standard overlay list
+         (uCbrSum.OverlayValuesFor; a value already on it is offered once),
+         and only for this contest: the window asks the session's contest
+         each time it opens (NY4I, issue 122, 2026-11-18: "if the rules list
+         POTA as an overlay, we have to honor it for this contest"). DATA,
+         IN THE SPONSOR'S SPELLING; the class never touches the window. The
+         Louisiana QSO Party is the first (rule 5.4: WIRES, TB-WIRES, POTA).
+         The base names none, which is the list every contest offered before.
+         Asked of ContestIdentity: no station. *)
+      property CabrilloOverlayCategories: TArray<string> read GetCabrilloOverlayCategories;
 
       (* THE LOG GRID'S HEADING OVER THE ZONE COLUMN -- what the operator
          reads, asked by uLogGrid for that one column (2026-11-11). The base
@@ -4633,6 +4681,12 @@ function ContestDupeKeyIncludesReceivedQTH(aContest: TContestBase): boolean;
    are whatever the class says; nil (the classless DUMMYCONTEST) answers
    aMode. *)
 function ContestDupeModeOf(aContest: TContestBase; aMode: ModeType): ModeType;
+
+(* aContest's TContestBase.MultiplierModeOf for aMode -- the mode a QSO in
+   aMode counts its multipliers in (issue 122). Both and NoMode are KEYS, not
+   modes, and are answered as they are whatever the class says; nil (the
+   classless DUMMYCONTEST) answers aMode. *)
+function ContestMultiplierModeOf(aContest: TContestBase; aMode: ModeType): ModeType;
 
 (* WHAT aContest's EXCHANGE CARRIES, AND HOW ITS PER-QSO STRING LEADS -- see
    TContestBase.ExchangeCarriesDomesticQTH and its neighbours (M11 S9d). nil
@@ -6260,6 +6314,18 @@ begin
       end;
 end;
 
+function ContestMultiplierModeOf(aContest: TContestBase; aMode: ModeType): ModeType;
+begin
+   if (aContest = nil) or (aMode = Both) or (aMode = NoMode) then
+      begin
+      Result := aMode;
+      end
+   else
+      begin
+      Result := aContest.MultiplierModeOf(aMode);
+      end;
+end;
+
 function ContestDupeKeyIncludesReceivedQTH(aContest: TContestBase): boolean;
 begin
    if aContest = nil then
@@ -7242,6 +7308,12 @@ begin
    Result := aMode;
 end;
 
+function TContestBase.MultiplierModeOf(aMode: ModeType): ModeType;
+begin
+   (* Every mode is its own multiplier mode -- see the declaration. *)
+   Result := aMode;
+end;
+
 function TContestBase.ADIFCountyState(const aQso: ContestExchange): string;
 begin
    (* Not a QSO party: no county -- see the declaration. *)
@@ -8084,6 +8156,13 @@ end;
 function TContestBase.GetSubmitsLogToARRL: boolean;
 begin
    Result := False;
+end;
+
+(* No sponsor overlays: the standard list alone -- see the property
+   CabrilloOverlayCategories. *)
+function TContestBase.GetCabrilloOverlayCategories: TArray<string>;
+begin
+   Result := nil;
 end;
 
 function TContestBase.GetIsActive: boolean;

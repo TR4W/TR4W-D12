@@ -84,7 +84,14 @@ uses
    (* TContestStateQSOPartyBase -- which contests are state parties (Q76). *)
    uContestStateQSOPartyBase,
    (* ContestsToWalk -- the invariants walk the registry (Q108 S1). *)
-   uTestRegisteredContests;
+   uTestRegisteredContests,
+   (* HostStateCodes, ShippedCountyKeys, HostIsCanadian -- a party's host,
+      read one way (issue 117). *)
+   Classes, uTestQSOPartyRules,
+   (* ShippedDomDirOverride, so the export reads the tree's county files. *)
+   uAppPaths,
+   (* ShippedDomDir. *)
+   uTestContestObjects;
 
 type
    TBooleanAnswer = function: boolean of object;
@@ -989,8 +996,19 @@ end;
    whose host is a Canadian province (ADIF has no Canadian county
    enumeration: British Columbia since Q89, Ontario since #127 -- the host
    judged by IsADIFPrimarySubdivision('VE', HostState), not by naming the
-   contests), and by no multi-state party, as before. A state party's host
-   county is its HostState, a two-letter code. *)
+   contests), and by no multi-state party, as before.
+
+   A STATE PARTY'S HOST COUNTY HAS ONE OF ITS HOST'S CODES AS ITS STATE --
+   restated 2026-11-18 (issue 117) as the property it protects, because a
+   host may now be several provinces ('AB SK MB'): every county key of the
+   party's county file (a key longer than two letters, the base's rule) is
+   written with a STATE that is one of HostState's codes -- HostState itself
+   where the host is one code -- read from the shipped file, so a
+   multi-province county file whose '>' province is missing or wrong fails
+   here, by key. A resolved key the file does not hold ('XYZ') is the host
+   for a single-code host and NOTHING for a multi-code one: no province is
+   invented. "A Canadian host" is every code a Canadian province
+   (HostIsCanadian). *)
 procedure TContestExportTests.Test_EveryPartyAndOnlyAPartyWritesAState;
 var
    contests: TContestIdentityList;
@@ -998,6 +1016,39 @@ var
    identity: TContestBase;
    isStateParty: boolean;
    isParty: boolean;
+
+   (* Every county of aParty's shipped county file is written with one of
+      the host's codes. The export reads the tree's files for the call
+      (ShippedDomDirOverride), restored after. *)
+   procedure CheckEveryCountyHasAHostState(aParty: TContestBase);
+   var
+      keys: TStringList;
+      i: integer;
+      state: string;
+      savedDomDir: string;
+   begin
+      keys := TStringList.Create;
+      savedDomDir := ShippedDomDirOverride;
+      try
+         ShippedDomDirOverride := ShippedDomDir;
+         ShippedCountyKeys(aParty.DomesticFileName + '.dom', keys);
+         CheckTrue(keys.Count > 0,
+                   ContestWho(aParty) + ': its county file holds counties');
+         for i := 0 to keys.Count - 1 do
+            begin
+            state := GetADIFStateForQSO(PartyQSO(HandleOf(aParty), string(keys[i]),
+                                                 string(keys[i]), 'K'));
+            CheckTrue(IsADIFHostStateCode(state) and
+                      (Pos(' ' + state + ' ', ' ' + UpperCase(aParty.HostState) + ' ') > 0),
+                      ContestWho(aParty) + ': county ' + string(keys[i]) +
+                      ' is written with STATE "' + state + '", not one of ' + aParty.HostState);
+            end;
+      finally
+         ShippedDomDirOverride := savedDomDir;
+         keys.Free;
+      end;
+   end;
+
 begin
    BeginTest('Test_EveryPartyAndOnlyAPartyWritesAState');
    (* AN INVARIANT OVER THE REGISTRY (Q108 S1), not a count: a contest writes
@@ -1037,12 +1088,12 @@ begin
          Hawaii QSO Party's districts). *)
       CheckTrue(not identity.WritesADIFCounty or
                 (isStateParty and
-                 not IsADIFPrimarySubdivision('VE', identity.HostState)),
+                 not HostIsCanadian(identity.HostState)),
                 ContestWho(identity) + ': CNTY only for a state party with a US host');
       if not ClassStatesItself(identity, WritesADIFCountyCode) then
          begin
          CheckEquals(Ord(isStateParty and
-                         not IsADIFPrimarySubdivision('VE', identity.HostState)),
+                         not HostIsCanadian(identity.HostState)),
                      Ord(identity.WritesADIFCounty),
                      ContestWho(identity) + ': CNTY exactly for the state parties with a US host, ' +
                      'unless the class states otherwise');
@@ -1050,11 +1101,19 @@ begin
 
       if isStateParty then
          begin
-         CheckEquals(2, Length(identity.HostState),
-                     ContestWho(identity) + ': the host is a two-letter code');
-         CheckEquals(identity.HostState,
-                     GetADIFStateForQSO(PartyQSO(HandleOf(identity), 'XYZ', 'Xyz', 'K')),
-                     ContestWho(identity) + ': a host county is the host''s state');
+         if Length(HostStateCodes(identity.HostState)) = 1 then
+            begin
+            CheckEquals(identity.HostState,
+                        GetADIFStateForQSO(PartyQSO(HandleOf(identity), 'XYZ', 'Xyz', 'K')),
+                        ContestWho(identity) + ': a host county is the host''s state');
+            end
+         else
+            begin
+            CheckEquals('',
+                        GetADIFStateForQSO(PartyQSO(HandleOf(identity), 'XYZ', 'Xyz', 'K')),
+                        ContestWho(identity) + ': a key its county file does not hold has no province');
+            end;
+         CheckEveryCountyHasAHostState(identity);
          end;
       end;
 

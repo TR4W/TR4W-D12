@@ -1,0 +1,432 @@
+Source: https://contests.arrl.org/ContestRules/SS-Rules.pdf (linked from https://www.arrl.org/sweepstakes)
+Fetched: 2026-11-18; pdftotext -layout, no wording changed
+Version: November Sweepstakes Rules Version 2.2; ARRL General Rules definitions Version 1.06 - 15 Jul 2022 (appended in the PDF)
+Modes: rule 2.4 'Use only CW during the CW weekend and Phone during the Phone weekend.' Phone is not defined in the rules or the glossary (FM, AM and digital are not named).
+Bands: rule 2.3 '1.8, 3.5, 7, 14, 21, and 28 MHz' (no WARC, no 6 m).
+
+ARRL November Sweepstakes Rules
+
+Introduction and How to Operate
+
+Contest Objective: To support amateur self-training in radiocommunications, including improving
+amateur operating skills, conducting technical investigations, and intercommunicating with other
+amateurs. Stations in the United States and Canada (including territories and possessions) exchange
+information with as many other US and Canadian stations as possible.
+
+     Your ARRL membership helps support the ARRL Contest Program – the world’s largest with
+    many different events from HF through microwave. Along with your membership, you’ll get
+    free access to the National Contest Journal, the ARRL’s online archive of QST articles, and the
+   Technical Information Service. Contesting builds skills and understanding – come join the fun!
+
+For more information about Sweepstakes and operating in the contest, visit the ARRL’s Sweepstakes
+web page.
+
+Contest Period (All dates are maintained in the ARRL contest calendar)
+         CW: First full weekend in November
+         Phone: Third full weekend in November
+         Contest Period: Begins 2100 UTC Saturday and runs through 0259 UTC Monday. Operate for a
+         maximum of 24 hours out of the 30-hour period. See the Special Rules for information about off
+         times.
+
+Log Deadline: Upload your log at contest-log-submission.arrl.org no later than SEVEN (7) days after the
+contest is over at 0259 UTC. Paper logs are not accepted. For details, see the Sweepstakes web page.
+
+Bands and Modes: Use only the 1.8, 3.5, 7, 14, 21, and 28 MHz bands. Use only CW during the CW
+weekend and Phone during the Phone weekend.
+
+Categories: Single Operator and Single Operator Unlimited (all power sub-categories); Multioperator,
+Single-Transmitter (High or Low Power); and School Club (no sub-categories). There are no limitations on
+band changes in any category. See the Special Rules and HF Categories sections for details.
+
+Limited Antennas Overlay: Any Single Operator or Single Operator Unlimited entrant can enter using
+the Limited Antennas Overlay. Operation is limited to the use of single-element antennas such as a
+single vertical, end-fed wire, or a single dipole antenna no more than 50 feet above ground at its highest
+point. The antenna(s) may cover multiple bands, as in the case of multiband verticals and dipoles with
+fan or trap constructions.
+
+Contacts: W/VE stations may only contact other W/VE stations for contest credit. Each station may be
+contacted only once, regardless of band.
+
+November Sweepstakes Rules  Version 2.2  Page 1 of 10
+Exchange: The following five pieces of information must be sent in each contact: the sequential serial
+number of the contact, your precedence (type of station – A, B, Q, M, S, or U – see the Special Rules),
+your call sign, your check (the last two digits of the year the operator or station was first licensed), and
+the abbreviation for your ARRL or RAC section. It is highly recommended that you send the information
+in this order to avoid confusion. Your call sign must be included in the exchange transmitted to the other
+station.
+
+This is a typical contest contact:
+         CQing Station: CQ Sweepstakes from W9JJ
+         Answering Station: W1AW
+         CQer: W1AW 123 A W9JJ 79 CT
+         Answer: 43 M W1AW 31 CT
+         CQer: Thanks, CQ Sweepstakes from W9JJ
+
+As the answering station, it is not necessary to send the CQing station's call before the exchange unless
+you think there might be some confusion about which station you are responding to.
+
+Scoring: Each contact counts for 2 QSO points. To calculate your final score, multiply the total QSO
+points by the number of ARRL and RAC sections you contacted. Use the abbreviations in the ARRL
+Contest Multipliers List which also lists the total number of multipliers.
+
+Club Competition: You can contribute your score to your ARRL Affiliated Club by selecting the club name
+when you upload your log. Club Competition rules are available here: Affiliated Club Competition Rules.
+
+Participation Awards:
+
+         Clean Sweep Mugs: “Clean Sweep” mugs are available to stations that contact all of the
+         ARRL/RAC sections in either the CW or Phone November Sweepstakes. Mug eligibility is based
+         on claimed scores.
+
+         Participation Pins: Anyone completing 100 contacts during either the CW or Phone Sweepstakes
+         is eligible for a Participation Pin. Pin eligibility is based on claimed scores.
+
+         Information on purchasing the mugs and pins is available on the ARRL’s Sweepstakes web page.
+
+Feedback about the contest:
+Send us your stories and photos! Tell us what fun you had, how you did, and what challenges you faced
+at the ARRL Contest Program’s “Soapbox” page.
+
+Additional Resources:
+ARRL Section Map
+
+All contest queries should be directed to contests@arrl.org or 860-594-0232.
+
+November Sweepstakes Rules  Version 2.2  Page 2 of 10
+Special Sweepstakes Rules
+
+    1. Operating Period: 2100 UTC Saturday through 0259 UTC Monday.
+           1.1 All stations may operate no more than 24 of the 30 hours, including listening and
+                transmitting. Off times must be at least 30 minutes long. The operating period begins with
+                the first contact, after which each off time must be at least 30 minutes long until 24 hours
+                have been completed.
+           1.2 Contacts logged after 24 hours of operation will not be counted toward the final score,
+                there is no penalty for including those contacts in a submitted log, and the station
+                contacted is eligible to receive credit for the contact.
+
+    2. Contacts
+           2.1 W/VE stations may only contact other W/VE stations for contest credit.
+           2.2 Each station may be contacted only once, regardless of band.
+           2.3 Use only the 1.8, 3.5, 7, 14, 21, and 28 MHz bands.
+           2.4 Use only CW during the CW weekend and Phone during the Phone weekend.
+
+    3. Categories
+           3.1 Single Operator: QRP, Low Power (LP), and High Power (HP)
+           3.2 Single Operator Unlimited: QRP, Low Power (LP), and High Power (HP)
+           3.3 Multioperator, Single Transmitter: Low Power and High Power
+           3.4 School Club: no power subcategories
+           3.5 Power Subcategories
+                3.5.1 QRP – 5 watts PEP output or less
+                3.5.2 Low Power (LP) – 100 watts PEP output or less
+                3.5.3 High Power (HP) – 1500 watts PEP output or the maximum allowable power level
+                         established by the national licensing authority issuing the operator and/or station
+                         license, whichever is less.
+
+    4. Contest Exchange - the required exchange consists of:
+         4.1 Serial Number - a consecutive contact number starting with 1
+         4.2 Precedence
+              “Q” for Single Operator, QRP
+              “A” for Single Operator, Low Power
+              “B” for Single Operator, High Power
+              “U” for Single Operator Unlimited, High Power, Single Operator Unlimited, Low Power and
+              Single Operator Unlimited, QRP
+              “M” for Multioperator, High Power or Multioperator, Low Power
+              “S” for School Club
+           4.3 Your call sign (the call sign must be included during the exchange)
+           4.4 Check
+                4.4.1 The last two digits of the year the operator or the station was first licensed
+                4.4.2 The same Check must be sent throughout the contest.
+           4.5 Section – send and log the abbreviations in the ARRL Contest Multipliers List.
+
+    5. Scoring
+           5.1 QSO points: Each contact counts for two (2) points.
+           5.2 Multipliers: ARRL/RAC Sections. (See the ARRL Contest Multipliers List.)
+           5.3 Final score equals the total QSO points times the total multipliers contacted.
+
+    6. Operating Restrictions
+           6.1 There are no limitations on band changes in any category.
+
+    7. Awards
+
+November Sweepstakes Rules  Version 2.2  Page 3 of 10
+      7.1 Online certificates will be available to all eligible participants, including the top CW and
+           Phone scores in each category in each ARRL/RAC Section and Division.
+
+      7.2 Plaques (if sponsored) will be awarded to the 1st Place station in each category and power
+           subcategory in Section 3, in the areas listed below. See the ARRL Sweepstakes page for a
+           list of plaques and instructions for sponsoring them.
+           7.2.1 1st Place United States
+           7.2.2 1st Place Canada
+           7.2.3 1st Place in each ARRL Division
+           7.2.4 A plaque is awarded only when at least ten (10) entries are received in that
+                     category in that area.
+
+8. Log Submission
+      8.1 Logs are due SEVEN (7) days after the event is over at 0259 UTC. If an extension of the log
+           deadline is needed, contact the ARRL Contest Program Manager. All entries received are
+           displayed on the Logs Received page.
+      8.2 Paper logs are not accepted. All logs must be submitted electronically in Cabrillo format.
+
+November Sweepstakes Rules  Version 2.2  Page 4 of 10
+Entry Categories for ARRL November Sweepstakes
+
+Version 1.6 – 20 Sep 2023
+
+        Categories          QRP1   Low High Power     Spotting
+Single Operator (SO)4             Power (HP)3        Assistance
+                                   (LP)2
+                                                         No
+                            Yes Yes    Yes
+
+Single Operator             Yes Yes    Yes           Yes
+
+Unlimited (SOU)4
+
+Multioperator, Single       No Yes     Yes           Yes
+
+Transmitter
+
+School Club (S)             No power sub-categories  Yes
+
+Checklog                          n/a                n/a
+
+1 — 5 watts PEP output or less
+2 — 100 watts PEP output or less
+3 — 1500 watts PEP output or the maximum allowable power level established by the
+national licensing authority issuing the operator and/or station license, whichever is
+less.
+4 — Limited Antennas Overlay available (see description below)
+
+HCAT.1. Single Operator (SO)
+         HCAT.1.1. Use of spotting assistance is not permitted.
+         HCAT.1.2. Only one transmitted signal is permitted at any time
+         HCAT.1.3. Power sub-categories include QRP (SOQRP), Low Power (SOLP), and High Power
+         (SOHP).
+         HCAT.1.4. Any Single Operator entrant who meets the requirements may enter the following
+         Category Overlay:
+                   Limited Antennas Overlay – Operation is limited to the use of single-element antennas
+                   such as a single vertical, end-fed wire, or a single dipole antenna no more than 50 feet
+
+November Sweepstakes Rules        Version 2.2                    Page 5 of 10
+                   above ground at its highest point. The antenna(s) may cover multiple bands, as in the
+                   case of multiband verticals and dipoles with fan or trap constructions.
+
+HCAT.2. Single Operator Unlimited (SOU)
+         HCAT.2.1. Use of spotting assistance is permitted. Spotting information must be derived from
+         sources within the station’s circle or sources open to the general public.
+         HCAT.2.2. Entrants are permitted to use social media, video live streaming, and internet chat
+         rooms.
+         HCAT.2.3. Only one transmitted signal is permitted at any time.
+         HCAT.2.4. Power sub-categories include QRP (SOUQRP), Low Power (SOULP), and High Power
+         (SOUHP).
+         HCAT.2.5. Any Single Operator Unlimited entrant who meets the requirements may enter the
+         following Category Overlay:
+                   Limited Antennas Overlay – Operation is limited to the use of single-element antennas
+                   such as a single vertical, end-fed wire, or a single dipole antenna no more than 50 feet
+                   above ground at its highest point. The antenna(s) may cover multiple bands, as in the
+                   case of multiband verticals and dipoles with fan or trap constructions.
+
+HCAT.3. Multioperator, Single Transmitter
+         HCAT.3.1. Use of spotting assistance is permitted. Spotting information must be derived from
+         sources within the station’s circle or sources open to the general public.
+         HCAT.3.2. Entrants are permitted to use social media, video live streaming, and internet chat
+         rooms.
+         HCAT.3.3. Only one transmitted signal is allowed at any time.
+         HCAT.3.4. Power sub-categories include Low Power (MSLP) and High Power (MSHP).
+
+HCAT.4. School Club
+         HCAT.4.1. School Club stations may be grouped by the type of institution:
+                   HCAT.4.1.1. College and University
+                   HCAT.4.1.2. Technical School
+                   HCAT.4.1.3. Secondary and other school
+         HCAT.4.2. Only currently enrolled students and faculty/staff of the institution are eligible to
+         operate a School Club station. Alumni may participate on the air with students. It is not,
+         however, in the spirit of the category for alumni exclusively to use the club station. Alumni
+         should make every effort to act in a mentoring role to current student club members.
+         HCAT.4.3. There are no sub-categories for School Club entries.
+         HCAT.4.4. School Club stations must operate from stations located on-campus. A club may
+         operate from an off-campus station only if no on-campus station exists.
+         HCAT.4.5. Spotting assistance may be used by School Club stations. Spotting information must
+         be derived from sources within the station’s circle or sources open to the general public.
+         HCAT.4.6. Entrants are permitted to use social media, video live streaming, and internet chat
+         rooms.
+
+November Sweepstakes Rules  Version 2.2  Page 6 of 10
+Rules for Entry
+
+Version 1.3 – 29 Nov 2023
+
+Conditions of Entry
+COND.1. By submitting a log, entrants agree to be bound by the contest rules. Violation of the contest
+rules or engaging in prohibited conduct may result in disciplinary action at the discretion of the ARRL
+Awards Committee up to and including disqualification.
+COND.2 Multiple entries
+
+         COND.2.1 Individuals and stations may submit multiple entries per contest under different call
+         signs from different locations, see OPRG.2 and STTN.1. Using a call sign modifier does NOT make
+         the call sign unique. (Example- W1AW and W1AW/7 are treated as the same call sign.)
+COND.3. Log contents used to determine final score and awards will be available to the public.
+COND.4. Entrants agree to follow the regulations of their operating licenses and station licenses at all
+times.
+COND.5. Entrants agree to be bound by the decisions of the ARRL Awards Committee.
+COND.6. All entries become the property of the ARRL and are not returnable.
+
+Operating and Entry Restrictions
+OPRG.1. Call signs and exchange information must be sent, received, acknowledged and logged correctly
+for a complete contact.
+OPRG.2. An operator may not use more than one call sign from any given location during the contest
+period.
+OPRG.3. Alternating CQs on two or more frequencies using the same band and mode is prohibited.
+OPRG.4. Each contact must include contemporaneous direct initiation by both operators making a
+contact. Initiation of a contact may be by either local or remote control.
+OPRG.5. Only one transmitted signal is permitted at any time.
+
+Station and Equipment Restrictions
+STTN.1. A transmitter used to contact one or more stations may not be subsequently used under any
+other call sign during the contest period, except
+
+    a) for family stations where more than one call sign has been issued, and then only if the second
+         call sign is used by a different operator.
+
+    b) for remote stations used by individual amateurs that have limited or no access to their own
+         stations.
+
+This rule does not permit any operator to use multiple call signs at the same station to manufacture
+contacts to another station in the contest.
+STTN.2. All transmitters and receivers must be located within a 500-meter diameter circle, excluding
+antennas.
+STTN.3. Remote receiving installations outside the 500-meter circle are prohibited. Stations remotely
+controlled by radio link may use necessary equipment at the control point. This does not allow using the
+control point as another receiving location.
+
+November Sweepstakes Rules  Version 2.2  Page 7 of 10
+Prohibited Conduct
+Examples of prohibited conduct include, but are not limited to:
+PROH.1. Claiming cross-band contacts.
+PROH.2. Use of systems such as repeaters, gateways, or digipeaters to relay on-the-air signals. Satellites
+may be used only if permitted by the contest rules. This does not apply to the remote control of a
+station.
+PROH.3. Arranging, soliciting, or confirming any contacts during or after the contest by use of any non-
+amateur radio means. All required elements of a contact must be exchanged via amateur radio.
+PROH.4. Misrepresenting contact times (“rubber clocking”) to meet band change or off time rules.
+PROH.5. Claiming excessive unverifiable contacts or multipliers (“log padding”).
+PROH.6. Transmitting signals with excessive bandwidth (e.g., spurious emissions) or harmonics.
+PROH.7. Failure to identify transmissions in a timely manner (i.e., for longer periods than 1 minute).
+PROH.8. Repeater input or output frequencies may not be used without the permission of the repeater
+owner.
+
+Log Checking Penalties
+Logs are cross-checked using custom software and human judgment.
+LGCK.1. Duplicate contacts are removed with no additional scoring penalty.
+LGCK.2. Contacts with call sign errors ("Busted") or that are not found in the corresponding log ("NIL")
+are removed from the log and an additional scoring penalty of the QSO point value of that contact is
+assessed.
+LGCK.3. Contacts with an incorrectly received exchange are removed with no additional scoring penalty.
+
+Disciplinary Actions
+DSCP.1. Disqualified entries will be listed in the published results, are not eligible for an award, and are
+not eligible to submit an entry in the next running of that contest.
+DSCP.2. Notification of Award Committee actions will be sent by email to the address provided with the
+log submission. The entrant has five days to appeal the decision to the Contest Program Manager. If
+there is no response, after that time the decision is final.
+DSCP.3. The Awards Committee reserves the right to change the category of any entry based on its
+examination of the log or other information.
+
+Log Submission Rules
+
+Version 1.01 – 30 April 2020
+
+Electronic Log Submission
+
+ELOG.1. The official ARRL format for electronic logs is the Cabrillo format (wwrof.org/cabrillo).
+         ELOG 1.1. A paper printout of an electronic log file is not an acceptable substitute. A utility for
+         converting log files in non-Cabrillo format to Cabrillo is available at www.b4h.net/cabforms.
+
+ELOG.2. Electronic logs must be submitted via contest-log-submission.arrl.org with the exception of
+Field Day, Straight Key Night, 10 GHz and Up, ARRL EME, Rookie Roundup, and School Club Roundup.
+
+November Sweepstakes Rules  Version 2.2  Page 8 of 10
+ELOG.3. Electronic logs are assumed to be signed as complying with all contest rules and conditions
+when they are submitted.
+ELOG.4. Multioperator logs must include the complete list of operators in the Cabrillo OPERATORS: field.
+
+Paper Log Submission
+PLOG.1. Paper logs are not accepted. All entries must be submitted electronically as described in ELOG.1
+and ELOG.2.
+
+Log Submission Deadline
+LGDL.1. Entries must be sent to the ARRL by the log deadline published in the rules for each contest. For
+electronic submissions, the submission date and time is determined by the app confirmation.
+LGDL.2. Submitted entries will be listed on the Logs Received page until final results are published.
+LGDL.3. Logs not submitted by the contest deadline are not eligible for awards.
+LGDL.4. Entries received at the ARRL after the contest submission deadline may not be included in the
+contest results.
+
+Definitions and Glossary
+
+Version 1.06 – 15 Jul 2022
+
+Automated Multi-Channel Decoder: Device such as CW Skimmer software that provides information
+about the identity and frequency of contest station transmissions while functioning independently of
+the operator’s direct control and participation. Software that displays multiple decoded signals at the
+same time is considered to be a multi-channel decoder.
+
+Band Changes: A band change consists of two consecutive contacts on different bands. For example,
+making a contact on 20 meters then on 40 meters and then on 20 meters counts as two band changes.
+
+Clock Hour: A clock hour is from zero to 59 minutes on the clock, not any 60 consecutive minutes.
+
+Digital (mode): Any mode defined as “data” in the FCC Part 97 rules (§97.3(c)(2)).
+
+DX Stations: Any non-W/VE station. This includes US possessions and territories in the Caribbean and
+Pacific and St. Paul Island (CY9) and Sable Island (CYØ). Exceptions such as the status of Hawaii (KH6)
+and Alaska (KL7) are stated in the Special Rules for each contest.
+
+DXCC Entities: defined by ARRL DXCC List
+
+Electronic Log or Entry: consists of any log submitted by electronic means.
+
+High Power (HP): 1500 watts PEP output or the maximum allowable power level established by the
+national licensing authority issuing the operator and/or station license, whichever is less.
+
+November Sweepstakes Rules  Version 2.2  Page 9 of 10
+Low Power (LP):
+Below 30 MHz- 100 watts PEP output or less
+
+Maritime Mobile: For the purposes of ARRL contests, maritime mobile is defined as shipboard
+operation, outside of the territorial waters of the country (defined for these purposes as 12 miles
+offshore).
+
+Maximum Number of Signals: This Maximum Number does not include a signal necessary to provide
+spotting assistance, i.e. 2m packet connection. Other than that exception, it is the maximum number of
+signals that a station may emit at any time.
+
+Multioperator: More than one person performs all transmitting, receiving, and logging functions as well
+as equipment and antenna adjustments.
+
+Off Time: A period during which no contacts are logged. Unless otherwise specified, to count as off time,
+there must be at least 30 consecutive minutes in the log without a contact. During off time, operators
+may not listen to contest activity.
+
+QRP: 5 watts PEP output or less
+
+RTTY (mode): Any mode defined as “RTTY” in the FCC Part 97 rules (§97.3(c)(7)).
+
+Single Operator: One person performs all transmitting, receiving, and logging functions as well as
+equipment and antenna adjustments.
+
+Spotting/QSO Finding Assistance: Use of any technology that provides call sign or multiplier
+identification of a signal to the operator. This includes PSKReporter, Telnet, DX spotting websites or
+bulletin board systems, automated multi-channel decoders, etc. This also includes operating
+arrangements with other individuals, DX alerting nets, chat rooms, social media, live video streaming,
+etc. Such assistance may NOT be used to convey receipt or non-receipt of any required element of a
+contact or to request a repeat of any required element of a contact. Generating spotting information for
+use by other stations is not considered to be spotting assistance.
+
+W/VE stations: stations operating in the United States and District of Columbia with the exception of
+Alaska and Hawaii, and stations operating within the Canadian provinces and territories with the
+exception of the DXCC entities St. Paul Island and Sable Island. (Exception – See the Special Rules for
+Sweepstakes and the 160 Meter Contest regarding US possessions and territories.)
+
+November Sweepstakes Rules  Version 2.2  Page 10 of 10
+

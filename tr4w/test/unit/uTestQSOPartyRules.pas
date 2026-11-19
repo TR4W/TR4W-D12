@@ -38,6 +38,8 @@ unit uTestQSOPartyRules;
 interface
 
 uses
+   (* TStrings -- ShippedCountyKeys. *)
+   Classes,
    VC,
    (* TDomQTHTable -- CountyTable's type. *)
    LogDom;
@@ -116,6 +118,28 @@ function EnterPartyQSO(const aCall, aExch: string; aBand: BandType;
 function PartyReceivedCabrilloColumn(aContest: TContestHandle;
    const aRX: ContestExchange): string;
 
+type
+   THostStateCodes = array of string;
+
+(* THE CODES A STATE PARTY'S HostState NAMES -- blank-separated, upper-cased,
+   empty words dropped: 'GA' gives one, 'AB SK MB' (the Canadian Prairies,
+   issue 117) three. The registry walks that hold every party's host
+   (uTestContestFactory, uTestContestExport) read it one way. *)
+function HostStateCodes(const aHostState: string): THostStateCodes;
+
+(* IS aCode ONE OF ADIF'S PRIMARY SUBDIVISIONS FOR A NORTH AMERICAN QSO
+   PARTY'S HOST -- the USA, Alaska, Hawaii or Canada? *)
+function IsADIFHostStateCode(const aCode: string): boolean;
+
+(* IS EVERY CODE OF aHostState A CANADIAN PROVINCE OR TERRITORY? -- a
+   Canadian host writes no ADIF CNTY. False for an empty host. *)
+function HostIsCanadian(const aHostState: string): boolean;
+
+(* THE KEYS OF aFileName in the tree's target/dom (uTestContestObjects.
+   ShippedDomDir) LONGER THAN TWO LETTERS -- what the party base takes for a
+   county; INCLUDE lines and a missing file give none. aKeys is cleared. *)
+procedure ShippedCountyKeys(const aFileName: string; aKeys: TStrings);
+
 implementation
 
 uses
@@ -131,7 +155,11 @@ uses
    (* Contest, the session's contest. *)
    PostUnit,
    uTestContestObjects,
-   uTestShippedDom;
+   uTestShippedDom,
+   (* IsADIFPrimarySubdivision -- IsADIFHostStateCode, HostIsCanadian. *)
+   uADIF,
+   (* DomFileLineKey -- ShippedCountyKeys. *)
+   uDomFileKeys;
 
 function InStateMultiplierOf(aContest: ContestType; const aAlias: string): string;
 begin
@@ -372,6 +400,79 @@ begin
       Result := UpperCase(ActiveContest(aContest).FormatCabrilloReceivedExchange(my, aRX, ctx));
    finally
       Settings.Contest.LiteralDomesticQth := savedLiteral;
+   end;
+end;
+
+function HostStateCodes(const aHostState: string): THostStateCodes;
+var
+   rest: string;
+   code: string;
+   p: integer;
+begin
+   Result := nil;
+   rest := UpperCase(Trim(aHostState)) + ' ';
+   while rest <> '' do
+      begin
+      p := Pos(' ', rest);
+      code := Copy(rest, 1, p - 1);
+      rest := Copy(rest, p + 1, Length(rest));
+      if code <> '' then
+         begin
+         SetLength(Result, Length(Result) + 1);
+         Result[High(Result)] := code;
+         end;
+      end;
+end;
+
+function IsADIFHostStateCode(const aCode: string): boolean;
+begin
+   Result := (Length(aCode) = 2) and
+             (IsADIFPrimarySubdivision('K', aCode)   or
+              IsADIFPrimarySubdivision('KL', aCode)  or
+              IsADIFPrimarySubdivision('KH6', aCode) or
+              IsADIFPrimarySubdivision('VE', aCode));
+end;
+
+function HostIsCanadian(const aHostState: string): boolean;
+var
+   codes: THostStateCodes;
+   i: integer;
+begin
+   codes := HostStateCodes(aHostState);
+   Result := Length(codes) > 0;
+   for i := 0 to High(codes) do
+      begin
+      if not IsADIFPrimarySubdivision('VE', codes[i]) then
+         begin
+         Result := False;
+         end;
+      end;
+end;
+
+procedure ShippedCountyKeys(const aFileName: string; aKeys: TStrings);
+var
+   lines: TStringList;
+   key: string;
+   i: integer;
+begin
+   aKeys.Clear;
+   if not FileExists(ShippedDomDir + aFileName) then
+      begin
+      Exit;
+      end;
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(ShippedDomDir + aFileName));
+      for i := 0 to lines.Count - 1 do
+         begin
+         key := DomFileLineKey(string(lines[i]));
+         if Length(key) > 2 then
+            begin
+            aKeys.Add(AnsiString(key));
+            end;
+         end;
+   finally
+      lines.Free;
    end;
 end;
 

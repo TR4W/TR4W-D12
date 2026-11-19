@@ -1,5 +1,12 @@
 Source: https://w9awe.org/download/91/2026/2230/announcing-the-2026-illinois-qso-party (saved beside this file)
 Fetched: 2026-11-15; pdftotext -layout, no wording changed
+The announcement gives no revision date; it presents the October 18, 2026 running and states no recurrence rule.
+Cabrillo: IL-QSO-PARTY -- the rules state none; DXLog ILQP.txt CABRILLO_CONTEST_NAME, per NY4I's naming strategy (#131).
+ADIF Contest_ID: IL QSO PARTY (with blanks) -- the ADIF 3.1.8 Contest_ID enumeration (adifmt v0.1.23, 2026-11-18, which refuses IL-QSO-PARTY).
+WA7BNM: not looked up (the calendar bars automated access).
+The county table is the sponsor's chart, ILQP-Counties-Abbreviations.pdf, transcribed in IL-QSO-PARTY-Counties.txt.
+ILQP-Summary-Sheet.pdf is the 2007 sheet; where it and these 2026 rules disagree (it counts W/K and VE as DXCC), these rules govern.
+NY4I's rulings: GitHub issue 119 (IL counts as a state for an Illinois station; DC counts as Maryland).
 
 Announcing the 2026 Illinois QSO Party
 

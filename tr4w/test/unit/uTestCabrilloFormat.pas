@@ -258,6 +258,9 @@ begin
    CheckEquals('RY', FormatCabrilloModeDigitalAsRY(Digital, eFT8), 'FT8 is RY here');
    CheckEquals('RY', FormatCabrilloModeDigitalAsRY(Digital, eFT4), 'and FT4');
    CheckEquals('RY', FormatCabrilloModeDigitalAsRY(Digital, ePSK31), 'and PSK31');
+   // Issue 120: JTTY is a digital mode that is not RTTY -- DG, RY here.
+   CheckEquals('DG', FormatCabrilloMode(Digital, eJTTY, False), 'JTTY is DG');
+   CheckEquals('RY', FormatCabrilloModeDigitalAsRY(Digital, eJTTY), 'and RY here');
    CheckEquals('PH', FormatCabrilloModeDigitalAsRY(FM, eFM), 'FM is PH');
    CheckEquals('PH', FormatCabrilloModeDigitalAsRY(Phone, eUSB), 'phone is PH');
    CheckEquals('CW', FormatCabrilloModeDigitalAsRY(CW, eCW), 'CW is CW');

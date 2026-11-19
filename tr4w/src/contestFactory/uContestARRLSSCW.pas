@@ -74,6 +74,15 @@ type
          (TContestBase.CallHistorySiteName); this is its fallback. *)
       function CallHistoryLegacyFileName: string; override;
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* THE RUNNING'S MODE -- Q98 (design 8.2v), 2026-11-18. CW only: the
+         sponsor's rule 2.4, "Use only CW during the CW weekend and Phone
+         during the Phone weekend" (ARRL November Sweepstakes Rules v2.2,
+         saved as docs/ContestRules/ARRL/ARRL-SS-Rules.txt). A phone, FM or
+         digital QSO is an automatic X-QSO: logged, 0 points, no multiplier.
+         A CW record with no submode is credited (eNoMode is "some submode").
+         The bands are not stated yet (BANDS_NOT_YET_STATED). *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
    end;
 
 implementation
@@ -164,6 +173,11 @@ end;
 function TContestARRLSSCW.ExchangeCarriesDomesticQTH: boolean;
 begin
    Result := True;
+end;
+
+function TContestARRLSSCW.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode = CW;
 end;
 
 initialization

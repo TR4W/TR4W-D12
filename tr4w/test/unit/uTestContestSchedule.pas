@@ -496,17 +496,46 @@ begin
    BeginTest('Test_VerifiedClassesKnownDates');
    known := nil;
    Add('7QP', At(2027, 1, 1, 0, 0), At(2027, 5, 1, 13, 0));
+   (* The sponsor's rules V 26.0.1: "First Sunday of June each year", 1400Z
+      Sunday to 0100Z Monday. 2027's is June 6; 2028's June 4. *)
+   Add('AC-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 6, 6, 14, 0));
+   Add('AC-QSO-PARTY', At(2027, 6, 7, 0, 59), At(2027, 6, 7, 0, 59));
+   Add('AC-QSO-PARTY', At(2027, 6, 7, 1, 30), At(2028, 6, 4, 14, 0));
    Add('ARIZONA QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 10, 9, 15, 0));
    Add('CALIFORNIA QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 10, 2, 16, 0));
    Add('CALIFORNIA QSO PARTY', At(2027, 10, 3, 22, 0), At(2028, 10, 7, 16, 0));
    Add('COLORADO QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 9, 11, 14, 0));
+   (* The sponsor's rules page (last update March 8, 2026): 1700 UTC May 9 to
+      0300 UTC May 10, 2026, the date alone (no recurrence stated). *)
+   Add('CP-QSO-PARTY', At(2026, 1, 1, 0, 0), At(2026, 5, 9, 17, 0));
+   Add('CP-QSO-PARTY', At(2026, 5, 10, 2, 59), At(2026, 5, 10, 2, 59));
    Add('CQ-WPX-SSB', At(2027, 1, 1, 0, 0), At(2027, 3, 27, 0, 0));
    Add('CQ-WPX-SSB', At(2030, 1, 1, 0, 0), At(2030, 3, 30, 0, 0));
    Add('GA-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 4, 10, 18, 0));
    Add('GA-QSO-PARTY', At(2027, 4, 11, 5, 0), At(2027, 4, 11, 14, 0));
+   (* The sponsor's 2026 announcement: 1700 UTC October 18 to 0100 UTC
+      October 19; NY4I (issue 119): the third full weekend of October, so
+      the Sunday of it. 2028 opens on a Sunday: its third full weekend is the
+      21st-22nd, not the third Sunday (the 15th). *)
+   Add('IL-QSO-PARTY', At(2026, 1, 1, 0, 0), At(2026, 10, 18, 17, 0));
+   Add('IL-QSO-PARTY', At(2026, 10, 19, 0, 59), At(2026, 10, 19, 0, 59));
+   Add('IL-QSO-PARTY', At(2026, 10, 19, 1, 0), At(2027, 10, 17, 17, 0));
+   Add('IL-QSO-PARTY', At(2028, 1, 1, 0, 0), At(2028, 10, 22, 17, 0));
    Add('IN QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 5, 1, 15, 0));
    Add('KY-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 6, 5, 13, 0));
+   (* The sponsor's rules, revised February 18, 2026: 14:00 UTC April 4 to
+      02:00 UTC April 5, 2026; NY4I (issue 122, 2026-11-18): "first weekend
+      of April". 2029 opens April on a Sunday: the 7th, not March 31. *)
+   Add('LA-QSO-PARTY', At(2026, 1, 1, 0, 0), At(2026, 4, 4, 14, 0));
+   Add('LA-QSO-PARTY', At(2026, 4, 5, 1, 59), At(2026, 4, 5, 1, 59));
+   Add('LA-QSO-PARTY', At(2026, 4, 5, 2, 0), At(2027, 4, 3, 14, 0));
+   Add('LA-QSO-PARTY', At(2029, 1, 1, 0, 0), At(2029, 4, 7, 14, 0));
    Add('MICHIGAN QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 4, 17, 16, 0));
+   (* The sponsor's 2026 rules: 1400z April 4 to 0200z April 5, 2026; NY4I
+      (issue 123): the first weekend of April -- 2027's is April 3. *)
+   Add('MS-QSO-PARTY', At(2026, 1, 1, 0, 0), At(2026, 4, 4, 14, 0));
+   Add('MS-QSO-PARTY', At(2026, 4, 5, 1, 59), At(2026, 4, 5, 1, 59));
+   Add('MS-QSO-PARTY', At(2026, 4, 5, 2, 0), At(2027, 4, 3, 14, 0));
    Add('NC QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 2, 28, 15, 0));
    Add('NEWEQP', At(2027, 1, 1, 0, 0), At(2027, 5, 1, 20, 0));
    Add('NEWEQP', At(2027, 5, 2, 6, 0), At(2027, 5, 2, 13, 0));
@@ -517,6 +546,10 @@ begin
    Add('SALMON RUN', At(2027, 1, 1, 0, 0), At(2027, 9, 18, 16, 0));
    Add('SALMON RUN', At(2027, 9, 19, 8, 0), At(2027, 9, 19, 16, 0));
    Add('SC-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 2, 27, 15, 0));
+   (* The sponsor's 2027 page: October 9-10, 1800z to 1800z. 2028 opens on a
+      Sunday, so its 2nd full weekend is the 14th-15th. *)
+   Add('SD-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 10, 9, 18, 0));
+   Add('SD-QSO-PARTY', At(2027, 10, 10, 18, 30), At(2028, 10, 14, 18, 0));
    Add('TEXAS QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 9, 18, 14, 0));
    Add('TEXAS QSO PARTY', At(2027, 9, 19, 3, 0), At(2027, 9, 19, 14, 0));
    Add('VT-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 2, 6, 0, 0));
@@ -537,6 +570,9 @@ begin
    CheckFalse(TryScheduleSortKey(s, At(2027, 6, 20, 4, 0), key), 'WV after 2027 is undated');
    s := Parsed(ScheduleOf('NC QSO PARTY'));
    CheckFalse(TryScheduleSortKey(s, At(2028, 1, 1, 0, 0), key), 'NC after 2027 is undated');
+   (* The Canadian Prairies states its 2026 date only, so it is undated today. *)
+   s := Parsed(ScheduleOf('CP-QSO-PARTY'));
+   CheckFalse(TryScheduleSortKey(s, At(2026, 5, 10, 3, 0), key), 'CP after 0300 UTC 2026-05-10 is undated');
 end;
 
 (* THE NEW CONTEST LIST'S ORDER, through uContestDates.SortContestDates:

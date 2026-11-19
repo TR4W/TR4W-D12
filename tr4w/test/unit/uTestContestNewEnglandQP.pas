@@ -408,8 +408,11 @@ end;
    states DupeModeOf joins the list from the sponsor's text. *)
 procedure TContestNewEnglandQPTests.Test_EveryOtherContestKeepsEachModeItsOwnDupeMode;
 const
-   (* "digital QSOs are considered the same as CW" -- the neqp.org FAQ. *)
-   DIGITAL_IS_CW_FOR_DUPES = ' NEWEQP ';
+   (* "digital QSOs are considered the same as CW" -- the neqp.org FAQ;
+      "once per band and mode (phone and CW/digital)" -- the Illinois QSO
+      Party's 2026 rules (#119); "once on CW/Digital and once on Phone PER
+      BAND" -- the Louisiana QSO Party's rule 9.4 (#122). *)
+   DIGITAL_IS_CW_FOR_DUPES = ' NEWEQP IL-QSO-PARTY LA-QSO-PARTY ';
 var
    contests: TContestIdentityList;
    k: integer;

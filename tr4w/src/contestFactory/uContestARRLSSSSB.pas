@@ -74,6 +74,18 @@ type
          fallback. *)
       function CallHistoryLegacyFileName: string; override;
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* THE RUNNING'S MODE -- Q98 (design 8.2v), 2026-11-18. Phone only: the
+         sponsor's rule 2.4, "Use only CW during the CW weekend and Phone
+         during the Phone weekend" (ARRL November Sweepstakes Rules v2.2,
+         saved as docs/ContestRules/ARRL/ARRL-SS-Rules.txt). Phone is SSB,
+         USB, LSB, AM or a phone record with no submode (eNoMode is "some
+         submode"). The rules do not define Phone, so FM -- TR4W's own
+         ModeType -- is NOT credited until NY4I rules (the conservative
+         reading, as CQ WW SSB's Q120(a)). CW, FM and every digital mode are
+         automatic X-QSOs: logged, 0 points, no multiplier. The bands are not
+         stated yet (BANDS_NOT_YET_STATED). *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
    end;
 
 implementation
@@ -164,6 +176,11 @@ end;
 function TContestARRLSSSSB.ExchangeCarriesDomesticQTH: boolean;
 begin
    Result := True;
+end;
+
+function TContestARRLSSSSB.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode = Phone;
 end;
 
 initialization

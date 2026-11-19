@@ -1,0 +1,71 @@
+Canadian Prairies QSO Party -- the 65 federal electoral districts (Alberta 37, Saskatchewan 14, Manitoba 14).
+Codes and names from the sponsor table (docs/ContestRules/QSOParties/CanadianPrairies/canadian-prairies-districts.md, issue 117).
+Each line maps its district to its province with a greater-than sign. Out of the prairies each district is its own multiplier
+(FCONTEST sets MultipliersIsCounties). In the prairies a district counts as its province, and the ADIF STATE of a district is that province.
+No INCLUDE here: an out-of-area entrant table must hold only districts. No line of this header may hold an equals sign.
+
+AIR > Ab = AIR,^Airdrie-Cochrane
+BAT > Ab = BAT,^Battle River-Crowfoot
+BOW > Ab = BOW,^Bow River
+CCE > Ab = CCE,^Calgary Centre
+CCO > Ab = CCO,^Calgary Confederation
+CCF > Ab = CCF,^Calgary Crowfoot
+CET > Ab = CET,^Calgary East
+CHE > Ab = CHE,^Calgary Heritage
+CMC > Ab = CMC,^Calgary McKnight
+CMI > Ab = CMI,^Calgary Midnapore
+CNH > Ab = CNH,^Calgary Nose Hill
+CSH > Ab = CSH,^Calgary Shepard
+CSG > Ab = CSG,^Calgary Signal Hill
+CSK > Ab = CSK,^Calgary Skyview
+EDC > Ab = EDC,^Edmonton Centre
+EGA > Ab = EGA,^Edmonton Gateway
+EDG > Ab = EDG,^Edmonton Griesbach
+EDM > Ab = EDM,^Edmonton Manning
+ENW > Ab = ENW,^Edmonton Northwest
+ERV > Ab = ERV,^Edmonton Riverbend
+ESE > Ab = ESE,^Edmonton Southeast
+EST > Ab = EST,^Edmonton Strathcona
+EDW > Ab = EDW,^Edmonton West
+FTH > Ab = FTH,^Foothills
+FTM > Ab = FTM,^Fort McMurray - Cold Lake
+GPR > Ab = GPR,^Grande Prairie
+LAK > Ab = LAK,^Lakeland
+LWT > Ab = LWT,^Leduc-Wetaskiwin
+LTH > Ab = LTH,^Lethbridge
+MED > Ab = MED,^Medicine Hat - Cardston - Warner
+PRK > Ab = PRK,^Parkland
+PRW > Ab = PRW,^Peace River - Westlock
+PON > Ab = PON,^Ponoka - Didsbury
+RED > Ab = RED,^Red Deer
+SPK > Ab = SPK,^Sherwood Park - Fort Saskatchewan
+STS > Ab = STS,^St. Albert - Sturgeon River
+YEL > Ab = YEL,^Yellowhead
+BLM > Sk = BLM,^Battlefords-Lloydminster-Meadow Lake
+CAR > Sk = CAR,^Carlton Trail - Eagle Creek
+DES > Sk = DES,^Desnethe-Mississippi-Churchill River
+MOO > Sk = MOO,^Moose Jaw - Lake Centre - Lanigan
+PRI > Sk = PRI,^Prince Albert
+RGL > Sk = RGL,^Regina - Lewvan
+RGQ > Sk = RGQ,^Regina Qu'Appelle
+RGW > Sk = RGW,^Regina Wascana
+SKS > Sk = SKS,^Saskatoon South
+SKU > Sk = SKU,^Saskatoon - University
+SKW > Sk = SKW,^Saskatoon West
+SOU > Sk = SOU,^Souris - Moose Mountain
+SGK > Sk = SGK,^Swift Current - Grasslands - Kindersley
+YOR > Sk = YOR,^Yorkton
+BRA > Mb = BRA,^Brandon-Souris
+CHU > Mb = CHU,^Churchill - Keewatinook Aski
+ELM > Mb = ELM,^Elmwood - Transcona
+KIL > Mb = KIL,^Kildonan - St. Paul
+POR > Mb = POR,^Portage - Lisgar
+PRO > Mb = PRO,^Provencher
+RDM > Mb = RDM,^Riding Mountain
+STB > Mb = STB,^St. Boniface - St. Vital
+SEL > Mb = SEL,^Selkirk - Interlake - Eastman
+WPC > Mb = WPC,^Winnipeg Centre
+WPN > Mb = WPN,^Winnipeg North
+WPS > Mb = WPS,^Winnipeg South
+WSC > Mb = WSC,^Winnipeg South Centre
+WWT > Mb = WWT,^Winnipeg West

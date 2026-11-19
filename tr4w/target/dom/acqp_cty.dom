@@ -1,0 +1,55 @@
+Atlantic Canada QSO Party -- the 47 counties and divisions (NL 11, PE 3, NB 15, NS 18), issue 116.
+The sponsor rules (V 26.0.1) give the counts and send the codes to the acqp.ca resources page, which refuses automated fetches.
+Codes from DXLog.net ACQP.txt (updated 2026-09-06), names from the ham2k qso-parties data (not sponsor verified); see
+docs/ContestRules/QSOParties/AtlanticCanada/AC-QSO-PARTY-Counties.txt. Each line maps its county or division to its province
+with a greater-than sign. Out of the region each is its own multiplier (FCONTEST sets MultipliersIsCounties). In the region
+a county counts as its province, and the ADIF STATE of a county is that province.
+No INCLUDE here: an out-of-region entrant table must hold only counties and divisions. No line of this header may hold an equals sign.
+
+NLASJ > Nl = NLASJ,^Division 1 Avalon Peninsula - St. John's
+NLBMT > Nl = NLBMT,^Division 2 Burin Peninsula - Marystown
+NLSCB > Nl = NLSCB,^Division 3 South Coast - Channel-Port aux Basques
+NLSGS > Nl = NLSGS,^Division 4 St. George's - Stephenville
+NLHCB > Nl = NLHCB,^Division 5 Humber District - Corner Brook
+NLGFW > Nl = NLGFW,^Division 6 Central Newfoundland - Grand Falls-Windsor
+NLBTC > Nl = NLBTC,^Division 7 Bonavista/Trinity - Clarenville
+NLNDL > Nl = NLNDL,^Division 8 Notre Dame Bay - Lewisporte
+NLNSA > Nl = NLNSA,^Division 9 Northern Peninsula - St. Anthony
+NLLGB > Nl = NLLGB,^Division 10 Labrador - Happy Valley-Goose Bay
+NLLNN > Nl = NLLNN,^Division 11 Nunatsiavut - Nain
+PEKGS > Pe = PEKGS,^Kings County
+PEQNS > Pe = PEQNS,^Queens County
+PEPRN > Pe = PEPRN,^Prince County
+NBALB > Nb = NBALB,^Albert County
+NBCAR > Nb = NBCAR,^Carleton County
+NBCHA > Nb = NBCHA,^Charlotte County
+NBGLO > Nb = NBGLO,^Gloucester County
+NBKEN > Nb = NBKEN,^Kent County
+NBKGS > Nb = NBKGS,^Kings County
+NBMAD > Nb = NBMAD,^Madawaska County
+NBNOR > Nb = NBNOR,^Northumberland County
+NBQNS > Nb = NBQNS,^Queens County
+NBRES > Nb = NBRES,^Restigouche County
+NBSJC > Nb = NBSJC,^Saint John County
+NBSUN > Nb = NBSUN,^Sunbury County
+NBVIC > Nb = NBVIC,^Victoria County
+NBWES > Nb = NBWES,^Westmorland County
+NBYOR > Nb = NBYOR,^York County
+NSANP > Ns = NSANP,^Annapolis County
+NSATG > Ns = NSATG,^Antigonish County
+NSCBR > Ns = NSCBR,^Cape Breton County
+NSCOL > Ns = NSCOL,^Colchester County
+NSCMB > Ns = NSCMB,^Cumberland County
+NSDIG > Ns = NSDIG,^Digby County
+NSGUY > Ns = NSGUY,^Guysborough County
+NSHRM > Ns = NSHRM,^Halifax County
+NSHNT > Ns = NSHNT,^Hants County
+NSINV > Ns = NSINV,^Inverness County
+NSKGS > Ns = NSKGS,^Kings County
+NSLUN > Ns = NSLUN,^Lunenburg County
+NSPIC > Ns = NSPIC,^Pictou County
+NSQNS > Ns = NSQNS,^Queens County
+NSRIC > Ns = NSRIC,^Richmond County
+NSSHL > Ns = NSSHL,^Shelburne County
+NSVIC > Ns = NSVIC,^Victoria County
+NSYAR > Ns = NSYAR,^Yarmouth County

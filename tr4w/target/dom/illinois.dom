@@ -1,0 +1,15 @@
+Entries for the Illinois QSO Party used by in-state (Illinois) stations
+The 102 Illinois counties (each its own multiplier), the US states with DC counted as Maryland, and the 13 Canadian provinces and territories.
+DXCC countries other than the USA, Canada, Hawaii and Alaska are the class's DX multiplier (at most 5 in the score), not entries here.
+The county file comes FIRST, so a county code wins over any state or province alias spelled the same.
+DC is mapped to Md before S50.DOM: the rules count US states, and NY4I ruled DC counts as Maryland (issue 119).
+IL itself stays on the state list: an Illinois county QSO also earns it (the class, issue 317), and so does a station logged as IL (NY4I, issue 119).
+Every key here longer than two letters is a county: the class's county-earns-IL rule relies on it.
+NF and LB are read as NL (the last line).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+INCLUDE FILE illinois_cty.dom
+Dc > Md = DC
+INCLUDE FILE s50.dom
+INCLUDE FILE p13.dom
+Nl = NF,LB

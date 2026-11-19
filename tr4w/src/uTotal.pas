@@ -202,7 +202,10 @@ begin
      iTotalTextOut(QTotals[Band, Both]);
      end;
 
-  if Settings.Mult.ByMode then TempMode := ActiveMode else TempMode := Both;
+  (* The multiplier sheet's mode key -- LOGDUPE's one statement of it, which
+     applies the contest's multiplier mode (issue 122): in RTTY a Louisiana
+     operator sees the CW/digital multipliers, the slot they were written to. *)
+  TempMode := MultiplierSheetMode(ActiveMode);
 
   if (DoingDomesticMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin

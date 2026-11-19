@@ -1246,7 +1246,10 @@ begin
                                         [BandStringsArray[Band], ModeStringArray[Mode]]);
 
   if Settings.Mult.ByBand then MultBand := ActiveBand else MultBand := AllBands;
-  if Settings.Mult.ByMode then MultMode := ActiveMode else MultMode := Both;
+  (* The multiplier sheet's mode key -- LOGDUPE's one statement of it, which
+     applies the contest's multiplier mode (issue 122) as SetMultFlags does,
+     so the remaining-multipliers display reads the slot the QSOs wrote. *)
+  MultMode := MultiplierSheetMode(ActiveMode);
 
          { Update the band output port for this radio }
 

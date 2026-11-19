@@ -217,3 +217,10 @@ https://www.warac.org/wqp/wiqp_rules.htm | doc | head | uContestWisconsinQP | co
 https://www.yodx.ro/rules.php | doc | head | uContestYODX | contest schedule source (Q99)
 https://yotacontest.mrasz.org/rules-2026/english | doc | head | uContestYOTA | contest schedule source (Q99)
 https://yudx.yu1srs.org.rs/rules | doc | head | uContestYUDX | contest schedule source (Q99)
+https://pdarc.org/sd-qso-party | doc | head | uContestSouthDakotaQP | sponsor rules page (sdqsoparty.com redirects here)
+https://w9awe.org/ilqp/ | doc | head | uContestIllinoisQP | sponsor rules page (the 2026 announcement)
+https://laqp.w5gad.org/rules | doc | head | uContestLouisianaQP | sponsor rules page (revised February 18, 2026)
+https://laqp.contesting.com/ | doc | head | uContestLouisianaQP | sponsor log upload page (rule 10.1)
+https://arrlmiss.org/mississippi-qso-party/ | doc | skip | uContestMississippiQP | sponsor page, not probed: it refused an automated fetch with HTTP 403 on 2026-11-18; the rules PDF link is 404
+https://cpqp.ve6hams.ca/rules-2/ | doc | skip | uContestCanadianPrairiesQP | sponsor rules page, not probed: NY4I saved it as a browser download (2026-11-18), the sponsor site may refuse automated fetches
+https://www.acqp.ca/logs | doc | skip | uContestAtlanticCanadaQP | sponsor log upload page, not probed: acqp.ca refused automated fetches (HTTP 403, issue 116)

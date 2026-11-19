@@ -68,6 +68,8 @@ type
       procedure Test_OnlyCQWWHasASixtyMinuteBreak;
       procedure Test_AGapCountsUpToTheBreak;
       procedure Test_OnlyARRLContestsOfferTheARRLLogPortal;
+      procedure Test_OnlyNamedContestsAddCabrilloOverlays;
+      procedure Test_OverlayListComposition;
    end;
 
 implementation
@@ -879,6 +881,106 @@ begin
    CheckFalse(ContestIdentity(DUMMYCONTEST).SubmitsLogToARRL, 'no contest: no ARRL portal');
 end;
 
+(* ------------------------------------------------------------------------ *)
+(* A SPONSOR'S CATEGORY-OVERLAY VALUES -- issue 122                          *)
+(* ------------------------------------------------------------------------ *)
+
+(* CabrilloOverlayCategories. EXACTLY the contests in OVERLAY_SPONSORS (by
+  id) name overlays; every other contest names none, so its summary offers
+  the standard list as before. A registry walk, so a by-id contest is held
+  too. Add one only from its sponsor's rules, in the same commit as its
+  class's GetCabrilloOverlayCategories. *)
+procedure TContestUITests.Test_OnlyNamedContestsAddCabrilloOverlays;
+const
+   OVERLAY_SPONSORS: array[0..0] of string = ('LA-QSO-PARTY');
+var
+   contests: TContestIdentityList;
+   obj: TContestBase;
+   k, i: integer;
+   listed: boolean;
+   answered: integer;
+begin
+   BeginTest('Test_OnlyNamedContestsAddCabrilloOverlays');
+   answered := 0;
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      listed := False;
+      for i := Low(OVERLAY_SPONSORS) to High(OVERLAY_SPONSORS) do
+         begin
+         if ContestId(HandleOf(obj)) = OVERLAY_SPONSORS[i] then
+            begin
+            listed := True;
+            end;
+         end;
+      CheckEquals(Ord(listed), Ord(Length(obj.CabrilloOverlayCategories) > 0),
+                  ContestWho(obj) + ': names its sponsor''s overlays');
+      if listed then
+         begin
+         Inc(answered);
+         end;
+      end;
+   CheckEquals(Length(OVERLAY_SPONSORS), answered, 'every overlay sponsor was walked');
+   CheckEquals(0, Length(ContestIdentity(DUMMYCONTEST).CabrilloOverlayCategories),
+               'no contest: no overlays');
+end;
+
+(* uCbrSum.OverlayValuesWith: the standard list in its old places, then the
+  sponsor's values it lacks (once, without case), then one blank, last. *)
+procedure TContestUITests.Test_OverlayListComposition;
+var
+   values, standard: TArray<string>;
+   sponsor: TArray<string>;
+   la: TContestBase;
+   h: TContestHandle;
+   i: integer;
+begin
+   BeginTest('Test_OverlayListComposition');
+
+   (* NO SPONSOR VALUES: exactly CategoryValuesFor's list. *)
+   standard := CategoryValuesFor(ctCategoryOverlay);
+   values := OverlayValuesWith(OverlayCategory, nil);
+   CheckEquals(Length(standard), Length(values), 'no sponsor: the standard length');
+   for i := 0 to High(values) do
+      begin
+      if i <= High(standard) then
+         begin
+         CheckEquals(standard[i], values[i], 'no sponsor: item ' + IntToStr(i));
+         end;
+      end;
+
+   (* LOUISIANA: TB-WIRES is standard already, so WIRES and POTA follow. *)
+   CheckTrue(FindContestById('LA-QSO-PARTY', h), 'Louisiana is registered');
+   la := ContestIdentity(h);
+   values := OverlayValuesWith(OverlayCategory, la.CabrilloOverlayCategories);
+   CheckEquals(NumberOverlayCategories + 3, Length(values),
+               'Louisiana: the standard six, WIRES, POTA, the blank');
+   if Length(values) = NumberOverlayCategories + 3 then
+      begin
+      for i := 0 to NumberOverlayCategories - 1 do
+         begin
+         CheckEquals(OverlayCategory[i], values[i], 'the standard list keeps its places');
+         end;
+      CheckEquals('WIRES', values[NumberOverlayCategories], '5.4.1');
+      CheckEquals('POTA', values[NumberOverlayCategories + 1], '5.4.3');
+      CheckEquals('', values[High(values)], 'the blank, last');
+      end;
+
+   (* A DUPLICATE IN ANOTHER CASE, AND A BLANK, ARE NOT OFFERED TWICE. *)
+   SetLength(sponsor, 3);
+   sponsor[0] := 'tb-wires';
+   sponsor[1] := ' ';
+   sponsor[2] := 'POTA';
+   values := OverlayValuesWith(OverlayCategory, sponsor);
+   CheckEquals(NumberOverlayCategories + 2, Length(values), 'only POTA is added');
+   if Length(values) = NumberOverlayCategories + 2 then
+      begin
+      CheckEquals('POTA', values[NumberOverlayCategories], 'POTA after the standard list');
+      CheckEquals('', values[High(values)], 'one blank, last');
+      end;
+end;
+
 procedure TContestUITests.RunAllTests;
 begin
    Test_ChoicesListEveryContestOnce;
@@ -896,6 +998,8 @@ begin
    Test_OnlyCQWWHasASixtyMinuteBreak;
    Test_AGapCountsUpToTheBreak;
    Test_OnlyARRLContestsOfferTheARRLLogPortal;
+   Test_OnlyNamedContestsAddCabrilloOverlays;
+   Test_OverlayListComposition;
 end;
 
 end.

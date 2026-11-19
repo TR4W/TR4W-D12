@@ -15,6 +15,11 @@ unit uWSJTXReport;
   FT4 followed, and FST4 / FST4W arrived with issue 173, and neither was added
   (FT4 is an MFSK submode in ADIF, so it parses to eFT4 and fell through to the
   "not a WSJT-X mode" branch: its received report was exported as "-12").
+  eJTTY (WSJT-X 3.3's keyboard mode, issue 120) is included although its
+  exchange text carries a "599": whether WSJT-X logs a JTTY QSO's report as
+  a dB value outside its RTTY/Field Day operating activities is not shown by
+  its source, and inclusion is harmless either way -- only a stored value
+  below WSJTX_SNR_RST_LIMIT is converted, so a logged 599 is left alone.
 
   WHICH MODES NOT.  Q65, JT9 and MSK144 have no ExtendedModeType value at all
   (their ADIF mode / submode parse to eNoMode), so no ExtMode can name them and
@@ -31,7 +36,7 @@ uses
 
 const
    (* The ExtMode values whose RSTReceived is a WSJT-X dB SNR. *)
-   WSJTX_SNR_MODES = [eFT8, eFT4, eJT65, eFST4, eFST4W, eMFSK];
+   WSJTX_SNR_MODES = [eFT8, eFT4, eJT65, eFST4, eFST4W, eMFSK, eJTTY];
 
    (* A stored report below this is an SNR, not an RST (the legacy test). *)
    WSJTX_SNR_RST_LIMIT = 25;

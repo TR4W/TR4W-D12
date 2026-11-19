@@ -83,6 +83,7 @@ type
       procedure Test_InvalidValuesAreNotWritten;
       procedure Test_OldDOKAndFOCNamesStillImport;
       procedure Test_GenericDataMode_SaysSoInTheFile;
+      procedure Test_JTTY_WritesAValidModeAndRoundTrips;
       procedure Test_OldTR4WSpellingsStillImport;
       procedure Test_ADIFDateStringToQSOTime_Valid;
       procedure Test_ADIFDateStringToQSOTime_InvalidLength;
@@ -900,6 +901,9 @@ begin
    // ADIF 3.1.6 Submode enumeration: FST4 and FST4W are submodes of MFSK.
    Pair(eFST4,   'MFSK', 'FST4');
    Pair(eFST4W,  'MFSK', 'FST4W');
+   // Issue 120: JTTY is NOT an ADIF 3.1.6 submode -- MODE MFSK, no
+   // SUBMODE; the name goes in APP_TR4W_SUBMODE (Test_JTTY_...).
+   Pair(eJTTY,   'MFSK', '');
    Pair(eMFSK,   'MFSK', '');
    Pair(eFT8,    'FT8',  '');
    Pair(eJT65,   'JT65', '');
@@ -1233,6 +1237,72 @@ begin
              'header text must hold no "<"');
 end;
 
+(* JTTY, ISSUE 120. WSJT-X 3.3 writes MODE MFSK + SUBMODE JTTY, which ADIF
+  3.1.6 does not list (the validator's compliance error). TR4W reads that
+  form, and WRITES MODE MFSK with the name in APP_TR4W_SUBMODE, which its own
+  import restores. Exhaustive over the enum: only eJTTY names an app
+  submode. *)
+procedure TADIFHelperTests.Test_JTTY_WritesAValidModeAndRoundTrips;
+var
+   rec     : ContestExchange;
+   s       : string;
+   records : TContestExchangeArray;
+   e       : ExtendedModeType;
+   m       : ModeAndExtendedModeType;
+begin
+   BeginTest('Test_JTTY_WritesAValidModeAndRoundTrips');
+   for e := Low(ExtendedModeType) to High(ExtendedModeType) do
+      begin
+      CheckTrue((e = eJTTY) = (ADIFAppSubModeForExtMode(e) <> ''),
+                  ExtendedModeStringArray[e] + ' names an app submode');
+      end;
+   CheckEquals('JTTY', ADIFAppSubModeForExtMode(eJTTY), 'the name');
+   CheckEquals('JTTY', ExtendedModeStringArray[eJTTY], 'TR4W''s own token');
+
+   // WSJT-X's own record, as LOGGEDADIF hands it over.
+   m := GetADIFSubMode('JTTY');
+   CheckTrue(m.msmMode = Digital, 'SUBMODE JTTY is Digital');
+   CheckEquals(Integer(eJTTY), Integer(m.msmExtendedMode), 'SUBMODE JTTY is eJTTY');
+   CheckEquals(1, ImportADIFFromString(
+      '<CALL:4>KG1S <MODE:4>MFSK <SUBMODE:4>JTTY <BAND:3>20m <EOR>', records),
+      'WSJT-X form read');
+   CheckEquals(Integer(eJTTY), Integer(records[0].ExtMode), 'WSJT-X form -> eJTTY');
+
+   // TR4W's export: a valid MODE, no SUBMODE, the app field.
+   rec := Default(ContestExchange);
+   rec.Callsign := 'KG1S';
+   rec.Band     := Band20;
+   rec.Mode     := Digital;
+   rec.ExtMode  := eJTTY;
+   s := EmitADIFRecord(rec);
+   CheckTrue(Pos('<MODE:4>MFSK', s) > 0, 'MODE MFSK');
+   CheckTrue(Pos('<SUBMODE:', s) = 0, 'no SUBMODE ADIF 3.1.6 lacks');
+   CheckTrue(Pos('<APP_TR4W_SUBMODE:4>JTTY', s) > 0, 'the name in the app field');
+   CheckEquals(1, ImportADIFFromString(s + '<EOR>', records), 'read back');
+   CheckTrue(records[0].Mode = Digital, 'round trip: Digital');
+   CheckEquals(Integer(eJTTY), Integer(records[0].ExtMode), 'round trip: eJTTY');
+
+   // The field may precede MODE; it is applied once the record is read.
+   CheckEquals(1, ImportADIFFromString(
+      '<CALL:4>KG1S <APP_TR4W_SUBMODE:4>JTTY <MODE:4>MFSK <EOR>', records),
+      'field before MODE');
+   CheckEquals(Integer(eJTTY), Integer(records[0].ExtMode), 'order-independent');
+
+   // Beside any other mode, or a real SUBMODE, it changes nothing.
+   CheckEquals(1, ImportADIFFromString(
+      '<CALL:4>KG1S <MODE:3>FT8 <APP_TR4W_SUBMODE:4>JTTY <EOR>', records),
+      'beside FT8');
+   CheckEquals(Integer(eFT8), Integer(records[0].ExtMode), 'FT8 stays FT8');
+   CheckEquals(1, ImportADIFFromString(
+      '<CALL:4>KG1S <MODE:4>MFSK <SUBMODE:3>FT4 <APP_TR4W_SUBMODE:4>JTTY <EOR>', records),
+      'beside SUBMODE FT4');
+   CheckEquals(Integer(eFT4), Integer(records[0].ExtMode), 'FT4 stays FT4');
+
+   // No other mode writes the field.
+   rec.ExtMode := eFT4;
+   CheckTrue(Pos('APP_TR4W_SUBMODE', EmitADIFRecord(rec)) = 0, 'FT4 writes no app submode');
+end;
+
 procedure TADIFHelperTests.Test_OldTR4WSpellingsStillImport;
 var
    m : ModeAndExtendedModeType;
@@ -1483,6 +1553,7 @@ begin
    Test_InvalidValuesAreNotWritten;
    Test_OldDOKAndFOCNamesStillImport;
    Test_GenericDataMode_SaysSoInTheFile;
+   Test_JTTY_WritesAValidModeAndRoundTrips;
    Test_OldTR4WSpellingsStillImport;
 
    Test_ADIFDateStringToQSOTime_Valid;
