@@ -24,6 +24,7 @@ broken one must not wedge every shell command).
 Not covered, on purpose: a script that itself calls FullBuild. Nothing here does.
 """
 import json
+import os
 import re
 import sys
 
@@ -75,6 +76,13 @@ def main():
       return 0
 
    if not command or not is_run(command):
+      return 0
+
+   # NY4I, 2026-11-20: an unattended session sat on this prompt. He creates
+   # .claude/fullbuild-preapproved (untracked, local to his clone) to pre-approve
+   # the run, and deletes it to restore the prompt.
+   marker = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fullbuild-preapproved')
+   if os.path.exists(marker):
       return 0
 
    print(json.dumps({
