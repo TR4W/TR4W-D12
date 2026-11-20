@@ -7550,3 +7550,17 @@ log); nothing sees the preview window or the message.
   `BACO`): ONE file as before, `CALLSIGN` MY CALL (the lines carry two
   calls); with only `APPL`, `CALLSIGN: NY4I/APPL`.
 - [ ] **The ADIF** stays one file with every row.
+
+## Added 2026-11-20 -- found on the Program Files install (60e2cb8a)
+
+- [ ] **TRMASTER.DTA download from an install under `C:\Program Files`.** Help > Download TRMASTER.DTA used
+  to fail with `Unable to create file ...\TRMASTER.DTA.tmp: Access is denied` because the shipped copy was
+  updated in place. It now saves to `%APPDATA%\TR4W\settings\TRMASTER.DTA`: the message line should say it
+  was downloaded and to restart, and after a restart the log says `Call history file: ...\settings\TRMASTER.DTA
+  (downloaded)`. An install in a writable folder still updates the file beside the contest in place.
+- [ ] **Cabrillo window with a required LOCATION empty** (ARRL 10, Winter Field Day). OK shows "LOCATION field is
+  empty." and the Cabrillo window STAYS OPEN with the fields as typed, so LOCATION can be filled in; OK again
+  writes the file. (The cursor is not moved to the LOCATION field yet.) Cancel still saves and closes.
+- [ ] **Continent List report.** Columns are only the contest's own bands (ARRL 10: just 10), the header and every
+  row line up, and the Total row ends in the ALL total. A QSO logged on a band the contest does not use is not
+  in this report. Try a multi-band contest and check 160 to 10 plus the WARC bands it allows.
