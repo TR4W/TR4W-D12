@@ -185,7 +185,10 @@ that is a STANDARD user (not elevated):
 
 - [ ] **Fresh install, first run.** Install with the default folder (`C:\Program Files\TR4W`). Start TR4W
   from the Start-menu shortcut (its "Start in" must be the install folder). Expected: ONE notice, "TR4W
-  cannot save files in the folder it is installed in ... kept here instead: C:\Users\<you>\AppData\Roaming\TR4W\".
+  is installed under Program Files, which Windows protects ... kept here instead, however TR4W is started
+  (including Run as administrator): C:\Users\<you>\AppData\Roaming\TR4W\". (The other wording, "TR4W
+  cannot save files in the folder it is installed in", is now only for a refused folder OUTSIDE Program
+  Files.)
   NO "could not open its log file" message, and NO "Press OK to ignore and risk data corruption" dialog
   at any point. Second start: no notice (the folder holds `WHY TR4W FILES ARE HERE.txt`).
 - [ ] **Where each file lands** -- under `%APPDATA%\TR4W\`: `tr4w.log` and `tr4w-early.log` (top),
@@ -195,8 +198,10 @@ that is a STANDARD user (not elevated):
   `dxcluster\`. **The contest `.db` (and its `-wal`/`-shm`) is created in `%APPDATA%\TR4W\` itself**
   when you make a New Contest; File > Open lists the contests there; ADIF / Cabrillo / summary
   exports land beside that `.db`. NOTHING new appears in `C:\Program Files\TR4W`.
-- [ ] **The log says so.** `tr4w.log` has `[Paths] the program folder does not accept new files;
-  settings, logs and contests are written under C:\Users\...\AppData\Roaming\TR4W\` on every start.
+- [ ] **The log says so.** `tr4w.log` has `[Paths] the program folder is under Program Files; settings,
+  logs and contests are written under C:\Users\...\AppData\Roaming\TR4W\ whoever runs TR4W` on every
+  start (a refused folder outside Program Files logs `the program folder does not accept new files`
+  instead).
 - [ ] **Shipped data still read from the install folder.** A contest with a domestic file (e.g. a
   state QSO party) loads its `dom\` file; the country file is found (CTY.DAT shipped, unless one was
   downloaded); Preferences tooltips show (help\ from the install folder).
