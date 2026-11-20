@@ -833,6 +833,17 @@ begin
                '579        ',
                '579        '],
               aSent, aRec);
+         (* "DX (including KP4, etc.) operators send DXCC prefix" -- the
+            sponsor's rule (audit 2026-11-20, by hand): a station that states
+            no location (variants 1 and 6) sends its own country. *)
+         if aVariant = 1 then
+            begin
+            aSent := '59  ' + Format('%-7s', [PinStation(aStation, FLORIDAQSOPARTY).MyCountry]);
+            end
+         else if aVariant = 6 then
+            begin
+            aSent := '599 ' + Format('%-7s', [PinStation(aStation, FLORIDAQSOPARTY).MyCountry]);
+            end;
          end;
       UKEI:
          begin
