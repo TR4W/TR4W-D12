@@ -620,10 +620,12 @@ const
        AtVE: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange);
        AtDX: (Exchange: RSTQSONUMBEREXCHANGE; InitialExchange: NoInitialExchange)),
       (* OHIOQSOPARTY *)
+      (* Edited by hand at the 2026-11-20 audit: "Ohio stations send RST and
+         their Ohio county" -- no serial. *)
       (Token: 'OHIO QSO PARTY';
-       AtUS: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange);
-       AtVE: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange);
-       AtDX: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange)),
+       AtUS: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange);
+       AtVE: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange);
+       AtDX: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange)),
       (* OKDX *)
       (Token: 'OK-OM DX CW';
        AtUS: (Exchange: RSTAndQSONumberOrDomesticQTHExchange; InitialExchange: NoInitialExchange);
@@ -1177,7 +1179,7 @@ const
        Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange)),
       (Contest: OHIOQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Adam';
        MySection: 'KS'; MyGrid: 'EM17';
-       Kinds: (Exchange: RSTQSONumberAndDomesticQTHExchange; InitialExchange: NoInitialExchange)),
+       Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange)),
       (Contest: PAQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'ADA';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: QSONumberDomesticQTHExchange; InitialExchange: NoInitialExchange)),

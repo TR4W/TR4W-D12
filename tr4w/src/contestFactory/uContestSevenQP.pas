@@ -75,6 +75,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       dupe key (DupeKeyIncludesReceivedQTH), as on every single-state party
       since Q118 -- the /county suffix already did; now the bare call does.
 
+  MODES (audit against the sponsor, 2026-11-20): "Any computer-to-computer
+  mode is considered digital. WSJT modes do not support the 7QP exchange, so
+  are not allowed." UsesMode refuses the WSJT-X modes (WSJT_SUBMODES: FT8,
+  FT4, FT2, JT65, FST4, FST4W) -- an automatic X-QSO -- and credits CW,
+  phone and every other digital submode. FM stays phone (the rules say only
+  "SSB").
+
   BANDS (NY4I, 2026-10-16, from the four parties' rules): 160, 80, 40, 20,
   15 and 10 m -- no WARC, no VHF. UsesBand states them; a QSO anywhere else
   is logged, scores 0 and earns no multiplier (design 7.4). The row's
@@ -135,6 +142,8 @@ type
    public
       (* 160 to 10 m without WARC -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
+      (* CW, phone and every digital mode but the WSJT ones -- see the body. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
       (* A MOBILE IN A NEW COUNTY IS A NEW QSO -- the received QTH is part of
          the dupe key. See TContestBase.DupeKeyIncludesReceivedQTH and the
          header. *)
@@ -459,6 +468,32 @@ end;
 function TContestSevenQP.UsesBand(aBand: BandType): boolean;
 begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* "Any computer-to-computer mode is considered digital. WSJT modes do not
+   support the 7QP exchange, so are not allowed." (the sponsor's 2026 rules,
+   Other). So every digital submode is credited but the WSJT-X ones --
+   FT8, FT4, FT2, JT65, FST4 and FST4W (uContestBase.WSJT_SUBMODES); a QSO in
+   one is an automatic X-QSO. eNoMode and the generic data modes mean "some
+   submode" and are credited. CW and phone are credited; the rules score
+   "SSB" and say nothing of FM, which stays phone as it always was here (a
+   question for NY4I). An identity fact: no station is asked. *)
+function TContestSevenQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - WSJT_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 function TContestSevenQP.GetIsUSQSOParty: boolean;

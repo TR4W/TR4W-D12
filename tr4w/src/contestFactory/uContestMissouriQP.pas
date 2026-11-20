@@ -401,8 +401,7 @@ begin
          end;
       Digital:
          begin
-         Result := DigitalSubmodeAllowed(aExtMode,
-                      EVERY_SUBMODE - FT_SUBMODES - [eJT65, eFST4, eFST4W]);
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - WSJT_SUBMODES);
          end;
       else
          begin

@@ -998,7 +998,7 @@ begin
                'DX     '],
               aSent, aRec);
          end;
-      MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, TOEC, NYQP,
+      MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, TOEC, NYQP, OHIOQSOPARTY,
       TENNESSEEQSOPARTY, ALRS_UA1DZ_CUP, INQSOPARTY, BCQP, IN7QPNE:
          begin
          Take(aVariant,
@@ -1041,7 +1041,7 @@ begin
                '  BOB        GA  '],
               aSent, aRec);
          end;
-      NRAUBALTICCW, NRAUBALTICSSB, OHIOQSOPARTY, RSGB18, UBACW, UBASSB, CQIR:
+      NRAUBALTICCW, NRAUBALTICSSB, RSGB18, UBACW, UBASSB, CQIR:
          begin
          Take(aVariant,
               ['599 0007     FL      ',

@@ -940,8 +940,8 @@ begin
       points are CW 3, Phone 2, and digital is no mode of the contest.
       Pinned in uTestContestMinnesotaQP. *)
 
-   (* OnePhoneTwoCW: if Mode = CW then 2 else 1 -- digital takes the 1. *)
-   CheckPoints(OHIOQSOPARTY, 'Ohio', 2, 1, 1);
+   (* OHIO LEFT THIS LIST at the 2026-11-20 audit: "CW and SSB" -- a digital
+      QSO is no mode of the contest. Pinned in uTestContestOhioQP. *)
    CheckPoints(ArizonaQsoParty, 'Arizona', 2, 1, 1);
 
    (* WISCONSIN LEFT THIS LIST AT #88 round 2 (2026-10-26): its sponsor
@@ -1067,7 +1067,9 @@ begin
       from up to 2 counties" (2027) -- two, pinned in
       uTestContestMinnesotaQP. *)
    CheckUnlimited(MOQSOPARTY, 'Missouri');
-   CheckUnlimited(OHIOQSOPARTY, 'Ohio');
+   (* OHIO LEFT THIS LIST at the 2026-11-20 audit: "No station may claim
+      simultaneous operation in more than one county" -- zero, pinned in
+      uTestContestOhioQP. *)
    (* WISCONSIN LEFT THIS LIST AT #88 round 2: "Mobiles or portables may not
       sit on a county line" -- zero, pinned in uTestContestWisconsinQP. *)
    CheckUnlimited(TENNESSEEQSOPARTY, 'Tennessee');
@@ -1126,7 +1128,10 @@ begin
    (* NCQSOPointMethod: phone 2, CW 3, digital 5 -- three distinct numbers,
       before any bonus. PointsFor zeroes the whole exchange, so the callsign
       and the DomesticQTH are blank and neither bonus fires. *)
-   CheckPoints(NCQSOPARTY, 'North Carolina', 3, 2, 5);
+   (* NORTH CAROLINA LEFT THIS CHECK at the 2026-11-20 audit: PointsFor's
+      default band is 160 m, which the sponsor does not credit ("No 160").
+      Its points are pinned on 20 m in Test_NorthCarolinaBonusIsTheCurrentRules
+      and uTestContestNorthCarolinaQP. *)
 
    (* VAQSOPointMethod: phone 1, else marine/air mobile 3, else 2. A blank
       callsign is not marine, so this is the plain case. *)
@@ -1228,6 +1233,9 @@ var
       qso: ContestExchange;
    begin
       FillChar(qso, SizeOf(qso), 0);
+      (* 20 m: the zeroed record's band is 160 m, which NC does not credit
+         ("No 160, WARC, or above 2 meters"). *)
+      qso.Band := Band20;
       qso.Mode := aMode;
       qso.Callsign := aCall;
       qso.DomesticQTH := aQTH;
@@ -1988,8 +1996,10 @@ begin
          CheckTrue(ContestAllowsCountyLineOnImport(ContestHandleOf(c)) = classAllows,
                    string(ContestTypeSA[c]) + ': the import follows the class, not the row');
          case c of
-            MICHQSOPARTY, WISCONSINQSOPARTY:
+            MICHQSOPARTY, WISCONSINQSOPARTY, OHIOQSOPARTY:
                begin
+               (* OHIO since the 2026-11-20 audit: "No station may claim
+                  simultaneous operation in more than one county". *)
                CheckTrue(rowAllows, string(ContestTypeSA[c]) + ': the old row said CountyLineAllowed');
                CheckFalse(classAllows, string(ContestTypeSA[c]) + ': the class allows none');
                CheckFalse(ContestAllowsCountyLineOnImport(ContestHandleOf(c)),
@@ -2012,7 +2022,7 @@ begin
          obj.Free;
          end;
       end;
-   CheckEquals(7, disagreements, 'exactly seven contests where the old row and the county line disagree');
+   CheckEquals(8, disagreements, 'exactly eight contests where the old row and the county line disagree');
 
    (* THE IMPORT FOLLOWS THE CLASS FOR EVERY REGISTERED CONTEST -- by-id
       ones included (issue #135), which the frozen row comparison above
