@@ -60,6 +60,7 @@ type
       procedure Test_ExchangeText_SweepstakesShape;
       procedure Test_Reader_BothPublishedLayoutsGiveOnePrefill;
       procedure Test_EveryContestStatesItsCallHistoryFields;
+      procedure Test_SiteLayoutsGiveTheRememberedText;
       procedure Test_Store_KnownEntryIsKeptAndALoggedQSOReplaces;
       procedure Test_Loader_SettingOffMissingFileAndOtherContest;
       procedure Test_Loader_FillsTheStoreForSweepstakes;
@@ -77,6 +78,7 @@ uses
    SysUtils,
    VC,
    uCallHistory,
+   uCallHistoryDownload,
    uCallsigns,
    uContestBase,
    uContestRegistry,
@@ -384,71 +386,164 @@ begin
    end;
 end;
 
-(* EVERY REGISTERED CONTEST STATES WHAT IT PREFILLS: Sweepstakes in both
-   modes CK then Sect, every other contest nothing. A contest that starts
-   using a call history adds itself here. *)
+(* WHAT EACH CONTEST PREFILLS, AS LITERALS -- the exact set of contests that
+   name a supercheckhistory.com file (the call history download sweep,
+   2026-11-20). A contest that starts using a call history file adds a row
+   to the three tables below, and its layout to Test_SiteLayoutsGiveTheRememberedText;
+   the walk fails a contest that names a stem and is not here, and a row here
+   whose contest names none.
+
+   The stem is the N1MM file's name on the site (<stem>.txt), which is NOT
+   always the Cabrillo name. The fields are N1MM's names in the order the log
+   remembers a worked station (see TContestBase.CallHistoryFields). The
+   second layout of each file was READ from the site on 2026-11-20 and is
+   in Test_SiteLayoutsGiveTheRememberedText. *)
+const
+   CALL_HISTORY_MEMBERS: array[0..8] of ContestType = (
+      ARRLSSCW, ARRLSSSSB, ARRL10, ARRLFIELDDAY, CWOPEN, IARU,
+      NAQSOCW, NAQSOSSB, NAQSORTTY);
+   CALL_HISTORY_STEMS: array[0..8] of string = (
+      'ARRL-SS-CW', 'ARRL-SS-SSB', 'ARRL-10M', 'ARRL-FD', 'CW-OPEN', 'IARU-HF',
+      'NAQP-CW', 'NAQP-SSB', 'NAQP-RTTY');
+   CALL_HISTORY_FIELD_NAMES: array[0..8] of string = (
+      'CK Sect', 'CK Sect', 'Exch1', 'Exch1 Sect', 'Name', 'Sect',
+      'Name State', 'Name State', 'Name State');
+
+(* The fields as N1MM names them, one blank between. *)
+function FieldNamesText(const aFields: TCallHistoryFields): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 0 to High(aFields) do
+      begin
+      if Result <> '' then
+         begin
+         Result := Result + ' ';
+         end;
+      Result := Result + CallHistoryFieldName(aFields[i]);
+      end;
+end;
+
+(* EVERY REGISTERED CONTEST STATES WHAT IT PREFILLS: the contests in the
+   tables above name their site file and fields, every other contest nothing.
+   A contest that starts using a call history adds itself to the tables. *)
 procedure TCallHistoryTests.Test_EveryContestStatesItsCallHistoryFields;
 var
    contests: TContestIdentityList;
-   k: integer;
+   k, m, row: integer;
    fields: TCallHistoryFields;
-   isSweepstakes: boolean;
+   seen: array[0..8] of boolean;
 begin
    BeginTest('Test_EveryContestStatesItsCallHistoryFields');
+   for m := Low(seen) to High(seen) do
+      begin
+      seen[m] := False;
+      end;
    contests := ContestsToWalk;
    for k := 0 to High(contests) do
       begin
       fields := contests[k].CallHistoryFields;
-      isSweepstakes := IsLegacyContest(contests[k], ARRLSSCW) or
-                       IsLegacyContest(contests[k], ARRLSSSSB);
-      if IsLegacyContest(contests[k], ARRLSSCW) then
+      row := -1;
+      for m := Low(CALL_HISTORY_MEMBERS) to High(CALL_HISTORY_MEMBERS) do
          begin
-         CheckEquals('ARRL-SS-CW.txt', contests[k].CallHistoryFileName, 'SS CW''s default file: the site''s name');
-         CheckEquals('ARRL-SS-CW', contests[k].CallHistorySiteName, 'SS CW''s site file');
-         CheckEquals('SSCW.txt', contests[k].CallHistoryLegacyFileName, 'SS CW''s legacy file: N1MM''s name');
-         end
-      else if IsLegacyContest(contests[k], ARRLSSSSB) then
+         if IsLegacyContest(contests[k], CALL_HISTORY_MEMBERS[m]) then
+            begin
+            row := m;
+            seen[m] := True;
+            end;
+         end;
+      if row >= 0 then
          begin
-         CheckEquals('ARRL-SS-SSB.txt', contests[k].CallHistoryFileName, 'SS SSB''s default file: the site''s name');
-         CheckEquals('ARRL-SS-SSB', contests[k].CallHistorySiteName, 'SS SSB''s site file');
-         CheckEquals('SSSSB.txt', contests[k].CallHistoryLegacyFileName, 'SS SSB''s legacy file: N1MM''s name');
+         CheckEquals(CALL_HISTORY_STEMS[row], contests[k].CallHistorySiteName,
+                     ContestWho(contests[k]) + ': its site file');
+         CheckEquals(CALL_HISTORY_STEMS[row] + '.txt', contests[k].CallHistoryFileName,
+                     ContestWho(contests[k]) + ': the default file follows the site name');
+         CheckEquals(CALL_HISTORY_FIELD_NAMES[row], FieldNamesText(fields),
+                     ContestWho(contests[k]) + ': the fields, in the remembered order');
+         CheckTrue(CallHistoryDownloadURL(CALL_HISTORY_SITE_URL, contests[k].CallHistorySiteName) <> '',
+                   ContestWho(contests[k]) + ': the stem makes a URL');
          end
       else
          begin
          CheckEquals('', contests[k].CallHistoryFileName, ContestWho(contests[k]) + ' names no default file');
          CheckEquals('', contests[k].CallHistorySiteName, ContestWho(contests[k]) + ' has no site file');
          CheckEquals('', contests[k].CallHistoryLegacyFileName, ContestWho(contests[k]) + ' has no legacy file');
+         CheckEquals(0, Length(fields), ContestWho(contests[k]) + ' uses no call history');
          end;
-      (* THE INVARIANT: a site file is offered only for a contest that can read
-         it, and the default name follows the site's, and the SS site name IS
-         the Cabrillo name. *)
+      (* THE INVARIANT: a site file is offered only for a contest that can read it. *)
       if contests[k].CallHistorySiteName <> '' then
          begin
          CheckTrue(Length(fields) > 0, ContestWho(contests[k]) + ': a site file needs fields to prefill');
-         CheckEquals(contests[k].CallHistorySiteName + '.txt', contests[k].CallHistoryFileName,
-                     ContestWho(contests[k]) + ': the default file follows the site name');
          end;
-      if isSweepstakes then
+      (* THE SWEEPSTAKES KEEP THEIR HISTORY: the site name is the Cabrillo name
+         and the file N1MM called it stays the fallback. *)
+      if IsLegacyContest(contests[k], ARRLSSCW) then
          begin
-         CheckEquals(contests[k].CabrilloName, contests[k].CallHistorySiteName,
-                     ContestWho(contests[k]) + ': the site name is the Cabrillo name');
+         CheckEquals(contests[k].CabrilloName, contests[k].CallHistorySiteName, 'SS CW: the Cabrillo name');
+         CheckEquals('SSCW.txt', contests[k].CallHistoryLegacyFileName, 'SS CW''s legacy file: N1MM''s name');
          end;
-      if isSweepstakes then
+      if IsLegacyContest(contests[k], ARRLSSSSB) then
          begin
-         CheckEquals(2, Length(fields), ContestWho(contests[k]) + ' prefills two fields');
-         if Length(fields) = 2 then
-            begin
-            CheckTrue(fields[0] = chfCK, ContestWho(contests[k]) + ': the check first');
-            CheckTrue(fields[1] = chfSect, ContestWho(contests[k]) + ': then the section');
-            end;
-         end
-      else
-         begin
-         CheckEquals(0, Length(fields), ContestWho(contests[k]) + ' uses no call history');
+         CheckEquals(contests[k].CabrilloName, contests[k].CallHistorySiteName, 'SS SSB: the Cabrillo name');
+         CheckEquals('SSSSB.txt', contests[k].CallHistoryLegacyFileName, 'SS SSB''s legacy file: N1MM''s name');
          end;
+      end;
+   for m := Low(seen) to High(seen) do
+      begin
+      CheckTrue(seen[m], CALL_HISTORY_STEMS[m] + ': its contest is registered');
       end;
    (* "No contest" too. *)
    CheckEquals(0, Length(ContestIdentity(NoContest).CallHistoryFields), 'no contest: none');
+end;
+
+(* THE SITE'S OWN LAYOUTS, as read on 2026-11-20 (the !!Order!! line of each
+   file and a row or two, trimmed; the NAQP SSB and RTTY layouts are INFERRED
+   from the CW file, never sampled): each contest's fields turn a row into the
+   text the log remembers for a worked station -- 'Name State' for NAQP, 'Class
+   Section' for Field Day -- and refuse a row missing one. No network. *)
+procedure TCallHistoryTests.Test_SiteLayoutsGiveTheRememberedText;
+var
+   reader: TCallHistoryReader;
+
+   procedure Layout(aMember: ContestType; const aText: string; aAdded, aIncomplete: integer;
+                    const aFirst: string);
+   begin
+      reader := TCallHistoryReader.Create;
+      try
+         ReadText(reader, aText, ContestIdentity(ContestHandleOf(aMember)).CallHistoryFields);
+         CheckEquals(aAdded, gCollected.Count, 'rows prefilled for ' + aFirst);
+         CheckEquals(aIncomplete, reader.Incomplete, 'rows refused for ' + aFirst);
+         if gCollected.Count > 0 then
+            begin
+            CheckEquals(aFirst, string(gCollected[0]), 'the first prefill');
+            end;
+      finally
+         reader.Free;
+      end;
+   end;
+
+begin
+   BeginTest('Test_SiteLayoutsGiveTheRememberedText');
+   (* NAQP-CW.txt: !!Order!!,Call,Name,State,UserText -- a row with no name is refused. *)
+   Layout(NAQSOCW, '!!Order!!,Call,Name,State,UserText'#13#10 +
+                   '4L5O,,DX,'#13#10 + '4U1WB,MASA,DC,'#13#10, 1, 1, '4U1WB=MASA DC');
+   Layout(NAQSOSSB, '!!Order!!,Call,Name,State,UserText'#13#10 + '4A2MAX,MAX,XE,'#13#10,
+          1, 0, '4A2MAX=MAX XE');
+   Layout(NAQSORTTY, '!!Order!!,Call,Name,State,UserText'#13#10 + '4A2MAX,MAX,XE,'#13#10,
+          1, 0, '4A2MAX=MAX XE');
+   (* ARRL-10M.txt: !!Order!!,Call,Exch1,UserText -- the QTH alone. *)
+   Layout(ARRL10, '!!Order!!,Call,Exch1,UserText'#13#10 + '4U1WB,DC,'#13#10 + 'AA0A,MO,'#13#10,
+          2, 0, '4U1WB=DC');
+   (* ARRL-FD.txt: !!Order!!,Call,Exch1,Sect,UserText -- the class, then the section. *)
+   Layout(ARRLFIELDDAY, '!!Order!!,Call,Exch1,Sect,UserText'#13#10 +
+                        '4U1WB,,MDC,'#13#10 + '2E0FHM,1D,DX,'#13#10, 1, 1, '2E0FHM=1D DX');
+   (* CW-OPEN.txt: !!Order!!,Call,Name,UserText. *)
+   Layout(CWOPEN, '!!Order!!,Call,Name,UserText'#13#10 + '2E0OBO,BOB,'#13#10,
+          1, 0, '2E0OBO=BOB');
+   (* IARU-HF.txt: !!Order!!,Call,Sect,UserText -- the zone or the society. *)
+   Layout(IARU, '!!Order!!,Call,Sect,UserText'#13#10 + '2E0AMO,27,'#13#10 + '4U1WB,HQ,'#13#10,
+          2, 0, '2E0AMO=27');
 end;
 
 procedure TCallHistoryTests.Test_Store_KnownEntryIsKeptAndALoggedQSOReplaces;
@@ -778,6 +873,7 @@ begin
       Test_ExchangeText_SweepstakesShape;
       Test_Reader_BothPublishedLayoutsGiveOnePrefill;
       Test_EveryContestStatesItsCallHistoryFields;
+      Test_SiteLayoutsGiveTheRememberedText;
       Test_Store_KnownEntryIsKeptAndALoggedQSOReplaces;
       Test_Loader_SettingOffMissingFileAndOtherContest;
       Test_Loader_FillsTheStoreForSweepstakes;

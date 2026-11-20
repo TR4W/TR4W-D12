@@ -129,6 +129,11 @@ function CallHistoryFieldOfName(const aName: string; out aField: TCallHistoryFie
 (* The name N1MM gives a field -- for a log line or a message. *)
 function CallHistoryFieldName(aField: TCallHistoryField): string;
 
+(* A CONTEST'S CallHistoryFields ANSWER, from a literal list --
+   CallHistoryFieldList([chfName, chfState]). One routine so a class states
+   its fields and nothing else; the order given is the order returned. *)
+function CallHistoryFieldList(const aFields: array of TCallHistoryField): TCallHistoryFields;
+
 (* THE EXCHANGE TEXT A CONTEST PREFILLS: the values of aFields in aFields'
    order, one blank between them. False (and '') when aFields is empty or a
    named field is empty in this row -- a partial row is not prefilled. *)
@@ -447,6 +452,18 @@ begin
             inc(FStoreFull);
             end;
       end;
+      end;
+end;
+
+function CallHistoryFieldList(const aFields: array of TCallHistoryField): TCallHistoryFields;
+var
+   i: integer;
+begin
+   Result := nil;
+   SetLength(Result, Length(aFields));
+   for i := 0 to High(aFields) do
+      begin
+      Result[i] := aFields[i];
       end;
 end;
 
