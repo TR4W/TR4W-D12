@@ -34,6 +34,7 @@ type
       procedure Test_ARoverFromANewPlaceIsNoDupe;
       procedure Test_ABoundaryEntryLogsOneQSOPerPlace;
       procedure Test_MyCountyOfARoverPlaceIsItsADIFCounty;
+      procedure Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
    public
       procedure RunAllTests; override;
    end;
@@ -60,6 +61,8 @@ uses
    uTestContestObjects,  (* ShippedDomDir -- the tree's target\dom *)
    uNewContestHostArea,  (* THostAreaPlaces *)
    uRoverSession,        (* ContestRoverPlaces *)
+   LogDom,               (* DomQTHTable, TDomQTHTable -- the real county file's load *)
+   uSortedStringList,    (* TSortedStringList -- a fresh mo.DomList *)
    uRoverState;
 
 (* Three Hawaii districts, as hawaiiqp_cty.dom spells its lines. *)
@@ -610,6 +613,76 @@ begin
    end;
 end;
 
+(* THE NEW YORK QSO PARTY'S COUNTIES, THROUGH THE REAL FILE (NY4I's rover
+  test, 2026-11-19: KIN/QUE stored no my_county). newyork_cty.dom carried
+  no ^Name for any county, so mo.DomList had no display name and
+  PostUnit.ADIFCountyOfQSO -- my_county of a rover's place AND the worked
+  station's CNTY -- answered '' for every NY county. The test above seeded
+  the name by hand and could not see it. Here the shipped file is loaded
+  as the session loads it, and EVERY key it holds must name its county;
+  the names are the sponsor's table (docs/ContestRules/QSOParties/NewYork,
+  v1.1), spelled as the ADIF county list spells them. CAY is Cayuga and
+  CHA Chautauqua. *)
+procedure TRoverStateTests.Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
+var
+   handle: TContestHandle;
+   savedContest: TContestHandle;
+   savedTable: TDomQTHTable;
+   savedList: TSortedStringList;
+   lines: TStringList;
+   i, keys: integer;
+   key, county: string;
+begin
+   BeginTest('Test_EveryNewYorkCountyCodeNamesItsADIFCounty');
+   CheckTrue(FindContestById('NY-QSO-PARTY', handle), 'New York is registered');
+   savedContest := Contest;
+   savedTable := DomQTHTable;
+   DomQTHTable := TDomQTHTable.Create;
+   (* A FRESH MULTIPLIER LIST, as a session that opened only this contest has.
+      mo.DomList is never emptied by a load (only its dupes are cleared), so
+      the list the rest of the suite left behind answers KIN with Oklahoma's
+      Kingfisher and QUE with a Quebec region -- reported, not changed here. *)
+   savedList := mo.DomList;
+   mo.DomList := TSortedStringList.Create;
+   lines := TStringList.Create;
+   try
+      CheckTrue(DomQTHTable.LoadInDomQTHFile(IncludeTrailingPathDelimiter(ShippedDomDir) +
+                                             'newyork_cty.dom'),
+                'newyork_cty.dom loads');
+      Contest := handle;
+
+      CheckEquals('NY,KINGS', RoverPlaceADIFCounty('KIN'), 'KIN is Kings county');
+      CheckEquals('NY,QUEENS', RoverPlaceADIFCounty('QUE'), 'QUE is Queens county');
+      CheckEquals('NY,CATTARAUGUS', RoverPlaceADIFCounty('CAT'), 'CAT is Cattaraugus');
+      CheckEquals('NY,CAYUGA', RoverPlaceADIFCounty('CAY'), 'CAY is Cayuga, not Chautauqua');
+      CheckEquals('NY,CHAUTAUQUA', RoverPlaceADIFCounty('CHA'), 'CHA is Chautauqua');
+      CheckEquals('NY,ALBANY', RoverPlaceADIFCounty('ALB'), 'ALB is Albany');
+      CheckEquals('NY,NEW YORK', RoverPlaceADIFCounty('NEW'), 'NEW is New York county');
+      CheckEquals('NY,ST. LAWRENCE', RoverPlaceADIFCounty('STL'), 'STL is St. Lawrence');
+
+      lines.LoadFromFile(IncludeTrailingPathDelimiter(ShippedDomDir) + 'newyork_cty.dom');
+      keys := 0;
+      for i := 0 to lines.Count - 1 do
+         begin
+         if Pos('=', lines[i]) > 0 then
+            begin
+            key := Trim(Copy(lines[i], 1, Pos('=', lines[i]) - 1));
+            county := RoverPlaceADIFCounty(key);
+            CheckTrue(Copy(county, 1, 3) = 'NY,', key + ' names an ADIF county: "' + county + '"');
+            Inc(keys);
+            end;
+         end;
+      CheckEquals(62, keys, 'the sponsor''s 62 counties');
+   finally
+      lines.Free;
+      mo.DomList.Free;
+      mo.DomList := savedList;
+      DomQTHTable.Free;
+      DomQTHTable := savedTable;
+      Contest := savedContest;
+   end;
+end;
+
 procedure TRoverStateTests.RunAllTests;
 begin
    Test_TheThreeSeparatorsAndTheSlashSplitUnits;
@@ -624,6 +697,7 @@ begin
    Test_ARoverFromANewPlaceIsNoDupe;
    Test_ABoundaryEntryLogsOneQSOPerPlace;
    Test_MyCountyOfARoverPlaceIsItsADIFCounty;
+   Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
 end;
 
 end.
