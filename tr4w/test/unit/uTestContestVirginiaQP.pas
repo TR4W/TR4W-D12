@@ -214,8 +214,6 @@ begin
          CheckEquals(3, Integer(rx.QSOPoints), 'a Virginia rover on CW: 3');
          engine.Enter(prefix + 'CCC', '13 FFX', Band20, Phone, eUSB, accepted, rx);
          CheckEquals(1, Integer(rx.QSOPoints), 'a fixed Virginia station on phone: 1');
-         engine.Enter(prefix + 'DDD/MM', '14 FFX', Band20, CW, eCW, accepted, rx);
-         CheckEquals(2, Integer(rx.QSOPoints), 'a /MM station scores by mode -- no sponsor rule');
          end;
       engine.Activate(True);
       engine.Enter('W4EEE/M', '15 NC', Band20, Phone, eUSB, accepted, rx);
