@@ -771,7 +771,17 @@ begin
      other four categories with it (Q61): one value each, in force before
      the file is written. *)
    CommitCategories;
+   CabrilloExportRefused := False;
    act;
+
+   { The export refused the header (an empty LOCATION) and said so: stay open so
+     the operator can fix the field. Closing here dropped him out of the form
+     with the field still empty (NY4I, 2026-11-20). }
+   if CabrilloExportRefused then
+      begin
+      CabrilloExportRefused := False;
+      Exit;
+      end;
 
    { Issue #976: close after a successful export rather than dropping the
      operator back at OK/Cancel with nothing left to do. }

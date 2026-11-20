@@ -2069,6 +2069,9 @@ procedure ContinentReport;
     ID, Call: CallString;
     CallAddress, AllBandTotal: integer;
     ContTotals: array [ BandType, ContListType ] of integer;
+    ContestBands: array [ 0 .. Ord( Band12 ) ] of BandType;
+    ContestBandCount, ColumnIndex: integer;
+    HeaderLine, RuleLine: string;
     Cont, ListContinent: ContListType;
     TempQSOTotals: array [ BandType ] of integer;
     UnknownCalls: array [ BandType, 0 .. MaxUnknownCalls - 1 ] of CallString;
@@ -2159,12 +2162,30 @@ procedure ContinentReport;
   WriteLnVarCenter( FileWrite, 'Continent List' );
   WriteLn( FileWrite );
 
-  // if not DoingDupingFile then
-  begin
-  WriteLn( FileWrite,
-     '                    160    80    40    20    15    10    30    17    12    ALL'#13#10
-     + '                    ---   ---   ---   ---   ---   ---   ---   ---   ---    ---' );
-  end;
+  (* ONLY THE CONTEST'S OWN BANDS (NY4I, 2026-11-20: ARRL 10 listed 160 to 12).
+    The header used to name nine bands while each row carried six values and
+    then the total, so the total sat under the 30 column. One list of columns
+    now feeds the header, every row and the total row. *)
+  ContestBandCount := 0;
+  for Band := Band160 to Band12 do
+     begin
+     if ContestIdentity( Contest ).UsesBand( Band ) then
+        begin
+        ContestBands[ ContestBandCount ] := Band;
+        inc( ContestBandCount );
+        end;
+     end;
+
+  HeaderLine := '                 ';
+  RuleLine   := '                 ';
+  for ColumnIndex := 0 to ContestBandCount - 1 do
+     begin
+     HeaderLine := HeaderLine + Format( '%6s',
+        [ Trim( BandStringsArray[ ContestBands[ ColumnIndex ] ] ) ] );
+     RuleLine := RuleLine + '   ---';
+     end;
+  WriteLn( FileWrite, HeaderLine + '    ALL' );
+  WriteLn( FileWrite, RuleLine + '    ---' );
 
   for Cont := USA to UK do
      begin
@@ -2174,10 +2195,10 @@ procedure ContinentReport;
      begin
      AllBandTotal := 0;
 
-     for Band := Band160 to Band10 do
+     for ColumnIndex := 0 to ContestBandCount - 1 do
         begin
-        Write( FileWrite, ContTotals[ Band, Cont ]:6 );
-        AllBandTotal := ContTotals[ Band, Cont ] + AllBandTotal;
+        Write( FileWrite, ContTotals[ ContestBands[ ColumnIndex ], Cont ]:6 );
+        AllBandTotal := ContTotals[ ContestBands[ ColumnIndex ], Cont ] + AllBandTotal;
         end;
 
      WriteLn( FileWrite, AllBandTotal:7 );
@@ -2197,10 +2218,10 @@ procedure ContinentReport;
   // if not DoingDupingFile then
   begin
   AllBandTotal := 0;
-  for Band     := Band160 to Band12 do
+  for ColumnIndex := 0 to ContestBandCount - 1 do
      begin
-     Write( FileWrite, TempQSOTotals[ Band ]:6 );
-     AllBandTotal := TempQSOTotals[ Band ] + AllBandTotal;
+     Write( FileWrite, TempQSOTotals[ ContestBands[ ColumnIndex ] ]:6 );
+     AllBandTotal := TempQSOTotals[ ContestBands[ ColumnIndex ] ] + AllBandTotal;
      end;
   WriteLn( FileWrite, AllBandTotal:7 );
   end;
@@ -2209,7 +2230,7 @@ procedure ContinentReport;
 
   WriteLn( FileWrite );
 
-  for Band := Band160 to Band10 do
+  for Band := Band160 to Band12 do
     if ContTotals[ Band, UK ] > 0 then
        begin
        // TempString := BandString[Band];
@@ -3432,6 +3453,7 @@ function tGenerateSummaryPortionOfCabrilloFile( const aCallsign: string;
          if GetCabrilloTagText( ctLocation ) = 0 then
             begin
             showwarning( TC_LOCATIONFIELDEMPTY );
+            CabrilloExportRefused := True;
             Exit;
             end;
          end;

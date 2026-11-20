@@ -246,6 +246,13 @@ function CabrilloTagItemIndex(const aTag: CabrilloTags): integer;
 
 function CabrilloSummaryIsOpen: boolean;
 
+(* SET BY THE EXPORT WHEN IT REFUSED THE HEADER (a required LOCATION that is
+  empty) and wrote nothing. The window asks it after the action runs: it stays
+  open so the operator can fix the field, instead of closing on the warning's OK
+  (NY4I, 2026-11-20). The window clears it before running the action. *)
+var
+   CabrilloExportRefused: boolean = False;
+
 // Bring the window forward, if it is up.
 procedure FocusCabrilloSummaryWindow;
 

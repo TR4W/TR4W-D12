@@ -5320,7 +5320,13 @@ var
 begin
    resolved := CharBufferText(CD.ActiveFilename);
 
-   if SysUtils.FileExists(resolved) then
+   (* NOT WHEN THE PROGRAM FOLDER IS NOT WRITABLE TO US (2026-11-20, an install
+     under Program Files): the shipped copy is read in place, so updating it
+     in place failed with "Access is denied" on TRMASTER.DTA.tmp. A redirected
+     run downloads to the per-user folder, which FCONTEST looks in first. *)
+   if (SysUtils.FileExists(resolved))            and
+      (not WritableFilesRedirected)              and
+      (DirectoryIsWritable(ExtractFilePath(resolved))) then
       begin
       Result := resolved;
       end
