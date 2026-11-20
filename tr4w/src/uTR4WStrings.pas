@@ -587,6 +587,7 @@ resourcestring
    TC_UPLOADCABRILLOTOSCP                = 'Do you want to upload your Cabrillo file to SuperChecklPartial?';
    TC_DISTINCTADIFPROMPT                 = 'This contest takes its %s QSOs as an ADIF file of their own, and its Cabrillo leaves them out. Also write the %d such QSO(s) to %s?';
    TC_DISTINCTADIFNOTINCABRILLO          = 'The Cabrillo leaves out %d %s QSO(s): this contest takes them as an ADIF file of their own, written by the ADIF export (%s).';
+   TC_CABRILLOPERACTIVATION              = 'This contest takes a separate Cabrillo log for each activation: %d files were written (%s). Each claims the whole log''s score.';
 
    { RC_ -- reachable from Pascal code }
 

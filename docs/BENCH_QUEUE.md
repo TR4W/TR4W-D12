@@ -7437,3 +7437,38 @@ screen.
 - [ ] **Open follow-up, bands NOT in this change.** Rule 2.3 allows only
   160/80/40/20/15/10 m; both SS ids are still in `BANDS_NOT_YET_STATED`, so
   a 30 m, 6 m or 2 m QSO still scores today.
+
+## Added 2026-11-19 -- A ROVER'S CABRILLO, ONE FILE PER ACTIVATION (issues 133, 87; rover step F)
+
+The Hawaii QSO Party's rules ask a mobile for "a separate log for each
+activation". One TR4W log covers the event; the Cabrillo export splits it by
+the place each QSO was sent from (its ROVER place, else the MY STATE it sent).
+Unit-tested (`uTestCabrilloActivation`, the real export over a small Hawaii
+log); nothing sees the preview window or the message.
+
+- [ ] **Hawaii, a rover.** MY STATE `HIL`, log a QSO; ROVER `KOH`, log two;
+  ROVER `KOH KON` on a boundary, log one (two rows); ROVER `KON`, log one.
+  File > Cabrillo. EXPECT three files beside the log, `<log>-hil.log`,
+  `<log>-koh.log`, `<log>-kon.log`, and NO `<log>.log` (an older one is NOT
+  deleted -- do not submit it); a message names the three; the preview
+  shows the first. EXPECT `CALLSIGN: AH7RF` (HIL, before roving),
+  `AH7RF/KOH`, `AH7RF/KON`; every QSO line in a file signs that call; the
+  boundary QSO is one line in KOH and one in KON at the same time, sent KOH
+  and KON; every file's `CLAIMED-SCORE` is the whole log's (the score
+  window's). No SuperCheckPartial upload is offered for a split log.
+- [ ] **Hawaii, a rover in one place only** (ROVER `KOH` the whole time):
+  ONE file, `<log>.log`, its `CALLSIGN: AH7RF/KOH` matching its lines.
+- [ ] **Submit** the split files to hqp.contesting.com: EXPECT each accepted
+  as its own entry. NOT RULED by the sponsor: the CALLSIGN of a file for a
+  place logged before roving (plain AH7RF here), and whether a log that
+  roved should also give its home QSOs a `/HIL` -- ask the sponsor. ALSO
+  UNRULED: when the home district is the first rover place (MY STATE `KOH`,
+  then ROVER `KOH`) the QSOs logged before roving share the KOH file and are
+  written `AH7RF/KOH`, though they went out as plain `AH7RF` -- a log
+  checker may call those busted.
+- [ ] **A failed file** in a split set leaves the earlier ones on disk and
+  shows no listing message: check the warning names the file.
+- [ ] **Any other QSO party with a rover** (Georgia, ROVER `APPL`, then
+  `BACO`): ONE file as before, `CALLSIGN` MY CALL (the lines carry two
+  calls); with only `APPL`, `CALLSIGN: NY4I/APPL`.
+- [ ] **The ADIF** stays one file with every row.

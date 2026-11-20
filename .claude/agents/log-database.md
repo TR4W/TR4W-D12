@@ -928,6 +928,11 @@ exchange only.
   `PostUnit.CurrentMyStationExchange(contest, facts, rec.ceRoverQTH)` ->
   `uContestBase.MyStationExchangeWithRoverPlace`. A row with none exports
   byte-for-byte as before, so no corpus fixture can move.
+- **`TLogRepository.HasRoverQSO`** (`uLogSource.LogSourceHasRoverQSO`; rover
+  step F, 2026-11-19): one `EXISTS` over non-deleted rows with a
+  `my_rover_qth`. The Cabrillo export asks it before it walks the log a
+  second time to split by activation -- a log that never roved costs one
+  query (file-formats.md).
 
 ## AN OLDER LOG IS BACKED UP BEFORE IT IS UPGRADED (NY4I, 2026-11-19)
 

@@ -128,6 +128,7 @@ uses
   uCabrilloFormat in 'src\uCabrilloFormat.pas',
   uOperatorList in 'src\uOperatorList.pas',
   uCabrilloExchange in 'src\uCabrilloExchange.pas',
+  uCabrilloActivation in 'src\uCabrilloActivation.pas',
   uADIFExchange in 'src\uADIFExchange.pas',
   uARRLSections in 'src\uARRLSections.pas',
   uPOTAReference in 'src\uPOTAReference.pas',

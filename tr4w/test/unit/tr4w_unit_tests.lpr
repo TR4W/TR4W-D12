@@ -113,6 +113,7 @@ uses
    uCabrilloFormat      in '..\..\src\uCabrilloFormat.pas',
    uTestCabrilloFormat  in 'uTestCabrilloFormat.pas',
    uCabrilloExchange    in '..\..\src\uCabrilloExchange.pas',
+   uCabrilloActivation  in '..\..\src\uCabrilloActivation.pas',
    uADIFExchange        in '..\..\src\uADIFExchange.pas',
    uARRLSections        in '..\..\src\uARRLSections.pas',
    uPOTAReference       in '..\..\src\uPOTAReference.pas',
@@ -824,6 +825,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogMyFacts      in 'uTestLogMyFacts.pas',
    uTestPostUnitReports in 'uTestPostUnitReports.pas',
    uTestDistinctAdditionalExport in 'uTestDistinctAdditionalExport.pas',
+   uTestCabrilloActivation in 'uTestCabrilloActivation.pas',
    uTestQTCCounts       in 'uTestQTCCounts.pas',
    uTestScoringMyFacts  in 'uTestScoringMyFacts.pas',
    uNewContestCommands  in '..\..\src\uNewContestCommands.pas',
@@ -1495,6 +1497,7 @@ begin
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
    RegisterSuite(TPostUnitReportsTests.Create('PostUnitReports'));
    RegisterSuite(TDistinctAdditionalExportTests.Create('DistinctAdditionalExport'));
+   RegisterSuite(TCabrilloActivationTests.Create('CabrilloActivation'));
    RegisterSuite(TQTCCountsTests.Create('QTCCounts'));
    RegisterSuite(TScoringMyFactsTests.Create('ScoringMyFacts'));
    RegisterSuite(TClusterTokensTests.Create('ClusterTokens'));

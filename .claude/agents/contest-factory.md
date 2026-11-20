@@ -702,7 +702,11 @@ the target shape, the M-step migration order and the open questions.
   went at Q108 S1). The rover strip takes the contest the
   rescore and the ADIF record parse already hold
   (`MainUnit.LocateCallStrippingRoverCounty`); a caller with none fetches it
-  only for a call with a '/'.
+  only for a call with a '/'. **OUR OWN rover (issue 133, step F):**
+  `TContestBase.SplitsCabrilloByActivation` (base False, Hawaii ALONE True,
+  pinned over the registry by `uTestCabrilloActivation`) splits a roving
+  log's Cabrillo into one file per sent place -- see file-formats.md. A new
+  party whose rules ask for a log per activation overrides it.
 - **`ScoreQSO` is the ONE public scoring entry point** (M3, 2026-10-01):
   non-virtual on `TContestBase` -- zero, band check, the host-area check
   (`CreditsWorkedStation`, Q107), the four `QSO POINTS ...`
