@@ -454,8 +454,12 @@ the target shape, the M-step migration order and the open questions.
   Mexico is the exception: its rules let an FT8/FT4 QSO count when the log
   is hand-edited to the exchange, and NY4I's earlier NM ruling credits FT,
   so it was left as it is (asked on the report). **"CW and SSB" refuses
-  FM** (NY4I, 2026-11-20: Ohio, the 7QP, Florida -- `aMode in [CW, Phone]`);
-  a sponsor that says "Phone" (Salmon Run) or names FM (Tennessee) credits it. `FT_SUBMODES` = FT8, FT4 and **FT2, appended to
+  FM** (NY4I, 2026-11-20: Ohio, the 7QP, Florida -- `uContestBase.ModeIsCWOrSSB`,
+  which also refuses Phone in an `FM_SUBMODES` submode, because ADIF import
+  reads MODE FM as Phone/eFM); a sponsor that says "Phone" (Salmon Run) or
+  names FM (Tennessee) credits it. ARRL SS SSB and CQ WW SSB (`aMode =
+  Phone`) still credit an imported Phone/eFM QSO -- not audited.
+  `FT_SUBMODES` = FT8, FT4 and **FT2, appended to
   `ExtendedModeType` after JTTY (ADIF 3.1.8 MFSK/FT2)**. NOT moved, on
   purpose: Mississippi's `IsFTSubmode` and Vermont's WARC exception
   (`UsesBandInMode`) are ALLOW rules naming FT8/FT4 only, so FT2 stays

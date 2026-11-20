@@ -479,14 +479,15 @@ end;
    submode" and are credited. CW and phone are credited; the rules score
    "SSB" and say nothing of FM, and NY4I ruled (2026-11-20) "Just CW and
    SSB": an FM QSO is an automatic X-QSO. That ruling answered the FM
-   question only -- the sponsor's digital (4 points) stays. An identity fact:
-   no station is asked. *)
+   question only -- the sponsor's digital (4 points) stays. An imported FM
+   QSO (Phone with an FM submode) is refused too: uContestBase.ModeIsCWOrSSB.
+   An identity fact: no station is asked. *)
 function TContestSevenQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
       CW, Phone:
          begin
-         Result := True;
+         Result := ModeIsCWOrSSB(aMode, aExtMode);
          end;
       Digital:
          begin

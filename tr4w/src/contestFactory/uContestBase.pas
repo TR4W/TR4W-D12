@@ -4411,6 +4411,21 @@ const
       "everything that can carry the exchange" means. *)
    EVERY_SUBMODE: TExtendedModeSet = [Low(ExtendedModeType)..High(ExtendedModeType)];
 
+   (* THE FM SUBMODES -- the ones MainUnit.GetModeFromExtendedMode files under
+      FM (FM, narrow FM, wide FM and the FM-channel digital voices D-STAR and
+      C4FM). A QSO in one may arrive as ModeType FM (live entry) OR as Phone
+      with this submode (ADIF import reads MODE FM that way), so a contest
+      that refuses FM refuses both -- ModeIsCWOrSSB. *)
+   FM_SUBMODES: TExtendedModeSet = [eFM, eFM_N, eWFM, eDStar, eC4FM];
+
+(* IS THIS A CW OR AN SSB QSO? -- for a sponsor whose modes are "CW and SSB"
+   (NY4I, 2026-11-20: Ohio, the 7QP and Florida -- "Just CW and SSB", "FM is
+   not valid in FQP--just SSB and CW"). CW, or Phone in any submode but the
+   FM ones; FM itself, Digital and the rest are not. Phone with eNoMode is
+   "some submode" (the UsesMode contract) and is credited. A contest's
+   UsesMode calls it -- for its whole answer, or for its CW/phone part. *)
+function ModeIsCWOrSSB(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+
 (* IS THIS DIGITAL SUBMODE ONE THE CONTEST ALLOWS? -- issue 122 (NY4I,
    2026-11-19: "Rather than a list of excluded modes, the contest class should
    indicate the allowed modes. Then if the modes is not valid for that
@@ -5512,6 +5527,24 @@ function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
 begin
    Result := (aExtMode in [eNoMode, eData, eData_R, eData_FM]) or
              (aExtMode in aAllowed);
+end;
+
+function ModeIsCWOrSSB(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW:
+         begin
+         Result := True;
+         end;
+      Phone:
+         begin
+         Result := not (aExtMode in FM_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 function ContestOpenNoticeOf(aContest: TContestBase; aCurrentYear: integer): string;

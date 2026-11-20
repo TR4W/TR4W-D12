@@ -186,7 +186,9 @@ begin
       begin
       for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
          begin
-         CheckTrue(identity.UsesMode(mode, ext) = (mode in [CW, Phone]),
+         CheckTrue(identity.UsesMode(mode, ext) =
+                   ((mode = CW) or
+                    ((mode = Phone) and not (ext in [eFM, eFM_N, eWFM, eDStar, eC4FM]))),
                    ModeStringArray[mode] + '/' + ExtendedModeStringArray[ext]);
          end;
       end;
@@ -196,6 +198,9 @@ begin
    CheckTrue(QSOIsXQSO(identity, OHQso(Band20, Digital, ePSK31)), 'PSK31 is an X-QSO');
    CheckEquals(0, OHPoints(Band10, FM, eFM), 'FM is an X-QSO: 0');
    CheckTrue(QSOIsXQSO(identity, OHQso(Band10, FM, eFM)), 'FM is an X-QSO');
+   (* ADIF import reads MODE FM as Phone with the FM submode. *)
+   CheckTrue(QSOIsXQSO(identity, OHQso(Band10, Phone, eFM)), 'an imported FM QSO (Phone/eFM) is an X-QSO');
+   CheckFalse(QSOIsXQSO(identity, OHQso(Band10, Phone, eNoMode)), 'phone of no known submode is not');
 end;
 
 (* THE SPONSOR'S 11 CANADIAN MULTIPLIERS -- "11 Canadian Provinces (NL, PE,
@@ -233,12 +238,12 @@ begin
          begin
          CheckEquals(SPONSOR_VE[i], MultiplierOf(table, SPONSOR_VE[i]),
                      SPONSOR_VE[i] + ' is its own multiplier');
-         multipliers.Add(MultiplierOf(table, SPONSOR_VE[i]));
+         multipliers.Add(AnsiString(MultiplierOf(table, SPONSOR_VE[i])));
          end;
       for i := Low(OTHER_VE) to High(OTHER_VE) do
          begin
          CheckTrue(MultiplierOf(table, OTHER_VE[i]) <> '', OTHER_VE[i] + ' is known');
-         multipliers.Add(MultiplierOf(table, OTHER_VE[i]));
+         multipliers.Add(AnsiString(MultiplierOf(table, OTHER_VE[i])));
          end;
       CheckEquals(11, multipliers.Count, 'eleven Canadian multipliers, no more');
 

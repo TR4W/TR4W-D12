@@ -340,12 +340,13 @@ begin
 end;
 
 (* "No digital QSOs are allowed in the FQP"; NY4I, 2026-11-20: "FM is not
-   valid in FQP--just SSB and CW." Any submode of CW or Phone is credited --
-   eNoMode and eData included, as the contract asks -- and no submode of FM
-   or Digital is. An identity fact: no station is asked. *)
+   valid in FQP--just SSB and CW." CW, and Phone in any submode but the FM
+   ones (an imported FM QSO is Phone with an FM submode) -- eNoMode included,
+   as the contract asks: uContestBase.ModeIsCWOrSSB. No submode of FM or
+   Digital is credited. An identity fact: no station is asked. *)
 function TContestFloridaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
-   Result := aMode in [CW, Phone];
+   Result := ModeIsCWOrSSB(aMode, aExtMode);
 end;
 
 function TContestFloridaQP.GetDisplayName: string;

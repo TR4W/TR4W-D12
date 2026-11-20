@@ -179,7 +179,9 @@ begin
       begin
       for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
          begin
-         credited := (mode in [CW, Phone]) or
+         credited := (mode = CW) or
+                     ((mode = Phone) and
+                      not (ext in [eFM, eFM_N, eWFM, eDStar, eC4FM])) or
                      ((mode = Digital) and
                       not (ext in [eFT8, eFT4, eFT2, eJT65, eFST4, eFST4W]));
          CheckTrue(identity.UsesMode(mode, ext) = credited,
@@ -200,6 +202,11 @@ begin
    qso.Mode := FM;
    qso.ExtMode := eFM;
    CheckTrue(QSOIsXQSO(identity, qso), 'FM is an X-QSO');
+   (* ADIF import reads MODE FM as Phone with the FM submode. *)
+   qso.Mode := Phone;
+   CheckTrue(QSOIsXQSO(identity, qso), 'an imported FM QSO (Phone/eFM) is an X-QSO');
+   qso.ExtMode := eUSB;
+   CheckFalse(QSOIsXQSO(identity, qso), 'USB is not');
    contestObject := Make(SEVENQP, Entrant(True));
    try
       CheckEquals(0, PointsIn(eFT8), 'FT8 scores nothing');

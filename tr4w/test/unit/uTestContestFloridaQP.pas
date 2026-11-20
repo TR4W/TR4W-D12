@@ -218,7 +218,11 @@ begin
       qso := FloridaQso(Band20, Digital, ext);
       CheckTrue(QSOIsXQSO(identity, qso), 'a digital QSO is an X-QSO, ext ' + IntToStr(Ord(ext)));
       CheckTrue(ContestCreditsMode(identity, CW, ext), 'CW is credited, ext ' + IntToStr(Ord(ext)));
-      CheckTrue(ContestCreditsMode(identity, Phone, ext), 'phone is credited, ext ' + IntToStr(Ord(ext)));
+      (* Phone in an FM submode is an imported FM QSO (ADIF reads MODE FM
+         as Phone/eFM), and is refused as FM is. *)
+      CheckTrue(ContestCreditsMode(identity, Phone, ext) =
+                not (ext in [eFM, eFM_N, eWFM, eDStar, eC4FM]),
+                'phone is credited but in an FM submode, ext ' + IntToStr(Ord(ext)));
       CheckFalse(ContestCreditsMode(identity, FM, ext), 'FM is not credited, ext ' + IntToStr(Ord(ext)));
       qso := FloridaQso(Band10, FM, ext);
       CheckTrue(QSOIsXQSO(identity, qso), 'an FM QSO is an X-QSO, ext ' + IntToStr(Ord(ext)));

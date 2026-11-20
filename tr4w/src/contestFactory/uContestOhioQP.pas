@@ -368,11 +368,12 @@ begin
 end;
 
 (* "CW and SSB": CW and phone. NY4I, 2026-11-20: "Just CW and SSB" -- FM and
-   digital QSOs are automatic X-QSOs. An identity fact: no station is
+   digital QSOs are automatic X-QSOs -- an imported FM QSO (Phone with an FM
+   submode) too: uContestBase.ModeIsCWOrSSB. An identity fact: no station is
    asked. *)
 function TContestOhioQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
-   Result := aMode in [CW, Phone];
+   Result := ModeIsCWOrSSB(aMode, aExtMode);
 end;
 
 (* OHIO IS NOT A STATE MULTIPLIER FOR A OHIO ENTRANT -- #88
