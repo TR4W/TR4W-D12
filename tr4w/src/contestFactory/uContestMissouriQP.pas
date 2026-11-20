@@ -375,7 +375,9 @@ end;
    and eData mean "some digital submode" and are credited, as the contract
    asks (ADDING_A_CONTEST, UsesMode). An identity fact: no station is
    asked. FST4 and FST4W are WSJT-X structured-message modes like FT8, FT4
-   and JT65 -- "similar modes" -- so they are refused too (issue 260). *)
+   and JT65 -- "similar modes" -- so they are refused too (issue 260). FT2
+   joins FT8 and FT4 since it existed (NY4I, issues 88 and 122, 2026-11-19:
+   "NOT FT8, FT4 or FT2"): FT_SUBMODES. *)
 function TContestMissouriQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
@@ -385,7 +387,8 @@ begin
          end;
       Digital:
          begin
-         Result := not (aExtMode in [eFT8, eFT4, eJT65, eFST4, eFST4W]);
+         Result := DigitalSubmodeAllowed(aExtMode,
+                      EVERY_SUBMODE - FT_SUBMODES - [eJT65, eFST4, eFST4W]);
          end;
       else
          begin

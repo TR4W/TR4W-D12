@@ -555,7 +555,8 @@ end;
 (* "FT8/FT4 is a SEPARATE competition with a separate log": every other
    digital submode is credited, eNoMode and eData included ("some submode of
    Digital", the contract); CW, phone and FM are. An identity fact: no
-   station is asked. *)
+   station is asked. FT2 is refused with them since it existed (NY4I,
+   issues 88 and 122, 2026-11-19: "NOT FT8, FT4 or FT2"): FT_SUBMODES. *)
 function TContestNebraskaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
@@ -565,7 +566,7 @@ begin
          end;
       Digital:
          begin
-         Result := not (aExtMode in [eFT8, eFT4]);
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
          end;
       else
          begin

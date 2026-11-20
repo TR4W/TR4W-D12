@@ -75,10 +75,14 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     digital mode that supports the required exchange". NY4I, issue 122,
     2026-11-19: the class states the ALLOWED modes, and "for th eLA QSO
     PArty ... that would be CW, Phone (including FM, AM, SSB[USB,LSB]),
-    RTTY, JTTY, PSK31" -- the free-form exchange modes. UsesMode credits CW,
-    phone, FM and the digital submodes RTTY (and reversed RTTY), JTTY and
-    PSK31; any other digital submode (FT8, FT4, JT65, FST4, FST4W, JS8,
-    MFSK, PSK63, reversed PSK) is logged and is an automatic X-QSO (Q98).
+    RTTY, JTTY, PSK31" -- the free-form exchange modes. NY4I's later ruling
+    on issues 88 and 122 (2026-11-19) generalises it: a QSO party disallows
+    only the modes that cannot convey its exchange, "functionally
+    specifically NOT FT8, FT4 or FT2". So UsesMode credits CW, phone and FM
+    whole (C4FM and D-STAR are phone), and every digital submode but FT8,
+    FT4 and FT2 (EVERY_SUBMODE - FT_SUBMODES); an FT QSO is logged and is
+    an automatic X-QSO (Q98). JS8, PSK63, MFSK, reversed PSK, JT65, FST4 and
+    FST4W, X-QSOs under the earlier list, are credited since.
     9.2: "NO repeater contacts": a repeater QSO cannot be told
     from a simplex one in the log; not enforced.
 
@@ -467,14 +471,13 @@ end;
    contest class should indicate the allowed modes. Then if the modes is not
    valid for that contest, it is an X-QSO. So for the LA QSO Party, that
    would be CW, Phone (including FM, AM, SSB[USB,LSB]), RTTY, JTTY, PSK31."
-   RTTY, JTTY and PSK31 are the free-form ("conversational") digital modes
-   that can send the exchange (3.3). Every other digital submode -- FT8,
-   FT4, JT65, FST4, FST4W, JS8, MFSK, PSK63 -- is an automatic X-QSO
-   (uContestBase.DigitalSubmodeAllowed, which also keeps eNoMode and the
-   generic data modes eData, eData_R and eData_FM, "some submode",
-   credited). CW, phone and FM are credited whole, as
-   before: phone's submodes are not tested. An identity fact: no station is
-   asked. *)
+   GENERALISED THE SAME DAY (issues 88 and 122): "Same as other QSO
+   parties. This functionally means specifically NOT FT8, FT4 or FT2." So
+   every digital submode is credited but the FT modes, which are an
+   automatic X-QSO (uContestBase.DigitalSubmodeAllowed over
+   EVERY_SUBMODE - FT_SUBMODES). CW, phone and FM are credited whole:
+   phone's submodes are not tested, so C4FM and D-STAR count as phone. An
+   identity fact: no station is asked. *)
 function TContestLouisianaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
@@ -484,7 +487,7 @@ begin
          end;
       Digital:
          begin
-         Result := DigitalSubmodeAllowed(aExtMode, RTTY_SUBMODES + [eJTTY, ePSK31]);
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
          end;
       else
          begin

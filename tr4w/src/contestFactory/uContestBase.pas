@@ -4364,6 +4364,18 @@ const
    (* RTTY, normal or reversed: one mode to every sponsor that names RTTY. *)
    RTTY_SUBMODES: TExtendedModeSet = [eRTTY, eRTTY_R];
 
+   (* THE FT MODES -- FT8, FT4 and FT2: the call-and-grid modes that cannot
+      carry a QSO party's exchange. NY4I, issues 88 and 122 (2026-11-19):
+      "functionally specifically NOT FT8, FT4 or FT2". *)
+   FT_SUBMODES: TExtendedModeSet = [eFT8, eFT4, eFT2];
+
+   (* EVERY SUBMODE -- so an allow-list that is "everything but these" is
+      written EVERY_SUBMODE - [...] and still goes through
+      DigitalSubmodeAllowed. Such a list, unlike a named one, credits a
+      submode appended to ExtendedModeType later: that is what the sponsor's
+      "everything that can carry the exchange" means. *)
+   EVERY_SUBMODE: TExtendedModeSet = [Low(ExtendedModeType)..High(ExtendedModeType)];
+
 (* IS THIS DIGITAL SUBMODE ONE THE CONTEST ALLOWS? -- issue 122 (NY4I,
    2026-11-19: "Rather than a list of excluded modes, the contest class should
    indicate the allowed modes. Then if the modes is not valid for that
@@ -4381,10 +4393,12 @@ const
    arrives as eData_R, and refusing it would make an X-QSO of a QSO the
    operator made in an allowed mode.
 
-   A deny-list contest (Missouri, Illinois, Nebraska, Wisconsin,
-   Mississippi, Vermont) is NOT migrated by this: their lists credit every
-   submode they do not name, JTTY and JS8 included, and an allow-list would
-   change that. Each moves on its own sponsor's word. *)
+   AN ALLOW-LIST MAY BE "EVERYTHING BUT THESE" (NY4I, issues 88 and 122,
+   2026-11-19: a QSO party disallows only the modes that cannot convey its
+   exchange -- "functionally specifically NOT FT8, FT4 or FT2"): it is
+   written EVERY_SUBMODE - FT_SUBMODES (Louisiana, New York, Illinois,
+   Nebraska, Wisconsin) or with more modes taken out (Missouri). A named
+   list (Iowa's) credits nothing it does not name. *)
 function DigitalSubmodeAllowed(aExtMode: ExtendedModeType;
                                const aAllowed: TExtendedModeSet): boolean;
 

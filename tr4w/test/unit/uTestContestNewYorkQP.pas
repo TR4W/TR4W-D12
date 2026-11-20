@@ -45,6 +45,7 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_NewYorkPoints;
+      procedure Test_NewYorkModes;
       procedure Test_NewYorkBands;
       procedure Test_NewYorkCountsMultipliersOnceOverall;
       procedure Test_NewYorkCountsAllThirteenProvinces;
@@ -139,6 +140,41 @@ begin
       CheckEquals(0, PointsFor(inState, Band20, Both, eNoMode), who + ': no mode a contact is made in');
       CheckEquals(0, PointsFor(inState, Band20, NoMode, eNoMode), who + ': nor this one');
       end;
+end;
+
+(* "Only digital modes that natively support the NYQP exchange are permitted
+   for contest credit." NY4I, #88, 2026-11-19: "NOT FT8, FT4 or FT2". Every
+   mode and submode is walked: CW, phone and FM whole, digital but the FT
+   modes. An FT QSO is an automatic X-QSO and scores nothing. *)
+procedure TContestNewYorkQPTests.Test_NewYorkModes;
+var
+   identity: TContestBase;
+   mode: ModeType;
+   ext: ExtendedModeType;
+   credited: boolean;
+begin
+   BeginTest('Test_NewYorkModes');
+   identity := ContestIdentity(NYQP);
+   for mode := Low(ModeType) to High(ModeType) do
+      begin
+      for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
+         begin
+         credited := (mode in [CW, Phone, FM]) or
+                     ((mode = Digital) and not (ext in [eFT8, eFT4, eFT2]));
+         CheckTrue(identity.UsesMode(mode, ext) = credited,
+                   ModeStringArray[mode] + '/' + ExtendedModeStringArray[ext] +
+                   ': every mode but the FT ones');
+         end;
+      end;
+   CheckTrue(QSOIsXQSO(identity, NYQso(Band20, Digital, eFT8)), 'FT8 is an X-QSO');
+   CheckTrue(QSOIsXQSO(identity, NYQso(Band20, Digital, eFT4)), 'FT4 is');
+   CheckTrue(QSOIsXQSO(identity, NYQso(Band20, Digital, eFT2)), 'FT2 is');
+   CheckFalse(QSOIsXQSO(identity, NYQso(Band20, Digital, eJS8)), 'JS8 is not');
+   CheckEquals(0, PointsFor(True, Band20, Digital, eFT8), 'FT8 scores 0');
+   CheckEquals(0, PointsFor(False, Band20, Digital, eFT2), 'FT2 scores 0');
+   CheckEquals(3, PointsFor(True, Band20, Digital, eJTTY), 'JTTY is a 3-point digital QSO');
+   CheckEquals(1, PointsFor(True, Band2, FM, eC4FM), 'C4FM is phone: 1');
+   CheckEquals(1, PointsFor(False, Band2, FM, eDStar), 'D-STAR is phone: 1');
 end;
 
 (* "All FCC allocated amateur frequencies (excluding the 30, 17, and 12
@@ -236,6 +272,7 @@ end;
 procedure TContestNewYorkQPTests.RunAllTests;
 begin
    Test_NewYorkPoints;
+   Test_NewYorkModes;
    Test_NewYorkBands;
    Test_NewYorkCountsMultipliersOnceOverall;
    Test_NewYorkCountsAllThirteenProvinces;

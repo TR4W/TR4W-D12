@@ -321,6 +321,8 @@ begin
    identity := ContestIdentity(ContestHandleOf(NEBRASKAQSO));
    CheckTrue(QSOIsXQSO(identity, QsoOn(Band20, Digital, eFT8)), 'FT8 is an X-QSO');
    CheckTrue(QSOIsXQSO(identity, QsoOn(Band40, Digital, eFT4)), 'FT4 is an X-QSO');
+   CheckTrue(QSOIsXQSO(identity, QsoOn(Band40, Digital, eFT2)), 'FT2 is (NY4I, issues 88/122)');
+   CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Digital, eJS8)), 'JS8 is not');
    CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Digital, eRTTY)), 'RTTY is not');
    CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Digital, ePSK31)), 'nor PSK');
    CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Digital, eNoMode)),
@@ -329,7 +331,7 @@ begin
    CheckFalse(QSOIsXQSO(identity, QsoOn(Band20, Phone, eUSB)), 'nor phone');
    CheckFalse(QSOIsXQSO(identity, QsoOn(Band2, FM, eFM)), 'nor FM');
    CheckTrue(ContestCreditsModeKey(identity, Digital),
-             'the Digital key is credited: only two submodes are refused');
+             'the Digital key is credited: only the FT submodes are refused');
 
    CheckEquals(0, PointsFor(Band20, Digital, eFT8), 'FT8 scores 0');
    CheckEquals(0, PointsFor(Band40, Digital, eFT4), 'FT4 scores 0');

@@ -87,9 +87,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       for New York" -- the county is one multiplier and the state of New York
       a second, from one QSO. A QSO carries one domestic key, so an in-state
       entrant's maximum is 124 here, not the sponsor's 125.
-    * MODES -- "Only digital modes that natively support the NYQP exchange
-      are permitted". Which submodes those are is not named, so UsesMode is
-      not stated (MODES_NOT_YET_STATED) and every digital QSO is credited.
+
+  MODES -- "Only digital modes that natively support the NYQP exchange are
+    permitted". NY4I (#88, 2026-11-19): "NOT FT8, FT4 or FT2". UsesMode.
  *)
 unit uContestNewYorkQP;
 
@@ -163,6 +163,9 @@ type
    public
       (* Every band but 30, 17 and 12 m -- see the body. *)
       function UsesBand(aBand: BandType): boolean; override;
+      (* CW, phone, FM and every digital submode but FT8, FT4 and FT2 --
+         see the body. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
          this contest (4.116.5), moved here at M8: a multiplier QTH of 'DX'
@@ -358,6 +361,34 @@ begin
                        Band6, Band2, Band222, Band432, Band902, Band1296,
                        Band2304, Band3456, Band5760, Band10G, Band24G,
                        BandLight];
+end;
+
+(* "Only digital modes that natively support the NYQP exchange are permitted
+   for contest credit." NY4I, issue 88, 2026-11-19: "Same as other QSO
+   parties. This functionally means specifically NOT FT8, FT4 or FT2." So
+   every digital submode is credited but those three, which are an automatic
+   X-QSO (uContestBase.DigitalSubmodeAllowed over EVERY_SUBMODE -
+   FT_SUBMODES, which also keeps eNoMode and the generic data modes, "some
+   submode", credited). CW, phone and FM are credited whole -- "Phone only
+   (SSB, FM, AM)"; C4FM and D-STAR are FM in TR4W and count as phone. No
+   category is forced (NY4I: the allowed modes dictate it). An identity
+   fact: no station is asked. *)
+function TContestNewYorkQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 (* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --
