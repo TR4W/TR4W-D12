@@ -149,6 +149,7 @@ resourcestring
    RS_CONTEST_CATEGORYOPERATOR                = 'Category-Operator';
    RS_CONTEST_CATEGORYOVERLAY                 = 'Category-Overlay';
    RS_CONTEST_CATEGORYPOWER                   = 'Category-Power';
+   RS_CONTEST_CATEGORYSTATION                 = 'Category-Station';
    RS_CONTEST_CATEGORYTRANSMITTER             = 'Category-Transmitter';
    RS_CONTEST_CONTEST                         = 'Contest';
    RS_CONTEST_CONTESTNAME                     = 'Contest Name';

@@ -276,6 +276,14 @@ function StoredLegacyCommand(const aFileName, aCommand: string): string;
   saves. *)
 function StartupMainCallsign(const aFileName: string): string;
 
+(* MY SECTION AS STORED, for the New Contest dialog's prefill of a party
+  whose outside stations send their ARRL or RAC section (the Pennsylvania QSO
+  Party, NY4I 2026-11-20: "prefill from the station defaults"). The same
+  contract as StartupMainCallsign, and for the same reason: the dialog can
+  run before LoadSettingsForStartup. Reads settings/My/Section, else the
+  legacy bucket's MY SECTION; '' when neither holds one. Upper case. *)
+function StartupMySection(const aFileName: string): string;
+
 // The window layout on its own -- what ExitProgram calls.
 //
 // It exists as a NAMED routine rather than as SaveConfig(fn, nil, nil, nil, w)
@@ -1200,6 +1208,33 @@ begin
       Exit;
       end;
    Result := TJSONObject(group).GetValue(aName);
+end;
+
+function StartupMySection(const aFileName: string): string;
+var
+   root: TJSONObject;
+   value: TJSONValue;
+begin
+   Result := '';
+
+   root := ReadRootOrEmpty(aFileName);
+   try
+      value := StoredSettingValue(root, 'My', 'Section');
+      if value <> nil then
+         begin
+         Result := Trim(value.Value);
+         end;
+   finally
+      root.Free;
+   end;
+
+   (* THE LEGACY BUCKET, for a station not yet collapsed -- as
+     StartupMainCallsign falls back. *)
+   if Result = '' then
+      begin
+      Result := StoredLegacyCommand(aFileName, 'MY SECTION');
+      end;
+   Result := UpperCase(Result);
 end;
 
 function StartupUILanguage(const aFileName: string): string;

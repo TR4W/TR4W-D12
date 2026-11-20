@@ -381,10 +381,18 @@ begin
       end;
 end;
 
+(* THE STATION'S MY SECTION, from the file -- the dialog can run before the
+  settings are loaded (see the MY CALL prefill in ShowNewContest). *)
+function StationSection: string;
+begin
+   Result := StartupMySection(TR4WConfigFileName);
+end;
+
 (* The governed row as the box says: its label, list or box, and notice. *)
 procedure ShowHostAreaMode;
 var
    notice: string;
+   section: string;
 begin
    if frmNewContest.IAmIn then
       begin
@@ -407,6 +415,20 @@ begin
          begin
          notice := Format(SNewContestHostAreaInsideNotice, [HostArea.Area]);
          end;
+      end
+   else if HostArea.OutsideTakesSection then
+      begin
+      (* OUTSIDE, THE ARRL OR RAC SECTION (the Pennsylvania QSO Party, NY4I
+        2026-11-20), prefilled with the station's MY SECTION when it has one.
+        After ShowRowEntry, which empties the box. The command queued is
+        still the row's field, MY STATE. *)
+      frmNewContest.ShowRowEntry(HostAreaRow, SNewContestHostAreaSectionLabel);
+      section := StationSection;
+      if section <> '' then
+         begin
+         frmNewContest.SetRowText(HostAreaRow, section);
+         end;
+      notice := Format(SNewContestHostAreaOutsideSectionNotice, [HostArea.Area]);
       end
    else
       begin
@@ -580,9 +602,18 @@ begin
   if HostAreaActive and
      (not frmNewContest.RowIsPick(HostAreaRow)) then
      begin
-     refusal := HostAreaOutsideRefusal(HostAreaPlaces, HostArea.Area,
-                                       HostArea.HostStates,
-                                       frmNewContest.RowText(HostAreaRow));
+     if HostArea.OutsideTakesSection then
+        begin
+        refusal := HostAreaOutsideSectionRefusal(HostAreaPlaces, HostArea.Area,
+                                                 HostArea.HostStates,
+                                                 frmNewContest.RowText(HostAreaRow));
+        end
+     else
+        begin
+        refusal := HostAreaOutsideRefusal(HostAreaPlaces, HostArea.Area,
+                                          HostArea.HostStates,
+                                          frmNewContest.RowText(HostAreaRow));
+        end;
      end;
 
   if frmNewContest.ContestChosen then

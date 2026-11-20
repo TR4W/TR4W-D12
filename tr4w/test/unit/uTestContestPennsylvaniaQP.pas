@@ -44,6 +44,11 @@ type
       procedure Test_BonusStationIsA2026Rule;
       procedure Test_AdifStateOfASection;
       procedure Test_DXEntrantSendsDX;
+      procedure Test_EveryCountyHasItsSection;
+      procedure Test_InStateCountyAlsoEarnsItsSection;
+      procedure Test_DXIsTheSingleDXMultiplier;
+      procedure Test_OutsideStationEntersASection;
+      procedure Test_NoRoverOrSubmissionBonusIsComputed;
    end;
 
 implementation
@@ -57,7 +62,11 @@ uses
    uContestBase,
    uContestRegistry,
    uTestContestObjects,
-   uTestQSOPartyRules;
+   uTestQSOPartyRules,
+   (* PennsylvaniaSectionOfCounty -- the county-to-section crosswalk. *)
+   uContestPennsylvaniaQP,
+   (* HostAreaOutsideSectionRefusal -- the New Contest dialog's rule. *)
+   uNewContestHostArea;
 
 function PAIdentity: TContestBase;
 begin
@@ -305,6 +314,190 @@ begin
    CheckEquals('12   NTX   ', PAIdentity.FormatCabrilloSentExchange(my, qso, ctx), 'Cabrillo, a section');
 end;
 
+(* THE CROSSWALK COVERS THE COUNTY FILE. Every pa_cty.dom key has a section,
+   EPA or WPA, and the split is the ARRL's (tr4w/tools/trmaster/
+   arrl-sections-counties.json: 34 EPA, 33 WPA). A few known each way. A
+   section, a state or DX has none. *)
+procedure TContestPennsylvaniaQPTests.Test_EveryCountyHasItsSection;
+var
+   keys: TStringList;
+   i: integer;
+   section: string;
+   epa, wpa: integer;
+begin
+   BeginTest('Test_EveryCountyHasItsSection');
+   keys := TStringList.Create;
+   try
+      ShippedCountyKeys('pa_cty.dom', keys);
+      CheckEquals(67, keys.Count, 'the sponsor''s 67 counties');
+      epa := 0;
+      wpa := 0;
+      for i := 0 to keys.Count - 1 do
+         begin
+         section := PennsylvaniaSectionOfCounty(keys[i]);
+         CheckTrue((section = 'EPA') or (section = 'WPA'),
+                   keys[i] + ' has a section: ' + section);
+         if section = 'EPA' then
+            begin
+            Inc(epa);
+            end
+         else if section = 'WPA' then
+            begin
+            Inc(wpa);
+            end;
+         end;
+      CheckEquals(34, epa, 'EPA counties');
+      CheckEquals(33, wpa, 'WPA counties');
+   finally
+      keys.Free;
+   end;
+
+   CheckEquals('WPA', PennsylvaniaSectionOfCounty('ALL'), 'Allegheny (Pittsburgh)');
+   CheckEquals('WPA', PennsylvaniaSectionOfCounty('ERI'), 'Erie');
+   CheckEquals('WPA', PennsylvaniaSectionOfCounty('CEN'), 'Centre');
+   CheckEquals('EPA', PennsylvaniaSectionOfCounty('PHI'), 'Philadelphia');
+   CheckEquals('EPA', PennsylvaniaSectionOfCounty('DAU'), 'Dauphin (Harrisburg)');
+   CheckEquals('EPA', PennsylvaniaSectionOfCounty('NHA'), 'Northampton');
+   CheckEquals('EPA', PennsylvaniaSectionOfCounty(' bux '), 'in any case, trimmed');
+   CheckEquals('', PennsylvaniaSectionOfCounty('NTX'), 'a section is no county');
+   CheckEquals('', PennsylvaniaSectionOfCounty('EPA'), 'nor is EPA itself');
+   CheckEquals('', PennsylvaniaSectionOfCounty('PA'), 'nor the state');
+   CheckEquals('', PennsylvaniaSectionOfCounty('DX'), 'nor DX');
+   CheckEquals('', PennsylvaniaSectionOfCounty(''), 'nor nothing');
+end;
+
+(* "For in-state stations, the first EPA and WPA county worked will count
+   both the county and the section multiplier in the score" (NY4I,
+   2026-11-20). The section is the #317 second domestic key, for an in-state
+   entrant only, and it is a key of the in-state file (arrlsect.dom's EPA and
+   WPa; the sheet compares without case). *)
+procedure TContestPennsylvaniaQPTests.Test_InStateCountyAlsoEarnsItsSection;
+var
+   station: TStationContext;
+   party: TContestBase;
+   qso: ContestExchange;
+   key: string;
+begin
+   BeginTest('Test_InStateCountyAlsoEarnsItsSection');
+   CheckTrue(SameText('EPA', InStateMultiplierOf(PAQSOPARTY, 'EPA')),
+             'EPA is an in-state multiplier key');
+   CheckTrue(SameText('WPA', InStateMultiplierOf(PAQSOPARTY, 'WPA')),
+             'WPA is an in-state multiplier key');
+
+   station := WithHostAreaTable(NoStation);
+   station.InHostState := True;
+   party := Make(PAQSOPARTY, station);
+   try
+      qso := Default(ContestExchange);
+      qso.DomesticQTH := 'ALL';
+      CheckTrue(party.AdditionalDomesticMultiplierKey(qso, key), 'a county earns a second key');
+      CheckEquals('WPA', key, 'Allegheny earns WPA');
+      qso.DomesticQTH := 'BUX';
+      CheckTrue(party.AdditionalDomesticMultiplierKey(qso, key), 'Bucks too');
+      CheckEquals('EPA', key, 'Bucks earns EPA');
+      qso.DomesticQTH := '';
+      qso.DomMultQTH := 'ERI';
+      CheckTrue(party.AdditionalDomesticMultiplierKey(qso, key), 'a rover row');
+      CheckEquals('WPA', key, 'the credited key, no DomesticQTH');
+      qso.DomMultQTH := '';
+      qso.QTHString := 'ERI';
+      CheckFalse(party.AdditionalDomesticMultiplierKey(qso, key),
+                 'the typed QTH alone is not the credited key');
+      qso.DomesticQTH := 'NTX';
+      CheckFalse(party.AdditionalDomesticMultiplierKey(qso, key),
+                 'a section worked earns only itself');
+      CheckEquals('', key, 'and no key');
+      qso.DomesticQTH := 'DX';
+      CheckFalse(party.AdditionalDomesticMultiplierKey(qso, key), 'DX earns only DX');
+   finally
+      party.Free;
+   end;
+
+   station.InHostState := False;
+   party := Make(PAQSOPARTY, station);
+   try
+      qso := Default(ContestExchange);
+      qso.DomesticQTH := 'ALL';
+      CheckFalse(party.AdditionalDomesticMultiplierKey(qso, key),
+                 'an out-of-state entrant counts the county alone (10.b)');
+   finally
+      party.Free;
+   end;
+end;
+
+(* "Likewise, the first DXCC station worked counts as the single DX
+   multiplier." pa.dom's one 'dx' key -- no DXCC list, no DX sheet. *)
+procedure TContestPennsylvaniaQPTests.Test_DXIsTheSingleDXMultiplier;
+begin
+   BeginTest('Test_DXIsTheSingleDXMultiplier');
+   CheckEquals('DX', InStateMultiplierOf(PAQSOPARTY, 'DX'), 'one DX key');
+   CheckFalse(PAIdentity.HasDXMultiplier, 'no per-country DX multiplier');
+   CheckFalse(cfMultByMode in PAIdentity.Flags, 'once, not once per mode');
+end;
+
+(* A STATION OUTSIDE PA SENDS ITS ARRL OR RAC SECTION (NY4I, 2026-11-20:
+   "Rather than an op in Florida sending FL to the PA station, I would send
+   WCF"). The New Contest dialog's outside row takes a section or DX, and
+   refuses a state that is no section and anything naming PA. *)
+procedure TContestPennsylvaniaQPTests.Test_OutsideStationEntersASection;
+var
+   area: TNewContestHostArea;
+begin
+   BeginTest('Test_OutsideStationEntersASection');
+   CheckTrue(PAIdentity.DescribeNewContestHostArea(area), 'PA offers the box');
+   CheckTrue(area.OutsideTakesSection, 'outside, a section');
+   CheckEquals('PA EPA WPA', area.HostStates, 'PA and its two sections are inside');
+   CheckEquals('pa_cty', area.PlacesFile, 'inside, its counties');
+
+   CheckEquals('', HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'WCF'),
+               'a Florida station sends WCF');
+   CheckEquals('', HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'wcf'),
+               'in any case');
+   CheckEquals('', HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'ONE'),
+               'a RAC section');
+   CheckEquals('', HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'OH'),
+               'a state that IS its section');
+   CheckEquals('', HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'DX'),
+               'DX');
+   CheckEquals('', HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, ''),
+               'an empty row is the dialog''s own rule');
+   CheckTrue(HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'FL') <> '',
+             'FL is no section: send WCF, NFL or SFL');
+   CheckTrue(HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'EPA') <> '',
+             'EPA is inside PA');
+   CheckTrue(HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'pa') <> '',
+             'PA is inside PA');
+   CheckTrue(HostAreaOutsideSectionRefusal(nil, area.Area, area.HostStates, 'XYZ') <> '',
+             'anything else is refused');
+
+   (* Every other party keeps the state-or-province row. *)
+   CheckTrue(ContestIdentity(FLORIDAQSOPARTY).DescribeNewContestHostArea(area), 'Florida offers the box');
+   CheckFalse(area.OutsideTakesSection, 'and takes a state outside');
+end;
+
+(* "Rover Bonus -- That is not something we could know ... That just like
+   the electronic submission is something the user needs to add at log
+   submission time" (NY4I, 2026-11-20). A log with rover calls, many
+   counties and no bonus station scores points x multipliers and nothing
+   more. *)
+procedure TContestPennsylvaniaQPTests.Test_NoRoverOrSubmissionBonusIsComputed;
+var
+   view: TLoggedQSOList;
+begin
+   BeginTest('Test_NoRoverOrSubmissionBonusIsComputed');
+   view := TLoggedQSOList.Create;
+   try
+      AddBonusQSO(view, 'W3AAA/ALL', Band20, CW);
+      AddBonusQSO(view, 'W3AAA/BUX', Band20, CW);
+      AddBonusQSO(view, 'W3AAA/ERI', Band40, Phone);
+      AddBonusQSO(view, 'N3BBB', Band80, CW);
+      CheckEquals(150 * 7, FinalFor(cpHIGH, 2026, view), 'no rover or e-submission bonus');
+      CheckEquals(150 * 7 * 2, FinalFor(cpQRP, 2026, view), 'QRP doubles, and adds nothing else');
+   finally
+      view.Free;
+   end;
+end;
+
 procedure TContestPennsylvaniaQPTests.RunAllTests;
 begin
    Test_InStateFileTakesSectionsNotStates;
@@ -315,6 +508,11 @@ begin
    Test_BonusStationIsA2026Rule;
    Test_AdifStateOfASection;
    Test_DXEntrantSendsDX;
+   Test_EveryCountyHasItsSection;
+   Test_InStateCountyAlsoEarnsItsSection;
+   Test_DXIsTheSingleDXMultiplier;
+   Test_OutsideStationEntersASection;
+   Test_NoRoverOrSubmissionBonusIsComputed;
 end;
 
 end.

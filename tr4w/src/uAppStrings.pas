@@ -981,6 +981,17 @@ resourcestring
    SNewContestHostAreaEntryNotAState =
       '%s is not a US state, a Canadian province or DX. Enter the two-letter ' +
       'code, e.g. GA or ON, or DX.';
+   (* A PARTY WHOSE OUTSIDE STATIONS SEND THEIR ARRL OR RAC SECTION
+     (TNewContestHostArea.OutsideTakesSection -- the Pennsylvania QSO Party,
+     NY4I 2026-11-20): the row's label, its notice (%0:s the area) and the
+     refusal of an entry that is no section (%s the entry). *)
+   SNewContestHostAreaSectionLabel = 'MY SECTION';
+   SNewContestHostAreaOutsideSectionNotice =
+      'You are outside %0:s: enter your ARRL or RAC section (e.g. WCF or ' +
+      'ONE), or DX. Tick the box if you are in %0:s.';
+   SNewContestHostAreaEntryNotASection =
+      '%s is not an ARRL or RAC section or DX. Enter your section, e.g. WCF ' +
+      'or ONE, or DX.';
 
    (* MY CALL AND THE "I AM IN ..." BOX DISAGREE -- issue 167, asked once at
      OK. %0:s is the box's region (North America, Canada), %1:s MY CALL,

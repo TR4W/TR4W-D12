@@ -82,12 +82,26 @@ function HostAreaStationIsInside(const aPlaces: THostAreaPlaces;
 function HostAreaOutsideRefusal(const aPlaces: THostAreaPlaces;
                                 const aArea, aHostStates, aValue: string): string;
 
+(* THE SAME QUESTION WHEN THE OUTSIDE STATION SENDS ITS ARRL OR RAC SECTION
+  (TNewContestHostArea.OutsideTakesSection -- the Pennsylvania QSO Party,
+  NY4I 2026-11-20: "Rather than an op in Florida sending FL to the PA
+  station, I would send WCF").
+
+  Refused as inside: as HostAreaOutsideRefusal (a place key, or a word of
+  aHostStates -- the party lists its own sections there). Accepted: an ADIF
+  ARRL section (uARRLSections.IsADIFARRLSection -- so FL, which is no
+  section, is refused and WCF taken; a state that IS its section, OH, is
+  taken) or DX. Refused: anything else, naming the section. '' accepts. *)
+function HostAreaOutsideSectionRefusal(const aPlaces: THostAreaPlaces;
+                                       const aArea, aHostStates, aValue: string): string;
+
 implementation
 
 uses
    SysUtils,
    uDomFileKeys,     (* DomFileLineKey -- the in-state test's own key rule *)
    uPOTAReference,   (* LooksLikeAState -- the states and provinces *)
+   uARRLSections,    (* IsADIFARRLSection -- the sections, for PA *)
    uAppStrings;      (* SNewContestHostAreaEntry* *)
 
 const
@@ -243,6 +257,15 @@ begin
    Result := (aPlaces <> nil) and (aPlaces.IndexOfKey(aValue) >= 0);
 end;
 
+(* THE INSIDE TEST BOTH REFUSALS SHARE -- a place key, or a whole word of
+  aHostStates ('FL' is in 'FL', 'F' is not). aEntry is upper case. *)
+function HostAreaEntryIsInside(const aPlaces: THostAreaPlaces;
+                               const aHostStates, aEntry: string): boolean;
+begin
+   Result := HostAreaStationIsInside(aPlaces, aEntry) or
+             (Pos(' ' + aEntry + ' ', ' ' + UpperCase(aHostStates) + ' ') > 0);
+end;
+
 function HostAreaOutsideRefusal(const aPlaces: THostAreaPlaces;
                                 const aArea, aHostStates, aValue: string): string;
 var
@@ -256,8 +279,7 @@ begin
       end;
 
    (* A whole word of the list: 'FL' is in 'FL', 'F' is not. *)
-   if HostAreaStationIsInside(aPlaces, entry) or
-      (Pos(' ' + entry + ' ', ' ' + UpperCase(aHostStates) + ' ') > 0) then
+   if HostAreaEntryIsInside(aPlaces, aHostStates, entry) then
       begin
       Result := Format(SNewContestHostAreaEntryIsInside, [entry, aArea]);
       Exit;
@@ -269,6 +291,32 @@ begin
       end;
 
    Result := Format(SNewContestHostAreaEntryNotAState, [entry]);
+end;
+
+function HostAreaOutsideSectionRefusal(const aPlaces: THostAreaPlaces;
+                                       const aArea, aHostStates, aValue: string): string;
+var
+   entry: string;
+begin
+   Result := '';
+   entry := UpperCase(Trim(aValue));
+   if entry = '' then
+      begin
+      Exit;
+      end;
+
+   if HostAreaEntryIsInside(aPlaces, aHostStates, entry) then
+      begin
+      Result := Format(SNewContestHostAreaEntryIsInside, [entry, aArea]);
+      Exit;
+      end;
+
+   if (entry = HOST_AREA_DX) or IsADIFARRLSection(entry) then
+      begin
+      Exit;
+      end;
+
+   Result := Format(SNewContestHostAreaEntryNotASection, [entry]);
 end;
 
 end.

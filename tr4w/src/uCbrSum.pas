@@ -144,6 +144,15 @@ function CategoryValuesFor(const aTag: CabrilloTags): TArray<string>;
 function OverlayValuesWith(const aBase: array of string;
                            const aSponsor: TArray<string>): TArray<string>;
 
+(* THE CATEGORY-STATION DROP-DOWN FOR ONE CONTEST (2026-11-20, the Florida
+  QSO Party). aSponsor is the contest's CabrilloStationCategories: when it
+  names any value it IS the list (the sponsor's whole set, blanks skipped);
+  when it names none, aBase -- the standard StationCategory -- is. Then the
+  one blank "no category" choice, LAST, as every category list ends.
+  CategoryValuesFor(ctCategoryStation) is this with no sponsor values. *)
+function StationValuesWith(const aBase: array of string;
+                           const aSponsor: TArray<string>): TArray<string>;
+
 (* WHAT THE OVERLAY ROW COMMITS -- issue 122 (NY4I, 2026-11-19: "all Cabrillo
   fields are taken from the global record but when the contest is set, they
   are saved with the contest ... a contest item seeded by the station
@@ -158,7 +167,8 @@ function OverlayValuesWith(const aBase: array of string;
   aValue: an item is selected and it differs from aCurrent (blanks trimmed
   -- the blank "no overlay" item is a choice). Nothing selected changes
   nothing, as for the categories (a closed list holding a value it does not
-  offer is left alone). *)
+  offer is left alone). THE STATION ROW COMMITS BY THE SAME RULE
+  (Settings.Contest.CategoryStation, 2026-11-20) and asks this. *)
 function OverlayChoiceToCommit(aSelected: boolean;
                                const aChosen: string;
                                const aCurrent: string;
@@ -193,7 +203,11 @@ const
     (ctrTag: '_CATEGORY-MODE';          ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
     (ctrTag: '_CATEGORY-OPERATOR';      ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
     (ctrTag: '_CATEGORY-POWER';         ctrCFG:True;  ctrSave: False; ctrList: True; ctrOpen: False),
-    (ctrTag: '_CATEGORY-STATION';       ctrCFG:False; ctrSave: True; ctrList: True; ctrOpen: False), // Issue #976: now a drop-down
+    // NOT SAVED HERE since 2026-11-20 (the Florida QSO Party): the station
+    // category is the contest-scoped Settings.Contest.CategoryStation. A
+    // '_CATEGORY-STATION' already in settings\tr4w.json is still READ, as the
+    // station default when no contest states one -- see CabrilloTagText.
+    (ctrTag: '_CATEGORY-STATION';       ctrCFG:False; ctrSave: False; ctrList: True; ctrOpen: False), // Issue #976: now a drop-down
     (ctrTag: '_CATEGORY-TIME';          ctrCFG:True;  ctrSave: True; ctrList: True; ctrOpen: False),  // Issue #976: persist + restore selection
     // Cabrillo v3 publishes ONE/TWO/LIMITED/UNLIMITED/SWL here, and sponsors
     // routinely ask for something else -- so this is the one EDITABLE list:
@@ -239,6 +253,15 @@ procedure ShowCreateCabrillo(const aOnAccept: TCabrilloSummaryAction);
 // silence.  PostUnit grew a private version of this fork to fix that; it is
 // here now so there is one.
 function CabrilloTagText(const aTag: CabrilloTags): string;
+
+(* THE CATEGORY-STATION IN FORCE, whether or not the window is open: the
+  contest-scoped Settings.Contest.CategoryStation; when it holds none and
+  nothing STATED it (a stated blank is kept), the station default -- the
+  '_CATEGORY-STATION' the header store has held since issue 976, which every
+  station that chose one before 2026-11-20 still has. What CabrilloTagText
+  answers for the tag when the window is closed, and what the window
+  selects when it opens. *)
+function StationCategoryInForce: string;
 
 // A list tag's selected index, or -1.  Only meaningful while the window is
 // open: the store holds text, not positions.
@@ -305,7 +328,7 @@ begin
         the vocabulary and merging them is a decision about the Cabrillo
         header, not a side effect of removing a pointer. *)
       ctCategoryTransmitter: Result := ValuesWithBlank(TransmitterCategory);
-      ctCategoryStation:     Result := ValuesWithBlank(StationCategory);
+      ctCategoryStation:     Result := StationValuesWith(StationCategory, nil);
       ctCategoryTime:        Result := ValuesWithBlank(TimeCategory);
       ctCategoryOverlay:     Result := OverlayValuesWith(OverlayCategory, nil);
    end;
@@ -340,6 +363,30 @@ begin
          SetLength(Result, Length(Result) + 1);
          Result[High(Result)] := value;
          end;
+      end;
+   SetLength(Result, Length(Result) + 1);
+   Result[High(Result)] := '';
+end;
+
+function StationValuesWith(const aBase: array of string;
+                           const aSponsor: TArray<string>): TArray<string>;
+var
+   i     : integer;
+   value : string;
+begin
+   Result := nil;
+   for i := 0 to High(aSponsor) do
+      begin
+      value := Trim(aSponsor[i]);
+      if value <> '' then
+         begin
+         SetLength(Result, Length(Result) + 1);
+         Result[High(Result)] := value;
+         end;
+      end;
+   if Length(Result) = 0 then
+      begin
+      Result := ValuesOf(aBase);
       end;
    SetLength(Result, Length(Result) + 1);
    Result[High(Result)] := '';
@@ -413,9 +460,32 @@ begin
    FocusCabrilloSummary;
 end;
 
+(* WHICH HEADER STORE IS IN USE -- the ERMAK one under the ERMAK
+  specification, else the Cabrillo one. *)
+function HeaderSectionInUse: string;
+begin
+   if ErmakSpecification then
+      begin
+      Result := ERMAKSECTION;
+      end
+   else
+      begin
+      Result := CABRILLOSECTION;
+      end;
+end;
+
+function StationCategoryInForce: string;
+begin
+   Result := Trim(Settings.Contest.CategoryStation);
+   if (Result = '') and
+      (not Settings.CommandIsStated('CATEGORY-STATION')) then
+      begin
+      Result := Trim(HeaderValue(HeaderSectionInUse,
+                                 CabrilloTagsArray[ctCategoryStation].ctrTag));
+      end;
+end;
+
 function CabrilloTagText(const aTag: CabrilloTags): string;
-var
-   section: string;
 begin
    (* OPERATORS IS THE LOG'S, NEVER A TYPED OR STORED VALUE -- NY4I, CQ WW SSB
      2026. The Cabrillo header already overrode the saved field, but the 3830
@@ -483,18 +553,20 @@ begin
          Result := Trim(Settings.Contest.CategoryOverlay);
          Exit;
          end;
+      (* AND THE STATION CATEGORY (2026-11-20, the Florida QSO Party): the
+        contest's statement, else the station default. UNLIKE THE OVERLAY,
+        the old header-store value is that default when the setting holds
+        none and nothing stated it -- every station that chose FIXED in the
+        summary window before today keeps it, and so does the golden
+        corpus, whose logs state none. A blank STATED is kept blank. *)
+      ctCategoryStation:
+         begin
+         Result := StationCategoryInForce;
+         Exit;
+         end;
    end;
 
-   if ErmakSpecification then
-      begin
-      section := ERMAKSECTION;
-      end
-   else
-      begin
-      section := CABRILLOSECTION;
-      end;
-
-   Result := HeaderValue(section, CabrilloTagsArray[aTag].ctrTag);
+   Result := HeaderValue(HeaderSectionInUse, CabrilloTagsArray[aTag].ctrTag);
 end;
 
 function CabrilloTagItemIndex(const aTag: CabrilloTags): integer;

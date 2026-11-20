@@ -372,6 +372,7 @@ begin
    Pin(NAV_CONTESTCABRILLO, ['contest.categoryAssisted', 'contest.categoryBand',
                              'contest.categoryMode', 'contest.categoryOperator',
                              'contest.categoryOverlay', 'contest.categoryPower',
+                             'contest.categoryStation',
                              'contest.categoryTransmitter']);
    Pin(NAV_CONTESTRULES, ['contest.minitourDuration', 'contest.r150sMode',
                           'contest.rfoblMode', 'contest.sprintQsyRule',

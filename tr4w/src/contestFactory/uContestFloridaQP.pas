@@ -100,7 +100,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   CABRILLO -- CONTEST: FCG-FQP, the sponsor's Cabrillo specification
     (docs/ContestRules/QSOParties/Florida/Cabrillo-Specification-V3-FQP-1.md):
-    CATEGORY-OVERLAY DRIVER, NO-DRIVER and SWL added to the standard list. *)
+    CATEGORY-OVERLAY DRIVER, NO-DRIVER and SWL added to the standard list;
+    CATEGORY-STATION offered as the sponsor's whole set, FIXED, MOBILE,
+    EXPEDITION and SCHOOL (2026-11-20). Both are contest-scoped settings
+    (Settings.Contest.CategoryOverlay / CategoryStation), recorded in the
+    log and seeded by the station default.
+
+  SPECIAL BONUS CALLS (NY4I, 2026-11-20): the FQP announces its 1x1
+    "Spelling Bee" calls each year and they carry NO extra points for the
+    stations that work them, so there is nothing to score and no list is
+    kept; a release names them only if a rule ever pays for them. The 1x1
+    ENTRANT's own score rule (QSO points alone) is CombineWithMultipliers'. *)
 unit uContestFloridaQP;
 
 {$I tr4w.inc}
@@ -158,6 +168,9 @@ type
       (* THE FQP CABRILLO SPECIFICATION'S CATEGORY-OVERLAY values that the
          standard list lacks: DRIVER, NO-DRIVER, SWL. *)
       function GetCabrilloOverlayCategories: TArray<string>; override;
+      (* THE FQP CABRILLO SPECIFICATION'S CATEGORY-STATION values, the whole
+         set: FIXED, MOBILE, EXPEDITION, SCHOOL. *)
+      function GetCabrilloStationCategories: TArray<string>; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -331,6 +344,20 @@ begin
    Result[0] := 'DRIVER';
    Result[1] := 'NO-DRIVER';
    Result[2] := 'SWL';
+end;
+
+(* THE FQP CABRILLO SPECIFICATION: "CATEGORY-STATION: FIXED MOBILE
+   EXPEDITION SCHOOL" -- the sponsor's whole set (NY4I, 2026-11-20: "Check
+   the file in the rules for the STATION and OVERLAY values"). The Cabrillo
+   summary offers exactly these, then the blank. *)
+function TContestFloridaQP.GetCabrilloStationCategories: TArray<string>;
+begin
+   Result := nil;
+   SetLength(Result, 4);
+   Result[0] := 'FIXED';
+   Result[1] := 'MOBILE';
+   Result[2] := 'EXPEDITION';
+   Result[3] := 'SCHOOL';
 end;
 
 function TContestFloridaQP.UsesBand(aBand: BandType): boolean;

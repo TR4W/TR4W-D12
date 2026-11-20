@@ -92,6 +92,7 @@ type
                                   const aCombo: TComboBox);
       procedure ApplyErmakCategories;
       procedure FillOverlayItems;
+      procedure FillStationItems;
       procedure LoadValues;
       procedure SaveValues;
       procedure CommitCategory(const aTag: CabrilloTags;
@@ -101,6 +102,7 @@ type
       procedure CommitCategories;
       procedure CommitCategoryPower;
       procedure CommitOverlay;
+      procedure CommitStation;
    public
       { AnsiString, NOT string.  Every LCL caption and edit is a
         TTranslateString, which is an AnsiString; declaring these as the
@@ -338,6 +340,37 @@ begin
    end;
 end;
 
+(* THE STATION ROW, REFILLED AT EVERY OPENING (2026-11-20, the Florida QSO
+  Party) -- FillOverlayItems' reason: a sponsor that names its own station
+  categories (ContestIdentity(Contest).CabrilloStationCategories) names them
+  for the contest open NOW. uCbrSum.StationValuesWith composes the list. *)
+procedure TfrmCabrilloSummary.FillStationItems;
+var
+   values : TArray<string>;
+   cbo    : TComboBox;
+   i      : integer;
+begin
+   if not (FRow[ctCategoryStation] is TComboBox) then
+      begin
+      Exit;
+      end;
+   cbo := TComboBox(FRow[ctCategoryStation]);
+
+   values := StationValuesWith(StationCategory,
+                               ContestIdentity(Contest).CabrilloStationCategories);
+
+   cbo.Items.BeginUpdate;
+   try
+      cbo.Items.Clear;
+      for i := 0 to High(values) do
+         begin
+         cbo.Items.Add(AnsiString(values[i]));
+         end;
+   finally
+      cbo.Items.EndUpdate;
+   end;
+end;
+
 procedure TfrmCabrilloSummary.LoadValues;
 var
    tag     : CabrilloTags;
@@ -389,6 +422,17 @@ begin
             TComboBox(FRow[tag]).ItemIndex :=
                TComboBox(FRow[tag]).Items.IndexOf(
                   AnsiString(Trim(Settings.Contest.CategoryOverlay)));
+            end
+         else if tag = ctCategoryStation then
+            begin
+            (* THE CONTEST'S STATION CATEGORY (2026-11-20): what the header
+              will write -- the setting, else the station default
+              (uCbrSum.StationCategoryInForce) -- selected by TEXT after
+              FillStationItems put the contest's own values in the list. A
+              value the list does not offer is left unselected. *)
+            TComboBox(FRow[tag]).ItemIndex :=
+               TComboBox(FRow[tag]).Items.IndexOf(
+                  AnsiString(StationCategoryInForce));
             end
          else if CabrilloTagsArray[tag].ctrSave then
             begin
@@ -598,7 +642,29 @@ begin
    CommitCategory(ctCategoryOperator, 'CATEGORY-OPERATOR', tCategoryOperatorSA,
                   Ord(Settings.Contest.CategoryOperator));
    CommitOverlay;
+   CommitStation;
    CommitCategoryPower;
+end;
+
+(* THE STATION ROW WRITES THIS CONTEST'S SETTING (2026-11-20) -- the overlay's
+  route and rule. Compared with what the header would write
+  (StationCategoryInForce), so opening and closing the window over an
+  inherited station default records nothing. *)
+procedure TfrmCabrilloSummary.CommitStation;
+var
+   value: string;
+begin
+   if not OverlayChoiceToCommit(TagItemIndex(ctCategoryStation) >= 0,
+                                string(TagText(ctCategoryStation)),
+                                StationCategoryInForce,
+                                value) then
+      begin
+      Exit;
+      end;
+   if ApplyContestEdit('CATEGORY-STATION', value) then
+      begin
+      LogStoreRecordContestStatement('CATEGORY-STATION');
+      end;
 end;
 
 (* THE OVERLAY ROW WRITES THIS CONTEST'S SETTING -- issue 122 (NY4I,
@@ -712,6 +778,7 @@ begin
    { Every opening: the contest, and so the header section, may have changed
      since the last one. }
    FillOverlayItems;
+   FillStationItems;
    LoadValues;
 
    ApplyContentMinimumSize(Self);

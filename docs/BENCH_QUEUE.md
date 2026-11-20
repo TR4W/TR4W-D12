@@ -329,6 +329,16 @@ The Cabrillo summary's CATEGORY-OVERLAY row is refilled each time the window ope
 - [ ] **The blank choice sticks across a reopen.** In a log whose station default overlay is not blank, choose the blank item, press OK, close and reopen the log. The header must read `CATEGORY-OVERLAY:` (bare). Unit tests prove the edit takes a blank; whether the stored blank row survives the reopen when the station default is not blank is not tested.
 - [ ] **An old saved overlay is not carried over.** An overlay saved before 2026-11-19 lived in the global header store (`_CATEGORY-OVERLAY` in `settings\tr4w.json`); it is now inert, as `_CATEGORY-MODE` became at Q61. Set the station default once in Preferences.
 
+## Added 2026-11-20 -- CATEGORY-STATION IS THE CONTEST'S; PA SECTIONS (state-party audit; contest-factory)
+
+CATEGORY-STATION is now the contest-scoped `Settings.Contest.CategoryStation` (CATEGORY-STATION), like the overlay. Unlike the overlay, an old `_CATEGORY-STATION` in the global header store is still READ, as the station default, when the contest states none (`uCbrSum.StationCategoryInForce`). The Florida QSO Party offers only its specification's four values. The composition and the header read are unit-tested; the window is not.
+
+- [ ] **An old FIXED survives.** On a station that chose FIXED in the summary window before today, open any contest and export Cabrillo: `CATEGORY-STATION: FIXED`.
+- [ ] **Florida offers four.** In a Florida QSO Party log, open the Cabrillo summary: the station list is FIXED, MOBILE, EXPEDITION, SCHOOL, then the blank. Choose MOBILE and press OK; the header reads `CATEGORY-STATION: MOBILE`, and `tr4w.log` has `CATEGORY-STATION = MOBILE for this contest only`. Open another contest: it shows the station default, not MOBILE, and offers the full list.
+- [ ] **A blank sticks.** Choose the blank station item and press OK, close and reopen the log: the header reads `CATEGORY-STATION:` (bare). Whether a stored blank row survives the reopen when an old `_CATEGORY-STATION` exists is not tested.
+- [ ] **PA outside: a section.** New Contest, Pennsylvania QSO Party, box unticked: the row is labelled MY SECTION and is prefilled with the station's MY SECTION (e.g. WCF). `FL` is refused ("not an ARRL or RAC section"), `EPA` and `PA` are refused as inside PA, `DX` is taken. The Cabrillo sent column is `WCF`.
+- [ ] **PA inside: county and section.** A PA station (box ticked, a county chosen) works ALL (WPA) then BUX (EPA): the totals count four domestic multipliers (two counties, WPA, EPA); a third county in WPA adds one.
+
 ## Added 2026-11-19 -- VERMONT CLUB STATIONS FROM THE OPERATOR'S FILE (issue 270; contest-factory)
 
 The club-station multiplier reads `vtqp_club_stations.txt` from the writable data directory (the settings folder; on Windows `target\settings\`), else beside the program: one call a line, a `YEAR 2027` line, `#` comments. The parser, the notice text and the sheet are unit-tested; the notice on screen and the file lookup in a real install are not.
