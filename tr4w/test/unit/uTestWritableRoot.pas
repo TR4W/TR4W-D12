@@ -26,6 +26,12 @@ unit uTestWritableRoot;
     * the decision, with the probe INJECTED -- a writable folder changes
       nothing and creates nothing; a refused one moves to <base>\TR4W\,
       created once; no base keeps today's answer and says why;
+    * an install under the shell's Program Files folders is redirected BY
+      POLICY without asking the probe, so an elevated run agrees with a
+      normal one; the match is on a path component, ignores case and
+      separators, and a failed lookup leaves the probe to decide;
+    * the shell's Roaming AppData answer beats the APPDATA variable, which
+      is only the reported fallback;
     * --settings still wins over the redirect;
     * the operator's notice is due once per per-user root;
     * the first redirected run carries the install's settings across and
@@ -65,6 +71,15 @@ type
       procedure Test_ExportsGoBesideTheContestLog;
       procedure Test_ARefusedSettingsSaveKeepsTheOldFile;
       procedure Test_TheLogMessageNamesTheDiagnosticLog;
+      procedure Test_ProgramFilesIsMatchedOnAComponent;
+      procedure Test_ProgramFilesMatchIgnoresCaseAndSeparators;
+      procedure Test_OtherDrivesAndSharesAreNotProgramFiles;
+      procedure Test_AThirtyTwoBitProcessSeesTheX86Folder;
+      procedure Test_NoProgramFilesAnswerLeavesTheProbe;
+      procedure Test_ThePolicyRedirectsWithoutProbing;
+      procedure Test_ThePolicyWithNoBaseSaysWhy;
+      procedure Test_TheShellAnswerBeatsTheEnvironment;
+      procedure Test_TheProgramFilesNoticeIsTrueForAnAdministrator;
    public
       constructor Create(const AName: string);
       destructor Destroy; override;
@@ -82,6 +97,22 @@ function ProbeSaysNo(const aDir: string): boolean;
 begin
    Result := False;
 end;
+
+var
+   GProbeCalls: integer = 0;
+
+(* An elevated administrator: the folder accepts a file. Counts its calls so
+  a test can prove the policy never asked. *)
+function CountingProbeSaysYes(const aDir: string): boolean;
+begin
+   Inc(GProbeCalls);
+   Result := True;
+end;
+
+const
+   (* What a 64-bit TR4W gets from the shell on a stock 64-bit Windows. *)
+   PF    = 'C:\Program Files';
+   PFX86 = 'C:\Program Files (x86)';
 
 var
    GNoticeCount: integer = 0;
@@ -159,7 +190,7 @@ begin
    BeginTest('Test_AWritableFolderChangesNothing');
    install := NewScratchDir('install-writable');
    base    := NewScratchDir('appdata-writable');
-   root := ChooseWritableRoot(install, base, @ProbeSaysYes, redirected, created, problem);
+   root := ChooseWritableRoot(install, base, False, @ProbeSaysYes, redirected, created, problem);
    CheckEquals(install, root, 'a writable program folder is the answer, unchanged');
    CheckFalse(redirected, 'not redirected');
    CheckFalse(created, 'nothing created');
@@ -175,14 +206,14 @@ begin
    BeginTest('Test_ARefusedFolderMovesUnderTheBase');
    install := NewScratchDir('install-refused');
    base    := NewScratchDir('appdata-refused');
-   root := ChooseWritableRoot(install, base, @ProbeSaysNo, redirected, created, problem);
+   root := ChooseWritableRoot(install, base, False, @ProbeSaysNo, redirected, created, problem);
    CheckEquals(base + 'TR4W' + PathDelim, root, 'the per-user root under the base');
    CheckTrue(redirected, 'redirected');
    CheckTrue(created, 'this call created the per-user root');
    CheckTrue(DirectoryExists(root), 'the per-user root exists');
    CheckEquals('', problem, 'no problem');
 
-   root := ChooseWritableRoot(install, base, @ProbeSaysNo, redirected, created, problem);
+   root := ChooseWritableRoot(install, base, False, @ProbeSaysNo, redirected, created, problem);
    CheckTrue(redirected, 'still redirected on the next run');
    CheckFalse(created, 'and not created a second time');
 end;
@@ -194,7 +225,7 @@ var
 begin
    BeginTest('Test_NoBaseKeepsTodaysFolderAndSaysWhy');
    install := NewScratchDir('install-nobase');
-   root := ChooseWritableRoot(install, '', @ProbeSaysNo, redirected, created, problem);
+   root := ChooseWritableRoot(install, '', False, @ProbeSaysNo, redirected, created, problem);
    CheckEquals(install, root, 'no APPDATA: the program folder, as before');
    CheckFalse(redirected, 'not redirected');
    CheckTrue(Pos('APPDATA', problem) > 0, 'the problem names APPDATA: ' + problem);
@@ -222,7 +253,7 @@ begin
    root := NewScratchDir('appdata-notice');
    CheckFalse(WritableRootNoticeDue(False, root), 'never due when not redirected');
    CheckTrue(WritableRootNoticeDue(True, root), 'due the first time');
-   RecordWritableRootNotice(root, 'C:\Program Files\TR4W\');
+   RecordWritableRootNotice(root, 'C:\Program Files\TR4W\', True);
    CheckTrue(FileExists(root + WRITABLE_ROOT_NOTE), 'the note is written');
    CheckFalse(WritableRootNoticeDue(True, root), 'not due once the note is there');
 end;
@@ -423,6 +454,184 @@ begin
              'the move notice names both folders');
 end;
 
+(* ------------------------------------------------------------------------
+  THE PROGRAM FILES POLICY (NY4I, 2026-11-20). Pure string work with the
+  shell's answers injected, so these run identically on every platform.
+  ------------------------------------------------------------------------ *)
+
+procedure TWritableRootTests.Test_ProgramFilesIsMatchedOnAComponent;
+begin
+   BeginTest('Test_ProgramFilesIsMatchedOnAComponent');
+   CheckTrue(InstallIsUnderProgramFiles('C:\Program Files\TR4W', PF, PFX86),
+             'the default install folder is under Program Files');
+   CheckTrue(InstallIsUnderProgramFiles('C:\Program Files\Ham\TR4W\', PF, PFX86),
+             'a deeper folder is under it too');
+   CheckTrue(InstallIsUnderProgramFiles('C:\Program Files (x86)\TR4W\', PF, PFX86),
+             'the X86 folder counts');
+   CheckTrue(InstallIsUnderProgramFiles('C:\Program Files', PF, PFX86),
+             'Program Files itself counts');
+   CheckFalse(InstallIsUnderProgramFiles('C:\Program Files Extra\x', PF, PFX86),
+              'a sibling whose name starts the same is NOT under it');
+   CheckFalse(InstallIsUnderProgramFiles('C:\Program FilesTR4W', PF, PFX86),
+              'a name with no separator after the folder is NOT under it');
+   CheckFalse(InstallIsUnderProgramFiles('C:\radio\tr4w\', PF, PFX86),
+              'C:\radio\tr4w is not');
+   CheckFalse(InstallIsUnderProgramFiles('C:\tr4w\', PF, PFX86), 'C:\tr4w is not');
+   CheckFalse(InstallIsUnderProgramFiles('C:\', PF, PFX86),
+              'the drive root is not inside Program Files');
+end;
+
+procedure TWritableRootTests.Test_ProgramFilesMatchIgnoresCaseAndSeparators;
+begin
+   BeginTest('Test_ProgramFilesMatchIgnoresCaseAndSeparators');
+   CheckTrue(InstallIsUnderProgramFiles('c:\PROGRAM FILES\tr4w', PF, PFX86),
+             'case is ignored');
+   CheckTrue(InstallIsUnderProgramFiles('C:\Program Files\TR4W', 'C:\Program Files\', ''),
+             'a trailing separator on the shell''s answer is ignored');
+   CheckTrue(InstallIsUnderProgramFiles('C:\Program Files\', PF, ''),
+             'a trailing separator on the install folder is ignored');
+   CheckTrue(InstallIsUnderProgramFiles('C:/Program Files/TR4W/', PF, PFX86),
+             'forward slashes are folded');
+   CheckTrue(PathIsWithinFolder('C:\Program Files\\TR4W', 'C:\Program Files\\'),
+             'a doubled trailing separator on the folder is ignored');
+end;
+
+procedure TWritableRootTests.Test_OtherDrivesAndSharesAreNotProgramFiles;
+begin
+   BeginTest('Test_OtherDrivesAndSharesAreNotProgramFiles');
+   CheckFalse(InstallIsUnderProgramFiles('\\server\share\Program Files\TR4W', PF, PFX86),
+              'a UNC path is not the local Program Files');
+   CheckFalse(InstallIsUnderProgramFiles('Z:\Program Files\TR4W', PF, PFX86),
+              'a mapped drive is not the local Program Files');
+   CheckFalse(InstallIsUnderProgramFiles('D:\Program Files\TR4W', PF, PFX86),
+              'another drive''s folder of the same name is not');
+   CheckTrue(InstallIsUnderProgramFiles('D:\Program Files\TR4W', 'D:\Program Files', ''),
+             'but Program Files moved to D: is matched where the shell says it is');
+   CheckTrue(PathIsWithinFolder('\\server\share\apps\TR4W', '\\server\share\apps'),
+             'UNC paths compare on components like any other');
+end;
+
+procedure TWritableRootTests.Test_AThirtyTwoBitProcessSeesTheX86Folder;
+begin
+   BeginTest('Test_AThirtyTwoBitProcessSeesTheX86Folder');
+   (* A 32-bit process on 64-bit Windows is answered the X86 folder for BOTH
+     lookups. TR4W is 64-bit only; this pins that the comparison still holds
+     for whatever the shell says. *)
+   CheckTrue(InstallIsUnderProgramFiles('C:\Program Files (x86)\TR4W', PFX86, PFX86),
+             'the X86 folder answered twice still matches');
+   CheckFalse(InstallIsUnderProgramFiles('C:\Program Files\TR4W', PFX86, PFX86),
+              'and the folder it was not told about does not');
+end;
+
+procedure TWritableRootTests.Test_NoProgramFilesAnswerLeavesTheProbe;
+var
+   install, base, root, problem: string;
+   redirected, created: boolean;
+begin
+   BeginTest('Test_NoProgramFilesAnswerLeavesTheProbe');
+   CheckFalse(InstallIsUnderProgramFiles('C:\Program Files\TR4W', '', ''),
+              'a failed lookup matches nothing');
+   CheckFalse(PathIsWithinFolder('C:\anything', ''), 'an empty folder contains nothing');
+   CheckFalse(PathIsWithinFolder('', PF), 'an empty path is inside nothing');
+
+   (* So the decision falls back to the probe alone: writable stays put. *)
+   install := NewScratchDir('install-nolookup');
+   base    := NewScratchDir('appdata-nolookup');
+   root := ChooseWritableRoot(install, base,
+                              InstallIsUnderProgramFiles(install, '', ''),
+                              @ProbeSaysYes, redirected, created, problem);
+   CheckEquals(install, root, 'no Program Files answer: the probe decides');
+   CheckFalse(redirected, 'and a writable folder is not redirected');
+end;
+
+procedure TWritableRootTests.Test_ThePolicyRedirectsWithoutProbing;
+var
+   install, base, root, problem: string;
+   redirected, created: boolean;
+begin
+   BeginTest('Test_ThePolicyRedirectsWithoutProbing');
+   install := NewScratchDir('install-policy');
+   base    := NewScratchDir('appdata-policy');
+   GProbeCalls := 0;
+   root := ChooseWritableRoot(install, base, True, @CountingProbeSaysYes,
+                              redirected, created, problem);
+   CheckEquals(base + 'TR4W' + PathDelim, root,
+               'under Program Files an administrator still gets the per-user root');
+   CheckTrue(redirected, 'redirected by policy');
+   CheckTrue(created, 'the per-user root was made');
+   CheckEquals('', problem, 'no problem');
+   CheckEquals(0, GProbeCalls, 'the probe was never asked');
+
+   (* A standard user on the same install lands in the SAME place. *)
+   root := ChooseWritableRoot(install, base, True, @ProbeSaysNo,
+                              redirected, created, problem);
+   CheckEquals(base + 'TR4W' + PathDelim, root, 'a standard user agrees');
+   CheckFalse(created, 'and it is not made twice');
+end;
+
+procedure TWritableRootTests.Test_ThePolicyWithNoBaseSaysWhy;
+var
+   install, root, problem: string;
+   redirected, created: boolean;
+begin
+   BeginTest('Test_ThePolicyWithNoBaseSaysWhy');
+   install := NewScratchDir('install-policy-nobase');
+   root := ChooseWritableRoot(install, '', True, @ProbeSaysYes,
+                              redirected, created, problem);
+   CheckEquals(install, root, 'no per-user folder: the program folder, as before');
+   CheckFalse(redirected, 'not redirected');
+   CheckTrue(Pos('Program Files', problem) > 0, 'the problem names the policy: ' + problem);
+   CheckTrue(Pos('APPDATA', problem) > 0, 'and the missing per-user folder: ' + problem);
+end;
+
+procedure TWritableRootTests.Test_TheShellAnswerBeatsTheEnvironment;
+var
+   note: string;
+begin
+   BeginTest('Test_TheShellAnswerBeatsTheEnvironment');
+   CheckEquals('C:\Users\op\AppData\Roaming',
+               ChoosePerUserBase('C:\Users\op\AppData\Roaming', 'C:\wrong', note),
+               'the shell''s answer is used when it gives one');
+   CheckEquals('', note, 'and nothing is reported');
+
+   CheckEquals('C:\from-env',
+               ChoosePerUserBase('', 'C:\from-env', note),
+               'the environment is the fallback');
+   CheckTrue((Pos('APPDATA', note) > 0) and (Pos('C:\from-env', note) > 0),
+             'and the note names the source and its value: ' + note);
+
+   CheckEquals('', ChoosePerUserBase('', '', note), 'neither: nothing');
+   CheckTrue(Pos('neither', note) > 0, 'and the note says neither answered: ' + note);
+end;
+
+procedure TWritableRootTests.Test_TheProgramFilesNoticeIsTrueForAnAdministrator;
+var
+   text, root: string;
+   lines: TStringList;
+begin
+   BeginTest('Test_TheProgramFilesNoticeIsTrueForAnAdministrator');
+   text := UnicodeFormat(SWritableRootMovedProgramFiles,
+                         ['C:\Program Files\TR4W\', 'C:\AppData\TR4W\']);
+   CheckTrue((Pos('C:\Program Files\TR4W\', text) > 0) and (Pos('C:\AppData\TR4W\', text) > 0),
+             'the Program Files notice names both folders');
+   CheckTrue(Pos('cannot save', text) = 0,
+             'and does not claim the folder refuses files (an administrator''s does not)');
+   CheckTrue(Pos('administrator', text) > 0, 'it says an elevated run agrees');
+
+   root := NewScratchDir('appdata-notice-policy');
+   RecordWritableRootNotice(root, 'C:\Program Files\TR4W\', True);
+   lines := TStringList.Create;
+   try
+      lines.LoadFromFile(AnsiString(root + WRITABLE_ROOT_NOTE));
+      CheckTrue(Pos('under Program Files', lines.Text) > 0, 'the note gives the policy reason');
+      CheckTrue(Pos('does not accept new files', lines.Text) = 0,
+                'and not the probe''s');
+   finally
+      lines.Free;
+   end;
+   CheckFalse(WritableRootNoticeDue(True, root), 'and the notice is then not due again');
+end;
+
 procedure TWritableRootTests.RunAllTests;
 begin
    Test_AWritableFolderChangesNothing;
@@ -436,6 +645,15 @@ begin
    Test_ExportsGoBesideTheContestLog;
    Test_ARefusedSettingsSaveKeepsTheOldFile;
    Test_TheLogMessageNamesTheDiagnosticLog;
+   Test_ProgramFilesIsMatchedOnAComponent;
+   Test_ProgramFilesMatchIgnoresCaseAndSeparators;
+   Test_OtherDrivesAndSharesAreNotProgramFiles;
+   Test_AThirtyTwoBitProcessSeesTheX86Folder;
+   Test_NoProgramFilesAnswerLeavesTheProbe;
+   Test_ThePolicyRedirectsWithoutProbing;
+   Test_ThePolicyWithNoBaseSaysWhy;
+   Test_TheShellAnswerBeatsTheEnvironment;
+   Test_TheProgramFilesNoticeIsTrueForAnAdministrator;
 end;
 
 end.

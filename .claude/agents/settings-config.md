@@ -835,14 +835,31 @@ NY4I installed into `C:\Program Files\TR4W` as a standard user: "could not open 
 a raw RTL "Unable to create file ...\settings\tr4w.json.new ... risk data corruption" dialog after the
 setup wizard. A 64-bit process gets no VirtualStore, so every write was refused.
 
-- **`uAppPaths` probes once per run, on first use** (`DirectoryIsWritable`: create and delete a
-  uniquely named file in `AppDir`, the working directory). Writable: NOTHING changes -- `C:\tr4w`, the
-  dev tree, the corpus, the tests. Refused: `SettingsDir`, `SettingsFilePath`, `LogDir`, `LogFilePath`,
-  `ContestDir`, `ContestFilePath` and `StationStateDir` answer `%APPDATA%\TR4W\` (Roaming; mirrors the
-  install layout), so `WritableSettingsDir`, `BackupDir` and `DownloadedDataDir` follow. `DataDir` /
-  `DataFilePath` stay the install folder (shipped data; downloaded -> contest -> shipped still works).
-  The decision is the pure `ChooseWritableRoot(install, base, probe, ...)`; **Windows-only** -- macOS and
-  Linux arms are untouched and every new query answers "not redirected" there.
+- **UNDER PROGRAM FILES IS REDIRECTED BY POLICY, WHOEVER RUNS IT** (NY4I, 2026-11-20). `AppDir` (the
+  working directory) inside the shell's `FOLDERID_ProgramFiles` or `FOLDERID_ProgramFilesX86` is treated
+  as not writable WITHOUT probing, so "Run as administrator" and a normal start use the same per-user
+  folder (the probe alone let an elevated run use the install folder: two sets of data). The match is the
+  pure `InstallIsUnderProgramFiles(install, pf, pfX86)` over `PathIsWithinFolder` (both separators folded
+  to `\`, case ignored, on a component boundary: `C:\Program Files Extra\x` is NOT inside; an empty
+  folder -- a failed lookup -- matches nothing, so the probe decides alone). **No 8.3 resolution**: a
+  working directory spelled `C:\PROGRA~1\TR4W` does not match and falls to the probe.
+- **ELSEWHERE `uAppPaths` probes once per run, on first use** (`DirectoryIsWritable`: create and delete a
+  uniquely named file in `AppDir`). Writable: NOTHING changes -- `C:\tr4w`, `C:\radio\tr4w`, the dev
+  tree, the corpus, the tests. Redirected (policy or refused): `SettingsDir`, `SettingsFilePath`,
+  `LogDir`, `LogFilePath`, `ContestDir`, `ContestFilePath` and `StationStateDir` answer
+  `<Roaming AppData>\TR4W\` (mirrors the install layout), so `WritableSettingsDir`, `BackupDir` and
+  `DownloadedDataDir` follow. `DataDir` / `DataFilePath` stay the install folder (shipped data;
+  downloaded -> contest -> shipped still works). The decision is the pure
+  `ChooseWritableRoot(install, base, underProgramFiles, probe, ...)` (the probe is not called when
+  `underProgramFiles`); `WritableFilesRedirectedByPolicy` says which reason applied. **Windows-only** --
+  macOS and Linux arms are untouched and every new query answers "not redirected" there.
+- **THE FOLDERS ARE ASKED OF THE SHELL, NOT THE ENVIRONMENT** (NY4I, 2026-11-20): Roaming AppData,
+  Program Files and Program Files (x86) come from the RTL's `WinDirs.GetWindowsSpecialDirUnicode(FOLDERID_*,
+  False)` (`SHGetKnownFolderPath`, bound by the RTL from shell32 by full path -- no DLL declaration in
+  this tree; the Unicode flavour because the plain one is AnsiString). The wrapper RAISES a plain
+  `Exception` when shell32 lacks both entry points; `ShellKnownFolder` turns that into "no answer". The
+  `APPDATA` variable is only the fallback (`ChoosePerUserBase`), and using it -- or the shell naming no
+  Program Files folder -- is in `WritableRootProblem`, which `ReportWritableRoot` logs at Error.
 - **`--settings` still wins** for the settings file, downloads and backups (`WritableSettingsDirFor`).
 - **The first redirected run seeds** `tr4w.json`, `tr4w.ini`, `tr4w.pos` from the install's `settings\`
   (never overwriting), because the installer's 32-bit migration puts settings there.
@@ -850,8 +867,14 @@ setup wizard. A 64-bit process gets no VirtualStore, so every write was refused.
   (`WRITABLE_ROOT_NOTE`), written when the notice is shown (`TakeWritableRootNotice`). Not "the run that
   created it": `tr4wconvert` may create it first. `uProgramMain.ReportWritableRoot` logs `[Paths]` every
   start.
-- **`tr4wconvert`'s portable `settings\`** is used only when the binary's folder accepts writes
-  (`PortableFolderUsable`; always True off Windows).
+- **`tr4wconvert`'s portable `settings\`** is used only when the binary's folder is NOT under Program
+  Files (the same policy, one helper `UnderShellProgramFiles`) AND accepts writes
+  (`PortableFolderUsable`; always True off Windows), so an elevated `tr4wconvert` writes where the
+  program reads.
+- **The notice has two wordings**: `SWritableRootMoved` ("cannot save files in the folder", the probe's
+  reason) and `SWritableRootMovedProgramFiles` (the policy; true for an administrator too), chosen by
+  `WritableFilesRedirectedByPolicy`; `RecordWritableRootNotice(root, install, byPolicy)` writes the
+  matching reason into `WHY TR4W FILES ARE HERE.txt`.
 - **Written files ask `uAppPaths.WrittenFilePath(kind, name)`** (`wfSettings`, `wfDiagnosticLog`,
   `wfCrashLog`, `wfContestLog`, `wfBackup`, `wfDownload`, `wfStationState`) or
   `BesideContestLogFilePath` for exports -- never `TR4W_PATH_NAME`, the read-only tier. `tr4w.pos`,
@@ -867,9 +890,11 @@ setup wizard. A 64-bit process gets no VirtualStore, so every write was refused.
   **A caller that claims success or acts after the save must check the boolean** -- the old exception
   aborted it for free: Preferences' `SaveStore` (its `except` no longer sees a refusal), the setup
   wizard's result page and the legacy-ini "don't ask again" were changed for that.
-- **Open for NY4I:** an elevated run finds the folder writable and uses it (a second set of files);
-  Roaming holds an unbounded `tr4w.log` and the contest logs in a hidden folder; old `.db` files in the
-  install folder are not moved (the notice says so). Bench steps: `docs/BENCH_QUEUE.md`.
+- **Open for NY4I:** Roaming holds an unbounded `tr4w.log` and the contest logs in a hidden folder; old
+  `.db` files in the install folder are not moved (the notice says so); settings an earlier ELEVATED run
+  wrote into the install's `settings\` are seeded only when the per-user root is first created; runas
+  with another account's credentials uses THAT account's Roaming folder (correct, but a third place).
+  Bench steps: `docs/BENCH_QUEUE.md`.
 
 ## Coordinate with
 

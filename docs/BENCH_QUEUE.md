@@ -174,16 +174,21 @@ at what they cover; this is the list of what they cannot see.
 
 ## Added 2026-11-20 -- INSTALLED UNDER C:\Program Files: THE WRITABLE FILES MOVE TO %APPDATA%\TR4W (issue 165; settings-config)
 
-`uAppPaths` now probes, once per run, whether the program folder (the working directory) accepts a new
-file. Writable (C:\tr4w, C:\radio\tr4w): nothing changes. Refused: every WRITTEN file moves under
-`%APPDATA%\TR4W\` (Roaming) and the shipped data is still read from the install folder. The decision, the
+`uAppPaths` decides once per run where the program folder's (the working directory's) written files go.
+Under the shell's Program Files folders: the per-user folder, ALWAYS (policy, even elevated). Elsewhere it
+probes whether the folder accepts a new file. Writable (C:\tr4w, C:\radio\tr4w): nothing changes.
+Refused: every WRITTEN file moves under the Roaming AppData folder (asked of the shell, not the `APPDATA`
+variable) `+ \TR4W\` and the shipped data is still read from the install folder. The decision, the
 seed, the notice latch and the refused-save handling are unit-tested (`uTestWritableRoot`); a real
 read-only folder cannot be made in a unit test. Repeat NY4I's 2026-11-20 test on a Windows account
 that is a STANDARD user (not elevated):
 
 - [ ] **Fresh install, first run.** Install with the default folder (`C:\Program Files\TR4W`). Start TR4W
   from the Start-menu shortcut (its "Start in" must be the install folder). Expected: ONE notice, "TR4W
-  cannot save files in the folder it is installed in ... kept here instead: C:\Users\<you>\AppData\Roaming\TR4W\".
+  is installed under Program Files, which Windows protects ... kept here instead, however TR4W is started
+  (including Run as administrator): C:\Users\<you>\AppData\Roaming\TR4W\". (The other wording, "TR4W
+  cannot save files in the folder it is installed in", is now only for a refused folder OUTSIDE Program
+  Files.)
   NO "could not open its log file" message, and NO "Press OK to ignore and risk data corruption" dialog
   at any point. Second start: no notice (the folder holds `WHY TR4W FILES ARE HERE.txt`).
 - [ ] **Where each file lands** -- under `%APPDATA%\TR4W\`: `tr4w.log` and `tr4w-early.log` (top),
@@ -193,8 +198,10 @@ that is a STANDARD user (not elevated):
   `dxcluster\`. **The contest `.db` (and its `-wal`/`-shm`) is created in `%APPDATA%\TR4W\` itself**
   when you make a New Contest; File > Open lists the contests there; ADIF / Cabrillo / summary
   exports land beside that `.db`. NOTHING new appears in `C:\Program Files\TR4W`.
-- [ ] **The log says so.** `tr4w.log` has `[Paths] the program folder does not accept new files;
-  settings, logs and contests are written under C:\Users\...\AppData\Roaming\TR4W\` on every start.
+- [ ] **The log says so.** `tr4w.log` has `[Paths] the program folder is under Program Files; settings,
+  logs and contests are written under C:\Users\...\AppData\Roaming\TR4W\ whoever runs TR4W` on every
+  start (a refused folder outside Program Files logs `the program folder does not accept new files`
+  instead).
 - [ ] **Shipped data still read from the install folder.** A contest with a domestic file (e.g. a
   state QSO party) loads its `dom\` file; the country file is found (CTY.DAT shipped, unless one was
   downloaded); Preferences tooltips show (help\ from the install folder).
@@ -211,9 +218,27 @@ that is a STANDARD user (not elevated):
   settings to: ... The settings file on disk was not changed", TR4W keeps running, `tr4w.log` has
   `[Config] could not save` once per failed save, and the file's contents are unchanged. Clear the
   read-only flag afterwards.
-- [ ] **Run elevated once (right-click, Run as administrator).** The probe then finds the install folder
-  writable and TR4W uses `C:\Program Files\TR4W` as before -- a SECOND set of files. Note what you see;
-  whether TR4W should prefer an existing per-user folder over a writable install is NY4I's call.
+- [ ] **Normal AND elevated must agree (NY4I's rule, 2026-11-20).** An install under the shell's Program
+  Files folders (`C:\Program Files\...` or `C:\Program Files (x86)\...`) now uses the per-user folder BY
+  POLICY, whoever runs it -- the probe is not asked there. Run TR4W once normally and once with
+  right-click > **Run as administrator** (same Windows account): BOTH must use
+  `C:\Users\<you>\AppData\Roaming\TR4W\`, NOT the install folder. Nothing new may appear in
+  `C:\Program Files\TR4W` after the elevated run, and `tr4w.log` (in the per-user folder) must show
+  `[Paths] the program folder is under Program Files; ... whoever runs TR4W` on both starts. The one-time
+  notice (on whichever run is first) now reads "TR4W is installed under Program Files, which Windows
+  protects ... however TR4W is started (including Run as administrator)". Also run
+  `tr4wconvert` from an ELEVATED Command Prompt in `C:\Program Files\TR4W`: its header must name the
+  per-user `settings\tr4w.json`, not the install's `settings\`.
+  **Run as administrator with a DIFFERENT account's credentials** (a standard user typing an admin's
+  password) lands in THAT account's Roaming folder -- the shell answers the token's own folder. That is
+  correct, but it is a third place to look; note it if you see it.
+- [ ] **The per-user folder comes from the shell, not `%APPDATA%`.** From a Command Prompt run
+  `set APPDATA=C:\nowhere` and then start `C:\Program Files\TR4W\tr4w.exe` from that prompt (with the
+  install folder as the current directory). Expected: files still go to
+  `C:\Users\<you>\AppData\Roaming\TR4W\`, and `tr4w.log` has NO `[Paths]` error about the APPDATA
+  variable (it is only the fallback when the shell does not answer).
+- [ ] **An install outside Program Files is unchanged.** `C:\radio\tr4w` (writable): no notice, no
+  per-user folder, every file beside the program, normal or elevated.
 - [ ] **A Windows user name with non-ASCII letters** (e.g. a Cyrillic account). Every redirected path now
   contains the profile name (`C:\Users\<name>\AppData\Roaming\TR4W\`). Repeat the fresh-install check on such
   an account: settings save, `tr4w.log` opens, a contest `.db` is created, and `tr4wconvert` (a console
