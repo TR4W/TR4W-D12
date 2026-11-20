@@ -174,9 +174,21 @@ map, UNSET nothing. It opens the chosen one and closes nothing.
 fill, multiplier fill, active-band and other-band frequency, VFO marker --
 `uSpots.BandMapRoleColor`, settings in `Settings.BandMap`, shown on
 Preferences > Colors under the grid (placements on `NAV_COLORS`). Their
-defaults needed two appended swatches, `SILVER` and `HIGHLIGHT`. The VFO
-marker has a colour and no drawing (issues 59/65). The text colours and the
-age ramp are still literals.
+defaults needed two appended swatches, `SILVER` and `HIGHLIGHT`. The text
+colours and the age ramp are still literals.
+
+**Where the radio is, on the band map** (issue 65, NY4I "a plus b"): a spot
+within BAND MAP GUARD BAND of the radio gets its frequency field in the VFO
+marker role, and the ONE spot nearest the radio gets an outline in the same
+role, on the cell's hairline. Neither is the selection, which the operator
+owns. `BuildVisibleSpots`' `aCursorRow` is the SELECTED spot's row, not the
+radio's -- do not mark the VFO with it; the form asks
+`uBandMapOrder.NearestSpotIndex` / `SpotNearRadio` over a copy of
+`BandMapCursorFrequency` taken once per rebuild (`FRadioFreq`). **BAND MAP
+DISPLAY LIMIT is a ceiling**: the form passes
+`uBandMapOrder.EffectiveDisplayLimit` (the smaller of the setting and rows x
+whole visible columns, even, at least 2) into `BuildVisibleSpots`, and a
+resize that changes it requests a repaint.
 
 ## Before converting another window
 

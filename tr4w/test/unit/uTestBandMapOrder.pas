@@ -30,6 +30,14 @@ type
       procedure Test_CentreLeftCol_Middle;
       procedure Test_CentreLeftCol_Clamps;
       procedure Test_CentreLeftCol_EverythingFits;
+      procedure Test_SpotNearRadio_GuardBand;
+      procedure Test_SpotNearRadio_NoRadio;
+      procedure Test_NearestSpot_Basics;
+      procedure Test_NearestSpot_AnyOrderAndTies;
+      procedure Test_NearestSpot_EmptyOrNoRadio;
+      procedure Test_DisplayLimit_IsACeiling;
+      procedure Test_DisplayLimit_UnknownWindowUsesTheSetting;
+      procedure Test_DisplayLimit_EvenAndFloored;
    public
       procedure RunAllTests; override;
    end;
@@ -235,6 +243,103 @@ begin
    CheckEquals(0, CentreLeftCol(0, 1, 1), 'a one-column grid');
 end;
 
+(* ISSUE 65 (a): the red frequency field. *)
+procedure TBandMapOrderTests.Test_SpotNearRadio_GuardBand;
+begin
+   BeginTest('Test_SpotNearRadio_GuardBand');
+   CheckTrue(SpotNearRadio(14025200, 14025000, 200), 'exactly the guard band away: inside');
+   CheckTrue(SpotNearRadio(14024800, 14025000, 200), 'below the radio counts too');
+   CheckFalse(SpotNearRadio(14025201, 14025000, 200), 'one hertz past: outside');
+   CheckTrue(SpotNearRadio(14025000, 14025000, 0), 'guard band 0: an exact match is near');
+   CheckFalse(SpotNearRadio(14025001, 14025000, 0), 'guard band 0: one hertz off is not');
+end;
+
+procedure TBandMapOrderTests.Test_SpotNearRadio_NoRadio;
+begin
+   BeginTest('Test_SpotNearRadio_NoRadio');
+   CheckFalse(SpotNearRadio(0, 0, 0), 'no radio: even a 0 Hz spot is not marked');
+   CheckFalse(SpotNearRadio(150, 0, 200), 'no radio: inside the guard band of 0 is still not marked');
+   CheckFalse(SpotNearRadio(14025000, -1, 65535), 'a negative frequency is no radio');
+end;
+
+(* ISSUE 65 (b): the outline goes on ONE spot. *)
+procedure TBandMapOrderTests.Test_NearestSpot_Basics;
+var
+   freqs: array of integer;
+begin
+   BeginTest('Test_NearestSpot_Basics');
+   SetLength(freqs, 4);
+   freqs[0] := 14010000;
+   freqs[1] := 14020000;
+   freqs[2] := 14030000;
+   freqs[3] := 14040000;
+   CheckEquals(1, NearestSpotIndex(freqs, 14024000), 'between two: the closer, below');
+   CheckEquals(2, NearestSpotIndex(freqs, 14026000), 'between two: the closer, above');
+   CheckEquals(2, NearestSpotIndex(freqs, 14030000), 'on a spot: that spot');
+   CheckEquals(0, NearestSpotIndex(freqs, 7000000), 'below every spot: the lowest');
+   CheckEquals(3, NearestSpotIndex(freqs, 21000000), 'above every spot: the highest');
+end;
+
+procedure TBandMapOrderTests.Test_NearestSpot_AnyOrderAndTies;
+var
+   freqs: array of integer;
+begin
+   BeginTest('Test_NearestSpot_AnyOrderAndTies');
+   (* Beam-heading order is not frequency order. *)
+   SetLength(freqs, 4);
+   freqs[0] := 14040000;
+   freqs[1] := 14010000;
+   freqs[2] := 14031000;
+   freqs[3] := 14020000;
+   CheckEquals(2, NearestSpotIndex(freqs, 14032000), 'unsorted: still the closest');
+   CheckEquals(1, NearestSpotIndex(freqs, 14015000),
+               'equidistant (5 kHz each side): the FIRST position wins');
+   SetLength(freqs, 1);
+   freqs[0] := 3500000;
+   CheckEquals(0, NearestSpotIndex(freqs, 28000000), 'one spot: it is the nearest, however far');
+end;
+
+procedure TBandMapOrderTests.Test_NearestSpot_EmptyOrNoRadio;
+var
+   freqs: array of integer;
+begin
+   BeginTest('Test_NearestSpot_EmptyOrNoRadio');
+   SetLength(freqs, 0);
+   CheckEquals(-1, NearestSpotIndex(freqs, 14025000), 'an empty map: no outline');
+   SetLength(freqs, 2);
+   freqs[0] := 14010000;
+   freqs[1] := 14020000;
+   CheckEquals(-1, NearestSpotIndex(freqs, 0), 'no radio frequency: no outline');
+   CheckEquals(-1, NearestSpotIndex(freqs, -5), 'a negative frequency is no radio');
+end;
+
+(* ISSUE 65, question 2: BAND MAP DISPLAY LIMIT is a ceiling on what fits. *)
+procedure TBandMapOrderTests.Test_DisplayLimit_IsACeiling;
+begin
+   BeginTest('Test_DisplayLimit_IsACeiling');
+   CheckEquals(40, EffectiveDisplayLimit(164, 10, 4), 'fewer fit than the setting: what fits');
+   CheckEquals(164, EffectiveDisplayLimit(164, 30, 10), 'more fit than the setting: the setting');
+   CheckEquals(30, EffectiveDisplayLimit(30, 6, 5), 'exactly the setting fits');
+end;
+
+procedure TBandMapOrderTests.Test_DisplayLimit_UnknownWindowUsesTheSetting;
+begin
+   BeginTest('Test_DisplayLimit_UnknownWindowUsesTheSetting');
+   CheckEquals(164, EffectiveDisplayLimit(164, 0, 4), 'no rows known: the setting');
+   CheckEquals(164, EffectiveDisplayLimit(164, 10, 0), 'no whole column fits: the setting');
+   CheckEquals(164, EffectiveDisplayLimit(164, -3, -1), 'a nonsense size: the setting');
+end;
+
+procedure TBandMapOrderTests.Test_DisplayLimit_EvenAndFloored;
+begin
+   BeginTest('Test_DisplayLimit_EvenAndFloored');
+   CheckEquals(20, EffectiveDisplayLimit(164, 7, 3),
+               '21 fit: 20, because an odd limit centres one short anyway');
+   CheckEquals(2, EffectiveDisplayLimit(164, 1, 1),
+               'one cell fits: 2, never 1 -- a limit of 1 centres on NO spot');
+   CheckEquals(30, EffectiveDisplayLimit(31, 40, 40), 'an odd setting is evened too');
+end;
+
 procedure TBandMapOrderTests.RunAllTests;
 begin
    Test_AngularDistance_WrapsAtNorth;
@@ -252,6 +357,14 @@ begin
    Test_CentreLeftCol_Middle;
    Test_CentreLeftCol_Clamps;
    Test_CentreLeftCol_EverythingFits;
+   Test_SpotNearRadio_GuardBand;
+   Test_SpotNearRadio_NoRadio;
+   Test_NearestSpot_Basics;
+   Test_NearestSpot_AnyOrderAndTies;
+   Test_NearestSpot_EmptyOrNoRadio;
+   Test_DisplayLimit_IsACeiling;
+   Test_DisplayLimit_UnknownWindowUsesTheSetting;
+   Test_DisplayLimit_EvenAndFloored;
 end;
 
 end.

@@ -1452,8 +1452,10 @@ type
       // Was BandMapSO2RDisplay.
       property So2rDisplay: boolean read FSo2rDisplay write SetSo2rDisplay;
 
-      (* How many spots the map will show.  Was BandMapDisplayLimit, and it
-        carried crP: 1 -- so it redraws, and its setter says so. *)
+      (* The MOST spots the map will show.  Was BandMapDisplayLimit, and it
+        carried crP: 1 -- so it redraws, and its setter says so.  A CEILING
+        since issue 65: the band map shows the smaller of this and what fits
+        in its window (uBandMapOrder.EffectiveDisplayLimit). *)
       property DisplayLimit: TBandMapDisplayLimit read FDisplayLimit write SetDisplayLimit;
       (* Was the global BandMapSplitMode in logwind -- how a split-mode spot
         is placed: by the cutoff frequency, or always as phone.
@@ -1491,9 +1493,10 @@ type
         values, so each default is written out here rather than reaching VC.
         The roles' defaults and their resolution are uSpots.BandMapRoleColor.
 
-        THE VFO MARKER'S COLOUR ONLY. How the marker is drawn (a red guard
-        band, an outline on the nearest spot, a line between spots -- issues
-        59 and 65) is not decided, so no new marker is drawn. *)
+        THE VFO MARKER (issue 65, NY4I 2026-11-19: "a plus b") is drawn
+        twice in this colour: the frequency field of a spot within GuardBand
+        of the radio, and an outline round the one spot nearest the radio.
+        Neither is the selection. *)
       property SelectionColor: string read FSelectionColor write FSelectionColor;
       property DupeColor: string read FDupeColor write FDupeColor;
       property MultColor: string read FMultColor write FMultColor;

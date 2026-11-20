@@ -87,6 +87,7 @@ type
       procedure Test_Count_MultsOnlyKeepsTheOrangeM;
       procedure Test_Count_FilterOutDigital;
       procedure Test_Count_SortByBeamHeading;
+      procedure Test_Count_DisplayLimitIsPassedIn;
       procedure Test_Count_LoaderPathFromStoredRows;
       procedure Test_Count_ScopeChangeWithoutReload;
    end;
@@ -1497,6 +1498,100 @@ begin
    end;
 end;
 
+(* BAND MAP DISPLAY LIMIT IS A CEILING (issue 65): the band map passes the
+  smaller of the setting and what fits (uBandMapOrder.EffectiveDisplayLimit,
+  pinned in uTestBandMapOrder). This proves the store takes the limit it is
+  GIVEN, centres that many round the radio, and that 0 still means the
+  setting -- in frequency order and in beam order. *)
+procedure TSpotCommentMultiplierTests.Test_Count_DisplayLimitIsPassedIn;
+var
+   spot: TSpotRecord;
+   index: array[0..9] of integer;
+   cursorRow: integer;
+   n: integer;
+   savedSort, savedAllBands, savedAllModes, savedDisplayCQ, savedMultsOnly,
+   savedDupes: boolean;
+   savedCursor: LONGINT;
+
+   procedure AddOne(const aLine: string);
+   begin
+      CheckTrue(ParseDXSpotLine(aLine, spot), 'the spot decodes');
+      spot.FBand := Band20;
+      spot.FMode := CW;
+      spot.FSysTime := Now;
+      SpotsList.AddSpot(spot, False);
+   end;
+
+   function CallAt(const aRow: integer): string;
+   begin
+      Result := string(SpotsList.Get(index[aRow]).FCall);
+   end;
+
+begin
+   BeginTest('Test_Count_DisplayLimitIsPassedIn');
+   CheckTrue(LoadCountryFile, 'cty.dat loads');
+   savedSort      := Settings.BandMap.SortByBeamHeading;
+   savedAllBands  := Settings.BandMap.AllBands;
+   savedAllModes  := Settings.BandMap.AllModes;
+   savedDisplayCQ := Settings.BandMap.DisplayCQ;
+   savedMultsOnly := Settings.BandMap.MultsOnly;
+   savedDupes     := Settings.BandMap.DupeDisplay;
+   savedCursor    := BandMapCursorFrequency;
+   try
+      Settings.BandMap.SortByBeamHeading := False;
+      Settings.BandMap.AllBands := True;
+      Settings.BandMap.AllModes := True;
+      Settings.BandMap.DisplayCQ := True;
+      Settings.BandMap.MultsOnly := False;
+      Settings.BandMap.DupeDisplay := True;
+      SpotsList.Clear;
+      AddOne('DX de W3LPL-#:    14010.0  JA1XYZ       CW 24 dB 25 WPM CQ                1801Z');
+      AddOne('DX de W3LPL-#:    14020.0  K5ABC        CW 24 dB 25 WPM CQ                1802Z');
+      AddOne('DX de W3LPL-#:    14030.0  DL1ABC       CW 24 dB 25 WPM CQ                1803Z');
+      AddOne('DX de W3LPL-#:    14040.0  VK2ABC       CW 24 dB 25 WPM CQ                1804Z');
+      AddOne('DX de W3LPL-#:    14050.0  G4ABC        CW 24 dB 25 WPM CQ                1805Z');
+
+      (* The radio sits ON the DL spot. With a limit of 2 the window is one
+        below the first spot above the radio and that spot: DL and VK. *)
+      n := 0;
+      while (n < SpotsList.Count) and (SpotsList.Get(n).FCall <> 'DL1ABC') do
+         begin
+         Inc(n);
+         end;
+      CheckTrue(n < SpotsList.Count, 'precondition: the DL spot is in the store');
+      BandMapCursorFrequency := SpotsList.Get(n).FFrequency;
+
+      cursorRow := -1;
+      n := SpotsList.BuildVisibleSpots(index, cursorRow, 2);
+      CheckEquals(2, n, 'a limit of 2 shows 2 spots');
+      CheckEquals('DL1ABC', CallAt(0), 'centred on the radio: the spot it is on');
+      CheckEquals('VK2ABC', CallAt(1), 'and the one above');
+
+      n := SpotsList.BuildVisibleSpots(index, cursorRow, 4);
+      CheckEquals(4, n, 'a limit of 4 shows 4');
+      CheckEquals('K5ABC', CallAt(0), 'two below the first spot above the radio');
+      CheckEquals('G4ABC', CallAt(3), 'to the one past it');
+
+      n := SpotsList.BuildVisibleSpots(index, cursorRow, 0);
+      CheckEquals(5, n, 'limit 0 is the setting, which is above five');
+      n := SpotsList.BuildVisibleSpots(index, cursorRow);
+      CheckEquals(5, n, 'and so is leaving it out');
+
+      Settings.BandMap.SortByBeamHeading := True;
+      n := SpotsList.BuildVisibleSpots(index, cursorRow, 2);
+      CheckEquals(2, n, 'beam order takes the first 2 when given 2');
+   finally
+      Settings.BandMap.SortByBeamHeading := savedSort;
+      Settings.BandMap.AllBands  := savedAllBands;
+      Settings.BandMap.AllModes  := savedAllModes;
+      Settings.BandMap.DisplayCQ := savedDisplayCQ;
+      Settings.BandMap.MultsOnly := savedMultsOnly;
+      Settings.BandMap.DupeDisplay := savedDupes;
+      BandMapCursorFrequency := savedCursor;
+      SpotsList.Clear;
+   end;
+end;
+
 procedure TSpotCommentMultiplierTests.Test_Worked_ColourToken;
 begin
    BeginTest('Test_Worked_ColourToken');
@@ -1634,6 +1729,7 @@ begin
    Test_Cost_HintForAWholeBandMapIsCheap;
    Test_Count_FilterOutDigital;
    Test_Count_SortByBeamHeading;
+   Test_Count_DisplayLimitIsPassedIn;
    Test_Worked_PerBandMultiplier;
    Test_Worked_SweepstakesCountsOnceAcrossBands;
    Test_Worked_SpotStoreNeverFlagsADupeOrANeededMult;

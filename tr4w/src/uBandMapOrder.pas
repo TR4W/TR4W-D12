@@ -1,6 +1,7 @@
 unit uBandMapOrder;
 
-(* THE BAND MAP'S TWO PIECES OF PURE ARITHMETIC (issues 82 and 246).
+(* THE BAND MAP'S PURE ARITHMETIC (issues 82 and 246; the radio's marks and
+  the display-limit ceiling, issue 65, are below CentreLeftCol).
 
   A LEAF, deliberately: uSpots and the band map form pull in the whole program
   and cannot be linked by the unit tests, and "which spot comes first" and
@@ -65,6 +66,50 @@ function FirstSpotAbove(const aFrequencies: array of integer;
   nowhere to scroll and gives 0. *)
 function CentreLeftCol(const aTargetCol, aVisibleCols,
                        aColCount: integer): integer;
+
+(* WHERE THE RADIO IS (issues 65 and 59, NY4I 2026-11-19: "a plus b").
+
+  The band map marks the radio's frequency two ways, both separate from the
+  grid's selection -- the selection is a spot the OPERATOR chose and must not
+  follow the VFO:
+
+    (a) a spot within BAND MAP GUARD BAND of the radio has its frequency field
+        drawn in the VFO marker colour (SpotNearRadio);
+    (b) the ONE spot nearest the radio is outlined in that colour, so the map
+        answers "which spot am I on" even when nothing is inside the guard
+        band (NearestSpotIndex).
+
+  aCursor is the radio's frequency in Hz; 0 or less means no radio, and with
+  no radio neither marks anything. *)
+
+(* True when a spot at aSpotFrequency is within aGuardBand Hz of the radio.
+  A guard band of 0 is an exact frequency match (the setting's default, and
+  what "no guard band" has always meant). False with no radio. *)
+function SpotNearRadio(const aSpotFrequency, aCursor,
+                       aGuardBand: integer): boolean;
+
+(* THE SPOT NEAREST THE RADIO: the position in aFrequencies of the smallest
+  distance to aCursor, the FIRST such position on a tie. aFrequencies may be in
+  any order (beam-heading order is not frequency order). -1 for an empty list
+  or no radio. *)
+function NearestSpotIndex(const aFrequencies: array of integer;
+                          const aCursor: integer): integer;
+
+(* BAND MAP DISPLAY LIMIT IS A CEILING (issue 65, NY4I 2026-11-19): the map
+  shows whichever is smaller, the setting or what fits in the window
+  (aRowsDown x aVisibleCols, whole columns only), so a resize re-centres on the
+  radio without editing a setting.
+
+  A window whose size is not known yet (either count below 1 -- the form
+  before it is shown) gives the setting. The result is never below
+  MIN_DISPLAY_LIMIT and is EVEN: the centring window in
+  TDXSpotsList.BuildVisibleSpots spans (limit div 2) below and above the
+  radio, so an odd limit shows one fewer spot and a limit of 1 shows none. *)
+const
+   MIN_DISPLAY_LIMIT = 2;
+
+function EffectiveDisplayLimit(const aSetting, aRowsDown,
+                               aVisibleCols: integer): integer;
 
 implementation
 
@@ -183,6 +228,66 @@ begin
    if Result < 0 then
       begin
       Result := 0;
+      end;
+end;
+
+function SpotNearRadio(const aSpotFrequency, aCursor,
+                       aGuardBand: integer): boolean;
+begin
+   if aCursor <= 0 then
+      begin
+      Result := False;
+      Exit;
+      end;
+   Result := Abs(aSpotFrequency - aCursor) <= aGuardBand;
+end;
+
+function NearestSpotIndex(const aFrequencies: array of integer;
+                          const aCursor: integer): integer;
+var
+   i: integer;
+   distance: integer;
+   best: integer;
+begin
+   Result := -1;
+   if (aCursor <= 0) or (Length(aFrequencies) = 0) then
+      begin
+      Exit;
+      end;
+   best := 0;
+   for i := 0 to High(aFrequencies) do
+      begin
+      distance := Abs(aFrequencies[i] - aCursor);
+      (* Strictly smaller, so a tie keeps the first position. *)
+      if (Result < 0) or (distance < best) then
+         begin
+         best := distance;
+         Result := i;
+         end;
+      end;
+end;
+
+function EffectiveDisplayLimit(const aSetting, aRowsDown,
+                               aVisibleCols: integer): integer;
+var
+   fits: integer;
+begin
+   Result := aSetting;
+   if (aRowsDown >= 1) and (aVisibleCols >= 1) then
+      begin
+      fits := aRowsDown * aVisibleCols;
+      if fits < Result then
+         begin
+         Result := fits;
+         end;
+      end;
+   if Odd(Result) then
+      begin
+      Dec(Result);
+      end;
+   if Result < MIN_DISPLAY_LIMIT then
+      begin
+      Result := MIN_DISPLAY_LIMIT;
       end;
 end;
 
