@@ -2756,13 +2756,21 @@ function MyExchangeForExport(aContest: TContestBase; const aMyFacts: TQsoMyFacts
   party with no ADIF county enumeration). The CNTY the export writes for the
   worked station, lifted out of it unchanged (issues 133 and 87) so our own
   my_county while roving is the same rule: the party says whose county
-  (ADIFCountyState) and its name (ADIFCountyName over the multiplier list's
-  display name -- Hawaii's district-to-county crosswalk). aContest is the
-  object that holds the station; nil answers ''. *)
+  (ADIFCountyState) and its name (ADIFCountyName over its county file's
+  display name, CountyFileCountyName -- Hawaii's district-to-county
+  crosswalk). aContest is the object that holds the station; nil answers ''.
+
+  THE NAME IS THE PARTY'S COUNTY FILE'S, NOT THE SESSION'S MULTIPLIER LIST'S
+  (2026-11-20). The list (mo.DomList's AltName) knew a county only where the
+  session had loaded the county file -- an out-of-state entrant. An in-state
+  session's file files every county under the host state ('Pin > Fl'), so an
+  in-state station wrote no CNTY for an in-state county and no my_county for
+  itself. Out of state the two answers are the same, key for key
+  (uTestRoverState.Test_TheCountyFileNamesWhatTheListNamed). *)
 function ADIFCountyOfQSO( aContest: TContestBase; const aQso: ContestExchange ): string;
   var
-    cntyIdx: integer;
     stateCode: string;
+    fileName: string;
     countyName: string;
   begin
   Result := '';
@@ -2778,10 +2786,9 @@ function ADIFCountyOfQSO( aContest: TContestBase; const aQso: ContestExchange ):
      (* THE COUNTY NAME IS THE PARTY'S (ADIFCountyName, #118): the list's
        display name for a party whose multipliers are counties, the county a
        Hawaii district lies in, '' for none. *)
-     if mo.DomList.FindMult( aQso.QTHString, cntyIdx ) then
+     if aContest.CountyFileCountyName( string( aQso.QTHString ), fileName ) then
         begin
-        countyName := aContest.ADIFCountyName(
-           aQso, string( mo.DomList.AltName[ cntyIdx ] ) );
+        countyName := aContest.ADIFCountyName( aQso, fileName );
         if countyName <> '' then
            begin
            Result := stateCode + ',' + countyName;

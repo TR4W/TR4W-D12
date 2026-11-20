@@ -569,6 +569,16 @@ begin
 
         end;
 
+     (* THE SESSION'S MULTIPLIER LIST IS ADDED TO, NEVER CLEARED, BY A LOAD
+       (mo.ClearAllMults clears its worked bits only). Audited 2026-11-20
+       (issues 133 and 87): that is safe because a process loads ONE contest's
+       file, once -- LogCfg.SetUpGlobalsAndInitialize at start-up; File > Open
+       Log and New Contest relaunch the program; the matrix, /EXPORT and
+       /RESCORE run one contest per process. A run-time CONTEST statement
+       re-runs FoundContest but loads no file. A second top-level load in one
+       process would leave the first file's keys (and their AltNames) behind,
+       so a new caller of LoadInDomQTHFile must clear the list first. The
+       ADIF county name does not read this list (CountyFileCountyName). *)
      MultIndex := mo.DomList.AddString(Multiplier, NoBand, NoMode, True);
 
      FileString := PostcedingString(FileString, '=');

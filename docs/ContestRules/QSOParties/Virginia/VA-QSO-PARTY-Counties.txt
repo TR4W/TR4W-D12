@@ -1,0 +1,77 @@
+﻿Virginia QSO Party Counties and Independent Cities
+
+Source: https://www.qsl.net/sterling/VA_QSO_Party/2024_VQP/VQP_Counties&Cities.pdf
+Fetched: 2026-11-20
+
+Virginia QSO Party
+               Counties and Independent Cities (as of 2017)
+
+95 Counties and 38 Independent Cities with 3 Character Abbreviations - Cities marked with an "*"
+
+Accomack       ACC      Dinwiddie         DIN  Lancaster        LAN  Prince William    PRW
+                        * Emporia         EMX  Lee              LEE  Pulaski           PUL
+Albemarle      ALB      Essex             ESS  * Lexington      LEX  * Radford         RAX
+                        Fairfax           FFX  Loudoun          LDN  Rappahannock      RAP
+* Alexandria   ALX      * Fairfax         FXX  Louisa           LSA  Richmond          RIC
+                        * Falls Church    FCX  Lunenburg        LUN  * Richmond        RIX
+Alleghany      ALL      Fauquier          FAU  * Lynchburg      LYX  Roanoke           ROA
+                        Floyd             FLO  Madison          MAD  * Roanoke         ROX
+Amelia         AME      Fluvanna          FLU  Mathews          MAT  Rockbridge        RBR
+                        Franklin          FRA  * Manassas       MAX  Rockingham        RHM
+Amherst        AMH      * Franklin        FRX  * Manassas Park  MPX  Russell           RUS
+                        Frederick         FRE  * Martinsville   MVX  * Salem           SAX
+Appomattox     APP      * Fredericksburg  FBX  Mecklenburg      MEC  Scott             SCO
+                        * Galax           GAX  Middlesex        MID  Shenandoah        SHE
+Arlington      ARL      Giles             GIL  Montgomery       MON  Smyth             SMY
+                        Gloucester        GLO  Nelson           NEL  Southampton       SHA
+Augusta        AUG      Goochland         GOO  New Kent         NEW  Spotsylvania      SPO
+                        Grayson           GRA  * Newport News   NNX  Stafford          STA
+Bath           BAT      Greene            GRN  * Norfolk        NFX  * Staunton        STX
+                        Greensville       GVL  Northampton      NHA  * Suffolk         SUX
+Bedford        BED      Halifax           HAL  Northumberland   NUM  Surry             SUR
+                        * Hampton         HAX  * Norton         NRX  Sussex            SUS
+Bland          BLA      Hanover           HAN  Nottoway         NOT  Tazewell          TAZ
+                        Henrico           HCO  Orange           ORG  * Virginia Beach  VBX
+Botetourt      BOT      * Harrisonburg    HBX  Page             PAG  Warren            WAR
+                        Henry             HRY  Patrick          PAT  Washington        WAS
+* Bristol      BRX      Highland          HIG  * Petersburg     PBX  * Waynesboro      WAX
+                        * Hopewell        HOX  Pittsylvania     PIT  Westmoreland      WES
+Brunswick      BRU      Isle of Wight     IOW  * Poquoson       PQX  * Williamsburg    WMX
+                        James City        JAM  * Portsmouth     POX  * Winchester      WIX
+Buchanan       BCH      King & Queen      KQN  Powhatan         POW  Wise              WIS
+                        King George       KGE  Prince Edward    PRE  Wythe             WYT
+Buckingham     BHM      King William      KWM  Prince George    PRG  York              YOR
+
+* Buena Vista  BVX
+
+Campbell       CAM
+
+Caroline       CLN
+
+Carroll        CRL
+
+Charles City   CCY
+
+Charlotte      CHA
+
+* Charlottesville CHX
+
+* Chesapeake   CPX
+
+Chesterfield   CHE
+
+Clarke         CLA
+
+* Colonial Heights COX
+
+* Covington    CVX
+
+Craig          CRA
+
+Culpeper       CUL
+
+Cumberland     CUM
+
+* Danville     DAX
+
+Dickenson      DIC

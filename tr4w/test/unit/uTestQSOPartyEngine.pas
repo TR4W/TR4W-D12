@@ -32,6 +32,9 @@ type
       savedQualified: TQualifiedDupeSheet;
       savedCountries: TStringList;
       savedRefusalDomDir: string;
+      (* uAppPaths.ShippedDomDirOverride: the party's county file is read
+         from the shipped directory (CountyFileCountyName, the CNTY name). *)
+      savedShippedDomDir: string;
       savedMyCountry: string;
       savedDomesticFilename: string;
    public
@@ -55,7 +58,8 @@ implementation
 uses
    SysUtils, uSettingsModel, uContestRegistry, uContestFactory, uCTYDAT,
    uTestContestObjects, uTestShippedDom, uTestQSOPartyRules, ZoneCont, LogDupe, LogEdit, LogWind,
-   LogStuff, PostUnit, FCONTEST, uPendingCounties, MainUnit, uDomFileKeys;
+   LogStuff, PostUnit, FCONTEST, uPendingCounties, MainUnit, uDomFileKeys,
+   uAppPaths;   (* ShippedDomDirOverride *)
 
 function CountyFileDifference(const aParty, aDomName, aSourceName: string;
    aExpectedCount: integer; const aMappedTo: string): string;
@@ -142,6 +146,7 @@ begin
    savedList := CallsignsList;
    savedQualified := QualifiedDupes;
    savedRefusalDomDir := DomesticQTHRefusalDomDir;
+   savedShippedDomDir := ShippedDomDirOverride;
    savedMyCountry := Settings.My.Country;
    savedDomesticFilename := Settings.Contest.DomesticFilename;
    savedMults := mo;
@@ -202,6 +207,7 @@ begin
       Settings.Contest.DomesticFilename := savedDomesticFilename;
       Settings.My.DeriveCountry(savedMyCountry);
       DomesticQTHRefusalDomDir := savedRefusalDomDir;
+      ShippedDomDirOverride := savedShippedDomDir;
       ExchangeErrorMessage := savedError;
       Contest := savedContest;
       ReleaseActiveContest;
@@ -247,6 +253,8 @@ begin
    DomesticCountries.Clear;
    Add_KVEKH6KL;
    DomesticQTHRefusalDomDir := ShippedDomDir;
+   (* AS A SESSION RUNS: the shipped .dom directory is the tree's. *)
+   ShippedDomDirOverride := ShippedDomDir;
    Settings.My.DeriveCountry('K');
    if aInHostState then
       begin

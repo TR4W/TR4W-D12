@@ -963,6 +963,26 @@ call is ASSEMBLED from its parts, never stripped (ruling 6).
   `my_sent_unit`). Not built; reported for a ruling.
 - **Migration**: asked before any change; ALTER only on a table the v11
   rebuild does not rebuild. `DowngradeTestLog` below 13 drops both first.
+  **The backup-before-migration rule covers it with no extra code**:
+  `TLogDatabase.BackUpAnOlderLog` backs up any log whose version is below
+  `LOG_SCHEMA_VERSION`, so a schema-12 log is copied before the ALTER.
+- **`my_county` IS THE COUNTY FILE'S NAME, never the session list's
+  (2026-11-20)**: `PostUnit.ADIFCountyOfQSO` (CNTY and `my_county` alike) asks
+  `TContestBase.CountyFileCountyName` -- the party's own `<base>_cty.dom`,
+  read once per object -- because an IN-STATE session's list (`mo.DomList`)
+  files every county under the host state (`Pin > Fl`) and named none, so an
+  in-state Florida, Georgia, California ... station stored an EMPTY
+  `my_county`. `uTestRoverState.Test_TheCountyFileNamesWhatTheListNamed`
+  proves the out-of-state answer did not move, key for key.
+- **Every reader asks the same row** (`uTestCabrilloActivation.
+  Test_ANewYorkRoverOnACountyLineIsFourLinesAndOneRecord`, the real exports):
+  NY4I's KIN/QUE x CAT/CAY entry is four Cabrillo lines signed
+  VE3FRV/W2/KIN/QUE, ONE ADIF record (STATION_CALLSIGN the setting, MY_STATE
+  NY, MY_CNTY/CNTY the first counties, both USACA pairs), and each row's
+  station as Edit QSO's panel reads it (State NY, County its own county).
+- **Not the row's yet**: HamScore's one-QSO line rebuilds the SENT exchange
+  from today's CQ template (`uExchangeBuilder.BuildSentExchangeTextOf`), not
+  from `my_sent_unit`; only its call is the row's (`CabrilloCallFor`).
 
 ## AN OLDER LOG IS BACKED UP BEFORE IT IS UPGRADED (NY4I, 2026-11-19)
 

@@ -1,0 +1,230 @@
+﻿Indiana QSO Party County Abbreviations
+
+Source: http://www.hdxcc.org/inqp/counties.html
+Fetched: 2026-11-20
+
+Indiana QSO Party - Counties
+">
+li { padding-bottom: 4px; }
+tr.nth:nth-child(even) { background-color: #ffffff; }
+tr.nth:nth-child(odd) { background-color: #cccccc; }
+td.cty { border: 1px solid black; }
+td.padcnty { padding-left: 32px; padding-right: 32px; border: 1px solid black; }
+td.padexch { padding-left: 14px; padding-right: 14px; border: 1px solid black; }
+td.green { text-align: center; font-weight: normal; background-color: #00ff00; border: 1px solid black; }
+td.center { text-align: center; font-weight: normal; border: 1px solid black; }
+CQ INQP CQ INQP
+Sponsored by
+HDXCC
+the
+Hoosier DX and Contest Club
+-->
+-->
+Counties
+[PDF]
+Counties
+[Text]
+Printable Map
+-->
+-->
+-->
+See below for the official INQP county name abbreviations. The format
+includes "IN" for the first two letters plus the county name abbreviation. In all cases, the
+full exchange will be five letters.
+Beware that three Indiana counties
+have the same names as states (Delaware, Ohio, and Washington). Indiana
+stations should log states by their standard two letter postal abbreviations.
+County
+INQP
+Exchange
+Adams
+INADA
+Allen
+INALL
+Bartholomew
+INBAR
+Benton
+INBEN
+Blackford
+INBLA
+Boone
+INBOO
+Brown
+INBRO
+Carroll
+INCAR
+Cass
+INCAS
+Clark
+INCLR
+Clay
+INCLY
+Clinton
+INCLI
+Crawford
+INCRA
+Daviess
+INDAV
+Dearborn
+INDEA
+Decatur
+INDEC
+DeKalb
+INDEK
+Delaware
+INDEL
+Dubois
+INDUB
+Elkhart
+INELK
+Fayette
+INFAY
+Floyd
+INFLO
+Fountain
+INFOU
+Franklin
+INFRA
+Fulton
+INFUL
+Gibson
+INGIB
+Grant
+INGRA
+Greene
+INGRE
+Hamilton
+INHAM
+Hancock
+INHAN
+Harrison
+INHAR
+County
+INQP
+Exchange
+Hendricks
+INHND
+Henry
+INHNR
+Howard
+INHOW
+Huntington
+INHUN
+Jackson
+INJAC
+Jasper
+INJAS
+Jay
+INJAY
+Jefferson
+INJEF
+Jennings
+INJEN
+Johnson
+INJOH
+Knox
+INKNO
+Kosciusko
+INKOS
+Lagrange
+INLAG
+Lake
+INLAK
+LaPorte
+INLAP
+Lawrence
+INLAW
+Madison
+INMAD
+Marion
+INMRN
+Marshall
+INMRS
+Martin
+INMRT
+Miami
+INMIA
+Monroe
+INMNR
+Montgomery
+INMNT
+Morgan
+INMOR
+Newton
+INNEW
+Noble
+INNOB
+Ohio
+INOHI
+Orange
+INORA
+Owen
+INOWE
+Parke
+INPAR
+County
+INQP
+Exchange
+Perry
+INPER
+Pike
+INPIK
+Porter
+INPOR
+Posey
+INPOS
+Pulaski
+INPUL
+Putnam
+INPUT
+Randolph
+INRAN
+Ripley
+INRIP
+Rush
+INRUS
+Scott
+INSCO
+Shelby
+INSHE
+Spencer
+INSPE
+Starke
+INSTA
+Steuben
+INSTE
+St. Joseph
+INSTJ
+Sullivan
+INSUL
+Switzerland
+INSWI
+Tippecanoe
+INTPP
+Tipton
+INTPT
+Union
+INUNI
+Vanderburgh
+INVAN
+Vermillion
+INVER
+Vigo
+INVIG
+Wabash
+INWAB
+Warren
+INWRN
+Warrick
+INWRK
+Washington
+INWAS
+Wayne
+INWAY
+Wells
+INWEL
+White
+INWHT
+Whitley
+INWHL
+-->

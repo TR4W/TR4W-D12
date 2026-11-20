@@ -439,6 +439,16 @@ multipliers, CTY.DAT, band lookup and CRC32.
   (`RoverPlaceADIFCounty`, the worked side's CNTY rule `ADIFCountyOfQSO`, lifted
   once). Since schema 13 the unit sent is `my_sent_unit` and `my_state` the
   host state; the Cabrillo QSO-line call is assembled (below).
+- **THE COUNTY NAME IS THE PARTY'S COUNTY FILE'S (2026-11-20)**:
+  `ADIFCountyOfQSO` asks `TContestBase.CountyFileCountyName(QTH)` (the party
+  base reads its `<base>_cty.dom` once, beside the multi-province host map),
+  NOT the session's multiplier list's AltName. An in-state session's list
+  files every county under the host state (`Pin > Fl`), so an in-state
+  station wrote no CNTY for an in-state county and no MY_CNTY. Out of state
+  the answer is the list's, key for key (pinned). The key is the typed QTH,
+  upper cased, cut to ten -- an ALIAS (Michigan's `PRES` for `Presq`) still
+  names no county, as before. Names come from the SHIPPED file only: a name
+  corrected in an operator's override `.dom` does not reach CNTY.
 - **ONE CABRILLO PER ACTIVATION (rover step F, 2026-11-19)** where the class
   answers `TContestBase.SplitsCabrilloByActivation` (base False; HAWAII
   ALONE, its rules: "a separate log for each activation"), the log roved (one

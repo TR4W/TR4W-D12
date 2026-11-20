@@ -995,7 +995,13 @@ the target shape, the M-step migration order and the open questions.
   a Canadian host (BC, Ontario since #127) states False -- ADIF has no
   Canadian CNTY. **The county NAME is `TContestBase.ADIFCountyName(aQso,
   aDomesticName)`** (#118, 2026-11-17, the PostUnit seam): base = the
-  `.dom` display name; Hawaii maps its 14 DISTRICTS to ADIF's five Hawaii
+  `.dom` display name -- the party's OWN county file's `^Name`, through
+  `CountyFileCountyName` (2026-11-20; it was the session's multiplier list,
+  which an in-state session never fills with counties). **A new party's
+  `_cty.dom` names every county `KEY = KEY,^Name`, the name spelled as the
+  ADIF county list spells it** (the K1MU validator's `adiftags.sas`), from a
+  sponsor table committed under `docs/ContestRules`; `uTestRoverState.
+  CheckEveryCountyNamed` holds it. Hawaii maps its 14 DISTRICTS to ADIF's five Hawaii
   counties (`HI,Honolulu`); `''` writes none. A party whose multipliers are
   not counties maps them there, never by `WritesADIFCounty` False.
   **A RECEIVED GRID IN PLACE OF THE QTH is Hawaii's worked example** (its

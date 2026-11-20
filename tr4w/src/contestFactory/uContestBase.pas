@@ -3095,6 +3095,20 @@ type
          TContestStateQSOPartyBase; base False. *)
       function WritesADIFCounty: boolean; virtual;
 
+      (* IS aKey ONE OF THIS CONTEST'S COUNTIES, AND WHAT DOES ITS COUNTY FILE
+         CALL IT? -- the name PostUnit's CNTY block (ADIFCountyOfQSO) hands
+         ADIFCountyName, for the worked station's CNTY and a rover's or an
+         in-state station's my_county (issues 133 and 87, 2026-11-20).
+         aName is the line's ^Name, upper cased as the multiplier list holds
+         it ('' where the line names none). Read from the contest's OWN
+         county file, never from the session's multiplier list: an in-state
+         session loads a file that files every county under the host state,
+         so the list had no county to name and an in-state station wrote no
+         CNTY. Base False: no county file. MAIN THREAD ONLY where it reads
+         lazily (TContestStateQSOPartyBase). *)
+      function CountyFileCountyName(const aKey: string;
+                                    out aName: string): boolean; virtual;
+
       (* A SECOND EXPORT FILE FOR SOME OF THE CONTEST'S QSOs -- issue 272
          (NY4I, 2026-11-19: "the answer to which contacts go into a separate
          file would be something resident in the contest class").
@@ -3131,8 +3145,9 @@ type
 
       (* THE COUNTY NAME CNTY WRITES after the state and a comma -- PostUnit's
          CNTY block, asked only where WritesADIFCounty is True and the QTH is
-         in the multiplier list. aDomesticName is that list's display name
-         (the .dom's ^Name), which IS the ADIF county for a party whose
+         one of the contest's counties (CountyFileCountyName). aDomesticName
+         is the county file's display name (the .dom's ^Name; the session's
+         multiplier list until 2026-11-20), which IS the ADIF county for a party whose
          multipliers are counties: the base answers it. A party whose
          multipliers are parts of counties maps them (the Hawaii QSO Party's
          districts, #118); '' writes no CNTY. *)
@@ -7749,6 +7764,14 @@ end;
 function TContestBase.SplitsCabrilloByActivation: boolean;
 begin
    (* One Cabrillo for the whole log -- see the declaration. *)
+   Result := False;
+end;
+
+function TContestBase.CountyFileCountyName(const aKey: string;
+                                           out aName: string): boolean;
+begin
+   (* No county file -- see the declaration. *)
+   aName := '';
    Result := False;
 end;
 

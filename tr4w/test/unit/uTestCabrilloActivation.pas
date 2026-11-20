@@ -56,6 +56,7 @@ type
       procedure Test_TheActivationRules;
       procedure Test_ARoverLogIsOneCabrilloPerActivation;
       procedure Test_ARoverInOnePlaceIsOneFileHeadedByItsCall;
+      procedure Test_ANewYorkRoverOnACountyLineIsFourLinesAndOneRecord;
    public
       procedure RunAllTests; override;
    end;
@@ -65,7 +66,15 @@ implementation
 uses
    Classes, SysUtils, StrUtils, VC, utils_text, uSettingsModel,
    uContestBase, uContestRegistry, uContestFactory, uLogDatabase, uLogStore,
-   LogEdit, PostUnit, MainUnit, uRoverState, uCabrilloActivation;
+   LogEdit, PostUnit, MainUnit, uRoverState, uCabrilloActivation,
+   FCONTEST,             (* StationInHostState -- an in-state NY rover *)
+   uAppPaths,            (* ShippedDomDirOverride -- the county file's names *)
+   uTestContestObjects,  (* ShippedDomDir *)
+   uLogSource,           (* LogSourceReadStationAtIndex -- Edit QSO's facts *)
+   uQsoMyFacts,          (* TQsoMyFacts *)
+   uTR4WConfigFile,      (* TR4WConfigFileName -- proof the redirect landed *)
+   uCabrilloHeader,      (* SetHeaderValue, InvalidateCabrilloHeader -- LOCATION *)
+   uCbrSum;              (* CabrilloTagsArray, ctLocation *)
 
 const
    HAWAII_ID = 'HI-QSO-PARTY';
@@ -517,12 +526,217 @@ begin
    end;
 end;
 
+(* EVERY LINE OF aText THAT IS A QSO WITH aCall. *)
+function QSOLinesOf(const aText, aCall: string): TStringList;
+var
+   lines: TStringList;
+   i: integer;
+begin
+   Result := TStringList.Create;
+   lines := TStringList.Create;
+   try
+      lines.Text := aText;
+      for i := 0 to lines.Count - 1 do
+         begin
+         if (AnsiStartsStr('QSO:', lines[i]) or AnsiStartsStr('X-QSO:', lines[i])) and
+            (Pos(' ' + aCall + ' ', lines[i]) > 0) then
+            begin
+            Result.Add(lines[i]);
+            end;
+         end;
+   finally
+      lines.Free;
+   end;
+end;
+
+(* NY4I'S NEW YORK ROVER TEST, THROUGH THE REAL EXPORTS (rulings of
+  2026-11-20): a Canadian whose call setting is VE3FRV/W2, in state, roving on
+  the KIN/QUE line, works W2BN on the CAT/CAY line -- one entry, four rows,
+  one set. Every reader of the stored facts must agree:
+    Cabrillo   four DISTINCT lines, each signed with the ASSEMBLED call
+               (VE3FRV/W2/KIN/QUE), each sending its own unit and receiving
+               its own county;
+    ADIF       ONE record: STATION_CALLSIGN the call setting as set, MY_STATE
+               the host state NY, MY_CNTY/CNTY the first counties, and the
+               standard two-county pair fields for both sides;
+    Edit QSO   each row's station (LogSourceReadStationAtIndex, what the
+               "Our station for this QSO" panel shows): State NY, County its
+               own county, never ALB or blank. *)
+procedure TCabrilloActivationTests.Test_ANewYorkRoverOnACountyLineIsFourLinesAndOneRecord;
+var
+   rx: ContestExchange;
+   n, i: integer;
+   handle: TContestHandle;
+   savedInHostState: boolean;
+   savedDomDir: string;
+   savedIni: string;
+   cabrillo, adif: string;
+   lines: TStringList;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+
+   procedure Log(const aRoverQTH, aWorked: string);
+   begin
+      Inc(n);
+      rx := Default(ContestExchange);
+      rx.ceRecordKind := rkQSO;
+      rx.Callsign := CallString('W2BN');
+      rx.Mode := CW;
+      rx.ExtMode := eCW;
+      rx.Band := Band20;
+      rx.id := 'nyline1';
+      rx.ceContest := Contest;
+      rx.ceComputerID := Settings.Computer.Id;
+      rx.ceQSOID1 := 7300 + n;
+      rx.ceQSOID2 := 8300 + n;
+      rx.ceRoverQTH := ShortString(aRoverQTH);
+      rx.tSysTime.qtYear := 27;
+      rx.tSysTime.qtMonth := 10;
+      rx.tSysTime.qtDay := 17;
+      rx.tSysTime.qtHour := 18;
+      rx.tSysTime.qtMinute := 5;
+      rx.Frequency := 14030000;
+      rx.RSTSent := 599;
+      rx.RSTReceived := 599;
+      (* ANOTHER OPERATOR AT THE STATION, so ADIF writes STATION_CALLSIGN --
+         only then (the export's rule, uADIF.EmitADIFMyStationFields). *)
+      SetCharBufferBytes(rx.ceOperator, 'VE3XYZ');
+      rx.QTHString := ShortString(aWorked);
+      rx.DomesticQTH := ShortString(aWorked);
+      rx.DomMultQTH := ShortString(aWorked);
+      CheckTrue(LogStoreAppendQSO(rx), aRoverQTH + ' x ' + aWorked + ' is logged');
+   end;
+
+   function LinesWith(const aSent, aReceived: string): integer;
+   var
+      k: integer;
+   begin
+      Result := 0;
+      for k := 0 to lines.Count - 1 do
+         begin
+         if (Pos(' 599 ' + aSent + ' ', lines[k]) > 0) and
+            (Pos(' 599 ' + aReceived, lines[k]) > 0) then
+            begin
+            Inc(Result);
+            end;
+         end;
+   end;
+
+begin
+   BeginTest('Test_ANewYorkRoverOnACountyLineIsFourLinesAndOneRecord');
+   StartEmptyStore;
+   savedInHostState := StationInHostState;
+   savedDomDir := ShippedDomDirOverride;
+   savedIni := CharBufferText(TR4W_INI_FILENAME);
+   lines := nil;
+   try
+      (* THE NEW YORK QSO PARTY REQUIRES A CABRILLO LOCATION, which lives in
+         the settings file's header store. That file is redirected into this
+         suite's own folder (StopStore empties it) and the test stops unless
+         the redirect landed: a --settings switch would win, and writing the
+         developer's settings file is not this test's to do. *)
+      SetCharBuffer(TR4W_INI_FILENAME, FDir + 'tr4w.ini');
+      if Pos(FDir, TR4WConfigFileName) <> 1 then
+         begin
+         CheckTrue(False, 'the settings file was not redirected (' + TR4WConfigFileName + ')');
+         Exit;
+         end;
+      InvalidateCabrilloHeader;
+      SetHeaderValue(CABRILLOSECTION, CabrilloTagsArray[ctLocation].ctrTag, 'NNY');
+
+      CheckTrue(FindContestById('NY-QSO-PARTY', handle), 'New York is registered');
+      Contest := handle;
+      ActiveContest(Contest);
+      ShippedDomDirOverride := ShippedDomDir;
+      Settings.My.Call := 'VE3FRV/W2';
+      Settings.My.State := 'KIN';
+      (* As FoundContest decides it for MY STATE KIN. *)
+      StationInHostState := True;
+
+      n := 0;
+      Rove('KIN QUE');
+      Log('KIN', 'CAT');
+      Log('KIN', 'CAY');
+      Log('QUE', 'CAT');
+      Log('QUE', 'CAY');
+      Rove('');
+
+      (* CABRILLO: four lines, one per row, all with the assembled call. *)
+      PostUnit.CreateCabrilloFile;
+      cabrillo := ReadWhole(LogExportFileName(FTrw, lekCabrillo));
+      CheckTrue(cabrillo <> '', 'the Cabrillo is written');
+      lines := QSOLinesOf(cabrillo, 'W2BN');
+      CheckEquals(4, lines.Count, 'four rows are four lines');
+      for i := 0 to lines.Count - 1 do
+         begin
+         CheckTrue(Pos(' VE3FRV/W2/KIN/QUE ', lines[i]) > 0,
+                   'signed with the assembled call [' + lines[i] + ']');
+         end;
+      CheckEquals(1, LinesWith('KIN', 'CAT'), 'KIN to CAT once');
+      CheckEquals(1, LinesWith('KIN', 'CAY'), 'KIN to CAY once');
+      CheckEquals(1, LinesWith('QUE', 'CAT'), 'QUE to CAT once');
+      CheckEquals(1, LinesWith('QUE', 'CAY'), 'QUE to CAY once');
+      CheckEquals('VE3FRV/W2/KIN/QUE', HeaderValue(cabrillo, 'CALLSIGN:'),
+                  'the header carries the call its lines carry');
+
+      (* ADIF: ONE record, the call setting, the host state, both pairs. *)
+      PostUnit.ExportToADIF;
+      adif := ReadWhole(LogExportFileName(FTrw, lekADIF));
+      CheckEquals(1, CountOf('<CALL:4>W2BN', adif), 'one contact, one record');
+      CheckEquals(1, CountOf('<STATION_CALLSIGN:9>VE3FRV/W2 ', adif),
+                  'STATION_CALLSIGN is the call setting as set: ' + adif);
+      CheckEquals(0, CountOf('VE3FRV/W2/', adif), 'never the assembled call in ADIF');
+      CheckEquals(1, CountOf('<MY_STATE:2>NY', adif), 'MY_STATE is the host state');
+      CheckEquals(0, CountOf('<MY_STATE:3>', adif), 'never the unit');
+      CheckEquals(1, CountOf('<MY_CNTY:8>NY,KINGS', adif), 'MY_CNTY the first of ours');
+      CheckEquals(1, CountOf('<CNTY:14>NY,CATTARAUGUS', adif), 'CNTY the first of theirs');
+      CheckEquals(1, CountOf('<MY_USACA_COUNTIES:18>NY,KINGS:NY,QUEENS', adif),
+                  'our two counties in the standard field');
+      CheckEquals(1, CountOf('<USACA_COUNTIES:24>NY,CATTARAUGUS:NY,CAYUGA', adif),
+                  'theirs too');
+      CheckEquals(1, CountOf('<STX_STRING:7>599 KIN', adif), 'the record sent its first unit');
+
+      (* EDIT QSO's "Our station for this QSO": every row's own facts. *)
+      CheckTrue(LogSourceOpen, 'the log reopens for the station read');
+      try
+         for i := 0 to 3 do
+            begin
+            CheckTrue(LogSourceReadStationAtIndex(i, facts, sent),
+                      'row ' + IntToStr(i) + ' is read');
+            CheckEquals('VE3FRV/W2', string(facts.Call), 'row ' + IntToStr(i) + ': the call setting');
+            CheckEquals('NY', string(facts.State), 'row ' + IntToStr(i) + ': State NY');
+            CheckEquals('KIN/QUE', string(facts.RoverPlaces), 'row ' + IntToStr(i) + ': both places');
+            if i < 2 then
+               begin
+               CheckEquals('NY,KINGS', string(facts.County), 'row ' + IntToStr(i) + ': Kings');
+               CheckEquals('KIN', string(facts.SentUnit), 'row ' + IntToStr(i) + ': sent KIN');
+               end
+            else
+               begin
+               CheckEquals('NY,QUEENS', string(facts.County), 'row ' + IntToStr(i) + ': Queens');
+               CheckEquals('QUE', string(facts.SentUnit), 'row ' + IntToStr(i) + ': sent QUE');
+               end;
+            end;
+      finally
+         LogSourceClose;
+      end;
+   finally
+      lines.Free;
+      StationInHostState := savedInHostState;
+      ShippedDomDirOverride := savedDomDir;
+      SetCharBuffer(TR4W_INI_FILENAME, savedIni);
+      InvalidateCabrilloHeader;
+      StopStore;
+   end;
+end;
+
 procedure TCabrilloActivationTests.RunAllTests;
 begin
    Test_OnlyHawaiiSplitsItsCabrillo;
    Test_TheActivationRules;
    Test_ARoverLogIsOneCabrilloPerActivation;
    Test_ARoverInOnePlaceIsOneFileHeadedByItsCall;
+   Test_ANewYorkRoverOnACountyLineIsFourLinesAndOneRecord;
 end;
 
 end.
