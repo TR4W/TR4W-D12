@@ -1093,6 +1093,14 @@ the legacy `commands` bucket**, so station facts in a fixture (grid, state, zone
 `59 TOM`), so the fixture states only the grid. The 12-vs-16 IARU claimed score was a stated MY ZONE (a CQ
 zone) compared against ITU zones, not CTY.DAT.
 
+**A rover's Cabrillo can be one file per activation (issues 133/87, step F,
+2026-11-19)** -- `TContestBase.SplitsCabrilloByActivation`, Hawaii only; the
+split is in `PostUnit.CreateCabrilloFile` (file-formats.md). EVERY file's
+CLAIMED-SCORE is the WHOLE log's (NY4I: "the activations are ALL PART OF THE
+SAME SCORE"): `ClaimedScore` is read ONCE and handed to
+`tGenerateSummaryPortionOfCabrilloFile`, which no longer reads it itself.
+There is no per-activation score anywhere; do not add one.
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·

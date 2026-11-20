@@ -7439,7 +7439,13 @@ log); nothing sees the preview window or the message.
 - [ ] **Submit** the split files to hqp.contesting.com: EXPECT each accepted
   as its own entry. NOT RULED by the sponsor: the CALLSIGN of a file for a
   place logged before roving (plain AH7RF here), and whether a log that
-  roved should also give its home QSOs a `/HIL` -- ask the sponsor.
+  roved should also give its home QSOs a `/HIL` -- ask the sponsor. ALSO
+  UNRULED: when the home district is the first rover place (MY STATE `KOH`,
+  then ROVER `KOH`) the QSOs logged before roving share the KOH file and are
+  written `AH7RF/KOH`, though they went out as plain `AH7RF` -- a log
+  checker may call those busted.
+- [ ] **A failed file** in a split set leaves the earlier ones on disk and
+  shows no listing message: check the warning names the file.
 - [ ] **Any other QSO party with a rover** (Georgia, ROVER `APPL`, then
   `BACO`): ONE file as before, `CALLSIGN` MY CALL (the lines carry two
   calls); with only `APPL`, `CALLSIGN: NY4I/APPL`.
