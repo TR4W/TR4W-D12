@@ -42,6 +42,8 @@ uses
    (* TStationContext -- CQExchangeDefault's parameter (M7a). *)
    uContestBase,
    uContestARRLDXBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory,
    (* VC: the kind enums the transcribed row getters return (M10 S5). *)
    VC;
 
@@ -75,6 +77,20 @@ type
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE POWER OR THE STATE -- the site file ARRL-DX-CW carries Call, Exch1,
+         UserText (read 2026-11-20; 100% of rows): a DX station's row is its
+         power (100, 50, KW, K, 1K, QRP, LOW ...), a W or VE station's its
+         state or province. ONE answer serves either entrant, because the
+         prefill is the row's text whatever this entrant receives: a W entrant
+         is prefilled a power (which the RST-and-power parser takes as
+         written, any non-empty word), a DX entrant a state or province.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -161,6 +177,16 @@ procedure TContestARRLDXCW.DescribeNewContestPrompts(aPrompts: TNewContestPrompt
 begin
    aPrompts.AskFieldWithComment(TC_ENTERYOURQTHORPOWER, ncfMyState);
    aPrompts.AskFieldWithCommentWhenInside(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
+end;
+
+function TContestARRLDXCW.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestARRLDXCW.CallHistorySiteName: string;
+begin
+   Result := 'ARRL-DX-CW';
 end;
 
 initialization

@@ -399,30 +399,33 @@ end;
    second layout of each file was READ from the site on 2026-11-20 and is
    in Test_SiteLayoutsGiveTheRememberedText. *)
 const
-   CALL_HISTORY_MEMBERS: array[0..23] of ContestType = (
+   CALL_HISTORY_MEMBERS: array[0..25] of ContestType = (
       ARRLSSCW, ARRLSSSSB, ARRL10, ARRLFIELDDAY, CWOPEN, IARU,
       NAQSOCW, NAQSOSSB, NAQSORTTY,
       ARRL160, ARRL_RTTY_ROUNDUP, ARRLDIGI, CWOPS, NASPRINTCW, NASPRINTRTTY,
       SPRINTSSB, SST, WINTERFIELDDAY, CQ160CW, CQ160SSB,
       NYQP, TEXASQSOPARTY, FLORIDAQSOPARTY,
+      ARRLDXCW, ARRLDXSSB,
       DUMMYCONTEST);
    (* The one contest here with no member: the Alabama QSO Party registers
       by its id, so its row's member is a placeholder and its id decides. *)
-   CALL_HISTORY_BY_ID_ROW = 23;
+   CALL_HISTORY_BY_ID_ROW = 25;
    CALL_HISTORY_BY_ID = 'AL-QSO-PARTY';
-   CALL_HISTORY_STEMS: array[0..23] of string = (
+   CALL_HISTORY_STEMS: array[0..25] of string = (
       'ARRL-SS-CW', 'ARRL-SS-SSB', 'ARRL-10M', 'ARRL-FD', 'CW-OPEN', 'IARU-HF',
       'NAQP-CW', 'NAQP-SSB', 'NAQP-RTTY',
       'ARRL-160M', 'ARRL-RTTY', 'ARRL-DIGI', 'CWOPS', 'NA-SPRINT-CW', 'NA-SPRINT-RTTY',
       'NA-SPRINT-SSB', 'K1USNSST', 'WFD', 'CQ-160-CW', 'CQ-160-SSB',
       'QSOP_NY', 'QSOP_TX', 'QSOP_FL',
+      'ARRL-DX-CW', 'ARRL-DX-SSB',
       'QSOP_AL');
-   CALL_HISTORY_FIELD_NAMES: array[0..23] of string = (
+   CALL_HISTORY_FIELD_NAMES: array[0..25] of string = (
       'CK Sect', 'CK Sect', 'Exch1', 'Exch1 Sect', 'Name', 'Sect',
       'Name State', 'Name State', 'Name State',
       'Exch1', 'Exch1', 'Loc1', 'Name Exch1', 'Name State', 'Name State',
       'Name State', 'Name Exch1', 'Exch1 Sect', 'Exch1', 'Exch1',
       'Exch1', 'Exch1', 'Exch1',
+      'Exch1', 'Exch1',
       'Exch1');
 
 (* The fields as N1MM names them, one blank between. *)
@@ -449,7 +452,7 @@ var
    contests: TContestIdentityList;
    k, m, row: integer;
    fields: TCallHistoryFields;
-   seen: array[0..23] of boolean;
+   seen: array[0..25] of boolean;
 begin
    BeginTest('Test_EveryContestStatesItsCallHistoryFields');
    for m := Low(seen) to High(seen) do
@@ -581,6 +584,12 @@ begin
           1, 0, 'AA0AJ=MN');
    Layout(FLORIDAQSOPARTY, '!!Order!!,Call,Exch1,UserText'#13#10 + 'AA0AJ,MN,'#13#10,
           1, 0, 'AA0AJ=MN');
+   (* ARRL-DX-CW.txt and ARRL-DX-SSB.txt: !!Order!!,Call,Exch1,UserText -- a DX
+      station's row is its power, a W or VE station's its state. *)
+   Layout(ARRLDXCW, '!!Order!!,Call,Exch1,UserText'#13#10 + '2E0BLN,100,'#13#10 + 'W3LPL,PA,'#13#10 +
+                    '2E0CEA,KW,'#13#10, 3, 0, '2E0BLN=100');
+   Layout(ARRLDXSSB, '!!Order!!,Call,Exch1,UserText'#13#10 + '2E0CEA,50,'#13#10 + 'K1TTT,MA,'#13#10,
+          2, 0, '2E0CEA=50');
    (* ARRL-DIGI.txt: !!Order!!,Call,Loc1,UserText -- the grid. *)
    Layout(ARRLDIGI, '!!Order!!,Call,Loc1,UserText'#13#10 + '2E0CVN,IO80,'#13#10,
           1, 0, '2E0CVN=IO80');
