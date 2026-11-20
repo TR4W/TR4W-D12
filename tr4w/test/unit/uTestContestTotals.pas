@@ -650,7 +650,9 @@ var
 begin
    BeginTest('Test_SalmonRunW7DXOncePerMode');
 
-   station := NoStation;
+   (* The host-area table knows every QTH: an out-of-state entrant's QSO is a
+      credited one (Q107), and this is about the bonus. *)
+   station := WithHostAreaTable(NoStation);
    station.MyCategoryMode := cmMIXED;
    view := TLoggedQSOList.Create;
    try
@@ -675,7 +677,7 @@ begin
    view := TLoggedQSOList.Create;
    try
       (* FM IS PHONE, digital is no Salmon Run mode, a dupe is not a QSO. *)
-      view.Add(LoggedQSO('W7DX', Band2, FM));
+      view.Add(LoggedQSO('W7DX', Band6, FM));
       CheckEquals(500, Bonus(SALMONRUN, station, view), 'FM pays the phone bonus');
       view.Add(LoggedQSO('W7DX', Band20, Digital));
       CheckEquals(500, Bonus(SALMONRUN, station, view), 'digital pays nothing');
@@ -698,7 +700,7 @@ begin
       view.Add(LoggedQSO('W7DX', Band20, CW));
       view.Add(LoggedQSO('W7DX', Band20, Phone));
 
-      station := NoStation;
+      station := WithHostAreaTable(NoStation);
       station.MyCategoryMode := cmCW;
       CheckEquals(500, Bonus(SALMONRUN, station, view), 'a CW entry claims once');
       station.MyCategoryMode := cmSSB;
@@ -717,7 +719,7 @@ begin
    view := TLoggedQSOList.Create;
    try
       view.Add(LoggedQSO('W7DX', Band20, Phone));
-      station := NoStation;
+      station := WithHostAreaTable(NoStation);
       station.MyCategoryMode := cmCW;
       CheckEquals(0, Bonus(SALMONRUN, station, view), 'a CW entry is not paid for phone');
    finally
@@ -1410,7 +1412,7 @@ begin
          Louisiana at issue 122 (rule 9.5): "Any station working N5LCC ...
          may claim a one-time 100 POINT BONUS". Atlantic Canada at issue
          116: ten bonus calls, "5 Bonus points once per band and mode". *)
-      CheckEquals('AC-QSO-PARTY|AR-QSO-PARTY|BCQP|IL-QSO-PARTY|KS-QSO-PARTY|KY-QSO-PARTY|LA-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|SC-QSO-PARTY|SD-QSO-PARTY|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
+      CheckEquals('AC-QSO-PARTY|AR-QSO-PARTY|BCQP|IL-QSO-PARTY|KS-QSO-PARTY|KY-QSO-PARTY|LA-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|SC-QSO-PARTY|SD-QSO-PARTY|TENNESSEE QSO PARTY|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
                   'the contests that declare bonus stations');
    finally
       declaring.Free;

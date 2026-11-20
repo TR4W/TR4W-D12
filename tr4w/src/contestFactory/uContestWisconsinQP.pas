@@ -71,11 +71,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   NOT BUILT, listed on #88:
     * THE MOBILE/PORTABLE 500-POINT COUNTY BONUS: it needs the entrant's
       CATEGORY-STATION and home county, which do not reach scoring.
-    * A WISCONSIN ENTRANT'S DX QSO: "DX countries worked count for QSO points
-      but not as multipliers", but the exchange is domestic-only
-      (RSTDomesticQTH) and wisconsin.dom has no DX entry, so a typed "599 DX"
-      is refused as an improper QTH. A DX QSO that is logged (import, peer)
-      scores its points and no multiplier. Reported, not changed.
+  A WISCONSIN ENTRANT'S DX QSO (built 2026-11-20): "Non-Wisconsin stations
+    send State or Province or Country" and "DX countries worked count for QSO
+    points but not as multipliers". A Wisconsin entrant is given the
+    domestic-or-DX parse (a typed "599 DL" is logged, scores its points and
+    earns no multiplier -- wisconsin.dom has no DX entry); an entrant
+    elsewhere works Wisconsin stations only. The received Cabrillo column is
+    the domestic QTH, else DX (CabrilloReceivedDomesticQTHOrDX).
  *)
 unit uContestWisconsinQP;
 
@@ -156,6 +158,9 @@ type
          below 50 MHz -- the header. *)
       function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
    public
+      (* SET-UP -- an entrant outside Wisconsin works Wisconsin stations only. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
       (* Every band but WARC -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
@@ -257,19 +262,43 @@ end;
 
 function TContestWisconsinQP.GetExchangeKind: ExchangeType;
 begin
-   Result := RSTDomesticQTHExchange;
+   (* The in-state entrant's kind; DescribeSession states the other. *)
+   Result := RSTDomesticOrDXQTHExchange;
+end;
+
+procedure TContestWisconsinQP.DescribeSession(const aStation: TStationContext;
+                                              aSession: TSessionDefaults);
+begin
+   if not aStation.InHostState then
+      begin
+      aSession.Exchange := RSTDomesticQTHExchange;
+      end;
 end;
 
 function TContestWisconsinQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
-   Result := ExchangeFieldsRSTQSONumberQTH;
+   if Station.InHostState then
+      begin
+      Result := ExchangeFieldsRSTQTH;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
 end;
 
 function TContestWisconsinQP.ParseReceivedExchangeFormat(const aText: string;
                                                          aParsers: TExchangeParsers;
                                                          var aExch: ContestExchange): boolean;
 begin
-   Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+   if Station.InHostState then
+      begin
+      Result := aParsers.ParseRSTDomesticOrDXQTH(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
 end;
 
 procedure TContestWisconsinQP.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
@@ -301,7 +330,14 @@ function TContestWisconsinQP.GetCabrilloReceivedExchange(const aMy: TMyStationEx
                                                          const aCtx: TCabrilloQSOContext): string;
 begin
    (* The location alone, 'DX' for a station outside the US and Canada. *)
-   Result := CabrilloReceivedQTHDX(aMy, aQso, aCtx);
+   if Station.InHostState then
+      begin
+      Result := CabrilloReceivedDomesticQTHOrDX(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloReceivedQTHDX(aMy, aQso, aCtx);
+      end;
 end;
 
 function TContestWisconsinQP.GetInStateDomesticFileName: string;
@@ -430,7 +466,10 @@ end;
    TContestBase.LogsSeveralQTHsFromOneEntry. *)
 function TContestWisconsinQP.LogsSeveralQTHsFromOneEntry: boolean;
 begin
-   Result := True;
+   (* The session's shape: the domestic QTH outside the state, where it
+      was True; in the state the domestic-or-DX exchange, where it was
+      not. No station may sit on a county line anyway. *)
+   Result := not Station.InHostState;
 end;
 
 function TContestWisconsinQP.CallHistoryFields: TCallHistoryFields;

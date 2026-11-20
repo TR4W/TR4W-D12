@@ -145,7 +145,7 @@ const
 
    SEVERAL_QTHS_EVERYWHERE = [
       COUNTYHUNTER, MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, TOEC,
-      WISCONSINQSOPARTY, NYQP, TENNESSEEQSOPARTY, ALRS_UA1DZ_CUP, INQSOPARTY,
+      NYQP, TENNESSEEQSOPARTY, ALRS_UA1DZ_CUP, INQSOPARTY,
       BCQP, IN7QPNE];
 
    BLANK_EXCHANGE_EVERYWHERE = [BWQP, GENERALQSO, POTA];
@@ -261,7 +261,8 @@ begin
          begin
          Result := (aContest in SEVERAL_QTHS_EVERYWHERE)                    or
                    ((aContest in [SEVENQP, ArizonaQsoParty, SALMONRUN,
-                                  TEXASQSOPARTY]) and (aStation <> psHost))  or
+                                  TEXASQSOPARTY, WISCONSINQSOPARTY]) and
+                    (aStation <> psHost))                                    or
                    ((aContest = ARRL160) and notSectionCountry)             or
                    ((aContest in [ARRLDXCW, ARRLDXSSB]) and notWOrVE)       or
                    ((aContest = NEWENGLANDQSO) and (aStation <> psHost))    or
@@ -338,6 +339,17 @@ begin
          station := PinStation(s, c);
          for r := Succ(erRoverCounty) to High(TExchangeRule) do
             begin
+            (* TENNESSEE IN STATE, by hand 2026-11-20: it takes a DX country
+               (the domestic-or-DX shape, which logs no several QTHs) AND its
+               sponsor requires "2 rows in the log file, one for each county"
+               for a county-line station, so a Tennessee entrant still logs
+               several QTHs from one entry. Pinned in
+               Test_EveryContestStatesItsPinnedExchangeRules. *)
+            if (r = erSeveralQTHs) and (c = TENNESSEEQSOPARTY) and (s = psHost) then
+               begin
+               Inc(checked);
+               Continue;
+               end;
             CheckEquals(BoolToStr(LegacyAnswer(r, Kinds(c, station).Exchange), True),
                         BoolToStr(ProgramAnswer(r, c, station), True),
                         Who(c, s) + ' ' + RULE_NAMES[r] + ' as its session shape did');

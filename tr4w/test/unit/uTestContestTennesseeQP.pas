@@ -38,6 +38,11 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_TennesseeIsNoStateMultiplierInState;
+      procedure Test_TennesseePointsAreThreeInEveryMode;
+      procedure Test_TennesseeBands;
+      procedure Test_TennesseeCountyLineIsTwo;
+      procedure Test_TennesseeK4TCGBonus;
+      procedure Test_TennesseeRealEngineTakesDXInStateOnly;
    end;
 
 implementation
@@ -45,7 +50,140 @@ implementation
 uses
    SysUtils,
    VC,
+   uContestBase,
+   uContestRegistry,
+   uContestStateQSOPartyBase,
+   uTestContestObjects,
+   uTestQSOPartyEngine,
    uTestQSOPartyRules;
+
+(* "3 points per QSO regardless of mode." *)
+procedure TContestTennesseeQPTests.Test_TennesseePointsAreThreeInEveryMode;
+var
+   inState: boolean;
+begin
+   BeginTest('Test_TennesseePointsAreThreeInEveryMode');
+   for inState := False to True do
+      begin
+      CheckEquals(3, PartyPoints(TENNESSEEQSOPARTY, inState, Band20, CW, eCW), 'CW is 3');
+      CheckEquals(3, PartyPoints(TENNESSEEQSOPARTY, inState, Band20, Phone, eSSB), 'phone is 3');
+      CheckEquals(3, PartyPoints(TENNESSEEQSOPARTY, inState, Band2, FM, eFM), 'FM is 3');
+      CheckEquals(3, PartyPoints(TENNESSEEQSOPARTY, inState, Band40, Digital, eRTTY), 'digital is 3');
+      end;
+end;
+
+(* "All amateur bands are valid, with the exception of 60, 30, 17 and 12
+   meters." *)
+procedure TContestTennesseeQPTests.Test_TennesseeBands;
+var
+   identity: TContestBase;
+   b: BandType;
+begin
+   BeginTest('Test_TennesseeBands');
+   identity := ContestIdentity(TENNESSEEQSOPARTY);
+   CheckTrue(identity.VHFBandsEnabled, 'the VHF bands can be reached');
+   for b := Low(BandType) to High(BandType) do
+      begin
+      if not (b in [AllBands, NoBand]) then
+         begin
+         CheckTrue(identity.UsesBand(b) = not (b in [Band30, Band17, Band12]),
+                   'band ' + IntToStr(Ord(b)) + ' is credited exactly when it is not WARC');
+         end;
+      end;
+   CheckEquals(3, PartyPoints(TENNESSEEQSOPARTY, True, Band6, CW, eCW), '6 m scores');
+   CheckEquals(0, PartyPoints(TENNESSEEQSOPARTY, True, Band30, CW, eCW), '30 m scores nothing');
+end;
+
+(* "Three and four county lines may not be run simultaneously" -- two. *)
+procedure TContestTennesseeQPTests.Test_TennesseeCountyLineIsTwo;
+var
+   contestObject: TContestBase;
+   msg: string;
+begin
+   BeginTest('Test_TennesseeCountyLineIsTwo');
+   contestObject := Make(TENNESSEEQSOPARTY);
+   try
+      CheckEquals(2, (contestObject as TContestStateQSOPartyBase).CountyLineCountiesMax, 'two counties');
+      CheckTrue((contestObject as TContestStateQSOPartyBase).ValidateQTHCount(2, msg), 'a county line');
+      CheckFalse((contestObject as TContestStateQSOPartyBase).ValidateQTHCount(3, msg), 'not a three-county point');
+   finally
+      contestObject.Free;
+   end;
+end;
+
+(* "All entrants may claim 100 bonus points for each QSO (one per band/mode)
+   with TCG headquarters station K4TCG ... added after the geographic
+   multiplier." Dupes and X-QSOs pay nothing; another call is not K4TCG. *)
+procedure TContestTennesseeQPTests.Test_TennesseeK4TCGBonus;
+var
+   contestObject: TContestBase;
+   view: TLoggedQSOList;
+   t: TScoreTotals;
+   dupe: ContestExchange;
+begin
+   BeginTest('Test_TennesseeK4TCGBonus');
+   t := Default(TScoreTotals);
+   view := TLoggedQSOList.Create;
+   contestObject := Make(TENNESSEEQSOPARTY, WithHostAreaTable(NoStation));
+   try
+      CheckEquals(0, contestObject.BonusPoints(t, view), 'an empty log');
+      view.Add(PartyQso('K4TCG', Band20, CW, eCW));
+      CheckEquals(100, contestObject.BonusPoints(t, view), '20 m CW: 100');
+      view.Add(PartyQso('K4TCG', Band20, CW, eCW));
+      CheckEquals(100, contestObject.BonusPoints(t, view), '20 m CW again: still 100');
+      view.Add(PartyQso('K4TCG', Band20, Phone, eUSB));
+      CheckEquals(200, contestObject.BonusPoints(t, view), '20 m phone: 200');
+      view.Add(PartyQso('K4TCG', Band40, CW, eCW));
+      CheckEquals(300, contestObject.BonusPoints(t, view), '40 m CW: 300');
+      view.Add(PartyQso('K4TCG', Band30, CW, eCW));
+      CheckEquals(300, contestObject.BonusPoints(t, view), 'a WARC QSO is an X-QSO: nothing');
+      dupe := PartyQso('K4TCG', Band15, CW, eCW);
+      dupe.ceDupe := True;
+      view.Add(dupe);
+      CheckEquals(300, contestObject.BonusPoints(t, view), 'a dupe pays nothing');
+      view.Add(PartyQso('K4TCGX', Band10, CW, eCW));
+      CheckEquals(300, contestObject.BonusPoints(t, view), 'another call pays nothing');
+      t.QSOPoints := 90;
+      t.ScoredBand := AllBands;
+      t.SessionCountsMultipliers := True;
+      t.Mults[AllBands, Both, rmDomestic] := 10;
+      CheckEquals(90 * 10 + 300, contestObject.FinalScore(t, view), 'the bonus is added last');
+   finally
+      contestObject.Free;
+      view.Free;
+   end;
+end;
+
+(* "RS(T) and Tennessee County, U.S. state, Canadian province/territory, or
+   DXCC entity"; "DXCC entities (... less USA, Canada, Alaska & Hawaii)" are
+   a Tennessee entrant's multipliers, and "Stations outside of Tennessee work
+   only Tennessee stations". The typed "599 DL" goes through the real engine. *)
+procedure TContestTennesseeQPTests.Test_TennesseeRealEngineTakesDXInStateOnly;
+var
+   engine: TQSOPartyEngine;
+   rx: ContestExchange;
+   accepted: boolean;
+begin
+   BeginTest('Test_TennesseeRealEngineTakesDXInStateOnly');
+   engine := TQSOPartyEngine.Create(ContestHandleOf(TENNESSEEQSOPARTY));
+   try
+      engine.Activate(True);
+      engine.Enter('DL1AAA', '599 DL', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'a Tennessee entrant logs a DX country');
+      CheckTrue(rx.DXMult, 'its entity is a DXCC multiplier');
+      CheckEquals(3, Integer(rx.QSOPoints), 'for 3 points');
+      CheckEquals('599 DL     ', PartyReceivedCabrilloColumn(ContestHandleOf(TENNESSEEQSOPARTY), rx),
+                  'and the received column is the country, not empty');
+      engine.Enter('KL7AA', '599 AK', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'Alaska is a state');
+      CheckFalse(rx.DXMult, 'and no DX entity');
+      engine.Activate(False);
+      engine.Enter('DL1AAA', '599 DL', Band20, CW, eCW, accepted, rx);
+      CheckFalse(accepted, 'an entrant outside Tennessee cannot work DX');
+   finally
+      engine.Free;
+   end;
+end;
 
 (* "Tennessee Stations - Multipliers accumulate on a per band basis.
    Multipliers are: Tennessee counties (95 max/band) U.S. states (49
@@ -77,6 +215,11 @@ end;
 procedure TContestTennesseeQPTests.RunAllTests;
 begin
    Test_TennesseeIsNoStateMultiplierInState;
+   Test_TennesseePointsAreThreeInEveryMode;
+   Test_TennesseeBands;
+   Test_TennesseeCountyLineIsTwo;
+   Test_TennesseeK4TCGBonus;
+   Test_TennesseeRealEngineTakesDXInStateOnly;
 end;
 
 end.

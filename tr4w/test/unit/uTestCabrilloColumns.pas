@@ -372,6 +372,31 @@ begin
                   '579 DX     '],
                  aSent, aRec);
             end
+         else if aContest in [SALMONRUN, TEXASQSOPARTY] then
+            begin
+            (* 2026-11-20: a Washington or Texas entrant's DX station is its
+               DX QTH, the country it sent, when no domestic QTH is held --
+               CabrilloReceivedRSTDomesticQTHOrDXQTH. These records hold no
+               DomesticQTH, so every input prints its DX QTH or DX. *)
+            Take(aVariant,
+                 ['599 FL     ',
+                  '59         ',
+                  '599 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                  '599 TRC    ',
+                  '599 FL     ',
+                  '599 99     ',
+                  '599        ',
+                  '599 FL     '],
+                 ['579 DL     ',
+                  '58  DX     ',
+                  '579 ABCDE  ',
+                  '579 DL     ',
+                  '579 DL     ',
+                  '579 DL     ',
+                  '579 ZZ     ',
+                  '579 ZZ     '],
+                 aSent, aRec);
+            end
          else
             begin
             Take(aVariant,
@@ -967,28 +992,102 @@ begin
          begin
          (* THE LOCATION ALONE (#88 round 2, 2026-10-26): the sponsor's
             Cabrillo page, "RST columns are not needed". The RST arm below
-            with its four-character RST field taken off, nothing else. *)
-         Take(aVariant,
-              ['FL     ',
-               'DX     ',
-               'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-               'TRC    ',
-               'FL     ',
-               '99     ',
-               'DX     ',
-               'FL     '],
-              ['GA     ',
-               'DX     ',
-               'ABCDEFGHIJ',
-               'TRC    ',
-               'GA     ',
-               'GA     ',
-               '       ',
-               'DX     '],
-              aSent, aRec);
+            with its four-character RST field taken off, nothing else.
+            A Wisconsin entrant (psHost) writes the DOMESTIC QTH, else DX
+            (2026-11-20: it accepts a DX station's typed country); these
+            records hold no DomesticQTH, so every input is DX. *)
+         if aStation = psHost then
+            begin
+            Take(aVariant,
+                 ['FL     ',
+                  'DX     ',
+                  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                  'TRC    ',
+                  'FL     ',
+                  '99     ',
+                  'DX     ',
+                  'FL     '],
+                 ['DX     ',
+                  'DX     ',
+                  'DX     ',
+                  'DX     ',
+                  'DX     ',
+                  'DX     ',
+                  'DX     ',
+                  'DX     '],
+                 aSent, aRec);
+            end
+         else
+            begin
+            Take(aVariant,
+                 ['FL     ',
+                  'DX     ',
+                  'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                  'TRC    ',
+                  'FL     ',
+                  '99     ',
+                  'DX     ',
+                  'FL     '],
+                 ['GA     ',
+                  'DX     ',
+                  'ABCDEFGHIJ',
+                  'TRC    ',
+                  'GA     ',
+                  'GA     ',
+                  '       ',
+                  'DX     '],
+                 aSent, aRec);
+            end;
+         end;
+      TENNESSEEQSOPARTY:
+         begin
+         (* A Tennessee entrant (psHost) writes the DOMESTIC QTH, else the DX
+            QTH (2026-11-20), as the Washington and Texas entrants do. *)
+         if aStation = psHost then
+            begin
+            Take(aVariant,
+                 ['599 FL     ',
+                  '59  DX     ',
+                  '599 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                  '599 TRC    ',
+                  '599 FL     ',
+                  '599 99     ',
+                  '599 DX     ',
+                  '599 FL     '],
+                 ['579 DL     ',
+                  '58  DX     ',
+                  '579 ABCDE  ',
+                  '579 DL     ',
+                  '579 DL     ',
+                  '579 DL     ',
+                  '579 ZZ     ',
+                  '579 ZZ     '],
+                 aSent, aRec);
+            end
+         else
+            begin
+            Take(aVariant,
+                 ['599 FL     ',
+                  '59  DX     ',
+                  '599 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                  '599 TRC    ',
+                  '599 FL     ',
+                  '599 99     ',
+                  '599 DX     ',
+                  '599 FL     '],
+                 ['579 GA     ',
+                  '58  DX     ',
+                  '579 ABCDEFGHIJ',
+                  '579 TRC    ',
+                  '579 GA     ',
+                  '579 GA     ',
+                  '579        ',
+                  '579 DX     '],
+                 aSent, aRec);
+            end;
          end;
       MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, TOEC, NYQP,
-      TENNESSEEQSOPARTY, ALRS_UA1DZ_CUP, INQSOPARTY, BCQP, IN7QPNE:
+      ALRS_UA1DZ_CUP, INQSOPARTY, BCQP, IN7QPNE:
          begin
          Take(aVariant,
               ['599 FL     ',
@@ -1335,7 +1434,54 @@ begin
                ' 33  0012'],
               aSent, aRec);
          end;
-      PAQSOPARTY, VAQP:
+      VAQP:
+         begin
+         (* A Virginia entrant (psHost) writes the DOMESTIC QTH, else DX
+            (2026-11-20); these records hold no DomesticQTH. *)
+         if aStation = psHost then
+            begin
+            Take(aVariant,
+                 ['7    FL    ',
+                  '123        ',
+                  '4567 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                  '7    TRC   ',
+                  '7    FL    ',
+                  '-5   99    ',
+                  '7          ',
+                  '7    FL    '],
+                 ['0012 DX    ',
+                  '0000 DX    ',
+                  '4567 DX    ',
+                  '0012 DX    ',
+                  '0012 DX    ',
+                  '4294967295 DX    ',
+                  '0012 DX    ',
+                  '0012 DX    '],
+                 aSent, aRec);
+            end
+         else
+            begin
+            Take(aVariant,
+                 ['7    FL    ',
+                  '123        ',
+                  '4567 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                  '7    TRC   ',
+                  '7    FL    ',
+                  '-5   99    ',
+                  '7          ',
+                  '7    FL    '],
+                 ['0012 GA    ',
+                  '0000       ',
+                  '4567 ABCDEFGHIJ',
+                  '0012 TRC   ',
+                  '0012 GA    ',
+                  '4294967295 GA    ',
+                  '0012       ',
+                  '0012 GA    '],
+                 aSent, aRec);
+            end;
+         end;
+      PAQSOPARTY:
          begin
          Take(aVariant,
               ['7    FL    ',

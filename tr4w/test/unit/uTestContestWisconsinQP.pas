@@ -55,6 +55,7 @@ type
       procedure Test_WisconsinCabrilloIsTheLocationAlone;
       procedure Test_WisconsinEntrantsDXQSO;
       procedure Test_WisconsinPowerMultiplier;
+      procedure Test_WisconsinEntrantTypesDX;
    end;
 
 implementation
@@ -70,6 +71,8 @@ uses
    uContestStateQSOPartyBase,
    LogDom,
    uTestContestObjects,
+   uTestQSOPartyEngine,
+   uTestQSOPartyRules,
    uTestShippedDom;
 
 (* A Wisconsin entrant (Adams County) or one in Illinois; outside the state
@@ -362,8 +365,7 @@ end;
 (* "DX countries worked count for QSO points but not as multipliers." A
    Wisconsin entrant's DX QSO, once logged, scores its points; wisconsin.dom
    (the in-state table) has no DX entry, so it earns no domestic multiplier.
-   TYPING "599 DX" IS REFUSED as an improper QTH -- the exchange is
-   domestic-only -- which is reported on #88, not pinned here. *)
+   Typing it is Test_WisconsinEntrantTypesDX's (built 2026-11-20). *)
 procedure TContestWisconsinQPTests.Test_WisconsinEntrantsDXQSO;
 var
    contestObject: TContestBase;
@@ -403,6 +405,36 @@ begin
       mo.Free;
       mo := savedSheet;
       MultipliersIsCounties := savedCounties;
+   end;
+end;
+
+(* "Non-Wisconsin stations send State or Province or Country"; "DX countries
+   worked count for QSO points but not as multipliers"; "Only Wisconsin
+   stations may be worked" by a non-Wisconsin entrant. The typed "599 DL" goes
+   through the real engine; the Cabrillo column is the location alone, DX for
+   it ("should show 'DX'"). *)
+procedure TContestWisconsinQPTests.Test_WisconsinEntrantTypesDX;
+var
+   engine: TQSOPartyEngine;
+   rx: ContestExchange;
+   accepted: boolean;
+begin
+   BeginTest('Test_WisconsinEntrantTypesDX');
+   engine := TQSOPartyEngine.Create(ContestHandleOf(WISCONSINQSOPARTY));
+   try
+      engine.Activate(True);
+      engine.Enter('DL1AAA', '599 DL', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'a Wisconsin entrant logs a DX country');
+      CheckEquals(2, Integer(rx.QSOPoints), 'for its points');
+      CheckFalse(rx.DXMult, 'and no multiplier');
+      CheckFalse(rx.DomesticMult, 'of either kind');
+      CheckEquals('DX', Trim(PartyReceivedCabrilloColumn(ContestHandleOf(WISCONSINQSOPARTY), rx)),
+                  'the received column says DX');
+      engine.Activate(False);
+      engine.Enter('DL1AAA', '599 DL', Band20, CW, eCW, accepted, rx);
+      CheckFalse(accepted, 'an entrant outside Wisconsin cannot work DX');
+   finally
+      engine.Free;
    end;
 end;
 
@@ -453,6 +485,7 @@ begin
    Test_WisconsinCabrilloIsTheLocationAlone;
    Test_WisconsinEntrantsDXQSO;
    Test_WisconsinPowerMultiplier;
+   Test_WisconsinEntrantTypesDX;
 end;
 
 end.
