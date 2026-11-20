@@ -224,6 +224,7 @@ var
    version: integer;
    ignored: string;
    blocker: TFileStream;
+   raw: TLogConnection;
 begin
    BeginTest('a backup that cannot be taken refuses the upgrade and leaves the log as it was');
    dir := ScratchDir('refused');
@@ -238,6 +239,26 @@ begin
       blocker.Free;
       end;
    GHookCalls := 0;
+
+   (* ROLLBACK-JOURNAL MODE FIRST, or the MD5 below pins nothing about the
+     order. The fixture is WAL already, so Open's journal_mode = WAL would
+     rewrite no header byte of it, and an Open that asked for the backup
+     AFTER its write connection would pass. A rollback-journal log (a
+     network share) is the case the order protects: its header bytes 18 and
+     19 go 1 to 2 the moment the write connection opens. TLogConnection's
+     ExecutePragma is transaction-free; SQLite refuses to leave WAL inside a
+     transaction. *)
+   raw := TLogConnection.Create(nil);
+   try
+      raw.DatabaseName := UTF8Encode(fn);
+      raw.Open;
+      raw.ExecutePragma('PRAGMA journal_mode = DELETE');
+      raw.Close;
+   finally
+      raw.Free;
+   end;
+   CheckEquals('', LogSidecarPresent(fn), 'the staged log has no sidecar before the open');
+
    before := FileMD5(fn);
 
    raised := False;

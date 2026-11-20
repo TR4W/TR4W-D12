@@ -58,7 +58,12 @@ Rules that apply to every open:
     so no second backup;
   - a headless run (`/EXPORT`, `/RESCORE`, `/IMPORT`) of an older log: the
     same backup, to the same folder -- the corpus's schema-2 logs each take
-    one, into the corpus's own settings folder (`corpus-lib.sh` clears it);
+    one, into the corpus's own settings folder (`corpus-lib.sh` clears it).
+    A refused one, MEASURED 2026-11-19 (`/EXPORT`, the backup folder a
+    file): two Error lines in `tr4w.log`, the log byte-identical with no
+    sidecar, no ADIF or Cabrillo written -- and **exit code 0**, which is
+    what every failed store open does under `/EXPORT` today (not new here;
+    open);
   - a log from a newer build, or not a TR4W log: refused by the read-only
     probe, never copied;
   - the store's read-only mode and `OpenReadOnly`: never migrate, so never

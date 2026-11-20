@@ -969,7 +969,15 @@ Every migration, not one schema's. Definition and the case-by-case list:
   writes one backup per set into `tr4w/test/corpus/settings/backup/`
   (`--settings` moves `BackupDir`); `corpus-lib.sh`'s
   `corpus_clear_upgrade_backups` empties it at each run's start and
-  `.gitignore` lists it. Do NOT skip the backup to tidy a run.
+  `.gitignore` lists it. Do NOT skip the backup to tidy a run. **A REFUSED
+  headless upgrade EXITS 0** (measured: `/EXPORT`, backup folder a file --
+  Error lines, log byte-identical, no artifact written). That is every
+  failed store open under `/EXPORT`, not this feature's; open for the
+  startup owner.
+- **The failure pin is a ROLLBACK-JOURNAL copy** (`journal_mode = DELETE`
+  first): the fixture is WAL, on which `ApplyPragmas` changes no header
+  byte, so an MD5 over it could not see the order. Mutation-tested: the
+  backup moved after `OpenConnection` fails the MD5 and the "not open" pin.
 - **Not covered**: `external_delivery.last_sent`, the one migration that can
   reach a log already AT the current schema (development logs). A migration
   that fails after its backup backs up again on the next try (numbered name),
