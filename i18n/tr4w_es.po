@@ -11843,3 +11843,23 @@ msgstr ""
 #, fuzzy
 msgid "Category-Station"
 msgstr ""
+
+#: uappstrings.scallhistoryinuse
+#, fuzzy
+msgid "it is in use now (%d calls)"
+msgstr ""
+
+#: uappstrings.scallhistorynotapplied
+#, fuzzy
+msgid "it was not applied to the running contest (see tr4w.log); any call history already loaded stays in use"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtadownloadedinuse
+#, fuzzy
+msgid "TRMASTER.DTA downloaded -- Super Check Partial is using it now"
+msgstr ""
+
+#: utr4wstrings.tc_trmasterdtadownloadednotloaded
+#, fuzzy
+msgid "TRMASTER.DTA downloaded but could not be loaded -- the data in use is unchanged (see tr4w.log)"
+msgstr ""
