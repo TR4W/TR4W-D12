@@ -124,7 +124,10 @@ begin
                      end;
                   Digital:
                      begin
-                     if extMode <> eFT8 then
+                     (* FAQ: "any mode that can exchange the required
+                        information is allowed, but FT8 cannot do it";
+                        FT4 and FT2 likewise (NY4I, issues 88 and 122). *)
+                     if not (extMode in [eFT8, eFT4, eFT2]) then
                         begin
                         expected := 2;
                         end;
@@ -320,6 +323,17 @@ begin
          'FT8 exported as X-QSO');
       engine.Enter('K2FT', '599 MERC', Band20, CW, eCW, accepted, rx);
       CheckTrue(rx.DomesticMult, 'FT8 did not mark Mercer worked');
+      engine.Enter('K2F4', '599 CAPE', Band15, Digital, eFT4, accepted, rx);
+      CheckTrue(accepted, 'FT4 record can be logged');
+      CheckTrue(LoggedQSOIsXQSO(rx), 'FT4 is an X-QSO like FT8 (NY4I: NOT FT8, FT4 or FT2)');
+      CheckEquals(0, Integer(rx.QSOPoints), 'FT4 zero points');
+      engine.Enter('K2F2', '599 GLOU', Band15, Digital, eFT2, accepted, rx);
+      CheckTrue(accepted, 'FT2 record can be logged');
+      CheckTrue(LoggedQSOIsXQSO(rx), 'FT2 is an X-QSO too');
+      engine.Enter('K2RY', '599 CMDN', Band15, Digital, eRTTY, accepted, rx);
+      CheckTrue(accepted, 'RTTY accepted');
+      CheckFalse(LoggedQSOIsXQSO(rx), 'RTTY carries the exchange: a valid digital QSO');
+      CheckEquals(2, Integer(rx.QSOPoints), 'RTTY scores the CW/digital 2');
       engine.Enter('K2WARC', '599 HUNT', Band30, CW, eCW, accepted, rx);
       CheckTrue(accepted, 'off-band record can be logged');
       CheckTrue(LoggedQSOIsXQSO(rx), 'off-band X-QSO');

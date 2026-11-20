@@ -542,6 +542,11 @@ begin
    (* The sponsor's 2026 rules v1.1: the third Saturday of October, October
       17 2026 from 14:00 UTC through 01:59 UTC. 2027's is October 16. *)
    Add('NY-QSO-PARTY', At(2026, 1, 1, 0, 0), At(2026, 10, 17, 14, 0));
+   (* Missouri, NY4I 2026-11-20: "MOQP is April 3 and 4, 2027" -- the FIRST
+      full weekend of April (2026 alone moved to April 11-12 for Easter).
+      Saturday 1400 UTC opens it; its Sunday session resumes at 1400. *)
+   Add('MISSOURI QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 4, 3, 14, 0));
+   Add('MISSOURI QSO PARTY', At(2027, 4, 4, 5, 0), At(2027, 4, 4, 14, 0));
    Add('NY-QSO-PARTY', At(2026, 10, 18, 1, 59), At(2026, 10, 18, 1, 59));
    Add('NY-QSO-PARTY', At(2026, 10, 18, 2, 0), At(2027, 10, 16, 14, 0));
    Add('ON-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 4, 17, 18, 0));
@@ -631,21 +636,21 @@ var
 
 begin
    BeginTest('Test_OrderingOfRealContests');
-   (* SUNDAY 2027-04-11 0500: Georgia and Missouri are both in their
-      overnight gap and both resume at 1400 -- a tie that keeps the
-      alphabetical order. The CWT is next Wednesday, Michigan the next
-      Saturday, CQ WPX SSB next March; General QSO (unscheduled) and
-      AP-SPRINT (not yet stated) last, alphabetical. *)
+   (* SUNDAY 2027-04-11 0500: Georgia is in its overnight gap and resumes at
+      1400. Missouri ran April 3-4 (NY4I: "MOQP is April 3 and 4, 2027"), so
+      its next is April 1, 2028, after CQ WPX SSB's March 2028. The CWT is
+      next Wednesday, Michigan the next Saturday; General QSO (unscheduled)
+      and AP-SPRINT (not yet stated) last, alphabetical. *)
    Build(At(2027, 4, 11, 5, 0));
-   CheckEquals('GA-QSO-PARTY | MISSOURI QSO PARTY | CWOPS | MICHIGAN QSO PARTY | ' +
-               'CQ-WPX-SSB | AP-SPRINT | GENERAL QSO', Order, 'in the gap');
+   CheckEquals('GA-QSO-PARTY | CWOPS | MICHIGAN QSO PARTY | CQ-WPX-SSB | ' +
+               'MISSOURI QSO PARTY | AP-SPRINT | GENERAL QSO', Order, 'in the gap');
    CheckEquals(Length(IDS), Length(entries), 'one entry per contest');
 
    (* SATURDAY 2027-04-10 2000: Georgia is ON THE AIR (since 1800) and sorts
-      first; Missouri is in its gap until Sunday 1400. *)
+      first; Missouri has already run (April 3-4). *)
    Build(At(2027, 4, 10, 20, 0));
-   CheckEquals('GA-QSO-PARTY | MISSOURI QSO PARTY | CWOPS | MICHIGAN QSO PARTY | ' +
-               'CQ-WPX-SSB | AP-SPRINT | GENERAL QSO', Order, 'Georgia running');
+   CheckEquals('GA-QSO-PARTY | CWOPS | MICHIGAN QSO PARTY | CQ-WPX-SSB | ' +
+               'MISSOURI QSO PARTY | AP-SPRINT | GENERAL QSO', Order, 'Georgia running');
    CheckEquals(Stamp(At(2027, 4, 10, 20, 0)), Stamp(entries[0].DateUTC), 'the running key is now');
 
    (* WEDNESDAY 2027-04-14 1330: the CWT is on the air. *)

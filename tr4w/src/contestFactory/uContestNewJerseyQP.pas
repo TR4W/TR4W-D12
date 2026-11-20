@@ -273,10 +273,29 @@ begin
    Result := aBand in [Band80, Band40, Band20, Band15, Band10];
 end;
 
+(* "Digital - Any mode capable of completing a QSO with the NJQP exchange will
+   be considered a valid digital contact." and the sponsor's FAQ: "any mode
+   that can exchange the required information is allowed, but FT8 cannot do it
+   currently" (standard FT8 carries only grids and reports). FT4 and FT2 are
+   the same kind of structured-message mode, so they are refused with it, as
+   NY4I ruled for the QSO parties (issues 88 and 122, 2026-11-19: "specifically
+   NOT FT8, FT4 or FT2"): the class states the digital submodes it ALLOWS. *)
 function TContestNewJerseyQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
-   Result := (aMode in [CW, Phone, FM, Digital]) and
-      ((aMode <> Digital) or (aExtMode <> eFT8));
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 function TContestNewJerseyQP.CQExchangeDefault(const aStation: TStationContext): string;
