@@ -96,11 +96,12 @@ type
     FRepaintToken: cardinal;
     FPaintedToken: cardinal;
     function GetCount: integer;
-    (* The first DisplayLimit of the filtered spots aIndex[0..aFilteredCount-1],
+    (* The first aLimit of the filtered spots aIndex[0..aFilteredCount-1],
       in beam order (issue 82), written back to aIndex; returns how many. *)
     function BeamOrderedWindow(var aIndex: array of integer;
                                const aFilteredCount: integer;
-                               var aCursorRow: integer): integer;
+                               var aCursorRow: integer;
+                               const aLimit: integer): integer;
 
   protected
     function CompareStrings(const s1, s2: CallString): integer;
@@ -125,8 +126,18 @@ type
     // data and reads them back through Get().  A caller that keeps them past
     // the call must copy: an insert shifts the list, so it renumbers every
     // index above it.  The LCL form takes copies immediately.
+    //
+    // aCursorRow IS THE SELECTED SPOT'S ROW, NOT THE RADIO'S: FCurrentCursorFreq
+    // is the frequency of the spot the operator selected (SetCursor), so it
+    // must not be used to mark where the VFO is (issue 65 --
+    // uBandMapOrder.NearestSpotIndex does that).
+    //
+    // aLimit IS HOW MANY TO SHOW, at most (issue 65): the band map passes
+    // uBandMapOrder.EffectiveDisplayLimit, the smaller of BAND MAP DISPLAY
+    // LIMIT and what fits in its window. 0, the default, is the setting.
     function BuildVisibleSpots(var aIndex: array of integer;
-                               var aCursorRow: integer): integer;
+                               var aCursorRow: integer;
+                               const aLimit: integer = 0): integer;
     procedure Delete(Index: integer);
     //    procedure ClearDupes;
     procedure ResetSpotsTimes;
@@ -490,8 +501,10 @@ begin
 end;
 
 function TDXSpotsList.BuildVisibleSpots(var aIndex: array of integer;
-                                        var aCursorRow: integer): integer;
+                                        var aCursorRow: integer;
+                                        const aLimit: integer): integer;
 var
+  limit: integer;
   FilteredSpotCount: integer;
   k: integer;
   i: integer;
@@ -504,6 +517,11 @@ var
   // Total of all reject* + rejNoNext + NumberEntriesDisplayed should equal FList.Count.
   rejDupeNext, rejBand, rejMode, rejDupeFlag, rejCQ, rejWARC, rejMultsOnly, rejVHF, rejDigital: Integer;
 begin
+  limit := aLimit;
+  if limit <= 0 then
+     begin
+     limit := Settings.BandMap.DisplayLimit;
+     end;
   bottom := 0;
   top := 1;
   centrefound := False; // 4.79.3
@@ -597,11 +615,11 @@ begin
     apply. The display limit takes the first N in beam order instead. *)
   if Settings.BandMap.SortByBeamHeading then
      begin
-     Result := BeamOrderedWindow(aIndex, FilteredSpotCount, aCursorRow);
+     Result := BeamOrderedWindow(aIndex, FilteredSpotCount, aCursorRow, limit);
      Exit;
      end;
 
-  if FilteredSpotCount > Settings.BandMap.DisplayLimit then
+  if FilteredSpotCount > limit then
      begin
      // Every endpoint test below must go through aIndex.  The window
      // (bottom..top) indexes the FILTERED list, so asking the UNFILTERED FList
@@ -612,7 +630,7 @@ begin
      if FList[aIndex[0]].FFrequency >= BandMapCursorFrequency then
         begin
         // Everything on display is at or above the cursor -- show the low end.
-        top := Settings.BandMap.DisplayLimit - 1;
+        top := limit - 1;
         bottom := 0;
         centrefound := true;
         end;
@@ -621,7 +639,7 @@ begin
         begin
         // Everything on display is at or below the cursor -- show the high end.
         top := FilteredSpotCount - 1;
-        bottom := FilteredSpotCount - Settings.BandMap.DisplayLimit;
+        bottom := FilteredSpotCount - limit;
         centrefound := true;
         end;
 
@@ -632,22 +650,22 @@ begin
         if FList[aIndex[k]].FFrequency > BandMapCursorFrequency then
            begin
            centre := k;
-           if (centre >= (Settings.BandMap.DisplayLimit div 2)) and (centre <=
-             (FilteredSpotCount - (Settings.BandMap.DisplayLimit div 2))) then
+           if (centre >= (limit div 2)) and (centre <=
+             (FilteredSpotCount - (limit div 2))) then
               begin
-              top := centre + ((Settings.BandMap.DisplayLimit div 2) - 1);
-              bottom := centre - (Settings.BandMap.DisplayLimit div 2);
+              top := centre + ((limit div 2) - 1);
+              bottom := centre - (limit div 2);
               centrefound := true;
               end;
-           if centre > (FilteredSpotCount - (Settings.BandMap.DisplayLimit div 2)) then
+           if centre > (FilteredSpotCount - (limit div 2)) then
               begin
               top := FilteredSpotCount - 1;
-              bottom := FilteredSpotCount - Settings.BandMap.DisplayLimit;
+              bottom := FilteredSpotCount - limit;
               centrefound := true;
               end;
-           if centre < (Settings.BandMap.DisplayLimit div 2) then
+           if centre < (limit div 2) then
               begin
-              top := Settings.BandMap.DisplayLimit - 1;
+              top := limit - 1;
               bottom := 0;
               centrefound := true;
               end;
@@ -669,7 +687,7 @@ begin
         // could land below zero.  THAT is the wrong range the clamp below was
         // added to absorb.
         top := FilteredSpotCount - 1;
-        bottom := FilteredSpotCount - Settings.BandMap.DisplayLimit;
+        bottom := FilteredSpotCount - limit;
         end;
      end
 
@@ -696,13 +714,13 @@ begin
   if bottom < 0 then
      begin
      logger.Warn('[BuildVisibleSpots] bottom=%d clamped to 0 (top=%d, filtered=%d, limit=%d)',
-                 [bottom, top, FilteredSpotCount, Settings.BandMap.DisplayLimit]);
+                 [bottom, top, FilteredSpotCount, limit]);
      bottom := 0;
      end;
   if top > FilteredSpotCount - 1 then
      begin
      logger.Warn('[BuildVisibleSpots] top=%d clamped to %d (bottom=%d, limit=%d)',
-                 [top, FilteredSpotCount - 1, bottom, Settings.BandMap.DisplayLimit]);
+                 [top, FilteredSpotCount - 1, bottom, limit]);
      top := FilteredSpotCount - 1;
      end;
   // The caller renders aIndex[bottom..top].  Returning the COUNT and the
@@ -718,12 +736,13 @@ begin
         end;
      end;
   logger.Trace('[BuildVisibleSpots] window: bottom=%d, top=%d, rows=%d, cursorRow=%d, limit=%d',
-    [bottom, top, Result, aCursorRow, Settings.BandMap.DisplayLimit]);
+    [bottom, top, Result, aCursorRow, limit]);
 end;
 
 function TDXSpotsList.BeamOrderedWindow(var aIndex: array of integer;
                                         const aFilteredCount: integer;
-                                        var aCursorRow: integer): integer;
+                                        var aCursorRow: integer;
+                                        const aLimit: integer): integer;
 var
   headings: array of integer;
   order: array of integer;
@@ -753,9 +772,9 @@ begin
   OrderByBeam(headings, reference, order);
 
   Result := aFilteredCount;
-  if Result > Settings.BandMap.DisplayLimit then
+  if Result > aLimit then
      begin
-     Result := Settings.BandMap.DisplayLimit;
+     Result := aLimit;
      end;
   for i := 0 to Result - 1 do
      begin
@@ -766,7 +785,7 @@ begin
         end;
      end;
   logger.Trace('[BuildVisibleSpots] beam order: reference=%d, rows=%d, limit=%d',
-    [reference, Result, Settings.BandMap.DisplayLimit]);
+    [reference, Result, aLimit]);
 end;
 
 function SpotBeamHeading(const aSpot: TSpotRecord): integer;

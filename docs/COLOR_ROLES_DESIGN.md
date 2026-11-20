@@ -12,8 +12,10 @@ swatch name defaulting to the colour the band map drew before.
 `uSpots.BandMapRoleColor` resolves them; `uBandMapForm.DrawSpotCell` draws with
 them; Preferences > Colors shows them under the grid. Two swatches were appended
 so the defaults are exact: `SILVER` (clSilver) and `HIGHLIGHT` (the system
-selection colour, as `BTNFACE` is the system button face). The VFO marker has a
-colour and no drawing: how it is drawn is issue 65. The text colours (the white
+selection colour, as `BTNFACE` is the system button face). The VFO marker is
+drawn since issue 65: the frequency field of a spot within the guard band of the
+radio, and an outline round the one spot nearest the radio
+(`BANDMAP_LCL_DESIGN.md` section 9). The text colours (the white
 frequency text, the black flag letter, the selection's highlight text) and the
 call's age ramp are still literals. Roles for the rest of the program, and
 themes, remain the proposal below.

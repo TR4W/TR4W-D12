@@ -122,7 +122,7 @@ resourcestring
    RS_BANDMAP_MULTCOLOR                       = 'Band map fill behind a multiplier''s M';
    RS_BANDMAP_ACTIVEBANDCOLOR                 = 'Band map frequency on the active band';
    RS_BANDMAP_OTHERBANDCOLOR                  = 'Band map frequency on another band';
-   RS_BANDMAP_VFOMARKERCOLOR                  = 'Band map VFO marker (not drawn yet)';
+   RS_BANDMAP_VFOMARKERCOLOR                  = 'Band map VFO marker (nearest spot and guard band)';
    RS_LOGGING_CHECKLOGFILESIZE                = 'Warn when the log file grows unexpectedly';
    RS_LOGGING_UNKNOWNCOUNTRYFILE              = 'Record callsigns with no country match';
    RS_LOGGING_UPDATERESTARTFILE               = 'Keep the restart file up to date';

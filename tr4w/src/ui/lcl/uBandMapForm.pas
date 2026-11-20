@@ -59,6 +59,10 @@ uses
   uTR4WStrings;
 
 type
+  (* The displayed spots' frequencies, in row order -- what the uBandMapOrder
+    questions are asked over. *)
+  TBandMapFrequencies = array of integer;
+
   TfrmBandMap = class(TForm)
     grdSpots: TDrawGrid;
     sbSpot: TStatusBar;
@@ -120,7 +124,25 @@ type
     { True while the grid has focus.  Freezes the SELECTION, not the refresh. }
     FFrozen: boolean;
 
+    (* WHERE THE RADIO IS, read ONCE per rebuild (issue 65). The poll thread
+      writes BandMapCursorFrequency; painting from a copy taken with the
+      snapshot keeps the outline and the guard-band field agreeing with each
+      other and with the spots chosen round it. 0 is no radio. *)
+    FRadioFreq: integer;
+
+    (* THE ROW OUTLINED AS NEAREST THE RADIO, or -1 (issue 65 (b)). A
+      position in FRows, decided by uBandMapOrder.NearestSpotIndex at the
+      rebuild. Independent of the selection, which the operator owns. *)
+    FNearestRow: integer;
+
+    (* The display limit the last rebuild used: BAND MAP DISPLAY LIMIT as a
+      ceiling on what fits (issue 65). A resize that changes it asks for a
+      rebuild. *)
+    FAppliedLimit: integer;
+
     function  SpotIndexAt(const aCol, aRow: integer): integer;
+    function  FittingLimit: integer;
+    function  RowFrequencies: TBandMapFrequencies;
   public
     { Called through the view seam, from places that used to post a message to a
       list box handle: BMFirst (a hot key) and ProcessReturn (Enter). }
@@ -134,7 +156,7 @@ type
     procedure ShowSelectedSpotInfo;
     function  SelectedSpot(out aSpot: TSpotRecord): boolean;
     procedure DrawSpotCell(const aSpot: TSpotRecord; const aRect: TRect;
-                           const aSelected: boolean);
+                           const aSelected, aNearest: boolean);
     function  AgeColor(const aSpot: TSpotRecord): TColor;
   end;
 
@@ -211,7 +233,7 @@ uses
   Clipbrd,           (* Clipboard -- Copy spot *)
   uDXSpotParse,      (* SpotNotesText, SpotCommentForDisplay -- Copy spot *)
   uAppStrings,       (* SBandMapCopySpot, SBandMapCountryHeading *)
-  uBandMapOrder,     (* FirstSpotAbove, CentreLeftCol -- the pure arithmetic *)
+  uBandMapOrder,     (* the pure arithmetic: centring, the radio's marks, the limit *)
   uRadioConfigApply; (* ToggleAndStoreCommand -- a toggle here is SAVED *)
 
 (* A SPOT HAS A COUNTRY UNLESS ITS ROW IS A CQ OR NEW MARKER (issue 183). The
@@ -278,12 +300,25 @@ begin
 
    FHasSel   := False;
    FRowCount := 0;
+   FNearestRow := -1;
+   FRadioFreq  := 0;
+   FAppliedLimit := 0;
    RebuildSnapshot;
 end;
 
+(* A RESIZE CAN CHANGE HOW MANY SPOTS SHOW (issue 65): the display limit is a
+  ceiling on what fits. When the fitting limit moves, the spots are chosen
+  again round the radio -- by the refresh tick, coalesced, never once per
+  resize event (a drag raises dozens). *)
 procedure TfrmBandMap.HandleResize(Sender: TObject);
 begin
    LayOutGrid;
+   (* SpotsList is freed (and nilled) in uSpots' finalization, and the form can
+     outlive it at shutdown. *)
+   if Assigned(SpotsList) and (FittingLimit <> FAppliedLimit) then
+      begin
+      SpotsList.RequestRepaint;
+      end;
 end;
 
 procedure TfrmBandMap.HandleDestroy(Sender: TObject);
@@ -317,6 +352,37 @@ begin
    // DOWN THEN ACROSS.  This one line is the newspaper layout; everything else
    // follows from it.
    Result := (aCol * grdSpots.RowCount) + aRow;
+end;
+
+(* BAND MAP DISPLAY LIMIT AS A CEILING (issue 65, NY4I 2026-11-19): the setting
+  or what fits -- whole rows down times whole columns across -- whichever is
+  smaller. Before the grid has a window its size means nothing, so the rule
+  gets no size and answers the setting. *)
+function TfrmBandMap.FittingLimit: integer;
+var
+   rowsDown, visibleCols: integer;
+begin
+   rowsDown := 0;
+   visibleCols := 0;
+   if grdSpots.HandleAllocated then
+      begin
+      rowsDown    := grdSpots.ClientHeight div Settings.BandMap.ItemHeight;
+      visibleCols := grdSpots.ClientWidth div Settings.BandMap.ItemWidth;
+      end;
+   Result := EffectiveDisplayLimit(Settings.BandMap.DisplayLimit, rowsDown,
+                                   visibleCols);
+end;
+
+function TfrmBandMap.RowFrequencies: TBandMapFrequencies;
+var
+   i: integer;
+begin
+   Result := nil;
+   SetLength(Result, FRowCount);
+   for i := 0 to FRowCount - 1 do
+      begin
+      Result[i] := FRows[i].FFrequency;
+      end;
 end;
 
 procedure TfrmBandMap.LayOutGrid;
@@ -393,14 +459,14 @@ end;
     B. It does nothing while the grid has focus (FFrozen), the same rule that
        freezes the selection: the operator scrolling by hand is not fought.
        It resumes when focus returns to the entry window.
-    C. The cursor is BandMapCursorFrequency, the radio the map is showing.
+    C. The cursor is BandMapCursorFrequency, the radio the map is showing
+       (as FRadioFreq, the copy RebuildSnapshot takes).
 
   In beam-heading order the rows are not in frequency order, so there is no
   "above the radio": the view goes to the first column, where the best spots
   are. *)
 procedure TfrmBandMap.CenterOnRadio;
 var
-   freqs: array of integer;
    i, target, visibleCols: integer;
 begin
    if FFrozen then
@@ -423,12 +489,7 @@ begin
       Exit;
       end;
 
-   SetLength(freqs, FRowCount);
-   for i := 0 to FRowCount - 1 do
-      begin
-      freqs[i] := FRows[i].FFrequency;
-      end;
-   target := FirstSpotAbove(freqs, BandMapCursorFrequency);
+   target := FirstSpotAbove(RowFrequencies, FRadioFreq);
 
    visibleCols := grdSpots.ClientWidth div Settings.BandMap.ItemWidth;
    if visibleCols < 1 then
@@ -452,10 +513,17 @@ var
    cursorRow: integer;
    n, i: integer;
 begin
+   (* The radio's frequency, once, for everything this rebuild decides. *)
+   FRadioFreq := BandMapCursorFrequency;
+
    n := SpotsList.Count;
    SetLength(idx, n + 1);
+   (* cursorRow is the SELECTED spot's row (see BuildVisibleSpots), not the
+     radio's, and nothing here needs it: the selection is restored by
+     identity, and the radio's mark is FNearestRow below. *)
    cursorRow := -1;
-   n := SpotsList.BuildVisibleSpots(idx, cursorRow);
+   FAppliedLimit := FittingLimit;
+   n := SpotsList.BuildVisibleSpots(idx, cursorRow, FAppliedLimit);
 
    SetLength(FRows, n);
    for i := 0 to n - 1 do
@@ -465,6 +533,10 @@ begin
       FRows[i] := SpotsList.Get(idx[i]);
       end;
    FRowCount := n;
+
+   (* ISSUE 65 (b): the one spot nearest the radio is outlined. -1 with no
+     radio or no spots, and then nothing is outlined. *)
+   FNearestRow := NearestSpotIndex(RowFrequencies, FRadioFreq);
 
    LayOutGrid;
    RestoreSelection;
@@ -674,7 +746,7 @@ begin
 end;
 
 procedure TfrmBandMap.DrawSpotCell(const aSpot: TSpotRecord; const aRect: TRect;
-                                   const aSelected: boolean);
+                                   const aSelected, aNearest: boolean);
 var
    cellRect, freqRect, flagRect, callRect: TRect;
    freqText: string;
@@ -716,23 +788,8 @@ begin
 
    // --- the frequency, on a band-coloured field -------------------------
    //
-   // PRESERVED EXACTLY, INCLUDING A DEAD BRANCH -- design note 3.8.  The Win32
-   // code set clRed for a spot inside the guard band and then let the band test
-   // overwrite it unconditionally, so the red never rendered.  Reproduced
-   // rather than quietly fixed: changing what the operator sees inside a port
-   // makes any difference impossible to attribute, and this window is watched
-   // constantly during a contest.  Correcting the order is one line once NY4I
-   // has decided the red is wanted.
-   //
    // THE COLOURS ARE ROLES SINCE ISSUE 59 (uSpots.BandMapRoleColor), each
-   // defaulting to the literal it replaced. The guard-band line reads the VFO
-   // MARKER role and is still overwritten: how the marker is drawn is the open
-   // question of issues 59 and 65, so the role is stored and nothing new draws.
-   if Abs(aSpot.FFrequency - BandMapCursorFrequency) <= Settings.BandMap.GuardBand then
-      begin
-      bandColor := tr4wColorsArray[BandMapRoleColor(bmcVFOMarker)];
-      end;
-
+   // defaulting to the literal it replaced.
    if ((aSpot.FBand = InactiveRadioPtr.BandMemory) and Settings.So2r.TwoRadioMode) or
       ((aSpot.FBand = BandmapBand) and (not Settings.So2r.TwoRadioMode)) then
       begin
@@ -741,6 +798,16 @@ begin
    else
       begin
       bandColor := tr4wColorsArray[BandMapRoleColor(bmcOtherBand)];
+      end;
+
+   (* INSIDE THE GUARD BAND, THE VFO MARKER COLOUR (issue 65 (a), NY4I
+     2026-11-19). D7 and the conversion both set this colour BEFORE the band
+     test, which overwrote it, so it never showed; it is decided after the
+     band colour now, so it wins. Was a literal clRed; the VFO marker role
+     defaults to the same red. *)
+   if SpotNearRadio(aSpot.FFrequency, FRadioFreq, Settings.BandMap.GuardBand) then
+      begin
+      bandColor := tr4wColorsArray[BandMapRoleColor(bmcVFOMarker)];
       end;
 
    grdSpots.Canvas.Brush.Color := bandColor;
@@ -849,9 +916,31 @@ begin
    grdSpots.Canvas.Brush.Style := bsClear;
    grdSpots.Canvas.Font.Color  := callColor;
    grdSpots.Canvas.TextOut(callRect.Left + CELL_PAD, y, string(aSpot.FCall));
+
+   (* --- THE SPOT NEAREST THE RADIO: an outline (issue 65 (b)) ----------
+
+     In the VFO marker colour, on the one-pixel hairline of window background
+     that separates this spot from the next (CELL_INSET) -- so it never sits on
+     the red multiplier fill or the red guard-band field, where the same red
+     would vanish. Drawn last, over nothing the fields own. Rectangle stops
+     one pixel short of Right and Bottom, which is exactly the hairline. *)
+   if aNearest then
+      begin
+      grdSpots.Canvas.Pen.Style := psSolid;
+      grdSpots.Canvas.Pen.Width := 1;
+      grdSpots.Canvas.Pen.Color := tr4wColorsArray[BandMapRoleColor(bmcVFOMarker)];
+      grdSpots.Canvas.Rectangle(aRect);
+      end;
    grdSpots.Canvas.Brush.Style := bsSolid;
 end;
 
+(* A CELL HANDLER, AND IT STAYS ONE. The native-LCL rule's first choice is the
+  control's own drawing plus OnPrepareCanvas; that hook sets ONE brush and font
+  for a cell's text, and a band-map cell is three fields -- a band-coloured
+  frequency, a flag with a gradient, an age-ramped call -- and now an outline.
+  None of that is expressible there (design 4.1 chose the drawn grid for the
+  newspaper layout). OnDrawCell is the LCL's own event for a custom cell, and
+  this handler paints only from the snapshot (FRows), never from a global. *)
 procedure TfrmBandMap.SpotsDrawCell(Sender: TObject; aCol, aRow: integer;
                                     aRect: TRect; aState: TGridDrawState);
 var
@@ -865,7 +954,7 @@ begin
       grdSpots.Canvas.FillRect(aRect);
       Exit;
       end;
-   DrawSpotCell(FRows[i], aRect, gdSelected in aState);
+   DrawSpotCell(FRows[i], aRect, gdSelected in aState, i = FNearestRow);
 end;
 
 { ------------------------------------------------------------ interaction -- }
