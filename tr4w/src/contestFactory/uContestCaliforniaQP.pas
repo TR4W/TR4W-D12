@@ -71,7 +71,9 @@ unit uContestCaliforniaQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestCaliforniaQP = class(TContestStateQSOPartyBase)
@@ -155,6 +157,18 @@ type
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
       function PerQSOExchangeLeadsWithSerial: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_CA carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 738 of 738 non-state rows are county keys of its
+         own county file; the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -415,6 +429,16 @@ end;
 function TContestCaliforniaQP.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' # ' + aStation.MyState;
+end;
+
+function TContestCaliforniaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestCaliforniaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_CA';
 end;
 
 initialization

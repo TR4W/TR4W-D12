@@ -202,7 +202,9 @@ unit uContestIllinoisQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    (* ITS ID -- stored data; see the header. *)
@@ -266,6 +268,18 @@ type
       function ExchangeCarriesDomesticQTH: boolean; override;
       (* NO AdditionalDomesticMultiplierKey: a county does not also earn IL
          (NY4I, 2026-11-19) -- the header's RULING. *)
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_IL carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 276 of 281 non-state rows are county keys of its
+         own county file; the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -535,6 +549,16 @@ end;
 function TContestIllinoisQP.ExchangeCarriesDomesticQTH: boolean;
 begin
    Result := True;
+end;
+
+function TContestIllinoisQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestIllinoisQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_IL';
 end;
 
 initialization

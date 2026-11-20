@@ -58,7 +58,9 @@ unit uContestWestVirginiaQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    WV_QSO_PARTY_CONTEST_ID = 'WV-QSO-PARTY';
@@ -107,6 +109,18 @@ type
          out aKey: DXMultiplierString): boolean; override;
       function CountryMode: CountryModeType; override;
       function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_WV carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 45 of 46 non-state rows are county keys of its
+         own county file; the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -306,6 +320,16 @@ function TContestWestVirginiaQP.AdditionalDomesticMultiplierKey(const aQso: Cont
 begin
    (* A county also earns WV, in state -- the header (#317). *)
    Result := InStateCountyEarnsHostState(aQso, aKey);
+end;
+
+function TContestWestVirginiaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestWestVirginiaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_WV';
 end;
 
 initialization

@@ -399,34 +399,38 @@ end;
    second layout of each file was READ from the site on 2026-11-20 and is
    in Test_SiteLayoutsGiveTheRememberedText. *)
 const
-   CALL_HISTORY_MEMBERS: array[0..25] of ContestType = (
-      ARRLSSCW, ARRLSSSSB, ARRL10, ARRLFIELDDAY, CWOPEN, IARU,
-      NAQSOCW, NAQSOSSB, NAQSORTTY,
-      ARRL160, ARRL_RTTY_ROUNDUP, ARRLDIGI, CWOPS, NASPRINTCW, NASPRINTRTTY,
-      SPRINTSSB, SST, WINTERFIELDDAY, CQ160CW, CQ160SSB,
-      NYQP, TEXASQSOPARTY, FLORIDAQSOPARTY,
-      ARRLDXCW, ARRLDXSSB,
-      DUMMYCONTEST);
-   (* The one contest here with no member: the Alabama QSO Party registers
-      by its id, so its row's member is a placeholder and its id decides. *)
-   CALL_HISTORY_BY_ID_ROW = 25;
-   CALL_HISTORY_BY_ID = 'AL-QSO-PARTY';
-   CALL_HISTORY_STEMS: array[0..25] of string = (
-      'ARRL-SS-CW', 'ARRL-SS-SSB', 'ARRL-10M', 'ARRL-FD', 'CW-OPEN', 'IARU-HF',
-      'NAQP-CW', 'NAQP-SSB', 'NAQP-RTTY',
-      'ARRL-160M', 'ARRL-RTTY', 'ARRL-DIGI', 'CWOPS', 'NA-SPRINT-CW', 'NA-SPRINT-RTTY',
-      'NA-SPRINT-SSB', 'K1USNSST', 'WFD', 'CQ-160-CW', 'CQ-160-SSB',
-      'QSOP_NY', 'QSOP_TX', 'QSOP_FL',
-      'ARRL-DX-CW', 'ARRL-DX-SSB',
-      'QSOP_AL');
-   CALL_HISTORY_FIELD_NAMES: array[0..25] of string = (
-      'CK Sect', 'CK Sect', 'Exch1', 'Exch1 Sect', 'Name', 'Sect',
-      'Name State', 'Name State', 'Name State',
-      'Exch1', 'Exch1', 'Loc1', 'Name Exch1', 'Name State', 'Name State',
-      'Name State', 'Name Exch1', 'Exch1 Sect', 'Exch1', 'Exch1',
-      'Exch1', 'Exch1', 'Exch1',
-      'Exch1', 'Exch1',
-      'Exch1');
+   CALL_HISTORY_MEMBERS: array[0..50] of ContestType = (
+      ARRLSSCW, ARRLSSSSB, ARRL10, ARRLFIELDDAY, CWOPEN, IARU, NAQSOCW, NAQSOSSB, NAQSORTTY,
+      ARRL160, ARRL_RTTY_ROUNDUP, ARRLDIGI, CWOPS, NASPRINTCW, NASPRINTRTTY, SPRINTSSB, SST,
+      WINTERFIELDDAY, CQ160CW, CQ160SSB, NYQP, TEXASQSOPARTY, FLORIDAQSOPARTY, ARRLDXCW,
+      ARRLDXSSB, ArizonaQsoParty, CALQSOPARTY, MICHQSOPARTY, MOQSOPARTY, NEBRASKAQSO,
+      NCQSOPARTY, OHIOQSOPARTY, TENNESSEEQSOPARTY, VAQP, WISCONSINQSOPARTY, DUMMYCONTEST,
+      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
+      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
+      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST);
+   (* A contest that registers by its id has no member (its row's member is
+      the placeholder DUMMYCONTEST); the id decides there. '' for a member row. *)
+   CALL_HISTORY_IDS: array[0..50] of string = (
+      '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+      '', '', '', '', '', '', '', '', '', '', '', '', '', 'AL-QSO-PARTY', 'AR-QSO-PARTY',
+      'GA-QSO-PARTY', 'HI-QSO-PARTY', 'IL-QSO-PARTY', 'KS-QSO-PARTY', 'KY-QSO-PARTY',
+      'LA-QSO-PARTY', 'MS-QSO-PARTY', 'NH-QSO-PARTY', 'NJ-QSO-PARTY', 'OK-QSO-PARTY',
+      'SC-QSO-PARTY', 'SD-QSO-PARTY', 'VT-QSO-PARTY', 'WV-QSO-PARTY');
+   CALL_HISTORY_STEMS: array[0..50] of string = (
+      'ARRL-SS-CW', 'ARRL-SS-SSB', 'ARRL-10M', 'ARRL-FD', 'CW-OPEN', 'IARU-HF', 'NAQP-CW',
+      'NAQP-SSB', 'NAQP-RTTY', 'ARRL-160M', 'ARRL-RTTY', 'ARRL-DIGI', 'CWOPS', 'NA-SPRINT-CW',
+      'NA-SPRINT-RTTY', 'NA-SPRINT-SSB', 'K1USNSST', 'WFD', 'CQ-160-CW', 'CQ-160-SSB',
+      'QSOP_NY', 'QSOP_TX', 'QSOP_FL', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'QSOP_AZ', 'QSOP_CA',
+      'QSOP_MI', 'QSOP_MO', 'QSOP_NE', 'QSOP_NC', 'QSOP_OH', 'QSOP_TN', 'QSOP_VA', 'QSOP_WI',
+      'QSOP_AL', 'QSOP_AR', 'QSOP_GA', 'QSOP_HI', 'QSOP_IL', 'QSOP_KS', 'QSOP_KY', 'QSOP_LA',
+      'QSOP_MS', 'QSOP_NH', 'QSOP_NJ', 'QSOP_OK', 'QSOP_SC', 'QSOP_SD', 'QSOP_VT', 'QSOP_WV');
+   CALL_HISTORY_FIELD_NAMES: array[0..50] of string = (
+      'CK Sect', 'CK Sect', 'Exch1', 'Exch1 Sect', 'Name', 'Sect', 'Name State', 'Name State',
+      'Name State', 'Exch1', 'Exch1', 'Loc1', 'Name Exch1', 'Name State', 'Name State',
+      'Name State', 'Name Exch1', 'Exch1 Sect', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
+      'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
+      'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
+      'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1');
 
 (* The fields as N1MM names them, one blank between. *)
 function FieldNamesText(const aFields: TCallHistoryFields): string;
@@ -452,7 +456,8 @@ var
    contests: TContestIdentityList;
    k, m, row: integer;
    fields: TCallHistoryFields;
-   seen: array[0..25] of boolean;
+   seen: array[0..50] of boolean;
+   reader: TCallHistoryReader;
 begin
    BeginTest('Test_EveryContestStatesItsCallHistoryFields');
    for m := Low(seen) to High(seen) do
@@ -466,9 +471,9 @@ begin
       row := -1;
       for m := Low(CALL_HISTORY_MEMBERS) to High(CALL_HISTORY_MEMBERS) do
          begin
-         if m = CALL_HISTORY_BY_ID_ROW then
+         if CALL_HISTORY_IDS[m] <> '' then
             begin
-            if ContestId(HandleOf(contests[k])) = CALL_HISTORY_BY_ID then
+            if ContestId(HandleOf(contests[k])) = CALL_HISTORY_IDS[m] then
                begin
                row := m;
                seen[m] := True;
@@ -490,6 +495,24 @@ begin
                      ContestWho(contests[k]) + ': the fields, in the remembered order');
          CheckTrue(CallHistoryDownloadURL(CALL_HISTORY_SITE_URL, contests[k].CallHistorySiteName) <> '',
                    ContestWho(contests[k]) + ': the stem makes a URL');
+         (* A QSO PARTY'S FILE, QSOP_<ST>.txt, is !!Order!!,Call,Exch1,UserText
+            for every party sampled: a county code or a state is its QTH. *)
+         if Copy(CALL_HISTORY_STEMS[row], 1, 5) = 'QSOP_' then
+            begin
+            reader := TCallHistoryReader.Create;
+            try
+               ReadText(reader, '!!Order!!,Call,Exch1,UserText'#13#10 + 'AA0AJ,MN,'#13#10 +
+                                'K2AA,,'#13#10, fields);
+               CheckEquals(1, gCollected.Count, ContestWho(contests[k]) + ': one row prefilled');
+               if gCollected.Count > 0 then
+                  begin
+                  CheckEquals('AA0AJ=MN', string(gCollected[0]), ContestWho(contests[k]) + ': the QTH alone');
+                  end;
+               CheckEquals(1, reader.Incomplete, ContestWho(contests[k]) + ': a row with no QTH is refused');
+            finally
+               reader.Free;
+            end;
+            end;
          end
       else
          begin

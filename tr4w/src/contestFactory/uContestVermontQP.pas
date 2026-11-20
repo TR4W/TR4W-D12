@@ -238,7 +238,9 @@ uses
    uSettingsModel,
    (* TStrings, TStringList -- the club-station list. *)
    Classes,
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    (* ITS ID -- stored data; see the header. *)
@@ -395,6 +397,18 @@ type
       function DistinctAdditionalExportFormat: TDistinctExportFormat; override;
       function DistinctAdditionalExportModes: TExtendedModes; override;
       function DistinctAdditionalExportFileTag: string; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_VT carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 35 of 35 non-state rows are county keys of its
+         own county file; the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 const
@@ -961,6 +975,16 @@ begin
    Result.PrefixMultsCaption := STotalsClubStationMults;
    Result.PrefixMultsCaptionCW := 'CW Clubs';
    Result.PrefixMultsCaptionPhone := 'Ph Clubs';
+end;
+
+function TContestVermontQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestVermontQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_VT';
 end;
 
 initialization

@@ -59,7 +59,9 @@ unit uContestOhioQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestOhioQP = class(TContestStateQSOPartyBase)
@@ -130,6 +132,18 @@ type
          #88 round 3 (2026-10-26). See the implementation. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_OH carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 330 of 330 non-state rows are county keys of its
+         own county file; the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -298,6 +312,16 @@ function TContestOhioQP.CountsAsMultiplier(const aQso: ContestExchange;
 begin
    Result := not (Station.InHostState and
                   DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
+end;
+
+function TContestOhioQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestOhioQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_OH';
 end;
 
 initialization

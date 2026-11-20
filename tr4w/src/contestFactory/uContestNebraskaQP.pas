@@ -179,7 +179,9 @@ uses
    (* cpLOW / cpQRP -- the entrant's CATEGORY-POWER, as TStationContext
       carries it. First, so VC's names win wherever the two overlap. *)
    uSettingsModel,
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestNebraskaQP = class(TContestStateQSOPartyBase)
@@ -260,6 +262,18 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_NE carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 30 of 32 non-state rows are county keys of its
+         own county file; the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 const
@@ -712,6 +726,16 @@ end;
 function TContestNebraskaQP.CountryMode: CountryModeType;
 begin
    Result := DXCCCountryMode(CountsDXMultiplier);
+end;
+
+function TContestNebraskaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestNebraskaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_NE';
 end;
 
 initialization
