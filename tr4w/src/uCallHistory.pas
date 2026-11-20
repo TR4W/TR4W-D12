@@ -93,6 +93,7 @@ type
       FAlreadyKnown: integer;
       FStoreFull: integer;
       FIncomplete: integer;
+      FPartial: integer;
       procedure SetDefaultOrder;
       procedure ReadOrder(const aWords: TCallHistoryWords);
       procedure NoteDirective(const aName: string);
@@ -107,8 +108,9 @@ type
       function ReadLine(const aLine: string; out aValues: TCallHistoryValues): boolean;
 
       (* EVERY LINE, each data row's exchange built from aFields
-         (CallHistoryExchangeText) and handed to aAdd. A row missing any of
-         aFields is counted Incomplete and handed to no one. *)
+         (CallHistoryExchangeText) and handed to aAdd. A row carrying SOME of
+         aFields is handed on with what it has (counted Partial); a row
+         carrying none of them is counted Incomplete and handed to no one. *)
       procedure ReadAll(aLines: TStrings; const aFields: array of TCallHistoryField;
                         aAdd: TCallHistoryAddFunc);
 
@@ -117,7 +119,11 @@ type
       property Added: integer read FAdded;
       property AlreadyKnown: integer read FAlreadyKnown;
       property StoreFull: integer read FStoreFull;
+      (* Rows with a call that give the contest nothing (none of its fields). *)
       property Incomplete: integer read FIncomplete;
+      (* Rows prefilled with only some of the contest's fields -- NY4I,
+         2026-11-20: the history does not have to be complete to be useful. *)
+      property Partial: integer read FPartial;
       (* Each directive name other than Order, once, as the file spells it,
          joined with ', '; '' for none. *)
       function UnknownDirectives: string;
@@ -135,11 +141,18 @@ function CallHistoryFieldName(aField: TCallHistoryField): string;
 function CallHistoryFieldList(const aFields: array of TCallHistoryField): TCallHistoryFields;
 
 (* THE EXCHANGE TEXT A CONTEST PREFILLS: the values of aFields in aFields'
-   order, one blank between them. False (and '') when aFields is empty or a
-   named field is empty in this row -- a partial row is not prefilled. *)
+   order, one blank between them, SKIPPING A FIELD THE ROW LACKS (NY4I,
+   2026-11-20: "the history does not have to be complete to be useful"). A
+   row with only the county of a Name-then-QTH contest gives 'CRL'; the
+   operator adds the name. False (and '') when aFields is empty or the row
+   carries none of them. aMissing is how many of aFields the row lacked. *)
 function CallHistoryExchangeText(const aValues: TCallHistoryValues;
                                  const aFields: array of TCallHistoryField;
-                                 out aText: string): boolean;
+                                 out aText: string): boolean; overload;
+function CallHistoryExchangeText(const aValues: TCallHistoryValues;
+                                 const aFields: array of TCallHistoryField;
+                                 out aText: string;
+                                 out aMissing: integer): boolean; overload;
 
 (* WHERE A CALL HISTORY FILE IS: a name with a directory is used as it is;
    a bare name is looked for in the CallHistoryFiles folder -- the writable
@@ -425,6 +438,7 @@ var
    i: integer;
    values: TCallHistoryValues;
    text: string;
+   missing: integer;
 begin
    for i := 0 to aLines.Count - 1 do
       begin
@@ -433,10 +447,14 @@ begin
          Continue;
          end;
       inc(FDataRows);
-      if not CallHistoryExchangeText(values, aFields, text) then
+      if not CallHistoryExchangeText(values, aFields, text, missing) then
          begin
          inc(FIncomplete);
          Continue;
+         end;
+      if missing > 0 then
+         begin
+         inc(FPartial);
          end;
       case aAdd(values[chfCall], text) of
          charAdded:
@@ -469,19 +487,19 @@ end;
 
 function CallHistoryExchangeText(const aValues: TCallHistoryValues;
                                  const aFields: array of TCallHistoryField;
-                                 out aText: string): boolean;
+                                 out aText: string;
+                                 out aMissing: integer): boolean;
 var
    i: integer;
 begin
    aText := '';
-   Result := Length(aFields) > 0;
+   aMissing := 0;
    for i := Low(aFields) to High(aFields) do
       begin
       if aValues[aFields[i]] = '' then
          begin
-         aText := '';
-         Result := False;
-         Exit;
+         inc(aMissing);
+         Continue;
          end;
       if aText <> '' then
          begin
@@ -489,6 +507,16 @@ begin
          end;
       aText := aText + aValues[aFields[i]];
       end;
+   Result := aText <> '';
+end;
+
+function CallHistoryExchangeText(const aValues: TCallHistoryValues;
+                                 const aFields: array of TCallHistoryField;
+                                 out aText: string): boolean;
+var
+   missing: integer;
+begin
+   Result := CallHistoryExchangeText(aValues, aFields, aText, missing);
 end;
 
 function CallHistoryFilePath(const aName: string): string;

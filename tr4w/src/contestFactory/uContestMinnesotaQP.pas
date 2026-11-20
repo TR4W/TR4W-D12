@@ -89,7 +89,9 @@ unit uContestMinnesotaQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    (* "receive 1 multiplier for working a DX station" -- the domestic
@@ -183,6 +185,21 @@ type
          USA, Canada, Hawaii or Alaska. ONE predicate for the scoring and the
          hint. *)
       function CountryCountsAsDX(const aCountryID: string): boolean;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE NAME THEN THE COUNTY OR STATE -- this party remembers a worked station as
+         the Name, a blank, the QTH. The site file QSOP_MN carries Call, Exch1,
+         UserText (read 2026-11-20): the QTH, and NO name. A row with only the
+         QTH prefills the QTH alone (CallHistoryExchangeText skips a field the
+         row lacks, NY4I 2026-11-20); the operator adds the name -- before or
+         after, the parser reads "CRL BOB" as county then name when the first
+         word is a known QTH. 224 of 224 non-state rows are county keys of its own
+         county file.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -411,6 +428,16 @@ begin
    (* The party head first -- the county or state, as for every party. *)
    inherited DescribeNewContestPrompts(aPrompts);
    aPrompts.AskField(ncfMyName);
+end;
+
+function TContestMinnesotaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfName, chfExch1]);
+end;
+
+function TContestMinnesotaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_MN';
 end;
 
 initialization
