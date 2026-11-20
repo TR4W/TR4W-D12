@@ -56,6 +56,8 @@ https://xmldata.qrz.com/xml/current/ | tooling | head | tools\trmaster\trmaster_
 https://data.fcc.gov/download/pub/uls/complete/l_amat.zip | tooling | head | tools\trmaster\fcc_import.py | FCC amateur licence database, input of the callsign lookup build
 https://apc-cap.ic.gc.ca/datafiles/amateur_delim.zip | tooling | head | tools\trmaster\lookup_build.py | ISED amateur file, input of the callsign lookup build
 https://download.geonames.org/export/zip/US.zip | tooling | head | tools\trmaster\lookup_build.py | GeoNames US postal codes, input of the callsign lookup build
+https://github.com/TR4W/TR4W.github.io.git | tooling | skip | tools\trmaster\lookup_build.py | where lookup_build.py --deploy pushes the lookup database (a git remote, not a web page)
+https://tr4w.github.io/fcc_lookup.sqlite.gz | tooling | skip | tools\trmaster\lookup_build.py | comment: the published file's address (the program's own copy is Version.FCC_LICENSE_DOWNLOAD_URL)
 https://download.geonames.org/export/zip/CA_full.csv.zip | tooling | head | tools\trmaster\lookup_build.py | GeoNames Canadian postal codes, input of the callsign lookup build
 https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt | tooling | head | tools\trmaster\lookup_build.py | Census ZIP-to-county crosswalk, input of the callsign lookup build
 https://www2.census.gov/geo/docs/reference/codes2020/national_county2020.txt | tooling | head | tools\trmaster\lookup_build.py | Census county codes, input of the callsign lookup build
