@@ -59,7 +59,9 @@ unit uContestARRLFieldDay;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestARRLFieldDay = class(TContestBase)
@@ -183,6 +185,17 @@ type
    protected
       (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
       function GetSubmitsLogToARRL: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE CLASS THEN THE SECTION -- the site file ARRL-FD carries Call, Exch1,
+         Sect, UserText (read 2026-11-20), Exch1 being the class (1D); the log
+         remembers a worked station as the class, a blank, the QTH.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -535,6 +548,16 @@ end;
 function TContestARRLFieldDay.GetSubmitsLogToARRL: boolean;
 begin
    Result := True;
+end;
+
+function TContestARRLFieldDay.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1, chfSect]);
+end;
+
+function TContestARRLFieldDay.CallHistorySiteName: string;
+begin
+   Result := 'ARRL-FD';
 end;
 
 initialization

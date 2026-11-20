@@ -51,7 +51,9 @@ unit uContestARRL10;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestARRL10 = class(TContestBase)
@@ -124,6 +126,17 @@ type
    protected
       (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
       function GetSubmitsLogToARRL: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE STATE OR PROVINCE -- the site file ARRL-10M carries Call, Exch1,
+         UserText (read 2026-11-20), Exch1 being the state, province or
+         district. The log remembers the QTH alone for this exchange.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -365,6 +378,16 @@ end;
 function TContestARRL10.GetSubmitsLogToARRL: boolean;
 begin
    Result := True;
+end;
+
+function TContestARRL10.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestARRL10.CallHistorySiteName: string;
+begin
+   Result := 'ARRL-10M';
 end;
 
 initialization

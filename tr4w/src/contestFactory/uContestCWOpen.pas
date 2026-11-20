@@ -68,7 +68,9 @@ unit uContestCWOpen;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestCWOpen = class(TContestBase)
@@ -132,6 +134,16 @@ type
       (* THE TOTALS GRID'S MULTIPLIER ROW SAYS CALLS -- see
          TContestBase.GetTotalsDisplay (issue 277). *)
       function GetTotalsDisplay: TTotalsDisplay; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE NAME -- the site file CW-OPEN carries Call, Name, UserText (read
+         2026-11-20); the log remembers the name alone for this exchange.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -320,6 +332,16 @@ begin
    Result.PrefixMultsCaption := STotalsCallsignMults;
    Result.PrefixMultsCaptionCW := 'CW Calls';
    Result.PrefixMultsCaptionPhone := 'Ph Calls';
+end;
+
+function TContestCWOpen.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfName]);
+end;
+
+function TContestCWOpen.CallHistorySiteName: string;
+begin
+   Result := 'CW-OPEN';
 end;
 
 initialization

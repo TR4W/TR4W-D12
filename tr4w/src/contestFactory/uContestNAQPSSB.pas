@@ -53,7 +53,9 @@ unit uContestNAQPSSB;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestNAQPSSB = class(TContestBase)
@@ -122,6 +124,18 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         NAME THEN STATE -- the site file NAQP-CW carries Call, Name, State, UserText
+         (read 2026-11-20); the log remembers a worked station as the Name,
+         a blank, the QTH. The site names the SSB and RTTY runnings the
+         same way: their layout is INFERRED from the CW file, not sampled.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -357,6 +371,16 @@ end;
 function TContestNAQPSSB.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+function TContestNAQPSSB.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfName, chfState]);
+end;
+
+function TContestNAQPSSB.CallHistorySiteName: string;
+begin
+   Result := 'NAQP-SSB';
 end;
 
 initialization

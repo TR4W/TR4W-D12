@@ -488,9 +488,7 @@ end;
 
 function TContestARRLSSBase.CallHistoryFields: TCallHistoryFields;
 begin
-   SetLength(Result, 2);
-   Result[0] := chfCK;
-   Result[1] := chfSect;
+   Result := CallHistoryFieldList([chfCK, chfSect]);
 end;
 
 function TContestARRLSSBase.CallHistorySiteName: string;

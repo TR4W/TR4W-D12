@@ -61,7 +61,9 @@ unit uContestIARU;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestIARU = class(TContestBase)
@@ -169,6 +171,19 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesZone: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE ZONE OR THE SOCIETY -- the site file IARU-HF carries Call, Sect,
+         UserText (read 2026-11-20), Sect holding the ITU zone or the
+         society, as the log remembers one or the other. A zone is written
+         in the file with its leading zero ('08') where the log remembers
+         '8'; the prefill is that text as written.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -513,6 +528,16 @@ begin
       begin
       Result := inherited DomesticMultiplierHint(aText);
       end;
+end;
+
+function TContestIARU.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfSect]);
+end;
+
+function TContestIARU.CallHistorySiteName: string;
+begin
+   Result := 'IARU-HF';
 end;
 
 initialization
