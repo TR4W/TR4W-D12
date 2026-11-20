@@ -38,12 +38,14 @@ type
       procedure Test_AnInStateSessionNamesItsCounties;
       procedure Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
       procedure Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
+      procedure Test_TheOtherSixCountyFilesNameTheirCounties;
       procedure Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;
       procedure Test_AnInStatePartyQSOKeepsTheHostStateAndSendsItsUnit;
       procedure Test_TheCallIsAssembledFromTheSettingAndThePlaces;
       procedure CheckEveryCountyNamed(const aContestId, aFile, aState: string;
                                       aCount: integer;
-                                      const aPins: array of string);
+                                      const aPins: array of string;
+                                      const aUnnamed: array of string);
    public
       procedure RunAllTests; override;
    end;
@@ -784,7 +786,7 @@ begin
    CheckEveryCountyNamed('NY-QSO-PARTY', 'newyork_cty.dom', 'NY', 62,
       ['KIN=NY,KINGS', 'QUE=NY,QUEENS', 'CAT=NY,CATTARAUGUS',
        'CAY=NY,CAYUGA', 'CHA=NY,CHAUTAUQUA', 'ALB=NY,ALBANY',
-       'NEW=NY,NEW YORK', 'STL=NY,ST. LAWRENCE']);
+       'NEW=NY,NEW YORK', 'STL=NY,ST. LAWRENCE'], []);
 end;
 
 (* THE SAME FOR FLORIDA AND TENNESSEE (NY4I, 2026-11-20): their county
@@ -792,17 +794,79 @@ end;
   sponsors' tables -- docs/ContestRules/QSOParties/Florida/
   FL-QSO-PARTY-Counties.txt and Tennessee/TN-QSO-PARTY-Rules.txt -- each
   checked against the ADIF county list when it was written. Arizona,
-  Indiana, Michigan, North Carolina, the 7QP and Virginia stay unnamed: no
-  sponsor county table is in docs/ContestRules to take the names from. *)
+  Indiana, Michigan, North Carolina, the 7QP and Virginia followed on
+  2026-11-20 (Test_TheOtherSixCountyFilesNameTheirCounties). *)
 procedure TRoverStateTests.Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
 begin
    BeginTest('Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty');
    CheckEveryCountyNamed(ContestId(ContestHandleOf(FLORIDAQSOPARTY)), 'florida_cty.dom', 'FL', 67,
       ['PIN=FL,PINELLAS', 'HIL=FL,HILLSBOROUGH', 'DAD=FL,MIAMI-DADE',
-       'STJ=FL,ST. JOHNS', 'BAY=FL,BAY', 'DES=FL,DESOTO']);
+       'STJ=FL,ST. JOHNS', 'BAY=FL,BAY', 'DES=FL,DESOTO'], []);
    CheckEveryCountyNamed(ContestId(ContestHandleOf(TENNESSEEQSOPARTY)), 'tennessee_cty.dom', 'TN', 95,
       ['ANDE=TN,ANDERSON', 'VANB=TN,VAN BUREN', 'MCMI=TN,MCMINN',
-       'HARN=TN,HARDIN', 'HARD=TN,HARDEMAN']);
+       'HARN=TN,HARDIN', 'HARD=TN,HARDEMAN'], []);
+end;
+
+(* THE OTHER SIX COUNTY FILES (2026-11-20): Arizona, Indiana, Michigan, North
+  Carolina and Virginia write CNTY and now name every county, from the
+  sponsors' own tables committed beside their rules (docs/ContestRules/
+  QSOParties/<party>/<XX>-QSO-PARTY-Counties.txt), each name spelled as the
+  ADIF county list spells it (the K1MU validator's) -- Indiana's St Joseph has
+  no period there, Michigan's St. Clair has one; a Virginia independent city
+  is '<name> City' where the list says so (Fairfax City, Richmond City) and
+  plain where it does not (Bristol, Salem).
+  ONE KEY IS LEFT UNNAMED ON PURPOSE: North Carolina's CHO, which the
+  sponsor's table spells "CHOwen" -- no North Carolina county; Chowan is
+  presumably meant, which is the sponsor's to confirm, not this file's to
+  guess.
+  The 7QP's file is named too (the 7QP table, all eight states) but its class
+  writes no CNTY, so the names are asked of the file itself. *)
+procedure TRoverStateTests.Test_TheOtherSixCountyFilesNameTheirCounties;
+var
+   lines, names: TStringList;
+   i, keys: integer;
+   key: string;
+begin
+   BeginTest('Test_TheOtherSixCountyFilesNameTheirCounties');
+   CheckEveryCountyNamed(ContestId(ContestHandleOf(ArizonaQsoParty)), 'arizona_cty.dom', 'AZ', 15,
+      ['APH=AZ,APACHE', 'LPZ=AZ,LA PAZ', 'SCZ=AZ,SANTA CRUZ', 'YMA=AZ,YUMA'], []);
+   CheckEveryCountyNamed(ContestId(ContestHandleOf(INQSOPARTY)), 'in_cty.dom', 'IN', 92,
+      ['INADA=IN,ADAMS', 'INMRN=IN,MARION', 'INSTJ=IN,ST JOSEPH', 'INDEK=IN,DEKALB',
+       'INLAP=IN,LAPORTE'], []);
+   CheckEveryCountyNamed(ContestId(ContestHandleOf(MICHQSOPARTY)), 'michigan_cty.dom', 'MI', 83,
+      ['ALCO=MI,ALCONA', 'STCL=MI,ST. CLAIR', 'GRTR=MI,GRAND TRAVERSE',
+       'PRESQ=MI,PRESQUE ISLE', 'KZOO=MI,KALAMAZOO'], []);
+   CheckEveryCountyNamed(ContestId(ContestHandleOf(NCQSOPARTY)), 'nc_cty.dom', 'NC', 100,
+      ['ALA=NC,ALAMANCE', 'DVD=NC,DAVIDSON', 'MCD=NC,MCDOWELL', 'NEW=NC,NEW HANOVER',
+       'PEQ=NC,PERQUIMANS', 'GRM=NC,GRAHAM'], ['CHO']);
+   CheckEveryCountyNamed(ContestId(ContestHandleOf(VAQP)), 'va_cty.dom', 'VA', 133,
+      ['ACC=VA,ACCOMACK', 'FFX=VA,FAIRFAX', 'FXX=VA,FAIRFAX CITY', 'RIC=VA,RICHMOND',
+       'RIX=VA,RICHMOND CITY', 'BRX=VA,BRISTOL', 'KQN=VA,KING AND QUEEN',
+       'IOW=VA,ISLE OF WIGHT'], []);
+
+   (* THE 7QP: every key of its file named, by the reader the CNTY rule
+      uses (uDomFileKeys.DomFileKeyNames). *)
+   lines := TStringList.Create;
+   names := TStringList.Create;
+   try
+      lines.LoadFromFile(IncludeTrailingPathDelimiter(ShippedDomDir) + 'seven_cty.dom');
+      DomFileKeyNames(lines, names);
+      keys := 0;
+      for i := 0 to names.Count - 1 do
+         begin
+         key := string(names.Names[i]);
+         CheckTrue(string(names.ValueFromIndex[i]) <> '', 'seven_cty.dom: ' + key + ' is named');
+         Inc(keys);
+         end;
+      CheckEquals(259, keys, 'seven_cty.dom: the 7QP''s 259 counties');
+      CheckEquals('APACHE', string(names.Values['AZAPH']), '7QP AZAPH');
+      CheckEquals('LEWIS AND CLARK', string(names.Values['MTLEW']), '7QP MTLEW');
+      CheckEquals('CARSON CITY', string(names.Values['NVCAR']), '7QP NVCAR');
+      CheckEquals('NEZ PERCE', string(names.Values['IDNEZ']), '7QP IDNEZ');
+   finally
+      names.Free;
+      lines.Free;
+   end;
 end;
 
 (* A COUNTY FILE, LOADED AS THE SESSION LOADS IT into a fresh table and a
@@ -810,7 +874,23 @@ end;
   holds (aCount of them), and the pins 'CODE=ST,NAME' exactly. *)
 procedure TRoverStateTests.CheckEveryCountyNamed(const aContestId, aFile, aState: string;
                                                  aCount: integer;
-                                                 const aPins: array of string);
+                                                 const aPins: array of string;
+                                                 const aUnnamed: array of string);
+
+   function IsUnnamed(const aKey: string): boolean;
+   var
+      u: integer;
+   begin
+      Result := False;
+      for u := Low(aUnnamed) to High(aUnnamed) do
+         begin
+         if SameText(aUnnamed[u], aKey) then
+            begin
+            Result := True;
+            end;
+         end;
+   end;
+
 var
    aHandle: TContestHandle;
    savedContest: TContestHandle;
@@ -855,8 +935,15 @@ begin
             begin
             key := Trim(Copy(lines[i], 1, Pos('=', lines[i]) - 1));
             county := RoverPlaceADIFCounty(key);
-            CheckTrue(Copy(county, 1, 3) = aState + ',',
-                      aFile + ': ' + key + ' names an ADIF county: "' + county + '"');
+            if IsUnnamed(key) then
+               begin
+               CheckEquals('', county, aFile + ': ' + key + ' is left unnamed on purpose');
+               end
+            else
+               begin
+               CheckTrue(Copy(county, 1, 3) = aState + ',',
+                         aFile + ': ' + key + ' names an ADIF county: "' + county + '"');
+               end;
             Inc(keys);
             end;
          end;
@@ -1089,6 +1176,7 @@ begin
    Test_AnInStateSessionNamesItsCounties;
    Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
    Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
+   Test_TheOtherSixCountyFilesNameTheirCounties;
    Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;
    Test_AnInStatePartyQSOKeepsTheHostStateAndSendsItsUnit;
    Test_TheCallIsAssembledFromTheSettingAndThePlaces;

@@ -1,0 +1,73 @@
+﻿Arizona QSO Party County Abbreviations
+
+Source: https://www.azqp.org/counties
+Fetched: 2026-11-20
+
+The page lists the 15 county names, then the 15 codes in the same order
+(Apache APH ... Yuma YMA); the 7QP table (SeventhCallArea/7QP-Counties.txt)
+pairs the same codes with the same names.
+
+Activated Counties | AZQP - Arizona QSO Party
+top of page
+2027
+1500z Oct 9 to 0500z Oct 10, 2027  (UTC)
+Arizona Section
+AZQP
+begins in:
+19th Running of the AZQP*
+365d
+24h
+60m
+AZQP 2026 Activated Counties
+Apache
+Cochise
+Coconino
+Gila
+Graham
+Greenlee
+La Paz
+Maricopa
+Mohave
+Navajo
+Pima
+Pinal
+Santa Cruz
+Yavapai
+Yuma
+Mobile
+APH
+CHS
+CNO
+GLA
+GHM
+GLE
+LPZ    K7E
+MCP   N7NWL
+MHV   K7M, W4IDX
+NVO
+PMA   K7A (K6WSC), K9SAT, WW9R
+PNL    KT7RC
+SCZ
+YVP    K7M
+YMA   K7L
+- - -    KK6MC/m plans to operate 8 counties.
+Announce your planned operations ==>
+Activate County
+Please include station and operator callsigns, county or counties, and “/m” if mobile. Update as needed.
+HOME
+Flyer
+Awards
+Rules
+Categories & Multipliers
+Activated Counties
+Log Submission
+Results & More
+History & Historical Results
+Resources
+Store
+Contact / Activate County
+© 2027 Arizona QSO Party
+Last Updated: 10/16
+/2026
+Back to Top
+bottom of page

@@ -1,0 +1,87 @@
+﻿North Carolina QSO Party Abbreviations
+
+Source: https://ncqsoparty.org/wp-content/uploads/2022/11/NCQP_Abbreviations_221121.pdf
+Fetched: 2026-11-20
+
+The abbreviation is the capital letters of each name (DaViDson = DVD).
+The sponsor spells CHO "CHOwen", which is no North Carolina county; Chowan is
+presumably meant. Not confirmed, so nc_cty.dom leaves CHO unnamed.
+
+11/21/22
+
+                  North Carolina QSO Party Abbreviations
+              (Abbreviation in dark red capital letters: i.e. CAPS)
+
+___ALAmance   ___CUMberland                             ___JOHnston     ___RANdolph
+___ALExander  ___CURrituck                              ___JONes        ___RIChmond
+___ALLeghany  ___DARe                                   ___LEE          ___ROBeson
+___ANSon      ___DaViDson                               ___LENoir       ___ROCkingham
+___ASHe       ___DAVie                                  ___LINcoln      ___ROWan
+___AVEry      ___DUPlin                                 ___MACon        ___RUTherford
+___BEAufort   ___DURham                                 ___MADison      ___SAMpson
+___BERtie     ___EDGecombe                              ___MARtin       ___SCOtland
+___BLAden     ___FORsyth                                ___MCDowell     ___STAnly
+___BRUnswick  ___FRAnklin                               ___MECklenburg  ___STOkes
+___BUNcombe   ___GASton                                 ___MITchell     ___SURry
+___BURke      ___GATes                                  ___MONtgomery   ___SWAin
+___CABarrus   ___GRahaM                                 ___MOOre        ___TRAnsylvania
+___CALdwell   ___GRAnville                              ___NASh         ___TYRrell
+___CAMden     ___GREene                                 ___NEW Hanover  ___UNIon
+___CARteret   ___GUIlford                               ___NORthampton  ___VANce
+___CASwell    ___HALifax                                ___ONSlow       ___WAKe
+___CATawba    ___HARnett                                ___ORAnge       ___WARren
+___CHAtham    ___HAYwood                                ___PAMlico      ___WAShington
+___CHErokee   ___HENderson                              ___PASquotank   ___WATauga
+___CHOwen     ___HERtford                               ___PENder       ___WAYne
+___CLAy       ___HOKe                                   ___PErQuimans   ___WiLKes
+___CLEveland  ___HYDe                                   ___PERson       ___WILson
+___COLumbus   ___IREdell                                ___PITt         ___YADkin
+___CRAven     ___JACkson                                ___POLk         ___YANcey
+
+Additional Multipliers for NC  Stations    (States, District of Columbia, and Canadian Provinces & Territories)
+___ AL Alabama                        ___
+___ AK Alaska                         ___  MN Minnesota       ___ WA Washington
+___ AZ Arizona                        ___
+___ AR Arkansas                       ___  MS Mississippi     ___ WV West Virginia
+___ CA California                     ___
+___ CT Connecticut                    ___  MO Missouri        ___ WI Wisconsin
+___ CO Colorado                       ___
+___ DC District of Columbia           ___  MT Montana         ___ WY Wyoming
+___ DE Delaware                       ___
+___ FL Florida                        ___  NE Nebraska
+___ GA Georgia                        ___
+___ HI Hawaii                         ___  NH New Hampshire
+___ ID Idaho                          ___
+___ IL Illinois                       ___  NV Nevada
+___ IN Indiana                        ___
+___ IA Iowa                           ___  NJ New Jersey      ___ AB Alberta
+___ KS Kansas                         ___
+___ KY Kentucky                       ___  NM New Mexico      ___ BC British Columbia
+___ LA Louisiana                      ___
+___ ME Maine                          ___  NY New York        ___ MB Manitoba
+___ MD Maryland                       ___
+___ MA Massachusetts                  ___  ND North Dakota    ___ NB New Brunswick
+___ MI Michigan                       ___
+                                           OH Ohio            ___ NL Newfoundland and Labrador
+
+                                           OK Oklahoma        ___ NS Nova Scotia
+
+                                           OR Oregon          ___ NT Northwest Territories
+
+                                           PA Pennsylvania    ___ NU Nunavut (Territory)
+
+                                           RI Rhode Island    ___ ON Ontario
+
+                                           SC South Carolina  ___ PE Prince Edward Island
+
+                                           SD South Dakota    ___ QC Quebec
+
+                                           TN Tennessee       ___ SK Saskatchewan
+
+                                           TX Texas           ___ YT Yukon (Territory)
+
+                                           UT Utah
+
+                                           VT Vermont
+
+                                           VA Virginia        ___ DX Other DX Country
