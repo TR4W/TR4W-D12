@@ -875,6 +875,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestITUZoneContests in 'uTestITUZoneContests.pas',
    (* P7: the Super Check Partial cell buffer, over the matrix's TRMASTER fixture. *)
    uTestLogSCP          in 'uTestLogSCP.pas',
+   (* Live reload of TRMASTER.DTA and a call history file, mid-contest
+      (NY4I, 2026-11-20): snapshot swap, no restart. *)
+   uTestLiveDataSwap    in 'uTestLiveDataSwap.pas',
    (* Issue 89 / audit 6.6: the TNC packet object's spot memory and display
       line buffer, pinned before the object became a class. *)
    uTestLogPack         in 'uTestLogPack.pas',
@@ -1325,6 +1328,7 @@ begin
    RegisterSuite(TCRC16Tests.Create('CRC16'));
    RegisterSuite(TWinKeyWireTests.Create('WinKeyWire'));
    RegisterSuite(TLogSCPTests.Create('LogSCP'));
+   RegisterSuite(TLiveDataSwapTests.Create('LiveDataSwap'));
    RegisterSuite(TLogPackTests.Create('LogPack'));
    RegisterSuite(TK4SpectrumTests.Create('K4Spectrum'));
    RegisterSuite(TSpectrumMappingTests.Create('SpectrumMapping'));

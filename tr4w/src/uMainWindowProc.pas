@@ -107,6 +107,9 @@ type
      THE SAME SHAPE AS TTR4WEntryEvents above: one instance, created on first
      use, holding handler methods for a unit that is otherwise procedural. }
    TTR4WBackgroundEvents = class
+      (* THE FILE THE TRMASTER DOWNLOAD IS WRITING, set by the menu arm that
+        starts it; TRMasterDownloadFinished loads that file into SCP. *)
+      TRMasterTarget: string;
       procedure PotaDownloadFinished(Sender: TObject; aSucceeded: boolean);
       procedure PotaParksParsed(Sender: TObject; aParks: TStringList);
       procedure TRMasterDownloadFinished(Sender: TObject; aSucceeded: boolean);
@@ -136,6 +139,11 @@ implementation
   is a window procedure nothing can be moved out of. }
 uses
   SysUtils,
+  (* FIRST, so a name these two share with a unit below still resolves to the
+    later one, as it did before they were here (this tree relies on use
+    order). Both uses below are qualified for the same reason. *)
+  LogSCP,             // CD -- the TRMASTER reload
+  LogDupe,            // LoadCallHistoryFile -- the call history reload
   uCrashLog,          // LogCaughtException -- see the guard on WindowProc
   (* Messages stood here and had NOTHING left to declare (2026-09-08). Every
     WM_ / HDN_ / LVSCW_ name in this file is now inside a COMMENT describing
@@ -571,37 +579,45 @@ begin
 end;
 
 (* 
-  WHY THIS DOES NOT RELOAD SCP, unlike the CTY handler below.
-  ctyLoadInCountryFile is a clean, idempotent reload entry point. TRMASTER has
-  no equivalent: LOGSCP loads it LAZILY into a heap index array behind three
-  flags (TRMasterFileOpen, IndexArrayAllocated, MasterFileExists) plus a cached
-  OperatorNameSet built once, and the only close routine,
-  SCPDisableAndDeAllocateFileBuffer, also sets SCPDisabledByApplication -- it
-  disables SCP rather than reloading it.
+  THE TRMASTER.DTA DOWNLOAD HAS FINISHED -- on the main thread. THE NEW FILE IS
+  IN USE AT ONCE, with no restart (2026-11-20).
 
-  A partial reload that left OperatorNameSet stale, or SCP disabled, would be
-  wrong data during a contest and would look like nothing at all. Telling the
-  operator to restart is honest and costs one restart; guessing at TRDOS load
-  state is not worth a wrong callsign hint. A proper reload belongs with the
-  SQLite log work, not here. *)
+  It used to say "restart TR4W", because LOGSCP loaded the file lazily into a
+  heap index behind three flags (TRMasterFileOpen, IndexArrayAllocated,
+  MasterFileExists) plus a cached OperatorNameSet, and its only close routine
+  also disabled SCP -- a partial reload could have left stale names or SCP off
+  in the middle of a contest. LOGSCP now holds the whole file as ONE snapshot
+  built privately: CD.ReplaceTRMasterFile loads and checks the new file, builds
+  the name set from it, and puts all of it in service in one step. A file that
+  does not load changes nothing, and the operator is told so. Everything that
+  reads SCP runs on this thread, so no lookup can be half way through. *)
 procedure TTR4WBackgroundEvents.TRMasterDownloadFinished(Sender: TObject;
                                                          aSucceeded: boolean);
+var
+   why: string;
 begin
-   if aSucceeded then
+   if not aSucceeded then
       begin
-      QuickDisplay(TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS);
+      QuickDisplay(TC_TRMASTERDTADOWNLOADFAILED);
+      Exit;
+      end;
+   if LogSCP.CD.ReplaceTRMasterFile(TRMasterTarget, why) then
+      begin
+      QuickDisplay(TC_TRMASTERDTADOWNLOADEDINUSE);
       end
    else
       begin
-      QuickDisplay(TC_TRMASTERDTADOWNLOADFAILED);
+      QuickDisplay(TC_TRMASTERDTADOWNLOADEDNOTLOADED);
       end;
 end;
 
 (* THE CALL HISTORY DOWNLOAD HAS FINISHED -- on the main thread, the result
-  valid only during this call. One line to the operator. A downloaded file is
-  read when a contest OPENS, not live, so the message says so; and if CALL
-  HISTORY FILENAME names a file other than the one just written, the message
-  says THAT, because the download then changes nothing the program reads. *)
+  valid only during this call. One line to the operator. A NEW FILE IS READ AT
+  ONCE (2026-11-20; it used to wait for the next contest open): LOGDUPE's
+  LoadCallHistoryFile builds the file privately and replaces the list's call
+  history layer in one step, the log's own entries untouched. If CALL HISTORY
+  FILENAME names a file other than the one just written, the message says
+  THAT, because the download then changes nothing the program reads. *)
 procedure TTR4WBackgroundEvents.CallHistoryDownloadFinished(Sender: TObject;
                                                             aResult: TCallHistoryDownloadResult);
 var
@@ -610,9 +626,12 @@ var
    inUse: string;
    written: string;
    same: boolean;
+   reload: boolean;
+   stored: integer;
 begin
    text  := aResult.MessageText;
    named := Trim(Settings.Contest.CallHistoryFilename);
+   reload := aResult.Outcome = chdUpdated;
    if (aResult.Outcome in [chdUpdated, chdCurrent]) and (named <> '') then
       begin
       (* THE FILE THE SETTING RESOLVES TO, as the loader resolves it (a bare name
@@ -630,6 +649,19 @@ begin
       if not same then
          begin
          text := text + '. ' + UnicodeFormat(SCallHistoryOtherFile, [named]);
+         reload := False;
+         end;
+      end;
+   if reload then
+      begin
+      stored := LogDupe.LoadCallHistoryFile;
+      if stored > 0 then
+         begin
+         text := text + '; ' + UnicodeFormat(SCallHistoryInUse, [stored]);
+         end
+      else
+         begin
+         text := text + '; ' + SCallHistoryNotApplied;
          end;
       end;
    QuickDisplay(text);

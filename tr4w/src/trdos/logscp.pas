@@ -81,6 +81,33 @@ type
   MemoryBlock = array[0..MemoryBlockSize - 1] of Byte;
   MemoryBlockPtr = ^MemoryBlock;
 
+  (* THE WHOLE OF A TRMASTER.DTA, as bytes. *)
+  TTRMasterBytes = array of Byte;
+
+  (* ONE LOADED TRMASTER.DTA -- LIVE-RELOAD SNAPSHOT (2026-11-20).
+
+    It is built whole and PRIVATELY (LoadTRMasterSnapshot), checked, and then
+    put in service as a unit (CallDatabase.InstallTRMasterSnapshot); nothing
+    writes to it afterwards, and it is freed only when a newer one replaces
+    it. THE FILE IS READ INTO MEMORY AND CLOSED, not held open: the RTL's
+    fmShareDenyNone is FILE_SHARE_READ or FILE_SHARE_WRITE with no
+    FILE_SHARE_DELETE (rtl/win/sysutils.pp, ShareModes), so a handle held
+    from the first lookup can keep Windows from deleting or replacing the
+    file -- which the download does. TRMASTER.DTA is a few megabytes.
+
+    The index, the end-of-file address and the file size live here; the
+    fields of CallDatabase with those names (SCPIndexArray, SCPEndOfFile,
+    DTAFileSize) and the flags (TRMasterFileOpen, IndexArrayAllocated,
+    MasterFileExists) are set from it in that one routine, so they change
+    together. *)
+  TTRMasterSnapshot = class
+  public
+    FileName: string;
+    Data: TTRMasterBytes;
+    Index: SCPIndexArrayType;
+    EndOfFile: LONGINT;
+  end;
+
   (* THE CELL BUFFER IS A CLASS HOLDING ONE DYNAMIC ARRAY (P7, 2026-10-17;
     docs/POINTER_AUDIT.md 2.2, 6.4, 7.5). It was an old-style object of three
     pointers to 260,000-byte arrays with TWO allocators for one pointer --
@@ -100,7 +127,8 @@ type
 
     function GetNextEntry(var EntryString: ShortString {string}): boolean;
     procedure GoAway;
-    procedure LoadCellIntoBuffer(KeyString: CallString; {var } FileRead: THandle {file}; NumberBytes: LONGINT);
+    procedure LoadCellIntoBuffer(KeyString: CallString; const Source: TTRMasterBytes;
+      Offset, NumberBytes: LONGINT);
 
     property NumberBufferEntries: LONGINT read FEntries;
   end;
@@ -165,7 +193,14 @@ type
     SCPEndOfFile: LONGINT; { Address for end of last entry }
     WorkingDirectory: Str40;
 
-    TRMasterFileRead: THandle {file};
+    (* THE LOADED FILE, nil until the first lookup asks for it. The three
+      fields above (SCPIndexArray, SCPEndOfFile, DTAFileSize) and
+      TRMasterFileOpen / IndexArrayAllocated / MasterFileExists are set from
+      it by InstallTRMasterSnapshot and by nothing else. *)
+    Snapshot: TTRMasterSnapshot;
+    (* The file a lazy load last failed on, so the log names a bad file once
+      and not on every keystroke. *)
+    LoadFailedFor: string;
     TRMasterFileOpen: boolean;
 
     procedure AddInBytes(NumberBytes, X, Y: integer);
@@ -218,13 +253,32 @@ type
 
     procedure SCPDisableAndDeAllocateFileBuffer;
 
+    (* PUTS A LOADED FILE IN SERVICE: the snapshot, the mirrored fields and
+      flags, and every cache that holds the old file's data (the cell buffer,
+      the last entry, the partial-call state). Frees the snapshot it
+      replaces. The caller built aNew privately, so no one ever sees it half
+      made. MAIN THREAD ONLY, like every reader of this object. *)
+    procedure InstallTRMasterSnapshot(aNew: TTRMasterSnapshot);
+
+    (* LIVE RELOAD -- loads aFileName, checks it, and replaces what SCP serves
+      from, with the operator-name set (when a contest asked for one) built
+      from the NEW file before the two change places. A file that cannot be
+      loaded changes nothing: False, aWhy says why, and the file in service
+      keeps serving. On success ActiveFilename names the new file. *)
+    function ReplaceTRMasterFile(const aFileName: string; out aWhy: string): boolean;
+
     procedure ShowStatistics;
     procedure TransferNewData(OldData: DataBaseEntryRecord; var NewData: DataBaseEntryRecord);
 
-    { Iterates every entry in TRMASTER.DTA and collects non-empty operator
-      names (uppercased) into Names.  Uses a private file handle so it does
-      not disturb the shared TRMasterFileRead state used by SCP lookups. }
+    (* Iterates every entry in the file in service and collects non-empty
+      operator names (uppercased) into Names.  Reads the snapshot's bytes
+      through a private cell buffer, so it does not disturb CellBuffer, the
+      one SCP lookups use. *)
     procedure BuildOperatorNameSet(Names: TStringList);
+
+    (* The same walk over any snapshot -- the one the reload has built and not
+      yet put in service. *)
+    procedure CollectOperatorNames(aSnapshot: TTRMasterSnapshot; Names: TStringList);
   end;
 
 (* The const section held one entry, PossibleCallActionTypeStringArray, and
@@ -246,6 +300,11 @@ var
 procedure InitOperatorNameSet;
 function NameInOperatorSet(const AName: string): Boolean;
 
+(* READS A TRMASTER.DTA INTO A NEW SNAPSHOT and checks it: nil, and aWhy (a
+  sentence for the log), for a file that is missing, too small to hold the
+  index, or whose index points outside it. Touches no other state. *)
+function LoadTRMasterSnapshot(const aFileName: string; out aWhy: string): TTRMasterSnapshot;
+
 function GetRandomLetter: Char;
 function GetRandomNumber: Char;
 
@@ -257,6 +316,13 @@ uses LogWind,
                       the type moved there with the setting *)
   uAppStrings,      (* SExportNotWritten *)
   SysUtils;
+
+var
+  (* A contest asked for the operator-name set (InitOperatorNameSet ran), even
+    if there was no file to build it from. A reload builds the set for the
+    new file when this is set -- so a first-ever download gives the names too,
+    not only the callsigns. *)
+  OperatorNamesWanted: boolean = False;
 
 function DoubleIndexCall(Call: CallString): boolean;
 
@@ -284,8 +350,8 @@ begin
 end;
 
 procedure TSCPCellBuffer.LoadCellIntoBuffer(KeyString: CallString;
-  {var }FileRead: THandle {file};
-  NumberBytes: LONGINT);
+  const Source: TTRMasterBytes;
+  Offset, NumberBytes: LONGINT);
 
 const
   PostModeMemory                        = 3 * BufferArraySize;
@@ -317,6 +383,22 @@ begin
         end;
      end;
 
+  (* THE CELL IS COPIED OUT OF THE SNAPSHOT'S BYTES (it was a read from the
+    open file). A cell that lies outside the bytes is cut to what is there --
+    LoadTRMasterSnapshot has already refused an index that points outside, so
+    this is the second line of defence, not the first. *)
+  if (Offset < 0) or (Offset > Length(Source)) then
+     begin
+     NumberBytes := 0;
+     end
+  else
+     begin
+     if NumberBytes > Length(Source) - Offset then
+        begin
+        NumberBytes := Length(Source) - Offset;
+        end;
+     end;
+
   if NumberBytes > Length(FData) then
      begin
      SetLength(FData, NumberBytes);
@@ -324,16 +406,7 @@ begin
 
   if NumberBytes > 0 then
      begin
-     (* ASK sReadFile WHETHER IT WORKED, WHICH IS WHAT IT RETURNS. The old
-       code ignored it in the running program's mode and halted the whole
-       program on it in the other; a cell that could not be read is an empty
-       cell with no key, so the next lookup tries the file again. *)
-     if not sReadFile(FileRead, FData[0], NumberBytes) then
-        begin
-        logger.Error('TSCPCellBuffer.LoadCellIntoBuffer: the read of cell %s (%d bytes) failed',
-           [string(KeyString), NumberBytes]);
-        Exit;
-        end;
+     Move(Source[Offset], FData[0], NumberBytes);
      end;
 
   Key := KeyString;
@@ -1670,12 +1743,13 @@ end;
 
 function CallDatabase.LoadInIndexArray: boolean;
 
-{ This procedure will go read in the index array for the active file.
-  It is saved in SCPIndexArray. Returns TRUE if it thinks it worked. }
+(* This procedure will go read in the file and its index array, once -- as a
+  snapshot (see TTRMasterSnapshot), which InstallTRMasterSnapshot puts in
+  service. Returns TRUE if it worked. *)
 
-//var
-  //Directory                             : Str40;
-  //Result1                               : integer {WORD} {WLI};
+var
+  Loaded                                : TTRMasterSnapshot;
+  Why                                   : string;
 
 begin
   WorkingDirectory := '';
@@ -1701,33 +1775,32 @@ begin
         it. }
     if not MasterFileExists then Exit;
 
-
-      //{WLI}
-         {DosError := 0;}
-           { Seems to be necessary in some cases as the
-                                value will be 18 - indicating "no more files"
-                                which might be because of the FindFirst that
-                                was executed.  Doesn't seem to get reset by
-                                the next two statements...  weird. }
-
-    if tOpenFileForRead(TRMasterFileRead, CharBufferText(ActiveFilename)) then
-
-//      Assign(TRMasterFileRead, ActiveFilename);
-//    Reset(TRMasterFileRead, 1);
-//    if IORESULT {DosError} {WLI} = 0 then
+    (* A FILE THAT FAILED THE CHECK IS NOT READ AGAIN BY EVERY KEYSTROKE --
+      this is asked on each lookup, and the file is megabytes. It is tried
+      again when ActiveFilename names another file, or when a reload
+      (ReplaceTRMasterFile -> InstallTRMasterSnapshot) succeeds. *)
+    if LoadFailedFor = CharBufferText(ActiveFilename) then
        begin
-       { sFileSize, not Windows.GetFileSize -- and it preserves the read
-         position, which the two sReadFile calls below depend on. }
-       DTAFileSize := sFileSize(TRMasterFileRead);
+       Exit;
+       end;
 
-       New(SCPIndexArray);
-       sReadFile(TRMasterFileRead, SCPIndexArray^, SizeOf(SCPIndexArray^));
-       sReadFile(TRMasterFileRead, SCPEndOfFile, SizeOf(SCPEndOfFile));
- //      BlockRead(TRMasterFileRead, SCPIndexArray^, SizeOf(SCPIndexArray^), Result1);
- //      BlockRead(TRMasterFileRead, SCPEndOfFile, SizeOf(SCPEndOfFile), Result1);
+    Loaded := LoadTRMasterSnapshot(CharBufferText(ActiveFilename), Why);
+    if Loaded <> nil then
+       begin
+       InstallTRMasterSnapshot(Loaded);
        LoadInIndexArray := True;
-       TRMasterFileOpen := True;
-       IndexArrayAllocated := True;
+       end
+    else
+       begin
+       (* THE OLD CODE IGNORED A FAILED OR SHORT READ AND WENT ON WITH A HALF
+         LOADED INDEX. A file that cannot be used is reported -- once, not on
+         every keystroke -- and SCP stays off for it. *)
+       if LoadFailedFor <> CharBufferText(ActiveFilename) then
+          begin
+          LoadFailedFor := CharBufferText(ActiveFilename);
+          logger.Error('TRMASTER.DTA %s cannot be used: %s',
+             [LoadFailedFor, Why]);
+          end;
        end;
 
   end;
@@ -1774,10 +1847,7 @@ begin
 
   NumberBytes := EndingOffset - StartingOffset;
 
-  { FileSeek from the start -- what SetFilePointer(..., FILE_BEGIN) did. }
-  FileSeek(TRMasterFileRead, Int64(StartingOffset), fsFromBeginning);
-
-  CellBuffer.LoadCellIntoBuffer(KeyString, TRMasterFileRead, NumberBytes);
+  CellBuffer.LoadCellIntoBuffer(KeyString, Snapshot.Data, StartingOffset, NumberBytes);
   InitialPartialCall := PartialCall;
 end;
 
@@ -2674,14 +2744,12 @@ begin
 
   Address := Random(Range) + StartingOffset;
 
-  if Address + SizeOf(MiniBuffer) >= sFileSize(TRMasterFileRead) then
+  if Address + SizeOf(MiniBuffer) >= Length(Snapshot.Data) then
      begin
-     Address := (sFileSize(TRMasterFileRead) - SizeOf(MiniBuffer)) - 5;
+     Address := (Length(Snapshot.Data) - SizeOf(MiniBuffer)) - 5;
      end;
 
-  FileSeek(TRMasterFileRead, Int64(Address), fsFromBeginning);
-
-  sReadFile(TRMasterFileRead, MiniBuffer, SizeOf(MiniBuffer));
+  Move(Snapshot.Data[Address], MiniBuffer, SizeOf(MiniBuffer));
 
   Address := 0;
 
@@ -2728,13 +2796,81 @@ begin
 
   if TRMasterFileOpen then
      begin
-     FileClose(TRMasterFileRead);
-     Dispose(SCPIndexArray);
+     (* THE SNAPSHOT OWNS THE INDEX, so freeing it is what Dispose(SCPIndexArray)
+       was; the pointer is cleared, where it used to be left dangling. *)
+     FreeAndNil(Snapshot);
+     SCPIndexArray := nil;
      TRMasterFileOpen := False;
      IndexArrayAllocated := False;
      end;
 
   SCPDisabledByApplication := True;
+end;
+
+procedure CallDatabase.InstallTRMasterSnapshot(aNew: TTRMasterSnapshot);
+
+var
+  Old                                   : TTRMasterSnapshot;
+
+begin
+  Old := Snapshot;
+
+  Snapshot := aNew;
+  SCPIndexArray := @aNew.Index;
+  SCPEndOfFile := aNew.EndOfFile;
+  DTAFileSize := Length(aNew.Data);
+  TRMasterFileOpen := True;
+  IndexArrayAllocated := True;
+  MasterFileExists := True;
+  LoadFailedFor := '';
+
+  (* EVERYTHING THAT HOLDS THE OLD FILE'S DATA GOES WITH IT. GetEntry answers
+    from LastCallRecord before it reads anything, and the cell buffer and the
+    partial walk are the old file's cells. *)
+  CellBuffer.GoAway;
+  ClearDataEntry(LastCallRecord);
+  LastPartialCall := '';
+  InitialPartialCall := '';
+
+  Old.Free;
+end;
+
+function CallDatabase.ReplaceTRMasterFile(const aFileName: string; out aWhy: string): boolean;
+
+var
+  Loaded                                : TTRMasterSnapshot;
+  NewNames                              : TStringList;
+  OldNames                              : TStringList;
+
+begin
+  Result := False;
+  Loaded := LoadTRMasterSnapshot(aFileName, aWhy);
+  if Loaded = nil then
+     begin
+     logger.Error('TRMASTER.DTA %s was not loaded: %s; the data in use is unchanged',
+        [aFileName, aWhy]);
+     Exit;
+     end;
+
+  (* THE NAME SET IS BUILT FROM THE NEW FILE, privately, BEFORE anything
+    changes; the two then change places with nothing between them. *)
+  NewNames := nil;
+  if OperatorNamesWanted or (OperatorNameSet <> nil) then
+     begin
+     NewNames := TStringList.Create;
+     NewNames.Sorted := True;
+     NewNames.Duplicates := dupIgnore;
+     CollectOperatorNames(Loaded, NewNames);
+     end;
+
+  OldNames := OperatorNameSet;
+  OperatorNameSet := NewNames;
+  InstallTRMasterSnapshot(Loaded);
+  OldNames.Free;
+
+  SetCharBuffer(ActiveFilename, aFileName);
+  logger.Info('TRMASTER.DTA reloaded from %s (%d bytes)', [aFileName, DTAFileSize]);
+  Result := True;
 end;
 
 procedure CallDatabase.ShowStatistics;
@@ -3032,11 +3168,20 @@ end;
   -------------------------------------------------------------------------- }
 
 procedure CallDatabase.BuildOperatorNameSet(Names: TStringList);
-{ Opens a private read handle to TRMASTER.DTA, walks every 37×37 cell,
-  and adds each non-empty operator name (uppercased) to Names.
-  The shared TRMasterFileRead handle and CellBuffer state are untouched. }
+(* The names of the file in service (loading it first if it is not yet). *)
+begin
+   if not LoadInIndexArray then
+      begin
+      Exit;
+      end;
+   CollectOperatorNames(Snapshot, Names);
+end;
+
+procedure CallDatabase.CollectOperatorNames(aSnapshot: TTRMasterSnapshot; Names: TStringList);
+(* Walks every 37 x 37 cell of aSnapshot's bytes through a private cell buffer
+  and adds each non-empty operator name (uppercased) to Names.  CellBuffer
+  and the snapshot in service are untouched. *)
 var
-   FileHandle  : THandle;
    LocalBuf    : TSCPCellBuffer;
    X           : Integer;
    Y           : Integer;
@@ -3046,14 +3191,6 @@ var
    EntryStr    : ShortString;
    Rec         : DataBaseEntryRecord;
 begin
-   if not LoadInIndexArray then
-      begin
-      Exit;
-      end;
-   if not tOpenFileForRead(FileHandle, CharBufferText(ActiveFilename)) then
-      begin
-      Exit;
-      end;
    LocalBuf := TSCPCellBuffer.Create;
    LocalBuf.MaximumMemoryToUse := BufferArraySize;
    try
@@ -3061,19 +3198,19 @@ begin
          begin
          for Y := 0 to 36 do
             begin
-            StartOffset := SCPIndexArray^[X, Y];
-            { End offset = start of the next cell; the very last cell uses SCPEndOfFile }
+            StartOffset := aSnapshot.Index[X, Y];
+            (* End offset = start of the next cell; the very last cell uses the end of file *)
             if Y < 36 then
                begin
-               EndOffset := SCPIndexArray^[X, Y + 1]
+               EndOffset := aSnapshot.Index[X, Y + 1]
                end
             else if X < 36 then
                begin
-               EndOffset := SCPIndexArray^[X + 1, 0]
+               EndOffset := aSnapshot.Index[X + 1, 0]
                end
             else
                begin
-               EndOffset := SCPEndOfFile;
+               EndOffset := aSnapshot.EndOfFile;
                end;
             NumBytes := EndOffset - StartOffset;
             if NumBytes <= 0 then
@@ -3084,8 +3221,7 @@ begin
                begin
                NumBytes := BufferArraySize;
                end;
-            FileSeek(FileHandle, Int64(StartOffset), fsFromBeginning);
-            LocalBuf.LoadCellIntoBuffer('', FileHandle, NumBytes);
+            LocalBuf.LoadCellIntoBuffer('', aSnapshot.Data, StartOffset, NumBytes);
             while LocalBuf.GetNextEntry(EntryStr) do
                begin
                ParseEntryToDataRecord(EntryStr, Rec);
@@ -3098,8 +3234,78 @@ begin
          end;
    finally
       LocalBuf.Free;
-      FileClose(FileHandle);
       end;
+end;
+
+function LoadTRMasterSnapshot(const aFileName: string; out aWhy: string): TTRMasterSnapshot;
+var
+   Stream      : TFileStream;
+   Size        : Int64;
+   X           : Integer;
+   Y           : Integer;
+begin
+   Result := nil;
+   aWhy := '';
+   if (aFileName = '') or (not FileExists(aFileName)) then
+      begin
+      aWhy := 'the file is not there';
+      Exit;
+      end;
+
+   Stream := nil;
+   try
+      try
+         Stream := TFileStream.Create(aFileName, fmOpenRead or fmShareDenyNone);
+         Size := Stream.Size;
+         if Size < SizeOf(SCPIndexArrayType) + SizeOf(LONGINT) then
+            begin
+            aWhy := 'the file is too small to hold the index (' + IntToStr(Size) + ' bytes)';
+            end
+         else if Size > High(LONGINT) then
+            begin
+            aWhy := 'the file is larger than the 2 GB its offsets can address';
+            end
+         else
+            begin
+            Result := TTRMasterSnapshot.Create;
+            Result.FileName := aFileName;
+            SetLength(Result.Data, Size);
+            Stream.ReadBuffer(Result.Data[0], Size);
+            Move(Result.Data[0], Result.Index, SizeOf(Result.Index));
+            Move(Result.Data[SizeOf(Result.Index)], Result.EndOfFile, SizeOf(Result.EndOfFile));
+
+            (* THE FIRST CHECK THIS FILE EVER GETS -- the download does none.
+              The end address and every cell address must lie inside the file;
+              otherwise a lookup would be handed another file's bytes, or none. *)
+            if (Result.EndOfFile < 0) or (Result.EndOfFile > Size) then
+               begin
+               aWhy := 'its end-of-file address lies outside the file';
+               end;
+            for X := 0 to 36 do
+               begin
+               for Y := 0 to 36 do
+                  begin
+                  if (aWhy = '') and (Int64(Result.Index[X, Y]) > Size) then
+                     begin
+                     aWhy := 'an index address lies outside the file';
+                     end;
+                  end;
+               end;
+            if aWhy <> '' then
+               begin
+               FreeAndNil(Result);
+               end;
+            end;
+      except
+         on E: Exception do
+            begin
+            aWhy := E.Message;
+            FreeAndNil(Result);
+            end;
+      end;
+   finally
+      Stream.Free;
+   end;
 end;
 
 procedure InitOperatorNameSet;
@@ -3107,6 +3313,7 @@ procedure InitOperatorNameSet;
   MasterFileExists is set at startup before ActiveFilename is populated,
   so we do a live check here now that the contest has set the filename. }
 begin
+   OperatorNamesWanted := True;
    if OperatorNameSet <> nil then
       begin
       Exit;
@@ -3173,6 +3380,8 @@ initialization
 
 finalization
 
+  FreeAndNil(CD.Snapshot);
+  FreeAndNil(OperatorNameSet);
   FreeAndNil(CD.CellBuffer);
   FreeAndNil(CD);
 

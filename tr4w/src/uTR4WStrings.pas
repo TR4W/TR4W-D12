@@ -522,7 +522,8 @@ resourcestring
    TC_POTAPARKSLOADED                    = 'POTA parks loaded';
    TC_POTAPARKSFILECOULDLOADED           = 'POTA parks file could not be loaded';
    TC_POTAPARKSDOWNLOADFAILED            = 'POTA parks download failed';
-   TC_TRMASTERDTADOWNLOADEDRESTARTTR4WUS = 'TRMASTER.DTA downloaded -- restart TR4W to use it';
+   TC_TRMASTERDTADOWNLOADEDINUSE         = 'TRMASTER.DTA downloaded -- Super Check Partial is using it now';
+   TC_TRMASTERDTADOWNLOADEDNOTLOADED     = 'TRMASTER.DTA downloaded but could not be loaded -- the data in use is unchanged (see tr4w.log)';
    TC_TRMASTERDTADOWNLOADFAILED          = 'TRMASTER.DTA download failed';
    TC_CTYDATDOWNLOADEDRELOADING          = 'CTY.DAT downloaded. Reloading...';
    TC_CTYDATRELOADEDSUCCESSFULLY         = 'CTY.DAT reloaded successfully.';

@@ -13,6 +13,7 @@ Read the specific doc before acting in its area — these are current and this f
 | CW Open/CWT walkthrough and GUI evidence | [TR4W-for-CWOPS.md](TR4W-for-CWOPS.md), [GUI_DOCUMENTATION_TEST_REPORT.md](GUI_DOCUMENTATION_TEST_REPORT.md) — Python scenarios, screenshots, limits and filed issues |
 | Operator guide website: build, preview and publish | [DOCS.md](../DOCS.md) — source in user-guide/ on main, generated Pages site on gh-pages; pinned MkDocs/Material and content-review baseline |
 | Build & test recipe | `tr4w/docs/BUILD.md` |
+| **TRMASTER.DTA and call history reload in place (snapshot swap, no restart)** | **[`docs/LIVE_DATA_RELOAD.md`](LIVE_DATA_RELOAD.md)** -- the build-privately / swap-whole design, the two-layer exchange lookup (the log outranks call history) and why SCP no longer holds the file open |
 | **Setting up a build environment** | **`tr4w/docs/BUILD.md`** — one installer; verified from scratch 2026-08-14 |
 | CI runner setup | `docs/CI_RUNNER_SETUP.md` |
 | TCI mock radio and build-test integration | [TCI_MOCK_AGENT_HANDOFF.md](TCI_MOCK_AGENT_HANDOFF.md) — standalone mock server, targeted tests, real-client integration plan and isolation requirements; operating details in tools/tcimock/README.md |

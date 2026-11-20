@@ -67,12 +67,20 @@ type
       issue 213. Written by LOGEDIT.AddQSOToDupeSheets (live, loader,
       rescore, each in log order), cleared with the dupe bits. *)
     LoggedZone: Byte;
-    (* THE EXCHANGE CAME FROM A CALL HISTORY FILE -- 2026-11-07. Such an
-      entry can be stale, so a section typed in a spot comment outranks it
-      (NY4I) where INITIAL.EX's and the log's do not (LogEdit.SpotSectionHint),
-      and FLUSH INITIAL EX does not write it into INITIAL.EX. Set only by
-      AddCallHistoryExchange; any other write of the exchange clears it. *)
-    FromCallHistoryFile: boolean;
+    (* THE CALL HISTORY FILE'S TEXT FOR THIS CALL -- its own layer since
+      2026-11-20 (live reload: the file can be replaced while the program
+      runs, and nothing the log knows may be lost by it). Such text can be
+      stale, so a section typed in a spot comment outranks it (NY4I) where
+      INITIAL.EX's and the log's do not (LogEdit.SpotSectionHint), and FLUSH
+      INITIAL EX does not write it into INITIAL.EX. Written only by
+      AddCallHistoryExchange; replaced as a whole by ReplaceCallHistory.
+      NEVER read directly: TCallsignsList.ExchangeOf is the lookup order. *)
+    HistoryExchange: String[14];
+    (* INITIAL.EX OR THE LOG STATED AN EXCHANGE FOR THIS CALL (AddIniitialExchange,
+      even an empty one) -- the overlay. It is what the entry remembers
+      whatever the history file says, which is what a recently logged QSO
+      trumping the file means. Cleared by ClearInitialExchanges. *)
+    OwnStated: boolean;
   end;
 
   (* THE WORKED-CALLS LIST -- a CLASS over a TObjectList since 2026-10-17
@@ -105,6 +113,10 @@ type
     function CompareStrings(const s1, s2: CallString): integer;
     procedure InsertCallsign(Index: integer; const s: CallString);
     function GetCount: integer;
+    (* THE LOOKUP ORDER, in one place: what the log or INITIAL.EX stated for
+      the call, else the call history file's text. *)
+    function ExchangeOf(aEntry: TCallsignEntry): string;
+    function IsFromCallHistory(aEntry: TCallsignEntry): boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -117,12 +129,21 @@ type
     function AddIniitialExchange(const Call: string; const InitialExchangeString: string): boolean;
     function GetIniitialExchange(const Call: string): string;
     function GetIniitialExchangeByIndex(Index: integer): string;
-    (* A CALL HISTORY FILE'S EXCHANGE -- 2026-11-07. Stored ONLY when the call
-      has no exchange yet (INITIAL.EX, loaded first, and an earlier row of the
-      file win), and marked as the file's. A QSO logged later replaces it
-      through AddIniitialExchange, as it replaces any remembered exchange.
-      charStoreFull when the list is full. *)
+    (* A CALL HISTORY FILE'S EXCHANGE -- 2026-11-07. Stored in the entry's
+      OWN history layer, and ONLY when the call has no exchange yet (INITIAL.EX
+      and an earlier row of the file win): charAlreadyKnown otherwise. A QSO
+      logged later outranks it through AddIniitialExchange -- a lookup order,
+      not a load order. charStoreFull when the list is full. *)
     function AddCallHistoryExchange(const Call: string; const InitialExchangeString: string): TCallHistoryAddResult;
+    (* THE LIVE RELOAD: aSnapshot is a whole call history file, built privately
+      by the loader. Every entry's history layer is dropped (an entry that
+      held nothing else -- no QSO, nothing stated -- goes with it) and the
+      snapshot's entries are stored as AddCallHistoryExchange would store
+      them, all in this one call, on the main thread, so a lookup sees the old
+      file or the new and never a mixture. nil drops the layer and stores
+      none. The log's and INITIAL.EX's text, the QSO counts, the dupe bits and
+      the logged zones are not touched. Returns the entries stored. *)
+    function ReplaceCallHistory(aSnapshot: TCallHistorySnapshot): integer;
     (* Is the call's remembered exchange a call history file's? False for a
       call with none. By index too, for the INITIAL.EX flush. *)
     function InitialExchangeIsFromCallHistory(const Call: string): boolean;
@@ -258,9 +279,26 @@ begin
   Result := FItems.Count;
 end;
 
+function TCallsignsList.ExchangeOf(aEntry: TCallsignEntry): string;
+begin
+  if aEntry.OwnStated then
+     begin
+     Result := string(aEntry.InExchange);
+     end
+  else
+     begin
+     Result := string(aEntry.HistoryExchange);
+     end;
+end;
+
+function TCallsignsList.IsFromCallHistory(aEntry: TCallsignEntry): boolean;
+begin
+  Result := (not aEntry.OwnStated) and (Length(aEntry.HistoryExchange) > 0);
+end;
+
 function TCallsignsList.GetIniitialExchangeByIndex(Index: integer): string;
 begin
-  Result := string(FItems[Index].InExchange);
+  Result := ExchangeOf(FItems[Index]);
 end;
 
 function TCallsignsList.GetIniitialExchange(const Call: string): string;
@@ -269,7 +307,7 @@ var
 begin
   if FindCallsign(Call, Index) then
      begin
-     Result := string(FItems[Index].InExchange);
+     Result := ExchangeOf(FItems[Index]);
      end
   else
      begin
@@ -315,7 +353,7 @@ begin
      Result := True;
      end;
   FItems[Index].InExchange := ShortString(InitialExchangeString);
-  FItems[Index].FromCallHistoryFile := False;
+  FItems[Index].OwnStated := True;
 end;
 
 function TCallsignsList.AddCallHistoryExchange(const Call: string; const InitialExchangeString: string): TCallHistoryAddResult;
@@ -324,7 +362,8 @@ var
 begin
   if FindCallsign(Call, Index) then
      begin
-     if Length(FItems[Index].InExchange) > 0 then
+     if (Length(FItems[Index].InExchange) > 0) or
+        (Length(FItems[Index].HistoryExchange) > 0) then
         begin
         Result := charAlreadyKnown;
         Exit;
@@ -339,9 +378,45 @@ begin
         end;
      InsertCallsign(Index, ShortString(Call));
      end;
-  FItems[Index].InExchange := ShortString(InitialExchangeString);
-  FItems[Index].FromCallHistoryFile := True;
+  FItems[Index].HistoryExchange := ShortString(InitialExchangeString);
   Result := charAdded;
+end;
+
+function TCallsignsList.ReplaceCallHistory(aSnapshot: TCallHistorySnapshot): integer;
+var
+  i                                     : integer;
+  entry                                 : TCallsignEntry;
+begin
+  Result := 0;
+
+  (* BACK TO FRONT, because an entry that existed only for the old file is
+    deleted. What marks one: it holds history text, has no QSO and was never
+    stated by the log or INITIAL.EX -- AddCallHistoryExchange is the only way
+    such an entry is made. *)
+  for i := FItems.Count - 1 downto 0 do
+     begin
+     entry := FItems[i];
+     if Length(entry.HistoryExchange) > 0 then
+        begin
+        entry.HistoryExchange := '';
+        if (entry.QSOs = 0) and (not entry.OwnStated) then
+           begin
+           FItems.Delete(i);
+           end;
+        end;
+     end;
+
+  if aSnapshot = nil then
+     begin
+     Exit;
+     end;
+  for i := 0 to aSnapshot.Count - 1 do
+     begin
+     if AddCallHistoryExchange(aSnapshot.Calls[i], aSnapshot.Exchanges[i]) = charAdded then
+        begin
+        inc(Result);
+        end;
+     end;
 end;
 
 function TCallsignsList.InitialExchangeIsFromCallHistory(const Call: string): boolean;
@@ -351,13 +426,13 @@ begin
   Result := False;
   if FindCallsign(Call, Index) then
      begin
-     Result := FItems[Index].FromCallHistoryFile and (Length(FItems[Index].InExchange) > 0);
+     Result := IsFromCallHistory(FItems[Index]);
      end;
 end;
 
 function TCallsignsList.InitialExchangeIsFromCallHistoryByIndex(Index: integer): boolean;
 begin
-  Result := FItems[Index].FromCallHistoryFile and (Length(FItems[Index].InExchange) > 0);
+  Result := IsFromCallHistory(FItems[Index]);
 end;
 
 procedure TCallsignsList.ClearInitialExchanges;
@@ -367,7 +442,8 @@ begin
   for i := 0 to FItems.Count - 1 do
      begin
      FItems[i].InExchange := '';
-     FItems[i].FromCallHistoryFile := False;
+     FItems[i].HistoryExchange := '';
+     FItems[i].OwnStated := False;
      end;
 end;
 
@@ -591,7 +667,7 @@ begin
   key := ShortString(s);
   for i := 0 to FItems.Count - 1 do
      begin
-     if CompareStrings(ShortString(LastString(FItems[i].InExchange)), key) = 0 then
+     if CompareStrings(ShortString(LastString(ShortString(ExchangeOf(FItems[i])))), key) = 0 then
         begin
         Result := True;
         CallWindowString := FItems[i].Call;

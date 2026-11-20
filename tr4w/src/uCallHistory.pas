@@ -57,7 +57,8 @@ unit uCallHistory;
 interface
 
 uses
-   Classes;
+   Classes,
+   Generics.Collections;   (* TDictionary -- the snapshot's call index *)
 
 type
    (* N1MM'S FIELDS, IN N1MM'S DEFAULT COLUMN ORDER -- the order is load-bearing:
@@ -80,6 +81,30 @@ type
 
    (* THE STORE: given a call and the text the contest builds from its row. *)
    TCallHistoryAddFunc = function(const aCall: string; const aExchange: string): TCallHistoryAddResult;
+
+   (* A CALL HISTORY FILE'S ENTRIES, BUILT ON THEIR OWN -- LIVE-RELOAD SNAPSHOT
+      (2026-11-20). The loader fills one privately (Add is a TCallHistoryAddFunc
+      target) and hands it to TCallsignsList.ReplaceCallHistory, which puts the
+      whole of it in service in one step. The file's first row for a call
+      stands; a later row is charAlreadyKnown. Calls compare case-blind. Entries
+      keep the file's order. It knows nothing of the log: what the log or
+      INITIAL.EX holds for a call is the list's overlay, and outranks this. *)
+   TCallHistorySnapshot = class
+   private
+      FIndex: TDictionary<string, integer>;
+      FCalls: array of string;
+      FExchanges: array of string;
+      FCount: integer;
+      function GetCall(aIndex: integer): string;
+      function GetExchange(aIndex: integer): string;
+   public
+      constructor Create;
+      destructor Destroy; override;
+      function Add(const aCall: string; const aExchange: string): TCallHistoryAddResult;
+      property Count: integer read FCount;
+      property Calls[aIndex: integer]: string read GetCall;
+      property Exchanges[aIndex: integer]: string read GetExchange;
+   end;
 
    (* THE READER: the column order in force, the directives met, and what
       happened to the rows. One reader per file read. *)
@@ -620,6 +645,51 @@ begin
          end;
       end;
    Result := True;
+end;
+
+constructor TCallHistorySnapshot.Create;
+begin
+   inherited Create;
+   FIndex := TDictionary<string, integer>.Create;
+   FCount := 0;
+end;
+
+destructor TCallHistorySnapshot.Destroy;
+begin
+   FIndex.Free;
+   inherited Destroy;
+end;
+
+function TCallHistorySnapshot.Add(const aCall: string; const aExchange: string): TCallHistoryAddResult;
+var
+   key: string;
+begin
+   key := UpperCase(aCall);
+   if FIndex.ContainsKey(key) then
+      begin
+      Result := charAlreadyKnown;
+      Exit;
+      end;
+   if FCount = Length(FCalls) then
+      begin
+      SetLength(FCalls, FCount * 2 + 64);
+      SetLength(FExchanges, Length(FCalls));
+      end;
+   FCalls[FCount] := aCall;
+   FExchanges[FCount] := aExchange;
+   FIndex.Add(key, FCount);
+   inc(FCount);
+   Result := charAdded;
+end;
+
+function TCallHistorySnapshot.GetCall(aIndex: integer): string;
+begin
+   Result := FCalls[aIndex];
+end;
+
+function TCallHistorySnapshot.GetExchange(aIndex: integer): string;
+begin
+   Result := FExchanges[aIndex];
 end;
 
 end.

@@ -146,6 +146,18 @@ multipliers, CTY.DAT, band lookup and CRC32.
   process inherited the first one's counters.
 - **Ignored read results.** `logscp.pas` had three `sReadFile` calls whose result
   was discarded.
+- **TRMASTER.DTA AND CALL HISTORY RELOAD IN PLACE (2026-11-20, `docs/LIVE_DATA_RELOAD.md`).**
+  SCP serves from ONE `TTRMasterSnapshot` (the whole file in memory, NO open handle --
+  a held handle is what stopped Windows replacing the file in use); `CD.ReplaceTRMasterFile`
+  loads, checks, builds the operator-name set from the NEW file and flips both together;
+  `InstallTRMasterSnapshot` is the only routine that sets `SCPIndexArray` / `SCPEndOfFile` /
+  `DTAFileSize` / the three flags and it clears `CellBuffer` and `LastCallRecord` (GetEntry
+  answers from that cache before reading). Call history is its own LAYER on each
+  `TCallsignsList` entry (`HistoryExchange`), under the overlay the log and INITIAL.EX write
+  (`InExchange` + `OwnStated`); `ExchangeOf` is the lookup order and
+  `ReplaceCallHistory` the swap. A new SCP reader must go through the snapshot's `Data`,
+  never open the file; a new reader of an entry's exchange must go through `ExchangeOf`.
+  Everything runs on the main thread -- keep it so, or add a lock to BOTH stores.
 - **EVERY FILE WE WRITE FOR THE OPERATOR GOES THROUGH `utils_file.OpenReportFile` /
   `CloseReportFile` (issue 313, M13 -- 2026-11-16).** The new file is `<name>.partial`
   and REPLACES the old one in one operation only when every write succeeded

@@ -1,5 +1,21 @@
 # Bench queue — what is waiting for a real run
 
+- [ ] **TRMASTER.DTA and call history reload with no restart (2026-11-20).** Unit-tested
+  (`uTestLiveDataSwap`) and nothing seen on a screen. (1) Open a contest, type a call so SCP has
+  used the file (`W1AW`, partials show), then Help > Download TRMASTER.DTA. The status line says
+  `TRMASTER.DTA downloaded -- Super Check Partial is using it now` and the entry window keeps
+  working; type a call you know the new file changed (or one it added) and the partials/name
+  reflect it WITHOUT a restart. On Windows this is also the first time a download replaces a file
+  SCP already read: it must succeed (before, the open handle blocked the replace). (2) With a QSO
+  half typed (call and exchange in the boxes), run the download: nothing in the boxes changes.
+  Log the QSO; it saves normally. (3) SS CW or SSB with USE CALL HISTORY FILE on: log a QSO with a
+  call the history file has, then Help > Download call history. The message ends `; it is in use
+  now (N calls)`. The logged call still prefills with what you LOGGED, a never-worked call from the
+  new file prefills with the new text, and a call only the old file had no longer appears in the
+  possible-call strip. (4) A failed download (cut the network) says
+  `TRMASTER.DTA download failed` and SCP keeps answering. (5) `tr4w.log` has
+  `TRMASTER.DTA reloaded from <path> (<n> bytes)` and `[CallHistory] ... stored`.
+
 - [ ] Radio editor, HamLib model ID and the HamLib version tooltip (2026-11-17). (1) Edit an
   IC-7100, Advanced tab: with "Drive through HamLib" clear the HamLib model ID box is greyed; tick
   it and the box enables, empty, with greyed prompt text naming the registered id ("3070 (default)"
@@ -837,10 +853,10 @@ The Contest page was one long list. Its settings now sit on eight leaves under C
 
 Help > Download call history for this contest (SS CW and SS SSB only). Manual only: nothing downloads by itself. NO test touches the site; the one real fetch is yours, by hand, and the site blocks hammering, so do it ONCE and then once more for the 304 -- do not repeat it. (`uCallHistoryDownload`, `uHTTPDownload.DownloadFileConditional`; rules in the supercheckhistory-download-rules memory.)
 
-- [ ] **First download (200).** Open an SS CW log (or SS SSB). Help > Download call history for this contest. The status line shows `Downloading call history...` and then `Call history updated (N entries, <date>); it takes effect the next time the contest is opened`. `target\settings\CallHistoryFiles\ARRL-SS-CW.txt` exists (the writable folder, NOT beside the program) next to `ARRL-SS-CW.txt.meta` (four lines: the ETag, Last-Modified, a UTC time, the file's size in bytes), and no `.tmp`. `tr4w.log` has `[CallHistory] GET https://supercheckhistory.com/downloads/N1MM/ARRL-SS-CW.txt (If-None-Match "", ...)` then `updated: <rows> rows, <usable> usable`, and the `[HTTP] request` DEBUG line shows `User-Agent: TR4W/<version>`. **If it says "the file has too few usable rows"** the 50 % yield threshold (rows that give BOTH check and section) is wrong for the site's real file: tell the agent the numbers on the `[CallHistory] the download was not kept` line; the thresholds are unattended guesses.
+- [ ] **First download (200).** Open an SS CW log (or SS SSB). Help > Download call history for this contest. The status line shows `Downloading call history...` and then `Call history updated (N entries, <date>); it is in use now (N calls)` (it used to say it takes effect the next time the contest is opened; the running contest reads the new file at once). `target\settings\CallHistoryFiles\ARRL-SS-CW.txt` exists (the writable folder, NOT beside the program) next to `ARRL-SS-CW.txt.meta` (four lines: the ETag, Last-Modified, a UTC time, the file's size in bytes), and no `.tmp`. `tr4w.log` has `[CallHistory] GET https://supercheckhistory.com/downloads/N1MM/ARRL-SS-CW.txt (If-None-Match "", ...)` then `updated: <rows> rows, <usable> usable`, and the `[HTTP] request` DEBUG line shows `User-Agent: TR4W/<version>`. **If it says "the file has too few usable rows"** the 50 % yield threshold (rows that give BOTH check and section) is wrong for the site's real file: tell the agent the numbers on the `[CallHistory] the download was not kept` line; the thresholds are unattended guesses.
 - [ ] **Second download (304).** Immediately again: `Call history already current`. `tr4w.log` shows `If-None-Match "<the ETag>"` and `is current (304)`. The file is unchanged (same size and time).
 - [ ] **A hand-edited file is not answered 304.** Append a comment line to `ARRL-SS-CW.txt` and download again: the log shows `If-None-Match ""` (no condition: the size no longer matches the sidecar) and the file is replaced.
-- [ ] **It takes effect at the next open, and only if it is the file in use.** Tick USE CALL HISTORY FILE with CALL HISTORY FILENAME blank, reopen the log: `[CallHistory]` names `ARRL-SS-CW.txt` and the prefill works (`N6TV`). With CALL HISTORY FILENAME set to another file, the download message adds that the downloaded file is not the one in use.
+- [ ] **It takes effect at once, and only if it is the file in use.** Tick USE CALL HISTORY FILE with CALL HISTORY FILENAME blank, download: the message says it is in use now and `[CallHistory]` names `ARRL-SS-CW.txt`; the prefill works (`N6TV`) without reopening the log (reopening still loads it). With CALL HISTORY FILENAME set to another file, the download message adds that the downloaded file is not the one in use and nothing is reloaded.
 - [ ] **The legacy file still works.** With only `SSCW.txt` in `tr4w\target\CallHistoryFiles\` and no `ARRL-SS-CW.txt` anywhere, blank CALL HISTORY FILENAME: the log says `reading the legacy file`. Once the downloaded `ARRL-SS-CW.txt` exists it wins.
 - [ ] **A contest with no site file.** In any other contest (CQ WW) the menu item says `This contest has no call history download` and nothing is requested.
 - [ ] **No network / blocked.** With the network off: `Download failed (<reason>); the previous file was kept`, and the old file and `.meta` are unchanged. (Never provoke a 429 or a block on purpose.)
@@ -7566,7 +7582,7 @@ log); nothing sees the preview window or the message.
 - [ ] **TRMASTER.DTA download from an install under `C:\Program Files`.** Help > Download TRMASTER.DTA used
   to fail with `Unable to create file ...\TRMASTER.DTA.tmp: Access is denied` because the shipped copy was
   updated in place. It now saves to `%APPDATA%\TR4W\settings\TRMASTER.DTA`: the message line should say it
-  was downloaded and to restart, and after a restart the log says `Call history file: ...\settings\TRMASTER.DTA
+  was downloaded and is in use now (no restart since 2026-11-20), and after a restart the log still says `Call history file: ...\settings\TRMASTER.DTA
   (downloaded)`. An install in a writable folder still updates the file beside the contest in place.
 - [ ] **Cabrillo window with a required LOCATION empty** (ARRL 10, Winter Field Day). OK shows "LOCATION field is
   empty." and the Cabrillo window STAYS OPEN with the fields as typed, so LOCATION can be filled in; OK again
