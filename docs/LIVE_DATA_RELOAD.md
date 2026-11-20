@@ -11,11 +11,17 @@ Both files follow one rule. The new file is read and checked into a complete
 object nothing else can see; then, on the main thread, the reference the lookups
 use is replaced in one step; then the old object is freed. A file that does not
 load changes nothing and is reported. Everything that reads either store runs on
-the main thread (verified: `CD.*`, `NameInOperatorSet` and `CallsignsList` are
-reached only from the entry-window, spot and display code; the network and
-download threads hand results back through `Synchronize` / `QueueAsyncCall`),
-and the download-finished handlers run on the main thread too, so there is no
-lock and no half-built state to see.
+the main thread, and the download-finished handlers run on the main thread too,
+so there is no lock and no half-built state to see. Checked 2026-11-20 by
+following every caller of the dupe check (`VisibleLog.CallIsADupe`), the
+remembered-exchange lookup (`EngineInitialExchangeOf`, the entry window),
+`CD.GetEntry` / `GetName` and `NameInOperatorSet`: the DX cluster lines are
+drained by `Application.QueueAsyncCall` (`uTelnet.ProcessTelnetLine`), the
+WSJT-X CQ decode is evaluated under an `OffMainThread` guard
+(`uWSJTX.EvaluateCQDecode`), the MMTTY and packet paths run from the main
+window's messages and the network parse, and the external loggers take
+immutable values. **A new caller on a worker thread must be marshalled to the
+main thread: `ReplaceCallHistory` frees entries.**
 
 ## TRMASTER.DTA (Super Check Partial) -- `logscp.pas`
 
@@ -26,10 +32,16 @@ lock and no half-built state to see.
 | `CD.InstallTRMasterSnapshot` | puts a snapshot in service: `CD.Snapshot`, the mirrored `SCPIndexArray` / `SCPEndOfFile` / `DTAFileSize`, the flags `TRMasterFileOpen` / `IndexArrayAllocated` / `MasterFileExists`, and clears every cache holding the old file (`CellBuffer`, `LastCallRecord`, `LastPartialCall`, `InitialPartialCall`). Frees the snapshot it replaces. The lazy first load uses it too. |
 | `CD.ReplaceTRMasterFile(file, why)` | the live reload: load + check, build `OperatorNameSet` from the NEW file when a contest asked for one (`OperatorNamesWanted`, or the set already exists), then flip set and snapshot together. On failure nothing changes. Sets `ActiveFilename` to the new file. |
 
-**The file is not held open.** The old code kept a handle (`fmShareDenyNone`, no
-`FILE_SHARE_DELETE`) from the first lookup to exit, so on Windows a download
-could not replace a TRMASTER.DTA SCP had already used. The snapshot is a few
-megabytes of memory instead, and the file is free.
+**The file is not held open.** The old code kept a handle from the first lookup
+to exit. The RTL's `fmShareDenyNone` is `FILE_SHARE_READ or FILE_SHARE_WRITE`
+with no `FILE_SHARE_DELETE` (`rtl/win/sysutils.pp`, `ShareModes`), so such a
+handle can keep Windows from deleting or replacing the file, which the download
+does (`uHTTPDownload.DownloadFileToPath` deletes the target, then renames). That
+is the reading of the RTL source; a real replace of a file in use has not been
+run. The snapshot is a few megabytes of memory instead, and the file is free.
+
+A file that fails the check is remembered (`CD.LoadFailedFor`) and not re-read on
+every keystroke; a successful reload, or another `ActiveFilename`, tries again.
 
 The handler is `uMainWindowProc.TRMasterDownloadFinished`; the file it loads is
 `BackgroundEvents.TRMasterTarget`, set by the menu arm from

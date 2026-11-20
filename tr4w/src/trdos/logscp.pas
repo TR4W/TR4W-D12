@@ -89,10 +89,11 @@ type
     It is built whole and PRIVATELY (LoadTRMasterSnapshot), checked, and then
     put in service as a unit (CallDatabase.InstallTRMasterSnapshot); nothing
     writes to it afterwards, and it is freed only when a newer one replaces
-    it. THE FILE IS READ INTO MEMORY AND CLOSED, not held open: an open
-    handle (the RTL's fmShareDenyNone carries no FILE_SHARE_DELETE) is what
-    kept Windows from replacing a TRMASTER.DTA that SCP had already used, so
-    a download over the file in use failed. TRMASTER.DTA is a few megabytes.
+    it. THE FILE IS READ INTO MEMORY AND CLOSED, not held open: the RTL's
+    fmShareDenyNone is FILE_SHARE_READ or FILE_SHARE_WRITE with no
+    FILE_SHARE_DELETE (rtl/win/sysutils.pp, ShareModes), so a handle held
+    from the first lookup can keep Windows from deleting or replacing the
+    file -- which the download does. TRMASTER.DTA is a few megabytes.
 
     The index, the end-of-file address and the file size live here; the
     fields of CallDatabase with those names (SCPIndexArray, SCPEndOfFile,
@@ -269,14 +270,14 @@ type
     procedure ShowStatistics;
     procedure TransferNewData(OldData: DataBaseEntryRecord; var NewData: DataBaseEntryRecord);
 
-    { Iterates every entry in the file in service and collects non-empty
+    (* Iterates every entry in the file in service and collects non-empty
       operator names (uppercased) into Names.  Reads the snapshot's bytes
       through a private cell buffer, so it does not disturb CellBuffer, the
-      one SCP lookups use. }
+      one SCP lookups use. *)
     procedure BuildOperatorNameSet(Names: TStringList);
 
-    { The same walk over any snapshot -- the one the reload has built and not
-      yet put in service. }
+    (* The same walk over any snapshot -- the one the reload has built and not
+      yet put in service. *)
     procedure CollectOperatorNames(aSnapshot: TTRMasterSnapshot; Names: TStringList);
   end;
 
@@ -1742,9 +1743,9 @@ end;
 
 function CallDatabase.LoadInIndexArray: boolean;
 
-{ This procedure will go read in the file and its index array, once -- as a
+(* This procedure will go read in the file and its index array, once -- as a
   snapshot (see TTRMasterSnapshot), which InstallTRMasterSnapshot puts in
-  service. Returns TRUE if it worked. }
+  service. Returns TRUE if it worked. *)
 
 var
   Loaded                                : TTRMasterSnapshot;
@@ -1773,6 +1774,15 @@ begin
         to search around for it and come up with a complete path for
         it. }
     if not MasterFileExists then Exit;
+
+    (* A FILE THAT FAILED THE CHECK IS NOT READ AGAIN BY EVERY KEYSTROKE --
+      this is asked on each lookup, and the file is megabytes. It is tried
+      again when ActiveFilename names another file, or when a reload
+      (ReplaceTRMasterFile -> InstallTRMasterSnapshot) succeeds. *)
+    if LoadFailedFor = CharBufferText(ActiveFilename) then
+       begin
+       Exit;
+       end;
 
     Loaded := LoadTRMasterSnapshot(CharBufferText(ActiveFilename), Why);
     if Loaded <> nil then
@@ -3158,7 +3168,7 @@ end;
   -------------------------------------------------------------------------- }
 
 procedure CallDatabase.BuildOperatorNameSet(Names: TStringList);
-{ The names of the file in service (loading it first if it is not yet). }
+(* The names of the file in service (loading it first if it is not yet). *)
 begin
    if not LoadInIndexArray then
       begin
@@ -3168,9 +3178,9 @@ begin
 end;
 
 procedure CallDatabase.CollectOperatorNames(aSnapshot: TTRMasterSnapshot; Names: TStringList);
-{ Walks every 37×37 cell of aSnapshot's bytes through a private cell buffer
+(* Walks every 37 x 37 cell of aSnapshot's bytes through a private cell buffer
   and adds each non-empty operator name (uppercased) to Names.  CellBuffer
-  and the snapshot in service are untouched. }
+  and the snapshot in service are untouched. *)
 var
    LocalBuf    : TSCPCellBuffer;
    X           : Integer;
@@ -3189,7 +3199,7 @@ begin
          for Y := 0 to 36 do
             begin
             StartOffset := aSnapshot.Index[X, Y];
-            { End offset = start of the next cell; the very last cell uses the end of file }
+            (* End offset = start of the next cell; the very last cell uses the end of file *)
             if Y < 36 then
                begin
                EndOffset := aSnapshot.Index[X, Y + 1]

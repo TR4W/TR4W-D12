@@ -139,6 +139,11 @@ implementation
   is a window procedure nothing can be moved out of. }
 uses
   SysUtils,
+  (* FIRST, so a name these two share with a unit below still resolves to the
+    later one, as it did before they were here (this tree relies on use
+    order). Both uses below are qualified for the same reason. *)
+  LogSCP,             // CD -- the TRMASTER reload
+  LogDupe,            // LoadCallHistoryFile -- the call history reload
   uCrashLog,          // LogCaughtException -- see the guard on WindowProc
   (* Messages stood here and had NOTHING left to declare (2026-09-08). Every
     WM_ / HDN_ / LVSCW_ name in this file is now inside a COMMENT describing
@@ -153,8 +158,6 @@ uses
   uGetServerLog,      // WM_USER_HEADLESS_SYNC_REPLACE + the headless-sync state
   uPOTAParks,        // WM_POTA_DOWNLOAD_DONE / _LOAD_DONE and the loaders
   uTRMasterUpdate,    // WM_TRMASTER_DOWNLOAD_DONE
-  LogSCP,             // CD -- the TRMASTER reload
-  LogDupe,            // LoadCallHistoryFile -- the call history reload
   uAppStrings,       // SCallHistoryOtherFile
   uCallHistory,      // CallHistoryFilePath -- which file CALL HISTORY FILENAME means
   uCTYUpdate,        // WM_CTY_DOWNLOAD_DONE / WM_CTY_VERSION_CHECKED
@@ -598,7 +601,7 @@ begin
       QuickDisplay(TC_TRMASTERDTADOWNLOADFAILED);
       Exit;
       end;
-   if CD.ReplaceTRMasterFile(TRMasterTarget, why) then
+   if LogSCP.CD.ReplaceTRMasterFile(TRMasterTarget, why) then
       begin
       QuickDisplay(TC_TRMASTERDTADOWNLOADEDINUSE);
       end
@@ -651,7 +654,7 @@ begin
       end;
    if reload then
       begin
-      stored := LoadCallHistoryFile;
+      stored := LogDupe.LoadCallHistoryFile;
       if stored > 0 then
          begin
          text := text + '; ' + UnicodeFormat(SCallHistoryInUse, [stored]);

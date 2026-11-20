@@ -57,6 +57,7 @@ type
       procedure Test_TRMaster_LoggedExchangeSurvivesTheSwap;
       procedure Test_TRMaster_FailedLoadLeavesTheOldServing;
       procedure Test_TRMaster_SwapBetweenLookups;
+      procedure Test_TRMaster_SwapInTheMiddleOfAPartialWalk;
       procedure Test_TRMaster_NameSetChangesWithTheFile;
       procedure Test_CallHistory_SwapKeepsTheLogAndShowsTheNewFile;
       procedure Test_CallHistory_ARecentQSOWinsBeforeAndAfter;
@@ -462,6 +463,45 @@ begin
    end;
 end;
 
+(* THE ONE SEQUENCE WHERE HALF AN OLD STATE COULD LIVE: a partial-call walk
+  is under way (the cell buffer holds the old file's cell and a read position)
+  when the file is replaced. The walk must end, not carry on into the old
+  bytes, and a new walk must read the new file. *)
+procedure TLiveDataSwapTests.Test_TRMaster_SwapInTheMiddleOfAPartialWalk;
+var
+   why: string;
+   variant: string;
+   call: CallString;
+   count: integer;
+begin
+   BeginTest('Test_TRMaster_SwapInTheMiddleOfAPartialWalk');
+   OpenTRMaster;
+   try
+      variant := MakeVariant('a', 'HIRAM', 'HIRAX');
+      CheckTrue(CD.PartialCallSetup('ABC'), 'a walk is set up');
+      CD.GetNextPartialCall(call);
+      CheckTrue(call <> '', 'the first call of the walk');
+
+      CheckTrue(CD.ReplaceTRMasterFile(variant, why), 'the swap: ' + why);
+
+      CD.GetNextPartialCall(call);
+      CheckEquals('', string(call), 'the walk does not go on into the old file');
+
+      CheckTrue(CD.PartialCallSetup('ABC'), 'a new walk');
+      count := 0;
+      repeat
+         CD.GetNextPartialCall(call);
+         if call <> '' then
+            begin
+            inc(count);
+            end;
+      until call = '';
+      CheckEquals(8, count, 'the new file''s eight calls');
+   finally
+      CloseTRMaster;
+   end;
+end;
+
 procedure TLiveDataSwapTests.Test_TRMaster_NameSetChangesWithTheFile;
 var
    names: TStringList;
@@ -758,6 +798,7 @@ begin
    Test_TRMaster_LoggedExchangeSurvivesTheSwap;
    Test_TRMaster_FailedLoadLeavesTheOldServing;
    Test_TRMaster_SwapBetweenLookups;
+   Test_TRMaster_SwapInTheMiddleOfAPartialWalk;
    Test_TRMaster_NameSetChangesWithTheFile;
    Test_CallHistory_SwapKeepsTheLogAndShowsTheNewFile;
    Test_CallHistory_ARecentQSOWinsBeforeAndAfter;
