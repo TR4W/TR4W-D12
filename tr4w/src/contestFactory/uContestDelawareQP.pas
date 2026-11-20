@@ -232,6 +232,7 @@ function DelawarePowerMultiplier(aPower: tCategoryPower): longint;
 implementation
 
 uses
+   SysUtils,
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -351,21 +352,27 @@ end;
 function TContestDelawareQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                 const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTState(aMy, aQso);
+   (* "Stations outside Delaware send signal report and state, province or
+      DX": a DX entrant has no state, so it sends DX (2026-11-20 audit). *)
+   Result := ADIFSentRSTStateOrDX(aMy, aQso);
 end;
 
 function TContestDelawareQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                     const aQso: ContestExchange;
                                                     const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
+   Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
 end;
 
 function TContestDelawareQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                         const aQso: ContestExchange;
                                                         const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+   (* "Stations outside Delaware send signal report and state, province or
+      DX": a station with no domestic QTH is written as DX (2026-11-20
+      audit; the QTHString-reading helper wrote an empty column for a typed
+      DX entity). *)
+   Result := CabrilloReceivedRSTDomesticQTHOrDX(aMy, aQso, aCtx);
 end;
 
 function TContestDelawareQP.GetInStateDomesticFileName: string;
@@ -463,6 +470,12 @@ begin
    (* aStation.MyState is the state the session SENDS (design 7.11/7.12): a
       Delaware station's county, anyone else's state or province. *)
    Result := ' 5NN ' + aStation.MyState;
+   if Trim(aStation.MyState) = '' then
+      begin
+      (* A DX entrant sends DX -- the sponsor's exchange for a station
+         outside Delaware with no state or province. *)
+      Result := ' 5NN DX';
+      end;
 end;
 
 function TContestDelawareQP.CabrilloModeString(aMode: ModeType;

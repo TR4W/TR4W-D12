@@ -62,6 +62,8 @@ type
       procedure Test_DelawareADIFIdRoundTrips;
       procedure Test_DelawareCQExchangeSendsTheSentState;
       procedure Test_DelawareToDelawareEarnsPointsOnly;
+      procedure Test_DelawareADXEntrantSendsDX;
+      procedure Test_DelawareReceivedColumnThroughTheEngine;
    end;
 
 implementation
@@ -76,7 +78,7 @@ uses
    uTestContestObjects,
    uTestExchangeParserStub,
    (* InStateMultiplierOf, CountsForEntrant -- #88 round 3. *)
-   uTestQSOPartyRules;
+   uTestQSOPartyRules, uTestQSOPartyEngine;
 
 (* ---------------------------------------------------------------------------
    HELPERS
@@ -530,8 +532,77 @@ begin
              'outside Delaware, New Castle is');
 end;
 
+(* "Stations outside Delaware send signal report and state, province or DX."
+   (rules-2024, Exchange; "DX stations should use DX.") A DX entrant has no
+   state, so its Cabrillo and ADIF sent exchange and its CQ message say DX
+   (2026-11-20 audit: they were blank). A Delaware or other US entrant is
+   unchanged. *)
+procedure TContestDelawareQPTests.Test_DelawareADXEntrantSendsDX;
+var
+   contestObject: TContestBase;
+   my: TMyStationExchange;
+   ctx: TCabrilloQSOContext;
+   rx: ContestExchange;
+   station: TStationContext;
+begin
+   BeginTest('Test_DelawareADXEntrantSendsDX');
+   contestObject := Make(DELAWAREQSOPARTY, StationAt(False));
+   try
+      rx := Default(ContestExchange);
+      rx.RSTSent := 599;
+      my := Default(TMyStationExchange);
+      ctx := Default(TCabrilloQSOContext);
+      ctx.RSTSent := '599';
+      my.MyState := 'PA';
+      CheckEquals('599 PA     ', contestObject.FormatCabrilloSentExchange(my, rx, ctx),
+                  'a Pennsylvania entrant sends its state');
+      my.MyState := '';
+      CheckEquals('599 DX     ', contestObject.FormatCabrilloSentExchange(my, rx, ctx),
+                  'a DX entrant sends DX in the Cabrillo column');
+      CheckEquals('599 DX     ', contestObject.FormatADIFSentExchange(my, rx),
+                  'and in the ADIF STX_STRING');
+      station := StationAt(False);
+      station.MyState := '';
+      CheckEquals(' 5NN DX', contestObject.CQExchangeDefault(station),
+                  'and in the CQ message');
+   finally
+      contestObject.Free;
+   end;
+end;
+
+(* "Delaware stations send signal report and county. Stations outside
+   Delaware send signal report and state, province or DX." Through the real
+   engine and the writer's own HisQTH: a station typed "599 DX" is the DX
+   column, a state is itself (2026-11-20 audit). *)
+procedure TContestDelawareQPTests.Test_DelawareReceivedColumnThroughTheEngine;
+var
+   engine: TQSOPartyEngine;
+   rx: ContestExchange;
+   accepted: boolean;
+   handle: TContestHandle;
+begin
+   BeginTest('Test_DelawareReceivedColumnThroughTheEngine');
+   handle := ContestHandleOf(DELAWAREQSOPARTY);
+   engine := TQSOPartyEngine.Create(handle);
+   try
+      engine.Activate(True);
+      engine.Enter('W1AW', '599 CT', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'a state is taken in Delaware');
+      CheckEquals('599 CT     ', PartyReceivedCabrilloColumn(handle, rx), 'a state is itself');
+      engine.Enter('DL1AAA', '599 DX', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'a DX station sending DX is taken');
+      CheckEquals('599 DX     ', PartyReceivedCabrilloColumn(handle, rx),
+                  'a DX station is DX: QTH ' + string(rx.QTHString) +
+                  ', domestic ' + string(rx.DomesticQTH) + ', DX ' + string(rx.DXQTH));
+   finally
+      engine.Free;
+   end;
+end;
+
 procedure TContestDelawareQPTests.RunAllTests;
 begin
+   Test_DelawareReceivedColumnThroughTheEngine;
+   Test_DelawareADXEntrantSendsDX;
    Test_DelawareToDelawareEarnsPointsOnly;
    Test_DelawareIsAnAppendedStateParty;
    Test_DelawarePointsFollowTheEntrant;

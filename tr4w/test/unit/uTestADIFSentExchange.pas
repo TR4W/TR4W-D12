@@ -293,7 +293,7 @@ begin
       SEVENQP, ALLASIANCW, ALLASIANSSB, ARRL160, ArizonaQsoParty, LABRE, MICHQSOPARTY,
       MOQSOPARTY, NEWENGLANDQSO, NCQSOPARTY, OLDNEWYEAR, SALMONRUN, SOUTHAMERICANWW,
       TEXASQSOPARTY, TOEC, WISCONSINQSOPARTY, NYQP, TENNESSEEQSOPARTY, CQMM, ALRS_UA1DZ_CUP,
-      INQSOPARTY, BCQP, YOTA, IN7QPNE, IDAHOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO:
+      INQSOPARTY, BCQP, YOTA, IN7QPNE, IDAHOQSOPARTY, NEBRASKAQSO:
          begin
          Result := Pick(aVariant, '599 FL     ',
                      '59         ',
@@ -359,7 +359,23 @@ begin
                      '599 TOMASZ-THE-VERY-LONG ABCDEFGHIJKLMNOPQRST',
                      '599 TOM   TRC    ');
          end;
-      CALQSOPARTY, CUPURAL, UKRAINECHAMPIONSHIP, PAQSOPARTY, VAQP:
+      DELAWAREQSOPARTY:
+         begin
+         (* A DX entrant sends DX (2026-11-20 audit). *)
+         Result := Pick(aVariant, '599 FL     ',
+                     '59  DX     ',
+                     '599 ABCDEFGHIJKLMNOPQRST',
+                     '599 TRC    ');
+         end;
+      CALQSOPARTY:
+         begin
+         (* A DX entrant sends DX (2026-11-20 audit). *)
+         Result := Pick(aVariant, 'FL   7     ',
+                     'DX   123   ',
+                     'ABCDEFGHIJKLMNOPQRST 4567  ',
+                     'TRC  7     ');
+         end;
+      CUPURAL, UKRAINECHAMPIONSHIP, PAQSOPARTY, VAQP:
          begin
          Result := Pick(aVariant, 'FL   7     ',
                      '     123   ',

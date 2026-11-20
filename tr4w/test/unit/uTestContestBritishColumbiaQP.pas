@@ -54,6 +54,7 @@ type
       procedure Test_BritishColumbiaFAQExamples;
       procedure Test_BritishColumbiaCountsDCAsMaryland;
       procedure Test_BritishColumbiaHasTheFortyThreeCurrentDistricts;
+      procedure Test_BritishColumbiaExchangeCarriesNoSerial;
    end;
 
 implementation
@@ -397,8 +398,25 @@ begin
    end;
 end;
 
+(* "British Columbia stations send: RS(T) and District (three letter
+   abbreviation). Non-British Columbia stations send: RS(T) and
+   state/province/territory or DX." -- no serial number is part of the
+   exchange, so the received field list is RST and QTH only (2026-11-20
+   audit; it declared a QSO number from D7 on). *)
+procedure TContestBritishColumbiaQPTests.Test_BritishColumbiaExchangeCarriesNoSerial;
+var
+   declared: ExchangeInformationRecord;
+begin
+   BeginTest('Test_BritishColumbiaExchangeCarriesNoSerial');
+   declared := ContestIdentity(BCQP).ReceivedExchangeFields;
+   CheckTrue(declared.RST, 'the report is received');
+   CheckTrue(declared.QTH, 'the district, state, province or DX is received');
+   CheckFalse(declared.QSONumber, 'no serial number is received');
+end;
+
 procedure TContestBritishColumbiaQPTests.RunAllTests;
 begin
+   Test_BritishColumbiaExchangeCarriesNoSerial;
    Test_BritishColumbiaPoints;
    Test_BritishColumbiaBands;
    Test_BritishColumbiaModes;

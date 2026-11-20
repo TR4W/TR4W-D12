@@ -46,6 +46,7 @@ type
       procedure Test_CaliforniaBands;
       procedure Test_CaliforniaDigitalIsAnXQSO;
       procedure Test_CaliforniaScoresAtMost58Multipliers;
+      procedure Test_CaliforniaADXEntrantSendsDX;
    end;
 
 implementation
@@ -231,8 +232,48 @@ begin
    end;
 end;
 
+(* "Stations outside of California send QSO number and 2-letter State,
+   Canadian province/territory, or "DX"." (cqp.org Rules, EXCHANGE 2.) A DX
+   entrant has no state, so its Cabrillo and ADIF sent exchange and its CQ
+   message say DX (2026-11-20 audit: the state column was blank). A Kansas
+   or a California entrant is unchanged. *)
+procedure TContestCaliforniaQPTests.Test_CaliforniaADXEntrantSendsDX;
+var
+   contestObject: TContestBase;
+   my: TMyStationExchange;
+   ctx: TCabrilloQSOContext;
+   rx: ContestExchange;
+   station: TStationContext;
+begin
+   BeginTest('Test_CaliforniaADXEntrantSendsDX');
+   contestObject := Make(CALQSOPARTY, Entrant(False));
+   try
+      rx := Default(ContestExchange);
+      rx.NumberSent := 12;
+      my := Default(TMyStationExchange);
+      ctx := Default(TCabrilloQSOContext);
+      my.MyState := 'KS';
+      CheckEquals('12   KS    ', contestObject.FormatCabrilloSentExchange(my, rx, ctx),
+                  'a Kansas entrant sends its state');
+      my.MyState := '';
+      CheckEquals('12   DX    ', contestObject.FormatCabrilloSentExchange(my, rx, ctx),
+                  'a DX entrant sends DX in the Cabrillo column');
+      CheckEquals('DX   12    ', contestObject.FormatADIFSentExchange(my, rx),
+                  'and in the ADIF STX_STRING');
+      station := Entrant(False);
+      station.MyState := '';
+      CheckEquals(' # DX', contestObject.CQExchangeDefault(station),
+                  'and in the CQ message');
+      CheckEquals(' # KS', contestObject.CQExchangeDefault(Entrant(False)),
+                  'a Kansas entrant sends its state in the CQ message');
+   finally
+      contestObject.Free;
+   end;
+end;
+
 procedure TContestCaliforniaQPTests.RunAllTests;
 begin
+   Test_CaliforniaADXEntrantSendsDX;
    Test_CaliforniaPoints;
    Test_CaliforniaBands;
    Test_CaliforniaDigitalIsAnXQSO;

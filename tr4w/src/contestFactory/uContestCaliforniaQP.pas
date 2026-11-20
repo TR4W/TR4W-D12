@@ -174,6 +174,7 @@ type
 implementation
 
 uses
+   SysUtils,
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -333,15 +334,27 @@ end;
 
 function TContestCaliforniaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                   const aQso: ContestExchange): string;
+var
+   sent: TMyStationExchange;
 begin
-   Result := ADIFSentStateThenQSONumber(aMy, aQso);
+   (* "Stations outside of California send QSO number and 2-letter State,
+      Canadian province/territory, or "DX"": a DX entrant has no state, so
+      the helper is handed DX in its place (2026-11-20 audit). *)
+   sent := aMy;
+   sent.MyState := SentStateOrDX(aMy);
+   Result := ADIFSentStateThenQSONumber(sent, aQso);
 end;
 
 function TContestCaliforniaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                       const aQso: ContestExchange;
                                                       const aCtx: TCabrilloQSOContext): string;
+var
+   sent: TMyStationExchange;
 begin
-   Result := CabrilloSentQSONumberState(aMy, aQso, aCtx);
+   (* A DX entrant sends DX -- see GetADIFSentExchange. *)
+   sent := aMy;
+   sent.MyState := SentStateOrDX(aMy);
+   Result := CabrilloSentQSONumberState(sent, aQso, aCtx);
 end;
 
 function TContestCaliforniaQP.GetInStateDomesticFileName: string;
@@ -429,6 +442,11 @@ end;
 function TContestCaliforniaQP.CQExchangeDefault(const aStation: TStationContext): string;
 begin
    Result := ' # ' + aStation.MyState;
+   if Trim(aStation.MyState) = '' then
+      begin
+      (* A DX entrant sends DX, not a bare serial number. *)
+      Result := ' # DX';
+      end;
 end;
 
 function TContestCaliforniaQP.CallHistoryFields: TCallHistoryFields;

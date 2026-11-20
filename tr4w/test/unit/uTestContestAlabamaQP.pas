@@ -284,6 +284,12 @@ begin
       CheckTrue(accepted, 'DX prefix accepted');
       CheckTrue(rx.DXMult, 'DXCC multiplier');
       CheckEquals(5, mo.MTotals[AllBands, CW, rmDomestic], 'no AL for a DX prefix');
+      (* "DX stations ... send signal report and prefix of country": the
+         received column through the writer's own HisQTH is the prefix (it was
+         empty under the QTHString-reading helper, 2026-11-20 audit). *)
+      CheckEquals('599 DL     ', PartyReceivedCabrilloColumn(PartyHandle, rx),
+                  'the received column of a typed DX prefix: QTH ' + string(rx.QTHString) +
+                  ', domestic ' + string(rx.DomesticQTH) + ', DX ' + string(rx.DXQTH));
       engine.Enter('K4BAD', '599 AL', Band20, CW, eCW, accepted, rx);
       CheckFalse(accepted, 'literal AL cannot replace county (its .dom line has no alias)');
       ClearPendingCounties;
