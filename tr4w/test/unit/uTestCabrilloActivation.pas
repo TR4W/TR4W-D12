@@ -29,7 +29,8 @@
   the real export over small Hawaii logs: a rover's log is one file per
   activation, each headed by the activation's call and the WHOLE log's score,
   a boundary QSO one line in each of its two files; a rover that never left
-  one place is one file whose header carries the call its lines carry. *)
+  one place is one file whose header carries the BASE call (the lines
+  carry the places). *)
 unit uTestCabrilloActivation;
 
 {$I ..\..\src\tr4w.inc}
@@ -55,7 +56,7 @@ type
       procedure Test_OnlyHawaiiSplitsItsCabrillo;
       procedure Test_TheActivationRules;
       procedure Test_ARoverLogIsOneCabrilloPerActivation;
-      procedure Test_ARoverInOnePlaceIsOneFileHeadedByItsCall;
+      procedure Test_ARoverInOnePlaceIsOneFileHeadedByTheBaseCall;
       procedure Test_ANewYorkRoverOnACountyLineIsFourLinesAndOneRecord;
    public
       procedure RunAllTests; override;
@@ -283,12 +284,11 @@ begin
      whatever the places and calls. *)
    a := TCabrilloActivations.Create;
    try
-      a.Add('hil', False, 'AH7RF');
-      a.Add('KOH', False, 'AH7RF');
+      a.Add('hil', False);
+      a.Add('KOH', False);
       CheckEquals(2, a.Count, 'two places');
       CheckFalse(a.AnyRoved, 'no row roved');
       CheckFalse(a.ShouldSplit(True), 'no split without roving, even for Hawaii');
-      CheckEquals('MYCALL', a.SingleFileHeaderCall('MYCALL'), 'the header is MY CALL');
    finally
       a.Free;
    end;
@@ -296,10 +296,10 @@ begin
    (* A ROVER IN TWO PLACES, BEFORE-ROVING ROWS FIRST. *)
    a := TCabrilloActivations.Create;
    try
-      a.Add(' hil ', False, 'AH7RF');
-      a.Add('KOH', True, 'AH7RF/KOH');
-      a.Add('koh', True, 'AH7RF/KOH/KON');
-      a.Add('KON', True, 'AH7RF/KOH/KON');
+      a.Add(' hil ', False);
+      a.Add('KOH', True);
+      a.Add('koh', True);
+      a.Add('KON', True);
       CheckEquals(3, a.Count, 'three activations, a place once in any case');
       CheckEquals('HIL', a.Place(0), 'in the order first met, upper cased, trimmed');
       CheckEquals('KOH', a.Place(1), 'second');
@@ -320,20 +320,16 @@ begin
                   'a portable call keeps its own slash');
 
       CheckEquals('hil', a.FileTag(0), 'the tag is the place in lower case');
-      CheckEquals('MYCALL', a.SingleFileHeaderCall('MYCALL'),
-                  'rows with different calls: the header stays MY CALL');
    finally
       a.Free;
    end;
 
-   (* ONE PLACE, ROVED: one file, headed by the call every line carries. *)
+   (* ONE PLACE, ROVED: one activation, never split. *)
    a := TCabrilloActivations.Create;
    try
-      a.Add('KOH', True, 'AH7RF/KOH');
-      a.Add('KOH', True, 'ah7rf/koh');
+      a.Add('KOH', True);
+      a.Add('KOH', True);
       CheckFalse(a.ShouldSplit(True), 'one activation is one file');
-      CheckEquals('AH7RF/KOH', a.SingleFileHeaderCall('AH7RF'),
-                  'the header is the call the lines carry');
    finally
       a.Free;
    end;
@@ -341,8 +337,8 @@ begin
    (* A FILE TAG IS SAFE IN A FILE NAME, AND AN EMPTY PLACE HAS ONE. *)
    a := TCabrilloActivations.Create;
    try
-      a.Add('A B/C', True, 'X');
-      a.Add('', False, 'X');
+      a.Add('A B/C', True);
+      a.Add('', False);
       CheckEquals('a_b_c', a.FileTag(0), 'no space or slash in a name');
       CheckEquals('noqth', a.FileTag(1), 'an empty place is named');
       CheckEquals('X', a.ActivationCall(1, 'X'), 'no place, no suffix');
@@ -474,17 +470,19 @@ begin
    end;
 end;
 
-(* A ROVER THAT STAYED IN ONE PLACE: one file, as ever, but its CALLSIGN is
-  the call its lines carry (it said MY CALL while the lines said AH7RF/KOH). *)
-procedure TCabrilloActivationTests.Test_ARoverInOnePlaceIsOneFileHeadedByItsCall;
+(* A PLAIN ROVER (call NY4I) THAT STAYED IN ONE PLACE: one file, as ever. Its
+  CALLSIGN is the base call as set -- NEVER NY4I/KOH (NY4I, 2026-11-20) -- while
+  its QSO line signs the assembled call NY4I/KOH. *)
+procedure TCabrilloActivationTests.Test_ARoverInOnePlaceIsOneFileHeadedByTheBaseCall;
 var
    rx: ContestExchange;
    cabrillo: string;
 begin
-   BeginTest('Test_ARoverInOnePlaceIsOneFileHeadedByItsCall');
+   BeginTest('Test_ARoverInOnePlaceIsOneFileHeadedByTheBaseCall');
    StartEmptyStore;
    try
       Settings.My.State := 'HIL';
+      Settings.My.Call := 'NY4I';
       Rove('KOH');
       rx := Default(ContestExchange);
       rx.ceRecordKind := rkQSO;
@@ -515,10 +513,10 @@ begin
       PostUnit.CreateCabrilloFile;
       cabrillo := ReadWhole(LogExportFileName(FTrw, lekCabrillo));
       CheckTrue(cabrillo <> '', 'the one file is written');
-      CheckEquals('AH7RF/KOH', HeaderValue(cabrillo, 'CALLSIGN:'),
-                  'headed by the call its line carries');
-      CheckTrue(Pos(' AH7RF/KOH ', QSOLineOf(cabrillo, 'W7ONE')) > 0,
-                'the line signs AH7RF/KOH [' + QSOLineOf(cabrillo, 'W7ONE') + ']');
+      CheckEquals('NY4I', HeaderValue(cabrillo, 'CALLSIGN:'),
+                  'headed by the base call, never the roving call');
+      CheckTrue(Pos(' NY4I/KOH ', QSOLineOf(cabrillo, 'W7ONE')) > 0,
+                'the line signs NY4I/KOH [' + QSOLineOf(cabrillo, 'W7ONE') + ']');
       CheckFalse(FileExists(LogExportFileNameTagged(FTrw, lekCabrillo, 'koh')),
                  'one activation is not split');
    finally
@@ -676,8 +674,8 @@ begin
       CheckEquals(1, LinesWith('KIN', 'CAY'), 'KIN to CAY once');
       CheckEquals(1, LinesWith('QUE', 'CAT'), 'QUE to CAT once');
       CheckEquals(1, LinesWith('QUE', 'CAY'), 'QUE to CAY once');
-      CheckEquals('VE3FRV/W2/KIN/QUE', HeaderValue(cabrillo, 'CALLSIGN:'),
-                  'the header carries the call its lines carry');
+      CheckEquals('VE3FRV/W2', HeaderValue(cabrillo, 'CALLSIGN:'),
+                  'the header is the call setting as set, never the places');
 
       (* ADIF: ONE record, the call setting, the host state, both pairs. *)
       PostUnit.ExportToADIF;
@@ -735,7 +733,7 @@ begin
    Test_OnlyHawaiiSplitsItsCabrillo;
    Test_TheActivationRules;
    Test_ARoverLogIsOneCabrilloPerActivation;
-   Test_ARoverInOnePlaceIsOneFileHeadedByItsCall;
+   Test_ARoverInOnePlaceIsOneFileHeadedByTheBaseCall;
    Test_ANewYorkRoverOnACountyLineIsFourLinesAndOneRecord;
 end;
 

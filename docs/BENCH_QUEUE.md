@@ -7534,7 +7534,8 @@ log); nothing sees the preview window or the message.
   and KON; every file's `CLAIMED-SCORE` is the whole log's (the score
   window's). No SuperCheckPartial upload is offered for a split log.
 - [ ] **Hawaii, a rover in one place only** (ROVER `KOH` the whole time):
-  ONE file, `<log>.log`, its `CALLSIGN: AH7RF/KOH` matching its lines.
+  ONE file, `<log>.log`, its `CALLSIGN: AH7RF` (the base call, never a
+  roving call) while its QSO lines sign `AH7RF/KOH`.
 - [ ] **Submit** the split files to hqp.contesting.com: EXPECT each accepted
   as its own entry. NOT RULED by the sponsor: the CALLSIGN of a file for a
   place logged before roving (plain AH7RF here), and whether a log that

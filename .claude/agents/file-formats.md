@@ -465,8 +465,12 @@ multipliers, CTY.DAT, band lookup and CRC32.
   score"; read once). The first file is previewed, one message names all; no
   SCP upload offer for a split log. Rules: `uCabrilloActivation` (leaf);
   pinned by `uTestCabrilloActivation` (registry walk + real export). An
-  unsplit file's CALLSIGN is MY CALL unless the log roved and every line
-  carries one call (NY4I/KOH): then that call. Stale files from an earlier
+  unsplit file's CALLSIGN is ALWAYS the call setting as set, never a roving
+  call (NY4I, 2026-11-20: "It should just be my base callsign"; a KIN/QUE
+  rover's header read NY4I/KIN/QUE); its QSO lines carry the assembled call.
+  A SPLIT Hawaii file's header carrying its activation (AH7RF/KOH) is the one
+  exception, kept because the sponsor treats each activation as a different
+  station; NY4I may rule otherwise. Stale files from an earlier
   export (a plain `<log>.log`, a place no longer in the log) are not removed.
 - **ONE ADIF RECORD PER CONTACT (issue 338, NY4I 2026-11-20).**
   `PostUnit.ExportToADIF` reads each row's `qso_set_id`

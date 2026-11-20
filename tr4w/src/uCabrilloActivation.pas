@@ -22,6 +22,13 @@ unit uCabrilloActivation;
   activations are ALL PART OF THE SAME SCORE"). That is the caller's: it
   reads the score once and writes it in every header.
 
+  THE HEADER CALLSIGN OF AN UNSPLIT FILE IS NEVER A ROVING CALL (NY4I,
+  2026-11-20, after a KIN/QUE rover's header said NY4I/KIN/QUE: "That is
+  incorrect. It should just be my base callsign."). It is the call setting as
+  set; only the QSO lines carry the places. The one header that names a place
+  is a SPLIT file's (ActivationCall), because the sponsor treats each
+  activation as a different station.
+
   A LEAF: no store, no contest, no settings. The export walks the log and
   feeds each exported row in with Add; everything it then asks is answered
   from what was added, so the rules are pinned without a log
@@ -42,19 +49,14 @@ type
       (* Parallel to FPlaces: did any of that place's rows rove? *)
       FRoved: array of boolean;
       FAnyRoved: boolean;
-      (* The call every added row was exported with, while they agree. *)
-      FCommonRowCall: string;
-      FRowCallsDiffer: boolean;
-      FRowCount: integer;
    public
       constructor Create;
       destructor Destroy; override;
 
       (* ONE EXPORTED ROW: aPlace is the place its sent column prints (upper
         cased and trimmed here), aRoved whether it was sent while roving (its
-        ceRoverQTH is set), aRowCall the call its QSO line would carry in a
-        single file (uLogSource.ExportCallFor of its own facts). *)
-      procedure Add(const aPlace: string; aRoved: boolean; const aRowCall: string);
+        ceRoverQTH is set). *)
+      procedure Add(const aPlace: string; aRoved: boolean);
 
       (* How many activations: distinct places. *)
       function Count: integer;
@@ -85,13 +87,6 @@ type
         that is empty (no MY STATE). *)
       function FileTag(aIndex: integer): string;
 
-      (* THE CALLSIGN: HEADER OF THE ONE UNSPLIT FILE. aSessionCall (MY CALL,
-        as it always was), unless the log roved and every exported row carries
-        the same call -- a rover that stayed in one place, NY4I/KOH -- when the
-        header says that call, so it matches every QSO line under it. A log
-        whose rows carry different calls keeps aSessionCall: there is no one
-        call to name. *)
-      function SingleFileHeaderCall(const aSessionCall: string): string;
    end;
 
 implementation
@@ -113,8 +108,7 @@ begin
    inherited Destroy;
 end;
 
-procedure TCabrilloActivations.Add(const aPlace: string; aRoved: boolean;
-                                   const aRowCall: string);
+procedure TCabrilloActivations.Add(const aPlace: string; aRoved: boolean);
 var
    key: string;
    index: integer;
@@ -134,17 +128,6 @@ begin
       FRoved[index] := True;
       FAnyRoved := True;
       end;
-
-   if FRowCount = 0 then
-      begin
-      FCommonRowCall := aRowCall;
-      end
-   (* UnicodeSameText: SysUtils.SameText takes AnsiString here (narrowing). *)
-   else if not UnicodeSameText(FCommonRowCall, aRowCall) then
-      begin
-      FRowCallsDiffer := True;
-      end;
-   Inc(FRowCount);
 end;
 
 function TCabrilloActivations.Count: integer;
@@ -205,16 +188,6 @@ begin
    if Result = '' then
       begin
       Result := 'noqth';
-      end;
-end;
-
-function TCabrilloActivations.SingleFileHeaderCall(const aSessionCall: string): string;
-begin
-   Result := aSessionCall;
-   if FAnyRoved and (FRowCount > 0) and (not FRowCallsDiffer) and
-      (FCommonRowCall <> '') then
-      begin
-      Result := FCommonRowCall;
       end;
 end;
 
