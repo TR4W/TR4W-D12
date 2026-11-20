@@ -406,40 +406,45 @@ end;
    second layout of each file was READ from the site on 2026-11-20 and is
    in Test_SiteLayoutsGiveTheRememberedText. *)
 const
-   CALL_HISTORY_MEMBERS: array[0..52] of ContestType = (
+   CALL_HISTORY_MEMBERS: array[0..60] of ContestType = (
       ARRLSSCW, ARRLSSSSB, ARRL10, ARRLFIELDDAY, CWOPEN, IARU, NAQSOCW, NAQSOSSB, NAQSORTTY,
       ARRL160, ARRL_RTTY_ROUNDUP, ARRLDIGI, CWOPS, NASPRINTCW, NASPRINTRTTY, SPRINTSSB, SST,
       WINTERFIELDDAY, CQ160CW, CQ160SSB, NYQP, TEXASQSOPARTY, FLORIDAQSOPARTY, ARRLDXCW,
       ARRLDXSSB, ArizonaQsoParty, CALQSOPARTY, MICHQSOPARTY, MOQSOPARTY, NEBRASKAQSO,
       NCQSOPARTY, OHIOQSOPARTY, TENNESSEEQSOPARTY, VAQP, WISCONSINQSOPARTY, MINNQSOPARTY,
-      COLORADOQSOPARTY, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
+      COLORADOQSOPARTY, IDAHOQSOPARTY, PAQSOPARTY, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
       DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
-      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST);
+      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
+      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
+      DUMMYCONTEST);
    (* A contest that registers by its id has no member (its row's member is
       the placeholder DUMMYCONTEST); the id decides there. '' for a member row. *)
-   CALL_HISTORY_IDS: array[0..52] of string = (
+   CALL_HISTORY_IDS: array[0..60] of string = (
       '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-      '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'AL-QSO-PARTY',
+      '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'AL-QSO-PARTY',
       'AR-QSO-PARTY', 'GA-QSO-PARTY', 'HI-QSO-PARTY', 'IL-QSO-PARTY', 'KS-QSO-PARTY',
       'KY-QSO-PARTY', 'LA-QSO-PARTY', 'MS-QSO-PARTY', 'NH-QSO-PARTY', 'NJ-QSO-PARTY',
-      'OK-QSO-PARTY', 'SC-QSO-PARTY', 'SD-QSO-PARTY', 'VT-QSO-PARTY', 'WV-QSO-PARTY');
-   CALL_HISTORY_STEMS: array[0..52] of string = (
+      'OK-QSO-PARTY', 'SC-QSO-PARTY', 'SD-QSO-PARTY', 'VT-QSO-PARTY', 'WV-QSO-PARTY',
+      'AC-QSO-PARTY', 'IA-QSO-PARTY', 'ND-QSO-PARTY', 'NM-QSO-PARTY', 'ON-QSO-PARTY',
+      'QC-QSO-PARTY');
+   CALL_HISTORY_STEMS: array[0..60] of string = (
       'ARRL-SS-CW', 'ARRL-SS-SSB', 'ARRL-10M', 'ARRL-FD', 'CW-OPEN', 'IARU-HF', 'NAQP-CW',
       'NAQP-SSB', 'NAQP-RTTY', 'ARRL-160M', 'ARRL-RTTY', 'ARRL-DIGI', 'CWOPS', 'NA-SPRINT-CW',
       'NA-SPRINT-RTTY', 'NA-SPRINT-SSB', 'K1USNSST', 'WFD', 'CQ-160-CW', 'CQ-160-SSB',
       'QSOP_NY', 'QSOP_TX', 'QSOP_FL', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'QSOP_AZ', 'QSOP_CA',
       'QSOP_MI', 'QSOP_MO', 'QSOP_NE', 'QSOP_NC', 'QSOP_OH', 'QSOP_TN', 'QSOP_VA', 'QSOP_WI',
-      'QSOP_MN', 'QSOP_CO', 'QSOP_AL', 'QSOP_AR', 'QSOP_GA', 'QSOP_HI', 'QSOP_IL', 'QSOP_KS',
-      'QSOP_KY', 'QSOP_LA', 'QSOP_MS', 'QSOP_NH', 'QSOP_NJ', 'QSOP_OK', 'QSOP_SC', 'QSOP_SD',
-      'QSOP_VT', 'QSOP_WV');
-   CALL_HISTORY_FIELD_NAMES: array[0..52] of string = (
+      'QSOP_MN', 'QSOP_CO', 'QSOP_ID', 'QSOP_PA', 'QSOP_AL', 'QSOP_AR', 'QSOP_GA', 'QSOP_HI',
+      'QSOP_IL', 'QSOP_KS', 'QSOP_KY', 'QSOP_LA', 'QSOP_MS', 'QSOP_NH', 'QSOP_NJ', 'QSOP_OK',
+      'QSOP_SC', 'QSOP_SD', 'QSOP_VT', 'QSOP_WV', 'QSOP_AC', 'QSOP_IA', 'QSOP_ND', 'QSOP_NM',
+      'QSOP_ON', 'QSOP_QC');
+   CALL_HISTORY_FIELD_NAMES: array[0..60] of string = (
       'CK Sect', 'CK Sect', 'Exch1', 'Exch1 Sect', 'Name', 'Sect', 'Name State', 'Name State',
       'Name State', 'Exch1', 'Exch1', 'Loc1', 'Name Exch1', 'Name State', 'Name State',
       'Name State', 'Name Exch1', 'Exch1 Sect', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
       'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
       'Exch1', 'Exch1', 'Name Exch1', 'Name Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
       'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
-      'Exch1', 'Exch1');
+      'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1');
 
 (* The fields as N1MM names them, one blank between. *)
 function FieldNamesText(const aFields: TCallHistoryFields): string;
@@ -465,7 +470,7 @@ var
    contests: TContestIdentityList;
    k, m, row: integer;
    fields: TCallHistoryFields;
-   seen: array[0..52] of boolean;
+   seen: array[0..60] of boolean;
    reader: TCallHistoryReader;
 begin
    BeginTest('Test_EveryContestStatesItsCallHistoryFields');

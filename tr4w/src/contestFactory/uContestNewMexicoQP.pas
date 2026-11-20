@@ -198,7 +198,9 @@ uses
    (* cpLOW / cpQRP -- the entrant's CATEGORY-POWER, as TStationContext
       carries it. First, so VC's names win wherever the two overlap. *)
    uSettingsModel,
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    (* ITS ID -- stored data; see the header. *)
@@ -299,6 +301,18 @@ type
 
       (* WHAT THE EXCHANGE CARRIES -- a domestic QTH (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_NM carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 51 of 51 non-state rows are county keys of its
+         own county file (Pennsylvania: its in-state file pa.dom, which holds the ARRL sections); the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 (* THE POWER MULTIPLIER FOR A CATEGORY-POWER -- QRP x5, LOW x2, HIGH x1.
@@ -650,6 +664,16 @@ end;
 function TContestNewMexicoQP.HasPrefixMultiplier: boolean;
 begin
    Result := False;
+end;
+
+function TContestNewMexicoQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestNewMexicoQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_NM';
 end;
 
 initialization

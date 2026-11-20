@@ -73,7 +73,9 @@ unit uContestIowaQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    IA_QSO_PARTY_CONTEST_ID = 'IA-QSO-PARTY';
@@ -116,6 +118,18 @@ type
       function ExchangeCarriesDomesticQTH: boolean; override;
       function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
          out aKey: string): boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_IA carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 20 of 20 non-state rows are county keys of its
+         own county file (Pennsylvania: its in-state file pa.dom, which holds the ARRL sections); the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -325,6 +339,16 @@ function TContestIowaQP.AdditionalDomesticMultiplierKey(const aQso: ContestExcha
 begin
    (* A county also earns IA, in state -- the header (issue 317). *)
    Result := InStateCountyEarnsHostState(aQso, aKey);
+end;
+
+function TContestIowaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestIowaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_IA';
 end;
 
 initialization
