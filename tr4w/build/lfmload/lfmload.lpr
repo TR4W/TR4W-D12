@@ -55,6 +55,7 @@ uses
    Spin,
    Grids,
    Buttons,
+   CheckLst,
    Menus,
    Dialogs,
    DateTimePicker,

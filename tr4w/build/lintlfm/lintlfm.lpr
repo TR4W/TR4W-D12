@@ -41,6 +41,7 @@ uses
    Spin,       // TSpinEdit -- Auto-CQ's delay field
    Grids,      // TStringGrid -- the band plan and the beacon monitor
    Buttons,    // TSpeedButton -- the beacon monitor's push-like radio group
+   CheckLst,   // TCheckListBox -- the Rover dialog's list of places
    Menus,      // TPopupMenu / TMenuItem -- the band map's context menu
    Dialogs,         // TOpenDialog -- the New Contest file picker
    DateTimePicker,  // TDateTimePicker -- the Edit QSO date/time field
