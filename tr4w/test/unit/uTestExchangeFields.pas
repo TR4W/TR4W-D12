@@ -423,7 +423,7 @@ begin
       WAG, YODX, RU3AXMEMORIAL, ARKTIKA_SPRING, UNDX,
       NYQP, KINGOFSPAINCW, KINGOFSPAINSSB, PCC, DARC10M,
       REFCW, REFSSB, OZHCRVHF, CANADA_DAY, ARRL_RTTY_ROUNDUP, CQIR,
-      ALRS_UA1DZ_CUP, INQSOPARTY, OKOMSSB, BCQP, IN7QPNE, RTC:
+      ALRS_UA1DZ_CUP, INQSOPARTY, OKOMSSB, IN7QPNE, RTC:
          begin
          Result := 'QSONumber QTH RST';
          end;
@@ -437,7 +437,7 @@ begin
       ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, COUNTYHUNTER, CQVHF,
       FLORIDAQSOPARTY, JALONGPREFECT, LABRE, POTA, RSGB_ROPOCO_CW,
       RSGB_ROPOCO_SSB, SOUTHAMERICANWW, STEWPERRY, WWL, CQMM, IDAHOQSOPARTY,
-      DELAWAREQSOPARTY, NEBRASKAQSO:
+      DELAWAREQSOPARTY, NEBRASKAQSO, BCQP:
          begin
          Result := 'QTH RST';
          end;
@@ -611,9 +611,17 @@ begin
       for s := Low(TPinStation) to High(TPinStation) do
          begin
          station := PinStation(s, c);
-         CheckEquals(ExchangeFieldsText(LegacyFields(Kinds(c, station).Exchange)),
-                     ExchangeFieldsText(ProgramFields(c, station)),
-                     Who(c, s) + ' fields as its session shape marked them');
+         if c <> BCQP then
+            begin
+            (* THE BC QSO PARTY IS THE ONE DELIBERATE EXCEPTION (2026-11-20
+               audit): its session shape is the D7 RST-QTH-serial one, but
+               the sponsor's exchange is RST and district with no serial, so
+               its class declares RST and QTH (pinned above and by
+               uTestContestBritishColumbiaQP). *)
+            CheckEquals(ExchangeFieldsText(LegacyFields(Kinds(c, station).Exchange)),
+                        ExchangeFieldsText(ProgramFields(c, station)),
+                        Who(c, s) + ' fields as its session shape marked them');
+            end;
          Inc(checked);
          end;
       end;

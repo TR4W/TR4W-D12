@@ -293,7 +293,7 @@ begin
       SEVENQP, ALLASIANCW, ALLASIANSSB, ARRL160, ArizonaQsoParty, LABRE, MICHQSOPARTY,
       MOQSOPARTY, NEWENGLANDQSO, NCQSOPARTY, OLDNEWYEAR, SALMONRUN, SOUTHAMERICANWW,
       TEXASQSOPARTY, TOEC, WISCONSINQSOPARTY, NYQP, TENNESSEEQSOPARTY, CQMM, ALRS_UA1DZ_CUP,
-      INQSOPARTY, BCQP, YOTA, IN7QPNE, IDAHOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO,
+      INQSOPARTY, BCQP, YOTA, IN7QPNE, IDAHOQSOPARTY, NEBRASKAQSO,
       OHIOQSOPARTY:
          begin
          Result := Pick(aVariant, '599 FL     ',
@@ -370,15 +370,24 @@ begin
                      '599 TOMASZ-THE-VERY-LONG ABCDEFGHIJKLMNOPQRST',
                      '599 TOM   TRC    ');
          end;
-      PAQSOPARTY:
+      PAQSOPARTY, CALQSOPARTY:
          begin
-         (* Rule 5.a: a station with no MY STATE sends DX (2026-11-20). *)
+         (* Rule 5.a (Pennsylvania) and the California rule: a station with no MY STATE
+            sends DX (2026-11-20). *)
          Result := Pick(aVariant, 'FL   7     ',
                      'DX   123   ',
                      'ABCDEFGHIJKLMNOPQRST 4567  ',
                      'TRC  7     ');
          end;
-      CALQSOPARTY, CUPURAL, UKRAINECHAMPIONSHIP, VAQP:
+      DELAWAREQSOPARTY:
+         begin
+         (* A DX entrant sends DX (2026-11-20 audit). *)
+         Result := Pick(aVariant, '599 FL     ',
+                     '59  DX     ',
+                     '599 ABCDEFGHIJKLMNOPQRST',
+                     '599 TRC    ');
+         end;
+      CUPURAL, UKRAINECHAMPIONSHIP, VAQP:
          begin
          Result := Pick(aVariant, 'FL   7     ',
                      '     123   ',

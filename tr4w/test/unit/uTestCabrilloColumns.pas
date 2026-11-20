@@ -651,12 +651,12 @@ begin
          begin
          Take(aVariant,
               ['7    FL    ',
-               '123        ',
+               '123  DX    ',
                '4567 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                '7    TRC   ',
                '7    FL    ',
                '-5   99    ',
-               '7          ',
+               '7    DX    ',
                '7    FL    '],
               ['0012 GA    ',
                '0000 DX    ',
@@ -978,7 +978,34 @@ begin
                  aSent, aRec);
             end;
          end;
-      LABRE, IDAHOQSOPARTY, DELAWAREQSOPARTY, NEBRASKAQSO:
+      DELAWAREQSOPARTY:
+         begin
+         (* A DX entrant sends DX (2026-11-20 audit); the received column
+            of a station with no domestic QTH is DX. *)
+         Take(aVariant,
+              ['599 FL     ',
+               '59  DX     ',
+               '599 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+               '599 TRC    ',
+               '599 FL     ',
+               '599 99     ',
+               '599 DX     ',
+               '599 FL     '],
+              (* This table hands the writer a hand-set QTHString and no
+                 DomesticQTH, so every received column is DX here; the
+                 real engine's column is pinned by
+                 uTestContestDelawareQP. *)
+              ['579 DX     ',
+               '58  DX     ',
+               '579 DX     ',
+               '579 DX     ',
+               '579 DX     ',
+               '579 DX     ',
+               '579 DX     ',
+               '579 DX     '],
+              aSent, aRec);
+         end;
+      LABRE, IDAHOQSOPARTY, NEBRASKAQSO:
          begin
          Take(aVariant,
               ['599 FL     ',

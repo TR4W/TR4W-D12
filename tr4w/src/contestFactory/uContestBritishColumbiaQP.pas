@@ -353,7 +353,10 @@ end;
 
 function TContestBritishColumbiaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
-   Result := ExchangeFieldsRSTQSONumberQTH;
+   (* "British Columbia stations send: RS(T) and District ... Non-British
+      Columbia stations send: RS(T) and state/province/territory or DX": no
+      serial number is carried (2026-11-20 audit; it was declared since D7). *)
+   Result := ExchangeFieldsRSTQTH;
 end;
 
 function TContestBritishColumbiaQP.ParseReceivedExchangeFormat(const aText: string;

@@ -226,7 +226,10 @@ end;
 function TContestAlabamaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
    const aQso: ContestExchange; const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+   (* "DX stations ... send signal report and prefix of country": a typed
+      "599 DL" carries no QTHString, so the helper that reads the DomesticQTH
+      field is the one that writes the prefix (2026-11-20 audit). *)
+   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
 end;
 
 procedure TContestAlabamaQP.CalculateQSOPoints(var aQso: ContestExchange);
