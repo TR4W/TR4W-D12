@@ -85,6 +85,12 @@
 >   `rcvd_iota`, `rcvd_coords` and `cty_itu_zone`. No build ever wrote or read
 >   them. §4 and §4a still show them; they are history. See
 >   [§12o](#12o-schema-11--sixteen-unused-columns-removed-by-a-table-rebuild-issue-94-2026-11-19).
+> - **Schemas 12 and 13 (2026-11-19 and 2026-11-20, issues 133 and 87) ADDED
+>   three `qso` columns §4 does not list**: `my_rover_qth` (12, the place a
+>   rover sent the QSO from), `my_sent_unit` and `my_rover_places` (13, the
+>   unit sent, so `my_state` is the host state; and every place of a rover's
+>   operation, from which the Cabrillo call is assembled). All NULL on older
+>   rows, meaning "as before". `docs/LOG_SCHEMA.md` is their definition.
 
 **Schema settled 2026-08-29. STARTED 2026-09-01 — see [§13](#13-what-is-built-so-far)
 for what exists, and [§14](#14-decisions-taken-2026-09-01) for the four decisions
