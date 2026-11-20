@@ -37,6 +37,8 @@ import os
 import re
 import shutil
 import sqlite3
+import stat
+import subprocess
 import sys
 import time
 import urllib.request
@@ -70,6 +72,10 @@ GEONAMES_CA_URL = "https://download.geonames.org/export/zip/CA_full.csv.zip"
 
 # ISED (Canada) amateur callsign file, refreshed by ISED daily.
 ISED_URL = "https://apc-cap.ic.gc.ca/datafiles/amateur_delim.zip"
+
+# Where --deploy uploads: the website's own git repository (GitHub Pages serves
+# https://tr4w.github.io/fcc_lookup.sqlite.gz from it). --deployURL overrides it.
+DEFAULT_DEPLOY_URL = "https://github.com/TR4W/TR4W.github.io.git"
 
 # Sane lower bounds; a build with fewer rows is treated as a failed build.
 MIN_EXPECTED_ROWS = 500_000
@@ -435,6 +441,66 @@ def download_fcc(zip_path):
    raise RuntimeError("could not download the FCC database from any URL")
 
 
+def run_git(args, cwd):
+   """Run one git command; return its output, or raise with git's own words."""
+   result = subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True, text=True)
+   if result.returncode != 0:
+      raise RuntimeError(f"git {' '.join(args)} failed: {(result.stderr or result.stdout).strip()}")
+   return result.stdout
+
+
+def remove_tree(path):
+   """Delete a folder tree, git's read-only object files included (Windows
+   refuses to unlink those until the read-only flag is cleared)."""
+   def clear_and_retry(func, failing_path, _error):
+      os.chmod(failing_path, stat.S_IWRITE)
+      func(failing_path)
+   if Path(path).exists():
+      shutil.rmtree(path, onexc=clear_and_retry)
+
+
+def deploy(out_dir, deploy_url, workdir):
+   """Upload the published .gz and manifest.json to the website's git repo.
+
+   The website (GitHub Pages) is a git repository, so deploying is a shallow
+   clone, a copy, one commit and a push.  Nothing is committed when the files
+   are byte-identical to what the site already serves, so running this after
+   an up-to-date build is harmless.  A failure raises; the files in out_dir are
+   untouched either way."""
+   gz_path = out_dir / GZ_NAME
+   manifest_path = out_dir / MANIFEST_NAME
+   for needed in (gz_path, manifest_path):
+      if not needed.exists():
+         raise RuntimeError(f"nothing to deploy: {needed} does not exist (build first)")
+   built_at = (read_manifest(manifest_path) or {}).get("built_at_utc", "")
+
+   clone = workdir / "deploy"
+   remove_tree(clone)
+   log(f"Deploying to {deploy_url} ...")
+   run_git(["clone", "--depth", "1", deploy_url, str(clone)], workdir)
+   shutil.copyfile(gz_path, clone / GZ_NAME)
+   shutil.copyfile(manifest_path, clone / MANIFEST_NAME)
+   run_git(["add", GZ_NAME, MANIFEST_NAME], clone)
+   if not run_git(["status", "--porcelain"], clone).strip():
+      log("  The site already has these files. Nothing to upload.")
+      return
+   run_git(["commit", "-m", f"Callsign lookup database built {built_at}".strip()], clone)
+   run_git(["push", "origin", "HEAD"], clone)
+   log(f"  Uploaded {GZ_NAME} and {MANIFEST_NAME}.")
+
+
+def run_deploy(out_dir, args, workdir):
+   """The exit code of the optional deploy step: 0 when it was not asked for."""
+   if not args.deploy:
+      return 0
+   try:
+      deploy(out_dir, args.deploy_url or DEFAULT_DEPLOY_URL, workdir)
+      return 0
+   except Exception as exc:
+      log(f"ERROR: deploy failed: {exc}")
+      return 1
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -457,7 +523,15 @@ def main():
                        help="Use a local ISED amateur_delim.zip instead of downloading")
    parser.add_argument("--keep-work", action="store_true",
                        help="Keep the downloaded zip and scratch DB after a successful build")
+   parser.add_argument("--deploy", action="store_true",
+                       help="After a good build (or when nothing changed), upload the .gz and "
+                            "manifest.json to the website's git repository")
+   parser.add_argument("--deployURL", dest="deploy_url", default=None,
+                       help=f"Git URL to deploy to instead of {DEFAULT_DEPLOY_URL} "
+                            "(giving it implies --deploy)")
    args = parser.parse_args()
+   if args.deploy_url:
+      args.deploy = True
 
    out_dir = Path(args.output_dir).resolve()
    workdir = Path(args.workdir).resolve()
@@ -488,8 +562,8 @@ def main():
                    and old.get("crosswalk_sha256") == crosswalk_sha
                    and old.get("schema_version") == SCHEMA_VERSION)
       if unchanged and not args.force:
-         log(f"Up to date (FCC {source_lm}; ISED {ised_lm}). Nothing to do.")
-         return 0
+         log(f"Up to date (FCC {source_lm}; ISED {ised_lm}). Nothing to build.")
+         return run_deploy(out_dir, args, workdir)
 
    try:
       t0 = time.time()
@@ -584,7 +658,7 @@ def main():
          slim_db.unlink(missing_ok=True)
          if not args.zip_file:
             zip_path.unlink(missing_ok=True)
-      return 0
+      return run_deploy(out_dir, args, workdir)
    except Exception as exc:
       log(f"ERROR: {exc}")
       return 1

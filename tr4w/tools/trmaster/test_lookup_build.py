@@ -234,8 +234,64 @@ def test_reads_ised_zip():
       check((recs[0]["callsign"], recs[0]["first_name"]), ("VE1AA", "Zoé"), "record")
 
 
+def _git(args, cwd):
+   import subprocess
+   return subprocess.run(["git"] + args, cwd=str(cwd), capture_output=True, text=True, check=True).stdout
+
+
+def test_deploy_uploads_then_is_a_no_op():
+   """--deploy against a local bare repo: the first run commits both files,
+   the second (same bytes) commits nothing, a changed .gz commits again."""
+   with tempfile.TemporaryDirectory() as tmp:
+      tmp = Path(tmp)
+      bare = tmp / "site.git"
+      seed = tmp / "seed"
+      out = tmp / "out"
+      work = tmp / "work"
+      for d in (out, work, seed):
+         d.mkdir()
+      _git(["init", "--bare", "-b", "main", str(bare)], tmp)
+      _git(["init", "-b", "main"], seed)
+      (seed / "index.html").write_text("site")
+      _git(["add", "index.html"], seed)
+      _git(["-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "-m", "seed"], seed)
+      _git(["push", str(bare), "main"], seed)
+
+      (out / lb.GZ_NAME).write_bytes(b"gz one")
+      (out / lb.MANIFEST_NAME).write_text('{"built_at_utc": "2026-11-20T00:00:00Z"}')
+      env = {"GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com",
+             "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com"}
+      old_env = {k: os.environ.get(k) for k in env}
+      os.environ.update(env)
+      try:
+         lb.deploy(out, str(bare), work)
+         check(int(_git(["rev-list", "--count", "main"], bare)), 2, "first deploy adds one commit")
+         check(_git(["show", "main:" + lb.GZ_NAME], bare), "gz one", "the .gz is on the site")
+         lb.deploy(out, str(bare), work)
+         check(int(_git(["rev-list", "--count", "main"], bare)), 2, "identical files: no new commit")
+         (out / lb.GZ_NAME).write_bytes(b"gz two")
+         lb.deploy(out, str(bare), work)
+         check(int(_git(["rev-list", "--count", "main"], bare)), 3, "a changed .gz is a new commit")
+      finally:
+         for k, v in old_env.items():
+            if v is None:
+               os.environ.pop(k, None)
+            else:
+               os.environ[k] = v
+
+
+def test_deploy_without_files_is_refused():
+   with tempfile.TemporaryDirectory() as tmp:
+      raised = False
+      try:
+         lb.deploy(Path(tmp), "unused", Path(tmp))
+      except RuntimeError:
+         raised = True
+      check(raised, True, "no .gz and manifest: deploy refuses")
+
+
 def main():
-   tests = [(n, f) for n, f in sorted(globals().items())
+   tests =[(n, f) for n, f in sorted(globals().items())
             if n.startswith("test_") and callable(f)]
    failed = 0
    for name, fn in tests:
