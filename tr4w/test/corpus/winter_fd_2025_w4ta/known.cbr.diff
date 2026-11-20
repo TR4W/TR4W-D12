@@ -1,4 +1,13 @@
-# Q54 (NY4I 2026-10-16): Winter Field Day writes an FM contact as FM; D7 wrote PH
+# Q54 (NY4I 2026-10-16): Winter Field Day writes an FM contact as FM; D7 wrote PH; and (2026-11-19) the 2027 rules score the QSO points alone
+#
+# THE CLAIMED SCORE (2026-11-19). The sponsor's 2027 rules (v3,
+# docs/ContestRules/WinterFieldDay/WFD-2027-Rules-v3.md): "Total score =
+# (total QSO points) x (OM+1)", OM being the objectives the entrant selects on
+# submission, which the log does not hold. D7's formula -- points x one
+# multiplier per band and mode worked x2 for LOW -- was an earlier year's rule:
+# 1513 points x 14 band-modes x 2 = 42364. The claim is now the 1513 points.
+# No QSO line moves: the log has no 30/17/12 m QSO and its digital QSOs are
+# PSK31, which the rules allow.
 #
 # docs/CONTEST_FACTORY_OPEN_QUESTIONS.md, Q54. FM is a valid Cabrillo mode and
 # the WFD rules list it (CW, PH, FM, RY, DG), so TContestWinterFieldDay's
@@ -6,10 +15,12 @@
 # deleted and the base spelling applies. ref.cbr is D7-written and is NEVER
 # regenerated, so its one FM QSO (AI4RJ, 2 m, 1925Z) is pinned here as the
 # exact expected difference. Scoring is unchanged: FM still counts as phone,
-# 1 point, and CLAIMED-SCORE (42364) is compared and must still match.
+# 1 point.
 #
 # Read by run-golden-diff.sh: the lines below the comments are EXACTLY the
 # changed lines golden_diff.py must report for ref.cbr vs cand.cbr -- any
 # other difference in this artifact is a FAIL.
+-CLAIMED-SCORE: 42364
++CLAIMED-SCORE: 1513
 -QSO:   144 PH 2025-01-25 1925 W4TA    3I  WCF     AI4RJ          1H  WCF     0    
 +QSO:   144 FM 2025-01-25 1925 W4TA    3I  WCF     AI4RJ          1H  WCF     0    
