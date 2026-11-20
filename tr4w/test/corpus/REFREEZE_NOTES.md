@@ -64,3 +64,56 @@ sets below, whose frozen bytes held a value the fixture will not hold.
   D7 sent TOM)".
 - Checked line by line: all 79 QSO lines of each artifact differ by exactly
   that substitution, and no other line changed.
+
+---
+
+## 2026-11-19 -- all 13 sets: the overlay; plus Sweepstakes, Winter Field Day and issue 275
+
+The gate was 0 identical / 13 differing on the HEAD build (489e53f9). Every
+differing line was taken apart below; nothing else in any artifact moved. The
+new bytes were checked to equal a separate scratch run of the same binary.
+
+### All 13 sets -- `CATEGORY-OVERLAY: CLASSIC` -> `CATEGORY-OVERLAY:`
+
+- **The cause is a1890e32 (issue 122, NY4I 2026-11-19): the overlay is the
+  contest's setting, `Settings.Contest.CategoryOverlay`.** The frozen
+  `CLASSIC` came from the GLOBAL header store, `cabrilloHeader._CATEGORY-OVERLAY`
+  in the settings fixture. That row is inert since a1890e32, on purpose, as
+  `_CATEGORY-MODE` became at Q61 (BENCH_QUEUE records it).
+- **The log itself says blank.** Every fixture `log.db` holds a `config` row
+  `CATEGORY-OVERLAY = ''`, source `contest` -- this contest's own statement. So
+  no seeding could give CLASSIC here, and the blank is the right answer.
+- **Not a seeding defect on this path.** Under `/RESCORE` and `/EXPORT` the
+  station's stored contest-scoped values (the `commands` bucket) are not
+  applied to ANY of the categories: measured with a new log made from
+  arktika's `.cfg` with its ASSISTED and TRANSMITTER lines removed and the
+  station bucket saying ASSISTED / TWO / CLASSIC, the export wrote
+  NON-ASSISTED / ONE / blank. The overlay takes exactly the categories' path.
+- The golden corpus does not see it: `/EXPORT` of the arktika `.db` writes the
+  same bare `CATEGORY-OVERLAY:`, and `golden_diff.py` ignores the Cabrillo
+  header. D7's `ref.cbr` still says CLASSIC (D7's global store).
+- Scores unchanged in all eleven sets that moved on this line alone.
+
+### `arrl_ss_ssb_2024_w4ta` -- CLAIMED-SCORE 30192 -> 30044; QSO 206 is an X-QSO
+
+- Sweepstakes states its modes (46882b81, 2026-11-18; sponsor rule 2.4):
+  ARRL-SS-SSB credits phone only, so QSO 206 (N0TST, 160 m CW) is an automatic
+  X-QSO -- Cabrillo `X-QSO:`, ADIF `APP_TR4W_CLAIMEDQSO 0`. The golden corpus
+  already pins the same two lines (`known.adi.diff`, `known.cbr.diff`).
+- Arithmetic: 30192 = 2 x 204 x 74 and 30044 = 2 x 203 x 74 -- one QSO's two
+  points gone, the 74 multipliers unchanged (OK is worked elsewhere).
+
+### `winter_fd_2025_w4ta` -- CLAIMED-SCORE 42364 -> 1513; VE records gain `<STATE>`
+
+- **Score.** Winter Field Day's 2027 rules (v3, 27e5844b): the claimed score is
+  the QSO points; the objective multiplier is chosen on the submission form.
+  42364 = 1513 x 28 exactly, and 42364 is D7's own `CLAIMED-SCORE`, so the
+  points (1513) are unchanged and only the old x28 factor went.
+- **STATE -- pre-existing, NOT from today's work.** 32 ADIF records of VE
+  stations gain `<STATE:2>`: AB, BC, MB, NB, NS, PE, QC, SK as themselves, GH
+  as ON. That is ed126e42 (2026-11-15, issue 275 item 4: the single-province
+  RAC sections map to their province), "accepted by NY4I for issue 275" in
+  that commit's message, which updated the golden `known.adi.diff` but not
+  this baseline -- so this gate was already red on that set from 2026-11-15.
+  Checked: each of the 32 changed lines is the frozen line with exactly one
+  `<STATE:2>XX ` inserted, XX the section's province; no other line changed.
