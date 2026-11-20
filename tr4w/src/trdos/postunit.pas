@@ -942,11 +942,10 @@ procedure CreateCabrilloFile;
        end;
 
     // if FileExists(tReportsFilename) then if not OkayToDeleteExistingFile(tReportsFilename) then Exit;
-    (* THE ONE FILE. Its CALLSIGN is MY CALL, as always, unless the log roved
-      and every QSO line carries one call (NY4I/KOH): then that call, so the
-      header and the lines agree. *)
+    (* THE ONE FILE. Its CALLSIGN is MY CALL as set, never a roving call
+      (NY4I, 2026-11-20); the QSO lines carry the places. *)
     if not WriteOneCabrilloFile( CharBufferText( tReportsFilename ),
-              activations.SingleFileHeaderCall( Settings.My.Call ), score,
+              Settings.My.Call, score,
               False, '', '' ) then
        begin
        Exit;
@@ -3629,8 +3628,8 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
       with a rover suffix stripped back off. *)
     aPlainCall := ExportCallFor( NotCapturedMyFacts );
     (* A LOG THAT NEVER ROVED IS NOT WALKED: nothing it could add changes
-      the export (TCabrilloActivations.ShouldSplit and SingleFileHeaderCall
-      both need a roving row), so the ordinary export costs one query. *)
+      the export (TCabrilloActivations.ShouldSplit
+      needs a roving row), so the ordinary export costs one query. *)
     if not LogSourceHasRoverQSO then
        begin
        Exit;
@@ -3646,8 +3645,7 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
           begin
           aActivations.Add(
              CabrilloActivationPlaceOf( stationContest, facts, TempRXData ),
-             Trim( string( TempRXData.ceRoverQTH ) ) <> '',
-             CabrilloCallFor( facts ) );
+             Trim( string( TempRXData.ceRoverQTH ) ) <> '' );
           end;
        end;
   finally
