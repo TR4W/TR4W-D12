@@ -438,6 +438,8 @@ begin
                     TTabSheet, TRadioButton,
                     // StdCtrls
                     TMemo, TStaticText, TScrollBar,
+                    // CheckLst: the Rover dialog's list of places
+                    TCheckListBox,
                     // ExtCtrls
                     TImage, TShape, TBevel, TRadioGroup, TCheckGroup,
                     TSplitter, TScrollBox, TTimer, TPaintBox,

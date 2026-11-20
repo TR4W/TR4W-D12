@@ -186,6 +186,7 @@ begin
                     TComboBox, TListBox, TGroupBox, TTreeView, TPageControl,
                     TTabSheet, TRadioButton,
                     TMemo, TStaticText, TScrollBar,
+                    TCheckListBox,
                     TImage, TShape, TBevel, TRadioGroup, TCheckGroup,
                     TSplitter, TScrollBox, TTimer, TPaintBox,
                     TOpenDialog,
