@@ -962,6 +962,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestKansasQP in 'uTestContestKansasQP.pas',
    uTestContestIowaQP in 'uTestContestIowaQP.pas',
    uTestContestHawaiiQP in 'uTestContestHawaiiQP.pas',
+   (* Winter Field Day against the sponsor's 2027 rules (2026-11-19): its
+      bands, its modes and the WSJT ones it refuses, its schedule. *)
+   uTestContestWinterFieldDay in 'uTestContestWinterFieldDay.pas',
    (* The South Dakota QSO Party, a new contest registered by its id, and
       its split score (2026-11-18, #129). *)
    uTestContestSouthDakotaQP in 'uTestContestSouthDakotaQP.pas',
@@ -1251,6 +1254,7 @@ begin
    RegisterSuite(TContestKansasQPTests.Create('ContestKansasQP'));
    RegisterSuite(TContestIowaQPTests.Create('ContestIowaQP'));
    RegisterSuite(TContestHawaiiQPTests.Create('ContestHawaiiQP'));
+   RegisterSuite(TContestWinterFieldDayTests.Create('ContestWinterFieldDay'));
    RegisterSuite(TContestSouthDakotaQPTests.Create('ContestSouthDakotaQP'));
    RegisterSuite(TContestIllinoisQPTests.Create('ContestIllinoisQP'));
    RegisterSuite(TContestLouisianaQPTests.Create('ContestLouisianaQP'));

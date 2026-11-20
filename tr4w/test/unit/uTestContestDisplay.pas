@@ -1467,8 +1467,10 @@ begin
       obj := Make(HandleOf(identities[k]), NoStation);
       try
          s := obj.SummarySheet;
-         CheckEquals(Ord(c = WINTERFIELDDAY), Ord(s.MultiplierPerBandModeRow),
-                     who + ': one multiplier per band/mode row');
+         (* NO CONTEST SINCE 2026-11-19: Winter Field Day's 2027 rules took
+            away the one multiplier per band and mode it was for. *)
+         CheckFalse(s.MultiplierPerBandModeRow,
+                    who + ': one multiplier per band/mode row');
          CheckEquals(Ord(c = ARRLFIELDDAY), Ord(s.ClaimedScoreIsQSOPoints),
                      who + ': claims the QSO points');
       finally

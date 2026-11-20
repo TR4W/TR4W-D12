@@ -278,11 +278,15 @@ begin
    t.SessionCountsMultipliers := False;
    CheckEquals(11, Combine(CQWWCW, NoStation, t), 'a session with no multiplier scores its points');
 
-   (* THE TEMPLATE RUNS FIRST, FOR EVERY CONTEST: Winter Field Day's own
-      formula would multiply, and the session says there are no multipliers. *)
+   (* THE TEMPLATE RUNS FIRST, FOR EVERY CONTEST: WAE's own formula would
+      multiply, and the session says there are no multipliers. (This was
+      Winter Field Day's x5 for QRP until its 2027 rules took its power
+      factor away, 2026-11-19.) *)
    station := NoStation;
-   station.MyPower := cpQRP;
-   CheckEquals(11, Combine(WINTERFIELDDAY, station, t), 'no contest skips the template');
+   station.MyContinent := Europe;
+   t.Mults[AllBands, Both, rmPrefix] := 5;
+   CheckEquals(11, Combine(DARCWAEDCCW, station, t), 'no contest skips the template');
+   t.Mults[AllBands, Both, rmPrefix] := 0;
 
    (* FISTS SCORES ITS POINTS ALONE -- its own CombineWithMultipliers since
       M11 S7; CombineScore tested the session's FISTS exchange shape. *)
@@ -305,9 +309,13 @@ begin
    t.Mults[AllBands, Both, rmDomestic] := 7;
    CheckEquals(10, Combine(ARRLFIELDDAY, NoStation, t), 'ARRL Field Day: the points alone');
 
-   (* WINTER FIELD DAY: one multiplier per band and mode with a QSO -- 20 m CW
-      and phone, 40 m digital, 2 m phone: four. The sheet's multipliers do not
-      enter it. *)
+   (* WINTER FIELD DAY: THE QSO POINTS, AT EVERY POWER -- the 2027 rules
+      (v3): "Total score = (total QSO points) x (OM+1)", OM being the
+      objectives the entrant selects on submission, which the log does not
+      hold. Until 2026-11-19 this was D7's formula: points x one multiplier
+      per band and mode worked (four here: 20 m CW and phone, 40 m digital,
+      2 m phone) x2 for LOW and x5 for QRP -- 40, 80 and 200. Neither the
+      band-mode count nor the sheet's multipliers enter it now. *)
    t.QSOs[Band20, CW] := 3;
    t.QSOs[Band20, Phone] := 1;
    t.QSOs[Band40, Digital] := 2;
@@ -315,11 +323,11 @@ begin
    t.QSOs[AllBands, Both] := 7;
    station := NoStation;
    station.MyPower := cpHIGH;
-   CheckEquals(40, Combine(WINTERFIELDDAY, station, t), 'Winter Field Day, high power');
+   CheckEquals(10, Combine(WINTERFIELDDAY, station, t), 'Winter Field Day, high power: the points');
    station.MyPower := cpLOW;
-   CheckEquals(80, Combine(WINTERFIELDDAY, station, t), 'Winter Field Day, low power doubles');
+   CheckEquals(10, Combine(WINTERFIELDDAY, station, t), 'Winter Field Day, low power: no factor');
    station.MyPower := cpQRP;
-   CheckEquals(200, Combine(WINTERFIELDDAY, station, t), 'Winter Field Day, QRP five times');
+   CheckEquals(10, Combine(WINTERFIELDDAY, station, t), 'Winter Field Day, QRP: no factor');
 end;
 
 procedure TContestTotalsTests.Test_WAEWeightsItsMultipliers;
