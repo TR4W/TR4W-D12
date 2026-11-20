@@ -6305,7 +6305,10 @@ begin
     menu_download_trmaster:
       begin
       QuickDisplay(TC_DOWNLOADINGTRMASTERDTA);
-      DownloadTRMasterAsync(TRMasterDownloadTarget,
+      (* THE TARGET IS KEPT FOR THE HANDLER: the file just written is the one
+        SCP loads when the download finishes. *)
+      BackgroundEvents.TRMasterTarget := TRMasterDownloadTarget;
+      DownloadTRMasterAsync(BackgroundEvents.TRMasterTarget,
         BackgroundEvents.TRMasterDownloadFinished);
       end;
 

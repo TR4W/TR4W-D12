@@ -7,9 +7,9 @@ unit uTRMasterUpdate;
   message to a window, and a synchronous form for callers that have no window
   and no message loop yet (a first-run wizard, or startup).
 
-  WHAT THIS UNIT DOES NOT DO: reload SCP in the running program.  See
-  WM_TRMASTER_DOWNLOAD_DONE's handler in tr4w.lpr for why that is a restart
-  rather than a live swap.
+  WHAT THIS UNIT DOES NOT DO: load the file.  The caller's completion handler
+  does (uMainWindowProc, TRMasterDownloadFinished -> CD.ReplaceTRMasterFile),
+  which builds a snapshot of the new file and swaps it in -- no restart.
 }
 
 interface

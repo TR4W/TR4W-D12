@@ -1361,7 +1361,13 @@ resourcestring
    SCallHistoryDownloading = 'Downloading call history...';
    SCallHistoryNoSource = 'This contest has no call history download';
    SCallHistoryBusy = 'A call history download is already running';
-   SCallHistoryUpdated = 'Call history updated (%d entries, %s); it takes effect the next time the contest is opened';
+   SCallHistoryUpdated = 'Call history updated (%d entries, %s)';
+   (* Appended to the update message once the running contest has the new file
+     (live reload, 2026-11-20). %d is how many calls it stored. *)
+   SCallHistoryInUse = 'it is in use now (%d calls)';
+   (* Appended when the downloaded file was not applied to the running contest:
+     unreadable, or the contest or USE CALL HISTORY FILE wants no call history. *)
+   SCallHistoryNotApplied = 'it was not applied to the running contest (see tr4w.log); any call history already loaded stays in use';
    SCallHistoryCurrent = 'Call history already current';
    SCallHistoryNotAvailable = 'No call history file for this contest on supercheckhistory.com';
    SCallHistoryFailed = 'Download failed (%s); the previous file was kept';

@@ -590,7 +590,16 @@ procedure EnumInitialEx(var FileString: ShortString);
   fields it prefills (TContestBase.CallHistoryFields). The file is CALL
   HISTORY FILENAME, else the contest's TContestBase.CallHistoryFileName. A file that is not
   there is a Warning in the log and nothing else -- never a dialog, never an
-  exception. Answers how many entries were added. *)
+  exception. Answers how many entries were added.
+
+  IT IS ALSO THE LIVE RELOAD (2026-11-20): the Help-menu download calls it
+  again while the contest runs. The file is read into a snapshot of its own,
+  privately, and the whole of it replaces the list's call history layer in
+  one step (TCallsignsList.ReplaceCallHistory) -- what the log or INITIAL.EX
+  holds is a separate layer that outranks it, so nothing a swap does can lose
+  a logged QSO's exchange. A file that cannot be read changes nothing (the
+  layer already loaded keeps serving); a contest or setting that wants no call
+  history drops the layer. Answers 0 when nothing was applied. *)
 function LoadCallHistoryFile: integer;
 
 (* THE FILE A BLANK CALL HISTORY FILENAME MEANS: the running contest's own
@@ -1338,10 +1347,16 @@ begin
  // ShowMessage(wsprintfBuffer);
 end;
 
-(* uCallHistory's store, here: CallsignsList, as the file's entry. *)
-function AddCallHistoryToCallsignsList(const aCall: string; const aExchange: string): TCallHistoryAddResult;
+var
+  (* THE SNAPSHOT LoadCallHistoryFile IS FILLING. TCallHistoryAddFunc is a plain
+    function, so its target is a unit variable; main thread only, set for the
+    length of one ReadAll and nil otherwise. *)
+  GCallHistoryBuild: TCallHistorySnapshot = nil;
+
+(* uCallHistory's store, here: the snapshot under construction. *)
+function AddCallHistoryToSnapshot(const aCall: string; const aExchange: string): TCallHistoryAddResult;
 begin
-  Result := CallsignsList.AddCallHistoryExchange(aCall, aExchange);
+  Result := GCallHistoryBuild.Add(aCall, aExchange);
 end;
 
 function ContestCallHistoryFileName: string;
@@ -1358,11 +1373,13 @@ var
   legacyPath: string;
   lines: TStringList;
   reader: TCallHistoryReader;
+  snapshot: TCallHistorySnapshot;
   started: QWord;
 begin
   Result := 0;
   if not Settings.Contest.UseCallHistoryFile then
      begin
+     CallsignsList.ReplaceCallHistory(nil);
      Exit;
      end;
 
@@ -1371,6 +1388,7 @@ begin
      begin
      logger.Info('[CallHistory] USE CALL HISTORY FILE is on, but %s prefills nothing from one; no file read',
                  [ContestIdentity(Contest).DisplayName]);
+     CallsignsList.ReplaceCallHistory(nil);
      Exit;
      end;
 
@@ -1403,28 +1421,48 @@ begin
      end;
   lines := TStringList.Create;
   reader := TCallHistoryReader.Create;
+  snapshot := TCallHistorySnapshot.Create;
   try
      started := GetTickCount64;
+     (* A FILE THAT CANNOT BE READ LEAVES THE LAYER ALREADY LOADED ALONE. *)
      if not ReadCallHistoryLines(path, lines) then
         begin
         logger.Warn('[CallHistory] no call history file read: CALL HISTORY FILENAME = "%s", file "%s" (looked for "%s")',
                     [Settings.Contest.CallHistoryFilename, name, path]);
         Exit;
         end;
-     reader.ReadAll(lines, fields, AddCallHistoryToCallsignsList);
-     Result := reader.Added;
-     logger.Info('[CallHistory] %s: %d rows, %d entries added, %d already known, %d missing a field the contest prefills, in %d ms',
-                 [path, reader.DataRows, reader.Added, reader.AlreadyKnown, reader.Incomplete,
+     GCallHistoryBuild := snapshot;
+     try
+        reader.ReadAll(lines, fields, AddCallHistoryToSnapshot);
+     finally
+        GCallHistoryBuild := nil;
+     end;
+     (* A FILE WITH NO USABLE ROW IS NOT A CALL HISTORY (a page the server
+       sent instead, a file cut short): it must not empty the layer already
+       loaded. At contest open there is none to keep, so nothing is lost. *)
+     if snapshot.Count = 0 then
+        begin
+        logger.Warn('[CallHistory] %s holds no usable row (%d rows with a call, %d missing a field the contest prefills); the call history in use is unchanged',
+                    [path, reader.DataRows, reader.Incomplete]);
+        Exit;
+        end;
+     (* THE SWAP: the snapshot is complete, the list changes in this one call. *)
+     Result := CallsignsList.ReplaceCallHistory(snapshot);
+     logger.Info('[CallHistory] %s: %d rows, %d entries read, %d stored (the rest already known: INITIAL.EX, the log or an earlier row), %d missing a field the contest prefills, in %d ms',
+                 [path, reader.DataRows, reader.Added, Result, reader.Incomplete,
                   integer(GetTickCount64 - started)]);
      if reader.UnknownDirectives <> '' then
         begin
         logger.Info('[CallHistory] directives not implemented, ignored: %s', [reader.UnknownDirectives]);
         end;
-     if reader.StoreFull > 0 then
+     (* THE STORE-FULL ANSWER NOW COMES FROM THE LIST, in the swap (the snapshot
+       itself has no limit): a full list is what stopped some rows. *)
+     if CallsignsList.Count >= MAXCALLSIGNSINLIST then
         begin
-        logger.Warn('[CallHistory] the callsign list is full: %d rows were not stored', [reader.StoreFull]);
+        logger.Warn('[CallHistory] the callsign list is full (%d); some rows were not stored', [CallsignsList.Count]);
         end;
   finally
+     snapshot.Free;
      reader.Free;
      lines.Free;
   end;
