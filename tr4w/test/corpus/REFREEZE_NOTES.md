@@ -117,3 +117,18 @@ new bytes were checked to equal a separate scratch run of the same binary.
   this baseline -- so this gate was already red on that set from 2026-11-15.
   Checked: each of the 32 changed lines is the frozen line with exactly one
   `<STATE:2>XX ` inserted, XX the section's province; no other line changed.
+
+### `florida_qp_2026_ny4i` -- rescored.adi: a county-line contact is one record, and CNTY is written (2026-11-20)
+
+- **What moved.** The header count `2 QSO(s) logged in an unspecified DATA mode`
+  becomes `1`; W4THY's two rows (PIN and HIL, one `qso_set_id`) are ONE record
+  carrying `<CNTY:11>FL,PINELLAS`, `<USACA_COUNTIES>` with both counties and
+  `<APP_TR4W_CNTY_ALT>`; KG1S gains `<CNTY:9>FL,MONROE`. No other line changed.
+- **Why.** NY4I's rulings of 2026-11-20 (issues 133, 87, 338): one ADIF record
+  per linked contact, grouped by `qso_set_id`, with the first county in CNTY,
+  the standard USACA_COUNTIES for two counties and the application-defined
+  APP_TR4W_CNTY_ALT for the list; the county name comes from the party's own
+  county file (`^Name` in the .dom), which in-state sessions never loaded into
+  the multiplier list. `known.adi.diff` of the golden corpus carries the same
+  lines (the D7 reference holds two records and is never regenerated).
+- **Cabrillo is unchanged**: the two QSO lines stay.
