@@ -1194,7 +1194,7 @@ procedure WriteTitleBlockToSummarySheet;
      [ CQOpMode ] ) + '/' + IntToStr( tRestartInfo.riQSOByOpMode
      [ SearchAndPounceOpMode ] ) + ' Qs' + #13#10'      UNIQUE CALLSIGNS: ' +
      IntToStr( CallsignsList.GetTotalWorkedStations ) + #13#10 +
-     #13#10'            SOFTWARE: ' + SoftwareCredit + #13#10 );
+     #13#10'            SOFTWARE: ' + AnsiString( SoftwareCredit ) + #13#10 );
 
   end;
 

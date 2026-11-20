@@ -2975,7 +2975,7 @@ begin
       end;
    for i := 0 to High(aList) do
       begin
-      if SameText(aList[i], aCounty) then
+      if UnicodeSameText(aList[i], aCounty) then
          begin
          Exit;
          end;
