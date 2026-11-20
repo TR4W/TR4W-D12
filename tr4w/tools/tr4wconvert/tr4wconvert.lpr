@@ -306,7 +306,14 @@ end;
 
 function DefaultSettingsFile(out aOrigin: TSettingsOrigin): string;
 begin
-   if DirectoryExists(PortableSettingsDir) then
+   (* AND ITS FOLDER ACCEPTS WRITES (issue 165, 2026-11-20). The installer
+     creates settings\ beside the binary, so under C:\Program Files the
+     folder EXISTS while TR4W itself, refused there, keeps its settings
+     under %APPDATA%\TR4W -- and a conversion written beside the binary
+     would be one the program never reads. uAppPaths answers the question
+     (always yes off Windows, where nothing changes). *)
+   if DirectoryExists(PortableSettingsDir) and
+      PortableFolderUsable(ExtractFilePath(ParamStr(0))) then
       begin
       aOrigin := soPortable;
       Result := PortableSettingsDir + 'tr4w.json';

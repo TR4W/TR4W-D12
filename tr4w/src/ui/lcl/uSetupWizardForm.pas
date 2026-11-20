@@ -2269,7 +2269,14 @@ begin
          logger.Error('[SetupWizard] keyer library refused: %s', [err]);
          Exit;
          end;
-      SaveConfig(RadioStoreFileName, store, keyers);
+      (* A REFUSED SAVE IS SAID ON THE RESULT PAGE (issue 165): SaveConfig
+        reports it instead of raising, and the page would otherwise read as
+        if everything had been kept. uTR4WConfigFile logged it and told the
+        operator once. *)
+      if not SaveConfig(RadioStoreFileName, store, keyers) then
+         begin
+         AddReportLine(report, UnicodeFormat(SWizResNotSaved, [LastConfigWriteFailure]));
+         end;
 
       (* AT STARTUP THERE IS NOTHING TO PUT INTO USE ON: saved is as far as this
         goes.  Startup applies the saved active profile and cluster itself, a

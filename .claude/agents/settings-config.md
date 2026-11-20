@@ -829,6 +829,48 @@ on first start. What remains:
   once fixes it for that station; the tracked corpus fixture is deliberately
   left as it is.
 
+## A read-only install folder on Windows moves the WRITABLE files (issue 165, 2026-11-20)
+
+NY4I installed into `C:\Program Files\TR4W` as a standard user: "could not open its log file", then
+a raw RTL "Unable to create file ...\settings\tr4w.json.new ... risk data corruption" dialog after the
+setup wizard. A 64-bit process gets no VirtualStore, so every write was refused.
+
+- **`uAppPaths` probes once per run, on first use** (`DirectoryIsWritable`: create and delete a
+  uniquely named file in `AppDir`, the working directory). Writable: NOTHING changes -- `C:\tr4w`, the
+  dev tree, the corpus, the tests. Refused: `SettingsDir`, `SettingsFilePath`, `LogDir`, `LogFilePath`,
+  `ContestDir`, `ContestFilePath` and `StationStateDir` answer `%APPDATA%\TR4W\` (Roaming; mirrors the
+  install layout), so `WritableSettingsDir`, `BackupDir` and `DownloadedDataDir` follow. `DataDir` /
+  `DataFilePath` stay the install folder (shipped data; downloaded -> contest -> shipped still works).
+  The decision is the pure `ChooseWritableRoot(install, base, probe, ...)`; **Windows-only** -- macOS and
+  Linux arms are untouched and every new query answers "not redirected" there.
+- **`--settings` still wins** for the settings file, downloads and backups (`WritableSettingsDirFor`).
+- **The first redirected run seeds** `tr4w.json`, `tr4w.ini`, `tr4w.pos` from the install's `settings\`
+  (never overwriting), because the installer's 32-bit migration puts settings there.
+- **The operator is told ONCE per per-user root**: the root carries `WHY TR4W FILES ARE HERE.txt`
+  (`WRITABLE_ROOT_NOTE`), written when the notice is shown (`TakeWritableRootNotice`). Not "the run that
+  created it": `tr4wconvert` may create it first. `uProgramMain.ReportWritableRoot` logs `[Paths]` every
+  start.
+- **`tr4wconvert`'s portable `settings\`** is used only when the binary's folder accepts writes
+  (`PortableFolderUsable`; always True off Windows).
+- **Written files ask `uAppPaths.WrittenFilePath(kind, name)`** (`wfSettings`, `wfDiagnosticLog`,
+  `wfCrashLog`, `wfContestLog`, `wfBackup`, `wfDownload`, `wfStationState`) or
+  `BesideContestLogFilePath` for exports -- never `TR4W_PATH_NAME`, the read-only tier. `tr4w.pos`,
+  `bandmap.bin`, the dvk folder (`tree.GetRealPath`) and `CreateDirectoryIfNotExist` moved off it.
+  **`build\Count-LiveWrites.ps1` ratchets the raw write calls** outside `uAppPaths`/`uFileText`
+  (ceiling 42 at birth; lower it, never raise it).
+- **A refused settings save is REPORTED, not raised.** `SaveConfig`/`SaveSettings` are functions now
+  (False on refusal); `uTR4WConfigFile.WriteConfigDocument` goes through
+  `uFileText.TryWriteAllTextUTF8` (catches `EStreamError`/`EInOutError` only), logs an Error every time
+  and calls the `SetConfigWriteNotice` hook until one call answers True (it SHOWED the notice -- headless
+  or off the main thread it answers False), then not again that run (Preferences saves per keystroke).
+  The old file is untouched. `tr4wconvert` turns it into `FAILED:` + exit 1 via `LastConfigWriteFailure`.
+  **A caller that claims success or acts after the save must check the boolean** -- the old exception
+  aborted it for free: Preferences' `SaveStore` (its `except` no longer sees a refusal), the setup
+  wizard's result page and the legacy-ini "don't ask again" were changed for that.
+- **Open for NY4I:** an elevated run finds the folder writable and uses it (a second set of files);
+  Roaming holds an unbounded `tr4w.log` and the contest logs in a hidden folder; old `.db` files in the
+  install folder are not moved (the notice says so). Bench steps: `docs/BENCH_QUEUE.md`.
+
 ## Coordinate with
 
 `radio-factory` (the radio library, define-many/activate-one) · `serial-port-io`

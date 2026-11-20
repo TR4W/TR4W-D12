@@ -2654,7 +2654,17 @@ begin
       SaveColorRows;
 
       // Every library in one atomic write -- see uTR4WConfigFile.
-      SaveConfig(StoreFileName, FStore, FKeyerStore, FUDPConfig);
+      (* SaveConfig REPORTS a refused write instead of raising (issue 165),
+        so the handler below no longer sees it: the same report is made
+        here, and nothing after the write runs on a store the file does not
+        hold. *)
+      if not SaveConfig(StoreFileName, FStore, FKeyerStore, FUDPConfig) then
+         begin
+         aError := 'Could not write ' + StoreFileName + ': ' + LastConfigWriteFailure;
+         logger.Error('[Preferences] %s', [aError]);
+         Result := False;
+         Exit;
+         end;
 
       { AND REPOINT THE CLUSTER WINDOW'S DROP-DOWN AT THE EDITED LIBRARY,
         without changing what the operator has selected there. Adding or

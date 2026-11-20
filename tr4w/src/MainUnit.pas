@@ -7735,7 +7735,13 @@ begin
      (* ForceDirectories, not CreateDirectoryA: it is the RTL's, it takes a
        string, and it makes intermediate levels -- which CreateDirectoryA does
        not, so a nested path silently did nothing here before. *)
-     ForceDirectories(DirArray[i]);
+     (* UNDER uAppPaths.WritableFilesRoot (issue 165, 2026-11-20). These were
+       RELATIVE names, so they landed in the working directory -- the program
+       folder on Windows, which under C:\Program Files refuses them. On
+       Windows the root is that same folder when it is writable and
+       %APPDATA%\TR4W\ when it is not. Off Windows it answers '', so the
+       names stay relative exactly as before. *)
+     ForceDirectories(WritableFilesRoot + DirArray[i]);
      end;
   // Windows.CreateDirectoryA(GetYearString, nil);
 

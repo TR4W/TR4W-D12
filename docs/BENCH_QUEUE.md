@@ -172,6 +172,58 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-20 -- INSTALLED UNDER C:\Program Files: THE WRITABLE FILES MOVE TO %APPDATA%\TR4W (issue 165; settings-config)
+
+`uAppPaths` now probes, once per run, whether the program folder (the working directory) accepts a new
+file. Writable (C:\tr4w, C:\radio\tr4w): nothing changes. Refused: every WRITTEN file moves under
+`%APPDATA%\TR4W\` (Roaming) and the shipped data is still read from the install folder. The decision, the
+seed, the notice latch and the refused-save handling are unit-tested (`uTestWritableRoot`); a real
+read-only folder cannot be made in a unit test. Repeat NY4I's 2026-11-20 test on a Windows account
+that is a STANDARD user (not elevated):
+
+- [ ] **Fresh install, first run.** Install with the default folder (`C:\Program Files\TR4W`). Start TR4W
+  from the Start-menu shortcut (its "Start in" must be the install folder). Expected: ONE notice, "TR4W
+  cannot save files in the folder it is installed in ... kept here instead: C:\Users\<you>\AppData\Roaming\TR4W\".
+  NO "could not open its log file" message, and NO "Press OK to ignore and risk data corruption" dialog
+  at any point. Second start: no notice (the folder holds `WHY TR4W FILES ARE HERE.txt`).
+- [ ] **Where each file lands** -- under `%APPDATA%\TR4W\`: `tr4w.log` and `tr4w-early.log` (top),
+  `settings\tr4w.json` (written by the setup wizard and Preferences), `settings\tr4w.pos` (after a
+  clean exit), `settings\backup\` (a log backup), the downloaded `settings\CTY.DAT` (Alt-O) and
+  `settings\TRMASTER.DTA` (Help menu), `settings\CallHistoryFiles\`, `bandmap.bin`, `dvk\`,
+  `dxcluster\`. **The contest `.db` (and its `-wal`/`-shm`) is created in `%APPDATA%\TR4W\` itself**
+  when you make a New Contest; File > Open lists the contests there; ADIF / Cabrillo / summary
+  exports land beside that `.db`. NOTHING new appears in `C:\Program Files\TR4W`.
+- [ ] **The log says so.** `tr4w.log` has `[Paths] the program folder does not accept new files;
+  settings, logs and contests are written under C:\Users\...\AppData\Roaming\TR4W\` on every start.
+- [ ] **Shipped data still read from the install folder.** A contest with a domestic file (e.g. a
+  state QSO party) loads its `dom\` file; the country file is found (CTY.DAT shipped, unless one was
+  downloaded); Preferences tooltips show (help\ from the install folder).
+- [ ] **An upgrade over an old install.** If `C:\Program Files\TR4W\settings\tr4w.json` exists from an
+  older install (or the installer's 32-bit migration), the FIRST redirected run copies it (and
+  `tr4w.ini`, `tr4w.pos`) into `%APPDATA%\TR4W\settings\` and the notice says "Copied from the install
+  folder's settings: ...". The install folder's copy is not touched. If `.db` files are in the install
+  folder, the notice says they were left where they are.
+- [ ] **tr4wconvert under Program Files.** From a Command Prompt in `C:\Program Files\TR4W`, run
+  `tr4wconvert`: its header must name `C:\Users\...\AppData\Roaming\TR4W\settings\tr4w.json` (not the
+  install's `settings\`). Then start TR4W: it reads the converted settings.
+- [ ] **A refused settings save, separately.** On a WRITABLE install, make `settings\tr4w.json` read-only
+  (file Properties) and change a Preferences value. Expected: ONE plain notice "TR4W could not save your
+  settings to: ... The settings file on disk was not changed", TR4W keeps running, `tr4w.log` has
+  `[Config] could not save` once per failed save, and the file's contents are unchanged. Clear the
+  read-only flag afterwards.
+- [ ] **Run elevated once (right-click, Run as administrator).** The probe then finds the install folder
+  writable and TR4W uses `C:\Program Files\TR4W` as before -- a SECOND set of files. Note what you see;
+  whether TR4W should prefer an existing per-user folder over a writable install is NY4I's call.
+- [ ] **A Windows user name with non-ASCII letters** (e.g. a Cyrillic account). Every redirected path now
+  contains the profile name (`C:\Users\<name>\AppData\Roaming\TR4W\`). Repeat the fresh-install check on such
+  an account: settings save, `tr4w.log` opens, a contest `.db` is created, and `tr4wconvert` (a console
+  program) finds and writes the same `settings\tr4w.json`. Several paths still pass through AnsiString;
+  a failure here would look exactly like the original defect.
+- [ ] **No change on a normal install.** On `C:\tr4w`: no notice, no `%APPDATA%\TR4W` folder created,
+  every file where it always was.
+
+---
+
 ## Added 2026-11-19 -- CLUB LOG, WRL AND CLOUDLOG REPEAT A REDIRECTED POST (issue 255 follow-up; integrations)
 
 The decision (`DecideRepost`) and the repeat are unit-tested over loopback http for both transports and over
