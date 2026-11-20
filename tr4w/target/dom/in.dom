@@ -1,6 +1,8 @@
 ;Domestic template for Indiana stations in IN QSO Party
 
 INCLUDE FILE in_cty.dom
+;DC counts as Maryland (the 2026 Indiana QSO Party rules: District of Columbia counts as Maryland), mapped before S50.DOM
+Dc > Md = DC
 INCLUDE FILE S50.DOM
 INCLUDE FILE P13.DOM
 DX = DX

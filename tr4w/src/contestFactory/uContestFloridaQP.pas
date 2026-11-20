@@ -52,6 +52,17 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     states HI and AK. For an entrant outside Florida: the 67 counties
     (florida_cty.dom).
 
+  EXCHANGE SENT -- "Florida operators send county ... US (including KH6/KL7)
+    operators send State. Canadian operators send province ... DX (including
+    KP4, etc.) operators send DXCC prefix." A station that states a location
+    (MY STATE) sends it; a DX entrant, which has none, sends its own country
+    through the party base's SentLocation -- the CQ exchange, the Cabrillo
+    sent column and the ADIF STX_STRING (audit 2026-11-20; until then a DX
+    entrant's sent column was empty).
+
+  SCHEDULE -- "Starts the last Saturday of April", the LAST, not the 4th
+    (audit 2026-11-20).
+
   NOT BUILT -- each needs a fact scoring does not have, listed on #88:
     * MARITIME MOBILE R1/R2/R3. A /MM station is not a domestic call, so its
       exchange goes to the DX parser, which takes the QTH as text and asks no
@@ -152,6 +163,9 @@ type
                                            const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+      (* ' 5NN ' and the county, state, province or DXCC prefix this station
+         sends -- the header's EXCHANGE paragraph. *)
+      function CQExchangeDefault(const aStation: TStationContext): string; override;
    public
       (* DOES IT HAVE A DX MULTIPLIER AT THIS STATION? -- see
          TContestBase.HasDXMultiplier (M11 S4 part 2). *)
@@ -264,14 +278,14 @@ begin
    Result := 'Florida QSO Party';
 end;
 
-(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row FLORIDA QSO PARTY: status candidate; rules
-   https://floridaqsoparty.org/; rules year 2026. CANDIDATE: date from a
-   calendar, not yet checked against the sponsor's rules. *)
+(* WHEN IT RUNS -- the sponsor's rules (checked 2026-11-20): "CONTEST PERIOD:
+   Starts the last Saturday of April", "Saturday 16:00:00Z - Sunday
+   01:59:59Z; Sunday 12:00:00Z - 21:59:59Z". The LAST Saturday, not the 4th:
+   they differ when April has five (2028: the 22nd against the 29th). *)
 function TContestFloridaQP.GetSchedule: string;
 begin
-   Result := '4th Saturday of April at 16:00 UTC for 10h; ' +
-             '4th Saturday of April +1d at 12:00 UTC for 10h';
+   Result := 'last Saturday of April at 16:00 UTC for 10h; ' +
+             'last Saturday of April +1d at 12:00 UTC for 10h';
 end;
 
 (* STATED, NOT INHERITED -- M9a (2026-10-02): every contest class states its
@@ -368,7 +382,7 @@ function TContestFloridaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange
                                                    const aQso: ContestExchange;
                                                    const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
+   Result := CabrilloSentRSTState(SentLocation(aMy), aQso, aCtx);
 end;
 
 function TContestFloridaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
@@ -402,7 +416,16 @@ end;
 function TContestFloridaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange): string;
 begin
-   Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
+   Result := Format('%-3d %-7s', [aQso.RSTSent, SentLocation(aMy).MyState]);
+end;
+
+(* "DX (including KP4, etc.) operators send DXCC prefix": a DX entrant has no
+   MY STATE and sends its own country (the party base's SentLocation /
+   LocationOrOwnCountry -- Oklahoma's rule); a Florida station its county,
+   anyone else its state or province, as stated. *)
+function TContestFloridaQP.CQExchangeDefault(const aStation: TStationContext): string;
+begin
+   Result := ' 5NN ' + LocationOrOwnCountry(aStation.MyState, aStation.MyCountry);
 end;
 
 (* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait

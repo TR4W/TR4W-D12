@@ -60,6 +60,7 @@ type
       procedure Test_OrderingOfRealContests;
       procedure Test_EveryContestStatesItsSchedule;
       procedure Test_ReadmeExamplesParse;
+      procedure Test_FloridaStartsOnTheLastSaturday;
    public
       procedure RunAllTests; override;
    end;
@@ -905,8 +906,26 @@ begin
       end;
 end;
 
+(* THE FLORIDA QSO PARTY RUNS THE LAST SATURDAY OF APRIL -- the sponsor's
+   rules: "CONTEST PERIOD: Starts the last Saturday of April". April 2028 has
+   five Saturdays (the 1st to the 29th): the last is the 29th, the 4th the
+   22nd. *)
+procedure TContestScheduleTests.Test_FloridaStartsOnTheLastSaturday;
+var
+   s: TContestSchedule;
+   key: TDateTime;
+begin
+   BeginTest('Test_FloridaStartsOnTheLastSaturday');
+   s := Parsed(ScheduleOf('FLORIDA QSO PARTY'));
+   CheckTrue(TryScheduleSortKey(s, At(2028, 4, 1, 0, 0), key), '2028');
+   CheckEquals(Stamp(At(2028, 4, 29, 16, 0)), Stamp(key), '2028: Saturday the 29th, 1600Z');
+   CheckTrue(TryScheduleSortKey(s, At(2028, 4, 30, 3, 0), key), '2028 gap');
+   CheckEquals(Stamp(At(2028, 4, 30, 12, 0)), Stamp(key), '2028: the Sunday period, 1200Z');
+end;
+
 procedure TContestScheduleTests.RunAllTests;
 begin
+   Test_FloridaStartsOnTheLastSaturday;
    Test_ParsesEveryClauseShape;
    Test_RefusesBadInputNamingTheClause;
    Test_ResolverBeforeInsideAndAfter;

@@ -331,10 +331,20 @@ begin
                      'EL88AA5',
                      'EL88AA');
          end;
-      ARRLDXCW, ARRLDXSSB, FLORIDAQSOPARTY:
+      ARRLDXCW, ARRLDXSSB:
          begin
          Result := Pick(aVariant, '599 FL     ',
                      '59         ',
+                     '599 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                     '599 TRC    ');
+         end;
+      FLORIDAQSOPARTY:
+         begin
+         (* "DX (including KP4, etc.) operators send DXCC prefix" -- the
+            sponsor's rule (audit 2026-11-20, by hand): a station that states
+            no location (variant 1) sends its own country. *)
+         Result := Pick(aVariant, '599 FL     ',
+                     '59  ' + Format('%-7s', [PinStation(aStation, FLORIDAQSOPARTY).MyCountry]),
                      '599 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
                      '599 TRC    ');
          end;

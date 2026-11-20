@@ -46,6 +46,7 @@ type
    public
       procedure RunAllTests; override;
    private
+      procedure Test_FloridaSentExchange;
       procedure Test_FloridaPoints;
       procedure Test_FloridaBands;
       procedure Test_FloridaDigitalIsAnXQSO;
@@ -399,8 +400,71 @@ begin
    end;
 end;
 
+(* "Florida operators send county ... US (including KH6/KL7) operators send
+   State. Canadian operators send province ... DX (including KP4, etc.)
+   operators send DXCC prefix." A DX entrant has no MY STATE and sends its
+   own country, in the CQ exchange, the Cabrillo sent column and the ADIF
+   STX_STRING; anyone else sends what it stated. *)
+procedure TContestFloridaQPTests.Test_FloridaSentExchange;
+var
+   contestObject: TContestBase;
+   station: TStationContext;
+   my: TMyStationExchange;
+   qso: ContestExchange;
+   ctx: TCabrilloQSOContext;
+begin
+   BeginTest('Test_FloridaSentExchange');
+   qso := FloridaQso(Band20, CW, eCW);
+   qso.RSTSent := 599;
+   ctx := Default(TCabrilloQSOContext);
+   ctx.RSTSent := '599';
+   ctx.RSTReceived := '599';
+   ctx.HisQTH := 'LEE';
+
+   (* A DX ENTRANT: KP4 sends its prefix. *)
+   station := Entrant(False);
+   station.MyState := '';
+   station.MyCountry := 'KP4';
+   contestObject := Make(FLORIDAQSOPARTY, station);
+   try
+      my := Default(TMyStationExchange);
+      my.MyState := '';
+      CheckEquals(' 5NN KP4', contestObject.CQExchangeDefault(station),
+                  'CQ exchange: the DXCC prefix');
+      CheckEquals('599 KP4    ', contestObject.FormatCabrilloSentExchange(my, qso, ctx),
+                  'Cabrillo sent: RST and the prefix');
+      CheckEquals('599 KP4    ', contestObject.FormatADIFSentExchange(my, qso),
+                  'ADIF STX_STRING: RST and the prefix');
+   finally
+      contestObject.Free;
+   end;
+
+   (* A FLORIDA ENTRANT sends its county; one in Kansas its state. *)
+   station := Entrant(True);
+   station.MyCountry := 'K';
+   contestObject := Make(FLORIDAQSOPARTY, station);
+   try
+      my := Default(TMyStationExchange);
+      my.MyState := 'LEE';
+      CheckEquals(' 5NN LEE', contestObject.CQExchangeDefault(station), 'a Florida entrant: the county');
+      CheckEquals('599 LEE    ', contestObject.FormatCabrilloSentExchange(my, qso, ctx),
+                  'Cabrillo sent: RST and the county');
+   finally
+      contestObject.Free;
+   end;
+   station := Entrant(False);
+   station.MyCountry := 'K';
+   contestObject := Make(FLORIDAQSOPARTY, station);
+   try
+      CheckEquals(' 5NN KS', contestObject.CQExchangeDefault(station), 'a Kansas entrant: the state');
+   finally
+      contestObject.Free;
+   end;
+end;
+
 procedure TContestFloridaQPTests.RunAllTests;
 begin
+   Test_FloridaSentExchange;
    Test_FloridaPoints;
    Test_FloridaBands;
    Test_FloridaDigitalIsAnXQSO;

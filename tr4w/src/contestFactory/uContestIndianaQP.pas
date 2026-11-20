@@ -47,6 +47,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   entrant the states are "the other 49" -- Indiana itself is no multiplier
   (CountsAsMultiplier). Rovers in a new county were already new QSOs here
   (the state-party base's dupe key, Q118).
+  DC (audit 2026-11-20): "The other 49 U.S. states (District of Columbia
+  counts as Maryland)" -- in.dom maps `Dc > Md = DC` before S50.DOM, as
+  Illinois does; until then a typed DC was refused as an improper QTH.
+  MODES -- the rules name CW and phone only ("once in each mode (CW/phone)")
+  and say nothing of digital; the class credits every mode (question for
+  NY4I, left as it was).
  *)
 unit uContestIndianaQP;
 

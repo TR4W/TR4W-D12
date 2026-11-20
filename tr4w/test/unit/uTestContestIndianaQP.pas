@@ -42,6 +42,7 @@ type
    private
       procedure Test_IndianaMultipliersCountOncePerMode;
       procedure Test_IndianaIsNoStateMultiplierInState;
+      procedure Test_IndianaCountsDCAsMaryland;
    end;
 
 implementation
@@ -165,8 +166,22 @@ begin
    CheckFalse(CountsForEntrant(INQSOPARTY, True, 'DX', rmDomestic), 'and DX is still no multiplier');
 end;
 
+(* "The other 49 U.S. states (District of Columbia counts as Maryland)":
+   through the real in-state file, DC is Maryland's multiplier, so working
+   DC and Maryland earns one. *)
+procedure TContestIndianaQPTests.Test_IndianaCountsDCAsMaryland;
+begin
+   BeginTest('Test_IndianaCountsDCAsMaryland');
+   CheckEquals('MD', InStateMultiplierOf(INQSOPARTY, 'MD'), 'Maryland');
+   CheckEquals('MD', InStateMultiplierOf(INQSOPARTY, 'DC'),
+               'DC counts as Maryland (the 2026 rules)');
+   CheckTrue(CountsForEntrant(INQSOPARTY, True, InStateMultiplierOf(INQSOPARTY, 'DC'), rmDomestic),
+             'and Maryland through DC is a multiplier');
+end;
+
 procedure TContestIndianaQPTests.RunAllTests;
 begin
+   Test_IndianaCountsDCAsMaryland;
    Test_IndianaMultipliersCountOncePerMode;
    Test_IndianaIsNoStateMultiplierInState;
 end;
