@@ -359,7 +359,15 @@ begin
                      '599 TOMASZ-THE-VERY-LONG ABCDEFGHIJKLMNOPQRST',
                      '599 TOM   TRC    ');
          end;
-      CALQSOPARTY, CUPURAL, UKRAINECHAMPIONSHIP, PAQSOPARTY, VAQP:
+      PAQSOPARTY:
+         begin
+         (* Rule 5.a: a station with no MY STATE sends DX (2026-11-20). *)
+         Result := Pick(aVariant, 'FL   7     ',
+                     'DX   123   ',
+                     'ABCDEFGHIJKLMNOPQRST 4567  ',
+                     'TRC  7     ');
+         end;
+      CALQSOPARTY, CUPURAL, UKRAINECHAMPIONSHIP, VAQP:
          begin
          Result := Pick(aVariant, 'FL   7     ',
                      '     123   ',

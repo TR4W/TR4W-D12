@@ -1335,7 +1335,29 @@ begin
                ' 33  0012'],
               aSent, aRec);
          end;
-      PAQSOPARTY, VAQP:
+      PAQSOPARTY:
+         begin
+         (* Rule 5.a: a station with no MY STATE sends DX (2026-11-20). *)
+         Take(aVariant,
+              ['7    FL    ',
+               '123  DX    ',
+               '4567 ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+               '7    TRC   ',
+               '7    FL    ',
+               '-5   99    ',
+               '7    DX    ',
+               '7    FL    '],
+              ['0012 GA    ',
+               '0000       ',
+               '4567 ABCDEFGHIJ',
+               '0012 TRC   ',
+               '0012 GA    ',
+               '4294967295 GA    ',
+               '0012       ',
+               '0012 GA    '],
+              aSent, aRec);
+         end;
+      VAQP:
          begin
          Take(aVariant,
               ['7    FL    ',
@@ -1455,7 +1477,7 @@ begin
    CheckHelper('CabrilloSentRSTGrid', CabrilloSentRSTGrid, ARRLVHFJAN, psUS, True);
    CheckHelper('CabrilloSentStateQSONumber2', CabrilloSentStateQSONumber2, YOUTHCHAMPIONSHIPRF, psUS, True);
    CheckHelper('CabrilloSentQSONumberStateShort', CabrilloSentQSONumberStateShort, CUPRFCW, psUS, True);
-   CheckHelper('CabrilloSentQSONumberState', CabrilloSentQSONumberState, PAQSOPARTY, psUS, True);
+   CheckHelper('CabrilloSentQSONumberState', CabrilloSentQSONumberState, VAQP, psUS, True);
    CheckHelper('CabrilloSentStateQSONumber', CabrilloSentStateQSONumber, CUPURAL, psUS, True);
    CheckHelper('CabrilloSentRSTQSONumberState', CabrilloSentRSTQSONumberState, UBACW, psUS, True);
    CheckHelper('CabrilloSentRSTZoneStateDX', CabrilloSentRSTZoneStateDX, CQWWRTTY, psUS, True);
@@ -1485,7 +1507,7 @@ begin
    CheckHelper('CabrilloReceivedAgeQSONumber', CabrilloReceivedAgeQSONumber, YOUTHCHAMPIONSHIPRF, psUS, False);
    CheckHelper('CabrilloReceivedRSTPower', CabrilloReceivedRSTPower, OLDNEWYEAR, psUS, False);
    CheckHelper('CabrilloReceivedQSONumberQTHShort', CabrilloReceivedQSONumberQTHShort, CUPRFCW, psUS, False);
-   CheckHelper('CabrilloReceivedQSONumberQTH', CabrilloReceivedQSONumberQTH, PAQSOPARTY, psUS, False);
+   CheckHelper('CabrilloReceivedQSONumberQTH', CabrilloReceivedQSONumberQTH, VAQP, psUS, False);
    CheckHelper('CabrilloReceivedQTHQSONumber', CabrilloReceivedQTHQSONumber, CUPURAL, psUS, False);
    CheckHelper('CabrilloReceivedRSTQSONumberQTH', CabrilloReceivedRSTQSONumberQTH, UBACW, psUS, False);
    CheckHelper('CabrilloReceivedRSTZoneQTHDX', CabrilloReceivedRSTZoneQTHDX, CQWWRTTY, psUS, False);
