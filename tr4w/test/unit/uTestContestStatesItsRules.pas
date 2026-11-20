@@ -147,7 +147,7 @@ const
       'YUDX'
       );
 
-   MODES_NOT_YET_STATED: array[0..171] of string = (
+   MODES_NOT_YET_STATED: array[0..170] of string = (
       '7QP', 'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB',
       'ALRS-UA1DZ-CUP', 'AP-SPRINT', 'ARCI', 'ARI-DX',
       'ARIZONA QSO PARTY', 'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-160',
