@@ -57,7 +57,9 @@ unit uContestCQ160SSB;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestCQ160SSB = class(TContestBase)
@@ -128,6 +130,18 @@ type
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
       function ExchangeCarriesZone: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE STATE, PROVINCE OR ZONE -- the site file CQ-160-CW carries Call, Exch1,
+         UserText (read 2026-11-20): a state or province, or a CQ zone for a
+         DX station (written with a leading zero, "08"), as the log remembers
+         one or the other. The SSB file is INFERRED, not sampled.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -379,6 +393,16 @@ end;
 function TContestCQ160SSB.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+function TContestCQ160SSB.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestCQ160SSB.CallHistorySiteName: string;
+begin
+   Result := 'CQ-160-SSB';
 end;
 
 initialization
