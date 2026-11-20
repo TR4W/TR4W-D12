@@ -61,6 +61,7 @@ type
       procedure Test_Reader_BothPublishedLayoutsGiveOnePrefill;
       procedure Test_EveryContestStatesItsCallHistoryFields;
       procedure Test_SiteLayoutsGiveTheRememberedText;
+      procedure Test_APartialRowPrefillsWhatItHas;
       procedure Test_Store_KnownEntryIsKeptAndALoggedQSOReplaces;
       procedure Test_Loader_SettingOffMissingFileAndOtherContest;
       procedure Test_Loader_FillsTheStoreForSweepstakes;
@@ -326,15 +327,18 @@ begin
                        'AA0A,MO,MO,60,U,'#13#10 +
                        'KK6L,,CA,95,'#13#10 +
                        'K0QL,SC,SC,', SweepstakesFields);
-      CheckEquals(5, gCollected.Count, 'five complete rows');
+      CheckEquals(7, gCollected.Count, 'five complete rows and two partial');
       CheckEquals('NY4I=80 WCF', string(gCollected[0]), 'NY4I');
       CheckEquals('N6TV=72 SCV', string(gCollected[1]), 'N6TV');
       CheckEquals('N4AF=58 NC', string(gCollected[2]), 'N4AF');
       CheckEquals('4U1WB=89 MDC', string(gCollected[3]), 'Sect MDC, not State DC');
       CheckEquals('AA0A=60 MO', string(gCollected[4]), 'Exch1 is not asked');
+      CheckEquals('KK6L=95', string(gCollected[5]), 'no Sect (KK6L): prefilled with the check alone');
+      CheckEquals('K0QL=SC', string(gCollected[6]), 'no CK (K0QL): prefilled with the section alone');
       CheckEquals(7, reader.DataRows, 'seven rows with a call');
-      CheckEquals(2, reader.Incomplete, 'no Sect (KK6L) and no CK (K0QL): not prefilled');
-      CheckEquals(5, reader.Added, 'the store took five');
+      CheckEquals(0, reader.Incomplete, 'every row carries one of the two');
+      CheckEquals(2, reader.Partial, 'two rows carry only one');
+      CheckEquals(7, reader.Added, 'the store took seven');
    finally
       reader.Free;
    end;
@@ -374,11 +378,14 @@ begin
                        'AA0YY,A,,MO,'#13#10 +
                        'AE2NY,A,24,,'#13#10 +
                        'K1IP,U,,,', SweepstakesFields);
-      CheckEquals(2, gCollected.Count, 'two rows carry both the check and the section');
+      CheckEquals(4, gCollected.Count, 'two rows carry both, two carry one');
       CheckEquals('4U1WB=89 MDC', string(gCollected[0]), 'the site''s layout: 4U1WB, the same text');
       CheckEquals('AA0AO=14 MN', string(gCollected[1]), 'a blank precedence does not matter');
+      CheckEquals('AA0YY=MO', string(gCollected[2]), 'no check: the section alone');
+      CheckEquals('AE2NY=24', string(gCollected[3]), 'no section: the check alone');
       CheckEquals(5, reader.DataRows, 'five rows');
-      CheckEquals(3, reader.Incomplete, 'no check (AA0YY), no section (AE2NY), neither (K1IP)');
+      CheckEquals(1, reader.Incomplete, 'neither (K1IP): nothing to prefill');
+      CheckEquals(2, reader.Partial, 'AA0YY and AE2NY');
       reader.ReadLine('4U1WB,U,89,MDC,', values);
       CheckEquals('U', values[chfExch1], 'the precedence is read into Exch1, ready for a class that asks it');
    finally
@@ -399,38 +406,40 @@ end;
    second layout of each file was READ from the site on 2026-11-20 and is
    in Test_SiteLayoutsGiveTheRememberedText. *)
 const
-   CALL_HISTORY_MEMBERS: array[0..50] of ContestType = (
+   CALL_HISTORY_MEMBERS: array[0..52] of ContestType = (
       ARRLSSCW, ARRLSSSSB, ARRL10, ARRLFIELDDAY, CWOPEN, IARU, NAQSOCW, NAQSOSSB, NAQSORTTY,
       ARRL160, ARRL_RTTY_ROUNDUP, ARRLDIGI, CWOPS, NASPRINTCW, NASPRINTRTTY, SPRINTSSB, SST,
       WINTERFIELDDAY, CQ160CW, CQ160SSB, NYQP, TEXASQSOPARTY, FLORIDAQSOPARTY, ARRLDXCW,
       ARRLDXSSB, ArizonaQsoParty, CALQSOPARTY, MICHQSOPARTY, MOQSOPARTY, NEBRASKAQSO,
-      NCQSOPARTY, OHIOQSOPARTY, TENNESSEEQSOPARTY, VAQP, WISCONSINQSOPARTY, DUMMYCONTEST,
+      NCQSOPARTY, OHIOQSOPARTY, TENNESSEEQSOPARTY, VAQP, WISCONSINQSOPARTY, MINNQSOPARTY,
+      COLORADOQSOPARTY, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
       DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
-      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST,
-      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST);
+      DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST, DUMMYCONTEST);
    (* A contest that registers by its id has no member (its row's member is
       the placeholder DUMMYCONTEST); the id decides there. '' for a member row. *)
-   CALL_HISTORY_IDS: array[0..50] of string = (
+   CALL_HISTORY_IDS: array[0..52] of string = (
       '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-      '', '', '', '', '', '', '', '', '', '', '', '', '', 'AL-QSO-PARTY', 'AR-QSO-PARTY',
-      'GA-QSO-PARTY', 'HI-QSO-PARTY', 'IL-QSO-PARTY', 'KS-QSO-PARTY', 'KY-QSO-PARTY',
-      'LA-QSO-PARTY', 'MS-QSO-PARTY', 'NH-QSO-PARTY', 'NJ-QSO-PARTY', 'OK-QSO-PARTY',
-      'SC-QSO-PARTY', 'SD-QSO-PARTY', 'VT-QSO-PARTY', 'WV-QSO-PARTY');
-   CALL_HISTORY_STEMS: array[0..50] of string = (
+      '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'AL-QSO-PARTY',
+      'AR-QSO-PARTY', 'GA-QSO-PARTY', 'HI-QSO-PARTY', 'IL-QSO-PARTY', 'KS-QSO-PARTY',
+      'KY-QSO-PARTY', 'LA-QSO-PARTY', 'MS-QSO-PARTY', 'NH-QSO-PARTY', 'NJ-QSO-PARTY',
+      'OK-QSO-PARTY', 'SC-QSO-PARTY', 'SD-QSO-PARTY', 'VT-QSO-PARTY', 'WV-QSO-PARTY');
+   CALL_HISTORY_STEMS: array[0..52] of string = (
       'ARRL-SS-CW', 'ARRL-SS-SSB', 'ARRL-10M', 'ARRL-FD', 'CW-OPEN', 'IARU-HF', 'NAQP-CW',
       'NAQP-SSB', 'NAQP-RTTY', 'ARRL-160M', 'ARRL-RTTY', 'ARRL-DIGI', 'CWOPS', 'NA-SPRINT-CW',
       'NA-SPRINT-RTTY', 'NA-SPRINT-SSB', 'K1USNSST', 'WFD', 'CQ-160-CW', 'CQ-160-SSB',
       'QSOP_NY', 'QSOP_TX', 'QSOP_FL', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'QSOP_AZ', 'QSOP_CA',
       'QSOP_MI', 'QSOP_MO', 'QSOP_NE', 'QSOP_NC', 'QSOP_OH', 'QSOP_TN', 'QSOP_VA', 'QSOP_WI',
-      'QSOP_AL', 'QSOP_AR', 'QSOP_GA', 'QSOP_HI', 'QSOP_IL', 'QSOP_KS', 'QSOP_KY', 'QSOP_LA',
-      'QSOP_MS', 'QSOP_NH', 'QSOP_NJ', 'QSOP_OK', 'QSOP_SC', 'QSOP_SD', 'QSOP_VT', 'QSOP_WV');
-   CALL_HISTORY_FIELD_NAMES: array[0..50] of string = (
+      'QSOP_MN', 'QSOP_CO', 'QSOP_AL', 'QSOP_AR', 'QSOP_GA', 'QSOP_HI', 'QSOP_IL', 'QSOP_KS',
+      'QSOP_KY', 'QSOP_LA', 'QSOP_MS', 'QSOP_NH', 'QSOP_NJ', 'QSOP_OK', 'QSOP_SC', 'QSOP_SD',
+      'QSOP_VT', 'QSOP_WV');
+   CALL_HISTORY_FIELD_NAMES: array[0..52] of string = (
       'CK Sect', 'CK Sect', 'Exch1', 'Exch1 Sect', 'Name', 'Sect', 'Name State', 'Name State',
       'Name State', 'Exch1', 'Exch1', 'Loc1', 'Name Exch1', 'Name State', 'Name State',
       'Name State', 'Name Exch1', 'Exch1 Sect', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
       'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
+      'Exch1', 'Exch1', 'Name Exch1', 'Name Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
       'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1',
-      'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1', 'Exch1');
+      'Exch1', 'Exch1');
 
 (* The fields as N1MM names them, one blank between. *)
 function FieldNamesText(const aFields: TCallHistoryFields): string;
@@ -456,7 +465,7 @@ var
    contests: TContestIdentityList;
    k, m, row: integer;
    fields: TCallHistoryFields;
-   seen: array[0..50] of boolean;
+   seen: array[0..52] of boolean;
    reader: TCallHistoryReader;
 begin
    BeginTest('Test_EveryContestStatesItsCallHistoryFields');
@@ -577,7 +586,7 @@ begin
    BeginTest('Test_SiteLayoutsGiveTheRememberedText');
    (* NAQP-CW.txt: !!Order!!,Call,Name,State,UserText -- a row with no name is refused. *)
    Layout(NAQSOCW, '!!Order!!,Call,Name,State,UserText'#13#10 +
-                   '4L5O,,DX,'#13#10 + '4U1WB,MASA,DC,'#13#10, 1, 1, '4U1WB=MASA DC');
+                   '4L5O,,DX,'#13#10 + '4U1WB,MASA,DC,'#13#10, 2, 0, '4L5O=DX');
    Layout(NAQSOSSB, '!!Order!!,Call,Name,State,UserText'#13#10 + '4A2MAX,MAX,XE,'#13#10,
           1, 0, '4A2MAX=MAX XE');
    Layout(NAQSORTTY, '!!Order!!,Call,Name,State,UserText'#13#10 + '4A2MAX,MAX,XE,'#13#10,
@@ -587,7 +596,7 @@ begin
           2, 0, '4U1WB=DC');
    (* ARRL-FD.txt: !!Order!!,Call,Exch1,Sect,UserText -- the class, then the section. *)
    Layout(ARRLFIELDDAY, '!!Order!!,Call,Exch1,Sect,UserText'#13#10 +
-                        '4U1WB,,MDC,'#13#10 + '2E0FHM,1D,DX,'#13#10, 1, 1, '2E0FHM=1D DX');
+                        '4U1WB,,MDC,'#13#10 + '2E0FHM,1D,DX,'#13#10, 2, 0, '4U1WB=MDC');
    (* CW-OPEN.txt: !!Order!!,Call,Name,UserText. *)
    Layout(CWOPEN, '!!Order!!,Call,Name,UserText'#13#10 + '2E0OBO,BOB,'#13#10,
           1, 0, '2E0OBO=BOB');
@@ -618,7 +627,7 @@ begin
           1, 0, '2E0CVN=IO80');
    (* CWOPS.txt: !!Order!!,Call,Name,Exch1,UserText -- name, then number or state. *)
    Layout(CWOPS, '!!Order!!,Call,Name,Exch1,UserText'#13#10 + '2E0OBO,BOB,2381,'#13#10 +
-                 '2E0JGV,DAVID,,'#13#10, 1, 1, '2E0OBO=BOB 2381');
+                 '2E0JGV,DAVID,,'#13#10, 2, 0, '2E0OBO=BOB 2381');
    (* NA-SPRINT-CW.txt: !!Order!!,Call,Name,State,UserText. *)
    Layout(NASPRINTCW, '!!Order!!,Call,Name,State,UserText'#13#10 + '4U1UN,ADRIAN,DX,'#13#10,
           1, 0, '4U1UN=ADRIAN DX');
@@ -628,13 +637,53 @@ begin
           1, 0, '4U1UN=ADRIAN DX');
    (* K1USNSST.txt: !!Order!!,Call,Name,Exch1,UserText. *)
    Layout(SST, '!!Order!!,Call,Name,Exch1,UserText'#13#10 + 'AA0BY,,OR,'#13#10 +
-               'AA0AJ,DOREEN,MN,'#13#10, 1, 1, 'AA0AJ=DOREEN MN');
+               'AA0AJ,DOREEN,MN,'#13#10, 2, 0, 'AA0BY=OR');
    (* WFD.txt: !!Order!!,Call,Exch1,Sect,UserText. *)
    Layout(WINTERFIELDDAY, '!!Order!!,Call,Exch1,Sect,UserText'#13#10 + '6Y5PW,1H,DX,'#13#10,
           1, 0, '6Y5PW=1H DX');
    (* IARU-HF.txt: !!Order!!,Call,Sect,UserText -- the zone or the society. *)
    Layout(IARU, '!!Order!!,Call,Sect,UserText'#13#10 + '2E0AMO,27,'#13#10 + '4U1WB,HQ,'#13#10,
           2, 0, '2E0AMO=27');
+end;
+
+(* A ROW WITH SOME OF WHAT THE CONTEST REMEMBERS (NY4I, 2026-11-20: "the
+   history does not have to be complete to be useful"). Minnesota remembers
+   Name then QTH and its site file has the county only: AA0AC gives 'CRL',
+   the operator adds the name. A full row is as it always was, and a row
+   with none of the fields prefills nothing. *)
+procedure TCallHistoryTests.Test_APartialRowPrefillsWhatItHas;
+var
+   reader: TCallHistoryReader;
+   list: TCallsignsList;
+begin
+   BeginTest('Test_APartialRowPrefillsWhatItHas');
+   reader := TCallHistoryReader.Create;
+   try
+      ReadText(reader, '!!Order!!,Call,Name,Exch1,UserText'#13#10 +
+                       'AA0AC,,CRL,'#13#10 +
+                       'N6TV,STEVE,CA,'#13#10 +
+                       'K1AR,JOHN,,'#13#10 +
+                       'W1AW,,,'#13#10,
+               [chfName, chfExch1]);
+      CheckEquals(3, gCollected.Count, 'three rows give a prefill');
+      CheckEquals('AA0AC=CRL', string(gCollected[0]), 'county only: the county, no leading blank in the text');
+      CheckEquals('N6TV=STEVE CA', string(gCollected[1]), 'a full row is unchanged');
+      CheckEquals('K1AR=JOHN', string(gCollected[2]), 'name only: the name');
+      CheckEquals(4, reader.DataRows, 'four rows with a call');
+      CheckEquals(2, reader.Partial, 'two partial rows');
+      CheckEquals(1, reader.Incomplete, 'W1AW carries nothing to prefill');
+   finally
+      reader.Free;
+   end;
+   (* THE STORE KEEPS IT AS THE LOG KEEPS A LOGGED QSO'S TEXT: the engine
+      puts one blank before and after it in the exchange box. *)
+   list := TCallsignsList.Create;
+   try
+      CheckTrue(list.AddCallHistoryExchange('AA0AC', 'CRL') = charAdded, 'the partial text is added');
+      CheckEquals('CRL', list.GetIniitialExchange('AA0AC'), 'and read back as written');
+   finally
+      list.Free;
+   end;
 end;
 
 procedure TCallHistoryTests.Test_Store_KnownEntryIsKeptAndALoggedQSOReplaces;
@@ -750,16 +799,16 @@ begin
       (* INITIAL.EX, loaded first, knows NY4I. *)
       CallsignsList.AddIniitialExchange('NY4I', '80 NFL');
 
-      CheckEquals(5, LoadCallHistoryFile,
-                  'N6TV N4AF 4U1WB AA0A AA1RB added; NY4I known; KK6L K1IEB incomplete; N4AF''s second row known');
+      CheckEquals(7, LoadCallHistoryFile,
+                  'N6TV N4AF 4U1WB AA0A AA1RB added, KK6L and K1IEB added partial; NY4I known; N4AF''s second row known');
       CheckEquals('72 SCV', CallsignsList.GetIniitialExchange('N6TV'), 'N6TV');
       CheckEquals('58 NC', CallsignsList.GetIniitialExchange('N4AF'), 'N4AF: the first of its two rows');
       CheckEquals('08 VA', CallsignsList.GetIniitialExchange('AA1RB'), 'a one-digit CK, padded');
       CheckEquals('80 NFL', CallsignsList.GetIniitialExchange('NY4I'), 'INITIAL.EX''s entry stands');
       CheckFalse(CallsignsList.InitialExchangeIsFromCallHistory('NY4I'), 'and is not the file''s');
       CheckTrue(CallsignsList.InitialExchangeIsFromCallHistory('N6TV'), 'N6TV is the file''s');
-      CheckEquals('', CallsignsList.GetIniitialExchange('KK6L'), 'no Sect: not prefilled');
-      CheckEquals('', CallsignsList.GetIniitialExchange('K1IEB'), 'CK -1: not prefilled');
+      CheckEquals('95', CallsignsList.GetIniitialExchange('KK6L'), 'no Sect: the check alone');
+      CheckEquals('AZ', CallsignsList.GetIniitialExchange('K1IEB'), 'CK -1: the section alone');
 
       (* THE LOG AFTER IT REPLACES THE FILE'S TEXT -- the loader's own call. *)
       CallsignsList.AddIniitialExchange('N6TV', '72 LAX');
@@ -965,6 +1014,7 @@ begin
       Test_Reader_BothPublishedLayoutsGiveOnePrefill;
       Test_EveryContestStatesItsCallHistoryFields;
       Test_SiteLayoutsGiveTheRememberedText;
+      Test_APartialRowPrefillsWhatItHas;
       Test_Store_KnownEntryIsKeptAndALoggedQSOReplaces;
       Test_Loader_SettingOffMissingFileAndOtherContest;
       Test_Loader_FillsTheStoreForSweepstakes;

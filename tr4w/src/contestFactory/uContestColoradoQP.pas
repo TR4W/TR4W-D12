@@ -64,7 +64,9 @@ unit uContestColoradoQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestColoradoQP = class(TContestStateQSOPartyBase)
@@ -131,6 +133,21 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE NAME THEN THE COUNTY OR STATE -- this party remembers a worked station as
+         the Name, a blank, the QTH. The site file QSOP_CO carries Call, Exch1,
+         UserText (read 2026-11-20): the QTH, and NO name. A row with only the
+         QTH prefills the QTH alone (CallHistoryExchangeText skips a field the
+         row lacks, NY4I 2026-11-20); the operator adds the name -- before or
+         after, the parser reads "CRL BOB" as county then name when the first
+         word is a known QTH. 101 of 101 non-state rows are county keys of its own
+         county file.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -278,6 +295,16 @@ begin
    (* The party head first -- the county or state, as for every party. *)
    inherited DescribeNewContestPrompts(aPrompts);
    aPrompts.AskField(ncfMyName);
+end;
+
+function TContestColoradoQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfName, chfExch1]);
+end;
+
+function TContestColoradoQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_CO';
 end;
 
 initialization
