@@ -1116,6 +1116,44 @@ that never asked (Club Log, WRL, Cloudlog) is unchanged. `Test_APostAcrossARedir
 `Test_ThePostVerbCarriesItsBodyAcrossA301` now pin this for both transports. GET redirects, and the
 https-to-http refusal, are untouched.
 
+**EXCEPTION FOR THREE UPLOADS: `RepostOnRedirect` (issue 255 follow-up, NY4I, 2026-11-19).** For Club
+Log, World Radio League and Cloudlog it is acceptable to repeat the POST at the redirect target. It is an
+explicit per-request opt-in (`THttpRequest.RepostOnRedirect`, default False; the three senders set it;
+POST only, other methods unchanged) and is independent of `FollowRedirects`, which stays False for them
+(the transports still never follow a POST, and the bearer gate still wants no redirects). The loop is in
+`THttpRequest.Send` (shared layer), not in a transport, so both transports behave identically: each hands
+back the POST's 3xx and `Location`, and `uHttpTransport.DecideRepost` (pure) decides. Rules, in order:
+
+| decision | when | what Send does |
+| -------- | ---- | -------------- |
+| `rdSeeOther` | 303. RFC 9110 15.4.4: the POST was handled and the result is at the Location, to be fetched with a GET. These endpoints have nothing to fetch, so it is NOT repeated | reported, as today |
+| `rdTooManyRedirects` | `REPOST_MAX_HOPS` (3) repeats already made | reported |
+| `rdNoLocation` / `rdBadLocation` | empty, a control character or line break, not http(s), unparsable, or credentials (`user@`) in the address | reported |
+| `rdDowngrade` | https to http, whatever the host | reported |
+| `rdOtherHost` | a different host name or port (case-insensitive host; 443/80 are the defaults) or scheme | reported: these requests carry an API key (Club Log and WRL: bearer header; Cloudlog: `key` in the JSON body), and only the original origin may see it |
+| `rdRepost` | 301, 302, 307, 308 on the same origin | same method, body and headers sent to the target |
+
+301 and 302 are repeated as a POST with the body: NY4I's explicit ruling for these three (RFC 9110 15.4.2
+and 15.4.3 let a client change the method to GET; the endpoints only accept a POST). A relative Location
+(`/x`, `x`, `?q`, `//host/x`) is resolved by hand against the request address (no URIParser: its strings are
+8-bit), the fragment is dropped, dot segments are sent as written.
+
+**Classification** (read in each sender, no sender changed except to set the flag). A refusal is
+`Failure = hfPostRedirected` with the 3xx `StatusCode` kept and `FailReason` = `SPostRepostRefused` + one
+reason resourcestring (`SRepost*`), Send returns False. The first POST WAS answered, so it is not "nothing
+sent": Club Log = uncertain, paused (its default for a status outside 200/201); WRL = `Send` returned False,
+so the POST is uncertain; Cloudlog = `CLOUDLOG_REDIRECT`, failed and paused, for a 301/302/307/308 that was
+not repeated (a redirect means nothing was imported, as it always said) -- but a **303 is uncertain,
+paused** (the upload was handled; new arm in `uCloudlogClient`, pinned in `uTestCloudlog`). **If the repeat itself fails before a byte left** (cannot connect, TLS unavailable...) the kind
+that would say NothingSent is turned into `hfPostRedirected` with StatusCode 0, so no sender retries it as
+unsent: Club Log and WRL are uncertain, Cloudlog falls to its "may have been imported" uncertain default.
+A repeat that fails after bytes may have left (timeout, reset) keeps its own kind, already not NothingSent.
+`THttpRequest.Reposts` counts the repeats and `FinalURL` is the address that answered. Callers that asked to
+FOLLOW (score post, HamScore, SCP: `THttpPost`) are untouched and still report. Pinned by
+`uTestHttpTransport` (`Test_RepostOnRedirectOverTheWire` for each transport over loopback,
+`Test_DecideRepost`, `Test_RepostThroughTheSharedLayer` over the fake transport for https, bearer, downgrade
+and the failed repeat). Not covered: a real https redirect from the real services (BENCH_QUEUE).
+
 The generic half is also readable from source: `fphttpclient.pp`'s `RedirectForcesGET` is true
 for 303 only, and the loop rewinds `RequestBody` before the repeat (its own comment says "307/308",
 the code says 303). **WinHTTP is the surprise: it turns a POST into a GET on 301 and 302, so with

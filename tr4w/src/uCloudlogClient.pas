@@ -130,6 +130,10 @@ begin
       request.Password := FKey;
       request.Sensitive := True;
       request.FollowRedirects := False;
+      (* NY4I, 2026-11-19: the POST is repeated at a redirect target, same body
+        (the key is in it) and headers, but ONLY at the same host and port
+        (THttpRequest.RepostOnRedirect); anything else is reported below. *)
+      request.RepostOnRedirect := True;
       request.ConnectMs := 5000;
       request.IOMs := 20000;
       (* The 201 echoes the whole ADIF string back. *)
@@ -158,10 +162,18 @@ begin
          Result.ErrorCode := 'CLOUDLOG_READ_ONLY_KEY';
          Exit;
          end;
+      if Result.Status = 303 then
+         begin
+         (* 303 (issue 255): "the POST was handled, the result is at that
+            address". It is never repeated, and it is NOT "nothing imported":
+            uncertain and paused (the default above), never replayed blindly. *)
+         Exit;
+         end;
       if (Result.Status >= 300) and (Result.Status < 400) then
          begin
-         (* Redirects are not followed (the key is in the body). The usual cause
-            is a wrong base address; nothing was imported. *)
+         (* A redirect that RepostOnRedirect did not repeat (a 303, another
+            host, https to http, too many). The usual cause is a wrong base
+            address; nothing was imported. *)
          Result.Outcome := doFailed;
          Result.ErrorCode := 'CLOUDLOG_REDIRECT';
          Exit;

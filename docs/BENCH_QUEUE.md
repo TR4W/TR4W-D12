@@ -172,6 +172,20 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-19 -- CLUB LOG, WRL AND CLOUDLOG REPEAT A REDIRECTED POST (issue 255 follow-up; integrations)
+
+The decision (`DecideRepost`) and the repeat are unit-tested over loopback http for both transports and over
+a fake transport for https; no real service has redirected an upload to us.
+
+- [ ] **A real https redirect.** If a Club Log, WRL or Cloudlog/Wavelog address ever answers 301/302/307/308
+  (for example a Cloudlog base address typed without the final slash or with `http://`), the QSO should
+  arrive once and the log show `repeating the same request at`. With WinHTTP selected (`network.httpTransport`
+  `platform`) it must behave the same as the default.
+- [ ] **A Cloudlog address that redirects to another host or to http.** The upload must fail visibly (Cloudlog
+  `CLOUDLOG_REDIRECT`), the key must not be sent to the new address, and `tr4w.log` names the reason.
+
+---
+
 ## Added 2026-11-19 -- SELF-SPOTTING (issue 188; dx-cluster)
 
 The decision (contest answer, S&P, interval, 300 Hz) is unit-tested (`uTestSelfSpot`); nothing below has been seen against a real cluster or on screen.
