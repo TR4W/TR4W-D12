@@ -137,7 +137,7 @@ var
        string(sMode),
        RXData.tSysTime.qtYear, RXData.tSysTime.qtMonth, RXData.tSysTime.qtDay,
        RXData.tSysTime.qtHour, RXData.tSysTime.qtMinute,
-       ExportCallFor(aFacts),
+       CabrilloCallFor(aFacts),
        sentExch,
        string(RXData.Callsign),
        rcvExch]));

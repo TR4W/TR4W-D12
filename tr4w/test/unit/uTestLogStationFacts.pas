@@ -173,6 +173,9 @@ begin
    Result.Prec := aPrec;
    Result.PostalCode := 'K1A 0B1';
    Result.FocNumber := '1234';
+   (* And schema 13's two, so the same round trip holds them. *)
+   Result.SentUnit := 'KIN';
+   Result.RoverPlaces := 'KIN/QUE';
 end;
 
 procedure SaveRow(aRepo: TLogRepository; aSeed: integer; const aFacts: TQsoMyFacts;

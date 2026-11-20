@@ -36,6 +36,9 @@ type
       procedure Test_MyCountyOfARoverPlaceIsItsADIFCounty;
       procedure Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
       procedure Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
+      procedure Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;
+      procedure Test_AnInStatePartyQSOKeepsTheHostStateAndSendsItsUnit;
+      procedure Test_TheCallIsAssembledFromTheSettingAndThePlaces;
       procedure CheckEveryCountyNamed(const aContestId, aFile, aState: string;
                                       aCount: integer;
                                       const aPins: array of string);
@@ -67,6 +70,7 @@ uses
    uRoverSession,        (* ContestRoverPlaces *)
    LogDom,               (* DomQTHTable, TDomQTHTable -- the real county file's load *)
    uSortedStringList,    (* TSortedStringList -- a fresh mo.DomList *)
+   uQsoMyFacts,          (* TQsoMyFacts, AssembledCall -- schema 13 *)
    uRoverState;
 
 (* Three Hawaii districts, as hawaiiqp_cty.dom spells its lines. *)
@@ -715,6 +719,185 @@ begin
    end;
 end;
 
+(* LOG SCHEMA 13 ON A SCHEMA-12 LOG: my_sent_unit and my_rover_places added
+  by ALTER, NULL in every row ("as before"), the version stamped, ONE commit;
+  a second open changes nothing. A new log has both, last. *)
+procedure TRoverStateTests.Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;
+var
+   fn, dir: string;
+   db: TLogDatabase;
+   i: integer;
+begin
+   BeginTest('Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit');
+   dir := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_rover_' + IntToStr(GetProcessID);
+   ForceDirectories(dir);
+   fn := IncludeTrailingPathDelimiter(dir) + 'rover12.db';
+   ScrubTestLog(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      for i := Low(LOG_V13_QSO_COLUMNS) to High(LOG_V13_QSO_COLUMNS) do
+         begin
+         CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V13_QSO_COLUMNS[i].Name)),
+                   'a new log has ' + string(LOG_V13_QSO_COLUMNS[i].Name));
+         end;
+   finally
+      db.Free;
+   end;
+   DowngradeTestLog(fn, 12, Low(LOG_V3_QSO_COLUMNS));
+   CheckFalse(FileExists(fn + '-wal'), 'precondition: no WAL is left by the fixture');
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(1, CommitFramesInWal(fn + '-wal'), 'both columns and the stamp: ONE commit');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current');
+      for i := Low(LOG_V13_QSO_COLUMNS) to High(LOG_V13_QSO_COLUMNS) do
+         begin
+         CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V13_QSO_COLUMNS[i].Name)),
+                   string(LOG_V13_QSO_COLUMNS[i].Name) + ' is there');
+         end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(0, CommitFramesInWal(fn + '-wal'), 'a second open commits nothing');
+   finally
+      db.Free;
+   end;
+   ScrubTestLog(fn);
+end;
+
+(* NY4I, 2026-11-20 ("since I said I was in state"): an in-state party QSO
+  records the HOST state in my_state, the unit it sent in my_sent_unit and
+  the unit's ADIF county in my_county -- through the REAL county file (NY,
+  then Hawaii's district crosswalk) -- and the export's sent slot still sends
+  the unit. A two-letter state is no unit and changes nothing. A row from
+  before schema 13 (no my_sent_unit, the county code in my_state) sends what
+  it always did. The NY rover test's four rows: each sends its own place. *)
+procedure TRoverStateTests.Test_AnInStatePartyQSOKeepsTheHostStateAndSendsItsUnit;
+var
+   handle: TContestHandle;
+   savedContest: TContestHandle;
+   savedTable: TDomQTHTable;
+   savedList: TSortedStringList;
+   facts: TQsoMyFacts;
+   session: TMyStationExchange;
+
+   procedure LoadFresh(const aFile: string);
+   begin
+      DomQTHTable.Free;
+      DomQTHTable := TDomQTHTable.Create;
+      mo.DomList.Free;
+      mo.DomList := TSortedStringList.Create;
+      CheckTrue(DomQTHTable.LoadInDomQTHFile(IncludeTrailingPathDelimiter(ShippedDomDir) + aFile),
+                aFile + ' loads');
+   end;
+
+   function Sent(const aFacts: TQsoMyFacts; const aRover: string): string;
+   begin
+      Result := MyStationExchangeWithRoverPlace(
+                   MyStationExchangeOfQSO(session, aFacts, True, szkStatedMyZone, rykNone),
+                   aRover).MyState;
+   end;
+
+begin
+   BeginTest('Test_AnInStatePartyQSOKeepsTheHostStateAndSendsItsUnit');
+   savedContest := Contest;
+   savedTable := DomQTHTable;
+   savedList := mo.DomList;
+   DomQTHTable := nil;
+   mo.DomList := nil;
+   session := Default(TMyStationExchange);
+   session.MyState := 'ALB';
+   try
+      CheckTrue(FindContestById('NY-QSO-PARTY', handle), 'New York is registered');
+      Contest := handle;
+      LoadFresh('newyork_cty.dom');
+
+      facts := NotCapturedMyFacts;
+      facts.Source := mfsLogged;
+      facts.State := 'ALB';
+      CheckTrue(ApplyPartyUnitToMyFacts('alb', facts), 'ALB is a New York unit');
+      CheckEquals('NY', string(facts.State), 'my_state is the host state');
+      CheckEquals('NY,ALBANY', string(facts.County), 'my_county is Albany county');
+      CheckEquals('ALB', string(facts.SentUnit), 'my_sent_unit is what was sent');
+      CheckEquals('ALB', Sent(facts, ''), 'and the sent slot still sends ALB, never NY');
+
+      (* THE ROVER TEST'S FOUR ROWS: KIN/QUE working W2BN on CAT/CAY. *)
+      facts.State := 'ALB';
+      CheckTrue(ApplyPartyUnitToMyFacts('KIN', facts), 'KIN is a New York unit');
+      CheckEquals('NY', string(facts.State), 'from KIN: NY');
+      CheckEquals('NY,KINGS', string(facts.County), 'from KIN: Kings');
+      CheckEquals('KIN', Sent(facts, 'KIN'), 'the KIN rows send KIN (CAT and CAY)');
+      CheckTrue(ApplyPartyUnitToMyFacts('QUE', facts), 'QUE is a New York unit');
+      CheckEquals('NY,QUEENS', string(facts.County), 'from QUE: Queens');
+      CheckEquals('QUE', Sent(facts, 'QUE'), 'the QUE rows send QUE (CAT and CAY)');
+
+      facts := NotCapturedMyFacts;
+      facts.Source := mfsLogged;
+      facts.State := 'FL';
+      CheckFalse(ApplyPartyUnitToMyFacts('FL', facts), 'an out-of-state FL is no unit');
+      CheckEquals('FL', string(facts.State), 'and is left as typed');
+      CheckEquals('', string(facts.SentUnit), 'with no sent unit');
+      CheckEquals('FL', Sent(facts, ''), 'so it sends FL, as ever');
+
+      (* A ROW FROM BEFORE SCHEMA 13: the county code in my_state, no unit. *)
+      facts := NotCapturedMyFacts;
+      facts.Source := mfsLogged;
+      facts.State := 'ALB';
+      CheckEquals('ALB', Sent(facts, ''), 'an older row sends its my_state unchanged');
+
+      (* HAWAII: a district is no county; my_county is the county it lies in. *)
+      CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
+      Contest := handle;
+      LoadFresh('hawaiiqp_cty.dom');
+      facts := NotCapturedMyFacts;
+      facts.Source := mfsLogged;
+      facts.State := 'KOH';
+      CheckTrue(ApplyPartyUnitToMyFacts('KOH', facts), 'KOH is a Hawaii unit');
+      CheckEquals('HI', string(facts.State), 'a fixed KOH station: my_state HI, not KOH');
+      CheckEquals('HI,Hawaii', string(facts.County), 'KOH lies in Hawaii county');
+      session.MyState := 'KOH';
+      CheckEquals('KOH', Sent(facts, ''), 'and sends KOH');
+   finally
+      DomQTHTable.Free;
+      DomQTHTable := savedTable;
+      mo.DomList.Free;
+      mo.DomList := savedList;
+      Contest := savedContest;
+   end;
+end;
+
+(* NY4I, 2026-11-20, ruling 6: the call is ASSEMBLED from its parts, never
+  stripped -- the call setting as set (it may hold slashes) and the places. *)
+procedure TRoverStateTests.Test_TheCallIsAssembledFromTheSettingAndThePlaces;
+var
+   units: TStringList;
+begin
+   BeginTest('Test_TheCallIsAssembledFromTheSettingAndThePlaces');
+   CheckEquals('VE3FRV/W2/KIN/QUE', AssembledCall('VE3FRV/W2', 'KIN/QUE'),
+               'a Canadian in New York on the KIN/QUE line');
+   CheckEquals('NY4I/KOH', AssembledCall('NY4I', 'KOH'), 'one place');
+   CheckEquals('VE3FRV/W2', AssembledCall('VE3FRV/W2', ''), 'not roving: the setting as set');
+   CheckEquals('', AssembledCall('', 'KIN'), 'no call: nothing to sign');
+
+   units := TStringList.Create;
+   try
+      SplitRoverUnitsText('KIN QUE', units);
+      RoverState.SetUnits(units);
+      CheckEquals('VE3FRV/W2/KIN/QUE', RovingCall('VE3FRV/W2'),
+                  'the call keyed is the same assembly');
+   finally
+      RoverState.TurnOff;
+      units.Free;
+   end;
+end;
+
 procedure TRoverStateTests.RunAllTests;
 begin
    Test_TheThreeSeparatorsAndTheSlashSplitUnits;
@@ -731,6 +914,9 @@ begin
    Test_MyCountyOfARoverPlaceIsItsADIFCounty;
    Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
    Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
+   Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;
+   Test_AnInStatePartyQSOKeepsTheHostStateAndSendsItsUnit;
+   Test_TheCallIsAssembledFromTheSettingAndThePlaces;
 end;
 
 end.

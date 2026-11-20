@@ -371,6 +371,11 @@ begin
    tail := tail + '|' + string(LOG_V10_QSO_OFF_CONTEST_COLUMN.Name);
    (* And schema 12's rover place, last of all. *)
    tail := tail + '|' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name);
+   (* And schema 13's sent unit and rover places, last of all. *)
+   for i := Low(LOG_V13_QSO_COLUMNS) to High(LOG_V13_QSO_COLUMNS) do
+      begin
+      tail := tail + '|' + string(LOG_V13_QSO_COLUMNS[i].Name);
+      end;
    (* LAST, IN THIS ORDER -- the order ALTER TABLE ADD COLUMN gives a
      migrated log, so the two cannot differ. *)
    CheckEquals(tail, Copy(names, Length(names) - Length(tail) + 1, MaxInt),

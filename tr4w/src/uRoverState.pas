@@ -115,6 +115,7 @@ implementation
 
 uses
    SysUtils,
+   uQsoMyFacts,   (* AssembledCall -- the one call assembly *)
    uAppStrings;   (* SRover* *)
 
 constructor TRoverState.Create;
@@ -239,9 +240,9 @@ end;
 function RovingCall(const aCall: string): string;
 begin
    Result := aCall;
-   if (RoverState <> nil) and RoverState.Active and (aCall <> '') then
+   if (RoverState <> nil) and RoverState.Active then
       begin
-      Result := aCall + '/' + RoverState.Joined('/');
+      Result := AssembledCall(aCall, RoverState.Joined('/'));
       end;
 end;
 

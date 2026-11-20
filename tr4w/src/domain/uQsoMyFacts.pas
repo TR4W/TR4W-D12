@@ -87,7 +87,10 @@ type
 
    TQsoMyFacts = record
       Source: TQsoMyFactsSource;
-      Call: AnsiString;        (* as signed, rover suffix and all -- ADIF STATION_CALLSIGN *)
+      Call: AnsiString;        (* the call SETTING as set (VE3FRV/W2) -- ADIF STATION_CALLSIGN.
+                                  Since schema 13 never the rover's places: they
+                                  are RoverPlaces. A schema-12 rover row holds the
+                                  call as signed (NY4I/KIN/QUE) and no places. *)
       Grid: AnsiString;        (* MY_GRIDSQUARE *)
       State: AnsiString;       (* MY_STATE -- the PRIMARY subdivision we are in *)
       County: AnsiString;      (* MY_CNTY  -- the SECONDARY subdivision *)
@@ -129,6 +132,21 @@ type
       Prec: AnsiString;        (* MY PREC -- the Sweepstakes precedence *)
       PostalCode: AnsiString;  (* MY POSTAL CODE -- ADIF MY_POSTAL_CODE *)
       FocNumber: AnsiString;   (* MY FOC NUMBER -- the FOC Marathon's *)
+
+      (* SCHEMA 13 (issues 133 and 87, NY4I 2026-11-20). They FOLLOW Source
+         like the rest; empty means "as before" on any row.
+         SentUnit     the contest's own unit the QSO was SENT from (KIN, ALB,
+                      KOH): the sent exchange's slot reads it, so State can
+                      be the host's primary subdivision (NY) and County the
+                      unit's ADIF county (NY,Kings). Empty: the slot sends
+                      State, as every row before 13 did.
+         RoverPlaces  every place of the rover's operation when the QSO was
+                      logged, '/'-joined (KIN/QUE). The Cabrillo and on-air
+                      call is AssembledCall(Call, RoverPlaces); ADIF writes
+                      Call alone. Empty: Call is signed as stored -- which,
+                      on a schema-12 rover row, is already NY4I/KIN/QUE. *)
+      SentUnit: AnsiString;
+      RoverPlaces: AnsiString;
    end;
 
    (* WHERE A NEW ROW'S year_sent COMES FROM -- issue 300 (NY4I, 2026-11-13: a
@@ -269,6 +287,15 @@ function MyFactsForImport(const aFile, aContest: TQsoMyFacts;
 function ExportCallOf(const aFacts: TQsoMyFacts;
                       const aDeclaredCall, aSessionCall: AnsiString): AnsiString;
 
+(* THE CALL AS SIGNED ON THE AIR AND IN CABRILLO -- ASSEMBLED FROM ITS PARTS
+   (NY4I, 2026-11-20, ruling 6: never strip a suffix): the call setting as set
+   (aCall, which may hold slashes of its own -- VE3FRV/W2) and, when roving,
+   the places (aPlaces, '/'-joined -- KIN/QUE): VE3FRV/W2/KIN/QUE. No places,
+   or no call: aCall unchanged. The ONE assembly: uRoverState.RovingCall (the
+   call keyed now) and the Cabrillo export (the call a stored row signed) both
+   call it. *)
+function AssembledCall(const aCall, aPlaces: string): string;
+
 (* WHAT AN IMPORTED QSO SAID IT SENT, to be written back VERBATIM: its
    exchange_sent, when the row was imported (its file's or the contest's
    station) and the file carried an STX_STRING. '' means "build it" -- every
@@ -350,7 +377,9 @@ begin
              (a.Check <> b.Check)         or
              (a.Prec <> b.Prec)           or
              (a.PostalCode <> b.PostalCode) or
-             (a.FocNumber <> b.FocNumber);
+             (a.FocNumber <> b.FocNumber) or
+             (a.SentUnit <> b.SentUnit)   or
+             (a.RoverPlaces <> b.RoverPlaces);
 end;
 
 function MyFactsYearSentDiffers(const a, b: TQsoMyFacts): boolean;
@@ -387,6 +416,8 @@ begin
    Take(Result.Prec, aShown.Prec, aTyped.Prec);
    Take(Result.PostalCode, aShown.PostalCode, aTyped.PostalCode);
    Take(Result.FocNumber, aShown.FocNumber, aTyped.FocNumber);
+   Take(Result.SentUnit, aShown.SentUnit, aTyped.SentUnit);
+   Take(Result.RoverPlaces, aShown.RoverPlaces, aTyped.RoverPlaces);
    if aTyped.CQZone <> aShown.CQZone then
       begin
       Result.CQZone := aTyped.CQZone;
@@ -545,6 +576,15 @@ begin
    else
       begin
       Result := aSessionCall;
+      end;
+end;
+
+function AssembledCall(const aCall, aPlaces: string): string;
+begin
+   Result := aCall;
+   if (aCall <> '') and (Trim(aPlaces) <> '') then
+      begin
+      Result := aCall + '/' + Trim(aPlaces);
       end;
 end;
 

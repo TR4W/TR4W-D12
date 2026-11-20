@@ -140,6 +140,18 @@ function GetMyExchangeForExport: string;
   (ADIFCountyOfQSO, below), so the two cannot disagree. *)
 function RoverPlaceADIFCounty( const aPlace: string ): string;
 
+(* OUR STATION FOR A QSO SENT FROM ONE OF THE PARTY'S OWN UNITS (log schema
+  13, NY4I 2026-11-20: "since I said I was in state", my_state is the host
+  state). aPlace is the unit sent -- the rover's place, or an in-state
+  station's MY STATE as sent (KIN, ALB, KOH). When the active contest names
+  a host state for it (its own ADIFCountyState: NY, HI, a Prairies
+  province), aFacts gets SentUnit = the unit, State = that state and County
+  = the unit's ADIF county ('' where the party has none) and the answer is
+  True. Otherwise aFacts is untouched: a two-letter state, DX, a contest
+  that is no party. *)
+function ApplyPartyUnitToMyFacts( const aPlace: string;
+                                  var aFacts: TQsoMyFacts ): boolean;
+
 function EDIContestName(const aSessionName: string; aContest: TContestHandle): string;
 procedure ExportToEDI;
 procedure ExportToEDIByBand( Band: BandType );
@@ -2790,6 +2802,38 @@ function RoverPlaceADIFCounty( const aPlace: string ): string;
   Result := ADIFCountyOfQSO( ActiveContest( Contest ), place );
   end;
 
+function ApplyPartyUnitToMyFacts( const aPlace: string;
+                                  var aFacts: TQsoMyFacts ): boolean;
+  var
+    place: ContestExchange;
+    unitText: string;
+    hostState: string;
+  begin
+  Result := False;
+  unitText := UpperCase( Trim( aPlace ) );
+  if unitText = '' then
+     begin
+     Exit;
+     end;
+  (* As RoverPlaceADIFCounty builds it: the unit as its own resolved QTH. *)
+  place := Default( ContestExchange );
+  place.QTHString := ShortString( unitText );
+  place.DomesticQTH := place.QTHString;
+  if ActiveContest( Contest ) = nil then
+     begin
+     Exit;
+     end;
+  hostState := ActiveContest( Contest ).ADIFCountyState( place );
+  if hostState = '' then
+     begin
+     Exit;
+     end;
+  aFacts.SentUnit := AnsiString( unitText );
+  aFacts.State := AnsiString( hostState );
+  aFacts.County := AnsiString( RoverPlaceADIFCounty( unitText ) );
+  Result := True;
+  end;
+
 function EmitContestSpecificTailForExport( const rec: ContestExchange;
    const aMyFacts: TQsoMyFacts; const aSentExchange: AnsiString ): string;
   var
@@ -3550,7 +3594,7 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
           aActivations.Add(
              CabrilloActivationPlaceOf( stationContest, facts, TempRXData ),
              Trim( string( TempRXData.ceRoverQTH ) ) <> '',
-             ExportCallFor( facts ) );
+             CabrilloCallFor( facts ) );
           end;
        end;
   finally
@@ -3681,7 +3725,7 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
                 begin
                 (* THE QSO'S OWN CALL -- D5: its my_call, else the log's
                   declared call, never today's MY CALL ahead of them. *)
-                lineCall := ExportCallFor( rowMyFacts );
+                lineCall := CabrilloCallFor( rowMyFacts );
                 end;
              (* A QSO THE CONTEST TAKES IN AN ADIF FILE OF ITS OWN IS NOT A
                CABRILLO LINE (issue 272: Vermont's FT QSOs). Left out before

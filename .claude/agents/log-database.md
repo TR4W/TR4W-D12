@@ -934,6 +934,36 @@ exchange only.
   second time to split by activation -- a log that never roved costs one
   query (file-formats.md).
 
+## SCHEMA 13: THE UNIT A QSO WAS SENT FROM, AND THE ROVER'S PLACES (2026-11-20)
+
+NY4I's rulings of 2026-11-20 on issues 133 and 87: an in-state party QSO
+records the HOST state in `my_state` ("since I said I was in state"), and the
+call is ASSEMBLED from its parts, never stripped (ruling 6).
+
+- **`qso.my_sent_unit`, `qso.my_rover_places`** (`LOG_V13_QSO_COLUMNS`, TEXT,
+  last two columns), **`QSO_MY_COLUMNS` members** (`TQsoMyFacts.SentUnit` /
+  `.RoverPlaces`): written at insert and by an edit of our station, never by
+  an ordinary update. NULL means "as before" on every row.
+- **Capture**: `uLogStore.LogStoreCurrentMyFacts` asks
+  `PostUnit.ApplyPartyUnitToMyFacts(SentMyState)` when
+  `FCONTEST.StationInHostState`; `CaptureMyFactsNow` asks it of a rover's
+  `ceRoverQTH` (overriding) and records `RoverState.Joined('/')` in
+  `my_rover_places`. `my_call` is the call SETTING as set (no places).
+- **The export**: `MyStationExchangeOfQSO` sends `SentUnit` in the state
+  slot when the row has one, else `my_state` (every older row).
+  `uLogSource.CabrilloCallFor` = `AssembledCall(ExportCallFor, places)` for
+  every Cabrillo writer (QSO line, per-activation header, HamScore line);
+  ADIF's STATION_CALLSIGN stays `my_call`.
+- **A schema-12 rover row** holds `my_call` = NY4I/KIN/QUE and no places:
+  the base call is not derivable without stripping, so it exports exactly as
+  it did (Cabrillo and ADIF both sign NY4I/KIN/QUE).
+- **Known gap**: the Station-page MY STATE correction (`uStationFactRecord`,
+  `sfState` -> `my_state`, matched AS TYPED) no longer finds an in-state
+  party row (its `my_state` is the host state now; the typed code is
+  `my_sent_unit`). Not built; reported for a ruling.
+- **Migration**: asked before any change; ALTER only on a table the v11
+  rebuild does not rebuild. `DowngradeTestLog` below 13 drops both first.
+
 ## AN OLDER LOG IS BACKED UP BEFORE IT IS UPGRADED (NY4I, 2026-11-19)
 
 Every migration, not one schema's. Definition and the case-by-case list:
