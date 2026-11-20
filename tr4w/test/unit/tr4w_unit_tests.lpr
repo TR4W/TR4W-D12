@@ -1048,6 +1048,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestTennesseeQP in 'uTestContestTennesseeQP.pas',
    uTestContestTexasQP in 'uTestContestTexasQP.pas',
    uTestContestVirginiaQP in 'uTestContestVirginiaQP.pas',
+   (* The Arizona QSO Party's 2026 rules (the state-party audit,
+      2026-11-20). *)
+   uTestContestArizonaQP in 'uTestContestArizonaQP.pas',
    (* The RTC's 2026 rules: dupes per band AND mode, grids per band
       (2026-10-23). *)
    uTestContestRTC      in 'uTestContestRTC.pas',
@@ -1296,6 +1299,7 @@ begin
    RegisterSuite(TContestTennesseeQPTests.Create('ContestTennesseeQP'));
    RegisterSuite(TContestTexasQPTests.Create('ContestTexasQP'));
    RegisterSuite(TContestVirginiaQPTests.Create('ContestVirginiaQP'));
+   RegisterSuite(TContestArizonaQPTests.Create('ContestArizonaQP'));
    RegisterSuite(TContestRTCTests.Create('ContestRTC'));
    RegisterSuite(TFieldDaySectionRefusalTests.Create('FieldDaySectionRefusal'));
    RegisterSuite(TExchangeWordOrderTests.Create('ExchangeWordOrder'));

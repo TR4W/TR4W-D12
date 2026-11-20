@@ -125,6 +125,24 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   DC IS MARYLAND -- "Maryland and DC are lumped together as MD." ve7.dom
     (the in-province file, where states are multipliers) maps Dc > Md.
 
+  MULTIPLIERS (NY4I, 2026-11-20, quoting the sponsor) -- "For BC stations:
+    43 British Columbia electoral districts; 13 Canadian provinces/
+    territories: NL, PE, NS, NB, QC, ON, MB, SK, AB, BC, YT, NT, NU; and US
+    states, including Hawaii and Alaska. Maryland and DC are lumped together
+    as MD." "For non-BC stations: 43 British Columbia electoral districts."
+    Once per band and mode (cfMultByBand, cfMultByMode).
+      The data already said so: ve7.dom is the 43 districts (ve7_cty.dom),
+    S50 (Alaska and Hawaii included), P13 (with Bc) and Dc > Md; a DX QSO
+    earns none (CountsAsMultiplier).
+      BC IS ONE OF THE 13, AND A BC STATION NEVER SENDS "BC" -- it sends its
+    district. So the province BC is reachable only if a district QSO also
+    earns it: AdditionalDomesticMultiplierKey, issue 317's second key
+    (InStateCountyEarnsHostState), for a BC entrant only, in the district's
+    band-and-mode scope -- the shape Alabama, Kentucky and Iowa use. THAT IS
+    A READING of the sponsor's list, not a sentence of it: the rules do not
+    say how BC is earned. A station typing "BC" itself (P12's alias) is the
+    BC multiplier directly, as before.
+
   THE DISTRICTS ARE THE 43 CURRENT ONES AND NOTHING ELSE -- NY4I on #88,
     2026-11-19, giving the sponsor's table: "this is the whole list. Any
     historical items are now moot." ve7_cty.dom holds exactly those 43 codes
@@ -230,6 +248,11 @@ type
          York and Indiana ask too. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
+
+      (* A BC ENTRANT'S DISTRICT QSO ALSO EARNS BC -- issue 317's second
+         domestic key; the header (MULTIPLIERS, 2026-11-20). *)
+      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: string): boolean; override;
    public
       (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
          M9a. See TContestBase.DescribeNewContestPrompts. *)
@@ -261,6 +284,15 @@ function TContestBritishColumbiaQP.CountsAsMultiplier(const aQso: ContestExchang
 begin
    (* Every kind: the legacy rule returned before any flag was set. *)
    Result := not DomesticMultiplierIsDX(string(aQso.DomMultQTH));
+end;
+
+(* A BC entrant's QSO with a BC district also earns the province BC, in the
+   district's band-and-mode scope -- the header. Outside BC the multipliers
+   are the districts alone, and the helper answers False there. *)
+function TContestBritishColumbiaQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                                                   out aKey: string): boolean;
+begin
+   Result := InStateCountyEarnsHostState(aQso, aKey);
 end;
 
 function TContestBritishColumbiaQP.GetDisplayName: string;

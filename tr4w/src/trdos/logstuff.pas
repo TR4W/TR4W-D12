@@ -615,7 +615,7 @@ function LooksLikeACallSign(Call: Str40): boolean;
 
 (* MarineOrAirMobileStation MOVED to uCallSignRoutines on 2026-09-29 -- it
    is a pure suffix test on a callsign, and the Virginia QSO Party class
-   needs it without the TRDOS engine behind it. Its two call sites here
+   needed it without the TRDOS engine behind it (until 2026-11-20). Its two call sites here
    were legacy scoring arms, deleted at M10 S3. *)
 
 {

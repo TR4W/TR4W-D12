@@ -142,13 +142,19 @@ begin
    Result := 'Iowa QSO Party';
 end;
 
-(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row IA-QSO-PARTY: status candidate; rules https://w0yl.com/IAQP/; rules
-   year 2026. CANDIDATE: date from a calendar, not yet checked against the
-   sponsor's rules. *)
+(* WHEN IT RUNS -- NY4I's dates (2026-11-20; the sponsor states no
+   recurrence): 1400Z Saturday to 0200Z Sunday, for 2026 to 2030 --
+     Sep 19-20 2026, Sep 18-19 2027, Sep 16-17 2028, Sep 15-16 2029,
+     Sep 21-22 2030.
+   A DATE LIST, NOT A RULE: after 2030 the contest is undated until the
+   next dates are added here. *)
 function TContestIowaQP.GetSchedule: string;
 begin
-   Result := '3rd Saturday of September at 14:00 UTC for 12h';
+   Result := '2026-09-19 at 14:00 UTC for 12h; ' +
+             '2027-09-18 at 14:00 UTC for 12h; ' +
+             '2028-09-16 at 14:00 UTC for 12h; ' +
+             '2029-09-15 at 14:00 UTC for 12h; ' +
+             '2030-09-21 at 14:00 UTC for 12h';
 end;
 
 function TContestIowaQP.GetFriendlyName: string;

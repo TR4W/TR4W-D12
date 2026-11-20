@@ -623,8 +623,9 @@ end;
 (* '/AM' OR '/MM' -- AIR MOBILE OR MARITIME MOBILE.
 
    LIFTED OUT OF LOGSTUFF ON 2026-09-29, NOT COPIED. The Virginia QSO Party
-   scores such a station at three points, so a contest class needs to ask the
-   question -- and the answer lived in LOGSTUFF, whose dependency cone is the
+   scored such a station at three points (D7's rule, which its sponsor does
+   not state; since 2026-11-20 Virginia pays /M and /R instead), so a
+   contest class needed to ask the question -- and the answer lived in LOGSTUFF, whose dependency cone is the
    whole TRDOS engine. Duplicating it into the contest factory would have made
    two copies of one predicate, which is the drift CLAUDE.md forbids; so the
    single copy moved HERE, beside MobileCall and RoverCall, which are the same

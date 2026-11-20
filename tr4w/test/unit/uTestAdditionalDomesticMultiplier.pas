@@ -60,6 +60,7 @@ type
       procedure Test_PerQSOCountsFollowEachStatesScope;
       procedure Test_UDPShowsTheSecondKey;
       procedure Test_NoSecondKeyPartyIsUnchanged;
+      procedure Test_BritishColumbiaDistrictEarnsBC;
       procedure CheckPerQSOCounts(const aWhat: string;
                                   const aLogged: TArray<ContestExchange>;
                                   const aExpected: array of integer);
@@ -89,7 +90,7 @@ type
    end;
 
 const
-   PARTY_COUNT = 7;
+   PARTY_COUNT = 8;
 
 function PartyCase(aIndex: integer): TPartyCase;
 begin
@@ -148,6 +149,20 @@ begin
          Result.CountyFile := 'newyork_cty.dom';
          Result.CountyA := 'MON';
          Result.CountyB := 'ALB';
+         end;
+      6:
+         begin
+         (* NY4I, 2026-11-20, quoting the sponsor: a BC station's
+            multipliers are the 43 districts, "13 Canadian provinces/
+            territories: ... BC ..." and the US states, once per band and
+            mode. No BC station sends BC, so a district QSO earns it -- the
+            reading uContestBritishColumbiaQP's header records. A legacy
+            contest: its id is its ContestTypeSA spelling. *)
+         Result.Id := 'BCQP';
+         Result.Host := 'BC';
+         Result.CountyFile := 've7_cty.dom';
+         Result.CountyA := 'ASL';
+         Result.CountyB := 'BNS';
          end;
       else
          begin
@@ -292,8 +307,10 @@ end;
 procedure TAdditionalDomesticMultiplierTests.Test_InStateListsHoldTheHostKey;
 const
    (* NY: 62 counties + 50 states + 13 provinces + DX -- the DX key earns no
-      multiplier (CountsAsMultiplier), so the in-state maximum is 125. *)
-   EXPECTED: array[0..PARTY_COUNT - 1] of integer = (130, 118, 184, 162, 110, 126, 77);
+      multiplier (CountsAsMultiplier), so the in-state maximum is 125.
+      BC: 43 districts + 50 states (DC is Md) + 13 provinces + DX = 107; DX
+      earns no multiplier there either. *)
+   EXPECTED: array[0..PARTY_COUNT - 1] of integer = (130, 118, 184, 162, 110, 126, 107, 77);
 var
    i: integer;
    party: TPartyCase;
@@ -821,8 +838,38 @@ begin
    end;
 end;
 
+(* BRITISH COLUMBIA, PER BAND AND MODE (NY4I, 2026-11-20): a BC entrant's
+   first district in a band-and-mode scope earns the district and BC (2); a
+   second district in the same scope only itself (1); the first district on
+   phone, or on another band, BC again (2). Outside BC the district alone. *)
+procedure TAdditionalDomesticMultiplierTests.Test_BritishColumbiaDistrictEarnsBC;
+var
+   engine: TQSOPartyEngine;
+   logged: TArray<ContestExchange>;
+begin
+   BeginTest('Test_BritishColumbiaDistrictEarnsBC');
+   engine := TQSOPartyEngine.Create(HandleOfId('BCQP'));
+   try
+      engine.Activate(True);
+      logged := nil;
+      TakeQSO(engine, 'VE7AAA', '599 ASL', Band20, CW, eCW, logged);
+      TakeQSO(engine, 'VE7BBB', '599 BNS', Band20, CW, eCW, logged);
+      TakeQSO(engine, 'VE7CCC', '59 BNS', Band20, Phone, eUSB, logged);
+      TakeQSO(engine, 'VE7DDD', '599 ASL', Band40, CW, eCW, logged);
+      CheckPerQSOCounts('BC', logged, [2, 1, 2, 2]);
+
+      engine.Activate(False);
+      logged := nil;
+      TakeQSO(engine, 'VE7EEE', '599 ASL', Band20, CW, eCW, logged);
+      CheckPerQSOCounts('BC outside', logged, [1]);
+   finally
+      engine.Free;
+   end;
+end;
+
 procedure TAdditionalDomesticMultiplierTests.RunAllTests;
 begin
+   Test_BritishColumbiaDistrictEarnsBC;
    Test_EveryOtherContestAnswersFalse;
    Test_InStateListsHoldTheHostKey;
    Test_LongKeysAreCounties;

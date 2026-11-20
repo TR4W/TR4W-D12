@@ -373,6 +373,18 @@ function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
   has its station captured live by the store (uLogStore.CaptureMyFactsNow),
   not read from the message. *)
 function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean; overload;
+(* A RECORD LOGGED BY THIS SESSION -- WSJT-X's logged QSO. Read exactly as
+  the overload above, except that its CONTEST_ID is NOT read: the QSO was
+  made here, now, in the contest that is open, so exch keeps the contest the
+  caller gave it (ClearContestExchange's), and that contest interprets the
+  record. WSJT-X writes the contest of its own overlay -- the Delaware QSO
+  Party asks for the Field Day overlay, so its FT8 and FT4 QSOs arrive as
+  ARRL-FIELD-DAY (NY4I, 2026-11-20: the import "must not raise a flag").
+  Read as the file import does, that id made the record a Field Day QSO:
+  Field Day's class interpreted it, the off-contest stamp judged it by Field
+  Day's rules, and the log store rewrote the log's contest row to Field Day
+  on the append (uLogStore.AppendQSOOnce sets the contest from the record). *)
+function ParseSessionADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
 // GetContestByADIFName moved to uADIF.pas (Issue #887).
 procedure SetExtendedModeFromMode(RData: ContestExchange);
 function GetTR4WBandFromNetworkBand(band: TRadioBand): BandType;
@@ -10950,23 +10962,45 @@ begin
   Result := ParseADIFRecord(sADIF, exch, aMyFacts, aSentExchange, ignoredContestId);
 end;
 
-function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
-                         out aMyFacts: TQsoMyFacts;
-                         out aSentExchange: AnsiString;
-                         out aUnmatchedContestId: string): boolean;
+(* THE ONE READER behind every ParseADIFRecord overload and
+  ParseSessionADIFRecord. aReadsContestId False is the session's record (see
+  ParseSessionADIFRecord): ApplyADIFFieldsToExchange writes the contest only
+  from CONTEST_ID (exch.ceContest, and the id it could not match), so putting
+  back the caller's contest and dropping the unmatched id afterwards is
+  exactly "the tag was not read" -- nothing else in the record depends on it
+  while the fields are applied (uADIF captures N1MM's exchange tag for the
+  contest to read later for that reason). *)
+function ReadADIFRecord(sADIF: string; var exch: ContestExchange;
+                        aReadsContestId: boolean;
+                        out aMyFacts: TQsoMyFacts;
+                        out aSentExchange: AnsiString;
+                        out aUnmatchedContestId: string): boolean;
 var
   fields  : TADIFFieldList;
   temps   : TADIFRecordTemps;
   session : TADIFImportSession;
   (* The open contest, asked once per record -- see below. *)
   importContest : TContestBase;
+  (* The contest the caller gave the record, before any tag is read. *)
+  callersContest : TContestHandle;
 begin
   logger.debug('[ParseADIFRecord] Parsing %s', [sADIF]);
+  callersContest := exch.ceContest;
   Result := ParseADIFFieldsList(sADIF, fields);
   // Even when no terminator is found, apply whatever fields the lexer
   // managed to parse -- same forgiving behaviour as the legacy
   // implementation, which logged at error but kept the partial exch.
   ApplyADIFFieldsToExchange(fields, exch, temps);
+  if not aReadsContestId then
+     begin
+     if exch.ceContest <> callersContest then
+        begin
+        logger.Debug('[ParseADIFRecord] a session record''s CONTEST_ID is not read: ' +
+                     'it stays %s', [ContestId(callersContest)]);
+        end;
+     exch.ceContest := callersContest;
+     temps.UnmatchedContestId := '';
+     end;
   aUnmatchedContestId := temps.UnmatchedContestId;
 
   (* THE RECORD'S OWN STATION AND SENT EXCHANGE, read from the tags it
@@ -11003,8 +11037,17 @@ begin
   // (DomQTHTable). Whether the contest has rover counties is its own
   // answer, asked of the contest this record already fetched (M11 S7).
   LocateCallStrippingRoverCounty(importContest, exch.Callsign, exch.QTH);
-end; // of ParseADIFRecord
+end; // of ReadADIFRecord
 (*----------------------------------------------------------------------------*)
+
+function ParseADIFRecord(sADIF: string; var exch: ContestExchange;
+                         out aMyFacts: TQsoMyFacts;
+                         out aSentExchange: AnsiString;
+                         out aUnmatchedContestId: string): boolean;
+begin
+  Result := ReadADIFRecord(sADIF, exch, True, aMyFacts, aSentExchange,
+                           aUnmatchedContestId);
+end;
 
 function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
 var
@@ -11012,6 +11055,16 @@ var
   ignoredSent: AnsiString;
 begin
   Result := ParseADIFRecord(sADIF, exch, ignoredFacts, ignoredSent);
+end;
+
+function ParseSessionADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
+var
+  ignoredFacts: TQsoMyFacts;
+  ignoredSent: AnsiString;
+  ignoredContestId: string;
+begin
+  Result := ReadADIFRecord(sADIF, exch, False, ignoredFacts, ignoredSent,
+                           ignoredContestId);
 end;
 
 function ImportFromADIF(const aFileName: string = ''): boolean;

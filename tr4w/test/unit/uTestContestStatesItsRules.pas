@@ -100,9 +100,9 @@ const
       that already had them and the CQ WW three; the modes by the CQ WW three
       alone. Generated once from the frozen contest matrix's ids; edited by
       hand from then on, only ever DOWN. *)
-   BANDS_NOT_YET_STATED: array[0..153] of string = (
+   BANDS_NOT_YET_STATED: array[0..152] of string = (
       'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB', 'ALRS-UA1DZ-CUP',
-      'AP-SPRINT', 'ARCI', 'ARI-DX', 'ARIZONA QSO PARTY',
+      'AP-SPRINT', 'ARCI', 'ARI-DX',
       'ARKTIKA-SPRING', 'ARRL-DIGI', 'ARRL-DX-CW',
       'ARRL-DX-SSB', 'ARRL-FD', 'ARRL-RTTY', 'ARRL-SS-CW',
       'ARRL-SS-SSB', 'ARRL-VHF-JAN', 'ARRL-VHF-JUN', 'ARRL-VHF-SEP',
@@ -147,10 +147,10 @@ const
       'YUDX'
       );
 
-   MODES_NOT_YET_STATED: array[0..163] of string = (
+   MODES_NOT_YET_STATED: array[0..162] of string = (
       'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB',
       'ALRS-UA1DZ-CUP', 'AP-SPRINT', 'ARCI', 'ARI-DX',
-      'ARIZONA QSO PARTY', 'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-160',
+      'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-160',
       'ARRL-DIGI', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'ARRL-FD',
       'ARRL-RTTY', 'ARRL-VHF-JAN',
       'ARRL-VHF-JUN', 'ARRL-VHF-SEP', 'AS-CHAMP', 'BALTIC',

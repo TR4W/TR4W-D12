@@ -394,11 +394,12 @@ begin
       Exit;
       end;
 
-   (* SEVEN PARTIES: inside the host state (New England, for NEQP) the
+   (* SIX PARTIES (Arizona left on 2026-11-20 -- its exchange carries no
+      serial on either side): inside the host state (New England, for NEQP) the
       domestic-or-DX exchange; outside it the domestic QTH. Tennessee and
       Wisconsin joined by hand on 2026-11-20 (their sponsors' rules take a DX
       country from a station in the state). *)
-   if aContest in [SEVENQP, ArizonaQsoParty, SALMONRUN, TEXASQSOPARTY,
+   if aContest in [SEVENQP, SALMONRUN, TEXASQSOPARTY,
                    NEWENGLANDQSO, TENNESSEEQSOPARTY, WISCONSINQSOPARTY] then
       begin
       if aStation = psHost then
@@ -437,7 +438,11 @@ begin
       ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, COUNTYHUNTER, CQVHF,
       FLORIDAQSOPARTY, JALONGPREFECT, LABRE, POTA, RSGB_ROPOCO_CW,
       RSGB_ROPOCO_SSB, SOUTHAMERICANWW, STEWPERRY, WWL, CQMM, IDAHOQSOPARTY,
-      DELAWAREQSOPARTY, NEBRASKAQSO, BCQP:
+      DELAWAREQSOPARTY, NEBRASKAQSO, BCQP,
+      (* ARIZONA since the 2026-11-20 audit: "Send signal report RS(T) and
+         3-letter county abbreviation" -- no serial on either side of the
+         state line. *)
+      ArizonaQsoParty:
          begin
          Result := 'QTH RST';
          end;
@@ -611,13 +616,15 @@ begin
       for s := Low(TPinStation) to High(TPinStation) do
          begin
          station := PinStation(s, c);
-         if c <> BCQP then
+         if not (c in [BCQP, ArizonaQsoParty]) then
             begin
-            (* THE BC QSO PARTY IS THE ONE DELIBERATE EXCEPTION (2026-11-20
+            (* THE BC QSO PARTY IS A DELIBERATE EXCEPTION (2026-11-20
                audit): its session shape is the D7 RST-QTH-serial one, but
                the sponsor's exchange is RST and district with no serial, so
                its class declares RST and QTH (pinned above and by
-               uTestContestBritishColumbiaQP). *)
+               uTestContestBritishColumbiaQP). THE ARIZONA QSO PARTY is the
+               other, outside Arizona, for the same reason (the same audit:
+               an Arizona station sends RS(T) and its county). *)
             CheckEquals(ExchangeFieldsText(LegacyFields(Kinds(c, station).Exchange)),
                         ExchangeFieldsText(ProgramFields(c, station)),
                         Who(c, s) + ' fields as its session shape marked them');

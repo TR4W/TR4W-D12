@@ -372,10 +372,10 @@ begin
                   '579 DX     '],
                  aSent, aRec);
             end
-         else if aContest in [SALMONRUN, TEXASQSOPARTY] then
+         else if aContest in [SALMONRUN, TEXASQSOPARTY, ArizonaQsoParty] then
             begin
-            (* 2026-11-20: a Washington or Texas entrant's DX station is its
-               DX QTH, the country it sent, when no domestic QTH is held --
+            (* 2026-11-20: a Washington, Texas or Arizona entrant's DX station
+               is its DX QTH, the country it sent, when no domestic QTH is held --
                CabrilloReceivedRSTDomesticQTHOrDXQTH. These records hold no
                DomesticQTH, so every input prints its DX QTH or DX. *)
             Take(aVariant,

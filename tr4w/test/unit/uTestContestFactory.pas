@@ -942,7 +942,9 @@ begin
 
    (* OHIO LEFT THIS LIST at the 2026-11-20 audit: "CW and SSB" -- a digital
       QSO is no mode of the contest. Pinned in uTestContestOhioQP. *)
-   CheckPoints(ArizonaQsoParty, 'Arizona', 2, 1, 1);
+   (* ARIZONA LEFT THIS LIST at the 2026-11-20 audit: "MODES: CW, Phone" --
+      a digital QSO is no mode of the contest. Pinned in
+      uTestContestArizonaQP. *)
 
    (* WISCONSIN LEFT THIS LIST AT #88 round 2 (2026-10-26): its sponsor
       scores digital 2, not the phone value. Pinned in
@@ -1141,29 +1143,30 @@ begin
    CheckPoints(VAQP, 'Virginia', 2, 1, 2);
 end;
 
-(* VIRGINIA'S THIRD ARM, IN BOTH DIRECTIONS.
+(* VIRGINIA'S THIRD ARM -- THE SPONSOR'S, SINCE 2026-11-20.
 
-   The legacy chain is `if PHONE then 1 else if MarineOrAirMobileStation then 3
-   else 2`, and THE ORDER IS THE ASSERTION THAT MATTERS: a maritime-mobile
-   station worked on PHONE scores ONE, not three, because the phone test comes
-   first and returns. A class that tested the callsign first would look more
-   natural and would change a score.
-
-   MarineOrAirMobileStation was lifted from LOGSTUFF into uCallSignRoutines for
-   this class. It is case-SENSITIVE and that is faithful, not an oversight, so
-   the lower-case case is pinned too -- anybody who "fixes" it with an
-   UpperCase will be told they changed a score. *)
+   D7's chain was `if PHONE then 1 else if MarineOrAirMobileStation then 3
+   else 2`: /AM and /MM paid three on CW and digital. The sponsor's rules
+   say "3 points per contact made with a Virginia Mobile, Expedition, or
+   Rover" and nothing about air or maritime mobiles, and NY4I ruled "Check
+   rules" -- so the arm is the sponsor's now: a station signing /M or /R
+   whose credited QTH is a Virginia county or city scores three in ANY
+   mode, phone included; /AM and /MM score by mode. This test pins both
+   directions; uTestContestVirginiaQP drives the rule through the engine. *)
 procedure TContestFactoryTests.Test_VirginiaScoresMarineAndAirMobileAtThree;
 var
    obj: TContestBase;
 
-   function PointsForCall(const aCall: string; aMode: ModeType): integer;
+   function PointsForCall(const aCall: string; aMode: ModeType;
+                          const aQTH: string = ''): integer;
    var
       qso: ContestExchange;
    begin
       FillChar(qso, SizeOf(qso), 0);
       qso.Mode := aMode;
       qso.Callsign := aCall;
+      qso.QTHString := ShortString(aQTH);
+      qso.DomesticQTH := ShortString(aQTH);
       obj.ScoreQSO(qso);
       Result := qso.QSOPoints;
    end;
@@ -1177,31 +1180,24 @@ begin
       Exit;
       end;
    try
-      CheckEquals(3, PointsForCall('K4ABC/MM', CW),
-                  'maritime mobile on CW');
-      CheckEquals(3, PointsForCall('K4ABC/AM', CW),
-                  'air mobile on CW');
-      CheckEquals(3, PointsForCall('K4ABC/MM', Digital),
-                  'maritime mobile on digital -- not a phone contact');
+      (* D7'S ARM IS GONE: air and maritime mobiles score by mode. *)
+      CheckEquals(2, PointsForCall('K4ABC/MM', CW, 'FAX'), 'maritime mobile on CW: 2');
+      CheckEquals(2, PointsForCall('K4ABC/AM', CW, 'FAX'), 'air mobile on CW: 2');
+      CheckEquals(2, PointsForCall('K4ABC/MM', Digital, 'FAX'), 'maritime mobile on digital: 2');
+      CheckEquals(1, PointsForCall('K4ABC/MM', Phone, 'FAX'), 'maritime mobile on phone: 1');
 
-      CheckEquals(2, PointsForCall('K4ABC', CW),
-                  'a plain callsign on CW');
-      CheckEquals(2, PointsForCall('K4ABC/M', CW),
-                  'land mobile is NOT marine or air mobile');
-      CheckEquals(2, PointsForCall('K4ABC/P', CW),
-                  'portable is not either');
+      (* THE SPONSOR'S: a Virginia mobile or rover, three in any mode. *)
+      CheckEquals(3, PointsForCall('K4ABC/M', CW, 'FAX'), 'a Virginia mobile on CW: 3');
+      CheckEquals(3, PointsForCall('K4ABC/M', Phone, 'FAX'), 'and on phone: 3, not 1');
+      CheckEquals(3, PointsForCall('K4ABC/R', Digital, 'FAX'), 'a Virginia rover on digital: 3');
+      CheckEquals(3, PointsForCall('k4abc/m', CW, 'FAX'), 'the suffix test is case-blind');
 
-      (* THE ORDER OF THE CHAIN. *)
-      CheckEquals(1, PointsForCall('K4ABC/MM', Phone),
-                  'phone is tested FIRST -- a /MM phone contact scores one');
-
-      (* Faithful case sensitivity, and the length floor: the legacy routine
-         refuses anything shorter than four characters, so a bare suffix is
-         not a marine station. *)
-      CheckEquals(2, PointsForCall('k4abc/mm', CW),
-                  'the legacy test is case-sensitive and must stay so');
-      CheckEquals(2, PointsForCall('/MM', CW),
-                  'fewer than four characters is refused');
+      (* NOT A VIRGINIA STATION, OR NOT A MOBILE: by mode. *)
+      CheckEquals(2, PointsForCall('K4ABC/M', CW), 'a /M with no Virginia QTH: 2');
+      CheckEquals(2, PointsForCall('K4ABC/M', CW, 'NC'), 'a /M in North Carolina: 2');
+      CheckEquals(2, PointsForCall('K4ABC', CW, 'FAX'), 'a fixed Virginia station on CW: 2');
+      CheckEquals(1, PointsForCall('K4ABC', Phone, 'FAX'), 'and on phone: 1');
+      CheckEquals(2, PointsForCall('K4ABC/P', CW, 'FAX'), 'portable is no mobile');
    finally
       obj.Free;
       end;

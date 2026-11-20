@@ -42,6 +42,7 @@ type
       procedure Test_VirginiaBands;
       procedure Test_VirginiaCountyLineIsOneQSO;
       procedure Test_VirginiaRealEngineDX;
+      procedure Test_VirginiaMobileOrRoverScoresThree;
    end;
 
 implementation
@@ -176,8 +177,58 @@ begin
              'outside Virginia the rule is not asked');
 end;
 
+(* "3 points per contact made with a Virginia Mobile, Expedition, or Rover.
+   ... Mobile, Rover, and Expedition stations must use appropriate suffix in
+   call sign." Through the real engine, both sides of the state line: a /M
+   or /R station in a Virginia county scores 3 in any mode; a /M station in
+   another state, and a /MM station in Virginia, score by mode. *)
+procedure TContestVirginiaQPTests.Test_VirginiaMobileOrRoverScoresThree;
+var
+   engine: TQSOPartyEngine;
+   rx: ContestExchange;
+   accepted: boolean;
+   inState: boolean;
+   prefix: string;
+begin
+   BeginTest('Test_VirginiaMobileOrRoverScoresThree');
+   engine := TQSOPartyEngine.Create(ContestHandleOf(VAQP));
+   try
+      for inState := False to True do
+         begin
+         (* Calls differ between the two halves, so no QSO is a dupe of one
+            the other half logged. *)
+         if inState then
+            begin
+            prefix := 'W4';
+            end
+         else
+            begin
+            prefix := 'K4';
+            end;
+         engine.Activate(inState);
+         engine.Enter(prefix + 'AAA/M', '11 FFX', Band20, Phone, eUSB, accepted, rx);
+         CheckTrue(accepted, 'a Virginia mobile is taken');
+         CheckEquals(3, Integer(rx.QSOPoints), 'a Virginia mobile on phone: 3, not 1');
+         engine.Enter(prefix + 'BBB/R', '12 ACC', Band40, CW, eCW, accepted, rx);
+         CheckTrue(accepted, 'a Virginia rover is taken');
+         CheckEquals(3, Integer(rx.QSOPoints), 'a Virginia rover on CW: 3');
+         engine.Enter(prefix + 'CCC', '13 FFX', Band20, Phone, eUSB, accepted, rx);
+         CheckEquals(1, Integer(rx.QSOPoints), 'a fixed Virginia station on phone: 1');
+         engine.Enter(prefix + 'DDD/MM', '14 FFX', Band20, CW, eCW, accepted, rx);
+         CheckEquals(2, Integer(rx.QSOPoints), 'a /MM station scores by mode -- no sponsor rule');
+         end;
+      engine.Activate(True);
+      engine.Enter('W4EEE/M', '15 NC', Band20, Phone, eUSB, accepted, rx);
+      CheckTrue(accepted, 'a Virginia entrant works a North Carolina mobile');
+      CheckEquals(1, Integer(rx.QSOPoints), 'not a VIRGINIA mobile: phone 1');
+   finally
+      engine.Free;
+   end;
+end;
+
 procedure TContestVirginiaQPTests.RunAllTests;
 begin
+   Test_VirginiaMobileOrRoverScoresThree;
    Test_VirginiaIsNoStateMultiplierInState;
    Test_VirginiaPointsAndModes;
    Test_VirginiaBands;

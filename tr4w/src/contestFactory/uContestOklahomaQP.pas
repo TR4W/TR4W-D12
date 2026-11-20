@@ -265,12 +265,21 @@ begin
    Result := 'Oklahoma QSO Party';
 end;
 
-(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-17).
-   CSV row OK-QSO-PARTY: status candidate. CANDIDATE: dates from NY4I's intake (2026-11-17), the recurrence rule inferred
-   from them; not yet checked against the sponsor's rules. *)
+(* WHEN IT RUNS -- the sponsor's 2026 rules (docs/ContestRules/QSOParties/
+   Oklahoma/OK-QSO-PARTY-Rules.txt): "Saturday March 14 1400 to 0200 UTC,
+   Sunday March 15 1400 to 2200 UTC" -- the 2nd full weekend of March, two
+   sessions. NY4I, 2026-11-20: "Even though the time is split, we consider
+   this one log. The op would stop at 0200 UTC then come back later at 1400
+   UTC." So two clauses of ONE contest: the overnight gap is no period, and
+   the New Contest list keys it on Sunday's 1400 start, as it does every
+   two-session party (Kansas, Georgia). It was one 32-hour envelope, which
+   showed the contest running through the gap. The sponsor's "the entire 19
+   hour period" disagrees with its own times (12 + 8 = 20 hours); the times
+   are what is stated here. *)
 function TContestOklahomaQP.GetSchedule: string;
 begin
-   Result := '2nd full weekend of March at 14:00 UTC for 32h';
+   Result := '2nd full weekend of March at 14:00 UTC for 12h; ' +
+             '2nd full weekend of March +1d at 14:00 UTC for 8h';
 end;
 
 function TContestOklahomaQP.GetHostState: string;

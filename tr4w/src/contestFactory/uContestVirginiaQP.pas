@@ -45,7 +45,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   COUNTY LINES -- "Stations on County or Independent City lines count as one
     QSO and one County/Independent City multiplier." One QSO is one county,
     so GetCountyLineCountiesMax is 0 (Wisconsin's and Michigan's form): an
-    entry naming two counties is refused. The row's CountyLineAllowed boolean
+    entry naming two counties is refused. NY4I, 2026-11-20: "VAQP does not
+    allow county line operations where you get credit for 2 counties." The row's CountyLineAllowed boolean
     was never the source of a number.
 
   BANDS -- "160 meters and up, except no WARC band QSO's permitted."
@@ -63,11 +64,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   POINTS -- "1 point per Phone, 2 points per CW, 2 points per digital mode
     ..., and 3 points per contact made with a Virginia Mobile, Expedition,
-    or Rover." FM is phone. The 3-point rule is NOT built as the sponsor
-    writes it: the class has always paid 3 to an air or maritime mobile
-    (/AM, /MM) on a non-phone mode, which the rules do not say, and the
-    sponsor names no suffix for a Virginia mobile, expedition or rover
-    ("must use appropriate suffix in call sign"). Asked on #88.
+    or Rover." FM is phone. BUILT AS WRITTEN (NY4I, 2026-11-20: "Check
+    rules"): THREE POINTS IN ANY MODE for a station that is (1) in
+    Virginia -- its credited QTH is a Virginia county or city
+    (QSOCreditsHostCounty, the party base's one statement) -- and (2) a
+    mobile or rover by its call -- "Mobile, Rover, and Expedition stations
+    must use appropriate suffix in call sign": /M or /R
+    (uCallSignRoutines.MobileCall / RoverCall), read after any rover county
+    the engine strips (CallWithoutRoverCounty). Phone, CW and digital alike:
+    the 3 replaces the mode's points. The air- and maritime-mobile arm the
+    class carried from D7 (/AM, /MM scored 3 on CW and digital) is GONE: the
+    sponsor names no such rule. NOT BUILT: an EXPEDITION's suffix -- the
+    sponsor names none and no helper exists; an expedition signing /M or /R
+    is paid, one signing anything else scores by mode.
 
   THE RECEIVED COLUMN -- "QTH (Virginia County or Independent City for VA
     stations; State, Province or "DX" for others)": a DX station typed as its
@@ -152,6 +161,9 @@ type
       (* "count as one QSO" -- no county line; the header. *)
       function GetCountyLineCountiesMax: integer; override;
    public
+      (* A VIRGINIA MOBILE OR ROVER -- the three-point station; the header. *)
+      function IsVirginiaMobileOrRover(const aQso: ContestExchange): boolean;
+
       (* Every band but the WARC bands; every mode -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
@@ -197,17 +209,10 @@ uses
    uADIFExchange,
    (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
    uDXMultiplierKey,
-   (* MarineOrAirMobileStation. IT IS NOT IN LOGSTUFF ANY MORE -- it was lifted
-      into this leaf callsign unit on 2026-09-29 so that this class could ask
-      the question without the TRDOS engine in its dependency cone. See the
-      note at the function.
-
-      uCallSignRoutines is the right home rather than a new unit: it already
-      holds MobileCall, RoverCall and CaliforniaCall, which are the same kind
-      of suffix test, it depends on nothing that starts TR4W, and it has its
-      own unit tests. A contest class can still be constructed and asked to
-      score a QSO with no part of the program running, which is the property
-      uContestBase exists to protect. *)
+   (* MobileCall, RoverCall -- the /M and /R suffix tests of the three-point
+      rule. A leaf callsign unit, so a contest class can still be asked to
+      score a QSO with no part of the program running. (Until 2026-11-20 it
+      was MarineOrAirMobileStation, D7's /AM and /MM arm.) *)
    uCallSignRoutines,
    uContestRegistry;
 
@@ -376,35 +381,34 @@ begin
    Result := DXCCCountryMode(HasDXMultiplier);
 end;
 
-(* VAQSOPointMethod -- phone one, an air-mobile or maritime-mobile station
-   three, everything else two:
+(* "3 points per contact made with a Virginia Mobile, Expedition, or Rover"
+   -- the header. One predicate, asked by CalculateQSOPoints and pinned by
+   the tests: the worked station is in Virginia (its credited QTH is a
+   Virginia county or city) and signs /M or /R once any rover county the
+   engine strips is gone. MobileCall and RoverCall are case-blind. *)
+function TContestVirginiaQP.IsVirginiaMobileOrRover(const aQso: ContestExchange): boolean;
+var
+   call: string;
+begin
+   call := CallWithoutRoverCounty(string(aQso.Callsign));
+   Result := (MobileCall(call) or RoverCall(call)) and
+             QSOCreditsHostCounty(aQso);
+end;
 
-     if RXData.Mode = PHONE then 1
-     else if MarineOrAirMobileStation(RXData.Callsign) then 3
-     else 2;
-
-   THE ORDER IS LOAD-BEARING AND IS REPRODUCED EXACTLY. A /MM station worked on
-   PHONE scores ONE, not three -- the phone test comes first and returns. That
-   is what TR4W does today, and this move changes no score.
-
-   SO DIGITAL SCORES TWO, or three for a /AM or /MM station: the first test is
-   PHONE-versus-not, so digital falls into the same arms CW does. Stating that
-   explicitly is the point of the note, because there is no third argument to
-   get wrong here -- the shape is a chain, not a table, and a reader arriving
-   from the FixedModePoints contests would otherwise have to work it out.
-
-   MarineOrAirMobileStation IS CASE-SENSITIVE and requires at least four
-   characters, both faithfully preserved in the lift. 'K4ABC/MM' scores three;
-   'k4abc/mm' does not. *)
+(* PHONE ONE, CW TWO, DIGITAL TWO -- and THREE, in any mode, for a Virginia
+   mobile or rover (IsVirginiaMobileOrRover). FM is phone; anything that is
+   not phone scores two, as the chain below always did. Until 2026-11-20 this was D7's VAQSOPointMethod chain
+   (phone 1, else /AM or /MM 3, else 2), which the sponsor's rules do not
+   state -- the header. *)
 procedure TContestVirginiaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   if aQso.Mode in [Phone, FM] then
-      begin
-      aQso.QSOPoints := 1;
-      end
-   else if MarineOrAirMobileStation(string(aQso.Callsign)) then
+   if IsVirginiaMobileOrRover(aQso) then
       begin
       aQso.QSOPoints := 3;
+      end
+   else if aQso.Mode in [Phone, FM] then
+      begin
+      aQso.QSOPoints := 1;
       end
    else
       begin

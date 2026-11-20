@@ -1363,6 +1363,15 @@ begin
    end;
 end;
 
+(* ORDINAL ORDER OF TWO IDS -- the list below is sorted by it, not by
+   TStringList.Sort: that compares through the locale, and Windows' default
+   word sort ignores a hyphen, so 'ARIZONA QSO PARTY' and 'AR-QSO-PARTY'
+   would order one way on Windows and the other on Linux. *)
+function CompareIdsOrdinal(aList: TStringList; aIndex1, aIndex2: integer): integer;
+begin
+   Result := CompareStr(aList[aIndex1], aList[aIndex2]);
+end;
+
 procedure TContestTotalsTests.Test_OnlyBonusContestsDeclareStations;
 var
    contests: TContestIdentityList;
@@ -1393,7 +1402,7 @@ begin
             contestObject.Free;
          end;
          end;
-      declaring.Sort;
+      declaring.CustomSort(CompareIdsOrdinal);
       joined := '';
       for k := 0 to declaring.Count - 1 do
          begin
@@ -1416,8 +1425,10 @@ begin
          bonus added to the final score. Total of 200 points possible".
          Louisiana at issue 122 (rule 9.5): "Any station working N5LCC ...
          may claim a one-time 100 POINT BONUS". Atlantic Canada at issue
-         116: ten bonus calls, "5 Bonus points once per band and mode". *)
-      CheckEquals('AC-QSO-PARTY|AR-QSO-PARTY|BCQP|IL-QSO-PARTY|KS-QSO-PARTY|KY-QSO-PARTY|LA-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|SC-QSO-PARTY|SD-QSO-PARTY|TENNESSEE QSO PARTY|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
+         116: ten bonus calls, "5 Bonus points once per band and mode".
+         Arizona at the 2026-11-20 audit: "a one-time bonus of 100 points for
+         a QSO with K7A on any band or mode". *)
+      CheckEquals('AC-QSO-PARTY|AR-QSO-PARTY|ARIZONA QSO PARTY|BCQP|IL-QSO-PARTY|KS-QSO-PARTY|KY-QSO-PARTY|LA-QSO-PARTY|MISSOURI QSO PARTY|SALMON RUN|SC-QSO-PARTY|SD-QSO-PARTY|TENNESSEE QSO PARTY|WISCONSIN QSO PARTY|WV-QSO-PARTY', joined,
                   'the contests that declare bonus stations');
    finally
       declaring.Free;

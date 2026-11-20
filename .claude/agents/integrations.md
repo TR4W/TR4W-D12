@@ -45,7 +45,14 @@ server goes Active), so the reply was never the problem.
 CQ decode, STATUS, CLEAR and LOGGED ADIF -- `PostCQDecode` / `PostStatus` /
 `PostClear` / `PostLoggedADIF` copy values into ONE FIFO, and the matching
 `Evaluate*` runs on the main thread and refuses elsewhere (`OffMainThread`).
-`EvaluateLoggedADIF` is the one that LOGS A QSO. Do not add a second queue:
+`EvaluateLoggedADIF` is the one that LOGS A QSO, and it reads the record with
+`MainUnit.ParseSessionADIFRecord`, NOT `ParseADIFRecord` (2026-11-20): WSJT-X
+writes its OVERLAY's `CONTEST_ID` (the Delaware QSO Party's FT8 arrives as
+`ARRL-FIELD-DAY`), and the file import's reader takes the record's contest from
+it -- Field Day's class interpreted the QSO and `uLogStore.AppendQSOOnce`
+rewrote the log's contest row to Field Day. Pinned by
+`uTestContestDelawareQP.Test_DelawareWSJTXFieldDayRecordStaysDelaware`.
+Do not add a second queue:
 the one order is what keeps a QSO's LOGGED message beside the STATUS and decodes
 around it, and the entry-field work an evaluation starts is queued behind it.
 **A logged QSO is never dropped:** `Stop` (main thread, listener already down)
