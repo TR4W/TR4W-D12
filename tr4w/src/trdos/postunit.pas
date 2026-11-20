@@ -672,7 +672,8 @@ function ZoneSentForThisContest(aContest: TContestBase): string;
   (QTHString). D7's PostUnit made exactly that choice on exactly that flag.
 
   THE FLAG IS THE SESSION'S SETTING, Settings.Contest.LiteralDomesticQth --
-  NOT a class answer. Fifteen contests state it in DescribeSession, and
+  NOT a class answer. The contests that want the logged text state it in
+  DescribeSession, and
   FCONTEST.ApplySessionDefaults writes their statement into that setting; the
   operator may also state LITERAL DOMESTIC QTH himself, and a later line wins
   as for every session default. So the setting is the RESOLVED answer, and it
@@ -682,10 +683,15 @@ function ZoneSentForThisContest(aContest: TContestBase): string;
   the setting replaced it (c6131d81, 2026-09-12), so every one of those
   contests exported the resolved multiplier.
 
-  WWDIGI's own QTHString is TContestWWDigi's override since M4. LABRE and
-  EURASIA have no ContestType of those names and are told by the session's
-  name; the RF Cups state LITERAL DOMESTIC QTH as well, so their arm is a
-  second statement of that rule, kept as it stood. *)
+  WWDIGI's own QTHString is TContestWWDigi's override since M4.
+
+  NO CONTEST IS NAMED HERE (2026-11-20). Three arms forced the logged text
+  by contest: `Settings.Contest.Name = 'LABRE'`, `Contest in [CUPRFCW,
+  CUPRFSSB]` and `Settings.Contest.Name = 'EURASIA'`. LABRE states LITERAL
+  DOMESTIC QTH in its DescribeSession now; the RF Cups always did, so theirs
+  was a second statement; and EURASIA is the European VHF contest under
+  another CONTEST NAME, which counts no domestic multiplier, so the branch
+  below already wrote what was logged. Pinned by uTestCabrilloReceivedQTH. *)
 function CabrilloReceivedQTH( aCountsDomesticMultiplier: boolean;
                               const aQso: ContestExchange ): string;
 begin
@@ -695,26 +701,12 @@ begin
          begin
          Result := string( aQso.QTHString );
          end
-      else if Settings.Contest.Name = 'LABRE' then
-         begin
-         Result := string( aQso.QTHString );
-         end
       else
          begin
          Result := string( aQso.DomesticQTH );
          end;
       end
    else
-      begin
-      Result := string( aQso.QTHString );
-      end;
-
-   if LegacyContestOf( Contest ) in [ CUPRFCW, CUPRFSSB ] then
-      begin
-      Result := string( aQso.QTHString );
-      end;
-
-   if Settings.Contest.Name = 'EURASIA' then
       begin
       Result := string( aQso.QTHString );
       end;

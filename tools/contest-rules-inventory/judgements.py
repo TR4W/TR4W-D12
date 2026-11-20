@@ -258,10 +258,11 @@ SHAPE3 = [
    # unit (Q91, 2026-10-14).
    # postunit's `Settings.Contest.Name = 'WWDIGI'` went at M4 (2026-10-01):
    # TContestWWDigi chooses its own received QTH.
-   ("tr4w/src/trdos/postunit.pas", r"Settings\.Contest\.Name\s*=\s*'LABRE'", 1, ["LABRE"],
-    "`Settings.Contest.Name = 'LABRE'`"),
-   ("tr4w/src/trdos/postunit.pas", r"Settings\.Contest\.Name\s*=\s*'EURASIA'", 1, [],
-    "`Settings.Contest.Name = 'EURASIA'` -- see dead code"),
+   # postunit's `Settings.Contest.Name = 'LABRE'` and `= 'EURASIA'` went
+   # 2026-11-20, with `Contest in [CUPRFCW, CUPRFSSB]`: CabrilloReceivedQTH
+   # names no contest. LABRE states LITERAL DOMESTIC QTH in DescribeSession,
+   # the RF Cups always did, and European VHF (EURASIA by CONTEST NAME)
+   # counts no domestic multiplier.
    ("tr4w/src/uCallSignRoutines.pas", r"^\s*if\s+Call\s*=\s*'RAEM'", 1, ["RAEM"],
     "`Call = 'RAEM'` accepted as a callsign"),
    # Missouri's W0MA / K0GQ bonus-call test moved onto its class as declared

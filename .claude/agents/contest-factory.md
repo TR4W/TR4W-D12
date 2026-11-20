@@ -1496,11 +1496,18 @@ the target shape, the M-step migration order and the open questions.
   one that only changes an input copies the context and calls the helper
   itself (there is no `inherited` to call).
   No contest is named in PostUnit's ADIF tail any more (ARRL 160 left at
-  M7b, POTA with its class); CUP RF's his-QTH, LABRE/EURASIA and the
-  `'TRC'`/`'PGA'` tests stay in the Cabrillo writer. **The his-QTH decision
-  is `PostUnit.CabrilloReceivedQTH`** (issue #109, 2026-10-26): with LITERAL
+  M7b, POTA with its class); the `'TRC'`/`'PGA'` tests (no contest named)
+  are `uCabrilloExchange`'s and `uADIFExchange`'s. **The his-QTH decision
+  is `PostUnit.CabrilloReceivedQTH`** (issue #109, 2026-10-26), and since
+  2026-11-20 it NAMES NO CONTEST: its `'LABRE'` / `'EURASIA'` name tests and
+  `Contest in [CUPRFCW, CUPRFSSB]` are deleted -- LABRE states LITERAL
+  DOMESTIC QTH in its `DescribeSession`, the RF Cups always did, and EURASIA
+  is European VHF under another CONTEST NAME, which counts no domestic
+  multiplier (a `DescribeSession` cannot see that name: FoundContest sets
+  `Settings.Contest.Name := CMD` before it runs). Pinned by
+  `uTestCabrilloReceivedQTH`. With LITERAL
   DOMESTIC QTH -- the SESSION setting `Settings.Contest.LiteralDomesticQth`,
-  which FCONTEST fills from the 15 classes' `DescribeSession` and the operator
+  which FCONTEST fills from the classes' `DescribeSession` and the operator
   may state, and which the log window reads too -- it writes `QTHString`, else
   the resolved `DomesticQTH` (D7's rule). It read LOGDOM's global, unwritten
   since 2026-09-12, so NAQP exported "vE3" for ON and "Ct" for CT; that global

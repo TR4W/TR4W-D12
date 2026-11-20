@@ -371,6 +371,15 @@ begin
    aSession.CQExchangeCW := '5NN' + aStation.MyState;
    aSession.SPExchangeCW := '5NN' + aStation.MyState;
    aSession.QSLCW := '73 \ ';
+   (* THE RECEIVED QTH IS SHOWN AND EXPORTED AS LOGGED (2026-11-20). PostUnit's
+     Cabrillo writer said so for this contest by its NAME --
+     `Settings.Contest.Name = 'LABRE'` in CabrilloReceivedQTH, since D7 -- and
+     that arm is deleted for this statement, which the writer and the log
+     window read through LITERAL DOMESTIC QTH. A PY station's state is its own
+     brazil.dom key, so only a DX station's column differs from the resolved
+     reading. As for every contest that states it, an operator's later
+     LITERAL DOMESTIC QTH = FALSE now wins; the name arm overrode it. *)
+   aSession.LiteralDomesticQTH := True;
 end;
 
 (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two

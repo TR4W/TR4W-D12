@@ -1600,7 +1600,10 @@ the reason beside it.
 
 **NOT MOVED, AND WHY.** The CUP RF CW/SSB his-QTH test in the Cabrillo writer
 (two classes and the CupRF distance table for one line, and it leaves out
-CUP RF DIGITAL -- Q23); LABRE's and EURASIA's `Settings.Contest.Name` tests and
+CUP RF DIGITAL -- Q23); LABRE's and EURASIA's `Settings.Contest.Name` tests
+(*all three moved 2026-11-20: LABRE states LITERAL DOMESTIC QTH, the RF Cups
+already did, European VHF -- EURASIA -- counts no domestic multiplier;
+`PostUnit.CabrilloReceivedQTH` names no contest*) and
 the shared arms' `'TRC'` / `'PGA'` tests (no ContestType -- Q8); the Cabrillo
 headers and Winter Field Day's FM mode string (M9); the summary sheet (M6, M9).
 
