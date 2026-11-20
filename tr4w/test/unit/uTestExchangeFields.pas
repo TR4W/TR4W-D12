@@ -394,10 +394,12 @@ begin
       Exit;
       end;
 
-   (* FIVE PARTIES: inside the host state (New England, for NEQP) the
-      domestic-or-DX exchange; outside it the domestic QTH. *)
+   (* SEVEN PARTIES: inside the host state (New England, for NEQP) the
+      domestic-or-DX exchange; outside it the domestic QTH. Tennessee and
+      Wisconsin joined by hand on 2026-11-20 (their sponsors' rules take a DX
+      country from a station in the state). *)
    if aContest in [SEVENQP, ArizonaQsoParty, SALMONRUN, TEXASQSOPARTY,
-                   NEWENGLANDQSO] then
+                   NEWENGLANDQSO, TENNESSEEQSOPARTY, WISCONSINQSOPARTY] then
       begin
       if aStation = psHost then
          begin
@@ -418,8 +420,8 @@ begin
       IOTA, MICHQSOPARTY, MOQSOPARTY, NCQSOPARTY, NRAUBALTICCW,
       NRAUBALTICSSB, OHIOQSOPARTY, OKDX, PACC, CANADA_WINTER, RADIOVHFFD,
       RDA, RSGB18, RUSSIANDX, SPDX, TOEC, UBACW, UBASSB, UKRAINIAN, DARCXMAS,
-      WAG, WISCONSINQSOPARTY, YODX, RU3AXMEMORIAL, ARKTIKA_SPRING, UNDX,
-      NYQP, KINGOFSPAINCW, KINGOFSPAINSSB, TENNESSEEQSOPARTY, PCC, DARC10M,
+      WAG, YODX, RU3AXMEMORIAL, ARKTIKA_SPRING, UNDX,
+      NYQP, KINGOFSPAINCW, KINGOFSPAINSSB, PCC, DARC10M,
       REFCW, REFSSB, OZHCRVHF, CANADA_DAY, ARRL_RTTY_ROUNDUP, CQIR,
       ALRS_UA1DZ_CUP, INQSOPARTY, OKOMSSB, BCQP, IN7QPNE, RTC:
          begin

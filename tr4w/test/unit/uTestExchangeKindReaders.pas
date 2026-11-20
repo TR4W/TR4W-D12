@@ -491,8 +491,15 @@ begin
                      Who(c, s) + ' Precedence column as the shape showed it');
          CheckTrue(LegacyColumns(c, station) = ProgramCheckColumn(c, station),
                      Who(c, s) + ' Check column as the shape showed it');
-         CheckEquals(LegacyMessages(c, station), ProgramMessages(c, station),
-                     Who(c, s) + ' messages as the shape chose them');
+         (* TENNESSEE AND WISCONSIN IN STATE, by hand 2026-11-20: they take a
+            DX country now (the domestic-or-DX shape, which had no default
+            messages) and KEEP their default exchange messages, which are
+            pinned in Test_EveryContestWritesItsPinnedExchangeMessages. *)
+         if not ((c in [TENNESSEEQSOPARTY, WISCONSINQSOPARTY]) and (s = psHost)) then
+            begin
+            CheckEquals(LegacyMessages(c, station), ProgramMessages(c, station),
+                        Who(c, s) + ' messages as the shape chose them');
+            end;
          CheckTrue(LegacyGrid(c, station) = ProgramGrid(c, station),
                      Who(c, s) + ' grid reading as the shape allowed it');
          Inc(checked);

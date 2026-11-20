@@ -218,7 +218,7 @@ const
    (* WRITTEN BY HAND FROM THE OLD CASE AND RUN GREEN AGAINST IT -- see the
       unit header. Every one of the 79 DX contests has a row that gives a
       key, and every station branch its rule has. *)
-   KEY_PINS: array[0..172] of TKeyPin = (
+   KEY_PINS: array[0..181] of TKeyPin = (
       (* EVERY COUNTRY, AT EVERY STATION -- the old ARRLDXCC / CQDXCC kinds,
          the case's `else`. *)
       (Contest: ARRL_RTTY_ROUNDUP;       Station: psUS; Qso: pqW1AW; Assigns: True; Key: 'K'),
@@ -322,7 +322,9 @@ const
       (Contest: IDAHOQSOPARTY;           Station: psHost; Qso: pqVE3;  Assigns: False; Key: ''),
       (Contest: IDAHOQSOPARTY;           Station: psUS;   Qso: pqJA1;  Assigns: True;  Key: 'JA'),
       (Contest: SALMONRUN;               Station: psHost; Qso: pqW1AW; Assigns: False; Key: ''),
-      (Contest: SALMONRUN;               Station: psHost; Qso: pqKH6;  Assigns: True;  Key: 'KH6'),
+      (Contest: SALMONRUN;               Station: psHost; Qso: pqPY2;  Assigns: True;  Key: 'PY'),
+      (* "Alaska and Hawaii count as states": KH6 is no DX entity (2026-11-20). *)
+      (Contest: SALMONRUN;               Station: psHost; Qso: pqKH6;  Assigns: False; Key: ''),
       (Contest: SALMONRUN;               Station: psUS;   Qso: pqKH6;  Assigns: False; Key: ''),
 
       (* EVERY COUNTRY BUT THE USA, CANADA, HAWAII AND ALASKA. Delaware, 7QP
@@ -353,6 +355,15 @@ const
       (Contest: TEXASQSOPARTY;           Station: psHost; Qso: pqVE3;  Assigns: False; Key: ''),
       (Contest: TEXASQSOPARTY;           Station: psHost; Qso: pqPY2;  Assigns: True;  Key: 'PY'),
       (Contest: TEXASQSOPARTY;           Station: psDX;   Qso: pqPY2;  Assigns: False; Key: ''),
+      (* Tennessee and Virginia, built 2026-11-20: the host state only. *)
+      (Contest: TENNESSEEQSOPARTY;       Station: psHost; Qso: pqVE3;  Assigns: False; Key: ''),
+      (Contest: TENNESSEEQSOPARTY;       Station: psHost; Qso: pqKL7;  Assigns: False; Key: ''),
+      (Contest: TENNESSEEQSOPARTY;       Station: psHost; Qso: pqPY2;  Assigns: True;  Key: 'PY'),
+      (Contest: TENNESSEEQSOPARTY;       Station: psDX;   Qso: pqPY2;  Assigns: False; Key: ''),
+      (Contest: VAQP;                    Station: psHost; Qso: pqVE3;  Assigns: False; Key: ''),
+      (Contest: VAQP;                    Station: psHost; Qso: pqKL7;  Assigns: False; Key: ''),
+      (Contest: VAQP;                    Station: psHost; Qso: pqPY2;  Assigns: True;  Key: 'PY'),
+      (Contest: VAQP;                    Station: psDX;   Qso: pqPY2;  Assigns: False; Key: ''),
 
       (* EVERY COUNTRY BUT ITALY: the first letter of the country, so an
          empty country (byte 1 of an empty field) still counts, with an
@@ -444,7 +455,7 @@ const
       six ARRL kinds, CQ (DXCC + WAE) for every other, NO DX MULTIPLIER
       INCLUDED; so a station that runs none gets the CQ list, and the North
       American kind, whatever its name, gets CQ. *)
-   MODE_PINS: array[0..43] of TModePin = (
+   MODE_PINS: array[0..47] of TModePin = (
       (Contest: ARRLDXCW;          Station: psUS;   Mode: ARRLCountryMode),
       (Contest: ARRLDXCW;          Station: psVE;   Mode: ARRLCountryMode),
       (Contest: ARRLDXCW;          Station: psDX;   Mode: CQCountryMode),
@@ -471,7 +482,11 @@ const
       (Contest: TEXASQSOPARTY;     Station: psUS;   Mode: CQCountryMode),
       (Contest: SALMONRUN;         Station: psHost; Mode: ARRLCountryMode),
       (Contest: SALMONRUN;         Station: psUS;   Mode: CQCountryMode),
-      (Contest: ARRL160;           Station: psUS;   Mode: ARRLCountryMode),
+      (Contest: TENNESSEEQSOPARTY; Station: psHost; Mode: ARRLCountryMode),
+      (Contest: TENNESSEEQSOPARTY; Station: psUS;   Mode: CQCountryMode),
+      (Contest: VAQP;              Station: psHost; Mode: ARRLCountryMode),
+      (Contest: VAQP;              Station: psUS;   Mode: CQCountryMode),
+      (Contest: ARRL160;          Station: psUS;   Mode: ARRLCountryMode),
       (Contest: ARRL160;           Station: psDX;   Mode: CQCountryMode),
       (Contest: ARRL10;            Station: psDX;   Mode: ARRLCountryMode),
       (Contest: WINTERFIELDDAY;    Station: psUS;   Mode: ARRLCountryMode),
@@ -547,7 +562,8 @@ const
       (* psDX DL1AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, WAG],
       (* psHost K1AAA *) DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB,
                                           DARCWAEDCCW, DARCWAEDCSSB, DELAWAREQSOPARTY, NEBRASKAQSO,
-                                          NEWENGLANDQSO, SALMONRUN, SEVENQP, TEXASQSOPARTY],
+                                          NEWENGLANDQSO, SALMONRUN, SEVENQP, TENNESSEEQSOPARTY,
+                                          TEXASQSOPARTY, VAQP],
       (* psPA PA3AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, PACC],
       (* psJA JA1AAA *)  DX_EVERYWHERE + [ALLASIANCW, ALLASIANSSB, ALRS_UA1DZ_CUP,
                                           DARCWAEDCCW, DARCWAEDCSSB, JIDXCW, JIDXSSB],
@@ -572,7 +588,8 @@ const
       NEBRASKAQSO, NEWENGLANDQSO, RADIOYOC, RDA, RU3AXMEMORIAL,
       (* RUSSIANDX left it with Q131 (2026-10-22): rule 9 of the 2027 rules
          counts DXCC + WAE -- the CQ list -- at every station. *)
-      SACCW, SACSSB, SALMONRUN, SEVENQP, TEXASQSOPARTY, UNDX, WINTERFIELDDAY,
+      SACCW, SACSSB, SALMONRUN, SEVENQP, TENNESSEEQSOPARTY, TEXASQSOPARTY, UNDX,
+      VAQP, WINTERFIELDDAY,
       WRTC, YBDX, YODX, YOUTHCHAMPIONSHIPRF, YUDX];
 
 (* The handle form is the registry walk's: a contest registered by its id

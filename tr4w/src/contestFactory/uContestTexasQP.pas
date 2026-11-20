@@ -38,16 +38,35 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Since 2026-10-19 the CONTEST: line is WA7BNM's TXQP (see GetCabrilloName).
 
   NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
-  TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- which is exactly
-  what TR4W does today, because nothing in the program has ever counted the
-  queued counties.
+  TContestStateQSOPartyBase's CountyLineCountiesUnlimited. The sponsor writes
+  "a county line or junction between 2 or more Texas counties, a separate QSO
+  and exchange must be logged for each county", which names no limit.
 
-  THAT IS "NOT LOOKED UP YET", NOT "UNLIMITED BY DECISION", and the difference
-  matters: a number here would have to come from the sponsor's published rules,
-  the way Florida's two and California's four did. It must NOT be derived from
-  ContestsArray's CountyLineAllowed boolean, which carries no limit at all --
-  reading it as a number is the defect that made a class of any kind start
-  refusing a two-QTH exchange.
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (2026-11-20; the text is
+  docs/ContestRules/QSOParties/Texas/TX-QSO-PARTY-Rules.txt):
+
+  POINTS -- "Count two (2) points per phone QSO ... three (3) points per CW
+    and other digital mode QSOs": CW 3, digital 3, phone 2. FM is a voice
+    mode and scores with phone. (The legacy arm scored digital the phone
+    value.)
+
+  BANDS -- "Operation on all Amateur bands is permitted, except on 60 meters,
+    30 meters, 17 meters and 12 meters." UsesBand; cfVHFBandsEnabled.
+
+  MODES -- "Digital modes must be capable of sending and receiving the full
+    contest exchange": NY4I's standing reading of that wording (issues 88 and
+    122, 2026-11-19) is every digital submode but FT8, FT4 and FT2.
+
+  THE RECEIVED COLUMN of a DX station, for a Texas entrant, is its typed
+    entity (CabrilloReceivedRSTDomesticQTHOrDXQTH); CabrilloReceivedRSTQTHOrDXQTH
+    tests QTHString and printed an empty column for a typed "599 DL".
+
+  NOT BUILT, listed on #88: the 500-point bonus for each Texas mobile worked
+    in five counties (the sponsor's wording of the mobile line is garbled and
+    which stations are mobiles is not in the log), and the Texas mobile's
+    1000 points per county with five QSOs (the entrant's category and county
+    do not reach scoring, #133).
  *)
 unit uContestTexasQP;
 
@@ -118,6 +137,11 @@ type
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* Every band but 60, 30, 17 and 12 m, and every digital submode but
+         FT8, FT4 and FT2 -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -167,7 +191,6 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uContestFixedPoints,   (* FixedModePoints *)
    (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
    uDXMultiplierKey,
    uContestRegistry;
@@ -325,7 +348,7 @@ function TContestTexasQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchan
 begin
    if CountsDXMultiplier then
       begin
-      Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
       end
    else
       begin
@@ -340,15 +363,52 @@ end;
 
 function TContestTexasQP.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode];
+   (* The VHF bands are credited -- the header. *)
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
 end;
 
-(* TwoPhoneThreeCW -- `if Mode = CW then 3 else 2`, so DIGITAL scores the
-   PHONE value. That is why the third number is stated rather than left to
-   a CW-versus-not test, which would be wrong here and silent about it. *)
+(* "Count two (2) points per phone QSO ... three (3) points per CW and other
+   digital mode QSOs." A case, not FixedModePoints: FM is phone here, and
+   that helper files FM with "everything else". A QSO off the bands or modes
+   never reaches here. *)
 procedure TContestTexasQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 2, 2);
+   case aQso.Mode of
+      Phone, FM:
+         begin
+         aQso.QSOPoints := 2;
+         end;
+      else
+         begin
+         aQso.QSOPoints := 3;
+         end;
+      end;
+end;
+
+function TContestTexasQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10,
+                       Band6, Band2, Band222, Band432, Band902, Band1296,
+                       Band2304, Band3456, Band5760, Band10G, Band24G,
+                       BandLight];
+end;
+
+function TContestTexasQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as

@@ -332,6 +332,14 @@ function CabrilloReceivedQSONumberQTH(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       const aCtx: TCabrilloQSOContext): string;
 
+(* Serial, his-QTH when the record holds a DOMESTIC QTH, else 'DX':
+   '%-4.4u %-6s'. The Virginia QSO Party's column ("State, Province or "DX"
+   for others"); CabrilloReceivedQSONumberQTH prints the exporter's HisQTH,
+   which is empty for a DX station typed as its country. *)
+function CabrilloReceivedQSONumberDomesticQTHOrDX(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+
 (* His-QTH, serial (the Ukraine Championship and the Ural Cup put the QTH
    first): '%-4s %-6.4u'. *)
 function CabrilloReceivedQTHQSONumber(const aMy: TMyStationExchange;
@@ -383,6 +391,16 @@ function CabrilloReceivedRSTQTHDX(const aMy: TMyStationExchange;
 function CabrilloReceivedQTHDX(const aMy: TMyStationExchange;
                                const aQso: ContestExchange;
                                const aCtx: TCabrilloQSOContext): string;
+
+(* His-QTH when the record holds a DOMESTIC QTH, else 'DX', and NO RST:
+   '%-7s'. The location-only column for a party whose exchange accepts a DX
+   station's typed entity (the Wisconsin QSO Party's in-state entrant, whose
+   sponsor writes "should show 'DX'"). CabrilloReceivedQTHDX tests QTHString,
+   so a typed "DL" there leaves the column as the exporter's HisQTH -- empty
+   unless LITERAL DOMESTIC QTH. *)
+function CabrilloReceivedDomesticQTHOrDX(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
 
 (* RST and his-QTH -- when the QSO has none, its DX QTH, or 'DX':
    '%-3s %-7s'. *)
@@ -1007,23 +1025,44 @@ begin
   Result := SysUtils.Format('%-3s %-7s', [aCtx.RSTReceived, qth]);
 end;
 
-(* RST and HisQTH when the record holds a DomesticQTH, else aNotDomestic --
-   the one statement of "domestic is the DomesticQTH field" the two helpers
-   below share (issue 333). *)
+(* HisQTH when the record holds a DomesticQTH, else aNotDomestic -- the one
+   statement of "domestic is the DomesticQTH field" the helpers below share
+   (issue 333). *)
+function DomesticQTHOr(const aQso: ContestExchange;
+                       const aCtx: TCabrilloQSOContext;
+                       const aNotDomestic: string): string;
+begin
+  Result := aCtx.HisQTH;
+  if aQso.DomesticQTH = '' then
+     begin
+     Result := aNotDomestic;
+     end;
+end;
+
+(* The same with the RST in front. *)
 function RSTAndDomesticQTHOr(const aQso: ContestExchange;
                              const aCtx: TCabrilloQSOContext;
                              const aNotDomestic: string): string;
-var
-  qth: string;
 begin
-  qth := aCtx.HisQTH;
-  if aQso.DomesticQTH = '' then
-     begin
-     qth := aNotDomestic;
-     end;
   (* UnicodeFormat: FPC 3.2.2's SysUtils.Format takes AnsiString, and this
      unit's strings are UnicodeString -- no narrowing added. *)
-  Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, qth]);
+  Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived,
+                                        DomesticQTHOr(aQso, aCtx, aNotDomestic)]);
+end;
+
+function CabrilloReceivedDomesticQTHOrDX(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := UnicodeFormat('%-7s', [DomesticQTHOr(aQso, aCtx, 'DX')]);
+end;
+
+function CabrilloReceivedQSONumberDomesticQTHOrDX(const aMy: TMyStationExchange;
+                                                  const aQso: ContestExchange;
+                                                  const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := UnicodeFormat('%-4.4u %-6s', [aQso.NumberReceived,
+                                          DomesticQTHOr(aQso, aCtx, 'DX')]);
 end;
 
 function CabrilloReceivedRSTDomesticQTHOrDX(const aMy: TMyStationExchange;

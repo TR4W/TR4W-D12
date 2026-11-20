@@ -38,17 +38,47 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   THE ONLY ONE OF THESE FOUR WHOSE POINTS DEPEND ON THE CALLSIGN'S SHAPE -- see
   the note on CalculateQSOPoints.
 
-  NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
-  TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- exactly what TR4W
-  does today, because nothing in the program has ever counted the queued
-  counties.
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (2026-11-20; the text is
+  docs/ContestRules/QSOParties/Virginia/VA-QSO-PARTY-Rules.txt):
 
-  ITS ROW CARRIES NO CountyLineAllowed FIELD AT ALL, so the array's boolean
-  reads False. THAT MEANS UNKNOWN, NOT ZERO. Nobody has looked the rule up; a
-  number here would have to come from the sponsor's published rules the way
-  Florida's two and California's four did. Deriving one from the boolean is the
-  defect that made a contest start refusing a two-QTH exchange the moment it
-  got a class.
+  COUNTY LINES -- "Stations on County or Independent City lines count as one
+    QSO and one County/Independent City multiplier." One QSO is one county,
+    so GetCountyLineCountiesMax is 0 (Wisconsin's and Michigan's form): an
+    entry naming two counties is refused. The row's CountyLineAllowed boolean
+    was never the source of a number.
+
+  BANDS -- "160 meters and up, except no WARC band QSO's permitted."
+    UsesBand; cfVHFBandsEnabled (the suggested frequencies include 6 m to
+    70 cm).
+
+  MODES -- "Phone, CW, Digital" with no exception: UsesMode credits them all,
+    FM as phone.
+
+  MULTIPLIERS (once overall) -- a Virginia entrant counts the counties and
+    cities, the states but Virginia, the provinces and "DX entities. No extra
+    DX multiplier for U.S. (including Alaska and Hawaii), Virginia, and
+    Canada": the DX multiplier, in state only, every entity but K, VE, KH6
+    and KL. An entrant elsewhere counts the counties and cities alone.
+
+  POINTS -- "1 point per Phone, 2 points per CW, 2 points per digital mode
+    ..., and 3 points per contact made with a Virginia Mobile, Expedition,
+    or Rover." FM is phone. The 3-point rule is NOT built as the sponsor
+    writes it: the class has always paid 3 to an air or maritime mobile
+    (/AM, /MM) on a non-phone mode, which the rules do not say, and the
+    sponsor names no suffix for a Virginia mobile, expedition or rover
+    ("must use appropriate suffix in call sign"). Asked on #88.
+
+  THE RECEIVED COLUMN -- "QTH (Virginia County or Independent City for VA
+    stations; State, Province or "DX" for others)": a DX station typed as its
+    country exports DX (CabrilloReceivedQSONumberDomesticQTHOrDX); the plain
+    helper printed the exporter's HisQTH, empty for it.
+
+  NOT BUILT: the 100 points per county or city of a Virginia mobile, rover
+    or expedition and its expedition multiplier (the entrant's category and
+    county do not reach scoring, #133), and the one-time 50 points of each
+    "VA QSO Party Bonus Station" (the list is on the sponsor's web site, not
+    in the rules).
  *)
 unit uContestVirginiaQP;
 
@@ -118,10 +148,23 @@ type
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* "count as one QSO" -- no county line; the header. *)
+      function GetCountyLineCountiesMax: integer; override;
    public
+      (* Every band but the WARC bands; every mode -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+   public
+      (* THE DX MULTIPLIER, IN STATE ONLY -- the header. *)
+      function HasDXMultiplier: boolean; override;
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      function CountryMode: CountryModeType; override;
    public
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
@@ -152,6 +195,8 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
    (* MarineOrAirMobileStation. IT IS NOT IN LOGSTUFF ANY MORE -- it was lifted
       into this leaf callsign unit on 2026-09-29 so that this class could ask
       the question without the TRDOS engine in its dependency cone. See the
@@ -271,7 +316,16 @@ function TContestVirginiaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExc
                                                         const aQso: ContestExchange;
                                                         const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedQSONumberQTH(aMy, aQso, aCtx);
+   (* In state a DX station's typed country is written as DX; an entrant
+      elsewhere works Virginia stations only. *)
+   if Station.InHostState then
+      begin
+      Result := CabrilloReceivedQSONumberDomesticQTHOrDX(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloReceivedQSONumberQTH(aMy, aQso, aCtx);
+      end;
 end;
 
 function TContestVirginiaQP.GetInStateDomesticFileName: string;
@@ -281,7 +335,45 @@ end;
 
 function TContestVirginiaQP.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode];
+   (* The VHF bands are credited -- the header. *)
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
+end;
+
+function TContestVirginiaQP.GetCountyLineCountiesMax: integer;
+begin
+   Result := 0;
+end;
+
+(* "160 meters and up, except no WARC band QSO's permitted." *)
+function TContestVirginiaQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10,
+                       Band6, Band2, Band222, Band432, Band902, Band1296,
+                       Band2304, Band3456, Band5760, Band10G, Band24G,
+                       BandLight];
+end;
+
+(* "Phone, CW, Digital": every submode of each; FM is phone. *)
+function TContestVirginiaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone, FM, Digital];
+end;
+
+(* THE DX MULTIPLIER -- a Virginia entrant's only. *)
+function TContestVirginiaQP.HasDXMultiplier: boolean;
+begin
+   Result := Station.InHostState;
+end;
+
+function TContestVirginiaQP.DXMultiplierKey(const aQso: ContestExchange;
+                                            out aKey: DXMultiplierString): boolean;
+begin
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(HasDXMultiplier, aQso, aKey);
+end;
+
+function TContestVirginiaQP.CountryMode: CountryModeType;
+begin
+   Result := DXCCCountryMode(HasDXMultiplier);
 end;
 
 (* VAQSOPointMethod -- phone one, an air-mobile or maritime-mobile station
@@ -306,7 +398,7 @@ end;
    'k4abc/mm' does not. *)
 procedure TContestVirginiaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   if aQso.Mode = Phone then
+   if aQso.Mode in [Phone, FM] then
       begin
       aQso.QSOPoints := 1;
       end

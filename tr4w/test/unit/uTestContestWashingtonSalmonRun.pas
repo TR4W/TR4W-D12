@@ -26,9 +26,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     * at most 10 DXCC multipliers, and only the DX kind is capped;
     * Washington is not one of a Washington entrant's 49 states.
 
-  KH6 and KL7 are not pinned here: they count as a state AND as DX today,
-  and the sponsor's "Alaska and Hawaii count as states" is not yet ruled
-  on (#88). The W7DX bonus is pinned in uTestContestTotals. *)
+  KH6 and KL7 are states, not DX (2026-11-20: "Alaska and Hawaii count as
+  states"; the key is pinned in uTestDXMultiplierKey). The W7DX bonus is
+  pinned in uTestContestTotals and, off the contest bands, here. *)
 unit uTestContestWashingtonSalmonRun;
 
 {$I ..\..\src\tr4w.inc}
@@ -45,6 +45,9 @@ type
    private
       procedure Test_SalmonRunScoresAtMostTenDXMultipliers;
       procedure Test_SalmonRunWashingtonIsNoStateMultiplierInState;
+      procedure Test_SalmonRunBands;
+      procedure Test_SalmonRunW7DXNeedsAContestBand;
+      procedure Test_SalmonRunRealEngineDX;
    end;
 
 implementation
@@ -53,8 +56,82 @@ uses
    SysUtils,
    VC,
    uContestBase,
+   uContestRegistry,
    uTestContestObjects,
+   uTestQSOPartyEngine,
    uTestQSOPartyRules;
+
+(* "Contest Bands: 160, 80, 40, 20, 15, 10, and 6 meters. No contacts on 60,
+   30, 17, or 12 meters are allowed." *)
+procedure TContestWashingtonSalmonRunTests.Test_SalmonRunBands;
+var
+   identity: TContestBase;
+   b: BandType;
+begin
+   BeginTest('Test_SalmonRunBands');
+   identity := ContestIdentity(SALMONRUN);
+   CheckTrue(identity.VHFBandsEnabled, '6 m can be reached');
+   for b := Low(BandType) to High(BandType) do
+      begin
+      if not (b in [AllBands, NoBand]) then
+         begin
+         CheckTrue(identity.UsesBand(b) = (b in [Band160, Band80, Band40, Band20, Band15, Band10, Band6]),
+                   'band ' + IntToStr(Ord(b)) + ' is credited exactly on the contest bands');
+         end;
+      end;
+   CheckEquals(3, PartyPoints(SALMONRUN, True, Band6, CW, eCW), '6 m CW scores');
+   CheckEquals(0, PartyPoints(SALMONRUN, True, Band30, CW, eCW), '30 m scores nothing');
+   CheckEquals(0, PartyPoints(SALMONRUN, True, Band2, CW, eCW), '2 m scores nothing');
+end;
+
+(* "A QSO with ... W7DX, will add a 500-point bonus for each mode": a QSO on
+   a band the contest does not allow is no QSO at all. *)
+procedure TContestWashingtonSalmonRunTests.Test_SalmonRunW7DXNeedsAContestBand;
+var
+   contestObject: TContestBase;
+   view: TLoggedQSOList;
+   t: TScoreTotals;
+begin
+   BeginTest('Test_SalmonRunW7DXNeedsAContestBand');
+   t := Default(TScoreTotals);
+   view := TLoggedQSOList.Create;
+   contestObject := Make(SALMONRUN, WithHostAreaTable(NoStation));
+   try
+      view.Add(PartyQso('W7DX', Band30, CW, eCW));
+      CheckEquals(0, contestObject.BonusPoints(t, view), 'a 30 m W7DX QSO pays nothing');
+      view.Add(PartyQso('W7DX', Band20, CW, eCW));
+      CheckEquals(500, contestObject.BonusPoints(t, view), 'a 20 m CW one pays 500');
+   finally
+      contestObject.Free;
+      view.Free;
+   end;
+end;
+
+(* "Up to 10 DXCC entities other than US and VE": a Washington entrant's DX
+   station sends its prefix, which is its received column; Alaska and Hawaii
+   "count as states", not as DX entities. *)
+procedure TContestWashingtonSalmonRunTests.Test_SalmonRunRealEngineDX;
+var
+   engine: TQSOPartyEngine;
+   rx: ContestExchange;
+   accepted: boolean;
+begin
+   BeginTest('Test_SalmonRunRealEngineDX');
+   engine := TQSOPartyEngine.Create(ContestHandleOf(SALMONRUN));
+   try
+      engine.Activate(True);
+      engine.Enter('DL1AAA', '599 DL', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'a Washington entrant logs a DX country');
+      CheckTrue(rx.DXMult, 'its entity is a DXCC multiplier');
+      CheckEquals('599 DL     ', PartyReceivedCabrilloColumn(ContestHandleOf(SALMONRUN), rx),
+                  'the received column is the country');
+      engine.Enter('KH6AA', '599 HI', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'Hawaii is a state');
+      CheckFalse(rx.DXMult, 'and no DX entity');
+   finally
+      engine.Free;
+   end;
+end;
 
 (* "Up to 10 DXCC entities other than US and VE can be worked for multiplier
    credit." 9, 10 and 11 DX score 9, 10 and 10; the counties, states and
@@ -121,6 +198,9 @@ procedure TContestWashingtonSalmonRunTests.RunAllTests;
 begin
    Test_SalmonRunScoresAtMostTenDXMultipliers;
    Test_SalmonRunWashingtonIsNoStateMultiplierInState;
+   Test_SalmonRunBands;
+   Test_SalmonRunW7DXNeedsAContestBand;
+   Test_SalmonRunRealEngineDX;
 end;
 
 end.

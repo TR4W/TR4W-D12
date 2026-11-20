@@ -140,6 +140,18 @@ function HostIsCanadian(const aHostState: string): boolean;
    county; INCLUDE lines and a missing file give none. aKeys is cleared. *)
 procedure ShippedCountyKeys(const aFileName: string; aKeys: TStrings);
 
+(* A SCORING QSO FOR A PARTY'S POINTS TEST -- the call, band, mode and
+   submode, with a county as its received QTH (2026-11-20 audit: lifted so
+   the party tests that pin a sponsor's points do not each write their own). *)
+function PartyQso(const aCall: string; aBand: BandType; aMode: ModeType;
+                  aExtMode: ExtendedModeType): ContestExchange;
+
+(* What the one public scoring entry, ScoreQSO, gives for such a QSO to a
+   party's entrant, in the host state or out of it (the host-area table
+   knows every QTH, so a points test is not about that rule). *)
+function PartyPoints(aContest: ContestType; aInState: boolean; aBand: BandType;
+                     aMode: ModeType; aExtMode: ExtendedModeType): integer;
+
 implementation
 
 uses
@@ -477,6 +489,39 @@ begin
          end;
    finally
       lines.Free;
+   end;
+end;
+
+function PartyQso(const aCall: string; aBand: BandType; aMode: ModeType;
+                  aExtMode: ExtendedModeType): ContestExchange;
+begin
+   Result := Default(ContestExchange);
+   Result.ceRecordKind := rkQSO;
+   Result.Callsign := ShortString(aCall);
+   Result.Band := aBand;
+   Result.Mode := aMode;
+   Result.ExtMode := aExtMode;
+   Result.QTHString := 'ANDE';
+   Result.DomesticQTH := 'ANDE';
+end;
+
+function PartyPoints(aContest: ContestType; aInState: boolean; aBand: BandType;
+                     aMode: ModeType; aExtMode: ExtendedModeType): integer;
+var
+   contestObject: TContestBase;
+   station: TStationContext;
+   qso: ContestExchange;
+begin
+   station := WithHostAreaTable(NoStation);
+   station.InHostState := aInState;
+   contestObject := Make(aContest, station);
+   try
+      qso := PartyQso('W9ABC', aBand, aMode, aExtMode);
+      qso.QSOPoints := 99;
+      contestObject.ScoreQSO(qso);
+      Result := qso.QSOPoints;
+   finally
+      contestObject.Free;
    end;
 end;
 

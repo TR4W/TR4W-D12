@@ -948,9 +948,11 @@ begin
       scores digital 2, not the phone value. Pinned in
       uTestContestWisconsinQP. *)
 
-   (* TwoPhoneThreeCW: if Mode = CW then 3 else 2 -- digital takes the 2. *)
-   CheckPoints(TENNESSEEQSOPARTY, 'Tennessee', 3, 2, 2);
-   CheckPoints(TEXASQSOPARTY, 'Texas', 3, 2, 2);
+   (* THE 2026 RULES (2026-11-20 audit): Tennessee "3 points per QSO
+      regardless of mode"; Texas "three (3) points per CW and other digital
+      mode" and two per phone. Also pinned in their own test units. *)
+   CheckPoints(TENNESSEEQSOPARTY, 'Tennessee', 3, 3, 3);
+   CheckPoints(TEXASQSOPARTY, 'Texas', 3, 2, 3);
 end;
 
 (* THE COUNTY-LINE RULE FOR THE TEN, AND THE ASYMMETRY IS DELIBERATE.
@@ -1072,7 +1074,8 @@ begin
       uTestContestOhioQP. *)
    (* WISCONSIN LEFT THIS LIST AT #88 round 2: "Mobiles or portables may not
       sit on a county line" -- zero, pinned in uTestContestWisconsinQP. *)
-   CheckUnlimited(TENNESSEEQSOPARTY, 'Tennessee');
+   (* TENNESSEE LEFT THIS LIST (2026-11-20): "Three and four county lines may
+      not be run simultaneously" -- two, pinned in uTestContestTennesseeQP. *)
    CheckUnlimited(TEXASQSOPARTY, 'Texas');
    CheckUnlimited(ArizonaQsoParty, 'Arizona');
 end;
@@ -1418,7 +1421,8 @@ begin
    BeginTest('Test_FourBespokeArmsCountyLineMaxima');
    CheckUnlimited(BCQP, 'British Columbia');
    CheckUnlimited(PAQSOPARTY, 'Pennsylvania');
-   CheckUnlimited(VAQP, 'Virginia');
+   (* VIRGINIA LEFT THIS LIST (2026-11-20): a county-line station "counts as
+      one QSO" -- no county line, pinned in uTestContestVirginiaQP. *)
 end;
 
 (* NEW YORK, MOVED 2026-09-29.
@@ -2005,7 +2009,7 @@ begin
                CheckFalse(ContestAllowsCountyLineOnImport(ContestHandleOf(c)),
                           string(ContestTypeSA[c]) + ': an imported county-line repeat is a dupe again');
                end;
-            ArizonaQsoParty, BCQP, VAQP, SALMONRUN, NYQP:
+            ArizonaQsoParty, BCQP, SALMONRUN, NYQP:
                begin
                CheckFalse(rowAllows, string(ContestTypeSA[c]) + ': the old row said no county line');
                CheckTrue(classAllows, string(ContestTypeSA[c]) + ': the class allows one');
@@ -2022,7 +2026,7 @@ begin
          obj.Free;
          end;
       end;
-   CheckEquals(8, disagreements, 'exactly eight contests where the old row and the county line disagree');
+   CheckEquals(7, disagreements, 'exactly seven contests where the old row and the county line disagree');
 
    (* THE IMPORT FOLLOWS THE CLASS FOR EVERY REGISTERED CONTEST -- by-id
       ones included (issue #135), which the frozen row comparison above

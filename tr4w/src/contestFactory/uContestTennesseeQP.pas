@@ -30,17 +30,42 @@ http://www.gnu.org/licenses/gpl-3.0.txt
    CABName: 'TN-QSO-PARTY';  CountyLineAllowed: True;
    FriendlyName: 'Tennessee QSO Party'
 
-  NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
-  TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- which is exactly
-  what TR4W does today, because nothing in the program has ever counted the
-  queued counties.
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (2026-11-20; the text is
+  docs/ContestRules/QSOParties/Tennessee/TN-QSO-PARTY-Rules.txt):
 
-  THAT IS "NOT LOOKED UP YET", NOT "UNLIMITED BY DECISION", and the difference
-  matters: a number here would have to come from the sponsor's published rules,
-  the way Florida's two and California's four did. It must NOT be derived from
-  ContestsArray's CountyLineAllowed boolean, which carries no limit at all --
-  reading it as a number is the defect that made a class of any kind start
-  refusing a two-QTH exchange.
+  POINTS -- "3 points per QSO regardless of mode." Until this audit the class
+    scored 3 CW, 2 phone and 2 digital (the legacy TwoPhoneThreeCW arm).
+
+  BANDS -- "All amateur bands are valid, with the exception of 60, 30, 17 and
+    12 meters." UsesBand; cfVHFBandsEnabled so 6 m and up can be reached.
+
+  MULTIPLIERS (per band) -- a Tennessee entrant counts the counties, the
+    states but Tennessee (CountsAsMultiplier), the provinces and "DXCC
+    entities ... less USA, Canada, Alaska & Hawaii" -- the DX multiplier,
+    in state only, built now (it was confirmed in #88 round 3 and not built).
+    An out-of-state entrant counts the counties alone.
+
+  THE EXCHANGE -- "RS(T) and Tennessee County, U.S. state, Canadian
+    province/territory, or DXCC entity": a Tennessee entrant is therefore
+    given the domestic-or-DX parse (a typed "599 DL" is a DX station); an
+    entrant elsewhere works Tennessee stations only.
+
+  K4TCG -- "100 bonus points for each QSO (one per band/mode) with TCG
+    headquarters station K4TCG ... All bonus points are added after the
+    geographic multiplier": a declared bonus station, 100 once on each band in
+    each mode, a credited contact only.
+
+  COUNTY LINES -- "Three and four county lines may not be run
+    simultaneously" and the line is "2 rows in the log file, one for each
+    county": two counties, as Washington's.
+
+  NOT BUILT, listed on #88: the Tennessee mobile and rover 500 points per
+    county with 10 QSOs, and their one multiplier for such a county (the
+    entrant's CATEGORY-STATION and county do not reach scoring, #133); the
+    digital modes (the sponsor accepts "Any digital mode that supports the
+    required exchange" and its own dupe example names FT8): UsesMode is not
+    stated.
  *)
 unit uContestTennesseeQP;
 
@@ -110,6 +135,30 @@ type
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* "Three and four county lines may not be run simultaneously" -- 2. *)
+      function GetCountyLineCountiesMax: integer; override;
+
+      (* K4TCG, 100 once on each band in each mode -- the header. *)
+      function GetBonusStations: TBonusStationList; override;
+      function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
+   public
+      (* Every band but 60, 30, 17 and 12 m -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
+      (* SET-UP -- see TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
+   private
+      (* DOES THIS ENTRANT COUNT A DX MULTIPLIER? -- the station test
+         DescribeSession chooses the exchange by; HasDXMultiplier, the key and
+         the country list ask it, so the answers cannot disagree. *)
+      function CountsDXMultiplier: boolean;
+   public
+      function HasDXMultiplier: boolean; override;
+      function DXMultiplierKey(const aQso: ContestExchange;
+                               out aKey: DXMultiplierString): boolean; override;
+      function CountryMode: CountryModeType; override;
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
@@ -144,7 +193,8 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
-   uContestFixedPoints,   (* FixedModePoints *)
+   (* DXCCKeyExceptUSACanadaHawaiiAlaska, DXCCCountryMode -- issue #136. *)
+   uDXMultiplierKey,
    uContestRegistry;
 
 function TContestTennesseeQP.GetDisplayName: string;
@@ -208,19 +258,39 @@ end;
 
 function TContestTennesseeQP.GetExchangeKind: ExchangeType;
 begin
-   Result := RSTDomesticQTHExchange;
+   (* The in-state entrant's kind; an entrant elsewhere runs with
+      RSTDomesticQTHExchange, stated in DescribeSession. *)
+   Result := RSTDomesticOrDXQTHExchange;
 end;
 
+(* A TENNESSEE ENTRANT RECEIVES THE RST AND A COUNTY, STATE, PROVINCE OR
+   COUNTRY (RSTDomesticOrDXQTH); ANYONE ELSE THE RST AND A COUNTY
+   (RSTDomesticQTH) -- the two shapes DescribeSession chooses between, by the
+   station test CountsDXMultiplier asks. *)
 function TContestTennesseeQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
-   Result := ExchangeFieldsRSTQSONumberQTH;
+   if CountsDXMultiplier then
+      begin
+      Result := ExchangeFieldsRSTQTH;
+      end
+   else
+      begin
+      Result := ExchangeFieldsRSTQSONumberQTH;
+      end;
 end;
 
 function TContestTennesseeQP.ParseReceivedExchangeFormat(const aText: string;
                                                          aParsers: TExchangeParsers;
                                                          var aExch: ContestExchange): boolean;
 begin
-   Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+   if CountsDXMultiplier then
+      begin
+      Result := aParsers.ParseRSTDomesticOrDXQTH(aText, aExch);
+      end
+   else
+      begin
+      Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+      end;
 end;
 
 procedure TContestTennesseeQP.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
@@ -250,7 +320,16 @@ function TContestTennesseeQP.GetCabrilloReceivedExchange(const aMy: TMyStationEx
                                                          const aQso: ContestExchange;
                                                          const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+   (* In state a DX station's typed country is written, never an empty
+      column (CabrilloReceivedRSTQTHDX tests QTHString). *)
+   if CountsDXMultiplier then
+      begin
+      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
+      end;
 end;
 
 function TContestTennesseeQP.GetInStateDomesticFileName: string;
@@ -260,15 +339,79 @@ end;
 
 function TContestTennesseeQP.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand];
+   (* Multipliers per band; the VHF bands are credited -- the header. *)
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfVHFBandsEnabled];
 end;
 
-(* TwoPhoneThreeCW -- `if Mode = CW then 3 else 2`, so DIGITAL scores the
-   PHONE value. That is why the third number is stated rather than left to
-   a CW-versus-not test, which would be wrong here and silent about it. *)
+(* "3 points per QSO regardless of mode." A QSO off the bands never reaches
+   here (UsesBand). *)
 procedure TContestTennesseeQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
-   aQso.QSOPoints := FixedModePoints(aQso.Mode, 3, 2, 2);
+   aQso.QSOPoints := 3;
+end;
+
+function TContestTennesseeQP.GetCountyLineCountiesMax: integer;
+begin
+   Result := 2;
+end;
+
+function TContestTennesseeQP.GetBonusStations: TBonusStationList;
+begin
+   Result := nil;
+   SetLength(Result, 1);
+   Result[0].Call := 'K4TCG';
+   Result[0].Points := 100;
+   Result[0].Scope := bsOncePerBandAndMode;
+end;
+
+function TContestTennesseeQP.CountsTowardBonus(const aQso: ContestExchange): boolean;
+begin
+   Result := IsCreditedContact(aQso);
+end;
+
+(* "All amateur bands are valid, with the exception of 60, 30, 17 and 12
+   meters" (60 m has no BandType). *)
+function TContestTennesseeQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10,
+                       Band6, Band2, Band222, Band432, Band902, Band1296,
+                       Band2304, Band3456, Band5760, Band10G, Band24G,
+                       BandLight];
+end;
+
+(* SET-UP -- an entrant outside Tennessee works Tennessee stations only and
+   receives a county. *)
+procedure TContestTennesseeQP.DescribeSession(const aStation: TStationContext;
+                                              aSession: TSessionDefaults);
+begin
+   if not aStation.InHostState then
+      begin
+      aSession.Exchange := RSTDomesticQTHExchange;
+      end;
+end;
+
+(* THE STATION TEST -- DescribeSession's, asked of Station. *)
+function TContestTennesseeQP.CountsDXMultiplier: boolean;
+begin
+   Result := Station.InHostState;
+end;
+
+(* "DXCC entities (see ARRL DXCC list - less USA, Canada, Alaska & Hawaii)":
+   for a Tennessee entrant; none for anyone else. *)
+function TContestTennesseeQP.HasDXMultiplier: boolean;
+begin
+   Result := CountsDXMultiplier;
+end;
+
+function TContestTennesseeQP.DXMultiplierKey(const aQso: ContestExchange;
+                                             out aKey: DXMultiplierString): boolean;
+begin
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(CountsDXMultiplier, aQso, aKey);
+end;
+
+function TContestTennesseeQP.CountryMode: CountryModeType;
+begin
+   Result := DXCCCountryMode(CountsDXMultiplier);
 end;
 
 (* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --

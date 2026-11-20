@@ -118,6 +118,33 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Indiana's do. The row carries no CountyLineAllowed field at all; the number
   is read out of the rules, never out of that boolean.
 
+  ---------------------------------------------------------------------------
+  THE RULES, CHECKED AGAINST THE SPONSOR AGAIN (2026-11-20; the text is
+  docs/ContestRules/QSOParties/Washington/WA-SALMON-RUN-Rules.txt):
+
+  BANDS -- "Contest Bands: 160, 80, 40, 20, 15, 10, and 6 meters. No contacts
+    on 60, 30, 17, or 12 meters are allowed." UsesBand; cfVHFBandsEnabled so
+    6 m can be reached. A QSO off those bands is an automatic X-QSO: it scores
+    nothing, earns no multiplier and no W7DX bonus.
+
+  ALASKA AND HAWAII -- "US States less WA (49) -- District of Columbia counts
+    as MD, Alaska and Hawaii count as states" and "Up to 10 DXCC entities
+    other than US and VE": KH6 and KL7 are the states HI and AK, never also a
+    DX entity (DXCCKeyExceptUSACanadaHawaiiAlaska, the ten other parties').
+    Until 2026-11-20 they counted as both, and took a place in the 10.
+
+  THE RECEIVED COLUMN of a DX station, for a Washington entrant, is its typed
+    entity (CabrilloReceivedRSTDomesticQTHOrDXQTH).
+
+  NOT CHANGED, asked on #88: DIGITAL. "Contest Modes: Phone and CW. We cannot
+    accept WJST modes" -- NY4I's ruling of 2026-09-29 (above) scores digital 0
+    and does not refuse it, so a digital QSO still earns its county
+    multiplier and its dupe slot. The Q98 standard (a mode the contest does
+    not credit is UsesMode, an automatic X-QSO) would refuse it. A
+    single-mode entry's "contacts on modes other than the mode of entry may
+    not be counted" needs the entrant's CATEGORY-MODE in the QSO rule, which
+    UsesMode does not ask.
+
   BOTH NAMES WERE BLANK UNTIL 2026-09-29, AND NY4I RULED BOTH.
 
     ADIF    'WA-QSO-PARTY' -- ADIF 3.1.7's "Washington QSO Party".
@@ -215,6 +242,9 @@ type
       function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
       function CreditsBonusMode(aMode: ModeType): boolean; override;
    public
+      (* 160-10 m and 6 m -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -413,7 +443,7 @@ function TContestWashingtonSalmonRun.GetCabrilloReceivedExchange(const aMy: TMyS
 begin
    if CountsDXMultiplier then
       begin
-      Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
       end
    else
       begin
@@ -428,7 +458,14 @@ end;
 
 function TContestWashingtonSalmonRun.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode];
+   (* 6 m is credited -- the header. *)
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
+end;
+
+(* "Contest Bands: 160, 80, 40, 20, 15, 10, and 6 meters." *)
+function TContestWashingtonSalmonRun.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10, Band6];
 end;
 
 function TContestWashingtonSalmonRun.GetCountyLineCountiesMax: integer;
@@ -469,8 +506,7 @@ const
 
 (* THE DX CAP -- see the declaration. Outside Washington there is no DX
    multiplier, so the DX count is 0 and the cap never bites. KH6 and KL7 are
-   left as they are (they count as a state AND as DX today; the sponsor says
-   "Alaska and Hawaii count as states", which is not yet ruled on). *)
+   states, not DX -- the header. *)
 function TContestWashingtonSalmonRun.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
 begin
    Result := ContestPoints(aTotals) *
@@ -498,9 +534,11 @@ begin
    Result[0].Scope := bsOncePerMode;
 end;
 
+(* A credited contact: not a dupe and not an X-QSO (an off-band W7DX QSO pays
+   nothing). *)
 function TContestWashingtonSalmonRun.CountsTowardBonus(const aQso: ContestExchange): boolean;
 begin
-   Result := not aQso.ceDupe;
+   Result := IsCreditedContact(aQso);
 end;
 
 (* aMode is CW, Digital or Phone -- the base has already counted FM as
@@ -570,19 +608,12 @@ begin
 end;
 
 (* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
-   Every country but the USA and Canada, for an entrant inside Washington (ARRLDXCCWithNoUSAOrCanada, which
-   DescribeSession stated in state); none for anyone else. *)
+   Every country but the USA, Canada, Hawaii and Alaska, for an entrant
+   inside Washington; none for anyone else. *)
 function TContestWashingtonSalmonRun.DXMultiplierKey(const aQso: ContestExchange;
                                                      out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if CountsDXMultiplier and
-      not IsUSAOrCanadaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(CountsDXMultiplier, aQso, aKey);
 end;
 
 (* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
@@ -590,14 +621,7 @@ end;
    for anyone else, who counts none. *)
 function TContestWashingtonSalmonRun.CountryMode: CountryModeType;
 begin
-   if CountsDXMultiplier then
-      begin
-      Result := ARRLCountryMode;
-      end
-   else
-      begin
-      Result := CQCountryMode;
-      end;
+   Result := DXCCCountryMode(CountsDXMultiplier);
 end;
 
 (* OUT OF THE HOST STATE ONE ENTRY MAY CARRY SEVERAL QTHs (RSTDomesticQTH);

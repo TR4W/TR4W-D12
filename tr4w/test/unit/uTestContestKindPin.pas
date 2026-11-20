@@ -1189,9 +1189,11 @@ const
       (Contest: SEVENQP; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Azaph';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
+      (* TENNESSEE: an entrant in state accepts a DX station's country
+         (2026-11-20 audit), by hand. *)
       (Contest: TENNESSEEQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ande';
        MySection: 'KS'; MyGrid: 'EM17';
-       Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange)),
+       Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
       (Contest: TEXASQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ande';
        MySection: 'KS'; MyGrid: 'EM17';
        Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
@@ -1200,7 +1202,8 @@ const
        Kinds: (Exchange: QSONumberDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange)),
       (Contest: WISCONSINQSOPARTY; MyCall: 'K0AAA'; MyCountry: 'K'; MyState: 'Ada';
        MySection: 'KS'; MyGrid: 'EM17';
-       Kinds: (Exchange: RSTDomesticQTHExchange; InitialExchange: NoInitialExchange))
+       (* By hand, 2026-11-20: an entrant in state accepts a DX country. *)
+       Kinds: (Exchange: RSTDomesticOrDXQTHExchange; InitialExchange: NoInitialExchange))
    );
 
 (* A matrix station -- see the unit header for where each field comes from. *)
@@ -1443,7 +1446,9 @@ begin
       TEXASQSOPARTY. It was 6 until M11 S4 part 2 removed the DX column:
       DELAWAREQSOPARTY differed in its DX kind only. No party differed in
       its zone kind (M11 S5 part 2) or its domestic kind (M11 S6 part 2). *)
-   CheckEquals(5, varying, 'parties whose kinds differ in the host state');
+   (* 7 since 2026-11-20 (by hand): Tennessee and Wisconsin take a DX country
+      from an entrant in the state. *)
+   CheckEquals(7, varying, 'parties whose kinds differ in the host state');
 end;
 
 (* THE DOMESTIC FLAG FOLLOWS A CONTEST CHANGED WITHOUT A RESTART -- M11 S2,
