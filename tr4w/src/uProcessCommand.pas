@@ -124,7 +124,7 @@ const
 
 
  // sCommands                             =  67  {$IF MMTYMODE} + 5  {$IFEND};
-  sCommands                             =  72 + 2 + 1 + 5 + 1 + 4 + 1;  // + SPOTME (issue 188). Issue 61 Added OTRSP command + 5 display entries + BOOLSWAP + SPAN and its 3 display rows (issue 192)
+  sCommands                             =  72 + 2 + 1 + 5 + 1 + 4 + 1 + 2;  // + SPOTME (issue 188). Issue 61 Added OTRSP command + 5 display entries + BOOLSWAP + SPAN and its 3 display rows (issue 192) + the {ROVERCALL} / {ROVERQTH} display rows (2026-11-20)
 
   sCommandsArray                        : array[0..sCommands - 1] of TsCommandsArrayType =
     (
@@ -147,7 +147,11 @@ const
 (caCommand: '  % = Name from Names DB'; caAddress: scEXCHANGERADIOS),
 (caCommand: ' : = Send from K.B.'; caAddress: scEXCHANGERADIOS),
 (caCommand: ' ~ = Salutation - no name'; caAddress: scEXCHANGERADIOS),
-(caCommand: '  \ = My Call'; caAddress: scEXCHANGERADIOS),
+(caCommand: '  \ = My Call (never the rover''s places)'; caAddress: scEXCHANGERADIOS),
+// The two TOKENS (2026-11-20) -- display rows like the cryptic characters
+// above: the picker inserts the braced word itself, and the CW sender keys it.
+(caCommand: ' {ROVERCALL} = My call, with the rover''s places while roving'; caAddress: scEXCHANGERADIOS),
+(caCommand: ' {ROVERQTH} = The place sent now (the rover''s places while roving)'; caAddress: scEXCHANGERADIOS),
 (caCommand: ' | = Name from Exch Window'; caAddress: scEXCHANGERADIOS),
 (caCommand: ' [ = Wait for # (RST)'; caAddress: scEXCHANGERADIOS),
 (caCommand: ' ] = Repeat last RST from ['; caAddress: scEXCHANGERADIOS),
@@ -241,7 +245,10 @@ uses
    uFactoryRadioBase,  // SPAN: TFactoryRadioBase, rcSpectrum
    uSpectrumTypes,     // SPAN: SpectrumParseSpanCommand
    uSelfSpotRule,      // SPOTME: TSelfSpotTrigger
-   uSelfSpot;          // SPOTME: SelfSpotNow
+   uSelfSpot,          // SPOTME: SelfSpotNow
+   Contnrs,            // TObjectList -- the parsed message's parts
+   uMessageText,       // ParseMessage, RegisterMessageCommandWord -- brace words
+   uAppStrings;        // SMessageUnknownWordSkipped
 
 var
   (* A COMMAND'S OWN ANSWER, shown AFTER the generic '"X" command is executed.'
@@ -253,28 +260,15 @@ var
   GCommandNotice                        : string;
   GCommandNoticeIsError                 : boolean;
 
-function FoundCommand(var SendString: Str160): boolean;
-
+(* ONE COMMAND, as the old bookend body or the brace word spells it: NAME, or
+  NAME=ARGUMENT, with an optional leading Ctrl-A (the old form's "on the
+  inactive radio"). The body of the old FoundCommand loop, unchanged. *)
+procedure RunMessageCommand(CommandString: ShortString);
 var
-  CommandString                         : ShortString;
   TempInt, Result1                      : integer;
   i                                     : integer;
-  //p                                     : Pointer;
   cmdProc                               : TCommandHandler;
 begin
-  FoundCommand := False;
-
-  CommandUseInactiveRadio := False;
-
-  while StringHas(SendString, ControlC) do
-     begin
-     if not StringHas(SendString, ControlD) then Exit;
-
-     FoundCommand := StringHas(SendString, ControlD);
-
-     CommandString := {UpperCase}(BracketedString(SendString, ControlC, ControlD));
-     Delete(SendString, pos(ControlC, SendString), pos(ControlD, SendString) - pos(ControlC, SendString) + 1);
-
      if Copy(CommandString, 1, 1) = ControlA then {KK1L: 6.73 Vector commands to inactive radio with CTRL-A}
         begin
         CommandUseInactiveRadio := True;
@@ -382,7 +376,86 @@ begin
               end;
            end;
         end;
-     end;
+end;
+
+(* THE COMMANDS IN A MESSAGE, RUN; THE REST LEFT TO BE SENT (2026-11-20).
+
+  uMessageText.ParseMessage reads the message once. Every COMMAND -- a brace
+  word {NAME} / {NAME=ARGUMENT}, or the old Ctrl-C ... Ctrl-D bookend -- is
+  run IN ORDER and taken out, BEFORE any of the text is keyed: that is where
+  the bookend commands always ran (SendCrypticMessage calls this first), so
+  a SWAPRADIOS or an ESCAPE in a message acts before the text is queued, not
+  half-way through it.
+
+  A TOKEN ({ROVERCALL}, {ROVERQTH}) is left in the text, where the CW sender
+  keys it in place. An UNKNOWN word is taken out, never keyed, and named in a
+  notice -- one per word.
+
+  TRUE WHEN ANYTHING WAS TAKEN OUT (a command or an unknown word), so a
+  message that held nothing else sends nothing: the caller exits on True and
+  an empty remainder, as it did for a message of bookends only.
+
+  ONE THING THE OLD LOOP DID IS GONE: it deleted from the FIRST Ctrl-D in the
+  whole string, so a chain Ctrl-D in front of a bookend made the count
+  negative, the Delete did nothing, and the loop never ended. *)
+function FoundCommand(var SendString: Str160): boolean;
+var
+  parts                                 : TObjectList;
+  part                                  : TMessagePart;
+  rest                                  : AnsiString;
+  i                                     : integer;
+begin
+  FoundCommand := False;
+
+  CommandUseInactiveRadio := False;
+
+  rest := '';
+  parts := TObjectList.Create(True);
+  try
+     ParseMessage(AnsiString(SendString), parts);
+     for i := 0 to parts.Count - 1 do
+        begin
+        part := TMessagePart(parts[i]);
+        case part.Kind of
+           mpText, mpToken:
+              begin
+              rest := rest + part.Text;
+              end;
+
+           mpOldCommand:
+              begin
+              FoundCommand := True;
+              RunMessageCommand(ShortString(part.Text));
+              end;
+
+           mpCommand:
+              begin
+              FoundCommand := True;
+              if part.HasArgument then
+                 begin
+                 RunMessageCommand(ShortString(part.Name + '=' + part.Argument));
+                 end
+              else
+                 begin
+                 RunMessageCommand(ShortString(part.Name));
+                 end;
+              end;
+
+           mpUnknownWord:
+              begin
+              FoundCommand := True;
+              logger.Warn('[Message] {%s} is not a word TR4W knows -- skipped, not keyed',
+                          [part.Name]);
+              QuickDisplayError(UnicodeFormat(SMessageUnknownWordSkipped,
+                                              [string(part.Name)]));
+              end;
+        end;
+        end;
+  finally
+     parts.Free;
+  end;
+
+  SendString := ShortString(rest);
 
   CommandUseInactiveRadio := False; {KK1L: 6.73 Put back to normal so other calls default to active radio}
 end;
@@ -916,5 +989,21 @@ procedure csMMTTY_CLEAR_THE_TX_BUFFER;
 begin
   PostMmttyMessage(RXM_PTT, RXM_PTT_CLEAR_THE_TX_BUFFER);
 end;
+
+(* THE COMMAND TABLE'S NAMES ARE THE BRACE WORDS -- {MM_GRABLASTCALL},
+  {BANDUP}, {SPOTME}. A display row (it starts with a space) or a name that
+  is no brace word (ALT-D) is refused by the registration itself. *)
+procedure RegisterCommandTableWords;
+var
+  i                                     : integer;
+begin
+  for i := 0 to sCommands - 1 do
+     begin
+     RegisterMessageCommandWord(AnsiString(sCommandsArray[i].caCommand));
+     end;
+end;
+
+initialization
+  RegisterCommandTableWords;
 
 end.

@@ -48,9 +48,14 @@ unit uEditMessageForm;
   Ord('D') - 64 = 4.
 
   NY4I: "I always edited the CFG file to add the <03> at the start and the <04>
-  at the end", which is a fair verdict on how discoverable this is. It is
-  expected to be replaced rather than polished -- see the CW macro-token note in
-  the keyer plan -- so this preserves it rather than improving it.
+  at the end", which is a fair verdict on how discoverable this is.
+
+  REPLACED 2026-11-20: a command is written in curly braces as ordinary text
+  (MM_GRABLASTCALL or SRS=PB1; between an open and a close brace -- not shown
+  here, because this header is itself a brace comment), and the "List of
+  commands" picker inserts it so (uMessageText). The bookends still work and are converted to braces
+  when a memory is loaded; Ctrl+P stays for the other control characters. A
+  brace word TR4W does not know is refused on OK.
 
   It used to need a whole subclassed window procedure (NewMsgEditProc) to see
   those keystrokes, and hand-spliced the character into a raw buffer with a
@@ -146,6 +151,11 @@ function MessageEditFits(const aText: AnsiString): boolean;
   the dialog so a test can read it without a modal. *)
 function MessageEditRefusalText(const aText: AnsiString; aIsCaption: boolean): string;
 
+(* WHAT THE OPERATOR IS TOLD when aText names a brace word TR4W does not know
+  (uMessageText.FirstUnknownMessageWord): '' when every word is known. Apart
+  from the dialog, like the length refusal, so a test can read it. *)
+function MessageEditUnknownWordText(const aText: AnsiString): string;
+
 implementation
 
 {$R *.lfm}
@@ -174,6 +184,7 @@ uses
   uLCLFormHelpers,
   Dialogs,        // MessageDlg -- the too-long refusal (issue 302)
   uAppStrings,    // SMessageEditTextTooLong / SMessageEditCaptionTooLong
+  uMessageText,   // FirstUnknownMessageWord -- the brace words (2026-11-20)
   Log4D;
 
 const
@@ -518,6 +529,19 @@ begin
       end;
 end;
 
+function MessageEditUnknownWordText(const aText: AnsiString): string;
+var
+   word: AnsiString;
+begin
+   Result := '';
+   word := FirstUnknownMessageWord(aText);
+   if word = '' then
+      begin
+      Exit;
+      end;
+   Result := UnicodeFormat(SMessageEditUnknownWord, [string(word)]);
+end;
+
 function TfrmEditMessage.SaveToConfig: boolean;
 var
   stored: AnsiString;
@@ -535,6 +559,22 @@ begin
      expanded to 258. *)
    Result := False;
    stored := DeleteEscapeChars(edtMessage.Text);
+
+   (* A WORD IN BRACES TR4W DOES NOT KNOW IS REFUSED, and named (NY4I,
+     2026-11-20) -- at send it would be skipped, so saving it would only
+     store a message that does not do what it says. Same shape as the
+     too-long refusal below: a warning, the focus back, the dialog open. *)
+   refusal := MessageEditUnknownWordText(stored);
+   if refusal <> '' then
+      begin
+      logger.Warn('[EditMessage] %s: the message names {%s}, which is no command ' +
+                  'or token -- not saved, the dialog stays open',
+                  [lblKeyName.Caption, FirstUnknownMessageWord(stored)]);
+      MessageDlg(LclText(refusal), mtWarning, [mbOK], 0);
+      edtMessage.SetFocus;
+      Exit;
+      end;
+
    refusal := MessageEditRefusalText(stored, False);
    if refusal <> '' then
       begin

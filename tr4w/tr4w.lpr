@@ -142,6 +142,7 @@ uses
   uNewContestCommands in 'src\uNewContestCommands.pas',
   uNewContestHostArea in 'src\uNewContestHostArea.pas',
   uRoverState in 'src\uRoverState.pas',
+  uMessageText in 'src\uMessageText.pas',
   uRoverSession in 'src\uRoverSession.pas',
   uNewContestHome in 'src\uNewContestHome.pas',
   uContestChoices in 'src\uContestChoices.pas',

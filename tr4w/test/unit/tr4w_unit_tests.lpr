@@ -747,6 +747,7 @@ uses
    uDomFileKeys         in '..\..\src\uDomFileKeys.pas',
    uNewContestHostArea  in '..\..\src\uNewContestHostArea.pas',
    uRoverState          in '..\..\src\uRoverState.pas',
+   uMessageText         in '..\..\src\uMessageText.pas',
    uRoverSession        in '..\..\src\uRoverSession.pas',
    uNewContestHome      in '..\..\src\uNewContestHome.pas',
    uDomInclude          in '..\..\src\uDomInclude.pas',
@@ -833,6 +834,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestNewContestCommands in 'uTestNewContestCommands.pas',
    uTestNewContestHostArea in 'uTestNewContestHostArea.pas',
    uTestRoverState      in 'uTestRoverState.pas',
+   uTestMessageText     in 'uTestMessageText.pas',
    uTestNewContestHome  in 'uTestNewContestHome.pas',
    (* Design 7.12: a station fact is a default a contest may override. *)
    uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
@@ -1476,6 +1478,7 @@ begin
    RegisterSuite(TNewContestCommandsTests.Create('NewContestCommands'));
    RegisterSuite(TNewContestHostAreaTests.Create('NewContestHostArea'));
    RegisterSuite(TRoverStateTests.Create('RoverState'));
+   RegisterSuite(TMessageTextTests.Create('MessageText'));
    RegisterSuite(TNewContestHomeTests.Create('NewContestHome'));
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TStationValueKeptTests.Create('StationValueKept'));

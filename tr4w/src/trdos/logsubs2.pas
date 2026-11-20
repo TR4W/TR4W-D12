@@ -1541,9 +1541,12 @@ begin
                    begin
                    FlushCWBuffer;
                    end;
+                (* THE CALL ON THE AIR, as MainUnit.Send_DE sends it: the rover's
+                  NY4I/KOH while roving (RovingCall -- what {ROVERCALL} keys).
+                  Issues 133 and 87 changed Send_DE and missed this copy. *)
                 if (KeyRecentlyPressed(F1, 600)) or (not Settings.Message.DeEnable) then
                    begin
-                   SendCrypticMessage(UTF8Encode(Settings.My.Call))
+                   SendCrypticMessage(UTF8Encode(RovingCall(Settings.My.Call)))
                    end
                 else
                    begin
@@ -1557,11 +1560,13 @@ begin
                   begin
                   if Settings.Message.DeEnable then     // wli issue 277
                      begin
-                     SendCrypticMessage(UTF8Encode(CallWindowString + ' DE ' + Settings.My.Call + ' ' + Settings.My.Call))
+                     SendCrypticMessage(UTF8Encode(CallWindowString + ' DE ' +
+                       RovingCall(Settings.My.Call) + ' ' + RovingCall(Settings.My.Call)))
                      end
                   else
                      begin
-                     SendCrypticMessage(UTF8Encode(CallWindowString + ' ' + Settings.My.Call + ' ' + Settings.My.Call));
+                     SendCrypticMessage(UTF8Encode(CallWindowString + ' ' +
+                       RovingCall(Settings.My.Call) + ' ' + RovingCall(Settings.My.Call)));
                      end;
                   end
                else

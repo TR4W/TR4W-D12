@@ -383,9 +383,10 @@ begin
    ScrubTestLog(fn);
 end;
 
-(* NY4I, 2026-11-17 and 2026-11-19: while roving MYCALL is the roving call --
-  NY4I/KOH, NY4I/KOH/KON at a boundary -- and a fixed station never sends a
-  /KOH; {ROVERQTH} is a named token read whole, in any case. *)
+(* NY4I, 2026-11-17 and 2026-11-19: while roving the call on the air (what
+  {ROVERCALL} keys -- since 2026-11-20 '\' is always the plain call) is the
+  roving call -- NY4I/KOH, NY4I/KOH/KON at a boundary -- and a fixed station
+  never sends a /KOH. *)
 procedure TRoverStateTests.Test_TheCallOnTheAirAndTheRoverQTHToken;
 var
    units: TStringList;
@@ -408,12 +409,8 @@ begin
 
       RoverState.TurnOff;
       CheckEquals('NY4I', RovingCall('NY4I'), 'off again: the plain call');
-
-      CheckTrue(RoverQTHTokenAt('599 {ROVERQTH}', 5), 'the token after 599');
-      CheckTrue(RoverQTHTokenAt('{roverqth}', 1), 'in any case');
-      CheckFalse(RoverQTHTokenAt('599 {ROVERQT', 5), 'cut short is no token');
-      CheckFalse(RoverQTHTokenAt('{ TU', 1), 'a bare { is the worked call''s, as ever');
-      CheckFalse(RoverQTHTokenAt('{ROVERQTH}', 0), 'no index 0');
+      (* The {ROVERQTH} / {ROVERCALL} tokens are uMessageText's now, and
+        pinned in uTestMessageText (2026-11-20). *)
    finally
       RoverState.TurnOff;
       units.Free;

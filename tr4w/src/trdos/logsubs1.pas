@@ -87,6 +87,7 @@ uses
   uRadioRegistry,   // the rc* capability members (re-exported for using units)
   LOGSUBS2,
   uSettingsModel,   // Settings.Cw -- the CW settings that are not session state
+  uMessageText,     // MessageChainsOrCommands -- the brace words (2026-11-20)
   MainUnit;
 
 procedure PutUpExchangeMenu;
@@ -328,7 +329,10 @@ begin
              AddStringToBuffer(' ', Config.CWTone);
              end;
           end
-       else if pos(ControlD, Message) = 0 then
+       (* A COMMAND MESSAGE NEVER FLUSHED: this tested for a Ctrl-D, which
+         every <03>..<04> bookend carries and a {COMMAND} word does not
+         (2026-11-20). The one predicate asks both, and the chain Ctrl-D. *)
+       else if not MessageChainsOrCommands(AnsiString(Message)) then
           begin
           //          wkWaitForChainablemessage := True;
           // A new function-key message first stops whatever is still going out.

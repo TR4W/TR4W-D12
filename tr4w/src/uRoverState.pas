@@ -72,19 +72,16 @@ function RoverUnitsRefusal(const aUnits: TStrings;
                            const aPlaces: THostAreaPlaces;
                            aMaxUnits: integer): string;
 
-const
-   (* THE CW/macro token for the rover's place (NY4I 2026-11-17: "a ROVERQTH
-     token is still wanted for the exchange (599 {ROVERQTH})"). Matched in
-     any case. It keys the place sent now: the rover's places joined by '/'
-     while roving, the contest's sent state otherwise -- so a macro written
-     with it works for a fixed station too. *)
-   ROVER_QTH_TOKEN = '{ROVERQTH}';
+(* THE CALL ON THE AIR (NY4I, 2026-11-17, 2026-11-19 and 2026-11-20): while
+  roving, MY CALL gains the rover's places -- NY4I/KOH, and at a boundary
+  NY4I/KOH/KON, in the order chosen. It is what the message token
+  {ROVERCALL} keys, and what the S&P call and DE <call> send. The macros'
+  '\' does NOT use it: '\' is always the plain call setting (NY4I,
+  2026-11-20). Not roving: aCall unchanged; a fixed station never sends a
+  /KOH.
 
-(* THE CALL ON THE AIR (NY4I, 2026-11-17 and 2026-11-19): while roving, MY
-  CALL gains the rover's places -- NY4I/KOH, and at a boundary NY4I/KOH/KON,
-  in the order chosen -- so the macros' '\', the S&P call and DE <call> follow
-  the rover. Not roving: aCall unchanged; a fixed station never sends a
-  /KOH. *)
+  The message tokens themselves -- {ROVERCALL}, {ROVERQTH} -- are read by
+  uMessageText, the one grammar of a program message. *)
 function RovingCall(const aCall: string): string;
 
 type
@@ -102,10 +99,6 @@ type
   links one contact's rows. Not roving, or one place: empty. *)
 function RoverBoundaryLegs(const aLogged: TRoverLegs;
                            const aState: TRoverState): TRoverLegs;
-
-(* IS THE MACRO TOKEN {ROVERQTH} AT aText[aIndex]? Any case; False past the
-  end. The CW sender asks it where '{' would otherwise key the worked call. *)
-function RoverQTHTokenAt(const aText: string; aIndex: integer): boolean;
 
 var
    (* Created in this unit's initialization, freed in its finalization. *)
@@ -272,13 +265,6 @@ begin
          Inc(n);
          end;
       end;
-end;
-
-function RoverQTHTokenAt(const aText: string; aIndex: integer): boolean;
-begin
-   Result := (aIndex >= 1) and
-             (aIndex + Length(ROVER_QTH_TOKEN) - 1 <= Length(aText)) and
-             UnicodeSameText(Copy(aText, aIndex, Length(ROVER_QTH_TOKEN)), ROVER_QTH_TOKEN);
 end;
 
 initialization
