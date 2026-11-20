@@ -179,6 +179,17 @@ type
          that asks it is: the identity object is shared, and this is its
          one lazily written field. *)
       FCountyHostStates: TStringList;
+
+      (* THE SAME FILE AS KEY=^NAME (issues 133 and 87, 2026-11-20): every
+         county key the file declares, with its display name ('' for none).
+         Read by the same one read as FCountyHostStates (ReadCountyFile), on
+         the first CNTY or MY_CNTY asked; nil until a read found the file.
+         Owned and freed here; MAIN THREAD ONLY, as above. *)
+      FCountyNames: TStringList;
+
+      (* THE ONE READ OF THE COUNTY FILE behind both maps above. False, with
+         both left nil, when the file is not there. *)
+      function ReadCountyFile: boolean;
    protected
       (* AN IN-STATE ENTRANT'S HOST-COUNTY QSO ALSO EARNS THE HOST STATE --
          issue #317. A HELPER a party CALLS from its
@@ -430,6 +441,14 @@ type
       function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
       function WritesADIFCounty: boolean; override;
 
+      (* A COUNTY OF THIS PARTY IS A KEY OF ITS COUNTY FILE (DomesticFileName,
+         the shipped copy through uAppPaths.ShippedDomFilePath) -- the same
+         answer for an in-state and an out-of-state session. See
+         TContestBase.CountyFileCountyName. The key is matched as the
+         multiplier list matched it: upper cased, cut to ten characters. *)
+      function CountyFileCountyName(const aKey: string;
+                                    out aName: string): boolean; override;
+
       (* THE ONLY OVERRIDE OF THE BASE'S VALIDATOR IN THIS TREE.
 
          TContestBase.ValidateQTHCount always passes, because TR4W has never
@@ -511,8 +530,8 @@ uses
    SysUtils,        (* Format *)
    uTR4WStrings,    (* TC_TOOMANYCOUNTIES *)
    uAppStrings,     (* SExchangeOutOfStateWorksHostOnly *)
-   uAppPaths,       (* ShippedDomFilePath -- a multi-province county file *)
-   uDomFileKeys,    (* DomFileOnDiskKeyTargets, DOM_EXTENSION *)
+   uAppPaths,       (* ShippedDomFilePath -- the party's county file *)
+   uDomFileKeys,    (* DomFileKeyTargets, DomFileKeyNames, DOM_EXTENSION *)
    uADIF;           (* ADIFStateOfPartyQSO -- Q76/Q89 *)
 
 function TContestStateQSOPartyBase.CallWithoutRoverCounty(const aCall: string): string;
@@ -771,25 +790,68 @@ begin
    Result := Pos(' ', Trim(HostState)) > 0;
 end;
 
-function TContestStateQSOPartyBase.CountyFileHostState(const aKey: string): string;
+function TContestStateQSOPartyBase.ReadCountyFile: boolean;
 var
-   map: TStringList;
+   path: string;
+   lines: TStringList;
+begin
+   Result := (FCountyHostStates <> nil) and (FCountyNames <> nil);
+   if Result then
+      begin
+      Exit;
+      end;
+
+   path := ShippedDomFilePath(DomesticFileName + string(DOM_EXTENSION));
+   if not FileExists(path) then
+      begin
+      (* No file: nothing cached, asked again next time -- see the field. *)
+      Exit;
+      end;
+
+   lines := TStringList.Create;
+   try
+      (* EXPLICIT AT THE BOUNDARY: TStrings.LoadFromFile takes the RTL's
+        AnsiString file name. *)
+      lines.LoadFromFile(AnsiString(path));
+      FreeAndNil(FCountyHostStates);
+      FreeAndNil(FCountyNames);
+      FCountyHostStates := TStringList.Create;
+      FCountyNames := TStringList.Create;
+      DomFileKeyTargets(lines, FCountyHostStates);
+      DomFileKeyNames(lines, FCountyNames);
+   finally
+      lines.Free;
+   end;
+   Result := True;
+end;
+
+function TContestStateQSOPartyBase.CountyFileCountyName(const aKey: string;
+                                                        out aName: string): boolean;
+var
+   key: string;
+   index: integer;
+begin
+   aName := '';
+   Result := False;
+   key := Copy(UpperCase(Trim(aKey)), 1, DOM_KEY_WIDTH_MAX);
+   if (key = '') or (not ReadCountyFile) then
+      begin
+      Exit;
+      end;
+   index := FCountyNames.IndexOfName(AnsiString(key));
+   if index >= 0 then
+      begin
+      aName := string(FCountyNames.ValueFromIndex[index]);
+      Result := True;
+      end;
+end;
+
+function TContestStateQSOPartyBase.CountyFileHostState(const aKey: string): string;
 begin
    Result := '';
-   if FCountyHostStates = nil then
+   if not ReadCountyFile then
       begin
-      map := TStringList.Create;
-      if DomFileOnDiskKeyTargets(
-            ShippedDomFilePath(DomesticFileName + string(DOM_EXTENSION)), map) then
-         begin
-         FCountyHostStates := map;
-         end
-      else
-         begin
-         (* No file: nothing cached, asked again next time -- see the field. *)
-         map.Free;
-         Exit;
-         end;
+      Exit;
       end;
 
    Result := string(FCountyHostStates.Values[AnsiString(UpperCase(Trim(aKey)))]);
@@ -805,6 +867,7 @@ end;
 destructor TContestStateQSOPartyBase.Destroy;
 begin
    FCountyHostStates.Free;
+   FCountyNames.Free;
    inherited Destroy;
 end;
 

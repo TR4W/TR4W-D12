@@ -34,6 +34,8 @@ type
       procedure Test_ARoverFromANewPlaceIsNoDupe;
       procedure Test_ABoundaryEntryLogsOneQSOPerPlace;
       procedure Test_MyCountyOfARoverPlaceIsItsADIFCounty;
+      procedure Test_TheCountyFileNamesWhatTheListNamed;
+      procedure Test_AnInStateSessionNamesItsCounties;
       procedure Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
       procedure Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
       procedure Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;
@@ -71,6 +73,10 @@ uses
    LogDom,               (* DomQTHTable, TDomQTHTable -- the real county file's load *)
    uSortedStringList,    (* TSortedStringList -- a fresh mo.DomList *)
    uQsoMyFacts,          (* TQsoMyFacts, AssembledCall -- schema 13 *)
+   uDomFileKeys,         (* DomFileLineKey -- every key a county file declares *)
+   uLogSource,           (* ExportCallFor, CabrilloCallFor -- a stored row's two calls *)
+   uContestStateQSOPartyBase,  (* TContestStateQSOPartyBase -- the parties walked *)
+   uTestRegisteredContests,    (* ContestsToWalk, ContestWho *)
    uRoverState;
 
 (* Three Hawaii districts, as hawaiiqp_cty.dom spells its lines. *)
@@ -571,52 +577,193 @@ end;
 
 (* my_county OF A ROVER'S QSO, THROUGH THE REAL ROUTINE
   (PostUnit.RoverPlaceADIFCounty -- the worked station's CNTY rule): a Hawaii
-  district gives the county it lies in, a county party's county its list
-  name. Both need the place on the session's multiplier list (mo.DomList),
-  as the export's CNTY does; a place the list lacks gives none. *)
+  district gives the county it lies in, a county party's county the name its
+  COUNTY FILE gives it -- whatever the session's multiplier list holds
+  (2026-11-20; it was the list's AltName, seeded here by hand). A place that
+  is no key of the county file gives none. *)
 procedure TRoverStateTests.Test_MyCountyOfARoverPlaceIsItsADIFCounty;
 var
    handle: TContestHandle;
    savedContest: TContestHandle;
-   index: integer;
-
-   procedure Seed(const aKey, aName: string);
-   begin
-      index := mo.DomList.AddString(aKey, AllBands, Both, True);
-      mo.DomList.AltName[index] := Str30(aName);
-   end;
-
-   procedure Unseed(const aKey: string);
-   begin
-      if mo.DomList.FindMult(aKey, index) then
-         begin
-         mo.DomList.Delete(index);
-         end;
-   end;
-
+   savedDomDir: string;
+   savedList: TSortedStringList;
 begin
    BeginTest('Test_MyCountyOfARoverPlaceIsItsADIFCounty');
    savedContest := Contest;
+   savedDomDir := ShippedDomDirOverride;
+   savedList := mo.DomList;
+   ShippedDomDirOverride := ShippedDomDir;
+   (* AN EMPTY LIST: the answer must not come from it. *)
+   mo.DomList := TSortedStringList.Create;
    try
       CheckTrue(FindContestById('HI-QSO-PARTY', handle), 'Hawaii is registered');
       Contest := handle;
-      Seed('KOH', 'Kohala');
       CheckEquals('HI,Hawaii', RoverPlaceADIFCounty('KOH'),
                   'KOH lies in Hawaii county: my_county is the county, not the district');
       CheckEquals('', RoverPlaceADIFCounty(''), 'no place, no county');
-      Unseed('KOH');
-      CheckEquals('', RoverPlaceADIFCounty('KOH'),
-                  'a place the session''s list lacks gives none');
+      CheckEquals('', RoverPlaceADIFCounty('ZZZ'),
+                  'a place the county file does not declare gives none');
 
       CheckTrue(FindContestById('GA-QSO-PARTY', handle), 'Georgia is registered');
       Contest := handle;
-      Seed('APPL', 'Appling');
-      CheckEquals('GA,Appling', RoverPlaceADIFCounty('APPL'),
-                  'a county party''s county is its list name');
-      Unseed('APPL');
+      CheckEquals('GA,APPLING', RoverPlaceADIFCounty('appl'),
+                  'a county party''s county is its county file''s name, in any case');
    finally
-      Unseed('KOH');
-      Unseed('APPL');
+      mo.DomList.Free;
+      mo.DomList := savedList;
+      ShippedDomDirOverride := savedDomDir;
+      Contest := savedContest;
+   end;
+end;
+
+(* THE COUNTY FILE NAMES WHAT THE MULTIPLIER LIST NAMED (2026-11-20). The
+  ADIF county name moved from the session's list (mo.DomList's AltName) to
+  the party's own county file (CountyFileCountyName). An OUT-OF-STATE session
+  -- the only one whose list held the counties -- must not move: for EVERY
+  party and EVERY key its county file declares, the file loaded as that
+  session loads it (MultipliersIsCounties) gives the list's answer, found or
+  not and name for name. *)
+procedure TRoverStateTests.Test_TheCountyFileNamesWhatTheListNamed;
+var
+   parties: TContestIdentityList;
+   party: TContestBase;
+   savedTable: TDomQTHTable;
+   savedList: TSortedStringList;
+   savedCounties: boolean;
+   savedDomDir: string;
+   lines: TStringList;
+   i, p, index, checked: integer;
+   key, fileName, listName: string;
+   inFile, inList: boolean;
+begin
+   BeginTest('Test_TheCountyFileNamesWhatTheListNamed');
+   parties := ContestsToWalk;
+   savedTable := DomQTHTable;
+   savedList := mo.DomList;
+   savedCounties := MultipliersIsCounties;
+   savedDomDir := ShippedDomDirOverride;
+   ShippedDomDirOverride := ShippedDomDir;
+   lines := TStringList.Create;
+   DomQTHTable := nil;
+   mo.DomList := nil;
+   checked := 0;
+   try
+      MultipliersIsCounties := True;
+      for p := 0 to High(parties) do
+         begin
+         party := parties[p];
+         if not (party is TContestStateQSOPartyBase) then
+            begin
+            Continue;
+            end;
+         DomQTHTable.Free;
+         DomQTHTable := TDomQTHTable.Create;
+         mo.DomList.Free;
+         mo.DomList := TSortedStringList.Create;
+         CheckTrue(DomQTHTable.LoadInDomQTHFile(IncludeTrailingPathDelimiter(ShippedDomDir) +
+                                                party.DomesticFileName + '.dom'),
+                   ContestWho(party) + ': its county file loads');
+         lines.LoadFromFile(IncludeTrailingPathDelimiter(ShippedDomDir) +
+                            party.DomesticFileName + '.dom');
+         for i := 0 to lines.Count - 1 do
+            begin
+            key := DomFileLineKey(lines[i]);
+            if key = '' then
+               begin
+               Continue;
+               end;
+            inList := mo.DomList.FindMult(key, index);
+            listName := '';
+            if inList then
+               begin
+               listName := string(mo.DomList.AltName[index]);
+               end;
+            inFile := party.CountyFileCountyName(key, fileName);
+            CheckTrue(inList = inFile, ContestWho(party) + ': ' + key + ' is a county in both');
+            CheckEquals(listName, fileName, ContestWho(party) + ': ' + key + '''s name');
+            Inc(checked);
+            end;
+         end;
+      CheckTrue(checked > 1000, 'every party''s every county was compared');
+   finally
+      lines.Free;
+      DomQTHTable.Free;
+      DomQTHTable := savedTable;
+      mo.DomList.Free;
+      mo.DomList := savedList;
+      MultipliersIsCounties := savedCounties;
+      ShippedDomDirOverride := savedDomDir;
+   end;
+end;
+
+(* AN IN-STATE SESSION NAMES ITS OWN COUNTIES (2026-11-20). florida.dom files
+  every Florida county under Fl ('Pin > Fl = PIN') and georgia.dom's county
+  file every county under Ga, so an in-state session's list holds no county
+  key: the list-based rule wrote no CNTY for an in-state county and left an
+  in-state station's my_county blank. The county file answers instead. *)
+procedure TRoverStateTests.Test_AnInStateSessionNamesItsCounties;
+var
+   handle: TContestHandle;
+   savedContest: TContestHandle;
+   savedTable: TDomQTHTable;
+   savedList: TSortedStringList;
+   savedCounties: boolean;
+   savedDomDir: string;
+   index: integer;
+   facts: TQsoMyFacts;
+
+   procedure LoadInState(const aFile: string);
+   begin
+      DomQTHTable.Free;
+      DomQTHTable := TDomQTHTable.Create;
+      mo.DomList.Free;
+      mo.DomList := TSortedStringList.Create;
+      CheckTrue(DomQTHTable.LoadInDomQTHFile(IncludeTrailingPathDelimiter(ShippedDomDir) + aFile),
+                aFile + ' loads');
+   end;
+
+begin
+   BeginTest('Test_AnInStateSessionNamesItsCounties');
+   savedContest := Contest;
+   savedTable := DomQTHTable;
+   savedList := mo.DomList;
+   savedCounties := MultipliersIsCounties;
+   savedDomDir := ShippedDomDirOverride;
+   ShippedDomDirOverride := ShippedDomDir;
+   DomQTHTable := nil;
+   mo.DomList := nil;
+   try
+      (* As FoundContest sets it for an in-state entrant. *)
+      MultipliersIsCounties := False;
+
+      Contest := ContestHandleOf(FLORIDAQSOPARTY);
+      LoadInState('florida.dom');
+      CheckFalse(mo.DomList.FindMult('PIN', index),
+                 'the cause: an in-state Florida list holds no county key');
+      CheckEquals('FL,PINELLAS', RoverPlaceADIFCounty('PIN'),
+                  'an in-state Florida county still names its county');
+      facts := NotCapturedMyFacts;
+      facts.Source := mfsLogged;
+      facts.State := 'PIN';
+      CheckTrue(ApplyPartyUnitToMyFacts('PIN', facts), 'PIN is a Florida unit');
+      CheckEquals('FL', string(facts.State), 'my_state FL');
+      CheckEquals('FL,PINELLAS', string(facts.County), 'my_county Pinellas, not blank');
+      CheckEquals('PIN', string(facts.SentUnit), 'and it sends PIN');
+
+      CheckTrue(FindContestById('GA-QSO-PARTY', handle), 'Georgia is registered');
+      Contest := handle;
+      LoadInState('georgia.dom');
+      CheckFalse(mo.DomList.FindMult('APPL', index),
+                 'the cause: an in-state Georgia list files APPL under Ga');
+      CheckEquals('GA,APPLING', RoverPlaceADIFCounty('APPL'),
+                  'an in-state Georgia county names its county');
+   finally
+      DomQTHTable.Free;
+      DomQTHTable := savedTable;
+      mo.DomList.Free;
+      mo.DomList := savedList;
+      MultipliersIsCounties := savedCounties;
+      ShippedDomDirOverride := savedDomDir;
       Contest := savedContest;
    end;
 end;
@@ -669,6 +816,7 @@ var
    savedContest: TContestHandle;
    savedTable: TDomQTHTable;
    savedList: TSortedStringList;
+   savedDomDir: string;
    lines: TStringList;
    i, keys: integer;
    key, county: string;
@@ -676,6 +824,10 @@ begin
    CheckTrue(FindContestById(aContestId, aHandle), aContestId + ' is registered');
    savedContest := Contest;
    savedTable := DomQTHTable;
+   (* THE NAMES ARE THE COUNTY FILE'S (CountyFileCountyName), read from the
+      shipped directory: the tree's, here. *)
+   savedDomDir := ShippedDomDirOverride;
+   ShippedDomDirOverride := ShippedDomDir;
    DomQTHTable := TDomQTHTable.Create;
    (* A FRESH MULTIPLIER LIST, as a session that opened only this contest has:
       the list the rest of the suite left behind holds other contests' keys
@@ -715,6 +867,7 @@ begin
       mo.DomList := savedList;
       DomQTHTable.Free;
       DomQTHTable := savedTable;
+      ShippedDomDirOverride := savedDomDir;
       Contest := savedContest;
    end;
 end;
@@ -785,6 +938,7 @@ var
    savedContest: TContestHandle;
    savedTable: TDomQTHTable;
    savedList: TSortedStringList;
+   savedDomDir: string;
    facts: TQsoMyFacts;
    session: TMyStationExchange;
 
@@ -810,6 +964,8 @@ begin
    savedContest := Contest;
    savedTable := DomQTHTable;
    savedList := mo.DomList;
+   savedDomDir := ShippedDomDirOverride;
+   ShippedDomDirOverride := ShippedDomDir;
    DomQTHTable := nil;
    mo.DomList := nil;
    session := Default(TMyStationExchange);
@@ -869,6 +1025,7 @@ begin
       DomQTHTable := savedTable;
       mo.DomList.Free;
       mo.DomList := savedList;
+      ShippedDomDirOverride := savedDomDir;
       Contest := savedContest;
    end;
 end;
@@ -878,6 +1035,7 @@ end;
 procedure TRoverStateTests.Test_TheCallIsAssembledFromTheSettingAndThePlaces;
 var
    units: TStringList;
+   facts: TQsoMyFacts;
 begin
    BeginTest('Test_TheCallIsAssembledFromTheSettingAndThePlaces');
    CheckEquals('VE3FRV/W2/KIN/QUE', AssembledCall('VE3FRV/W2', 'KIN/QUE'),
@@ -885,6 +1043,21 @@ begin
    CheckEquals('NY4I/KOH', AssembledCall('NY4I', 'KOH'), 'one place');
    CheckEquals('VE3FRV/W2', AssembledCall('VE3FRV/W2', ''), 'not roving: the setting as set');
    CheckEquals('', AssembledCall('', 'KIN'), 'no call: nothing to sign');
+
+   (* THE TWO EXPORT CALLS OF A STORED ROW (uLogSource). Schema 13: ADIF the
+      setting, Cabrillo the assembly. A SCHEMA-12 ROVER ROW -- NY4I's test
+      log: my_call NY4I/KIN/QUE as signed, no places -- signs exactly as it
+      did in both, and is never suffixed twice. *)
+   facts := NotCapturedMyFacts;
+   facts.Source := mfsLogged;
+   facts.Call := 'VE3FRV/W2';
+   facts.RoverPlaces := 'KIN/QUE';
+   CheckEquals('VE3FRV/W2', ExportCallFor(facts), 'schema 13: ADIF writes the setting');
+   CheckEquals('VE3FRV/W2/KIN/QUE', CabrilloCallFor(facts), 'and Cabrillo the assembly');
+   facts.Call := 'NY4I/KIN/QUE';
+   facts.RoverPlaces := '';
+   CheckEquals('NY4I/KIN/QUE', ExportCallFor(facts), 'schema 12: ADIF as it was');
+   CheckEquals('NY4I/KIN/QUE', CabrilloCallFor(facts), 'and Cabrillo as it was, once');
 
    units := TStringList.Create;
    try
@@ -912,6 +1085,8 @@ begin
    Test_ARoverFromANewPlaceIsNoDupe;
    Test_ABoundaryEntryLogsOneQSOPerPlace;
    Test_MyCountyOfARoverPlaceIsItsADIFCounty;
+   Test_TheCountyFileNamesWhatTheListNamed;
+   Test_AnInStateSessionNamesItsCounties;
    Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
    Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
    Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;

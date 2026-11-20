@@ -44,6 +44,11 @@ const
      tree and the ratchet counts every one of those. *)
    DOM_EXTENSION: AnsiString = '.dom';
 
+   (* THE WIDTH A KEY IS COMPARED AT -- the multiplier list's Str10 (and
+     AddNewPrefixRecord's for an alias). A reader that looks a county key up
+     cuts it here, as the list did. *)
+   DOM_KEY_WIDTH_MAX = 10;
+
 (* The key aLine declares, upper-cased, or '' when it declares none. *)
 function DomFileLineKey(const aLine: string): string;
 
@@ -80,6 +85,34 @@ procedure DomFileKeyTargets(const aLines: TStrings; aTargets: TStrings);
 (* The same, of the file at aPath. False, with aTargets cleared, when there
   is no such file. *)
 function DomFileOnDiskKeyTargets(const aPath: string; aTargets: TStrings): boolean;
+
+(* ---------------------------------------------------------------------------
+  THE DISPLAY NAME A LINE GIVES ITS KEY -- 'Alb = ALB,^Albany' gives 'ALBANY'.
+  2026-11-20, issues 133 and 87.
+
+  WHY IT EXISTS: THE ADIF COUNTY OF A PARTY'S COUNTY CODE. It was read from
+  the session's multiplier list (mo.DomList's AltName), which holds the names
+  only where the session loaded the COUNTY file -- an out-of-state entrant.
+  An in-state entrant's file either maps every county to the host state
+  ('Pin > Fl = PIN', florida.dom; 'APPL > Ga', georgia_cty.dom under an
+  in-state load) or carries no county at all, so the list has no county key
+  and an in-state station wrote no CNTY and no my_county. The party's own
+  county file says it whoever is entering.
+
+  THE RULE IS EnumDOMFILE's, for what it stores as AltName: every item after
+  the first '=' whose first character, upper-cased and trimmed, is '^'; the
+  text after the '^', cut to thirty characters (a Str30). The LAST such item
+  of a line wins, as the loader's repeated assignment does. '' for a line
+  that names none. *)
+function DomFileLineDisplayName(const aLine: string): string;
+
+(* Every line of aLines that declares a key (DomFileLineKey), as KEY=NAME in
+  aNames (cleared first) -- NAME '' where no line names it. The key is cut to
+  ten characters, the width the multiplier list compares. A later line of
+  the same key replaces the name only with a name, as the loader's AltName
+  assignment does. A file's INCLUDE lines are not followed: no county file
+  holds one. *)
+procedure DomFileKeyNames(const aLines: TStrings; aNames: TStrings);
 
 (* ---------------------------------------------------------------------------
   THE ALIASES A LINE GIVES -- the RIGHT side of 'MULTIPLIER = alias, alias',
@@ -133,6 +166,10 @@ const
 
    (* Str10, the width AddNewPrefixRecord stores an alias in. *)
    DOM_ALIAS_WIDTH_MAX = 10;
+
+   (* Str30, the width the multiplier list stores a display name in
+     (TSortedStringList.AltName). *)
+   DOM_DISPLAY_NAME_WIDTH_MAX = 30;
 
 function DomFileLineKey(const aLine: string): string;
 var
@@ -258,6 +295,72 @@ begin
       DomFileKeyTargets(lines, aTargets);
    finally
       lines.Free;
+      end;
+end;
+
+function DomFileLineDisplayName(const aLine: string): string;
+var
+   rest: string;
+   item: string;
+   p: integer;
+begin
+   Result := '';
+   p := Pos('=', aLine);
+   if p = 0 then
+      begin
+      Exit;
+      end;
+
+   rest := Copy(aLine, p + 1, Length(aLine));
+   while rest <> '' do
+      begin
+      p := Pos(',', rest);
+      if p > 0 then
+         begin
+         item := Copy(rest, 1, p - 1);
+         rest := Copy(rest, p + 1, Length(rest));
+         end
+      else
+         begin
+         item := rest;
+         rest := '';
+         end;
+
+      item := UpperCase(Trim(item));
+      if (item <> '') and (item[1] = '^') then
+         begin
+         Result := Copy(item, 2, DOM_DISPLAY_NAME_WIDTH_MAX);
+         end;
+      end;
+end;
+
+procedure DomFileKeyNames(const aLines: TStrings; aNames: TStrings);
+var
+   key: string;
+   name: string;
+   i: integer;
+   index: integer;
+begin
+   aNames.Clear;
+   for i := 0 to aLines.Count - 1 do
+      begin
+      key := Copy(DomFileLineKey(aLines[i]), 1, DOM_KEY_WIDTH_MAX);
+      if key = '' then
+         begin
+         Continue;
+         end;
+      name := DomFileLineDisplayName(aLines[i]);
+      (* EXPLICIT: TStrings holds AnsiString; a key is an ASCII code and a
+         name the file's own text. *)
+      index := aNames.IndexOfName(AnsiString(key));
+      if index < 0 then
+         begin
+         aNames.Add(AnsiString(key + '=' + name));
+         end
+      else if name <> '' then
+         begin
+         aNames[index] := AnsiString(key + '=' + name);
+         end;
       end;
 end;
 
