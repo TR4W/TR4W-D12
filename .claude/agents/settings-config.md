@@ -861,8 +861,12 @@ setup wizard. A 64-bit process gets no VirtualStore, so every write was refused.
 - **A refused settings save is REPORTED, not raised.** `SaveConfig`/`SaveSettings` are functions now
   (False on refusal); `uTR4WConfigFile.WriteConfigDocument` goes through
   `uFileText.TryWriteAllTextUTF8` (catches `EStreamError`/`EInOutError` only), logs an Error every time
-  and calls the `SetConfigWriteNotice` hook ONCE per run (Preferences saves per keystroke). The old file
-  is untouched. `tr4wconvert` turns it into `FAILED:` + exit 1 via `LastConfigWriteFailure`.
+  and calls the `SetConfigWriteNotice` hook until one call answers True (it SHOWED the notice -- headless
+  or off the main thread it answers False), then not again that run (Preferences saves per keystroke).
+  The old file is untouched. `tr4wconvert` turns it into `FAILED:` + exit 1 via `LastConfigWriteFailure`.
+  **A caller that claims success or acts after the save must check the boolean** -- the old exception
+  aborted it for free: Preferences' `SaveStore` (its `except` no longer sees a refusal), the setup
+  wizard's result page and the legacy-ini "don't ask again" were changed for that.
 - **Open for NY4I:** an elevated run finds the folder writable and uses it (a second set of files);
   Roaming holds an unbounded `tr4w.log` and the contest logs in a hidden folder; old `.db` files in the
   install folder are not moved (the notice says so). Bench steps: `docs/BENCH_QUEUE.md`.

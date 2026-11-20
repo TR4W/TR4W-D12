@@ -125,9 +125,13 @@ begin
       if dontAskAgain then
          begin
          store.KeepLegacyIni := True;
-         SaveConfig(aStoreFileName, store, nil, nil);
-         logger.Info('[LegacyIni] operator asked not to be reminded about %s again',
-                     [ini]);
+         (* A refused save keeps nothing: the operator is asked again next
+           start. uTR4WConfigFile has logged why (issue 165). *)
+         if SaveConfig(aStoreFileName, store, nil, nil) then
+            begin
+            logger.Info('[LegacyIni] operator asked not to be reminded about %s again',
+                        [ini]);
+            end;
          end;
 
       if not remove then

@@ -214,6 +214,11 @@ that is a STANDARD user (not elevated):
 - [ ] **Run elevated once (right-click, Run as administrator).** The probe then finds the install folder
   writable and TR4W uses `C:\Program Files\TR4W` as before -- a SECOND set of files. Note what you see;
   whether TR4W should prefer an existing per-user folder over a writable install is NY4I's call.
+- [ ] **A Windows user name with non-ASCII letters** (e.g. a Cyrillic account). Every redirected path now
+  contains the profile name (`C:\Users\<name>\AppData\Roaming\TR4W\`). Repeat the fresh-install check on such
+  an account: settings save, `tr4w.log` opens, a contest `.db` is created, and `tr4wconvert` (a console
+  program) finds and writes the same `settings\tr4w.json`. Several paths still pass through AnsiString;
+  a failure here would look exactly like the original defect.
 - [ ] **No change on a normal install.** On `C:\tr4w`: no notice, no `%APPDATA%\TR4W` folder created,
   every file where it always was.
 

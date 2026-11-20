@@ -1027,13 +1027,15 @@ end;
   operator sees, once per run (uTR4WConfigFile latches it and logs every
   failure). Never from a headless run, and never off the main thread: a
   modal there would deadlock or vanish, and the log already has the line. *)
-procedure ConfigWriteNoticeToOperator(const aFileName, aReason: string);
+function ConfigWriteNoticeToOperator(const aFileName, aReason: string): boolean;
 begin
+   Result := False;
    if tSilentExport or (not OnMainThread) then
       begin
       Exit;
       end;
    ReportStartupWarning(UnicodeFormat(SSettingsNotSaved, [aFileName, aReason]));
+   Result := True;
 end;
 
 (* True when aDir holds a contest log -- the .db files a redirected TR4W no
@@ -1069,6 +1071,14 @@ begin
                + WritableFilesRoot + ' (shipped data is still read from '
                + DataDir + ')');
 
+   (* NOBODY TO TELL IN A SCRIPTED RUN, and the notice must not be spent
+     there: TakeWritableRootNotice records it as shown. /IMPORTLOG is not one
+     of IsHeadlessSwitch's switches but promises "no dialog" too. *)
+   if tSilentExport or SameText(AnsiString(ParamStr(1)), AnsiString('/IMPORTLOG')) then
+      begin
+      Exit;
+      end;
+
    if not TakeWritableRootNotice(installDir, root, copied) then
       begin
       Exit;
@@ -1076,10 +1086,6 @@ begin
    if copied <> '' then
       begin
       logger.Info('[Paths] copied from ' + installDir + 'settings: ' + copied);
-      end;
-   if tSilentExport then
-      begin
-      Exit;
       end;
 
    text := UnicodeFormat(SWritableRootMoved, [installDir, root]);

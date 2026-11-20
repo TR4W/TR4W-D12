@@ -128,7 +128,10 @@ function TR4WConfigFileName: string;
   shows. LastConfigWriteFailure is the last refusal's reason, '' after a
   write that worked -- tr4wconvert reports it and exits non-zero. *)
 type
-   TConfigWriteNotice = procedure(const aFileName, aReason: string);
+   (* True when the operator was actually told -- a hook that cannot show
+     anything (headless, off the main thread) answers False, and the next
+     failure tries again. *)
+   TConfigWriteNotice = function(const aFileName, aReason: string): boolean;
 
 procedure SetConfigWriteNotice(aNotice: TConfigWriteNotice);
 function LastConfigWriteFailure: string;
@@ -522,8 +525,7 @@ begin
       'settings it holds');
    if (not gConfigWriteNoticeShown) and Assigned(gConfigWriteNotice) then
       begin
-      gConfigWriteNoticeShown := True;
-      gConfigWriteNotice(aFileName, reason);
+      gConfigWriteNoticeShown := gConfigWriteNotice(aFileName, reason);
       end;
 end;
 

@@ -87,10 +87,18 @@ var
    GNoticeCount: integer = 0;
    GNoticeFile: string = '';
 
-procedure CountNotice(const aFileName, aReason: string);
+function CountNotice(const aFileName, aReason: string): boolean;
 begin
    Inc(GNoticeCount);
    GNoticeFile := aFileName;
+   Result := True;
+end;
+
+(* A hook that could not show anything: the latch must stay open. *)
+function NoticeNotShown(const aFileName, aReason: string): boolean;
+begin
+   Inc(GNoticeCount);
+   Result := False;
 end;
 
 procedure RemoveTree(const aDir: string);
@@ -313,11 +321,18 @@ end;
 procedure TWritableRootTests.Test_ExportsGoBesideTheContestLog;
 begin
    BeginTest('Test_ExportsGoBesideTheContestLog');
-   CheckEquals('/home/op/tr4w/a.adi', BesideContestLogFilePath('/home/op/tr4w/a.db', 'a.adi'),
-               'a Unix-spelled log');
+   (* Built with PathDelim, not a spelled separator: ExtractFilePath splits
+     at the platform's separators only, so a Windows-spelled path is one
+     file name on Linux. The composition is the same on every platform. *)
+   CheckEquals(PathDelim + 'home' + PathDelim + 'op' + PathDelim + 'tr4w' + PathDelim + 'a.adi',
+               BesideContestLogFilePath(PathDelim + 'home' + PathDelim + 'op' + PathDelim
+                                        + 'tr4w' + PathDelim + 'a.db', 'a.adi'),
+               'an export goes in the log''s own folder');
+{$IFDEF WINDOWS}
    CheckEquals('C:\Users\op\AppData\Roaming\TR4W\a.log',
                BesideContestLogFilePath('C:\Users\op\AppData\Roaming\TR4W\a.db', 'a.log'),
                'a redirected Windows log takes its exports with it');
+{$ENDIF}
    CheckEquals('a.log', BesideContestLogFilePath('a.db', 'a.log'),
                'a bare name stays a bare name');
 end;
@@ -361,6 +376,16 @@ begin
       CheckEquals(1, GNoticeCount, 'two failures, one notice');
       CheckEquals(fn, GNoticeFile, 'the notice names the file');
       CheckTrue(LastConfigWriteFailure <> '', 'the reason is kept: ' + LastConfigWriteFailure);
+
+      (* A hook that could not show anything leaves the latch open, so the
+        operator is still told by the next failure that CAN be shown. *)
+      GNoticeCount := 0;
+      ForgetConfigWriteNotice;
+      SetConfigWriteNotice(NoticeNotShown);
+      SaveSettings(fn, settings);
+      SetConfigWriteNotice(CountNotice);
+      SaveSettings(fn, settings);
+      CheckEquals(2, GNoticeCount, 'an unshown notice is offered again');
    finally
       settings.Free;
       SetConfigWriteNotice(nil);
