@@ -39,15 +39,19 @@ const
   TR4W_WEBSITE                          = 'https://tr4w.net';
 
   (* THE PROJECT'S DATA HOST on GitHub Pages (NY4I, 2026-11-20): the big files
-    the program downloads when the operator asks. Today that is the FCC/VE
-    license database, kept as one compressed file (a zip of a SQLite file; the
-    download unzips it). The URL is built here, from the host and the file's
-    NAME, so changing either is one line. The download itself is not written
-    yet (the setup wizard's external-files page will call it); the file name is
-    a placeholder until the file is published. No trailing slash on the host. *)
+    the program downloads when the operator asks. Today that is the callsign
+    lookup database (FCC and ISED licensees), which tools\trmaster\lookup_build.py
+    publishes as fcc_lookup.sqlite.gz (gzip of one SQLite file; the download
+    gunzips it) beside a ~600 byte manifest.json to fetch first
+    (tools\trmaster\LOOKUP_DB.md has the client flow). The URLs are built here,
+    from the host and the file NAMES, so changing either is one line. The
+    download itself is not written yet (issue 337; the setup wizard's
+    external-files page will call it). No trailing slash on the host. *)
   TR4W_DATA_SITE                        = 'https://tr4w.github.io';
-  FCC_LICENSE_FILE_NAME                 = 'fcc_licenses.sqlite.zip';
+  FCC_LICENSE_FILE_NAME                 = 'fcc_lookup.sqlite.gz';
+  FCC_LICENSE_MANIFEST_NAME             = 'manifest.json';
   FCC_LICENSE_DOWNLOAD_URL              = TR4W_DATA_SITE + '/' + FCC_LICENSE_FILE_NAME;
+  FCC_LICENSE_MANIFEST_URL              = TR4W_DATA_SITE + '/' + FCC_LICENSE_MANIFEST_NAME;
 
  implementation
  end.
