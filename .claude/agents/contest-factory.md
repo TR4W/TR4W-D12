@@ -445,8 +445,12 @@ the target shape, the M-step migration order and the open questions.
   (Missouri, Illinois, Nebraska, Wisconsin, Mississippi, Vermont) were NOT
   migrated -- they credit JTTY and JS8 today, so an allow-list is a rule
   change for their sponsors to settle. JTTY is approved only where a
-  sponsor's rule allows free-form digital (NY4I: Iowa and Winter Field Day;
-  WFD's rules are not in `docs/ContestRules` and its class states no modes).
+  sponsor's rule allows free-form digital (NY4I: Iowa and Winter Field Day).
+  Winter Field Day uses it since 2026-11-19 (its 2027 rules, v3, in
+  `docs/ContestRules/WinterFieldDay/`: "All modes, except WSJT modes"): RTTY,
+  PSK31/63/-R, MFSK, JS8, JTTY; it states its bands (all but 30/17/12 m) and
+  scores the QSO points alone -- the objective multiplier is selected on
+  submission, and D7's band-mode x power formula was an earlier year's.
   `uTestAutomaticXQSO` pins it all;
   `tools/contest-factory-q98/classify_matrix.py` classifies a stage's
   matrix movement against its prediction.
