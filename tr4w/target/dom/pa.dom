@@ -1,6 +1,9 @@
-Domestic template for Ohio stations in PA QSO Party
+Domestic file for Pennsylvania stations in the PA QSO Party (2026 rules, section 10.a)
+In-state multipliers: the 67 PA counties, the ARRL sections, the Canadian sections and one DX.
+The sponsor's exchange is a serial plus a PA county, an ARRL section, a Canadian section or DX (5.a),
+so the section list arrlsect.dom is included, not the states and provinces of S50.DOM and P13.DOM.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
 
 INCLUDE FILE pa_cty.dom
-INCLUDE FILE S50.DOM
-INCLUDE FILE P13.DOM
+INCLUDE FILE arrlsect.dom
 dx = dx

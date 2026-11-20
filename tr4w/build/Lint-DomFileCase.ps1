@@ -67,7 +67,7 @@ $LegacyNames = @(
 # follows them case-tolerantly. A NEW line must be exact; the count may only
 # fall. Lower the ceiling when it does, never raise it. 93 since 2026-11-19
 # (issue 88: newyork.dom's S50.DOM and PROV12.DOM lines became s50p13.dom).
-$INCLUDE_CEILING = 93
+$INCLUDE_CEILING = 91
 
 Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
 

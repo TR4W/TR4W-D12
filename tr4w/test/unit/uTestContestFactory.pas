@@ -1120,7 +1120,8 @@ begin
       are pinned in uTestContestBritishColumbiaQP. *)
 
    (* PAQSOPointMethod: if Mode = PHONE then 1 else 2. *)
-   CheckPoints(PAQSOPARTY, 'Pennsylvania', 2, 1, 2);
+   (* Digital scores 0 since the 2026-11-20 audit: the sponsor's rules name no digital mode (UsesMode). *)
+   CheckPoints(PAQSOPARTY, 'Pennsylvania', 2, 1, 0);
 
    (* NCQSOPointMethod: phone 2, CW 3, digital 5 -- three distinct numbers,
       before any bonus. PointsFor zeroes the whole exchange, so the callsign

@@ -1042,6 +1042,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestContestNorthCarolinaQP in 'uTestContestNorthCarolinaQP.pas',
    uTestContestMichiganQP in 'uTestContestMichiganQP.pas',
    uTestContestOhioQP in 'uTestContestOhioQP.pas',
+   uTestContestPennsylvaniaQP in 'uTestContestPennsylvaniaQP.pas',
    (* Coming back to TR4W raises every TR4W window, main on top (2026-11-01). *)
    uTestActivationRaise in 'uTestActivationRaise.pas',
    uTestContestTennesseeQP in 'uTestContestTennesseeQP.pas',
@@ -1290,6 +1291,7 @@ begin
    RegisterSuite(TContestNorthCarolinaQPTests.Create('ContestNorthCarolinaQP'));
    RegisterSuite(TContestMichiganQPTests.Create('ContestMichiganQP'));
    RegisterSuite(TContestOhioQPTests.Create('ContestOhioQP'));
+   RegisterSuite(TContestPennsylvaniaQPTests.Create('ContestPennsylvaniaQP'));
    RegisterSuite(TActivationRaiseTests.Create('ActivationRaise'));
    RegisterSuite(TContestTennesseeQPTests.Create('ContestTennesseeQP'));
    RegisterSuite(TContestTexasQPTests.Create('ContestTexasQP'));
