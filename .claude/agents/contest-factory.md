@@ -579,6 +579,16 @@ the target shape, the M-step migration order and the open questions.
   on a key given where `HasDXMultiplier` is False. `LOGEDIT.DoingDXMults`
   is that answer for the active contest -- live, so F21 is closed; there is
   no session flag for it.
+  **THE KEY IS A GATE AND A DISPLAY VALUE, NOT THE SHEET'S KEY (measured
+  2026-11-20, Florida maritime mobile).** `LOGDUPE.SetMultFlags` asks
+  `mo.IsDXMult(RXData.QTH.Country, ...)` -- the CTY COUNTRY INDEX of the
+  worked call -- and only requires `DXQTH <> ''`. So a DX multiplier that is
+  not a CTY country (the FQP's ITU regions R1/R2/R3 for a /MM station, which
+  has no country of its own) cannot be carried by `DXMultiplierKey`: setting
+  `DXQTH` for it would credit ONE spurious multiplier, the call's country. The
+  string-keyed sheet is the PREFIX one, which needs `HasPrefixMultiplier`
+  and so changes `uTestPrefixMultiplierKey`'s frozen sets; Florida's maritime
+  multiplier waits for a ruling on that seam.
 - **THE ZONE MULTIPLIER IS THE CLASS'S (M11 S5, 2026-10-14).** Four
   virtuals, each with a nil-safe `Contest...` free function:
   `HasZoneMultiplier: boolean` (base False -- part 2, which DELETED
