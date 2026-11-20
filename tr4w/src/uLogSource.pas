@@ -102,6 +102,11 @@ function LogSourceNext(out aQso: ContestExchange;
                        out aFacts: TQsoMyFacts;
                        out aSentExchange: AnsiString): boolean; overload;
 
+(* THE qso_set_id OF THE ROW THE LAST LogSourceNext READ ('' for none): which
+  rows are one contact (a county line, a rover's boundary) -- the ADIF
+  export writes them as one record (issue 338). *)
+function LogSourceLastQsoSetId: AnsiString;
+
 (* LogSourceNext, and the ROW ID of what it read -- the handle
   uLogStore.LogStoreUpdateQSOsByRowId writes by. For a pass that reads the
   whole log and rewrites some of it: the rescore reached each row by index
@@ -364,6 +369,15 @@ begin
    aFacts := NotCapturedMyFacts;
    aSentExchange := '';
    Result := (Repo <> nil) and Repo.ReadNextForExport(aQso, aFacts, aSentExchange);
+end;
+
+function LogSourceLastQsoSetId: AnsiString;
+begin
+   Result := '';
+   if Repo <> nil then
+      begin
+      Result := Repo.LastReadQsoSetId;
+      end;
 end;
 
 function LogSourceNextWithRowId(out aRowId: Int64;

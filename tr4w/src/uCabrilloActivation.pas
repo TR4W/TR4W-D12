@@ -97,7 +97,8 @@ type
 implementation
 
 uses
-   SysUtils;
+   SysUtils,
+   uQsoMyFacts;   (* AssembledCall -- the one call assembly *)
 
 constructor TCabrilloActivations.Create;
 begin
@@ -180,9 +181,12 @@ function TCabrilloActivations.ActivationCall(aIndex: integer;
                                              const aPlainCall: string): string;
 begin
    Result := aPlainCall;
-   if Roved(aIndex) and (Place(aIndex) <> '') and (aPlainCall <> '') then
+   if Roved(aIndex) then
       begin
-      Result := aPlainCall + '/' + Place(aIndex);
+      (* THE ONE ASSEMBLY (NY4I, 2026-11-20, ruling 6): the call as set and
+         the activation's place -- uQsoMyFacts.AssembledCall, which RovingCall
+         and every Cabrillo QSO line use too. *)
+      Result := AssembledCall(aPlainCall, Place(aIndex));
       end;
 end;
 

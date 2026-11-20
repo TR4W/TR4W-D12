@@ -418,6 +418,66 @@ type
    TQsoMyFactsArray = array of TQsoMyFacts;
    (* One exchange_sent per record, in the records' order. *)
    TSentExchangeArray = array of AnsiString;
+   (* Extra ADIF tag text per record, in the records' order, written just
+      before the station's own tags -- '' for none (issue 338). *)
+   TADIFRecordExtras = array of string;
+   (* A list of ADIF counties, 'ST,County', in order. *)
+   TADIFCountyList = array of string;
+
+const
+   (* THE LINKED-COUNTY FIELDS, NAMED HERE AND NOWHERE ELSE (issue 338, NY4I
+      2026-11-20). TEMPORARY NAMES: ADIF has only PROPOSED CNTY_ALT and
+      MY_CNTY_ALT, which both validators reject today (the 3.1.8
+      Secondary_Administrative_Subdivision_Alt enumeration holds NZ_Regions
+      only, and K1MU's validator does not know the tags). When ADIF defines
+      them, the switch is these two constants -- the value form below is the
+      one NY4I gave on #338 and does not change. *)
+   ADIF_APP_MY_COUNTIES_ALT = 'APP_TR4W_MY_CNTY_ALT';
+   ADIF_APP_COUNTIES_ALT = 'APP_TR4W_CNTY_ALT';
+
+(* THE TAGS FOR ONE CONTACT'S OTHER COUNTIES (issue 338) -- a county line or a
+  rover's boundary, logged as several linked rows and written as ONE ADIF
+  record whose MY_CNTY / CNTY carry the FIRST county. aMyCounties is ours,
+  aWorkedCounties the worked station's, each 'ST,County', distinct, in order.
+
+  A SIDE WITH TWO OR MORE COUNTIES writes, on NY4I's ruling, BOTH:
+    - the STANDARD 3.1.8 field when it has EXACTLY TWO: MY_USACA_COUNTIES /
+      USACA_COUNTIES, colon-separated ('NY,KINGS:NY,QUEENS') -- the field
+      ADIF defines for a station on the border of two US counties;
+    - the application field (ADIF_APP_MY_COUNTIES_ALT / ADIF_APP_COUNTIES_ALT)
+      with EVERY county, any number, in #338's list form
+      ('US_Counties:NY/KINGS;US_Counties:NY/QUEENS'), so a three- to
+      five-county corner is not lost.
+  The two are knowingly inconsistent (two fields, two syntaxes, one capped at
+  two) -- NY4I accepted that until ADIF defines CNTY_ALT. A side with one
+  county writes nothing here: a single-county QSO is unchanged. *)
+function LinkedCountyTags(const aMyCounties, aWorkedCounties: TADIFCountyList): string;
+
+type
+   (* The worked station's ADIF county of a record ('' for none), and whether
+      a record's contest writes counties -- PostUnit's, handed in so this
+      stays testable without a session. *)
+   TADIFRecordCounty = function(const rec: ContestExchange): string;
+   TADIFRecordTest = function(const rec: ContestExchange): boolean;
+
+(* ONE ADIF RECORD PER CONTACT (issue 338, NY4I 2026-11-20). The rows a
+  county line or a rover's boundary logged share a qso_set_id (aSetIds[i] is
+  records[i]'s, '' for none); where aMerges says the record's contest writes
+  counties, every row after the first of a set is folded into the FIRST --
+  its record, station, sent exchange, points and claimed flag are the ones
+  written -- and the set's distinct counties become aExtras (LinkedCountyTags):
+  ours from aMyFacts[i].County, the worked station's from aWorkedCounty. The
+  three arrays shrink in step and keep log order (a set is written where its
+  first row was). A row with no set id, a set of one row, or a contest that
+  writes no county (POTA's n-fer is one record per park) is untouched, and
+  its extra is ''. aMyFacts and aSentExchanges must be as long as records. *)
+procedure MergeLinkedADIFContacts(var records: TContestExchangeArray;
+                                  var aMyFacts: TQsoMyFactsArray;
+                                  var aSentExchanges: TSentExchangeArray;
+                                  const aSetIds: TSentExchangeArray;
+                                  aMerges: TADIFRecordTest;
+                                  aWorkedCounty: TADIFRecordCounty;
+                                  out aExtras: TADIFRecordExtras);
 
 // Build one ADIF field as `<NAME:LEN>VALUE ` (trailing space for tag
 // separation).  Empty value returns ''.
@@ -479,7 +539,12 @@ function ExportADIFToString(const records: TContestExchangeArray;
 
 function EmitADIFContact(const rec: ContestExchange; const aFacts: TQsoMyFacts;
                          const aSent: AnsiString; tailEmitter: TContestTailEmitter;
-                         aContest: TContestBase): string;
+                         aContest: TContestBase): string; overload;
+(* THE SAME, WITH aExtra -- tag text written after the tail and before our
+   station's tags ('' for none): LinkedCountyTags for a merged contact. *)
+function EmitADIFContact(const rec: ContestExchange; const aFacts: TQsoMyFacts;
+                         const aSent: AnsiString; tailEmitter: TContestTailEmitter;
+                         aContest: TContestBase; const aExtra: string): string; overload;
 
 (* THE QSOs A CONTEST SENDS TO ITS SECOND ADIF FILE (issue 272), picked out of
   the three parallel arrays an export holds -- records[i], aMyFacts[i] and
@@ -507,6 +572,15 @@ function ExportADIFToString(const records: TContestExchangeArray;
                             const programVersion: string;
                             tailEmitter: TContestTailEmitter;
                             aContest: TContestBase = nil): string; overload;
+(* THE SAME, WITH aExtras[i] written in records[i] (EmitADIFContact's aExtra);
+   shorter than records, or nil, means none past its end. *)
+function ExportADIFToString(const records: TContestExchangeArray;
+                            const aMyFacts: TQsoMyFactsArray;
+                            const aSentExchanges: TSentExchangeArray;
+                            const aExtras: TADIFRecordExtras;
+                            const programVersion: string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase): string; overload;
 
 (* OUR STATION'S TAGS FOR ONE RECORD, FROM THE RECORD -- log schema 3, stage 2.
 
@@ -638,7 +712,9 @@ uses
    (* IsValidPOTAPark -- the one shape test for a park reference. *)
    uPOTAReference,
    (* IsIOTAReference -- the one shape test for an IOTA reference. *)
-   uStationFieldCheck;
+   uStationFieldCheck,
+   (* TDictionary -- MergeLinkedADIFContacts' set id to written record. *)
+   Generics.Collections;
 
 var
    logger : TLogLogger;
@@ -2832,13 +2908,151 @@ function EmitADIFContact(const rec: ContestExchange; const aFacts: TQsoMyFacts;
                          const aSent: AnsiString; tailEmitter: TContestTailEmitter;
                          aContest: TContestBase): string;
 begin
+   Result := EmitADIFContact(rec, aFacts, aSent, tailEmitter, aContest, '');
+end;
+
+function EmitADIFContact(const rec: ContestExchange; const aFacts: TQsoMyFacts;
+                         const aSent: AnsiString; tailEmitter: TContestTailEmitter;
+                         aContest: TContestBase; const aExtra: string): string;
+begin
    Result := EmitADIFRecord(rec, aContest);
    if Assigned(tailEmitter) then
       begin
       Result := Result + tailEmitter(rec, aFacts, aSent);
       end;
+   Result := Result + aExtra;
    Result := Result + EmitADIFMyStationFields(rec, aFacts, Result);
    Result := Result + '<EOR>'#13#10;
+end;
+
+(* ONE SIDE OF LinkedCountyTags: the standard pair field when there are
+  exactly two, and the application field with them all. *)
+function LinkedCountySideTags(const aCounties: TADIFCountyList;
+                              const aStandardTag, aAppTag: string): string;
+var
+   i, comma: integer;
+   pair, list: string;
+begin
+   Result := '';
+   if Length(aCounties) < 2 then
+      begin
+      Exit;
+      end;
+   if Length(aCounties) = 2 then
+      begin
+      pair := aCounties[0] + ':' + aCounties[1];
+      Result := Result + EmitADIFField(aStandardTag, pair);
+      end;
+   list := '';
+   for i := 0 to High(aCounties) do
+      begin
+      comma := Pos(',', aCounties[i]);
+      if list <> '' then
+         begin
+         list := list + ';';
+         end;
+      (* 'NY,KINGS' -> 'US_Counties:NY/KINGS' (#338's form). *)
+      list := list + 'US_Counties:' + Copy(aCounties[i], 1, comma - 1) + '/' +
+              Copy(aCounties[i], comma + 1, MaxInt);
+      end;
+   Result := Result + EmitADIFField(aAppTag, list);
+end;
+
+function LinkedCountyTags(const aMyCounties, aWorkedCounties: TADIFCountyList): string;
+begin
+   Result := LinkedCountySideTags(aWorkedCounties, 'USACA_COUNTIES', ADIF_APP_COUNTIES_ALT) +
+             LinkedCountySideTags(aMyCounties, 'MY_USACA_COUNTIES', ADIF_APP_MY_COUNTIES_ALT);
+end;
+
+(* aCounty added to aList unless empty or already there (any case). *)
+procedure AddDistinctCounty(var aList: TADIFCountyList; const aCounty: string);
+var
+   i: integer;
+begin
+   if Trim(aCounty) = '' then
+      begin
+      Exit;
+      end;
+   for i := 0 to High(aList) do
+      begin
+      if SameText(aList[i], aCounty) then
+         begin
+         Exit;
+         end;
+      end;
+   SetLength(aList, Length(aList) + 1);
+   aList[High(aList)] := aCounty;
+end;
+
+procedure MergeLinkedADIFContacts(var records: TContestExchangeArray;
+                                  var aMyFacts: TQsoMyFactsArray;
+                                  var aSentExchanges: TSentExchangeArray;
+                                  const aSetIds: TSentExchangeArray;
+                                  aMerges: TADIFRecordTest;
+                                  aWorkedCounty: TADIFRecordCounty;
+                                  out aExtras: TADIFRecordExtras);
+var
+   firstOfSet: TDictionary<AnsiString, integer>;
+   outRecords: TContestExchangeArray;
+   outFacts: TQsoMyFactsArray;
+   outSent: TSentExchangeArray;
+   myLists, workedLists: array of TADIFCountyList;
+   i, k, n: integer;
+   key: AnsiString;
+   merges: boolean;
+begin
+   n := 0;
+   SetLength(outRecords, Length(records));
+   SetLength(outFacts, Length(records));
+   SetLength(outSent, Length(records));
+   SetLength(myLists, Length(records));
+   SetLength(workedLists, Length(records));
+   firstOfSet := TDictionary<AnsiString, integer>.Create;
+   try
+      for i := 0 to High(records) do
+         begin
+         key := '';
+         if i <= High(aSetIds) then
+            begin
+            key := aSetIds[i];
+            end;
+         merges := (key <> '') and aMerges(records[i]);
+         if merges and firstOfSet.TryGetValue(key, k) then
+            begin
+            (* A FURTHER ROW OF A CONTACT ALREADY WRITTEN: its counties only. *)
+            AddDistinctCounty(myLists[k], string(aMyFacts[i].County));
+            AddDistinctCounty(workedLists[k], aWorkedCounty(records[i]));
+            end
+         else
+            begin
+            k := n;
+            Inc(n);
+            outRecords[k] := records[i];
+            outFacts[k] := aMyFacts[i];
+            outSent[k] := aSentExchanges[i];
+            if merges then
+               begin
+               firstOfSet.Add(key, k);
+               AddDistinctCounty(myLists[k], string(aMyFacts[i].County));
+               AddDistinctCounty(workedLists[k], aWorkedCounty(records[i]));
+               end;
+            end;
+         end;
+   finally
+      firstOfSet.Free;
+   end;
+
+   SetLength(outRecords, n);
+   SetLength(outFacts, n);
+   SetLength(outSent, n);
+   SetLength(aExtras, n);
+   for k := 0 to n - 1 do
+      begin
+      aExtras[k] := LinkedCountyTags(myLists[k], workedLists[k]);
+      end;
+   records := outRecords;
+   aMyFacts := outFacts;
+   aSentExchanges := outSent;
 end;
 
 procedure PickDistinctExportRecords(aContest: TContestBase;
@@ -2883,10 +3097,23 @@ function ExportADIFToString(const records: TContestExchangeArray;
                             const programVersion: string;
                             tailEmitter: TContestTailEmitter;
                             aContest: TContestBase): string;
+begin
+   Result := ExportADIFToString(records, aMyFacts, aSentExchanges, nil,
+                                programVersion, tailEmitter, aContest);
+end;
+
+function ExportADIFToString(const records: TContestExchangeArray;
+                            const aMyFacts: TQsoMyFactsArray;
+                            const aSentExchanges: TSentExchangeArray;
+                            const aExtras: TADIFRecordExtras;
+                            const programVersion: string;
+                            tailEmitter: TContestTailEmitter;
+                            aContest: TContestBase): string;
 var
    i : Integer;
    facts: TQsoMyFacts;
    sent: AnsiString;
+   extra: string;
 begin
    Result := EmitADIFHeader(programVersion);
    for i := 0 to High(records) do
@@ -2902,7 +3129,14 @@ begin
          sent := aSentExchanges[i];
          end;
 
-      Result := Result + EmitADIFContact(records[i], facts, sent, tailEmitter, aContest);
+      extra := '';
+      if i <= High(aExtras) then
+         begin
+         extra := aExtras[i];
+         end;
+
+      Result := Result + EmitADIFContact(records[i], facts, sent, tailEmitter,
+                                         aContest, extra);
       end;
 end;
 

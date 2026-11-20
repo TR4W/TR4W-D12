@@ -437,8 +437,8 @@ multipliers, CTY.DAT, band lookup and CRC32.
   Cabrillo sent column. A row without one exports byte-for-byte as before.
 - `my_county` (MY_CNTY) of such a row is the ADIF county the place lies in
   (`RoverPlaceADIFCounty`, the worked side's CNTY rule `ADIFCountyOfQSO`, lifted
-  once); `my_call` is the call as signed (NY4I/KOH), so the Cabrillo QSO-line
-  call follows it.
+  once). Since schema 13 the unit sent is `my_sent_unit` and `my_state` the
+  host state; the Cabrillo QSO-line call is assembled (below).
 - **ONE CABRILLO PER ACTIVATION (rover step F, 2026-11-19)** where the class
   answers `TContestBase.SplitsCabrilloByActivation` (base False; HAWAII
   ALONE, its rules: "a separate log for each activation"), the log roved (one
@@ -458,7 +458,32 @@ multipliers, CTY.DAT, band lookup and CRC32.
   unsplit file's CALLSIGN is MY CALL unless the log roved and every line
   carries one call (NY4I/KOH): then that call. Stale files from an earlier
   export (a plain `<log>.log`, a place no longer in the log) are not removed.
-- ADIF stays one file, one record per row (qso_set_id merging is issue 338).
+- **ONE ADIF RECORD PER CONTACT (issue 338, NY4I 2026-11-20).**
+  `PostUnit.ExportToADIF` reads each row's `qso_set_id`
+  (`uLogSource.LogSourceLastQsoSetId`) and `uADIF.MergeLinkedADIFContacts`
+  folds a set's rows into its FIRST (its record, station, sent exchange,
+  points and claimed flag; log order kept) -- only where the record's contest
+  `WritesADIFCounty`, so POTA's n-fer stays one record per park. The first
+  county is CNTY / MY_CNTY; `uADIF.LinkedCountyTags` writes the set's
+  distinct counties per side: the STANDARD `USACA_COUNTIES` /
+  `MY_USACA_COUNTIES` (`NY,KINGS:NY,QUEENS`) when a side has EXACTLY two, and
+  `APP_TR4W_CNTY_ALT` / `APP_TR4W_MY_CNTY_ALT` (#338's form,
+  `US_Counties:NY/KINGS;US_Counties:NY/QUEENS`, every county) whenever it has
+  two or more. Knowingly inconsistent, NY4I's ruling. **The APP_ names are
+  TEMPORARY** (`ADIF_APP_COUNTIES_ALT` / `ADIF_APP_MY_COUNTIES_ALT`, the one
+  place): ADIF's CNTY_ALT / MY_CNTY_ALT are only proposed, and both
+  validators reject them today (3.1.8's ALT enumeration holds NZ_Regions
+  only). Two districts of one county name one county (no extras). The
+  contest's second ADIF file (#272) and the external-logger hand-off stay one
+  record per row. IMPORT does not re-expand them (deferred: the lists carry
+  county NAMES, not the party's codes, and a Hawaii county does not map back
+  to its districts). Cabrillo keeps one line per row.
+- **THE CALL IS ASSEMBLED (log schema 13, ruling 6)**: `my_call` is the call
+  setting as set (ADIF STATION_CALLSIGN); every Cabrillo writer signs
+  `uLogSource.CabrilloCallFor` = `uQsoMyFacts.AssembledCall(my_call,
+  my_rover_places)`; `TCabrilloActivations.ActivationCall` uses the same
+  routine. A schema-12 rover row (my_call NY4I/KIN/QUE, no places) exports
+  unchanged.
 
 ## Coordinate with
 

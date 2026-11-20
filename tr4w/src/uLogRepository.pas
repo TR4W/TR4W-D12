@@ -276,6 +276,8 @@ type
       FLastSetId: AnsiString;
       FSetIdForNextSave: AnsiString;
       FSentExchangeForNextSave: AnsiString;
+      (* See LastReadQsoSetId. *)
+      FLastReadSetId: AnsiString;
       (* OUR STATION FOR THE NEXT INSERT -- SetNextMyFacts. Cleared after every
          save, like the sent exchange; mfsNotCaptured (the zero value) binds
          every my_* column, my_source included, as NULL. *)
@@ -835,6 +837,11 @@ type
       function ReadNextForExport(out aQso: ContestExchange;
                                  out aFacts: TQsoMyFacts;
                                  out aSentExchange: AnsiString): boolean;
+      (* THE qso_set_id OF THE ROW THE LAST SEQUENTIAL READ RETURNED -- ''
+         when it has none, or nothing was read. The ADIF export's grouping of
+         one contact's linked rows (issue 338): the record has no field for
+         it. *)
+      function LastReadQsoSetId: AnsiString;
 
       (* ReadNext, and the ROW ID of the record it read -- the handle
          UpdateQSOByRowId takes. The cursor SELECTs it after QSO_COLUMNS, so
@@ -3895,6 +3902,11 @@ begin
    Result := ReadNextRow(ignored, aQso, aFacts, aSentExchange);
 end;
 
+function TLogRepository.LastReadQsoSetId: AnsiString;
+begin
+   Result := FLastReadSetId;
+end;
+
 function TLogRepository.ReadNextRow(out aRowId: Int64;
                                     out aQso: ContestExchange;
                                     out aFacts: TQsoMyFacts;
@@ -3903,11 +3915,16 @@ begin
    aRowId := 0;
    aFacts := NotCapturedMyFacts;
    aSentExchange := '';
+   FLastReadSetId := '';
    Result := (FCursor <> nil) and (not FCursor.EOF);
    if Result then
       begin
       ReadRecord(FCursor, aQso);
       ReadMyFacts(FCursor, aFacts);
+      if not FCursor.Fields[Ord(qc_qso_set_id)].IsNull then
+         begin
+         FLastReadSetId := AnsiString(FCursor.Fields[Ord(qc_qso_set_id)].AsString);
+         end;
       if not FCursor.Fields[Ord(qc_exchange_sent)].IsNull then
          begin
          aSentExchange := AnsiString(FCursor.Fields[Ord(qc_exchange_sent)].AsString);
