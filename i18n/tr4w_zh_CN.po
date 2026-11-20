@@ -11529,3 +11529,53 @@ msgstr ""
 #, fuzzy
 msgid "This contest takes a separate Cabrillo log for each activation: %d files were written (%s). Each claims the whole log's score."
 msgstr ""
+
+#: uappstrings.sdiagnosticlogunavailable
+#, fuzzy
+msgid ""
+"TR4W could not open its diagnostic log, tr4w.log.\n"
+"\n"
+"%s\n"
+"\n"
+"This is the troubleshooting log TR4W keeps for problem reports. It is NOT your contest log: your QSOs are kept in a separate contest log file, and TR4W tells you separately if it cannot save to that.\n"
+"\n"
+"TR4W writes its own files in:\n"
+"    %s\n"
+"\n"
+"TR4W will keep running and keep trying to open tr4w.log. Until it can, no troubleshooting details from this session are recorded."
+msgstr ""
+
+#: uappstrings.ssettingsnotsaved
+#, fuzzy
+msgid ""
+"TR4W could not save your settings to:\n"
+"    %0:s\n"
+"\n"
+"%1:s\n"
+"\n"
+"The settings file on disk was not changed. TR4W keeps running with the settings as you have them now, but changes made in this session will be lost when TR4W closes unless a later save works.\n"
+"\n"
+"Check that the folder exists, that you can write to it, and that the disk is not full. This message is shown once per session; later failures are written to tr4w.log."
+msgstr ""
+
+#: uappstrings.swritablerootcopied
+#, fuzzy
+msgid "Copied from the install folder's settings: %s"
+msgstr ""
+
+#: uappstrings.swritablerootmoved
+#, fuzzy
+msgid ""
+"TR4W cannot save files in the folder it is installed in:\n"
+"    %0:s\n"
+"\n"
+"So your settings, contest logs, backups and the troubleshooting log (tr4w.log) are kept here instead:\n"
+"    %1:s\n"
+"\n"
+"Nothing is lost. To keep everything in one folder, install TR4W in a folder you can write to, such as C:\\tr4w."
+msgstr ""
+
+#: uappstrings.swritablerootoldlogs
+#, fuzzy
+msgid "Contest logs already in the install folder were left where they are. To keep logging in one, copy it (with any file of the same name ending -wal or -shm) into the folder above."
+msgstr ""
