@@ -379,7 +379,8 @@ begin
       CheckEquals(1, CommitFramesInWal(fn + '-wal'),
                   'the column, the copy and the stamp went in ONE commit');
       CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current');
-      CheckEquals(12, LOG_SCHEMA_VERSION, 'which is 12 (the rover''s place, issues 133 and 87)');
+      CheckEquals(13, LOG_SCHEMA_VERSION,
+                  'which is 13 (the sent unit and the rover''s places, issues 133 and 87)');
       CheckEquals('85,0,N', QueryText(db, YEARS_SQL), 'each row''s year, from its zone');
       CheckEquals('85,0,N', QueryText(db,
                   'SELECT group_concat(IFNULL(rcvd_zone, ''N''), '','') ' +

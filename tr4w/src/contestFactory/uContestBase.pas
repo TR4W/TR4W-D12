@@ -7014,7 +7014,19 @@ begin
 
    if aSessionSendsMyState then
       begin
-      Result.MyState := string(aFacts.State);
+      (* THE UNIT THE QSO WAS SENT FROM, where the row recorded one (log
+         schema 13): an in-state party QSO keeps the host state in my_state
+         (NY) and the county code it sent (ALB) in my_sent_unit. A row with
+         none -- every row before 13, every out-of-state and non-party row --
+         sends its my_state, exactly as before. *)
+      if aFacts.SentUnit <> '' then
+         begin
+         Result.MyState := string(aFacts.SentUnit);
+         end
+      else
+         begin
+         Result.MyState := string(aFacts.State);
+         end;
       end;
    Result.MyGrid := string(aFacts.Grid);
    Result.MySection := string(aFacts.Section);

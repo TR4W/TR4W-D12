@@ -448,10 +448,16 @@ begin
       CheckEquals(IntToStr(score), HeaderValue(koh, 'CLAIMED-SCORE:'), 'KOH: the log''s score');
       CheckEquals(IntToStr(score), HeaderValue(kon, 'CLAIMED-SCORE:'), 'KON: the log''s score');
 
-      (* THE ADIF STAYS ONE FILE, EVERY ROW IN IT. *)
+      (* THE ADIF STAYS ONE FILE -- AND ONE RECORD PER CONTACT (issue 338,
+         NY4I 2026-11-20): the boundary's two rows are one record, so six
+         rows are five records. KOH and KON both lie in Hawaii county, so it
+         names no second county. *)
       PostUnit.ExportToADIF;
       adif := ReadWhole(LogExportFileName(FTrw, lekADIF));
-      CheckEquals(6, CountOf('<CALL:', adif), 'the ADIF holds every row');
+      CheckEquals(5, CountOf('<CALL:', adif), 'the ADIF holds every contact once');
+      CheckEquals(1, CountOf('W5BND', adif), 'the boundary contact is one record');
+      CheckEquals(0, CountOf('USACA_COUNTIES', adif) + CountOf('CNTY_ALT', adif),
+                  'two districts of one county: no second county written');
       CheckFalse(FileExists(LogExportFileNameTagged(FTrw, lekADIF, 'koh')),
                  'and is not split');
    finally

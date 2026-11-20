@@ -1,6 +1,6 @@
 # The contest log: schema definition
 
-This document defines the TR4W contest log as it stands at **schema 12**. A
+This document defines the TR4W contest log as it stands at **schema 13**. A
 contest log is one SQLite file per contest.
 
 **The code is the source.** The DDL lives in
@@ -254,6 +254,8 @@ A record is not always a QSO. `record_kind` is `QSO`, `QTCR`, `QTCS` or
 | `is_dupe` | INTEGER | null | 0 | DERIVED-AND-STORED | |
 | **`is_off_contest`** | INTEGER | **NOT NULL** | **0** | **DERIVED-AND-STORED** | **schema 10: 1 when the contest's own rule refuses this QSO** (off its bands or modes, or the host-area rule): an automatic X-QSO. Set by `uContestRegistry.StampOffContest` only at a setting point. The rescore recomputes it. See section 2b. |
 | `my_rover_qth` | TEXT | null | | CAPTURED | **schema 12** (issues 133 and 87): the contest's own place (a county code, a Hawaii district) a ROVER sent this QSO from; NULL when not roving. On the record (`ContestExchange.ceRoverQTH`, offset 331) and UPDATABLE like it. The export sends it in place of MY STATE (`uContestBase.MyStationExchangeWithRoverPlace`); `my_county` of such a row is the ADIF county it lies in (`PostUnit.RoverPlaceADIFCounty`). `my_state` is never the district. |
+| `my_sent_unit` | TEXT | null | | CAPTURED | **schema 13** (issues 133 and 87, NY4I 2026-11-20): the contest's own UNIT this QSO was sent from (KIN, ALB, KOH) -- a rover's place, or an in-state party station's MY STATE as sent. The export's sent slot reads it (`uContestBase.MyStationExchangeOfQSO`), so `my_state` holds the host's primary subdivision (NY, HI) and `my_county` the unit's ADIF county (`NY,KINGS`). Set by `PostUnit.ApplyPartyUnitToMyFacts` (the class's `ADIFCountyState`). NULL: the slot sends `my_state`, exactly as every older row. A `QSO_MY_COLUMNS` member. |
+| `my_rover_places` | TEXT | null | | CAPTURED | **schema 13** (NY4I 2026-11-20, ruling 6): every place of the rover's operation when the QSO was logged, `/`-joined (KIN/QUE). The Cabrillo and on-air call is `uQsoMyFacts.AssembledCall(my_call, my_rover_places)` (`uLogSource.CabrilloCallFor`); ADIF writes `my_call` alone, which since 13 is the call SETTING as set (VE3FRV/W2), never the places. NULL: `my_call` is signed as stored -- a schema-12 rover row's `my_call` already holds NY4I/KIN/QUE, so it exports unchanged. |
 | `is_xqso` | INTEGER | null | 0 | OPERATOR-STATED | the operator's X-QSO, or the file's. Never written by a rule. |
 | `is_run` | INTEGER | null | 0 | CAPTURED | `NOT ceSearchAndPounce`. The inversion is deliberate. |
 | `is_skipped` | INTEGER | null | 0 | (legacy) | written 0, never read back. A historical 1 is folded into `deleted` on read. |
@@ -377,6 +379,7 @@ deliberate; see `multi-op-network.md`.
 | 10 | `qso.is_off_contest` (`LOG_V10_QSO_OFF_CONTEST_COLUMN`, `INTEGER NOT NULL DEFAULT 0`) | 0, marked when the log holds a QSO; **the store stamps every QSO row once** |
 | **11** | **REMOVED** sixteen `qso` columns no build ever wrote or read (`LOG_V11_DROPPED_QSO_COLUMNS`): `snr_sent`, `snr_received`, `rcvd_state`, `rcvd_county`, `rcvd_section`, `rcvd_grid`, `rcvd_continent`, `rcvd_postal_code`, `rcvd_society`, `rcvd_department`, `rcvd_rda`, `rcvd_park`, `rcvd_summit`, `rcvd_iota`, `rcvd_coords`, `cty_itu_zone` (issue 94) | the table is **rebuilt** (section 1); every kept value is copied unchanged. A received QTH of any kind is `rcvd_qth`; `my_*` is our station, `rcvd_*` the worked one. |
 | **12** | `qso.my_rover_qth` (`LOG_V12_QSO_ROVER_QTH_COLUMN`, TEXT, last column) | NULL in every existing row, which is the truth (no earlier build roved). ALTER on a schema-11 table; from below 11 the rebuild's new table already has it. No backfill, no mark. |
+| **13** | `qso.my_sent_unit`, `qso.my_rover_places` (`LOG_V13_QSO_COLUMNS`, TEXT, last two columns) | NULL in every existing row, meaning "as before": no row is rewritten, and a row's export is unchanged. ALTER on a schema-12 table; from below 11 the rebuild's new table already has them. No backfill, no mark. |
 
 ### The stamp-once backfill (schemas 8, 9, 10)
 

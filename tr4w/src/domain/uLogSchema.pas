@@ -297,7 +297,28 @@ const
      and UPDATABLE like it. No backfill: NULL is the truth for every older row.
      The migration only adds the column (or, from below 11, the rebuild's new
      table already has it). *)
-   LOG_SCHEMA_VERSION = 12;
+   (* 13 SINCE 2026-11-20 (issues 133 and 87, NY4I's rulings of that day):
+     two my_* columns, LOG_V13_QSO_COLUMNS.
+       my_sent_unit     THE UNIT THIS QSO WAS SENT FROM -- the contest's own
+                        place (a county code KIN, ALB; a Hawaii district KOH)
+                        that the exchange carried. The export's sent slot
+                        reads it. It lets my_state be the host's PRIMARY
+                        subdivision (NY, HI) and my_county the unit's ADIF
+                        county (NY,Kings) for an in-state party QSO, which
+                        until 13 held the county code in my_state ("ALB is
+                        not even a state but a county").
+       my_rover_places  EVERY place of the rover's operation when the QSO was
+                        logged, '/'-joined in the order chosen (KIN/QUE). The
+                        Cabrillo and on-air call is ASSEMBLED from my_call
+                        (the call SETTING as set, VE3FRV/W2) and these
+                        (VE3FRV/W2/KIN/QUE); ADIF writes my_call alone.
+     NULL in every older row, and both mean "as before": a row with no
+     my_sent_unit sends its my_state, and a row with no my_rover_places signs
+     its my_call as stored -- so a schema-12 rover row, whose my_call already
+     holds NY4I/KIN/QUE, exports exactly as it did. No row is rewritten. Both
+     are station facts (QSO_MY_COLUMNS), written at insert and by an edit of
+     our station, never by an ordinary update. *)
+   LOG_SCHEMA_VERSION = 13;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -406,6 +427,13 @@ const
      log the same shape as a new one. TEXT, NULL when not roving. *)
    LOG_V12_QSO_ROVER_QTH_COLUMN: TLogAddedColumn = (
       Name: 'my_rover_qth'; Declaration: 'TEXT');
+
+   (* THE qso COLUMNS SCHEMA 13 ADDED (issues 133 and 87) -- see
+     LOG_SCHEMA_VERSION. Last in the CREATE TABLE, in this order, so ADD
+     COLUMN gives a migrated log the same shape as a new one. *)
+   LOG_V13_QSO_COLUMNS: array[0..1] of TLogAddedColumn = (
+      (Name: 'my_sent_unit';    Declaration: 'TEXT'),
+      (Name: 'my_rover_places'; Declaration: 'TEXT'));
 
    (* THE qso COLUMNS SCHEMA 11 REMOVED (issue 94). Verified before removal:
      no SQL, no Pascal, no tool and no script in the tree wrote or read any of
@@ -721,7 +749,15 @@ const
       '    my_postal_code    TEXT,'#10 +
       '    my_foc_number     TEXT,'#10 +
       '    is_off_contest    INTEGER NOT NULL DEFAULT 0,'#10 +
-      '    my_rover_qth      TEXT'#10 +
+      '    my_rover_qth      TEXT,'#10 +
+      '    my_sent_unit      TEXT,'#10 +
+      '    my_rover_places   TEXT'#10 +
+      '    -- SCHEMA 13: my_sent_unit, THE UNIT THE QSO WAS SENT FROM (KIN,'#10 +
+      '    -- ALB, KOH), which the sent exchange carries, so my_state is the'#10 +
+      '    -- host''s primary subdivision; my_rover_places, EVERY place of the'#10 +
+      '    -- rover''s operation (KIN/QUE), from which the Cabrillo call is'#10 +
+      '    -- assembled with my_call. NULL means as before. See'#10 +
+      '    -- LOG_V13_QSO_COLUMNS.'#10 +
       '    -- SCHEMA 12: my_rover_qth, THE PLACE A ROVER SENT THIS QSO FROM --'#10 +
       '    -- one of the contest''s own (a county code, a Hawaii district); NULL'#10 +
       '    -- when not roving. See LOG_V12_QSO_ROVER_QTH_COLUMN.'#10 +

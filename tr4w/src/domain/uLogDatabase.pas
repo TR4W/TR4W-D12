@@ -2188,6 +2188,7 @@ var
    markOffContestBackfill: boolean;
    rebuildQso: boolean;
    roverQTHMissing: boolean;
+   v13Missing: array of integer;
    oldQsoColumns: AnsiString;
    blockers: string;
    added: TStringList;
@@ -2388,6 +2389,25 @@ begin
          PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
                         'WHERE name = ''' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name) +
                         '''')) = '';
+      end;
+
+   (* v12 -> v13: WHICH OF qso.my_sent_unit / my_rover_places ARE MISSING --
+     asked here, before anything changes, for the same one-transaction
+     reason. A rebuilt table already has both (LOG_QSO_TABLE ends with
+     them). NULL in every existing row, which means "as before". *)
+   SetLength(v13Missing, 0);
+   if version < 13 then
+      begin
+      for i := Low(LOG_V13_QSO_COLUMNS) to High(LOG_V13_QSO_COLUMNS) do
+         begin
+         if PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                           'WHERE name = ''' + string(LOG_V13_QSO_COLUMNS[i].Name) +
+                           '''')) = '' then
+            begin
+            SetLength(v13Missing, Length(v13Missing) + 1);
+            v13Missing[High(v13Missing)] := i;
+            end;
+         end;
       end;
 
    (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
@@ -2591,6 +2611,18 @@ begin
       FConnection.ExecuteDirect(UTF8Encode(
          'ALTER TABLE qso ADD COLUMN ' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name) +
          ' ' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Declaration)));
+      end;
+
+   (* v12 -> v13: my_sent_unit and my_rover_places, NULL in every existing
+     row -- after the rebuild, whose new table already ends with them. *)
+   if not rebuildQso then
+      begin
+      for i := 0 to High(v13Missing) do
+         begin
+         FConnection.ExecuteDirect(UTF8Encode(
+            'ALTER TABLE qso ADD COLUMN ' + string(LOG_V13_QSO_COLUMNS[v13Missing[i]].Name) +
+            ' ' + string(LOG_V13_QSO_COLUMNS[v13Missing[i]].Declaration)));
+         end;
       end;
 
    (* AND THE VERSION, IN THE SAME TRANSACTION, THEN ONE COMMIT (R5,

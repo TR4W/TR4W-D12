@@ -362,6 +362,12 @@ begin
      compare, and the migration leaves it NULL. *)
    contentColumns := StringReplace(keptColumns, '|' + string(LOG_V12_QSO_ROVER_QTH_COLUMN.Name),
                                    '', []);
+   (* And schema 13's two (my_sent_unit, my_rover_places), after it. *)
+   for i := Low(LOG_V13_QSO_COLUMNS) to High(LOG_V13_QSO_COLUMNS) do
+      begin
+      contentColumns := StringReplace(contentColumns, '|' + string(LOG_V13_QSO_COLUMNS[i].Name),
+                                      '', []);
+      end;
    db := TLogDatabase.Create;
    try
       db.OpenReadOnly(freshFn);

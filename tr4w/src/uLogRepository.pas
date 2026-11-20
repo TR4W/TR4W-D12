@@ -276,6 +276,8 @@ type
       FLastSetId: AnsiString;
       FSetIdForNextSave: AnsiString;
       FSentExchangeForNextSave: AnsiString;
+      (* See LastReadQsoSetId. *)
+      FLastReadSetId: AnsiString;
       (* OUR STATION FOR THE NEXT INSERT -- SetNextMyFacts. Cleared after every
          save, like the sent exchange; mfsNotCaptured (the zero value) binds
          every my_* column, my_source included, as NULL. *)
@@ -835,6 +837,11 @@ type
       function ReadNextForExport(out aQso: ContestExchange;
                                  out aFacts: TQsoMyFacts;
                                  out aSentExchange: AnsiString): boolean;
+      (* THE qso_set_id OF THE ROW THE LAST SEQUENTIAL READ RETURNED -- ''
+         when it has none, or nothing was read. The ADIF export's grouping of
+         one contact's linked rows (issue 338): the record has no field for
+         it. *)
+      function LastReadQsoSetId: AnsiString;
 
       (* ReadNext, and the ROW ID of the record it read -- the handle
          UpdateQSOByRowId takes. The cursor SELECTs it after QSO_COLUMNS, so
@@ -1407,7 +1414,9 @@ const
       'my_county, my_grid, my_state, my_call, my_section, my_park, my_iota, ' +
       'my_country, my_continent, my_cq_zone, my_itu_zone, my_source, year_sent, ' +
       (* Schema 9 -- uLogSchema.LOG_V9_QSO_COLUMNS, in its order. *)
-      'my_name, my_fd_class, my_check, my_prec, my_postal_code, my_foc_number';
+      'my_name, my_fd_class, my_check, my_prec, my_postal_code, my_foc_number, ' +
+      (* Schema 13 -- uLogSchema.LOG_V13_QSO_COLUMNS, in its order. *)
+      'my_sent_unit, my_rover_places';
 
    (* Named once. Adding a column means adding it here, in BindRecord and in
      ReadRecord, and the round-trip test fails if the three disagree. *)
@@ -1486,7 +1495,8 @@ const
       ':radio_nr, :operator_call, :deleted, :sent_to_server, :server_dirty, :notes, ' +
       ':my_county, :my_grid, :my_state, :my_call, :my_section, :my_park, :my_iota, ' +
       ':my_country, :my_continent, :my_cq_zone, :my_itu_zone, :my_source, :year_sent, ' +
-      ':my_name, :my_fd_class, :my_check, :my_prec, :my_postal_code, :my_foc_number';
+      ':my_name, :my_fd_class, :my_check, :my_prec, :my_postal_code, :my_foc_number, ' +
+      ':my_sent_unit, :my_rover_places';
 
 (* 'a, b, c' -> 'a = :a, b = :b, c = :c'.
 
@@ -1631,7 +1641,9 @@ type
       qc_year_sent,
       (* Schema 9 -- the last of QSO_MY_COLUMNS. *)
       qc_my_name, qc_my_fd_class, qc_my_check, qc_my_prec, qc_my_postal_code,
-      qc_my_foc_number);
+      qc_my_foc_number,
+      (* Schema 13. *)
+      qc_my_sent_unit, qc_my_rover_places);
 
 const
    QC_PREFIX: AnsiString = 'qc_';
@@ -2249,6 +2261,9 @@ begin
    BindText(P('my_prec'), aFacts.Prec);
    BindText(P('my_postal_code'), aFacts.PostalCode);
    BindText(P('my_foc_number'), aFacts.FocNumber);
+   (* Schema 13: '' is NULL, "as before". *)
+   BindText(P('my_sent_unit'), aFacts.SentUnit);
+   BindText(P('my_rover_places'), aFacts.RoverPlaces);
    (* '' for mfsNotCaptured, which BindText stores as NULL. *)
    BindText(P('my_source'), MyFactsSourceToken(aFacts.Source));
    (* THE SENT YEAR (schema 8): NULL when none was sent; 0 is the year 00. *)
@@ -2327,6 +2342,8 @@ begin
    aFacts.Prec := S(qc_my_prec);
    aFacts.PostalCode := S(qc_my_postal_code);
    aFacts.FocNumber := S(qc_my_foc_number);
+   aFacts.SentUnit := S(qc_my_sent_unit);
+   aFacts.RoverPlaces := S(qc_my_rover_places);
 end;
 
 (* PRECONDITION: aQuery was opened by OpenQsoReader, so its fields are
@@ -3885,6 +3902,11 @@ begin
    Result := ReadNextRow(ignored, aQso, aFacts, aSentExchange);
 end;
 
+function TLogRepository.LastReadQsoSetId: AnsiString;
+begin
+   Result := FLastReadSetId;
+end;
+
 function TLogRepository.ReadNextRow(out aRowId: Int64;
                                     out aQso: ContestExchange;
                                     out aFacts: TQsoMyFacts;
@@ -3893,11 +3915,16 @@ begin
    aRowId := 0;
    aFacts := NotCapturedMyFacts;
    aSentExchange := '';
+   FLastReadSetId := '';
    Result := (FCursor <> nil) and (not FCursor.EOF);
    if Result then
       begin
       ReadRecord(FCursor, aQso);
       ReadMyFacts(FCursor, aFacts);
+      if not FCursor.Fields[Ord(qc_qso_set_id)].IsNull then
+         begin
+         FLastReadSetId := AnsiString(FCursor.Fields[Ord(qc_qso_set_id)].AsString);
+         end;
       if not FCursor.Fields[Ord(qc_exchange_sent)].IsNull then
          begin
          aSentExchange := AnsiString(FCursor.Fields[Ord(qc_exchange_sent)].AsString);

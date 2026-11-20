@@ -79,6 +79,7 @@ type
       procedure Test_ExtMode_ExportsAnADIFMode_Exhaustive;
       procedure Test_ExtMode_ExportPairs;
       procedure Test_EmittedTagsAreADIF316Fields;
+      procedure Test_ALinkedContactIsOneRecord;
       procedure Test_ValueShapes;
       procedure Test_InvalidValuesAreNotWritten;
       procedure Test_OldDOKAndFOCNamesStillImport;
@@ -966,7 +967,10 @@ const
       'STATION_CALLSIGN,RST_SENT,RST_RCVD,QTH,PRECEDENCE,CHECK,NAME,SRX,STX,' +
       'TEN_TEN,AGE,SRX_STRING,STX_STRING,RX_PWR,IOTA,SIG,SIG_INFO,POTA_REF,' +
       'MY_GRIDSQUARE,MY_STATE,MY_CNTY,MY_ARRL_SECT,MY_IOTA,MY_CQ_ZONE,' +
-      'MY_ITU_ZONE,MY_DXCC,MY_SIG,MY_SIG_INFO,MY_POTA_REF,DARC_DOK,';
+      'MY_ITU_ZONE,MY_DXCC,MY_SIG,MY_SIG_INFO,MY_POTA_REF,DARC_DOK,' +
+      (* Issue 338: a county line's or a rover's other counties (uADIF.
+        LinkedCountyTags). Its two APP_TR4W_ lists are not listed, as above. *)
+      'USACA_COUNTIES,MY_USACA_COUNTIES,';
    (* DOK and FOC_NUM, which TR4W wrote until 2026-10-23 and ADIF 3.1.6 does
      not have, are DARC_DOK and the application-defined APP_TR4W_FOC_NUM now
      (APP_ tags are always legal and are not listed). *)
@@ -1002,6 +1006,122 @@ begin
       CheckTrue(Pos(',' + name + ',', ADIF316QSOFields) > 0,
                 name + ' is written but is not a field of ADIF 3.1.6');
       end;
+end;
+
+(* The worked county a test row stands for, from its QTH code. And whether
+  its contest writes counties: not for a row whose QTH is 'PARK' (POTA's
+  n-fer stand-in). *)
+function TestWorkedCounty(const rec: ContestExchange): string;
+begin
+   Result := '';
+   if rec.QTHString = 'CAT' then
+      begin
+      Result := 'NY,CATTARAUGUS';
+      end
+   else if rec.QTHString = 'CAY' then
+      begin
+      Result := 'NY,CAYUGA';
+      end
+   else if rec.QTHString = 'BRM' then
+      begin
+      Result := 'NY,BROOME';
+      end;
+end;
+
+function TestWritesCounty(const rec: ContestExchange): boolean;
+begin
+   Result := string(rec.QTHString) <> 'PARK';
+end;
+
+(* ISSUE 338 (NY4I, 2026-11-20): a contact logged as several linked rows is
+  ONE ADIF record. NY4I's rover test: NY4I/KIN/QUE works W2BN on CAT/CAY --
+  four rows, one set -- is one record with the first counties in CNTY /
+  MY_CNTY and both sides' pairs in the standard USACA fields and the
+  APP_TR4W_ lists. A row of no set, and a set whose contest writes no county
+  (POTA's n-fer), are left alone. A three-county corner keeps all three in
+  the APP list and writes no USACA (two only). The exact strings were run
+  through both validators. *)
+procedure TADIFHelperTests.Test_ALinkedContactIsOneRecord;
+var
+   records: TContestExchangeArray;
+   facts: TQsoMyFactsArray;
+   sent, setIds: TSentExchangeArray;
+   extras: TADIFRecordExtras;
+   mine, worked: TADIFCountyList;
+
+   procedure Row(const aCall, aWorked, aMine, aSet: string);
+   var
+      n: integer;
+   begin
+      n := Length(records);
+      SetLength(records, n + 1);
+      SetLength(facts, n + 1);
+      SetLength(sent, n + 1);
+      SetLength(setIds, n + 1);
+      records[n] := Default(ContestExchange);
+      records[n].Callsign := ShortString(aCall);
+      records[n].QTHString := ShortString(aWorked);
+      facts[n] := NotCapturedMyFacts;
+      facts[n].Source := mfsLogged;
+      facts[n].County := AnsiString(aMine);
+      sent[n] := AnsiString(aCall);
+      setIds[n] := AnsiString(aSet);
+   end;
+
+begin
+   BeginTest('Test_ALinkedContactIsOneRecord');
+
+   SetLength(mine, 2);
+   mine[0] := 'NY,KINGS';
+   mine[1] := 'NY,QUEENS';
+   SetLength(worked, 2);
+   worked[0] := 'NY,CATTARAUGUS';
+   worked[1] := 'NY,CAYUGA';
+   CheckEquals('<USACA_COUNTIES:24>NY,CATTARAUGUS:NY,CAYUGA ' +
+               '<APP_TR4W_CNTY_ALT:48>US_Counties:NY/CATTARAUGUS;US_Counties:NY/CAYUGA ' +
+               '<MY_USACA_COUNTIES:18>NY,KINGS:NY,QUEENS ' +
+               '<APP_TR4W_MY_CNTY_ALT:42>US_Counties:NY/KINGS;US_Counties:NY/QUEENS ',
+               LinkedCountyTags(mine, worked), 'two counties a side: both fields, both sides');
+   SetLength(worked, 1);
+   CheckEquals('<MY_USACA_COUNTIES:18>NY,KINGS:NY,QUEENS ' +
+               '<APP_TR4W_MY_CNTY_ALT:42>US_Counties:NY/KINGS;US_Counties:NY/QUEENS ',
+               LinkedCountyTags(mine, worked), 'one worked county: nothing for that side');
+   SetLength(worked, 3);
+   worked[1] := 'NY,CAYUGA';
+   worked[2] := 'NY,ONONDAGA';
+   SetLength(mine, 1);
+   CheckEquals('<APP_TR4W_CNTY_ALT:72>US_Counties:NY/CATTARAUGUS;US_Counties:NY/CAYUGA;' +
+               'US_Counties:NY/ONONDAGA ',
+               LinkedCountyTags(mine, worked), 'three: the APP list alone, no USACA');
+
+   SetLength(records, 0);
+   Row('W2XC', 'BRM', 'NY,KINGS', '');
+   Row('W2BN', 'CAT', 'NY,KINGS', 'S1');
+   Row('W2BN', 'CAY', 'NY,KINGS', 'S1');
+   Row('W2BN', 'CAT', 'NY,QUEENS', 'S1');
+   Row('W2BN', 'CAY', 'NY,QUEENS', 'S1');
+   Row('K1ABC', 'PARK', '', 'S2');
+   Row('K1ABC', 'PARK', '', 'S2');
+   MergeLinkedADIFContacts(records, facts, sent, setIds,
+                           @TestWritesCounty, @TestWorkedCounty, extras);
+
+   CheckEquals(4, Length(records), 'the rover''s four rows are one record; the n-fer is two');
+   CheckEquals(4, Length(facts), 'the station array shrank in step');
+   CheckEquals(4, Length(sent), 'the sent array shrank in step');
+   CheckEquals(4, Length(extras), 'one extra per record');
+   CheckEquals('W2XC', string(records[0].Callsign), 'log order kept');
+   CheckEquals('', extras[0], 'a row of no set is unchanged');
+   CheckEquals('W2BN', string(records[1].Callsign), 'the contact where its first row was');
+   CheckEquals('CAT', string(records[1].QTHString), 'the FIRST row is written');
+   CheckEquals('NY,KINGS', string(facts[1].County), 'its MY_CNTY is the first county');
+   CheckEquals('<USACA_COUNTIES:24>NY,CATTARAUGUS:NY,CAYUGA ' +
+               '<APP_TR4W_CNTY_ALT:48>US_Counties:NY/CATTARAUGUS;US_Counties:NY/CAYUGA ' +
+               '<MY_USACA_COUNTIES:18>NY,KINGS:NY,QUEENS ' +
+               '<APP_TR4W_MY_CNTY_ALT:42>US_Counties:NY/KINGS;US_Counties:NY/QUEENS ',
+               extras[1], 'and both sides'' counties, each once');
+   CheckEquals('K1ABC', string(records[2].Callsign), 'the n-fer''s first park');
+   CheckEquals('K1ABC', string(records[3].Callsign), 'and its second, a record of its own');
+   CheckEquals('', extras[2] + extras[3], 'with nothing added');
 end;
 
 (* THE SHAPES THE EXPORT CHECKS BEFORE IT WRITES (NY4I, 2026-10-23: the ADIF
@@ -1593,6 +1713,7 @@ begin
    Test_ExtMode_ExportsAnADIFMode_Exhaustive;
    Test_ExtMode_ExportPairs;
    Test_EmittedTagsAreADIF316Fields;
+   Test_ALinkedContactIsOneRecord;
    Test_ValueShapes;
    Test_InvalidValuesAreNotWritten;
    Test_OldDOKAndFOCNamesStillImport;

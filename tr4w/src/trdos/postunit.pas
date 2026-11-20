@@ -140,6 +140,18 @@ function GetMyExchangeForExport: string;
   (ADIFCountyOfQSO, below), so the two cannot disagree. *)
 function RoverPlaceADIFCounty( const aPlace: string ): string;
 
+(* OUR STATION FOR A QSO SENT FROM ONE OF THE PARTY'S OWN UNITS (log schema
+  13, NY4I 2026-11-20: "since I said I was in state", my_state is the host
+  state). aPlace is the unit sent -- the rover's place, or an in-state
+  station's MY STATE as sent (KIN, ALB, KOH). When the active contest names
+  a host state for it (its own ADIFCountyState: NY, HI, a Prairies
+  province), aFacts gets SentUnit = the unit, State = that state and County
+  = the unit's ADIF county ('' where the party has none) and the answer is
+  True. Otherwise aFacts is untouched: a two-letter state, DX, a contest
+  that is no party. *)
+function ApplyPartyUnitToMyFacts( const aPlace: string;
+                                  var aFacts: TQsoMyFacts ): boolean;
+
 function EDIContestName(const aSessionName: string; aContest: TContestHandle): string;
 procedure ExportToEDI;
 procedure ExportToEDIByBand( Band: BandType );
@@ -2790,6 +2802,38 @@ function RoverPlaceADIFCounty( const aPlace: string ): string;
   Result := ADIFCountyOfQSO( ActiveContest( Contest ), place );
   end;
 
+function ApplyPartyUnitToMyFacts( const aPlace: string;
+                                  var aFacts: TQsoMyFacts ): boolean;
+  var
+    place: ContestExchange;
+    unitText: string;
+    hostState: string;
+  begin
+  Result := False;
+  unitText := UpperCase( Trim( aPlace ) );
+  if unitText = '' then
+     begin
+     Exit;
+     end;
+  (* As RoverPlaceADIFCounty builds it: the unit as its own resolved QTH. *)
+  place := Default( ContestExchange );
+  place.QTHString := ShortString( unitText );
+  place.DomesticQTH := place.QTHString;
+  if ActiveContest( Contest ) = nil then
+     begin
+     Exit;
+     end;
+  hostState := ActiveContest( Contest ).ADIFCountyState( place );
+  if hostState = '' then
+     begin
+     Exit;
+     end;
+  aFacts.SentUnit := AnsiString( unitText );
+  aFacts.State := AnsiString( hostState );
+  aFacts.County := AnsiString( RoverPlaceADIFCounty( unitText ) );
+  Result := True;
+  end;
+
 function EmitContestSpecificTailForExport( const rec: ContestExchange;
    const aMyFacts: TQsoMyFacts; const aSentExchange: AnsiString ): string;
   var
@@ -2991,6 +3035,7 @@ end;
   second file of the same export counts and warns on its own. *)
 function WriteADIFDocument( const records: TContestExchangeArray;
    const myFacts: TQsoMyFactsArray; const sentExchanges: TSentExchangeArray;
+   const extras: TADIFRecordExtras;
    notRecorded: integer; dtReportTime: TDateTime ): boolean;
   var
     dataModeNote: string;
@@ -3033,8 +3078,9 @@ function WriteADIFDocument( const records: TContestExchangeArray;
   (* The active contest carries the station, which a contest's field list can
     depend on (ARRL DX: does the entrant count the DX multiplier). uADIF asks
     it only for QSOs of its own contest, and nil for a classless one. *)
-  adifStr := uADIF.ExportADIFToString( records, myFacts, sentExchanges, string( TR4W_CURRENTVERSION ),
-     @EmitContestSpecificTailForExport, ActiveContest( Contest ) );
+  adifStr := uADIF.ExportADIFToString( records, myFacts, sentExchanges, extras,
+     string( TR4W_CURRENTVERSION ), @EmitContestSpecificTailForExport,
+     ActiveContest( Contest ) );
   sWriteFileFromString( tReportFileWrite, adifStr );
 
   Result := CloseExportFile( True );
@@ -3122,12 +3168,26 @@ procedure WriteDistinctAdditionalADIF( const records: TContestExchangeArray;
      begin
      Exit;
      end;
-  if WriteADIFDocument( pickedRecords, pickedFacts, pickedSent,
+  if WriteADIFDocument( pickedRecords, pickedFacts, pickedSent, nil,
         pickedNotRecorded, dtReportTime ) then
      begin
      logger.Info( 'ADIF export: %d %s QSO(s) written to %s',
         [ Length( pickedRecords ), DistinctADIFModeNames( rules ), fileName ] );
      end;
+  end;
+
+(* MergeLinkedADIFContacts' two questions (issue 338): does the record's
+  contest write ADIF counties -- only then are a set's rows one record (POTA's
+  n-fer stays one record per park) -- and the worked station's county, by the
+  CNTY rule the tail writes (ContestForRecord + ADIFCountyOfQSO). *)
+function RecordWritesADIFCounty( const rec: ContestExchange ): boolean;
+  begin
+  Result := ContestIdentity( rec.ceContest ).WritesADIFCounty;
+  end;
+
+function RecordWorkedADIFCounty( const rec: ContestExchange ): string;
+  begin
+  Result := ADIFCountyOfQSO( ContestForRecord( rec, ActiveContest( Contest ) ), rec );
   end;
 
 procedure ExportToADIF;
@@ -3139,6 +3199,14 @@ procedure ExportToADIF;
     sentExchanges: TSentExchangeArray;
     rowSent: AnsiString;
     rowFacts: TQsoMyFacts;
+    (* records[i]'s qso_set_id, and the merged contacts' linked-county tags
+      (issue 338). *)
+    setIds: TSentExchangeArray;
+    extras: TADIFRecordExtras;
+    loggedRecords: TContestExchangeArray;
+    loggedFacts: TQsoMyFactsArray;
+    loggedSent: TSentExchangeArray;
+    i: integer;
     notRecorded: integer;
     dtReportTime: TDateTime;
     exportKept: boolean;
@@ -3174,6 +3242,7 @@ procedure ExportToADIF;
      AND EACH ROW'S OWN STATION BESIDE IT (log schema 3, stage 2), in step, for
      the MY_* tags. *)
   SetLength( sentExchanges, 0 );
+  SetLength( setIds, 0 );
   while LogSourceNext( TempRXData, rowFacts, rowSent ) do
      begin
      if GoodLookingQSO then
@@ -3184,20 +3253,38 @@ procedure ExportToADIF;
         myFacts[ High( myFacts ) ] := rowFacts;
         SetLength( sentExchanges, length( sentExchanges ) + 1 );
         sentExchanges[ High( sentExchanges ) ] := rowSent;
-        if rowFacts.Source = mfsNotCaptured then
-           begin
-           Inc( notRecorded );
-           end;
+        SetLength( setIds, length( setIds ) + 1 );
+        setIds[ High( setIds ) ] := LogSourceLastQsoSetId;
         end;
      end;
 
-  exportKept := WriteADIFDocument( records, myFacts, sentExchanges,
+  (* THE CONTEST'S SECOND ADIF FILE takes its rows as logged (below): kept
+    here, because the merge hands back new, shorter arrays. *)
+  loggedRecords := records;
+  loggedFacts := myFacts;
+  loggedSent := sentExchanges;
+
+  (* ONE ADIF RECORD PER CONTACT (issue 338): a county line's or a rover's
+    linked rows are one record, carrying the first county in CNTY / MY_CNTY
+    and the rest in USACA_COUNTIES / MY_USACA_COUNTIES and the APP_TR4W_
+    lists. Cabrillo keeps one line per row. *)
+  MergeLinkedADIFContacts( records, myFacts, sentExchanges, setIds,
+     @RecordWritesADIFCounty, @RecordWorkedADIFCounty, extras );
+  for i := 0 to High( myFacts ) do
+     begin
+     if myFacts[ i ].Source = mfsNotCaptured then
+        begin
+        Inc( notRecorded );
+        end;
+     end;
+
+  exportKept := WriteADIFDocument( records, myFacts, sentExchanges, extras,
      notRecorded, dtReportTime );
   LogSourceClose;
   (* THE CONTEST'S SECOND ADIF FILE, when it states one (issue 272). Written
-    before the preview, which shows the file at tReportsFilename and nothing
-    else. *)
-  WriteDistinctAdditionalADIF( records, myFacts, sentExchanges, dtReportTime );
+    after the first is closed and before the preview, which shows the file at
+    tReportsFilename and nothing else. *)
+  WriteDistinctAdditionalADIF( loggedRecords, loggedFacts, loggedSent, dtReportTime );
   (* NO PREVIEW OF A FILE THAT IS NOT THERE (issue 313): CloseExportFile has
     told the operator. *)
   if exportKept then
@@ -3550,7 +3637,7 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
           aActivations.Add(
              CabrilloActivationPlaceOf( stationContest, facts, TempRXData ),
              Trim( string( TempRXData.ceRoverQTH ) ) <> '',
-             ExportCallFor( facts ) );
+             CabrilloCallFor( facts ) );
           end;
        end;
   finally
@@ -3681,7 +3768,7 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
                 begin
                 (* THE QSO'S OWN CALL -- D5: its my_call, else the log's
                   declared call, never today's MY CALL ahead of them. *)
-                lineCall := ExportCallFor( rowMyFacts );
+                lineCall := CabrilloCallFor( rowMyFacts );
                 end;
              (* A QSO THE CONTEST TAKES IN AN ADIF FILE OF ITS OWN IS NOT A
                CABRILLO LINE (issue 272: Vermont's FT QSOs). Left out before

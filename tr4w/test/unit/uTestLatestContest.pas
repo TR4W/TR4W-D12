@@ -179,6 +179,16 @@ begin
    db := TLogDatabase.Create;
    try
       db.Open(aFileName);
+      if aToVersion < 13 then
+         begin
+         (* Schema 13: the sent unit and the rover's places, the table's
+           last two columns, so they go first -- last added, first dropped. *)
+         for i := High(LOG_V13_QSO_COLUMNS) downto Low(LOG_V13_QSO_COLUMNS) do
+            begin
+            db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso DROP COLUMN ' +
+                                                   string(LOG_V13_QSO_COLUMNS[i].Name)));
+            end;
+         end;
       if aToVersion < 12 then
          begin
          (* Schema 12: where a rover sent the QSO from, the table's last

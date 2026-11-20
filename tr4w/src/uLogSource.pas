@@ -102,6 +102,11 @@ function LogSourceNext(out aQso: ContestExchange;
                        out aFacts: TQsoMyFacts;
                        out aSentExchange: AnsiString): boolean; overload;
 
+(* THE qso_set_id OF THE ROW THE LAST LogSourceNext READ ('' for none): which
+  rows are one contact (a county line, a rover's boundary) -- the ADIF
+  export writes them as one record (issue 338). *)
+function LogSourceLastQsoSetId: AnsiString;
+
 (* LogSourceNext, and the ROW ID of what it read -- the handle
   uLogStore.LogStoreUpdateQSOsByRowId writes by. For a pass that reads the
   whole log and rewrites some of it: the rescore reached each row by index
@@ -132,8 +137,19 @@ function LogSourceDeclaredCall: AnsiString;
   from: PostUnit's Cabrillo and ADIF export and HamScore's one-QSO line
   (uCabrillo) -- the rule is uQsoMyFacts.ExportCallOf, pinned there. It lived
   in PostUnit until 2026-10-23 (issue 95), and the second caller is why it was
-  lifted: a copy would drift. *)
+  lifted: a copy would drift.
+
+  SINCE LOG SCHEMA 13 IT IS THE CALL SETTING AS SET (VE3FRV/W2), never a
+  rover's places -- what ADIF's STATION_CALLSIGN writes. *)
 function ExportCallFor(const aFacts: TQsoMyFacts): string;
+
+(* THE CALL A STORED QSO SIGNED -- ExportCallFor ASSEMBLED with the row's
+  rover places (uQsoMyFacts.AssembledCall, log schema 13; NY4I 2026-11-20,
+  ruling 6): VE3FRV/W2/KIN/QUE. What every CABRILLO writer prints -- the QSO
+  line, the CALLSIGN header of a per-activation file, HamScore's one-QSO
+  line. A row with no places (not roving, or a schema-12 rover row whose
+  my_call already holds NY4I/KIN/QUE) signs ExportCallFor unchanged. *)
+function CabrilloCallFor(const aFacts: TQsoMyFacts): string;
 
 (* THE RECORD AT aIndex, 0-BASED: our station as it was for that QSO, and its
   exchange_sent ('' for none). What Edit QSO hands HamScore when it re-emits a
@@ -355,6 +371,15 @@ begin
    Result := (Repo <> nil) and Repo.ReadNextForExport(aQso, aFacts, aSentExchange);
 end;
 
+function LogSourceLastQsoSetId: AnsiString;
+begin
+   Result := '';
+   if Repo <> nil then
+      begin
+      Result := Repo.LastReadQsoSetId;
+      end;
+end;
+
 function LogSourceNextWithRowId(out aRowId: Int64;
                                 out aQso: ContestExchange): boolean;
 begin
@@ -397,6 +422,15 @@ function ExportCallFor(const aFacts: TQsoMyFacts): string;
 begin
    Result := string(ExportCallOf(aFacts, LogSourceDeclaredCall,
       UTF8Encode(Settings.My.Call)));
+end;
+
+function CabrilloCallFor(const aFacts: TQsoMyFacts): string;
+begin
+   Result := ExportCallFor(aFacts);
+   if aFacts.Source <> mfsNotCaptured then
+      begin
+      Result := AssembledCall(Result, string(aFacts.RoverPlaces));
+      end;
 end;
 
 function LogSourceReadStationAtIndex(aIndex: Int64;

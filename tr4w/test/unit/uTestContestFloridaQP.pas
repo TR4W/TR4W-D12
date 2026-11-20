@@ -378,6 +378,12 @@ begin
       for i := 0 to counties.Count - 1 do
          begin
          key := UpperCase(Trim(Copy(counties[i], Pos('=', counties[i]) + 1, MaxInt)));
+         (* THE ALIAS, not its ^display name (the county names since
+            2026-11-20): 'ALC,^Alachua' is the alias ALC. *)
+         if Pos(',', key) > 0 then
+            begin
+            key := Trim(Copy(key, 1, Pos(',', key) - 1));
+            end;
          CheckEquals('FL', MultiplierOf(table, key), 'county ' + key + ' counts as Florida');
          end;
 

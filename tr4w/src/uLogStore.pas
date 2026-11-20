@@ -756,7 +756,7 @@ uses
    (* uLogRepository is in the INTERFACE uses now -- LogStoreRepository's
       return type. *)
    MainUnit, uLogDatabase, uLogImport,
-   uRoverState,        (* RoverState, RovingCall -- my_call as signed while roving *)
+   uRoverState,        (* RoverState -- the places a rover's call is signed with *)
    uContestRegistry,   (* ContestId -- a contest's stored name *)
    uContestNames,      (* ContestFromName -- the schema 6 migration's contest *)
    uLogBinaryFile,
@@ -2817,6 +2817,17 @@ begin
       begin
       Result.YearSent := 0;
       end;
+   (* AN IN-STATE PARTY STATION SENDS ONE OF THE PARTY'S UNITS (log schema 13,
+     NY4I 2026-11-20: "since I said I was in state", my_state is the host
+     state). Its MY STATE as sent (ALB, KOH) becomes my_sent_unit, which the
+     sent exchange reads; my_state the host state (NY, HI) and my_county the
+     unit's ADIF county (NY,Albany). StationInHostState is THE in-host-area
+     answer, decided from the resolved MY STATE by FoundContest; out of
+     state, or in any other contest, nothing changes. *)
+   if StationInHostState then
+      begin
+      ApplyPartyUnitToMyFacts(SentMyState, Result);
+      end;
 end;
 
 (* The capture for a QSO being logged now: this station's values, and whether
@@ -2831,29 +2842,34 @@ end;
 function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
 begin
    Result := LogStoreCurrentMyFacts;
-   (* A ROVER'S QSO KNOWS ITS COUNTY (issues 133 and 87, NY4I 2026-11-19):
-     my_county is ADIF MY_CNTY, the SECONDARY subdivision -- a real county,
-     never a district. The place the record was sent from (ceRoverQTH, the
-     contest's own unit) is turned into the county it lies in by the rule the
-     worked station's CNTY uses (PostUnit.RoverPlaceADIFCounty): KOH ->
-     'HI,Hawaii'. A QSO not sent while roving keeps my_county empty, as
-     before: unknown. *)
+   (* A ROVER'S QSO WAS SENT FROM ITS OWN PLACE (issues 133 and 87, log
+     schema 13): ceRoverQTH, the contest's own unit, is my_sent_unit; my_state
+     the host state it lies in and my_county its ADIF county -- a real county,
+     never a district (KOH -> 'HI,Hawaii', KIN -> 'NY,Kings'), by the rule
+     the worked station's CNTY uses. It overrides the in-state station's
+     home unit LogStoreCurrentMyFacts recorded. *)
    if aQso.ceRoverQTH <> '' then
       begin
-      Result.County := AnsiString(RoverPlaceADIFCounty(string(aQso.ceRoverQTH)));
+      if not ApplyPartyUnitToMyFacts(string(aQso.ceRoverQTH), Result) then
+         begin
+         Result.County := AnsiString(RoverPlaceADIFCounty(string(aQso.ceRoverQTH)));
+         end;
       end;
    if not QsoWasLoggedHere(aQso.ceComputerID, Settings.Computer.Id) then
       begin
       Result.Source := mfsAssumed;
       end;
-   (* AND OUR CALL AS SIGNED (NY4I, 2026-11-17: while roving MYCALL is the
-     roving call): my_call is ADIF STATION_CALLSIGN, "as signed, rover suffix
-     and all" -- NY4I/KOH, or NY4I/KOH/KON at a boundary, as keyed. Only for a
-     QSO logged HERE while roving; a peer's row keeps this station's plain
-     call, marked assumed, as every peer row is. *)
+   (* AND THE PLACES OUR CALL WAS SIGNED WITH (NY4I, 2026-11-20, ruling 6:
+     the call is ASSEMBLED from its parts, never stripped). my_call stays the
+     call SETTING as set (LogStoreCurrentMyFacts: VE3FRV/W2) -- ADIF's
+     STATION_CALLSIGN; my_rover_places is every place of the operation
+     (KIN/QUE), so the Cabrillo and on-air call is AssembledCall of the two
+     (VE3FRV/W2/KIN/QUE) -- the call RovingCall keyed. Only for a QSO logged
+     HERE while roving; a peer's row keeps this station's facts, marked
+     assumed, as every peer row is. *)
    if (Result.Source = mfsLogged) and (aQso.ceRoverQTH <> '') and RoverState.Active then
       begin
-      Result.Call := UTF8Encode(RovingCall(Settings.My.Call));
+      Result.RoverPlaces := UTF8Encode(RoverState.Joined('/'));
       end;
    case SentYearSourceOf(ContestReceivedYearKind(ContestIdentity(aQso.ceContest)) <> rykNone,
                          Result.Source) of
