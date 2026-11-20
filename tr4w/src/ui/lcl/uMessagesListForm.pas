@@ -76,6 +76,7 @@ uses
   VC,               // TC_LIST_OF_COMMAND
   uProcessCommand,  // sCommands, sCommandsArray
   uMessagesList,    // GetInsertableCommand, LastSelectedCommand
+  uMessageText,     // MessagePickerText -- a command goes in as {NAME}
   MainUnit,         // logger
   uLCLFormHelpers,
   Log4D;
@@ -124,7 +125,10 @@ begin
    // sorted, so the visible index does not match the array's declaration order,
    // and indexing the array would paste a different command than the one shown.
    s := AnsiString(lstCommands.Items[lstCommands.ItemIndex]);
-   LastSelectedCommand := GetInsertableCommand(s);
+   (* A COMMAND IS INSERTED IN BRACES -- {MM_GRABLASTCALL} (2026-11-20), not
+     as a bare name the operator then had to bracket with Ctrl+P Ctrl+C ...
+     Ctrl+P Ctrl+D. A cryptic character or display row goes in as before. *)
+   LastSelectedCommand := string(MessagePickerText(AnsiString(GetInsertableCommand(s))));
    FPicked := True;
 end;
 

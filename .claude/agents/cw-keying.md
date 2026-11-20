@@ -371,19 +371,33 @@ record's field order the wire format by accident. Adding or reordering a
 `TwkValueList` field no longer changes what the keyer receives; changing
 `wkValueListBytes` does, and the test says so.
 
-## The rover's call and place in the macros (issues 133/87, 2026-11-19)
+## Brace words in a message, and the rover's call (NY4I, 2026-11-20)
 
-- `\` keys `uRoverState.RovingCall(Settings.My.Call)`: NY4I/KOH while roving,
-  NY4I/KOH/KON at a boundary, the plain call otherwise. So do the S&P space
-  bar, `DEPlusMyCall` and the call-window sends in `MainUnit`. Never change
-  `Settings.My.Call` itself for a rover.
-- `&` keys `FCONTEST.SentPlaceNow` (the rover's places joined by '/', else
-  `SentMyState`); `{ROVERQTH}` is a NAMED token read whole in the `'{'` arm
-  (`RoverQTHTokenAt`, the `'#'` arm's look-ahead is the precedent) and keys
-  the same. A bare `{` still keys the worked call.
-- Digital/RTTY messages go through `SendCrypticCWString` too
-  (`LOGSUBS1.SendCrypticMessage`), so all of this follows the rover there.
-  Phone (DVP) does not expand these.
+**ONE GRAMMAR: `src/uMessageText.pas`** (a leaf, pinned by
+`uTestMessageText`). `{NAME}` / `{NAME=ARGUMENT}`, NAME = letters, digits,
+`_`, any case. A word is a TOKEN (`ROVERCALL`, `ROVERQTH`), a COMMAND (every
+`sCommandsArray` name, registered by `uProcessCommand`'s initialization, plus
+`QSY` and `SPEEDnn`), or UNKNOWN. **A `{` that starts no word is still the
+cryptic worked call** (`{ TU`, `{}`, `{{X}}`, unclosed); the cryptic characters
+are text to the parser and `SendCrypticCWString` keys them as before.
+
+- `FoundCommand` (called first by `SendCrypticMessage`, every mode) runs every
+  command -- brace or old `<03>..<04>` -- IN ORDER, BEFORE any text is keyed
+  (where bookends always ran), takes out unknown words with a notice
+  (`SMessageUnknownWordSkipped`) and leaves tokens for the `'{'` arm, which
+  keys them in place and skips (never keys) any other word.
+- The chain test in `SendFunctionKeyMessage` is `MessageChainsOrCommands`: a
+  Ctrl-D OR a brace command -- a command message has never flushed CW.
+- `SetCQMemoryString` / `SetEXMemoryString` convert `<03>X<04>` to `{X}` on
+  load (`UpgradeMessageBookends`, length-neutral); a body with no brace form
+  (Ctrl-A inactive radio, `SPEED+`, `ALT-D`, an unknown name) stays old.
+- The Alt-P editor refuses an unknown word; the picker inserts `{NAME}`.
+- `\` keys the PLAIN `Settings.My.Call`, always. `{ROVERCALL}` keys
+  `uRoverState.RovingCall` (NY4I/KOH while roving), and so do the S&P space
+  bar, `DEPlusMyCall`, `Send_DE` and `logsubs2.ProcessExchangeFunctionKey`.
+  Never change `Settings.My.Call` itself for a rover.
+- `&` and `{ROVERQTH}` key `FCONTEST.SentPlaceNow`.
+- Phone (DVP) runs commands but does not expand tokens.
 
 ## Coordinate with
 

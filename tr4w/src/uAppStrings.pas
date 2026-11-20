@@ -1657,6 +1657,15 @@ resourcestring
       %0:d is the length of what was typed, %1:d the limit. *)
    SMessageEditTextTooLong    = 'The message is %0:d bytes long and a message holds %1:d. Shorten it and press OK again.';
    SMessageEditCaptionTooLong = 'The caption is %0:d bytes long and a caption holds %1:d. Shorten it and press OK again.';
+   (* A WORD IN BRACES THAT TR4W DOES NOT KNOW (2026-11-20). In a program
+      message, {NAME} is a command from the List of commands, or {ROVERCALL}
+      or {ROVERQTH}. %0:s is the word as typed, without its braces. The
+      editor refuses to save the message; the dialog stays open. *)
+   SMessageEditUnknownWord    = 'TR4W does not know the word {%0:s}. Use a command from the List of commands, {ROVERCALL} or {ROVERQTH}, and press OK again.';
+   (* On the status line when a message being sent names a word TR4W does
+      not know: the word is skipped and nothing of it is sent. %0:s is the
+      word, without its braces. *)
+   SMessageUnknownWordSkipped = 'The message names {%0:s}, which TR4W does not know. It was skipped and not sent.';
    (* On the status line when a shared setting is too long for the network:
       %0:s is the setting's name, %1:d its length, %2:d the limit. The setting
       is still changed on this station. *)

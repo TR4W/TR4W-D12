@@ -58,7 +58,8 @@ uses uTelnet,
   uSettingsModel,   // Settings.Cw.SendCompleteFourLetterCall
   MainUnit,
   FCONTEST,         // SentMyState -- the state sent, design 7.11 (M9a)
-  uRoverState;      // RovingCall, RoverQTHTokenAt -- issues 133 and 87
+  uRoverState,      // RovingCall -- {ROVERCALL}, issues 133 and 87
+  uMessageText;     // MessageWordAt -- the brace words (2026-11-20)
 
 procedure SendCrypticDVPString(SendString: ShortString);
 
@@ -129,6 +130,9 @@ var
   TempString                            : Str80;
   i                                     : integer;
   TempReceivedData                      : ContestExchange;
+  WordName, WordArgument                : AnsiString;
+  WordHasArgument                       : boolean;
+  WordLength                            : integer;
 
 begin
 // For CQ TEST NY4I , this sends the C, then the Q, then T, then E, then S, then T, then NY4I
@@ -362,9 +366,11 @@ begin
           end;
   
         '~': SendSalutation(CallWindowString);
-        (* MY CALL, AS ON THE AIR: NY4I/KOH while roving (uRoverState.RovingCall,
-          issues 133 and 87); a fixed station's plain call. *)
-        '\': AddStringToBuffer(UTF8Encode(RovingCall(Settings.My.Call)), Config.CWTone);
+        (* MY CALL, THE PLAIN SETTING -- ALWAYS (NY4I, 2026-11-20). It never
+          carries the rover's places; a message that should sign NY4I/KOH while
+          roving says {ROVERCALL} (the '{' arm below). Issues 133 and 87 had
+          made '\' the roving call; that is undone. *)
+        '\': AddStringToBuffer(UTF8Encode(Settings.My.Call), Config.CWTone);
         (* The state SENT in this contest, not MY STATE -- design 7.11 (M9a);
           while roving, where the rover is now (NY4I 2026-10-23: "&" keys
           whatever ROVER selected). *)
@@ -422,20 +428,40 @@ begin
 
         ']': AddStringToBuffer(IntToStr(LastRSTSent), Config.CWTone);
 
-        (* {ROVERQTH} -- the place sent now (issues 133 and 87): a named token
-          read whole, so 599 {ROVERQTH} keys 599 KOH. Any other '{' keys the
-          worked call, as it always has. *)
+        (* A BRACE WORD, read whole (uMessageText.MessageWordAt -- the one
+          grammar, 2026-11-20). The TOKENS key in place: {ROVERCALL} is the
+          call on the air (NY4I/KOH while roving, the plain call otherwise),
+          {ROVERQTH} the place sent now, so 599 {ROVERQTH} keys 599 KOH.
+          FoundCommand has already run and taken out every command and
+          unknown word; one that reaches here anyway is skipped, NEVER keyed
+          as its letters. A '{' that starts no word keys the worked call, as
+          it always has. *)
         '{':
           begin
-          if RoverQTHTokenAt(string(SendString), CharacterCount) then
-             begin
-             AddStringToBuffer(UTF8Encode(SentPlaceNow), Config.CWTone);
-             CharacterCount := CharacterCount + Length(ROVER_QTH_TOKEN) - 1;
-             end
+          case MessageWordAt(AnsiString(SendString), CharacterCount, WordName,
+                             WordArgument, WordHasArgument, WordLength) of
+            mwToken:
+              begin
+              if WordName = MESSAGE_TOKEN_ROVERCALL then
+                 begin
+                 AddStringToBuffer(UTF8Encode(RovingCall(Settings.My.Call)), Config.CWTone);
+                 end
+              else
+                 begin
+                 AddStringToBuffer(UTF8Encode(SentPlaceNow), Config.CWTone);
+                 end;
+              CharacterCount := CharacterCount + WordLength - 1;
+              end;
+
+            mwCommand, mwUnknown:
+              begin
+              CharacterCount := CharacterCount + WordLength - 1;
+              end;
           else
-             begin
-             AddStringToBuffer(ReceivedData.Callsign, Config.CWTone);
-             end;
+            begin
+            AddStringToBuffer(ReceivedData.Callsign, Config.CWTone);
+            end;
+          end;
           end;
 
         '}':

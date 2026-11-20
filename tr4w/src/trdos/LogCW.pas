@@ -289,6 +289,7 @@ uses
      to the log as it is made (R2, 2026-10-23). *)
   uLogStore,
   uTXInhibitView,   (* NoteTransmitStarting -- issue #97, trigger 1 *)
+  uMessageText,     (* UpgradeMessageBookends -- <03>X<04> becomes {X} on load *)
   MainUnit; {KK1L: 6.72 Allows use of SniffOutControlCharacters}
 
 type
@@ -2199,6 +2200,46 @@ begin
   Result := True;
 end;
 
+(* AN OLD <03>COMMAND<04> BOOKEND BECOMES {COMMAND} THE FIRST TIME A MEMORY
+  IS LOADED (NY4I, 2026-11-20). Every memory text arrives through
+  SetCQMemoryString / SetEXMemoryString -- the contest .cfg import, the log's
+  restore of an edited memory, a contest default, the Alt-P editor -- so this
+  is the one place. Nothing is written here: the memory holds the brace form,
+  and the log's next save of it (the commit on an Alt-P OK, the capture at
+  close) keeps that. The file the text came from is never rewritten.
+
+  Called AFTER SniffOutControlCharacters, so a .cfg's textual '<03>' is the
+  byte by then. Two bytes become two bytes, so a 255-byte memory still fits.
+  A pair whose body is not a known brace word (a Ctrl-A inactive-radio
+  prefix, SPEED+, ALT-D, a typo) stays as it was and still runs as before;
+  the log says so. *)
+procedure UpgradeMemoryBookends(const aBank: string; Mode: ModeType; Key: AnsiChar;
+                                var MemoryString: ShortString);
+var
+  upgraded: AnsiString;
+  converted, leftAlone: integer;
+begin
+  if Pos(MESSAGE_OLD_COMMAND_START, MemoryString) = 0 then
+     begin
+     Exit;
+     end;
+
+  upgraded := UpgradeMessageBookends(AnsiString(MemoryString), converted, leftAlone);
+  if converted > 0 then
+     begin
+     MemoryString := ShortString(upgraded);
+     logger.Info('[Messages] %s memory %d/%d: %d <03>..<04> command(s) now written in braces',
+                 [aBank, Ord(Mode), Ord(Key), converted]);
+     end;
+  if leftAlone > 0 then
+     begin
+     logger.Warn('[Messages] %s memory %d/%d: %d <03>..<04> command(s) have no brace ' +
+                 'form and are kept as they were (an inactive-radio Ctrl-A, SPEED+/-, ' +
+                 'ALT-D, or a name TR4W does not know)',
+                 [aBank, Ord(Mode), Ord(Key), leftAlone]);
+     end;
+end;
+
 procedure SetCQMemoryString(Mode: ModeType; Key: AnsiChar; MemoryString: ShortString {Str80});
 
 begin
@@ -2210,6 +2251,7 @@ begin
   (* KK1L: 6.72 NOTE This is where I should interpret the string just as if
     it were being read from LOGCFG.DAT *)
   SniffOutControlCharacters(MemoryString); (* KK1L: 6.72 *)
+  UpgradeMemoryBookends('CQ', Mode, Key, MemoryString);
   CQMemory[Mode, Key] := MemoryString;
 end;
 
@@ -2345,6 +2387,7 @@ begin
   (* KK1L: 6.72 NOTE This is where I should interpret the string just as if
     it were being read from LOGCFG.DAT *)
   SniffOutControlCharacters(MemoryString); (* KK1L: 6.72 *)
+  UpgradeMemoryBookends('EX', Mode, Key, MemoryString);
   EXMemory[Mode, Key] := MemoryString;
 end;
 
