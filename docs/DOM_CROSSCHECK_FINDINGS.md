@@ -61,8 +61,10 @@ Conejos and Mineral (Colorado) and Mississippi County (Missouri) can never be cr
 - **DXLog** counts 50 states, DC and **13** VE multipliers (NL/LB/NF as one). Q88 says the
   sponsor counts 14, so that figure needs re-checking.
 - **`s49p8.dom` (NA Sprint RTTY)** has 49 states with no HI, 8 VE and no DC.
-- **`s50p13.dom`** says "50 STATES, DC AND 13 PROVINCES" in its header but has no DC entry. No
-  contest loads it.
+- **`s50p13.dom`** said "50 STATES, DC AND 13 PROVINCES" in its header but had no DC entry, and
+  no contest loaded it. Since 2026-11-19 (issue 88) its header says no DC, it includes
+  `prov13.dom` (NL, not NF, is Newfoundland and Labrador's key) and the New York QSO Party loads
+  it.
 
 ## Counts that differ (sponsor check needed)
 

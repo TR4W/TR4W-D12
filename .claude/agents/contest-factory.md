@@ -1602,7 +1602,7 @@ bare `FileExists` and failed on Linux. The files are renamed to the classes' spe
 (`git mv` through a temp name: Windows is case-insensitive) and
 `Lint-DomFileCase` gates it: a NEW class name or INCLUDE line must match its file
 exactly. Ten legacy upper-case class names (`S48P14DC`, `EUDX`, `GC`, `JIDX`,
-`NEQSOW1`, `NEQSO`, `OKOM`, `PACCPA`, `PACC`, `YOTA`) and 95 INCLUDE lines stay
+`NEQSOW1`, `NEQSO`, `OKOM`, `PACCPA`, `PACC`, `YOTA`) and the D7-era upper-case INCLUDE lines (a ceiling that only falls, `$INCLUDE_CEILING`) stay
 pinned, because changing a class literal changes a value saved settings and tests pin.
 **A new file in `target\dom` is lower case, always.**
 

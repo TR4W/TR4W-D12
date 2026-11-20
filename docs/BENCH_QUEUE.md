@@ -3094,7 +3094,7 @@ not "right". Check on a real run:
   G0DVJ; a machine-translated language credits LibreTranslate.
 - [ ] **N1MM listener** receives `<mycall>` again (UDP contact broadcast).
 - [ ] **The installer** (`dom\*.dom` wildcard): an installed copy has all 124
-  files in `dom\`, including `prov12.dom`.
+  files in `dom\`, including `prov13.dom` (it was `prov12.dom` until 2026-11-19).
 - [ ] **Every worker thread has a new signature** (pointer audit P1, defect D2).
   `tCreateThread` is typed now, and eleven thread bodies changed from
   parameterless procedures to `function(aParameter: Pointer): DWORD;

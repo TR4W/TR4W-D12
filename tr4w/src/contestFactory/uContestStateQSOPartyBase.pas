@@ -183,7 +183,7 @@ type
       (* AN IN-STATE ENTRANT'S HOST-COUNTY QSO ALSO EARNS THE HOST STATE --
          issue #317. A HELPER a party CALLS from its
          AdditionalDomesticMultiplierKey override (Alabama, West Virginia,
-         Kentucky, Vermont), never a rule this base applies: Arkansas and New
+         Kentucky, Vermont, New York ...), never a rule this base applies: Arkansas and New
          Jersey exclude their own state, and Florida's in-state file maps a
          county to Fl already.
 

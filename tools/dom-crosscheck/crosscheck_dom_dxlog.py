@@ -1027,7 +1027,7 @@ def new_party(args):
    # Every DXLog value an included file already ACCEPTS goes to that file's
    # multiplier in TR4W; listing it again would make a second multiplier.
    # Two DXLog multipliers landing on one included multiplier is a real
-   # difference (s50p13's NF takes NL), so it is said in the header.
+   # difference (until 2026-11-19 s50p13's NF took NL), so it is said in the header.
    merged_notes = []
    for name in includes:
       load = DomLoad(name, False, index)

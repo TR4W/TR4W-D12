@@ -1526,13 +1526,14 @@ begin
       who := ContestWho(identities[k]);
       obj := Make(HandleOf(identities[k]), NoStation);
       try
-         (* THE LEGACY CONTESTS, FROZEN: exactly these three. A contest
+         (* THE LEGACY CONTESTS, FROZEN: exactly these four (New York since
+            NY4I's answer on issue 88, 2026-11-19). A contest
             registered by its id requires none unless its class states the
             rule (see RequiresLocationCode) -- New Mexico and Ontario do,
             from their sponsors' rules, pinned by their own units. *)
          if isLegacy then
             begin
-            CheckEquals(Ord(c in [ARRL10, WINTERFIELDDAY, DELAWAREQSOPARTY]),
+            CheckEquals(Ord(c in [ARRL10, WINTERFIELDDAY, DELAWAREQSOPARTY, NYQP]),
                         Ord(obj.RequiresCabrilloLocation),
                         who + ': needs a LOCATION');
             end
