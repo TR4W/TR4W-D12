@@ -198,8 +198,16 @@ procedure WriteScoreInformationToSummarySheet;
 function OpenExportFileNamed( const aName: string ): boolean;
 function CloseExportFile( aKeep: boolean ): boolean;
 
-function tGenerateSummaryPortionOfCabrilloFile: boolean;
-function tGenerateLogPortionOfCabrilloFile: boolean;
+(* THE CABRILLO HEADER: aCallsign on its CALLSIGN line, aClaimedScore on its
+  CLAIMED-SCORE line. CreateCabrilloFile reads the score once, so every file
+  of a split export claims the same whole-log score (issues 133 and 87). *)
+function tGenerateSummaryPortionOfCabrilloFile( const aCallsign: string;
+                                                aClaimedScore: LONGINT ): boolean;
+(* THE CABRILLO QSO LINES. aOnePlace False: every row, each line with its own
+  call, as always. True: only the rows sent from aPlace (one activation --
+  uCabrilloActivation), every line with aCall. *)
+function tGenerateLogPortionOfCabrilloFile( aOnePlace: boolean;
+                                            const aPlace, aCall: string ): boolean;
 procedure tFirstCallInEachCountry;
 procedure SetTransmittersIdentifiers;
 procedure tFirstCallInEachZone;
@@ -498,6 +506,8 @@ uses
   uScore3830Report,
   (* SentMyState -- the state SENT in this contest, design 7.11 (M9a). *)
   FCONTEST,
+  (* TCabrilloActivations -- one Cabrillo per activation (issues 133, 87). *)
+  uCabrilloActivation,
   uCFG,
   (* ContestSession -- the session's exchange and DoingZoneMults. The ADIF
      CQZ/ITUZ choice and ZoneSentForThisContest asked its zone kind from M10
@@ -731,12 +741,99 @@ begin
       LogExportFileName( CharBufferText( TR4W_LOG_FILENAME ), aKind ) );
 end;
 
+(* THE EXPORT'S ACTIVATIONS -- every Cabrillo row's place, in log order, and
+  aPlainCall the log's own call (the declared call, else MY CALL). Defined
+  beside the QSO-line writer, whose place rule it shares. *)
+procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
+                                      out aPlainCall: string ); forward;
+
+(* ONE CABRILLO FILE AT aFileName: the header (aHeaderCall, aScore), then the
+  QSO lines (all of them, or one activation's -- see
+  tGenerateLogPortionOfCabrilloFile). True when the file is in place; False
+  has told the operator, or the summary refused to start (a missing
+  LOCATION). *)
+function WriteOneCabrilloFile( const aFileName, aHeaderCall: string;
+                               aScore: LONGINT; aOnePlace: boolean;
+                               const aPlace, aLineCall: string ): boolean;
+  begin
+  Result := False;
+  SetCharBuffer( tReportsFilename, aFileName );
+  if not tGenerateSummaryPortionOfCabrilloFile( aHeaderCall, aScore ) then
+     begin
+     Exit;
+     end;
+  if not tGenerateLogPortionOfCabrilloFile( aOnePlace, aPlace, aLineCall ) then
+     begin
+     (* The file is abandoned, not left half written; an earlier good one stays
+       (issue 313). *)
+     CloseExportFile( False );
+     Exit;
+     end;
+  (* NO PREVIEW, AND NO OFFER TO UPLOAD, A FILE THAT IS NOT THERE: CloseExportFile
+    has told the operator. *)
+  Result := CloseExportFile( True );
+  end;
+
+(* ONE CABRILLO PER ACTIVATION -- issues 133 and 87, rover step F.
+  "<log>-<place>.log" (uLogDatabase.LogExportFileNameTagged, the scheme of a
+  contest's second ADIF), each headed by the activation's call and the whole
+  log's score, holding the rows sent from that place under that call. The
+  first file is previewed; one message names them all. The upload to Super
+  Check Partial is not offered for a split log: it takes one file, and
+  which activation to send is not decided. Stops at the first file that could
+  not be written (the operator has been told). *)
+procedure WriteCabrilloPerActivation( aActivations: TCabrilloActivations;
+                                      const aPlainCall: string;
+                                      aScore: LONGINT );
+  var
+    i: integer;
+    fileName, call, names: string;
+    firstFile: string;
+  begin
+  names := '';
+  firstFile := '';
+  for i := 0 to aActivations.Count - 1 do
+     begin
+     fileName := LogExportFileNameTagged( CharBufferText( TR4W_LOG_FILENAME ),
+                    lekCabrillo, aActivations.FileTag( i ) );
+     call := aActivations.ActivationCall( i, aPlainCall );
+     if not WriteOneCabrilloFile( fileName, call, aScore, True,
+               aActivations.Place( i ), call ) then
+        begin
+        Exit;
+        end;
+     logger.Info( 'Cabrillo export: activation %s (%s) written to %s',
+                  [ aActivations.Place( i ), call, fileName ] );
+     if firstFile = '' then
+        begin
+        firstFile := fileName;
+        end
+     else
+        begin
+        names := names + ', ';
+        end;
+     names := names + ExtractFileName( fileName );
+     end;
+
+  (* Said once, after the files; silent in a headless run
+    (MainUnit.ShowMessage), where the log has it. *)
+  ShowMessage( sysutils.Format( TC_CABRILLOPERACTIVATION,
+     [ aActivations.Count, names ] ) );
+  SetCharBuffer( tReportsFilename, firstFile );
+  PreviewFileNameAddress := firstFile;
+  PreviewFileIsCabrillo  := true;
+  FilePreview;
+  end;
+
 procedure CreateCabrilloFile;
   label
     1;
   var
     SetTransmittersId: boolean;
     scp: TSCPUpload;
+    activations: TCabrilloActivations;
+    plainCall: string;
+    score: LONGINT;
   begin
 
   SetTransmittersId := False;
@@ -811,24 +908,35 @@ procedure CreateCabrilloFile;
      SetTransmittersIdentifiers;
      end;
 
-  // if FileExists(tReportsFilename) then if not OkayToDeleteExistingFile(tReportsFilename) then Exit;
-  if not tGenerateSummaryPortionOfCabrilloFile then
-     begin
-     Exit;
-     end;
-  if not tGenerateLogPortionOfCabrilloFile then
-     begin
-     (* The file is abandoned, not left half written; an earlier good one stays
-       (issue 313). *)
-     CloseExportFile( False );
-     Exit;
-     end;
-  (* NO PREVIEW, AND NO OFFER TO UPLOAD, A FILE THAT IS NOT THERE: CloseExportFile
-    has told the operator. *)
-  if not CloseExportFile( True ) then
-     begin
-     Exit;
-     end;
+  (* THE WHOLE LOG'S SCORE, READ ONCE: every file of a split export claims it
+    (NY4I, 2026-11-19: "the activations are ALL PART OF THE SAME SCORE"). *)
+  score := ClaimedScore;
+  activations := TCabrilloActivations.Create;
+  try
+    CollectCabrilloActivations( activations, plainCall );
+
+    (* ONE FILE PER ACTIVATION, where the contest asks for it and the log
+      roved from two places or more (issues 133 and 87). *)
+    if activations.ShouldSplit(
+          ContestIdentity( Contest ).SplitsCabrilloByActivation ) then
+       begin
+       WriteCabrilloPerActivation( activations, plainCall, score );
+       Exit;
+       end;
+
+    // if FileExists(tReportsFilename) then if not OkayToDeleteExistingFile(tReportsFilename) then Exit;
+    (* THE ONE FILE. Its CALLSIGN is MY CALL, as always, unless the log roved
+      and every QSO line carries one call (NY4I/KOH): then that call, so the
+      header and the lines agree. *)
+    if not WriteOneCabrilloFile( CharBufferText( tReportsFilename ),
+              activations.SingleFileHeaderCall( Settings.My.Call ), score,
+              False, '', '' ) then
+       begin
+       Exit;
+       end;
+  finally
+    activations.Free;
+  end;
   PreviewFileNameAddress := CharBufferText(tReportsFilename);
   PreviewFileIsCabrillo  := true;
   FilePreview;
@@ -3175,7 +3283,8 @@ begin
       end;
 end;
 
-function tGenerateSummaryPortionOfCabrilloFile: boolean;
+function tGenerateSummaryPortionOfCabrilloFile( const aCallsign: string;
+                                                aClaimedScore: LONGINT ): boolean;
   var
     T2: string;
     T3: String;
@@ -3235,7 +3344,9 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
          begin
          Exit;
          end;
-      T2 := Settings.My.Call;
+      (* THE CALL IS THE CALLER'S: MY CALL for the one file, an activation's
+        call (AH7RF/KOH) for each file of a split export -- CreateCabrilloFile. *)
+      T2 := aCallsign;
       (* The contest's Cabrillo name, asked of the contest -- M1; handed the
         session's title and name since M9a, which General QSO names instead
         (4.78.3, "ALLOW CUSTOM CONFIG Contest Title or Contest Name"). *)
@@ -3243,12 +3354,13 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                Settings.Contest.Title, Settings.Contest.Name );
 
       // Issue #998: asm-push wsprintf -> SysUtils.Format + sWriteFileFromString.
-      // %s=CALLSIGN(T2), %s=CONTEST(T3), %d=CLAIMED-SCORE(ClaimedScore, issue 86).
+      // %s=CALLSIGN(T2), %s=CONTEST(T3), %d=CLAIMED-SCORE(ClaimedScore, issue 86;
+      // read once by the caller since issue 133, so split files claim one score).
       sWriteFileFromString( tReportFileWrite,
          sysutils.Format( 'START-OF-LOG: 3.0'#13#10'CREATED-BY: ' +
          TR4W_CURRENTVERSION + '-D12' + CabrilloLanguageTag +
          #13#10'CALLSIGN: %s'#13#10'CONTEST: %s'#13#10'CLAIMED-SCORE: %d'#13#10,
-         [ T2, T3, ClaimedScore ] ) );
+         [ T2, T3, aClaimedScore ] ) );
 
       for TempTag := Low( CabrilloTags ) to High( CabrilloTags ) do
          begin
@@ -3390,7 +3502,64 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
     asks the contest (ContestIdentity) and no longer knows how any exchange
     is laid out. *)
 
-    function tGenerateLogPortionOfCabrilloFile: boolean;
+(* THE ACTIVATION OF ONE CABRILLO ROW -- the place its sent column prints:
+  the rover's place where the row has one (ceRoverQTH), else the state the
+  row sent (its own my_state, else the session's), upper cased. The SAME
+  CurrentMyStationExchange the column itself is built from, so a file's
+  activation and its sent QTH cannot disagree (issues 133 and 87). *)
+function CabrilloActivationPlaceOf( aContest: TContestBase;
+                                    const aFacts: TQsoMyFacts;
+                                    const aQso: ContestExchange ): string;
+  begin
+  Result := UpperCase( Trim( CurrentMyStationExchange( aContest, aFacts,
+               string( aQso.ceRoverQTH ) ).MyState ) );
+  end;
+
+procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
+                                      out aPlainCall: string );
+  var
+    facts: TQsoMyFacts;
+    exportContest: TContestBase;
+    stationContest: TContestBase;
+  begin
+  aPlainCall := Settings.My.Call;
+  if not LogSourceOpen then
+     begin
+     Exit;
+     end;
+  try
+    (* The log's own call: the declared call, else MY CALL -- never a call
+      with a rover suffix stripped back off. *)
+    aPlainCall := ExportCallFor( NotCapturedMyFacts );
+    (* A LOG THAT NEVER ROVED IS NOT WALKED: nothing it could add changes
+      the export (TCabrilloActivations.ShouldSplit and SingleFileHeaderCall
+      both need a roving row), so the ordinary export costs one query. *)
+    if not LogSourceHasRoverQSO then
+       begin
+       Exit;
+       end;
+    exportContest := ContestIdentity( Contest );
+    stationContest := ActiveContest( Contest );
+    LogSourceRewind;
+    while LogSourceNext( TempRXData, facts ) do
+       begin
+       (* THE ROWS THAT BECOME QSO LINES -- the writer's own two tests. *)
+       if GoodLookingQSO and
+          ( not exportContest.GoesToDistinctAdditionalExport( TempRXData ) ) then
+          begin
+          aActivations.Add(
+             CabrilloActivationPlaceOf( stationContest, facts, TempRXData ),
+             Trim( string( TempRXData.ceRoverQTH ) ) <> '',
+             ExportCallFor( facts ) );
+          end;
+       end;
+  finally
+    LogSourceClose;
+  end;
+  end;
+
+    function tGenerateLogPortionOfCabrilloFile( aOnePlace: boolean;
+                                                const aPlace, aCall: string ): boolean;
       label
         1;
       var
@@ -3448,6 +3617,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         leftOutOfCabrillo: integer;
         PreviousQTHString: Str10;
         slOperators: TStringList;
+        (* OUR CALL ON THIS ROW'S LINE: the row's own, or the activation's. *)
+        lineCall: string;
 
       begin
       (* PreviousQTHString is a Str10 -- a ShortString, so not
@@ -3494,6 +3665,24 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
         1:
           if LogSourceNext( TempRXData, rowMyFacts ) then
              begin
+             (* ONE ACTIVATION'S FILE HOLDS ONLY THE ROWS SENT FROM ITS PLACE
+               (issues 133 and 87), skipped before anything counts them, as
+               below; every line then carries the activation's call. *)
+             if aOnePlace then
+                begin
+                if CabrilloActivationPlaceOf( stationContest, rowMyFacts,
+                      TempRXData ) <> UpperCase( Trim( aPlace ) ) then
+                   begin
+                   goto 1;
+                   end;
+                lineCall := aCall;
+                end
+             else
+                begin
+                (* THE QSO'S OWN CALL -- D5: its my_call, else the log's
+                  declared call, never today's MY CALL ahead of them. *)
+                lineCall := ExportCallFor( rowMyFacts );
+                end;
              (* A QSO THE CONTEST TAKES IN AN ADIF FILE OF ITS OWN IS NOT A
                CABRILLO LINE (issue 272: Vermont's FT QSOs). Left out before
                anything counts it, so the record numbers, the previous
@@ -3616,9 +3805,8 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                    TempRXData.tSysTime.qtYear + 2000, TempRXData.tSysTime.qtMonth,
                    TempRXData.tSysTime.qtDay, TempRXData.tSysTime.qtHour,
                    TempRXData.tSysTime.qtMinute,
-                   (* THE QSO'S OWN CALL -- D5: its my_call, else the log's
-                     declared call, never today's MY CALL ahead of them. *)
-                   ExportCallFor( rowMyFacts ) ] );
+                   (* THE QSO'S OWN CALL, or its activation's -- lineCall. *)
+                   lineCall ] );
                 {
                 ActiveExchange := RSTQSONumberExchange;
                 nrReceived := StrToIntDef(TempRXData.ceClass, 0);
@@ -3714,13 +3902,13 @@ function tGenerateSummaryPortionOfCabrilloFile: boolean;
                 // %02d -> %.2d (date/time), %04u -> %.4u (sent number).
                 if TempRXData.ceRecordKind = rkQTCR then
                    begin
-                   sCall1 := ExportCallFor( rowMyFacts );
+                   sCall1 := lineCall;
                    sCall2 := string( HisCallsign );
                    end
                 else
                    begin
                    sCall1 := string( HisCallsign );
-                   sCall2 := ExportCallFor( rowMyFacts );
+                   sCall2 := lineCall;
                    end;
                 sWriteFileFromString( tReportFileWrite,
                    sysutils.Format

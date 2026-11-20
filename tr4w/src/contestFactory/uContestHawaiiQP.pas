@@ -351,6 +351,11 @@ type
       function FormatADIFReceivedExchange(const aQso: ContestExchange;
                                           aExchangeCarriesRST: boolean): string; override;
 
+      (* A ROVER'S CABRILLO IS ONE FILE PER ACTIVATION (issues 133 and 87):
+         the HQP homepage, "Such mobile stations must submit a separate log
+         for each activation". See TContestBase.SplitsCabrilloByActivation. *)
+      function SplitsCabrilloByActivation: boolean; override;
+
       (* AN IMPORTED OR WSJT-X QSO: NF/LB as NL, and a Digital QSO's
          GRIDSQUARE as its received grid -- the header. *)
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
@@ -838,6 +843,12 @@ begin
       begin
       Result := inherited ADIFCountyState(aQso);
       end;
+end;
+
+function TContestHawaiiQP.SplitsCabrilloByActivation: boolean;
+begin
+   (* A separate log for each activation -- see the declaration. *)
+   Result := True;
 end;
 
 (* THE COUNTY A DISTRICT LIES IN -- ADIF's five Hawaii counties, by the

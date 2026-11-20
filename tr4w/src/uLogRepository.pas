@@ -953,6 +953,12 @@ type
         serial" sentinel) counts its sign, which is below every floor. *)
       procedure SerialDigitWidths(out aSent, aReceived: integer);
 
+      (* DID THE STATION ROVE? -- a non-deleted row with a my_rover_qth (log
+        schema 12; issues 133 and 87). Asked by the Cabrillo export once, so
+        a log that never roved -- every log before schema 12, and nearly every
+        log since -- costs no second walk of its rows. *)
+      function HasRoverQSO: boolean;
+
       (* EVERY row, including deleted ones and non-QSO record kinds.
 
         Distinct from QSOCount on purpose: this is the number that compares
@@ -4236,6 +4242,26 @@ begin
       q.SQL.Text := 'SELECT COUNT(*) FROM qso WHERE deleted = 0';
       q.Open;
       Result := q.Fields[0].AsInteger;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.HasRoverQSO: boolean;
+var
+   q: TSQLQuery;
+begin
+   Result := False;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT EXISTS (SELECT 1 FROM qso WHERE deleted = 0 ' +
+                    'AND COALESCE(my_rover_qth, '''') <> '''')';
+      q.Open;
+      if (not q.EOF) and (not q.Fields[0].IsNull) then
+         begin
+         Result := q.Fields[0].AsInteger <> 0;
+         end;
       q.Close;
    finally
       q.Free;

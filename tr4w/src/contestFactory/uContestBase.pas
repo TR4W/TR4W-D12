@@ -3115,6 +3115,20 @@ type
       function DistinctAdditionalExportFileTag: string; virtual;
       function GoesToDistinctAdditionalExport(const aQso: ContestExchange): boolean; virtual;
 
+      (* ONE CABRILLO FILE PER ACTIVATION? -- issues 133 and 87, rover step F
+         (NY4I, 2026-11-19: "a contestclass option to split Rover logs").
+         False, the base: one Cabrillo for the whole log, however the station
+         roved. True: when the log roved (a row has my_rover_qth) from two
+         places or more, PostUnit.CreateCabrilloFile writes one file per place
+         a QSO was sent from ("<log>-<place>.log"), each with its own CALLSIGN
+         (the activation's call, AH7RF/KOH) and sent QTH; a boundary QSO's two
+         rows go one to each file; every file's CLAIMED-SCORE is the WHOLE
+         log's ("the activations are ALL PART OF THE SAME SCORE"). The ADIF
+         stays one file. See uCabrilloActivation. Only the Hawaii QSO Party
+         answers True: its rules alone ask for "a separate log for each
+         activation". The answer must not depend on the station. *)
+      function SplitsCabrilloByActivation: boolean; virtual;
+
       (* THE COUNTY NAME CNTY WRITES after the state and a comma -- PostUnit's
          CNTY block, asked only where WritesADIFCounty is True and the QTH is
          in the multiplier list. aDomesticName is that list's display name
@@ -7704,6 +7718,12 @@ begin
    Result := (DistinctAdditionalExportFormat <> defNone) and
              (aQso.Mode = Digital) and
              (aQso.ExtMode in DistinctAdditionalExportModes);
+end;
+
+function TContestBase.SplitsCabrilloByActivation: boolean;
+begin
+   (* One Cabrillo for the whole log -- see the declaration. *)
+   Result := False;
 end;
 
 function TContestBase.ADIFCountyName(const aQso: ContestExchange;

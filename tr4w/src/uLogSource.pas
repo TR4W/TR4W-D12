@@ -170,6 +170,10 @@ function LogSourceRecordCount: Int64;
   and hands them to the contest through TCabrilloQSOContext. *)
 procedure LogSourceSerialDigitWidths(out aSent, aReceived: integer);
 
+(* DID THE STATION ROVE? -- TLogRepository.HasRoverQSO; False with no store
+  open. The Cabrillo export's question before it splits by activation. *)
+function LogSourceHasRoverQSO: boolean;
+
 (* THE aOffsetFromEnd'th RECORD BACK FROM THE END: 1 is the last one logged.
 
   What a reverse scan wants, and what `tSetFilePointer(-n * SizeOf(rec),
@@ -443,6 +447,11 @@ begin
       begin
       Repo.SerialDigitWidths(aSent, aReceived);
       end;
+end;
+
+function LogSourceHasRoverQSO: boolean;
+begin
+   Result := (Repo <> nil) and Repo.HasRoverQSO;
 end;
 
 function LogSourceReadFromEnd(aOffsetFromEnd: Int64;

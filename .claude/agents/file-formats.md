@@ -438,8 +438,26 @@ multipliers, CTY.DAT, band lookup and CRC32.
 - `my_county` (MY_CNTY) of such a row is the ADIF county the place lies in
   (`RoverPlaceADIFCounty`, the worked side's CNTY rule `ADIFCountyOfQSO`, lifted
   once); `my_call` is the call as signed (NY4I/KOH), so the Cabrillo QSO-line
-  call follows it. The header's CALLSIGN is still MY CALL: the split by place
-  (one Cabrillo per activation) is NOT built -- waiting on NY4I (claimed score).
+  call follows it.
+- **ONE CABRILLO PER ACTIVATION (rover step F, 2026-11-19)** where the class
+  answers `TContestBase.SplitsCabrilloByActivation` (base False; HAWAII
+  ALONE, its rules: "a separate log for each activation"), the log roved (one
+  `LogSourceHasRoverQSO` query -- a log that never roved is not walked twice)
+  and two places or more: `PostUnit.CreateCabrilloFile` writes
+  `<log>-<place>.log` (`LogExportFileNameTagged`) per place. The place is the
+  SENT column's (`CabrilloActivationPlaceOf` = `CurrentMyStationExchange(...)
+  .MyState`: rover place, else the row's sent state), so file and column
+  cannot disagree. Each file's CALLSIGN and EVERY QSO line carry the
+  activation's call: the log's declared call + `/place` for a place that
+  roved (a boundary row's stored joined call is NOT used), the plain call for
+  a place only logged before roving (agent's choice; the rules are silent).
+  EVERY file's CLAIMED-SCORE is the WHOLE log's (NY4I: "all part of the same
+  score"; read once). The first file is previewed, one message names all; no
+  SCP upload offer for a split log. Rules: `uCabrilloActivation` (leaf);
+  pinned by `uTestCabrilloActivation` (registry walk + real export). An
+  unsplit file's CALLSIGN is MY CALL unless the log roved and every line
+  carries one call (NY4I/KOH): then that call. Stale files from an earlier
+  export (a plain `<log>.log`, a place no longer in the log) are not removed.
 - ADIF stays one file, one record per row (qso_set_id merging is issue 338).
 
 ## Coordinate with
