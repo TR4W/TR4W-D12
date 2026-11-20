@@ -48,10 +48,25 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   uContestWinterFieldDay is a coincidence of this year's rules, not a shared
   rule.
 
-  WFD ALREADY DIFFERS ELSEWHERE, which is the point: it disallows FT8 and FT4,
-  and its exchange carries a different class format. Those differences are not
-  in TR4W yet -- when they arrive they arrive HERE, in a file that ARRL Field
-  Day cannot be broken by. *)
+  WFD ALREADY DIFFERS ELSEWHERE, which is the point: its class letters, its
+  bands, its modes and its final score are all its own.
+
+  THE RULES ARE THE SPONSOR'S 2027 RULES, v3 (Winter Field Day Association;
+  docs/ContestRules/WinterFieldDay/WFD-2027-Rules-v3.md, reviewed key by key
+  2026-11-19):
+  - BANDS: "All Amateur bands may be used except 12, 17, 30, and 60 meters"
+    (UsesBand; TR4W has no 60 m band).
+  - MODES: "All modes, except WSJT modes ... Any mode used must be able to
+    fully transmit the exchange intact" -- the WSJT list is "FT2, FST4, FT4,
+    FT8, JT4, JT9, JT65, Q65, MSK144, WSPR, FST4W, and Echo". Stated as the
+    digital submodes ALLOWED (UsesMode, uContestBase.DigitalSubmodeAllowed;
+    NY4I on issue 120: WFD takes the free-form modes, JTTY and JS8Call
+    included). FM, C4FM and D-STAR are phone: "If the result is voice, it's
+    Phone".
+  - POINTS: phone 1, CW and digital 2 (CalculateQSOPoints).
+  - SCORE: "Total score = (total QSO points) x (OM+1)", OM being the
+    objectives the entrant SELECTS when submitting -- so the log's own
+    score is the QSO points (CombineWithMultipliers). *)
 unit uContestWinterFieldDay;
 
 {$I tr4w.inc}
@@ -59,10 +74,6 @@ unit uContestWinterFieldDay;
 interface
 
 uses
-   (* cpLOW and cpQRP -- the entrant's CATEGORY-POWER, which multiplies the
-      final score (M6). FIRST, so VC's names win where the two overlap, as
-      in uContestBase. *)
-   uSettingsModel,
    VC, uContestBase;
 
 type
@@ -97,10 +108,13 @@ type
       (* THE POINTS -- see the implementation. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
 
-      (* THE FINAL SCORE -- Issue 301 (NY4I): the points times the band-mode
-         multiplier, times two for a LOW entry and five for a QRP one. It was
-         LogEdit.TotalScore's Winter Field Day arm; moved at M6. *)
+      (* THE FINAL SCORE -- see the implementation. *)
       function CombineWithMultipliers(const aTotals: TScoreTotals): longint; override;
+   public
+      (* THE BANDS AND MODES IT CREDITS -- see the implementation, and
+         TContestBase.UsesBand / UsesMode (Q98 S1). *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
    public
       function ValidateClass(const aClass: string;
                              out aErrorMessage: string): boolean; override;
@@ -137,8 +151,9 @@ type
          M9a. See TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    protected
-      (* THE SUMMARY SHEET AND THE CABRILLO HEADER -- M9a. *)
-      function GetSummarySheet: TSummarySheetLayout; override;
+      (* THE CABRILLO HEADER -- M9a. The summary sheet's one-multiplier-per-
+         band-and-mode row went with that multiplier (2027 rules, 2026-11-19):
+         the base layout. *)
       function GetRequiresCabrilloLocation: boolean; override;
    public
       (* THE CANONICAL RECEIVED EXCHANGE -- see
@@ -199,43 +214,68 @@ begin
       end;
 end;
 
-(* THE BAND-MODE MULTIPLIER: one for each band from 160 m to 1296 MHz and
-   each of digital, CW and phone that has a QSO -- read from the QSO counts,
-   which FM already joins to phone. Transcribed from LogEdit.TotalScore, which
-   read the same counts from the totals window's copy of them (QTotals); the
-   score now reads the counts themselves (TScoreTotals.QSOs), which that copy
-   is taken from. The power factor is the entrant's CATEGORY-POWER, the value
-   TotalScore read through Settings.Contest.CategoryPower. *)
-function TContestWinterFieldDay.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
-var
-   b: BandType;
-   bandModes: longint;
-begin
-   bandModes := 0;
-   for b := Low(BandType) to Band1296 do
-      begin
-      if aTotals.QSOs[b, Digital] > 0 then
-         begin
-         inc(bandModes);
-         end;
-      if aTotals.QSOs[b, CW] > 0 then
-         begin
-         inc(bandModes);
-         end;
-      if aTotals.QSOs[b, Phone] > 0 then
-         begin
-         inc(bandModes);
-         end;
-      end;
+(* THE QSO POINTS, AND NOTHING ELSE -- the 2027 rules (v3): "Total score =
+   (total QSO points) x (OM+1)". OM, the objective multiplier, is the sum of
+   the objectives the entrant SELECTS on the sponsor's submission form ("When
+   you submit your log, we will ask you to select your completed
+   objectives"); most of them (alternative power, away from home, new
+   antennas, the SSTV image, a cross-band repeater, Winlink, the bulletin,
+   six continuous hours) are not in the log at all, so the log's own score is
+   the points with OM 0 -- the "+1 ... for participating".
 
-   Result := bandModes * ContestPoints(aTotals);
-   if Station.MyPower = cpLOW then
-      begin
-      Result := Result * 2;
-      end
-   else if Station.MyPower = cpQRP then
-      begin
-      Result := Result * 5;
+   UNTIL 2026-11-19 this was D7's formula (LOGEDIT.PAS's Winter Field Day
+   arm, moved here at M6): the points times one multiplier per band and mode
+   worked, times two for a LOW entry and five for a QRP one. That was an
+   earlier year's rule; the 2027 rules have neither a band-mode multiplier
+   nor a power factor. *)
+function TContestWinterFieldDay.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
+begin
+   Result := ContestPoints(aTotals);
+end;
+
+(* "ALL AMATEUR BANDS MAY BE USED EXCEPT 12, 17, 30, AND 60 METERS" (2027
+   rules). TR4W has no 60 m band. Light is credited as every other band
+   is: whether TR4W's light band is an amateur band the rule means is not
+   settled here (Iowa, under the same wording, leaves it out). AllBands and
+   NoBand are not bands a QSO is logged on. *)
+function TContestWinterFieldDay.UsesBand(aBand: BandType): boolean;
+begin
+   Result := (aBand in [Band160..BandLight]) and
+             not (aBand in [Band30, Band17, Band12]);
+end;
+
+(* "ALL MODES, EXCEPT WSJT MODES, MAY BE USED. Any mode used must be able to
+   fully transmit the exchange intact" (2027 rules). The WSJT modes it names
+   are FT2, FST4, FT4, FT8, JT4, JT9, JT65, Q65, MSK144, WSPR, FST4W and
+   Echo. CW is CW and MCW; FM (with C4FM, D-STAR) is phone, "if the result
+   is voice"; the digital group is "PSK, RTTY, Olivia, Packet, SSTV, ATV,
+   JS8Call, and all other amateur radio data and image modes" but the WSJT
+   ones.
+
+   THE DIGITAL SUBMODES ARE STATED AS THOSE ALLOWED (issue 122's seam): every
+   digital submode TR4W can name that is not a WSJT mode -- RTTY (normal and
+   reversed), PSK31/63 and reversed PSK, MFSK, JS8 and JTTY. JTTY is WSJT-X
+   3.3's free-text keyboard mode: the sponsor's WSJT list does not name it,
+   and NY4I ruled on issue 120 that Winter Field Day takes it, as it takes
+   JS8Call, because it passes the full exchange. So FT8, FT4, JT65, FST4 and
+   FST4W -- and any submode appended later (FT2) until a ruling names it --
+   are automatic X-QSOs. *)
+function TContestWinterFieldDay.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode,
+                      RTTY_SUBMODES + [ePSK31, ePSK63, ePSK_R, eMFSK, eJS8, eJTTY]);
+         end;
+      else
+         begin
+         Result := False;
+         end;
       end;
 end;
 
@@ -510,16 +550,6 @@ procedure TContestWinterFieldDay.DescribeNewContestPrompts(aPrompts: TNewContest
 begin
    aPrompts.AskField(ncfMyFDClass);
    aPrompts.AskField(ncfMySection);
-end;
-
-(* THE SUMMARY SHEET COUNTS ONE MULTIPLIER FOR EACH BAND AND MODE WORKED --
-   PostUnit's two WINTERFIELDDAY tests in WriteScoreInformationToSummarySheet,
-   moved here at M9a (2026-10-02): each multiplier column of a band/mode row
-   shows 1, and the total row shows how many rows there were. *)
-function TContestWinterFieldDay.GetSummarySheet: TSummarySheetLayout;
-begin
-   Result := inherited GetSummarySheet;
-   Result.MultiplierPerBandModeRow := True;
 end;
 
 (* THE CABRILLO FILE IS NOT STARTED WITHOUT A LOCATION -- PostUnit's guard,

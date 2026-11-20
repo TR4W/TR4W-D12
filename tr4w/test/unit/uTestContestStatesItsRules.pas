@@ -99,7 +99,7 @@ const
       that already had them and the CQ WW three; the modes by the CQ WW three
       alone. Generated once from the frozen contest matrix's ids; edited by
       hand from then on, only ever DOWN. *)
-   BANDS_NOT_YET_STATED: array[0..162] of string = (
+   BANDS_NOT_YET_STATED: array[0..161] of string = (
       'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB', 'ALRS-UA1DZ-CUP',
       'AP-SPRINT', 'ARCI', 'ARI-DX', 'ARIZONA QSO PARTY',
       'ARKTIKA-SPRING', 'ARRL-DIGI', 'ARRL-DX-CW',
@@ -140,13 +140,13 @@ const
       'TENNESSEE QSO PARTY', 'TEXAS QSO PARTY', 'TOEC', 'UBA-DX-CW',
       'UBA-DX-SSB', 'UCG', 'UKEI', 'UKRAINE CHAMPIONSHIP',
       'UKRAINIAN', 'UN DX', 'URAL-CUP', 'VAQP',
-      'WAG', 'WINTER FIELD DAY', 'WRTC',
+      'WAG', 'WRTC',
       'WW PMC', 'WWDIGI', 'WWIH', 'WWL',
       'XMAS', 'YBDX', 'YO-DX-HF', 'YOTA',
       'YUDX'
       );
 
-   MODES_NOT_YET_STATED: array[0..172] of string = (
+   MODES_NOT_YET_STATED: array[0..171] of string = (
       '7QP', 'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB',
       'ALRS-UA1DZ-CUP', 'AP-SPRINT', 'ARCI', 'ARI-DX',
       'ARIZONA QSO PARTY', 'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-160',
@@ -189,7 +189,7 @@ const
       'TEXAS QSO PARTY', 'TOEC', 'UBA-DX-CW', 'UBA-DX-SSB',
       'UCG', 'UKEI', 'UKRAINE CHAMPIONSHIP', 'UKRAINIAN',
       'UN DX', 'URAL-CUP', 'VAQP', 'WAG',
-      'WINTER FIELD DAY', 'WRTC', 'WW PMC',
+      'WRTC', 'WW PMC',
       'WWDIGI', 'WWIH', 'WWL', 'XMAS',
       'YBDX', 'YO-DX-HF', 'YOTA', 'YUDX'
       );
