@@ -1825,6 +1825,7 @@ const
       + 'CATEGORY-OPERATOR,'
       + 'CATEGORY-OVERLAY,'
       + 'CATEGORY-POWER,'
+      + 'CATEGORY-STATION,'
       + 'CATEGORY-TRANSMITTER,'
       + '"CHECK LOG FILE SIZE",'
       + '"CLUSTER AUTO SELF SPOT",'
