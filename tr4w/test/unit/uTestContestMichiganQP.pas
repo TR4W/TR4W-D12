@@ -38,6 +38,8 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_MichiganIsNoStateMultiplierInState;
+      procedure Test_BandsAndModesAreTheSponsors;
+      procedure Test_TheThirteenProvincesAndDX;
    end;
 
 implementation
@@ -45,6 +47,8 @@ implementation
 uses
    SysUtils,
    VC,
+   uContestBase,
+   uContestRegistry,
    uTestQSOPartyRules;
 
 (* "For Michigan stations, multipliers are the 83 Michigan counties, 49
@@ -75,9 +79,63 @@ begin
                'the District of Columbia is its own multiplier (S51.DOM includes DC.DOM)');
 end;
 
+(* "CW and SSB on 80, 40, 20, 15 and 10 meters." / "All categories are
+   all-band (80m-10m)" / "All categories are mixed-mode (CW,SSB)": five
+   bands, CW, and phone as SSB. No digital mode, no 160 m, no WARC, no 6 m. *)
+procedure TContestMichiganQPTests.Test_BandsAndModesAreTheSponsors;
+var
+   identity: TContestBase;
+   band: BandType;
+begin
+   BeginTest('Test_MichiganBandsAndModesAreTheSponsors');
+   identity := ContestIdentity(ContestHandleOf(MICHQSOPARTY));
+   for band := Low(BandType) to High(BandType) do
+      begin
+      CheckTrue(identity.UsesBand(band) = (band in [Band80, Band40, Band20, Band15, Band10]),
+                'only 80, 40, 20, 15 and 10 m, band ' + IntToStr(Ord(band)));
+      end;
+   CheckTrue(identity.UsesMode(CW, eCW), 'CW');
+   CheckTrue(identity.UsesMode(CW, eNoMode), 'CW, submode unknown');
+   CheckTrue(identity.UsesMode(Phone, eUSB), 'SSB');
+   CheckTrue(identity.UsesMode(Phone, eNoMode), 'phone with no submode is not proven off-mode');
+   CheckFalse(identity.UsesMode(Phone, eAM), 'AM is not SSB');
+   CheckFalse(identity.UsesMode(FM, eFM), 'FM is not SSB');
+   CheckFalse(identity.UsesMode(Digital, eRTTY), 'no digital: RTTY');
+   CheckFalse(identity.UsesMode(Digital, eFT8), 'no digital: FT8');
+   CheckFalse(identity.UsesMode(Digital, eNoMode), 'no digital: unknown submode');
+end;
+
+(* "For Michigan stations, multipliers are ... 13 Canadian provinces (NL, NB,
+   NS, PE, QC, ON, MB, SK, AB, BC, NT, YT, NU), and "DX"." The in-state file
+   gives each province ONE multiplier under the sponsor's own two letters,
+   whatever alias was typed: the sponsor's NL, PE and NU were unknown to it,
+   and Labrador (VO2, LAB) was a second multiplier beside Newfoundland. *)
+procedure TContestMichiganQPTests.Test_TheThirteenProvincesAndDX;
+const
+   PROVINCES: array[0..12] of string = ('NL', 'NB', 'NS', 'PE', 'QC', 'ON', 'MB',
+                                       'SK', 'AB', 'BC', 'NT', 'YT', 'NU');
+var
+   i: integer;
+begin
+   BeginTest('Test_MichiganTheThirteenProvincesAndDX');
+   for i := Low(PROVINCES) to High(PROVINCES) do
+      begin
+      CheckEquals(PROVINCES[i], UpperCase(InStateMultiplierOf(MICHQSOPARTY, PROVINCES[i])),
+                  'the sponsor''s own ' + PROVINCES[i] + ' is its multiplier');
+      end;
+   CheckEquals('NL', UpperCase(InStateMultiplierOf(MICHQSOPARTY, 'LAB')),
+               'Labrador is Newfoundland and Labrador, not a 14th province');
+   CheckEquals('NL', UpperCase(InStateMultiplierOf(MICHQSOPARTY, 'VO2')), 'VO2 too');
+   CheckEquals('NL', UpperCase(InStateMultiplierOf(MICHQSOPARTY, 'NF')), 'NF too');
+   CheckEquals('NT', UpperCase(InStateMultiplierOf(MICHQSOPARTY, 'VE8')), 'a call prefix still resolves');
+   CheckEquals('DX', UpperCase(InStateMultiplierOf(MICHQSOPARTY, 'DX')), 'the one DX multiplier');
+end;
+
 procedure TContestMichiganQPTests.RunAllTests;
 begin
    Test_MichiganIsNoStateMultiplierInState;
+   Test_BandsAndModesAreTheSponsors;
+   Test_TheThirteenProvincesAndDX;
 end;
 
 end.

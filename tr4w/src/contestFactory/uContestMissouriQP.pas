@@ -242,15 +242,15 @@ begin
    Result := 'Missouri QSO Party';
 end;
 
-(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row MISSOURI QSO PARTY: status candidate; rules
-   https://www.w0ma.org/index.php/missouri-qso-party; rules year 2026.
-   CANDIDATE: date from a calendar, not yet checked against the sponsor's
-   rules. *)
+(* WHEN IT RUNS -- the sponsor's 2026 rules: "1st Day 1400 UTC Saturday 0400
+   UTC Sunday / 2nd Day 1400 UTC Sunday 2000 UTC Sunday". The weekend is the
+   FIRST full weekend of April; 2026 alone moved to April 11-12 "due to the
+   Easter weekend" (April 4-5, 2026 was Easter). NY4I, 2026-11-20: "MOQP is
+   April 3 and 4, 2027." *)
 function TContestMissouriQP.GetSchedule: string;
 begin
-   Result := '2nd full weekend of April at 14:00 UTC for 14h; ' +
-             '2nd full weekend of April +1d at 14:00 UTC for 6h';
+   Result := '1st full weekend of April at 14:00 UTC for 14h; ' +
+             '1st full weekend of April +1d at 14:00 UTC for 6h';
 end;
 
 function TContestMissouriQP.GetHostState: string;

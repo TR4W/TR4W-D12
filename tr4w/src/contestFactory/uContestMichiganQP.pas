@@ -123,6 +123,11 @@ type
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* "CW and SSB on 80, 40, 20, 15 and 10 meters." -- see the
+         implementation. Identity facts: no station is asked. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+   public
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
    public
@@ -298,6 +303,37 @@ function TContestMichiganQP.CountsAsMultiplier(const aQso: ContestExchange;
 begin
    Result := not (Station.InHostState and
                   DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
+end;
+
+(* BANDS -- the sponsor's 2026 rules: "CW and SSB on 80, 40, 20, 15 and 10
+   meters." and "All categories are all-band (80m-10m)". No 160 m, no WARC,
+   no 6 m or up: such a QSO is an automatic X-QSO (Q98). *)
+function TContestMichiganQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* MODES -- "CW and SSB ... All categories are mixed-mode (CW,SSB)". CW, and
+   phone only as SSB (an unknown submode, eNoMode and eData, is credited:
+   "some submode", Q98 S1). No digital mode. FM and AM are refused, NY4I's
+   ruling (2026-11-20): "MIQP is just CW and SSB." (As at the Mississippi QSO
+   Party, whose rules also say only "SSB".) *)
+function TContestMichiganQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW:
+         begin
+         Result := True;
+         end;
+      Phone:
+         begin
+         Result := aExtMode in [eNoMode, eData, eSSB, eUSB, eLSB];
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 function TContestMichiganQP.CallHistoryFields: TCallHistoryFields;

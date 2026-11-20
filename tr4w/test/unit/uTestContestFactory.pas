@@ -535,10 +535,13 @@ begin
       in uTestContestFloridaQP. *)
    obj := MakeContest(MICHQSOPARTY);
    try
-      CheckEquals(2, PointsFor(obj, CW), 'Michigan CW');
-      CheckEquals(1, PointsFor(obj, Phone), 'Michigan phone');
-      CheckEquals(1, PointsFor(obj, Digital),
-                  'Michigan digital scores the phone value');
+      (* 20 m: Michigan credits 80-10 m only ("CW and SSB on 80, 40, 20, 15
+         and 10 meters"), and no digital mode, so digital scores nothing. *)
+      CheckEquals(2, PointsFor(obj, CW, Band20), 'Michigan CW');
+      CheckEquals(1, PointsFor(obj, Phone, Band20), 'Michigan phone');
+      CheckEquals(0, PointsFor(obj, Digital, Band20),
+                  'Michigan has no digital mode (CW and SSB only)');
+      CheckEquals(0, PointsFor(obj, CW, Band160), 'Michigan has no 160 m');
    finally
       obj.Free;
       end;
