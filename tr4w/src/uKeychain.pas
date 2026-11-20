@@ -603,6 +603,16 @@ begin
 end;
 
 finalization
+   (* The registry owns its backends (RegisterKeychainBackend frees a replaced
+     one), so it frees the rest here; the checked unit-test run had counted the
+     test keychain and every secret stored in it as unfreed blocks. *)
+   while Length(GBackends) > 0 do
+      begin
+      GBackends[High(GBackends)].Free;
+      SetLength(GBackends, Length(GBackends) - 1);
+      end;
+   GBackends := nil;
+   GActive := nil;
    GUnreadable.Free;
    GUnreadable := nil;
 

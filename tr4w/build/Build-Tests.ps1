@@ -137,7 +137,7 @@ catch
 # uTestMenuShortcuts builds for the run and never freed (uMenu cannot unpublish
 # it, so it cannot be freed mid-run). It is freed in that unit's finalization
 # now, when nothing can ask for an item. 57 on four runs.
-$LEAK_CEILING = 57
+$LEAK_CEILING = 54
 
 if ($Checked)
    {
