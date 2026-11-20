@@ -64,6 +64,10 @@ begin
       request.BearerToken := FToken;
       request.UserAgent := 'TR4W';
       request.FollowRedirects := False;
+      (* NY4I, 2026-11-19: a POST answered with a redirect is repeated, same
+        body and headers, at the SAME host only (THttpRequest.RepostOnRedirect);
+        a repeat that cannot be made is hfPostRedirected, i.e. uncertain below. *)
+      request.RepostOnRedirect := True;
       request.ConnectMs := 5000;
       request.IOMs := 10000;
       request.MaxResponseBytes := 4096;

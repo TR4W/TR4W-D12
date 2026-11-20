@@ -32,7 +32,16 @@ type
       ScriptContentType:  string;
       ScriptFinalURL:     string;
       ScriptBody:        RawByteString;
+      ScriptLocation:    string;
+      (* A DIFFERENT answer for every call after the first (issue 255 follow-up:
+        the repeat of a redirected POST). Used only when HasFollowUp. *)
+      HasFollowUp:         boolean;
+      FollowUpFailure:     THttpFailure;
+      FollowUpStatus:      integer;
+      FollowUpLocation:    string;
+      FollowUpBody:        RawByteString;
       (* what the transport saw *)
+      Urls:    TStringList;   (* the URL of every call, in order *)
       Calls:   integer;
       Last:    THttpWireRequest;
       LastHadSink: boolean;
@@ -88,10 +97,12 @@ constructor TFakeHttpTransport.Create;
 begin
    inherited Create;
    Last := THttpWireRequest.Create;
+   Urls := TStringList.Create;
 end;
 
 destructor TFakeHttpTransport.Destroy;
 begin
+   Urls.Free;
    Last.Free;
    inherited Destroy;
 end;
@@ -111,6 +122,7 @@ procedure TFakeHttpTransport.Execute(aRequest: THttpWireRequest; aSink: TStream;
                                      aResult: THttpWireResult);
 begin
    Inc(Calls);
+   Urls.Add(aRequest.URL);
    LastHadSink := aSink <> nil;
    Last.Method           := aRequest.Method;
    Last.URL              := aRequest.URL;
@@ -143,6 +155,18 @@ begin
    aResult.LastModified := ScriptLastModified;
    aResult.ContentType  := ScriptContentType;
    aResult.FinalURL     := ScriptFinalURL;
+   aResult.Location     := ScriptLocation;
+   if HasFollowUp and (Calls >= 2) then
+      begin
+      aResult.Failure    := FollowUpFailure;
+      aResult.StatusCode := FollowUpStatus;
+      aResult.Location   := FollowUpLocation;
+      if (FollowUpFailure = hfNone) and (FollowUpBody <> '') then
+         begin
+         aResult.Body := FollowUpBody;
+         end;
+      Exit;
+      end;
    if (ScriptFailure = hfNone) and (ScriptBody <> '') then
       begin
       if aSink <> nil then

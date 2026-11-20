@@ -395,8 +395,16 @@ POST, report it, ask the user to file a GitHub issue. `THttpWireRequest.MayFollo
 POST whatever `FollowRedirects` says) is asked by BOTH transports, so a POST's 3xx comes back as the
 answer with `THttpWireResult.Location`; `THttpRequest.Send` turns it into `Failure = hfPostRedirected`
 (`StatusCode` kept, `NothingSent` False, `FailReason` = `SPostRedirected` naming status and target and the
-issues page) ONLY for a caller that asked to follow (`THttpPost`: score post, HamScore, SCP). Club Log, WRL
-and Cloudlog never asked and still see a 3xx as an ordinary status. The score post shows the text in the
+issues page) ONLY for a caller that asked to follow (`THttpPost`: score post, HamScore, SCP). **Club Log,
+WRL and Cloudlog are the exception (NY4I, 2026-11-19): they set `THttpRequest.RepostOnRedirect`** and
+`Send` repeats the same POST (body, headers) at the Location, decided by the pure
+`uHttpTransport.DecideRepost`: 301/302/307/308 only, at most `REPOST_MAX_HOPS` (3), never 303 (the result
+is at that address), never https to http, never another host or port (the key is in a header or, for
+Cloudlog, the body), never an address with credentials; a refusal is `hfPostRedirected` with the 3xx
+status kept (Club Log/WRL uncertain, Cloudlog `CLOUDLOG_REDIRECT`), and a repeat that fails before a byte
+left is also made `hfPostRedirected` with status 0, never "nothing sent", so nothing retries it as unsent.
+The loop is in `Send`, not a transport, so both transports match. Do not give another caller the flag
+without asking. The score post shows the text in the
 Get Scores status; HamScore and SCP carry it in their log / `errorResult`. GET redirects and the
 https-to-http refusal are unchanged. `docs/HTTP_TRANSPORT_DESIGN.md` section 12.
 Never point a posting URL at an address that redirects while WinHTTP can be the transport.

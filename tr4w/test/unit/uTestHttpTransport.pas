@@ -68,6 +68,9 @@ type
       procedure Test_AGetStillFollowsARedirect;
       procedure Test_APostAcrossARedirect;
       procedure Test_ThePostVerbCarriesItsBodyAcrossA301;
+      procedure Test_RepostOnRedirectOverTheWire;
+      procedure Test_DecideRepost;
+      procedure Test_RepostThroughTheSharedLayer;
       procedure Test_ARefusedConnectionIsNotProvedUnsent;
       procedure Test_TlsUnavailableIsProvedUnsent;
       procedure Test_ExecuteNeverRaisesAndClearsTheResult;
@@ -271,7 +274,36 @@ begin
       extra  := 'Location: /echo'#13#10;
       body   := '';
       end
-   else if path = '/echo' then
+   else if path = '/loop' then
+      begin
+      (* issue 255 follow-up: a redirect that never ends (the hop limit). *)
+      status := '302 Found';
+      extra  := 'Location: /loop'#13#10;
+      body   := '';
+      end
+   else if path = '/dir/start' then
+      begin
+      (* A Location with no leading slash: relative to the directory, /dir/echo. *)
+      status := '307 Temporary Redirect';
+      extra  := 'Location: echo'#13#10;
+      body   := '';
+      end
+   else if path = '/abs' then
+      begin
+      (* An absolute Location on the SAME host and port. *)
+      status := '308 Permanent Redirect';
+      extra  := 'Location: http://127.0.0.1:' + IntToStr(FServer.Bindings[0].Port) + '/echo'#13#10;
+      body   := '';
+      end
+   else if path = '/xhost' then
+      begin
+      (* The same server, but a different host NAME: another origin as far as a
+        secret is concerned. It must never be contacted. *)
+      status := '307 Temporary Redirect';
+      extra  := 'Location: http://localhost:' + IntToStr(FServer.Bindings[0].Port) + '/echo'#13#10;
+      body   := '';
+      end
+   else if (path = '/echo') or (path = '/dir/echo') then
       begin
       body := got;
       end
@@ -753,6 +785,317 @@ begin
    finally
       post.Free;
       StopServer;
+   end;
+end;
+
+(* ISSUE 255 FOLLOW-UP (NY4I, 2026-11-19): Club Log, WRL and Cloudlog opt in with
+  RepostOnRedirect, and the shared layer repeats the POST at the target. Run for
+  EACH transport (the contract suite calls it), through the real Send, because
+  both transports hand back a POST's 3xx and the repeat is the shared layer's:
+  that is what makes them identical. *)
+procedure THttpTransportTests.Test_RepostOnRedirectOverTheWire;
+const
+   REPEATED: array[0..3] of integer = (301, 302, 307, 308);
+var
+   t:       TPlatformHttpTransport;
+   req:     THttpRequest;
+   port:    Word;
+   i:       integer;
+   sent:    string;
+   reqLine: string;
+begin
+   BeginTest(FTag + 'issue 255: RepostOnRedirect repeats the POST (same body) at the Location on 301/302/307/308, relative or absolute; never on 303, another host, or past 3 repeats');
+   sent := 'a=1&b=two';
+   port := StartServer;
+   t    := NewTransport;
+   SetHttpTransportForTest(t);
+   try
+      for i := Low(REPEATED) to High(REPEATED) do
+         begin
+         FHits := 0;
+         req := THttpRequest.Create(Url(port, '/r' + IntToStr(REPEATED[i])));
+         try
+            req.AllowInsecure     := True;
+            req.Body              := sent;
+            req.RepostOnRedirect  := True;
+            CheckTrue(req.Send, IntToStr(REPEATED[i]) + ' repeated and answered: ' + req.FailReason);
+            CheckEquals(200, req.StatusCode, IntToStr(REPEATED[i]) + ': the final status');
+            CheckEquals(sent, req.Response, IntToStr(REPEATED[i]) + ': the body arrived at /echo (the server echoes it)');
+            CheckEquals(1, req.Reposts, IntToStr(REPEATED[i]) + ': one repeat');
+            CheckEquals(2, FHits, IntToStr(REPEATED[i]) + ': the redirect, then the repeat');
+            reqLine := Copy(FHeaders, 1, Pos(' http/', FHeaders) - 1);
+            CheckEquals('post /echo', reqLine, IntToStr(REPEATED[i]) + ': the repeat is a POST, relative Location resolved');
+            CheckEquals(Url(port, '/echo'), req.FinalURL, IntToStr(REPEATED[i]) + ': the address that answered');
+         finally
+            req.Free;
+         end;
+         end;
+
+      FHits := 0;
+      req := THttpRequest.Create(Url(port, '/dir/start'));
+      try
+         req.AllowInsecure := True;
+         req.Body := sent;
+         req.RepostOnRedirect := True;
+         CheckTrue(req.Send, 'a Location without a leading slash: ' + req.FailReason);
+         CheckEquals('post /dir/echo', Copy(FHeaders, 1, Pos(' http/', FHeaders) - 1),
+                     'relative to the directory of the first request');
+         CheckEquals(sent, req.Response, 'body');
+      finally
+         req.Free;
+      end;
+
+      FHits := 0;
+      req := THttpRequest.Create(Url(port, '/abs'));
+      try
+         req.AllowInsecure := True;
+         req.Body := sent;
+         req.RepostOnRedirect := True;
+         CheckTrue(req.Send, 'an absolute Location on the same host and port: ' + req.FailReason);
+         CheckEquals(sent, req.Response, 'body');
+         CheckEquals(2, FHits, 'two requests');
+      finally
+         req.Free;
+      end;
+
+      (* 303: the result is at that address; NOT repeated, reported as before. *)
+      FHits := 0;
+      req := THttpRequest.Create(Url(port, '/r303'));
+      try
+         req.AllowInsecure := True;
+         req.Body := sent;
+         req.RepostOnRedirect := True;
+         CheckFalse(req.Send, '303 is not repeated');
+         CheckTrue(req.Failure = hfPostRedirected, 'reported: ' + HttpFailureName(req.Failure));
+         CheckEquals(303, req.StatusCode, 'the status is kept');
+         CheckFalse(req.NothingSent, 'the POST was sent');
+         CheckEquals(1, FHits, 'one request only');
+         CheckEquals('/r303', FPath, 'only the original address');
+         CheckEquals(0, req.Reposts, 'no repeat');
+      finally
+         req.Free;
+      end;
+
+      (* Another host NAME (localhost, same server): never contacted. *)
+      FHits := 0;
+      req := THttpRequest.Create(Url(port, '/xhost'));
+      try
+         req.AllowInsecure := True;
+         req.Body := sent;
+         req.RepostOnRedirect := True;
+         CheckFalse(req.Send, 'another host is refused');
+         CheckTrue(req.Failure = hfPostRedirected, 'reported: ' + HttpFailureName(req.Failure));
+         CheckEquals(307, req.StatusCode, 'the status is kept');
+         CheckEquals(1, FHits, 'the other host was never contacted');
+         CheckTrue(Pos('different host', req.FailReason) > 0, 'and says why: ' + req.FailReason);
+      finally
+         req.Free;
+      end;
+
+      (* An endless redirect: the original plus 3 repeats, then a report. *)
+      FHits := 0;
+      req := THttpRequest.Create(Url(port, '/loop'));
+      try
+         req.AllowInsecure := True;
+         req.Body := sent;
+         req.RepostOnRedirect := True;
+         CheckFalse(req.Send, 'too many redirects fails');
+         CheckTrue(req.Failure = hfPostRedirected, 'reported: ' + HttpFailureName(req.Failure));
+         CheckEquals(REPOST_MAX_HOPS, req.Reposts, 'three repeats');
+         CheckEquals(REPOST_MAX_HOPS + 1, FHits, 'the original and three repeats, no fourth');
+         CheckEquals(302, req.StatusCode, 'the last redirect');
+         CheckTrue(Pos('more than', req.FailReason) > 0, 'says too many: ' + req.FailReason);
+      finally
+         req.Free;
+      end;
+
+      (* Not opted in (every other POST caller): the 3xx is an ordinary status. *)
+      FHits := 0;
+      req := THttpRequest.Create(Url(port, '/r301'));
+      try
+         req.AllowInsecure := True;
+         req.Body := sent;
+         CheckTrue(req.Send, 'not opted in: an answer');
+         CheckEquals(301, req.StatusCode, 'the 301 itself');
+         CheckEquals(1, FHits, 'one request');
+      finally
+         req.Free;
+      end;
+   finally
+      SetHttpTransportForTest(nil);
+      t.Free;
+      StopServer;
+   end;
+end;
+
+(* THE DECISION, pure: every refusal and every form of Location. *)
+procedure THttpTransportTests.Test_DecideRepost;
+var
+   target: string;
+begin
+   BeginTest('issue 255: DecideRepost resolves a Location and refuses 303, a downgrade, another host or port, credentials, a bad address and the 4th repeat');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '/v2/qso', 301, 0, target) = rdRepost, '301 absolute path');
+   CheckEquals('https://a.example/v2/qso', target, 'resolved against the origin');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'qso2', 308, 0, target) = rdRepost, 'relative name');
+   CheckEquals('https://a.example/v1/qso2', target, 'against the directory');
+   CheckTrue(DecideRepost('https://a.example/v1/qso?x=1', '?y=2', 302, 0, target) = rdRepost, 'query only');
+   CheckEquals('https://a.example/v1/qso?y=2', target, 'keeps the path');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '//A.EXAMPLE/z', 307, 0, target) = rdRepost, 'scheme-relative, host in another case');
+   CheckEquals('https://A.EXAMPLE/z', target, 'takes the scheme');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://a.example:443/z#frag', 307, 0, target) = rdRepost, 'explicit default port is the same origin');
+   CheckEquals('https://a.example:443/z', target, 'fragment dropped');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '/z', 307, REPOST_MAX_HOPS - 1, target) = rdRepost, 'the third repeat is allowed');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '/z', 307, REPOST_MAX_HOPS, target) = rdTooManyRedirects, 'the fourth is not');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '/z', 303, 0, target) = rdSeeOther, '303 is never repeated');
+   CheckEquals('', target, 'no target on a refusal');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '', 301, 0, target) = rdNoLocation, 'no Location');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'http://a.example/z', 301, 0, target) = rdDowngrade, 'https to http');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'http://evil.example/z', 301, 0, target) = rdDowngrade, 'https to http elsewhere is a downgrade first');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://b.example/z', 301, 0, target) = rdOtherHost, 'another host');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://a.example:8443/z', 301, 0, target) = rdOtherHost, 'another port');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://sub.a.example/z', 301, 0, target) = rdOtherHost, 'a sub-domain is another host');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://a.example@evil.example/z', 301, 0, target) = rdBadLocation, 'credentials in the address (the host trick)');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '/z'#13#10'X: y', 301, 0, target) = rdBadLocation, 'a line break');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'ftp://a.example/z', 301, 0, target) = rdBadLocation, 'not http');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://a.example:4294967739/z', 301, 0, target) = rdBadLocation, 'a port that would wrap to 443 on a 32-bit parse');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://a.example:0/z', 301, 0, target) = rdBadLocation, 'port 0');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://a.example:44a/z', 301, 0, target) = rdBadLocation, 'a port that is not digits');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '/\evil.example/z', 301, 0, target) = rdBadLocation, 'a backslash');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', 'https://a.example\@evil.example/z', 301, 0, target) = rdBadLocation, 'a backslash before an @');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '/a b', 301, 0, target) = rdBadLocation, 'a space');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '/caf' + #$00E9, 301, 0, target) = rdBadLocation, 'not ASCII');
+   CheckTrue(DecideRepost('https://a.example/v1/qso', '#frag', 301, 0, target) = rdBadLocation, 'a fragment alone');
+   CheckTrue(DecideRepost('http://127.0.0.1:8080/a', '/b', 301, 0, target) = rdRepost, 'plain http stays plain http');
+   CheckEquals('http://127.0.0.1:8080/b', target, 'with its port');
+   CheckTrue(DecideRepost('http://a.example/a', 'https://a.example/b', 301, 0, target) = rdOtherHost, 'an upgrade is another origin and is not followed either');
+end;
+
+(* The shared layer over a FAKE transport: https and a bearer token, which the
+  loopback server cannot give. *)
+procedure THttpTransportTests.Test_RepostThroughTheSharedLayer;
+var
+   fake: TFakeHttpTransport;
+   req:  THttpRequest;
+begin
+   BeginTest('issue 255: the repeat keeps method, body and credentials on the same host; refuses a downgrade or another host; a repeat that cannot be made is not "nothing sent"');
+   DeclareCertificateChecking;
+   fake := TFakeHttpTransport.Create;
+   SetHttpTransportForTest(fake);
+   try
+      (* follow once, secret kept, answer taken from the repeat *)
+      fake.ScriptStatus   := 301;
+      fake.ScriptLocation := '/v2/qso';
+      fake.HasFollowUp    := True;
+      fake.FollowUpStatus := 201;
+      fake.FollowUpBody   := ToWire('{"ok":true}');
+      req := THttpRequest.Create('https://api.invalid/v1/qso');
+      try
+         req.BearerToken := TOKEN;
+         req.Body := '{"a":1}';
+         req.RepostOnRedirect := True;
+         CheckTrue(req.Send, 'answered: ' + req.FailReason);
+         CheckEquals(201, req.StatusCode, 'the repeat''s status');
+         CheckEquals('{"ok":true}', req.Response, 'the repeat''s body');
+         CheckEquals(2, fake.Calls, 'two requests');
+         CheckEquals('https://api.invalid/v2/qso', fake.Urls[1], 'at the resolved target');
+         CheckEquals('POST', fake.Last.Method, 'same method');
+         CheckEquals('{"a":1}', string(fake.Last.Body), 'same body');
+         CheckEquals(TOKEN, fake.Last.BearerToken, 'same credentials, same host');
+         CheckFalse(fake.Last.FollowRedirects, 'the transport still never follows');
+      finally
+         req.Free;
+      end;
+
+      (* a downgrade: the secret never goes in the clear *)
+      fake.Calls := 0;
+      fake.Urls.Clear;
+      fake.HasFollowUp    := False;
+      fake.ScriptStatus   := 301;
+      fake.ScriptLocation := 'http://api.invalid/v1/qso';
+      req := THttpRequest.Create('https://api.invalid/v1/qso');
+      try
+         req.BearerToken := TOKEN;
+         req.Body := '{"a":1}';
+         req.RepostOnRedirect := True;
+         CheckFalse(req.Send, 'https to http is refused');
+         CheckTrue(req.Failure = hfPostRedirected, 'reported: ' + HttpFailureName(req.Failure));
+         CheckEquals(1, fake.Calls, 'nothing was sent to the plain address');
+         CheckEquals(301, req.StatusCode, 'the redirect status is kept');
+         CheckTrue(Pos('plain http', req.FailReason) > 0, req.FailReason);
+         CheckTrue(Pos(TOKEN, req.FailReason) = 0, 'no secret in the reason');
+      finally
+         req.Free;
+      end;
+
+      (* another host: the key must not leave *)
+      fake.Calls := 0;
+      fake.Urls.Clear;
+      fake.ScriptStatus   := 307;
+      fake.ScriptLocation := 'https://other.invalid/v1/qso';
+      req := THttpRequest.Create('https://api.invalid/v1/qso');
+      try
+         req.BearerToken := TOKEN;
+         req.RepostOnRedirect := True;
+         CheckFalse(req.Send, 'another host is refused');
+         CheckEquals(1, fake.Calls, 'the other host got nothing');
+         CheckEquals(307, req.StatusCode, 'status kept');
+      finally
+         req.Free;
+      end;
+
+      (* the repeat itself fails before a byte left: still "was sent" overall *)
+      fake.Calls := 0;
+      fake.Urls.Clear;
+      fake.ScriptStatus     := 302;
+      fake.ScriptLocation   := '/v2/qso';
+      fake.HasFollowUp      := True;
+      fake.FollowUpFailure  := hfCannotConnect;
+      fake.FollowUpStatus   := 0;
+      req := THttpRequest.Create('https://api.invalid/v1/qso');
+      try
+         req.BearerToken := TOKEN;
+         req.RepostOnRedirect := True;
+         CheckFalse(req.Send, 'the repeat failed');
+         CheckTrue(req.Failure = hfPostRedirected, 'not hfCannotConnect: ' + HttpFailureName(req.Failure));
+         CheckFalse(req.NothingSent, 'so no caller retries it as unsent');
+         CheckEquals(0, req.StatusCode, 'no final answer, and not the 3xx');
+         CheckEquals(2, fake.Calls, 'it was tried');
+      finally
+         req.Free;
+      end;
+
+      (* a caller that did not opt in is untouched: a 3xx is a plain status *)
+      fake.Calls := 0;
+      fake.Urls.Clear;
+      fake.HasFollowUp    := False;
+      fake.ScriptStatus   := 301;
+      fake.ScriptLocation := '/v2/qso';
+      req := THttpRequest.Create('https://api.invalid/v1/qso');
+      try
+         req.BearerToken := TOKEN;
+         CheckTrue(req.Send, 'an answer');
+         CheckEquals(301, req.StatusCode, 'the 301');
+         CheckEquals(1, fake.Calls, 'not repeated');
+      finally
+         req.Free;
+      end;
+
+      (* and one that asked to FOLLOW (the score post, HamScore, SCP) still
+        reports, never repeats *)
+      fake.Calls := 0;
+      fake.Urls.Clear;
+      req := THttpPost.Create('https://api.invalid/post');
+      try
+         req.Body := 'a=1';
+         CheckFalse(req.Send, 'reported');
+         CheckTrue(req.Failure = hfPostRedirected, 'as before');
+         CheckEquals(1, fake.Calls, 'one request');
+      finally
+         req.Free;
+      end;
+   finally
+      SetHttpTransportForTest(nil);
+      fake.Free;
    end;
 end;
 
@@ -1711,6 +2054,7 @@ begin
    Test_RedirectsOnlyWhenAsked;
    Test_AGetStillFollowsARedirect;
    Test_APostAcrossARedirect;
+   Test_RepostOnRedirectOverTheWire;
    Test_ARefusedConnectionIsNotProvedUnsent;
    if not FUseWinHttp then
       begin
@@ -1739,6 +2083,8 @@ begin
       FTag        := '';
 {$ENDIF}
       Test_ThePostVerbCarriesItsBodyAcrossA301;
+      Test_DecideRepost;
+      Test_RepostThroughTheSharedLayer;
       Test_RegistrySelectsOnceAndLogsOnce;
       Test_ThePolicyChoosesTheTransport;
       Test_TheSettingDefaultsToGenericAndTheSharedLayerReadsIt;

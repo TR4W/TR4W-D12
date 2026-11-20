@@ -234,6 +234,20 @@ resourcestring
       'the server answered the upload with a redirect (status %d) to %s. ' +
       'TR4W does not follow a redirect on an upload, and the upload was not repeated. ' +
       'This is unexpected: please file an issue at %s and include this message.';
+   (* Club Log, World Radio League and Cloudlog uploads repeat a POST at a
+     redirect target (issue 255 follow-up), but only when that is safe; this is
+     the report when it is not. %d is the status, the first %s the address the
+     server named, the second the reason (one of the strings below). *)
+   SPostRepostRefused =
+      'the server answered the upload with a redirect (status %d) to %s and it was not repeated: %s';
+   SRepostSeeOther =
+      'status 303 means the upload was handled and the result is at that address; TR4W does not send it again.';
+   SRepostTooMany = 'the server redirected the upload more than %d times.';
+   SRepostNoLocation = 'the redirect named no address.';
+   SRepostBadLocation = 'the redirect address is not usable.';
+   SRepostDowngrade = 'the redirect leads from https to plain http, which is never followed.';
+   SRepostOtherHost =
+      'the redirect leads to a different host or port, and the upload carries a key that only the original server may see.';
    { The operator notice for a missing CA bundle (issue 221). A background
      upload cannot show a dialog of its own, so the delivery worker hands this
      text to its owner, which shows it once. %0:s is the list of places looked,

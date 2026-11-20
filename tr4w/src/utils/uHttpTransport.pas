@@ -175,6 +175,38 @@ function FromWire(const aBytes: RawByteString): string;
   shared layer and a transport both need, so they cannot disagree. *)
 function IsHttpsUrl(const aUrl: string): boolean;
 
+const
+   (* HOW MANY TIMES A POST MAY BE REPEATED AT A REDIRECT TARGET (issue 255
+     follow-up, NY4I 2026-11-19: Club Log, WRL and Cloudlog only). *)
+   REPOST_MAX_HOPS = 3;
+
+type
+   (* THE ANSWER TO "SHOULD A POST THAT WAS ANSWERED WITH A REDIRECT BE REPEATED
+     AT ITS TARGET?". Pure: no network, no platform. It is the ONE place that
+     decides, and it lives above the transports because the transports never
+     follow a POST (THttpWireRequest.MayFollowRedirects); the shared layer
+     repeats it, so both transports behave identically by construction. *)
+   TRepostDecision = (
+      rdRepost,              (* yes: aTarget is where, resolved and absolute *)
+      rdSeeOther,            (* 303: "the result is at that address, fetch it" (RFC 9110
+                                15.4.4): the POST was handled, so it is NOT repeated *)
+      rdTooManyRedirects,    (* REPOST_MAX_HOPS repeats were already made *)
+      rdNoLocation,          (* the answer named no target *)
+      rdBadLocation,         (* an unusable target: a line break, credentials, a scheme
+                                that is neither http nor https, an unparsable address *)
+      rdDowngrade,           (* https to http: never *)
+      rdOtherHost);          (* a different host or port: the request may carry an API key
+                                in its body or a header, which only its own host may see *)
+
+(* aStatus is the 3xx the POST was answered with; aHopsDone how many repeats
+  were already made. The status is assumed to be a redirect; 303 is
+  rdSeeOther and every other status here repeats (301 and 302 included: NY4I's
+  ruling for these three uploads, although RFC 9110 15.4.2 lets a client turn
+  them into a GET -- these endpoints only take a POST). The target is resolved
+  against aFromUrl, so a relative Location is fine. *)
+function DecideRepost(const aFromUrl, aLocation: string; aStatus, aHopsDone: integer;
+                      out aTarget: string): TRepostDecision;
+
 (* REGISTRY. A transport unit calls this from its initialization section.
   aPreferred: this transport is the one to use on this platform whenever it is
   Available (a platform transport). The generic one registers as not preferred
@@ -334,6 +366,255 @@ end;
 function IsHttpsUrl(const aUrl: string): boolean;
 begin
    Result := UnicodeSameText(Copy(aUrl, 1, 8), 'https://');
+end;
+
+(* One address taken apart, BY HAND (not URIParser: its strings are 8-bit and a
+  UTF-16 string passed to it is a narrowing the build counts). aHostPort is
+  what follows any credentials in the authority; aPathQuery has no fragment and
+  always starts with '/'. False when it is not an http or https address. *)
+function SplitHttpUrl(const aUrl: string; out aScheme, aHost, aHostPort, aPathQuery: string;
+                      out aPort: integer; out aHasUserInfo: boolean): boolean;
+var
+   p, q:      integer;
+   rest, authority, portText: string;
+begin
+   Result := False;
+   aScheme := '';
+   aHost := '';
+   aHostPort := '';
+   aPathQuery := '/';
+   aPort := 0;
+   aHasUserInfo := False;
+   p := Pos('://', aUrl);
+   if p < 2 then
+      begin
+      Exit;
+      end;
+   aScheme := LowerCase(Copy(aUrl, 1, p - 1));
+   if (aScheme <> 'http') and (aScheme <> 'https') then
+      begin
+      Exit;
+      end;
+   rest := Copy(aUrl, p + 3, MaxInt);
+   p := Pos('#', rest);
+   if p > 0 then
+      begin
+      rest := Copy(rest, 1, p - 1);
+      end;
+   p := Pos('/', rest);
+   q := Pos('?', rest);
+   if (q > 0) and ((p = 0) or (q < p)) then
+      begin
+      p := q;
+      end;
+   if p = 0 then
+      begin
+      authority := rest;
+      end
+   else
+      begin
+      authority := Copy(rest, 1, p - 1);
+      aPathQuery := Copy(rest, p, MaxInt);
+      if aPathQuery[1] = '?' then
+         begin
+         aPathQuery := '/' + aPathQuery;
+         end;
+      end;
+   (* Everything up to the LAST '@' is credentials. *)
+   q := Length(authority);
+   while (q > 0) and (authority[q] <> '@') do
+      begin
+      Dec(q);
+      end;
+   aHasUserInfo := q > 0;
+   aHostPort := Copy(authority, q + 1, MaxInt);
+   portText := '';
+   if (aHostPort <> '') and (aHostPort[1] = '[') then
+      begin
+      q := Pos(']', aHostPort);
+      if q = 0 then
+         begin
+         Exit;
+         end;
+      aHost := LowerCase(Copy(aHostPort, 1, q));
+      if Copy(aHostPort, q + 1, 1) = ':' then
+         begin
+         portText := Copy(aHostPort, q + 2, MaxInt);
+         end
+      else if q < Length(aHostPort) then
+         begin
+         Exit;
+         end;
+      end
+   else
+      begin
+      q := Length(aHostPort);
+      while (q > 0) and (aHostPort[q] <> ':') do
+         begin
+         Dec(q);
+         end;
+      if q > 0 then
+         begin
+         aHost := LowerCase(Copy(aHostPort, 1, q - 1));
+         portText := Copy(aHostPort, q + 1, MaxInt);
+         end
+      else
+         begin
+         aHost := LowerCase(aHostPort);
+         end;
+      end;
+   if aHost = '' then
+      begin
+      Exit;
+      end;
+   if portText = '' then
+      begin
+      if aScheme = 'https' then
+         begin
+         aPort := 443;
+         end
+      else
+         begin
+         aPort := 80;
+         end;
+      end
+   else
+      begin
+      (* DIGITS ONLY, AT MOST FIVE: StrToInt and Val are not range-checked on
+        Win64, so ":4294967739" could wrap to 443 and pass the origin test. *)
+      if Length(portText) > 5 then
+         begin
+         Exit;
+         end;
+      aPort := 0;
+      for q := 1 to Length(portText) do
+         begin
+         if (portText[q] < '0') or (portText[q] > '9') then
+            begin
+            Exit;
+            end;
+         aPort := aPort * 10 + (Ord(portText[q]) - Ord('0'));
+         end;
+      if (aPort < 1) or (aPort > 65535) then
+         begin
+         Exit;
+         end;
+      end;
+   Result := True;
+end;
+
+function DecideRepost(const aFromUrl, aLocation: string; aStatus, aHopsDone: integer;
+                      out aTarget: string): TRepostDecision;
+var
+   fromScheme, fromHost, fromHostPort, fromPath: string;
+   toScheme, toHost, toHostPort, toPath, loc, target: string;
+   fromPort, toPort, i, p: integer;
+   fromUser, toUser: boolean;
+begin
+   aTarget := '';
+   if aStatus = 303 then
+      begin
+      Result := rdSeeOther;
+      Exit;
+      end;
+   if aHopsDone >= REPOST_MAX_HOPS then
+      begin
+      Result := rdTooManyRedirects;
+      Exit;
+      end;
+   loc := Trim(aLocation);
+   if loc = '' then
+      begin
+      Result := rdNoLocation;
+      Exit;
+      end;
+   Result := rdBadLocation;
+   for i := 1 to Length(loc) do
+      begin
+      (* Control characters, a space, a backslash (some parsers read "\" as "/",
+        so "/\host" or "\@" would name a host this code did not see) and
+        anything not ASCII: the same-host guarantee must not depend on this
+        parser and the transport's agreeing about odd addresses. *)
+      if (Ord(loc[i]) <= 32) or (Ord(loc[i]) >= 127) or (loc[i] = '\') then
+         begin
+         Exit;
+         end;
+      end;
+   if not SplitHttpUrl(aFromUrl, fromScheme, fromHost, fromHostPort, fromPath,
+                       fromPort, fromUser) then
+      begin
+      Exit;
+      end;
+
+   (* RESOLVE (RFC 3986 5.2, the cases a server writes). A leading "scheme://"
+     is absolute; "//host" takes the scheme; "/x" the origin; "?q" the path;
+     anything else is relative to the directory of the current path. *)
+   p := Pos('://', loc);
+   if (p > 1) and (Pos('/', Copy(loc, 1, p - 1)) = 0) and (Pos('?', Copy(loc, 1, p - 1)) = 0) then
+      begin
+      target := loc;
+      end
+   else if Copy(loc, 1, 2) = '//' then
+      begin
+      target := fromScheme + ':' + loc;
+      end
+   else if loc[1] = '/' then
+      begin
+      target := fromScheme + '://' + fromHostPort + loc;
+      end
+   else if loc[1] = '#' then
+      begin
+      Exit;
+      end
+   else if loc[1] = '?' then
+      begin
+      p := Pos('?', fromPath);
+      if p > 0 then
+         begin
+         fromPath := Copy(fromPath, 1, p - 1);
+         end;
+      target := fromScheme + '://' + fromHostPort + fromPath + loc;
+      end
+   else
+      begin
+      p := Pos('?', fromPath);
+      if p > 0 then
+         begin
+         fromPath := Copy(fromPath, 1, p - 1);
+         end;
+      p := Length(fromPath);
+      while (p > 0) and (fromPath[p] <> '/') do
+         begin
+         Dec(p);
+         end;
+      target := fromScheme + '://' + fromHostPort + Copy(fromPath, 1, p) + loc;
+      end;
+
+   if not SplitHttpUrl(target, toScheme, toHost, toHostPort, toPath, toPort, toUser) then
+      begin
+      Exit;
+      end;
+   if toUser then
+      begin
+      Exit;
+      end;
+   if (fromScheme = 'https') and (toScheme = 'http') then
+      begin
+      Result := rdDowngrade;
+      Exit;
+      end;
+   if (toScheme <> fromScheme) or (toHost <> fromHost) or (toPort <> fromPort) then
+      begin
+      Result := rdOtherHost;
+      Exit;
+      end;
+   p := Pos('#', target);
+   if p > 0 then
+      begin
+      target := Copy(target, 1, p - 1);
+      end;
+   aTarget := target;
+   Result := rdRepost;
 end;
 
 procedure RegisterHttpTransport(aClass: TPlatformHttpTransportClass; aPreferred: boolean);

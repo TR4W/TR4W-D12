@@ -206,6 +206,18 @@ type
       BearerToken:    string;
       Sensitive:      boolean;  (* form credentials also require redacted transport errors *)
       FollowRedirects: boolean;
+      (* A POST ANSWERED WITH A REDIRECT IS REPEATED AT ITS TARGET (issue 255
+        follow-up; NY4I, 2026-11-19: Club Log, WRL and Cloudlog only). Off by
+        default, and independent of FollowRedirects (which stays False for
+        them: the transports never follow a POST, and the bearer gate wants no
+        redirects). Send repeats the SAME method, body and headers at the
+        Location, up to REPOST_MAX_HOPS times, on 301, 302, 307 and 308 -- and
+        only when uHttpTransport.DecideRepost agrees: never on 303, never
+        https to http, never to another host or port (the request may carry an
+        API key), never to an address with credentials in it. A refusal is
+        Failure = hfPostRedirected with the 3xx status kept. Only POST: other
+        methods are unchanged. *)
+      RepostOnRedirect: boolean;
       MaxResponseBytes: Int64;  (* 0 = unlimited, retained for existing POST callers *)
       AcceptEncoding: string;
       IfNoneMatch:    string;   (* conditional GET: the ETag held; '' = no header *)
@@ -242,6 +254,7 @@ type
       LastModified:   string;
       ResponseContentType: string;
       FinalURL:       string;   (* set only when a followed redirect ended at another address *)
+      Reposts:        integer;  (* how many times RepostOnRedirect repeated the request; 0 otherwise *)
       ErrorDetail:    string;   (* the transport's own words ('Class: message'), '' after an answer
                                    or when the failure came from the shared layer's own checks *)
 
@@ -1032,6 +1045,37 @@ begin
              (aStatus = 307) or (aStatus = 308);
 end;
 
+(* WHY A REDIRECT WAS NOT REPEATED, in the operator's language. *)
+function RepostRefusalText(aDecision: TRepostDecision): string;
+begin
+   case aDecision of
+      rdSeeOther:
+         begin
+         Result := SRepostSeeOther;
+         end;
+      rdTooManyRedirects:
+         begin
+         Result := UnicodeFormat(SRepostTooMany, [REPOST_MAX_HOPS]);
+         end;
+      rdNoLocation:
+         begin
+         Result := SRepostNoLocation;
+         end;
+      rdDowngrade:
+         begin
+         Result := SRepostDowngrade;
+         end;
+      rdOtherHost:
+         begin
+         Result := SRepostOtherHost;
+         end;
+   else
+      begin
+      Result := SRepostBadLocation;
+      end;
+   end;
+end;
+
 function THttpRequest.Send: boolean;
 var
    wire:    THttpWireRequest;
@@ -1039,8 +1083,14 @@ var
    useTLS:  boolean;
    refusalLogged: boolean;
    ran:     boolean;
+   decision: TRepostDecision;
+   refused:  boolean;
+   target:   string;
 begin
    Result     := False;
+   Reposts    := 0;
+   refused    := False;
+   decision   := rdRepost;
    Response   := '';
    ResponseStatusText := '';
    FailReason := '';
@@ -1102,7 +1152,46 @@ begin
 
       ran := RunTransport(wire, nil, res, BearerToken, Password, VerifyServer,
                           Destination, Failure, FailReason, refusalLogged);
-      if ran and FollowRedirects and IsPostMethod(Method) and
+      (* ISSUE 255 FOLLOW-UP: repeat the POST at the redirect target when this
+        caller opted in. The transports hand back the 3xx for every POST, so
+        this loop, driven by the one pure decision, is identical for both. The
+        wire request is reused as it is: same method, body and headers, and
+        DecideRepost allows only the same host and port, so a secret in the
+        body or a header goes nowhere new. *)
+      while ran and RepostOnRedirect and IsPostMethod(Method) and
+            IsRedirectStatus(res.StatusCode) do
+         begin
+         decision := DecideRepost(wire.URL, res.Location, res.StatusCode, Reposts, target);
+         if decision <> rdRepost then
+            begin
+            refused := True;
+            Break;
+            end;
+         logger.Info('[HTTP] POST %s was answered %d: repeating the same request at %s (repeat %d of at most %d)',
+                     [ScrubBoth(wire.URL, BearerToken, Password), res.StatusCode,
+                      ScrubBoth(target, BearerToken, Password), Reposts + 1, REPOST_MAX_HOPS]);
+         wire.URL := target;
+         Inc(Reposts);
+         ran := RunTransport(wire, nil, res, BearerToken, Password, VerifyServer,
+                             Destination, Failure, FailReason, refusalLogged);
+         end;
+      if refused then
+         begin
+         (* The server answered, so the request WAS sent and may have been acted
+           on: reported, never retried as "nothing sent". The 3xx is kept as the
+           status, so a caller's own redirect rule still sees it. *)
+         StatusCode := res.StatusCode;
+         Failure    := hfPostRedirected;
+         FailReason := UnicodeFormat(SPostRepostRefused,
+                          [res.StatusCode,
+                           ScrubBoth(res.Location, BearerToken, Password),
+                           RepostRefusalText(decision)]);
+         logger.Error('[HTTP] POST %s answered %d with a redirect to %s -- not repeated: %s',
+                      [ScrubBoth(wire.URL, BearerToken, Password), res.StatusCode,
+                       ScrubBoth(res.Location, BearerToken, Password),
+                       RepostRefusalText(decision)]);
+         end
+      else if ran and FollowRedirects and IsPostMethod(Method) and
          IsRedirectStatus(res.StatusCode) then
          begin
          (* The server answered, so the request WAS sent and may have been acted
@@ -1158,7 +1247,21 @@ begin
         that answered after a redirect, and the transport's own words for a
         failure. The words are scrubbed of this request's credentials, and a
         credentialed caller should still prefer FailReason. *)
+      if (Reposts > 0) and (not ran) and NothingSent then
+         begin
+         (* The FIRST request was sent and answered; only the repeat failed
+           before a byte left. Claiming "nothing sent" would invite the caller
+           to retry a POST the server may have acted on (an uncertain create is
+           never replayed blindly), so the kind becomes "was redirected": not
+           provably unsent. The status is 0: no final answer exists, and a
+           caller that treats a 3xx as "nothing imported" must not see one. *)
+         Failure := hfPostRedirected;
+         end;
       FinalURL    := res.FinalURL;
+      if (Reposts > 0) and ran and (not refused) then
+         begin
+         FinalURL := wire.URL;   (* the address that answered the repeat *)
+         end;
       ErrorDetail := ScrubBoth(res.Detail, BearerToken, Password);
    finally
       res.Free;

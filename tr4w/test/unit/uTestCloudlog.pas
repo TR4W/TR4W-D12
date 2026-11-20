@@ -360,6 +360,9 @@ begin
    r := Answer(302, '');
    CheckTrue(r.Outcome = doFailed, 'a redirect is not followed');
    CheckEquals('CLOUDLOG_REDIRECT', r.ErrorCode);
+   r := Answer(303, '');
+   CheckTrue(r.Outcome = doUncertain, '303 means the POST was handled (issue 255): uncertain, never "nothing imported"');
+   CheckTrue(r.Pause, 'and paused');
    r := Answer(500, '<html>error</html>');
    CheckTrue(r.Outcome = doUncertain, '500: the import may have run');
    CheckTrue(r.Pause);
