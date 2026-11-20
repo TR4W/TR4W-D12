@@ -63,17 +63,44 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCHEDULE -- "Starts the last Saturday of April", the LAST, not the 4th
     (audit 2026-11-20).
 
-  NOT BUILT -- each needs a fact scoring does not have, listed on #88:
-    * MARITIME MOBILE R1/R2/R3. A /MM station is not a domestic call, so its
-      exchange goes to the DX parser, which takes the QTH as text and asks no
-      table; a .dom entry for R1-R3 would never be read. It needs a rule of
-      its own (a /MM call's DX key from its region) and a ruling.
-    * "Mobile and Expedition scores are based on cumulative QSOs and
-      multipliers counted once overall" and "Special 1x1 stations have no
-      multiplier": both depend on the entrant's CATEGORY-STATION, which does
-      not reach scoring.
+  MARITIME MOBILE R1/R2/R3 -- NOT BUILT (2026-11-20). "Maritime mobile
+    operators send ITU Region (1, 2 or 3)" and "Maritime Mobile (ITU Regions
+    R1, R2, R3)" is a multiplier. MEASURED: the DX multiplier sheet is keyed
+    by the CTY country index of the worked call (LOGDUPE.SetMultFlags asks
+    mo.IsDXMult(QTH.Country ...)), never by DXMultiplierKey's text, so a /MM
+    station cannot carry a region there; the string-keyed sheet is the PREFIX
+    one, and making Florida a prefix contest changes pins frozen for every
+    legacy contest (uTestPrefixMultiplierKey). It needs a ruling on which
+    seam. Until then a /MM station is an ordinary QSO that earns points.
 
-  CABRILLO -- CONTEST: FCG-FQP, the sponsor's Cabrillo specification. *)
+  SPECIAL 1x1 (2026-11-20) -- "The final score is based on total QSOs. No
+    multipliers": the QSO points alone, no geographic and no power
+    multiplier. Recognised by the CALL (one letter, a digit, one letter); the
+    sponsor names no CATEGORY-STATION for it. Questions on the report.
+
+  MOBILES AND EXPEDITIONS (2026-11-20) -- "Florida Mobiles and Expeditions
+    that move to a new county are considered to be a new station and may be
+    contacted again" (the worked side) is the party base's rover machinery:
+    the dupe key carries the received county and the county the rover sent
+    from (DupeKeyIncludesReceivedQTH / DupeKeyIncludesSentQTH), the sent
+    column follows each QSO's own county, a county line takes two
+    (GetCountyLineCountiesMax). The entrant's OWN score is cumulative: one
+    log, every QSO of every county scored (a new county is a new QSO), and a
+    multiplier earned once -- the sheet never resets for a county. The
+    sentence "multipliers counted once overall" could also mean once across
+    MODES (against "once per mode" for everyone else); that reading is NOT
+    built, it needs the entrant's CATEGORY-STATION in scoring, and is a
+    question for NY4I. The 2-county minimum for a Mobile is a category fact,
+    not scored. One Cabrillo for the whole log: the FQP specification has no
+    per-county file (SplitsCabrilloByActivation stays False).
+
+  NOT BUILT -- "A penalty of one additional QSO is assessed for an
+    incorrectly logged callsign or QTH, or if you are not in the other
+    station's log": a log checker's rule, it needs the other station's log.
+
+  CABRILLO -- CONTEST: FCG-FQP, the sponsor's Cabrillo specification
+    (docs/ContestRules/QSOParties/Florida/Cabrillo-Specification-V3-FQP-1.md):
+    CATEGORY-OVERLAY DRIVER, NO-DRIVER and SWL added to the standard list. *)
 unit uContestFloridaQP;
 
 {$I tr4w.inc}
@@ -128,6 +155,9 @@ type
       function GetCabrilloName: string; override;
       function GetADIFContestId: string; override;
       function GetFriendlyName: string; override;
+      (* THE FQP CABRILLO SPECIFICATION'S CATEGORY-OVERLAY values that the
+         standard list lacks: DRIVER, NO-DRIVER, SWL. *)
+      function GetCabrilloOverlayCategories: TArray<string>; override;
 
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
@@ -198,6 +228,11 @@ type
    not only a product. *)
 function FloridaPowerMultiplier(aPower: tCategoryPower): longint;
 
+(* A SPECIAL 1x1 CALL -- one prefix letter (K, N, W), a digit, one suffix
+   letter: W4F, K4Q. See CombineWithMultipliers for why the call shape is the
+   test. Public so the tests assert the shape itself. *)
+function FloridaIsOneByOneCall(const aCall: string): boolean;
+
 implementation
 
 uses
@@ -254,10 +289,48 @@ begin
       end;
 end;
 
+function FloridaIsOneByOneCall(const aCall: string): boolean;
+begin
+   Result := (Length(aCall) = 3) and
+             (aCall[1] in ['K', 'N', 'W']) and
+             (aCall[2] in ['0'..'9']) and
+             (aCall[3] in ['A'..'Z']);
+end;
+
+(* SPECIAL 1x1 STATIONS -- "Special 1x1 callsign Florida QSO Party Spelling Bee
+   stations - The final score is based on total QSOs. No multipliers." and
+   "Special 1x1 stations have no multiplier to encourage them to run." Their
+   score is the QSO points alone.
+
+   TWO CHOICES, BOTH FOR NY4I (see the report): (1) the sponsor names no
+   Cabrillo CATEGORY-STATION value for a 1x1 (the FQP specification lists
+   FIXED, MOBILE, EXPEDITION and SCHOOL), so the station is recognised by its
+   CALL, which is what "1x1 callsign" says; (2) "no multipliers" is read to
+   include the power multiplier, "based on total QSOs".
+
+   OTHERWISE points x multipliers, then the power multiplier. *)
 function TContestFloridaQP.CombineWithMultipliers(const aTotals: TScoreTotals): longint;
 begin
+   if FloridaIsOneByOneCall(UpperCase(Station.MyCall)) then
+      begin
+      Result := ContestPoints(aTotals);
+      Exit;
+      end;
    Result := inherited CombineWithMultipliers(aTotals) *
              FloridaPowerMultiplier(Station.MyPower);
+end;
+
+(* THE FQP CABRILLO SPECIFICATION (V3, docs/ContestRules/QSOParties/Florida):
+   "CATEGORY-OVERLAY: DRIVER ... NO-DRIVER ... NOVICE-TECH ROOKIE YOUTH YL
+   SWL". The standard list already holds ROOKIE, YOUTH, NOVICE-TECH and YL;
+   these three are the ones it lacks. *)
+function TContestFloridaQP.GetCabrilloOverlayCategories: TArray<string>;
+begin
+   Result := nil;
+   SetLength(Result, 3);
+   Result[0] := 'DRIVER';
+   Result[1] := 'NO-DRIVER';
+   Result[2] := 'SWL';
 end;
 
 function TContestFloridaQP.UsesBand(aBand: BandType): boolean;
