@@ -407,7 +407,10 @@ begin
          page := page + '<html><body>Not found</body></html>'#13#10;
          end;
       SetLength(bytes, Length(page));
-      Move(page[1], bytes[0], Length(page));
+      for i := 1 to Length(page) do
+         begin
+         bytes[i - 1] := Ord(page[i]);
+         end;
       WriteBytesFile(TempPath('page', '.dta'), bytes);
       ExpectRefused(gTempFiles[High(gTempFiles)], 'a web page');
    finally

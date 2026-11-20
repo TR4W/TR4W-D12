@@ -356,6 +356,9 @@ procedure TSCPCellBuffer.LoadCellIntoBuffer(KeyString: CallString;
 const
   PostModeMemory                        = 3 * BufferArraySize;
 
+var
+  I                                     : LONGINT;
+
 begin
   Key := '';
   FEntries := 0;
@@ -404,9 +407,9 @@ begin
      SetLength(FData, NumberBytes);
      end;
 
-  if NumberBytes > 0 then
+  for I := 0 to NumberBytes - 1 do
      begin
-     Move(Source[Offset], FData[0], NumberBytes);
+     FData[I] := AnsiChar(Source[Offset + I]);
      end;
 
   Key := KeyString;
@@ -2749,7 +2752,10 @@ begin
      Address := (Length(Snapshot.Data) - SizeOf(MiniBuffer)) - 5;
      end;
 
-  Move(Snapshot.Data[Address], MiniBuffer, SizeOf(MiniBuffer));
+  for X := 0 to SizeOf(MiniBuffer) - 1 do
+     begin
+     MiniBuffer[X] := AnsiChar(Snapshot.Data[Address + X]);
+     end;
 
   Address := 0;
 
@@ -3237,6 +3243,14 @@ begin
       end;
 end;
 
+function TRMasterLongWordAt(const aData: TTRMasterBytes; aAt: integer): LongWord;
+begin
+   Result := LongWord(aData[aAt])             or
+             (LongWord(aData[aAt + 1]) shl 8)  or
+             (LongWord(aData[aAt + 2]) shl 16) or
+             (LongWord(aData[aAt + 3]) shl 24);
+end;
+
 function LoadTRMasterSnapshot(const aFileName: string; out aWhy: string): TTRMasterSnapshot;
 var
    Stream      : TFileStream;
@@ -3271,8 +3285,16 @@ begin
             Result.FileName := aFileName;
             SetLength(Result.Data, Size);
             Stream.ReadBuffer(Result.Data[0], Size);
-            Move(Result.Data[0], Result.Index, SizeOf(Result.Index));
-            Move(Result.Data[SizeOf(Result.Index)], Result.EndOfFile, SizeOf(Result.EndOfFile));
+            (* THE INDEX AND END ADDRESS ARE LITTLE-ENDIAN LONGWORDS, read a byte
+              at a time (no raw Move). *)
+            for X := 0 to 36 do
+               begin
+               for Y := 0 to 36 do
+                  begin
+                  Result.Index[X, Y] := TRMasterLongWordAt(Result.Data, (X * 37 + Y) * 4);
+                  end;
+               end;
+            Result.EndOfFile := LONGINT(TRMasterLongWordAt(Result.Data, SizeOf(Result.Index)));
 
             (* THE FIRST CHECK THIS FILE EVER GETS -- the download does none.
               The end address and every cell address must lie inside the file;
