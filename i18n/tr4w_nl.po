@@ -12772,3 +12772,23 @@ msgstr ""
 #, fuzzy
 msgid "The message names {%0:s}, which TR4W does not know. It was skipped and not sent."
 msgstr ""
+
+#: uappstrings.snewcontesthostareaentrynotasection
+#, fuzzy
+msgid "%s is not an ARRL or RAC section or DX. Enter your section, e.g. WCF or ONE, or DX."
+msgstr ""
+
+#: uappstrings.snewcontesthostareaoutsidesectionnotice
+#, fuzzy
+msgid "You are outside %0:s: enter your ARRL or RAC section (e.g. WCF or ONE), or DX. Tick the box if you are in %0:s."
+msgstr ""
+
+#: uappstrings.snewcontesthostareasectionlabel
+#, fuzzy
+msgid "MY SECTION"
+msgstr ""
+
+#: usettingscaptions.rs_contest_categorystation
+#, fuzzy
+msgid "Category-Station"
+msgstr ""
