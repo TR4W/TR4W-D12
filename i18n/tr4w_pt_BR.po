@@ -12100,3 +12100,13 @@ msgid ""
 "\n"
 "Nothing is lost. To keep everything in one folder, install TR4W outside Program Files, in a folder you can write to such as C:\\tr4w."
 msgstr ""
+
+#: uappstrings.smessageeditunknownword
+#, fuzzy
+msgid "TR4W does not know the word {%0:s}. Use a command from the List of commands, {ROVERCALL} or {ROVERQTH}, and press OK again."
+msgstr ""
+
+#: uappstrings.smessageunknownwordskipped
+#, fuzzy
+msgid "The message names {%0:s}, which TR4W does not know. It was skipped and not sent."
+msgstr ""
