@@ -344,7 +344,8 @@ begin
    CheckEquals(4, SevenQPPoints(Band20, Digital), '7QP: digital 4');
    CheckEquals(3, SevenQPPoints(Band20, CW), '7QP: CW 3');
    CheckEquals(2, SevenQPPoints(Band20, Phone), '7QP: phone 2');
-   CheckEquals(2, SevenQPPoints(Band10, FM), '7QP: FM is phone, 2');
+   (* NY4I, 2026-11-20: "Just CW and SSB" -- FM is an X-QSO. *)
+   CheckEquals(0, SevenQPPoints(Band10, FM), '7QP: FM is refused, 0');
    CheckEquals(0, SevenQPPoints(Band30, Digital), '7QP: digital on 30 m is off-band, 0');
 end;
 

@@ -1,0 +1,19 @@
+Canadian multipliers for Ohio stations in the OH QSO Party -- the sponsor's 11
+NL PE NS NB QC ON MB SK AB BC and NT, where NT is Yukon-NWT-Nu (NY4I, 2026-11-20).
+Yukon (YT) and Nunavut (NU) keep their own QTH and count as the multiplier NT.
+Newfoundland is not spelled LA here, and S50.DOM is included first: LA is Louisiana.
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+Nl = VO1,VO2,NL,NF,LB,LAB,^NF and Labrador
+Pe = VY2,PE,PEI,^Pr. Edward Isl.
+Ns = VE1,NS,^Nova Scotia
+Nb = VE9,NB,^New Brunswick
+Qc = VE2,QC,QUE,QU,PQ,^Quebec
+On = VE3,ON,ONT,^Ontario
+Mb = VE4,MB,MAN,^Manitoba
+Sk = VE5,SK,SAS,SASK,^Saskatchewan
+Ab = VE6,AB,ALB,ALT,^Alberta
+Bc = VE7,BC,^British Columbia
+Nt = VE8,NT,NW,NWT,^Yukon-NWT-Nu
+Yt > Nt = VY1,YT,YK,YU
+Nu > Nt = VY0,NU

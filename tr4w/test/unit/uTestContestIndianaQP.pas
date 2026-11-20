@@ -43,6 +43,7 @@ type
       procedure Test_IndianaMultipliersCountOncePerMode;
       procedure Test_IndianaIsNoStateMultiplierInState;
       procedure Test_IndianaCountsDCAsMaryland;
+      procedure Test_IndianaCreditsCWAndPhoneOnly;
    end;
 
 implementation
@@ -179,8 +180,43 @@ begin
              'and Maryland through DC is a multiplier');
 end;
 
+(* "once in each mode (CW/phone)"; NY4I, 2026-11-20: "Digital not allowed".
+   Every mode and submode is walked: CW, phone and FM (a phone emission)
+   are credited, no digital submode is, and a digital QSO is an automatic
+   X-QSO. *)
+procedure TContestIndianaQPTests.Test_IndianaCreditsCWAndPhoneOnly;
+var
+   identity: TContestBase;
+   mode: ModeType;
+   ext: ExtendedModeType;
+   qso: ContestExchange;
+begin
+   BeginTest('Test_IndianaCreditsCWAndPhoneOnly');
+   identity := ContestIdentity(INQSOPARTY);
+   for mode := Low(ModeType) to High(ModeType) do
+      begin
+      for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
+         begin
+         CheckTrue(identity.UsesMode(mode, ext) = (mode in [CW, Phone, FM]),
+                   ModeStringArray[mode] + '/' + ExtendedModeStringArray[ext]);
+         end;
+      end;
+   qso := Default(ContestExchange);
+   qso.ceRecordKind := rkQSO;
+   qso.Band := Band20;
+   qso.Mode := Digital;
+   qso.ExtMode := eRTTY;
+   CheckTrue(QSOIsXQSO(identity, qso), 'RTTY is an X-QSO');
+   qso.ExtMode := eNoMode;
+   CheckTrue(QSOIsXQSO(identity, qso), 'so is digital of no known submode');
+   qso.Mode := CW;
+   qso.ExtMode := eCW;
+   CheckFalse(QSOIsXQSO(identity, qso), 'CW is not');
+end;
+
 procedure TContestIndianaQPTests.RunAllTests;
 begin
+   Test_IndianaCreditsCWAndPhoneOnly;
    Test_IndianaCountsDCAsMaryland;
    Test_IndianaMultipliersCountOncePerMode;
    Test_IndianaIsNoStateMultiplierInState;

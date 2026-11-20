@@ -23,7 +23,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   sponsor's texts are docs/ContestRules/QSOParties/Florida/; each test quotes
   the rule it holds.
 
-    * points: CW 2, phone 1 -- FM is phone;
+    * points: CW 2, phone 1 -- FM is no FQP mode (NY4I, 2026-11-20);
     * "No digital QSOs are allowed" -- an automatic X-QSO;
     * "No 160 or 80 meters, WARC or VHF bands" -- 40, 20, 15 and 10 m;
     * the power multiplier after points x multipliers: HIGH, LOW and QRP
@@ -141,8 +141,9 @@ begin
 end;
 
 (* "Each complete non-duplicate Phone contact is worth 1 point per band. Each
-   complete non-duplicate CW contact is worth 2 points per band." FM is
-   phone. Inside Florida and outside it alike. *)
+   complete non-duplicate CW contact is worth 2 points per band." FM is no
+   FQP mode (NY4I, 2026-11-20: "just SSB and CW"), an X-QSO scoring 0.
+   Inside Florida and outside it alike. *)
 procedure TContestFloridaQPTests.Test_FloridaPoints;
 var
    inState: boolean;
@@ -161,7 +162,7 @@ begin
          end;
       CheckEquals(2, PointsFor(inState, Band20, CW, eCW), who + ': CW is 2');
       CheckEquals(1, PointsFor(inState, Band20, Phone, eSSB), who + ': phone is 1');
-      CheckEquals(1, PointsFor(inState, Band10, FM, eFM), who + ': FM is phone, 1');
+      CheckEquals(0, PointsFor(inState, Band10, FM, eFM), who + ': FM is no FQP mode, 0');
       CheckEquals(0, PointsFor(inState, Band20, Both, eNoMode), who + ': no mode a contact is made in');
       CheckEquals(0, PointsFor(inState, Band20, NoMode, eNoMode), who + ': nor this one');
       end;
@@ -200,7 +201,8 @@ begin
 end;
 
 (* "No digital QSOs are allowed in the FQP." No digital submode is credited;
-   CW, phone and FM are, whatever the submode. *)
+   CW and phone are, whatever the submode; FM is not ("FM is not valid in
+   FQP--just SSB and CW", NY4I, 2026-11-20). *)
 procedure TContestFloridaQPTests.Test_FloridaDigitalIsAnXQSO;
 var
    identity: TContestBase;
@@ -216,8 +218,14 @@ begin
       qso := FloridaQso(Band20, Digital, ext);
       CheckTrue(QSOIsXQSO(identity, qso), 'a digital QSO is an X-QSO, ext ' + IntToStr(Ord(ext)));
       CheckTrue(ContestCreditsMode(identity, CW, ext), 'CW is credited, ext ' + IntToStr(Ord(ext)));
-      CheckTrue(ContestCreditsMode(identity, Phone, ext), 'phone is credited, ext ' + IntToStr(Ord(ext)));
-      CheckTrue(ContestCreditsMode(identity, FM, ext), 'FM is credited, ext ' + IntToStr(Ord(ext)));
+      (* Phone in an FM submode is an imported FM QSO (ADIF reads MODE FM
+         as Phone/eFM), and is refused as FM is. *)
+      CheckTrue(ContestCreditsMode(identity, Phone, ext) =
+                not (ext in [eFM, eFM_N, eWFM, eDStar, eC4FM]),
+                'phone is credited but in an FM submode, ext ' + IntToStr(Ord(ext)));
+      CheckFalse(ContestCreditsMode(identity, FM, ext), 'FM is not credited, ext ' + IntToStr(Ord(ext)));
+      qso := FloridaQso(Band10, FM, ext);
+      CheckTrue(QSOIsXQSO(identity, qso), 'an FM QSO is an X-QSO, ext ' + IntToStr(Ord(ext)));
       end;
    CheckFalse(ContestCreditsModeKey(identity, Digital), 'the Digital key is not credited');
    CheckEquals(0, PointsFor(True, Band20, Digital, eRTTY), 'in FL, an RTTY QSO scores 0');
@@ -574,8 +582,9 @@ begin
    CheckEquals('CLUB: Florida Contest Group' + #13#10,
                CabrilloHeaderTagLine(ctClub, 'Florida Contest Group'), 'CLUB');
 
-   (* "QSO: 14045 CW ..." and "QSO: 14275 PH ...". (FM is written FM, as
-      before: the specification names no FM -- a question on the report.) *)
+   (* "QSO: 14045 CW ..." and "QSO: 14275 PH ...". (An FM QSO is an X-QSO
+      since 2026-11-20 and is still written FM; the specification names no
+      FM.) *)
    CheckEquals('CW', identity.CabrilloModeString(CW, eCW), 'CW');
    CheckEquals('PH', identity.CabrilloModeString(Phone, eSSB), 'phone');
 end;

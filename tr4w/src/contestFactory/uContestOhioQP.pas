@@ -61,16 +61,19 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   BANDS AND MODES -- "CW and SSB on 160, 80, 40, 20, 15, and 10 meters." UsesBand
     is those six. UsesMode credits CW and phone; a digital QSO is an automatic
     X-QSO ("All single operator entries are classified as mixed mode" means CW
-    plus SSB). FM is not named: it stays credited as phone, a question for
-    NY4I.
+    plus SSB). FM is not named, and NY4I ruled (2026-11-20) "Just CW and
+    SSB": an FM QSO is an automatic X-QSO too.
 
   MULTIPLIERS -- "For OHIO STATIONS - multipliers are the 49 American States
     (excluding Ohio), 1 Washington DC, 11 Canadian Provinces (NL, PE, NS,
     NB,VE2-7, NT), 88 Ohio Counties and 1 DX." ohio.dom had no DC and no DX
     entry, so an Ohio entrant could not log either; both are there now
-    (DC.DOM, Dx = DX). It still includes P13.DOM, which gives 13 provinces
-    and territories: the sponsor's 11 leave out YT and NU, a question for
-    NY4I. "Multipliers are counted once per mode" is cfMultByMode, as it was.
+    (DC.DOM, Dx = DX). THE 11 PROVINCES are the sponsor's own list (NY4I,
+    2026-11-20, from the party's site): NL PE NS NB QC ON MB SK AB BC and NT
+    "= Yukon-NWT-Nu". So ohio.dom includes ohio_ve.dom, not the shared
+    P13.DOM: Yukon and Nunavut are their own QTHs (YT, NU, as written) whose
+    MULTIPLIER is NT (`Yt > Nt`, the shape of Indiana's `Dc > Md`). "Multipliers
+    are counted once per mode" is cfMultByMode, as it was.
  *)
 unit uContestOhioQP;
 
@@ -326,9 +329,8 @@ begin
    Result := [cfQSOByBand, cfQSOByMode, cfMultByMode];
 end;
 
-(* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the
-   PHONE value. That is why the third number is stated rather than left to
-   a CW-versus-not test, which would be wrong here and silent about it. *)
+(* CW 2, PHONE 1 (OnePhoneTwoCW). FM and digital never reach here: UsesMode
+   refuses them (the header), so the third number is never used. *)
 procedure TContestOhioQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
@@ -365,12 +367,13 @@ begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
 end;
 
-(* "CW and SSB": CW and phone. FM is not named and stays credited as phone;
-   a digital QSO is an automatic X-QSO. An identity fact: no station is
+(* "CW and SSB": CW and phone. NY4I, 2026-11-20: "Just CW and SSB" -- FM and
+   digital QSOs are automatic X-QSOs -- an imported FM QSO (Phone with an FM
+   submode) too: uContestBase.ModeIsCWOrSSB. An identity fact: no station is
    asked. *)
 function TContestOhioQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
-   Result := aMode in [CW, Phone, FM];
+   Result := ModeIsCWOrSSB(aMode, aExtMode);
 end;
 
 (* OHIO IS NOT A STATE MULTIPLIER FOR A OHIO ENTRANT -- #88

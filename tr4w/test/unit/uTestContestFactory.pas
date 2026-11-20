@@ -933,8 +933,10 @@ begin
       are no longer the legacy arms, and are pinned in their own units,
       uTestContestCaliforniaQP and uTestContestMissouriQP. *)
 
-   (* TwoPointsPerQSO: RXData.QSOPoints := 2, whatever the mode. *)
-   CheckPoints(INQSOPARTY, 'Indiana', 2, 2, 2);
+   (* TwoPointsPerQSO: RXData.QSOPoints := 2, whatever the mode -- but
+      Indiana credits no digital since NY4I's ruling of 2026-11-20 ("Digital
+      not allowed"), so its digital QSO is an X-QSO and scores 0. *)
+   CheckPoints(INQSOPARTY, 'Indiana', 2, 2, 0);
    CheckPoints(COLORADOQSOPARTY, 'Colorado', 2, 2, 2);
    (* MINNESOTA LEFT THIS LIST AT #193 (2026-11-04): its sponsor's 2027
       points are CW 3, Phone 2, and digital is no mode of the contest.
@@ -1508,6 +1510,14 @@ begin
       CheckEquals(2, PointsFor(obj, FM), 'Salmon Run FM is phone, 2');
       CheckEquals(0, PointsFor(obj, Digital),
                   'Salmon Run digital is 0 -- not the legacy 2');
+      (* SINCE 2026-11-20 THE 0 IS A REFUSAL: NY4I, "Just CW and Phone" --
+         digital is no Salmon Run mode, an automatic X-QSO (UsesMode), not
+         a credited QSO scoring 0. FM stays phone. *)
+      CheckFalse(obj.UsesMode(Digital, eRTTY), 'Salmon Run refuses RTTY');
+      CheckFalse(obj.UsesMode(Digital, eFT8), 'Salmon Run refuses FT8');
+      CheckTrue(obj.UsesMode(CW, eCW), 'Salmon Run credits CW');
+      CheckTrue(obj.UsesMode(Phone, eSSB), 'Salmon Run credits phone');
+      CheckTrue(obj.UsesMode(FM, eFM), 'Salmon Run credits FM as phone');
 
       CheckEquals('WA', obj.HostState, 'Salmon Run host state');
       CheckTrue(obj.IsUSQSOParty, 'Salmon Run is a US QSO party');

@@ -79,8 +79,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   mode is considered digital. WSJT modes do not support the 7QP exchange, so
   are not allowed." UsesMode refuses the WSJT-X modes (WSJT_SUBMODES: FT8,
   FT4, FT2, JT65, FST4, FST4W) -- an automatic X-QSO -- and credits CW,
-  phone and every other digital submode. FM stays phone (the rules say only
-  "SSB").
+  phone and every other digital submode. FM is refused too -- an automatic
+  X-QSO: the rules say only "SSB", and NY4I ruled (2026-11-20) "Just CW and
+  SSB" for FM in the 7QP.
 
   BANDS (NY4I, 2026-10-16, from the four parties' rules): 160, 80, 40, 20,
   15 and 10 m -- no WARC, no VHF. UsesBand states them; a QSO anywhere else
@@ -264,8 +265,8 @@ end;
 (* CW 3, DIGITAL 4, PHONE 2 -- Q85 (2026-10-15). The 7QP sponsor's page
    scores SSB 2, CW 3 and digital 4, and DXLog's 7QP.txt agrees ("CW QSO give
    3 points, SSB QSO give 2 points, digital mode QSO give 4 points"). TR4W
-   gave digital 2 (TwoPhoneThreeCW). FM and anything else stays 2, as it was
-   -- the sponsor's phone value; FM on 10 m is phone. *)
+   gave digital 2 (TwoPhoneThreeCW). Phone is 2, the sponsor's SSB value;
+   FM never reaches here since 2026-11-20 (UsesMode refuses it). *)
 procedure TContestSevenQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    if aQso.Mode = Digital then
@@ -476,14 +477,17 @@ end;
    FT8, FT4, FT2, JT65, FST4 and FST4W (uContestBase.WSJT_SUBMODES); a QSO in
    one is an automatic X-QSO. eNoMode and the generic data modes mean "some
    submode" and are credited. CW and phone are credited; the rules score
-   "SSB" and say nothing of FM, which stays phone as it always was here (a
-   question for NY4I). An identity fact: no station is asked. *)
+   "SSB" and say nothing of FM, and NY4I ruled (2026-11-20) "Just CW and
+   SSB": an FM QSO is an automatic X-QSO. That ruling answered the FM
+   question only -- the sponsor's digital (4 points) stays. An imported FM
+   QSO (Phone with an FM submode) is refused too: uContestBase.ModeIsCWOrSSB.
+   An identity fact: no station is asked. *)
 function TContestSevenQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
-      CW, Phone, FM:
+      CW, Phone:
          begin
-         Result := True;
+         Result := ModeIsCWOrSSB(aMode, aExtMode);
          end;
       Digital:
          begin

@@ -27,11 +27,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   POINTS -- "Each complete non-duplicate Phone contact is worth 1 point per
     band. Each complete non-duplicate CW contact is worth 2 points per band."
-    FM is phone.
 
-  MODES -- "No digital QSOs are allowed in the FQP". UsesMode credits CW,
-    phone and FM; a digital QSO is an automatic X-QSO. Until #88 the legacy
-    OnePhoneTwoCW arm scored it the phone value, 1.
+  MODES -- "No digital QSOs are allowed in the FQP", and NY4I, 2026-11-20:
+    "FM is not valid in FQP--just SSB and CW." UsesMode credits CW and phone;
+    a digital or FM QSO is an automatic X-QSO. Until #88 the legacy
+    OnePhoneTwoCW arm scored digital the phone value, 1, and until
+    2026-11-20 FM scored as phone.
 
   BANDS -- "No 160 or 80 meters, WARC or VHF bands." 40, 20, 15 and 10 m.
 
@@ -182,7 +183,7 @@ type
       (* 40, 20, 15 and 10 m -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
 
-      (* CW and phone (FM is phone); no digital -- the header. *)
+      (* CW and phone (SSB); no FM, no digital -- the header. *)
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -267,7 +268,7 @@ begin
    inherited Create(aContest);
 end;
 
-(* CW 2, PHONE 1 -- the header. FM is phone. A digital QSO never reaches here
+(* CW 2, PHONE 1 -- the header. A digital or FM QSO never reaches here
    (UsesMode), nor an off-band one (UsesBand), nor a station an out-of-state
    entrant may not credit (CreditsWorkedStation). Both and NoMode are not
    modes a contact is made in. *)
@@ -278,7 +279,7 @@ begin
          begin
          aQso.QSOPoints := 2;
          end;
-      Phone, FM:
+      Phone:
          begin
          aQso.QSOPoints := 1;
          end;
@@ -338,12 +339,14 @@ begin
    Result := aBand in [Band40, Band20, Band15, Band10];
 end;
 
-(* "No digital QSOs are allowed in the FQP". Any submode of CW, Phone or FM is
-   credited -- eNoMode and eData included, as the contract asks -- and no
-   submode of Digital is. An identity fact: no station is asked. *)
+(* "No digital QSOs are allowed in the FQP"; NY4I, 2026-11-20: "FM is not
+   valid in FQP--just SSB and CW." CW, and Phone in any submode but the FM
+   ones (an imported FM QSO is Phone with an FM submode) -- eNoMode included,
+   as the contract asks: uContestBase.ModeIsCWOrSSB. No submode of FM or
+   Digital is credited. An identity fact: no station is asked. *)
 function TContestFloridaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
-   Result := aMode in [CW, Phone, FM];
+   Result := ModeIsCWOrSSB(aMode, aExtMode);
 end;
 
 function TContestFloridaQP.GetDisplayName: string;

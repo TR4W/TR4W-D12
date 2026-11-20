@@ -43,17 +43,23 @@ type
       procedure Test_OhioBands;
       procedure Test_OhioModes;
       procedure Test_OhioInStateFileHasDCAndDX;
+      procedure Test_OhioCanadianMultipliersAreTheSponsorsEleven;
    end;
 
 implementation
 
 uses
+   Classes,
    SysUtils,
    VC,
+   uMults,
+   LogDom,
    uContestBase,
    uContestRegistry,
    uContestStateQSOPartyBase,
    uTestContestObjects,
+   (* A shipped .dom through the real loader, its INCLUDEs followed. *)
+   uTestShippedDom,
    uTestQSOPartyRules;
 
 function OHQso(aBand: BandType; aMode: ModeType; aExtMode: ExtendedModeType): ContestExchange;
@@ -166,8 +172,8 @@ begin
    CheckEquals(0, OHPoints(Band6, Phone, eUSB), '6 m scores nothing');
 end;
 
-(* "CW and SSB": CW 2, phone 1; a digital QSO is no mode of the contest. FM
-   (not named) stays phone. *)
+(* "CW and SSB": CW 2, phone 1; a digital QSO is no mode of the contest, and
+   neither is FM (NY4I, 2026-11-20: "Just CW and SSB"). *)
 procedure TContestOhioQPTests.Test_OhioModes;
 var
    identity: TContestBase;
@@ -180,7 +186,9 @@ begin
       begin
       for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
          begin
-         CheckTrue(identity.UsesMode(mode, ext) = (mode in [CW, Phone, FM]),
+         CheckTrue(identity.UsesMode(mode, ext) =
+                   ((mode = CW) or
+                    ((mode = Phone) and not (ext in [eFM, eFM_N, eWFM, eDStar, eC4FM]))),
                    ModeStringArray[mode] + '/' + ExtendedModeStringArray[ext]);
          end;
       end;
@@ -188,6 +196,73 @@ begin
    CheckEquals(1, OHPoints(Band20, Phone, eUSB), 'SSB is 1');
    CheckEquals(0, OHPoints(Band20, Digital, eRTTY), 'RTTY is an X-QSO: 0');
    CheckTrue(QSOIsXQSO(identity, OHQso(Band20, Digital, ePSK31)), 'PSK31 is an X-QSO');
+   CheckEquals(0, OHPoints(Band10, FM, eFM), 'FM is an X-QSO: 0');
+   CheckTrue(QSOIsXQSO(identity, OHQso(Band10, FM, eFM)), 'FM is an X-QSO');
+   (* ADIF import reads MODE FM as Phone with the FM submode. *)
+   CheckTrue(QSOIsXQSO(identity, OHQso(Band10, Phone, eFM)), 'an imported FM QSO (Phone/eFM) is an X-QSO');
+   CheckFalse(QSOIsXQSO(identity, OHQso(Band10, Phone, eNoMode)), 'phone of no known submode is not');
+end;
+
+(* THE SPONSOR'S 11 CANADIAN MULTIPLIERS -- "11 Canadian Provinces (NL, PE,
+   NS, NB,VE2-7, NT)", and from the party's site (NY4I, 2026-11-20): "NT =
+   Yukon-NWT-Nu". ohio.dom includes ohio_ve.dom, not the shared P13.DOM: a
+   Yukon or Nunavut station keeps its own QTH (YT, NU) and counts as NT, so
+   the eleven are all there are. Through the shipped files and the real
+   loader. *)
+procedure TContestOhioQPTests.Test_OhioCanadianMultipliersAreTheSponsorsEleven;
+const
+   SPONSOR_VE: array[0..10] of string = (
+      'NL', 'PE', 'NS', 'NB', 'QC', 'ON', 'MB', 'SK', 'AB', 'BC', 'NT');
+   (* Every other spelling of a Canadian QTH the file knows. *)
+   OTHER_VE: array[0..9] of string = (
+      'YT', 'NU', 'VY0', 'VY1', 'VE8', 'NF', 'LB', 'VO1', 'VO2', 'PEI');
+var
+   savedSheet: TMultsObject;
+   savedCounties: boolean;
+   table: TDomQTHTable;
+   multipliers: TStringList;
+   i: integer;
+begin
+   BeginTest('Test_OhioCanadianMultipliersAreTheSponsorsEleven');
+   savedSheet := mo;
+   savedCounties := MultipliersIsCounties;
+   mo := TMultsObject.Create;
+   MultipliersIsCounties := False;
+   table := TDomQTHTable.Create;
+   multipliers := TStringList.Create;
+   try
+      multipliers.Sorted := True;
+      multipliers.Duplicates := dupIgnore;
+      LoadShippedDomFollowingIncludes(table, 'ohio.dom', True, 0);
+      for i := Low(SPONSOR_VE) to High(SPONSOR_VE) do
+         begin
+         CheckEquals(SPONSOR_VE[i], MultiplierOf(table, SPONSOR_VE[i]),
+                     SPONSOR_VE[i] + ' is its own multiplier');
+         multipliers.Add(AnsiString(MultiplierOf(table, SPONSOR_VE[i])));
+         end;
+      for i := Low(OTHER_VE) to High(OTHER_VE) do
+         begin
+         CheckTrue(MultiplierOf(table, OTHER_VE[i]) <> '', OTHER_VE[i] + ' is known');
+         multipliers.Add(AnsiString(MultiplierOf(table, OTHER_VE[i])));
+         end;
+      CheckEquals(11, multipliers.Count, 'eleven Canadian multipliers, no more');
+
+      CheckEquals('NT', MultiplierOf(table, 'YT'), 'Yukon counts as NT');
+      CheckEquals('YT', QTHOf(table, 'YT'), 'and keeps its own QTH');
+      CheckEquals('NT', MultiplierOf(table, 'NU'), 'Nunavut counts as NT');
+      CheckEquals('NU', QTHOf(table, 'NU'), 'and keeps its own QTH');
+      CheckEquals('NT', MultiplierOf(table, 'VY1'), 'a VY1 prefix is Yukon, NT');
+      CheckEquals('NL', MultiplierOf(table, 'NF'), 'NF is Newfoundland and Labrador');
+      CheckEquals('NL', MultiplierOf(table, 'LB'), 'and so is LB');
+      CheckEquals('LA', MultiplierOf(table, 'LA'), 'LA is Louisiana, not Labrador');
+      CheckTrue(CountsForEntrant(OHIOQSOPARTY, True, 'NT', rmDomestic), 'NT counts in state');
+   finally
+      multipliers.Free;
+      table.Free;
+      mo.Free;
+      mo := savedSheet;
+      MultipliersIsCounties := savedCounties;
+   end;
 end;
 
 (* "49 American States (excluding Ohio), 1 Washington DC ... and 1 DX":
@@ -209,6 +284,7 @@ begin
    Test_OhioBands;
    Test_OhioModes;
    Test_OhioInStateFileHasDCAndDX;
+   Test_OhioCanadianMultipliersAreTheSponsorsEleven;
 end;
 
 end.

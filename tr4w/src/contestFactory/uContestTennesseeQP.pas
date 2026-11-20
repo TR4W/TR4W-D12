@@ -62,10 +62,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
   NOT BUILT, listed on #88: the Tennessee mobile and rover 500 points per
     county with 10 QSOs, and their one multiplier for such a county (the
-    entrant's CATEGORY-STATION and county do not reach scoring, #133); the
-    digital modes (the sponsor accepts "Any digital mode that supports the
-    required exchange" and its own dupe example names FT8): UsesMode is not
-    stated.
+    entrant's CATEGORY-STATION and county do not reach scoring, #133).
+
+  MODES -- "Phone-SSB, FM (no repeater QSOs) / CW / Digital (Any digital mode
+    that supports the required exchange)" -- FM is named, so it is credited
+    (as phone). NY4I, 2026-11-20: "That phrase about supporting the exchange
+    means FT8, FT4 nor FT2 are allowed" -- even though the sponsor's own dupe
+    example names FT8. UsesMode credits CW, phone (FM is phone) and every
+    digital submode but FT_SUBMODES; an FT QSO is an automatic X-QSO. The
+    ruling covers every sponsor using the phrase (Louisiana, New York, New
+    Jersey, Texas, Arkansas state the same list).
  *)
 unit uContestTennesseeQP;
 
@@ -145,6 +151,8 @@ type
    public
       (* Every band but 60, 30, 17 and 12 m -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
+      (* CW, phone and every digital mode but FT8/FT4/FT2 -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -377,6 +385,28 @@ begin
                        Band6, Band2, Band222, Band432, Band902, Band1296,
                        Band2304, Band3456, Band5760, Band10G, Band24G,
                        BandLight];
+end;
+
+(* "Any digital mode that supports the required exchange" -- not FT8, FT4 or
+   FT2 (NY4I, 2026-11-20; the header). eNoMode and the generic data modes
+   mean "some submode" and are credited. An identity fact: no station is
+   asked. *)
+function TContestTennesseeQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 (* SET-UP -- an entrant outside Tennessee works Tennessee stations only and
