@@ -805,6 +805,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* Log schema 11: sixteen never-written qso columns removed by a table
       rebuild -- over a real schema-10 file (issue 94). *)
    uTestLogDroppedColumns in 'uTestLogDroppedColumns.pas',
+   (* An older log is backed up before it is upgraded (NY4I, 2026-11-19). *)
+   uTestLogMigrationBackup in 'uTestLogMigrationBackup.pas',
    (* Schema 9 phase 2: a Station-page edit of ANY value the open contest
       uses (the generalised issue 300 rule), the contest's use of a value,
       Edit QSO's check of a changed value, and the station-value correction. *)
@@ -1483,6 +1485,7 @@ begin
    RegisterSuite(TLogStationFactsTests.Create('LogStationFacts'));
    RegisterSuite(TLogOffContestTests.Create('LogOffContest'));
    RegisterSuite(TLogDroppedColumnsTests.Create('LogDroppedColumns'));
+   RegisterSuite(TLogMigrationBackupTests.Create('LogMigrationBackup'));
    RegisterSuite(TStationFactChangeTests.Create('StationFactChange'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));

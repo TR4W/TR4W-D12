@@ -230,6 +230,14 @@ var
    LogContestKeepsYearInZone: TLogContestKeepsYearInZone = nil;
 
 type
+   (* TAKE A BACKUP OF aFileName, AS IT IS, BEFORE IT IS UPGRADED FROM SCHEMA
+     aFromVersion TO aToVersion (NY4I, 2026-11-19). True only when a verified
+     backup has been published; aReport says where it went, or why it was not
+     written. See TLogDatabase.BeforeMigration. *)
+   TLogBeforeMigration = function(const aFileName: string;
+      aFromVersion, aToVersion: integer; out aReport: string): boolean;
+
+type
    (* SQLiteCode: the extended result code of the failure it wraps, 0 when
      none -- kept so SQLiteIsBusy can answer through a re-wrap. *)
    ELogDatabaseError = class(Exception)
@@ -338,10 +346,14 @@ type
         file: URI. *)
       FImmutable: boolean;
       FBusyTimeoutMs: integer;
+      FBeforeMigration: TLogBeforeMigration;
 
       (* Both open paths refuse a missing file with the same sentence. One
         copy, because two would drift. *)
       procedure RefuseAMissingFile(const aFileName: string);
+      (* Open's first step when BeforeMigration is assigned: an older log is
+        backed up, or the open is refused, before anything touches it. *)
+      procedure BackUpAnOlderLog(const aFileName: string);
       procedure OpenConnection(const aFileName: string);
       procedure ApplySchema;
       procedure MigrateSchema;
@@ -392,8 +404,28 @@ type
 
       (* Open an EXISTING log.  Refuses a missing file for the same reason in
         reverse: SQLite would helpfully create an empty database, and an empty
-        log that opens cleanly is worse than an error. *)
+        log that opens cleanly is worse than an error.
+
+        AN OLDER LOG IS BACKED UP BEFORE IT IS UPGRADED, when BeforeMigration
+        is assigned (NY4I, 2026-11-19). Before the write connection exists --
+        before journal_mode = WAL touches the header -- the file is opened
+        read-only and its user_version read. Below LOG_SCHEMA_VERSION,
+        BeforeMigration is asked to publish a backup of it; if it answers
+        False, Open raises ELogDatabaseError naming the two versions and its
+        report, and the file has not been written at all. *)
       procedure Open(const aFileName: string);
+
+      (* THE BACKUP AN OLDER LOG TAKES BEFORE Open UPGRADES IT; nil (the
+        default) takes none, which is this leaf's behaviour for a test or a
+        tool that opens a file it made itself. THE STORE ASSIGNS IT
+        (uLogStore.OpenExistingLog), so every log the program opens for the
+        operator is covered. A per-instance property and not a global like
+        LogContestKeepsYearInZone ON PURPOSE: the program's answer writes
+        into the settings directory's backup folder, and the unit tests open
+        dozens of downgraded logs that must never write there. Set before
+        Open. *)
+      property BeforeMigration: TLogBeforeMigration read FBeforeMigration
+                                                    write FBeforeMigration;
 
       (* OPEN AN EXISTING LOG WITHOUT WRITING ONE BYTE OF IT.
 
@@ -1881,9 +1913,66 @@ begin
       end;
 end;
 
+procedure TLogDatabase.BackUpAnOlderLog(const aFileName: string);
+var
+   probe: TLogDatabase;
+   version: integer;
+   report: string;
+begin
+   (* ASKED ON A CONNECTION OF ITS OWN, READ-ONLY, BEFORE THE WRITE CONNECTION
+     IS OPENED. OpenConnection's ApplyPragmas sets journal_mode = WAL, which
+     rewrites header bytes 18, 19, 27 and 95 of a rollback-journal file, so a
+     refusal after it would not leave the log as it was. OpenToPeek runs
+     VerifyIdentity, so a database that is not a TR4W log, or is from a newer
+     build, is refused here exactly as Open would refuse it -- and is never
+     copied into the backup folder first.
+
+     OpenToPeek, NOT OpenReadOnly: a read-only connection to a WAL-mode log
+     leaves its -wal and -shm behind (measured 2026-10-14, and again here by
+     uTestLogMigrationBackup on the schema-10 fixture), so a refused open
+     would not have left the folder as it found it. With no sidecar, the peek
+     is immutable and creates nothing; with one, it is OpenReadOnly, which
+     reads the -wal. *)
+   probe := TLogDatabase.Create;
+   try
+      probe.BusyTimeoutMs := FBusyTimeoutMs;
+      probe.OpenToPeek(aFileName);
+      version := probe.SchemaVersion;
+   finally
+      probe.Free;
+   end;
+
+   (* ONLY BELOW THIS BUILD'S SCHEMA. A current log, and a new one (CreateNew
+     never comes here), take no backup. The one migration that can reach a
+     log already at LOG_SCHEMA_VERSION -- external_delivery.last_sent, which
+     arrived inside schema 5 -- is not covered: it adds one column to a
+     development log and touches no QSO. *)
+   if version >= LOG_SCHEMA_VERSION then
+      begin
+      Exit;
+      end;
+
+   report := '';
+   if not FBeforeMigration(aFileName, version, LOG_SCHEMA_VERSION, report) then
+      begin
+      raise ELogDatabaseError.CreateFmt(
+         'The contest log "%s" is schema %d and must be upgraded to %d, and a ' +
+         'backup of it is taken first. The backup could not be taken (%s), so ' +
+         'the log was NOT upgraded and has not been changed.',
+         [aFileName, version, LOG_SCHEMA_VERSION, report]);
+      end;
+end;
+
 procedure TLogDatabase.Open(const aFileName: string);
 begin
    RefuseAMissingFile(aFileName);
+
+   (* FIRST, before this object opens anything (NY4I, 2026-11-19: an older
+     log is backed up before it is migrated). *)
+   if Assigned(FBeforeMigration) then
+      begin
+      BackUpAnOlderLog(aFileName);
+      end;
 
    FReadOnly := False;
    FImmutable := False;

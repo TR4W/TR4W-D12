@@ -374,6 +374,24 @@ var
      milliseconds per attempt rather than seconds. Read at open. *)
    LogStoreBusyTimeoutMs: integer = 0;
 
+type
+   (* The folder a backup is written to; see LogStoreUpgradeBackupFolder. *)
+   TLogStoreBackupFolder = function: string;
+
+var
+   (* WHERE AN OLDER LOG'S BACKUP GOES BEFORE IT IS UPGRADED (NY4I,
+     2026-11-19: "opening an older log must take a BACKUP FIRST").
+
+     uProgramMain assigns uAppPaths.BackupDir, the folder every other backup
+     uses. It is asked ONLY when a log below this build's schema is opened, so
+     a current log never creates the folder. A test assigns a function that
+     answers a scratch folder of its own, and NEVER BackupDir, which would
+     write under the real settings directory.
+
+     NIL FAILS CLOSED: an older log is then refused, not upgraded without a
+     backup (the reason names this variable). *)
+   LogStoreUpgradeBackupFolder: TLogStoreBackupFolder = nil;
+
 (* True when this session's log is read-only: opened so (the operator's answer
   to a locked log), or made so by a write the disk would not take -- a full
   disk or a write error (Disable, 2026-11-18). Either way it can be read and
@@ -1117,6 +1135,53 @@ begin
       end;
 end;
 
+(* THE STORE'S TLogDatabase.BeforeMigration: a verified backup of the log, as
+  the older build left it, in LogStoreUpgradeBackupFolder, before Open
+  upgrades it. Logged either way; a failure makes Open raise, and the store
+  stands down as for any failed open, with the log unchanged. *)
+function BackUpTheLogBeforeUpgrading(const aFileName: string;
+   aFromVersion, aToVersion: integer; out aReport: string): boolean;
+var
+   folder, path: string;
+begin
+   Result := False;
+   if not Assigned(LogStoreUpgradeBackupFolder) then
+      begin
+      aReport := 'no backup folder was given to the log store ' +
+                 '(uLogStore.LogStoreUpgradeBackupFolder is not assigned)';
+      end
+   else
+      begin
+      (* BackupDir creates the folder and raises when it cannot. *)
+      try
+         folder := LogStoreUpgradeBackupFolder();
+         Result := BackUpLogBeforeUpgrade(aFileName, folder, aFromVersion,
+                                          aToVersion, path, aReport);
+      except
+         on E: Exception do
+            begin
+            Result := False;
+            aReport := E.Message;
+            end;
+      end;
+      end;
+
+   if logger <> nil then
+      begin
+      if Result then
+         begin
+         logger.Info('[LogStore] %s is schema %d; before upgrading it to %d: %s',
+                     [aFileName, aFromVersion, aToVersion, aReport]);
+         end
+      else
+         begin
+         logger.Error('[LogStore] %s is schema %d and was NOT upgraded to %d, ' +
+                      'because no backup of it could be taken first: %s',
+                      [aFileName, aFromVersion, aToVersion, aReport]);
+         end;
+      end;
+end;
+
 (* OPEN AN EXISTING LOG, ASKING FIRST IF IT IS LOCKED. GDatabase exists and is
   closed. Leaves GReadOnly saying how it was opened. Raises what Open raises;
   in a headless run a locked log raises (busy-coded) rather than asking. *)
@@ -1126,6 +1191,10 @@ var
    detail, holders, said: string;
    choice: TLogLockedChoice;
 begin
+   (* An older log is backed up before Open upgrades it -- on every attempt
+     of the loop below: an upgrade that met a lock was rolled back, so the
+     retry upgrades the same older file again. *)
+   GDatabase.BeforeMigration := @BackUpTheLogBeforeUpgrading;
    GReadOnly := False;
    GReadOnlyRefusalShown := False;
    GWriteFailureNoticeShown := False;

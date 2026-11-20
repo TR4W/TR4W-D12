@@ -228,6 +228,22 @@ corpus_settings_win(){
 corpus_fixture_guard_start(){
    CORPUS_FIXTURE_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/settings/tr4w.json"
    CORPUS_FIXTURE_SUM_BEFORE=$(sha256sum "$CORPUS_FIXTURE_FILE" | cut -d' ' -f1)
+   corpus_clear_upgrade_backups
+}
+
+# corpus_clear_upgrade_backups
+# EVERY CORPUS LOG IS AN OLDER SCHEMA, AND THE APP BACKS ONE UP BEFORE IT
+# UPGRADES IT (NY4I, 2026-11-19) -- headless runs included, deliberately: the
+# backup is not skipped to keep a run tidy. --settings puts the backup folder
+# beside the fixture, settings/backup/, which is ignored by git; a taken name
+# gets a number rather than being overwritten, so without this every run would
+# add a backup per set. Cleared at the start of a run, so the folder holds
+# exactly the backups the latest run took. It is the RUN'S OUTPUT, never a
+# fixture: nothing else lives there.
+corpus_clear_upgrade_backups(){
+   local dir
+   dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/settings/backup"
+   rm -rf "$dir"
 }
 corpus_fixture_guard_check(){
    local after

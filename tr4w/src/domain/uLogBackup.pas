@@ -92,6 +92,38 @@ const
      purpose, so it is never mistaken for it and never rotates anything. *)
    CATCHUP_BACKUP_INFIX = ' before catch-up ';
    PERIODIC_BACKUP_SUFFIX = ' periodic';
+   (* The backup an older log takes before it is upgraded (NY4I, 2026-11-19):
+     "<log> before schema <from> to <to>.db". *)
+   SCHEMA_BACKUP_INFIX = ' before schema ';
+   SCHEMA_BACKUP_TO = ' to ';
+
+(* THE NAME OF THE BACKUP AN OLDER LOG TAKES BEFORE IT IS UPGRADED: "<base>
+  before schema <aFrom> to <aTo>.db" in aBackupDir, base by
+  LogBackupBaseName.
+
+  NEVER AN EXISTING FILE'S NAME. TLogBackup.Run displaces an existing
+  destination to .bak, replacing an older .bak, and a backup taken before an
+  upgrade is the only copy of the log as the older build left it. So a taken
+  name gets a number -- "<...> 2.db", "<...> 3.db" -- by
+  uLogNaming.FirstFreeLogFileName, the New Contest dialog's rule. A name is
+  taken twice only when the same log is upgraded twice: restored from a
+  backup, or a migration that failed AFTER its backup and was tried again. *)
+function LogSchemaBackupFileName(const aLogFile, aBackupDir: string;
+   aFrom, aTo: integer): string;
+
+(* BACK UP THE LOG FILE aLogFile, BY ITS PATH, BEFORE IT IS UPGRADED FROM
+  SCHEMA aFrom TO aTo -- the program's TLogDatabase.BeforeMigration (through
+  uLogStore). Nothing has the file open for writing: it is called before
+  TLogDatabase.Open opens its connection.
+
+  aBackupDir MUST EXIST: a folder that is not there is a failed backup, never
+  a reason to write somewhere else (the rule every backup here follows). The
+  copy is TLogBackup.Run's -- staged at .new, verified on its own read-only
+  connection, published by rename -- to LogSchemaBackupFileName. aPath is the
+  name it was written to, set before the run. Never raises; aReport is set on
+  every path. *)
+function BackUpLogBeforeUpgrade(const aLogFile, aBackupDir: string;
+   aFrom, aTo: integer; out aPath, aReport: string): boolean;
 
 (* THE LOG'S NAME AS A BACKUP IS NAMED FOR IT -- the one rule both backup
   names start from (LogStoreClearBackupFileName and
@@ -103,7 +135,8 @@ const
 
   NAMES NEVER STACK. Every trailing " before clear <yyyy-mm-dd hhnnss>Z" or
   " before catch-up <yyyy-mm-dd hhnnss>Z" (those exact shapes) and every
-  trailing " periodic" is removed, in any order and any
+  trailing " periodic", and every trailing " before schema <n> to <m>" (digits;
+  2026-11-19), is removed, in any order and any
   number, so a backup of a log that is itself a backup is named for the log it
   came from. Anything that merely CONTAINS the words keeps them. *)
 function LogBackupBaseName(const aLogFile: string): string;
@@ -132,7 +165,7 @@ function PeriodicBackupDue(var aLoggedSinceBackup: integer;
 implementation
 
 uses
-   SysUtils, uLogDatabase;
+   SysUtils, uLogDatabase, uLogNaming;
 
 const
    (* The stamp's shape, one character per position: 'd' a digit, anything
@@ -190,10 +223,62 @@ begin
                    Length(PERIODIC_BACKUP_SUFFIX)) = PERIODIC_BACKUP_SUFFIX);
 end;
 
+(* The length of a run of ASCII digits in aText ENDING at aLast (1-based),
+  0 when aText[aLast] is not a digit. *)
+function DigitRunEndingAt(const aText: string; aLast: integer): integer;
+begin
+   Result := 0;
+   while (aLast - Result >= 1) and
+         (aText[aLast - Result] >= '0') and
+         (aText[aLast - Result] <= '9') do
+      begin
+      inc(Result);
+      end;
+end;
+
+(* The length of a trailing " before schema <digits> to <digits>" on aBase, 0
+  when it does not end in exactly that shape. *)
+function SchemaBackupSuffixLength(const aBase: string): integer;
+var
+   last, digits: integer;
+begin
+   Result := 0;
+   last := Length(aBase);
+
+   digits := DigitRunEndingAt(aBase, last);
+   if digits = 0 then
+      begin
+      Exit;
+      end;
+   last := last - digits;
+   if (last < Length(SCHEMA_BACKUP_TO)) or
+      (Copy(aBase, last - Length(SCHEMA_BACKUP_TO) + 1, Length(SCHEMA_BACKUP_TO)) <> SCHEMA_BACKUP_TO) then
+      begin
+      Exit;
+      end;
+   last := last - Length(SCHEMA_BACKUP_TO);
+
+   digits := DigitRunEndingAt(aBase, last);
+   if digits = 0 then
+      begin
+      Exit;
+      end;
+   last := last - digits;
+   if (last < Length(SCHEMA_BACKUP_INFIX)) or
+      (Copy(aBase, last - Length(SCHEMA_BACKUP_INFIX) + 1, Length(SCHEMA_BACKUP_INFIX)) <> SCHEMA_BACKUP_INFIX) then
+      begin
+      Exit;
+      end;
+   last := last - Length(SCHEMA_BACKUP_INFIX);
+
+   Result := Length(aBase) - last;
+end;
+
 function LogBackupBaseName(const aLogFile: string): string;
 var
    i: integer;
    stripped: boolean;
+   suffix: integer;
 begin
    (* THE FILE NAME, without its directory. Scanned by hand rather than
      through ExtractFileName for the reason in the header: on Unix a backslash
@@ -238,7 +323,100 @@ begin
          Result := Copy(Result, 1, Length(Result) - Length(PERIODIC_BACKUP_SUFFIX));
          stripped := True;
          end;
+      suffix := SchemaBackupSuffixLength(Result);
+      if suffix > 0 then
+         begin
+         Result := Copy(Result, 1, Length(Result) - suffix);
+         stripped := True;
+         end;
    until not stripped;
+end;
+
+function LogSchemaBackupFileName(const aLogFile, aBackupDir: string;
+   aFrom, aTo: integer): string;
+begin
+   Result := IncludeTrailingPathDelimiter(aBackupDir) +
+             FirstFreeLogFileName(aBackupDir,
+                                  LogBackupBaseName(aLogFile) + SCHEMA_BACKUP_INFIX +
+                                  IntToStr(aFrom) + SCHEMA_BACKUP_TO + IntToStr(aTo) +
+                                  '.db');
+end;
+
+type
+   (* A LOG FILE, BY ITS PATH, AS A BACKUP SOURCE -- the file before the
+     upgrade, which nothing in this process has open for writing yet. NOT the
+     store's TLogStoreBackup: that one asks LogStoreEnsureOpen whether the
+     source is ready, and this runs INSIDE the store's open. *)
+   TLogFileBackup = class(TLogBackup)
+   private
+      FSource: string;
+   protected
+      function SourceIsReady: boolean; override;
+      procedure SnapshotTo(const aStaged: string); override;
+   public
+      constructor Create(const aSource: string);
+   end;
+
+constructor TLogFileBackup.Create(const aSource: string);
+begin
+   inherited Create;
+   FSource := aSource;
+end;
+
+function TLogFileBackup.SourceIsReady: boolean;
+begin
+   Result := FileExists(FSource);
+end;
+
+procedure TLogFileBackup.SnapshotTo(const aStaged: string);
+var
+   source: TLogDatabase;
+begin
+   (* READ-ONLY, and TLogDatabase.SnapshotTo takes its VACUUM INTO on a
+     further read-only connection of its own: nothing here writes the log.
+     VACUUM INTO copies user_version and application_id, so the backup says
+     which schema it is (pinned by uTestLogMigrationBackup). *)
+   source := TLogDatabase.Create;
+   try
+      source.OpenReadOnly(FSource);
+      source.SnapshotTo(aStaged);
+   finally
+      source.Free;
+   end;
+end;
+
+function BackUpLogBeforeUpgrade(const aLogFile, aBackupDir: string;
+   aFrom, aTo: integer; out aPath, aReport: string): boolean;
+var
+   backup: TLogFileBackup;
+begin
+   Result := False;
+   aPath := '';
+   aReport := '';
+   try
+      (* Asked first so the report says WHY, rather than the SQLite error a
+        VACUUM INTO a missing directory gives. *)
+      if not DirectoryExists(aBackupDir) then
+         begin
+         aReport := Format('the backup folder %s does not exist', [aBackupDir]);
+         Exit;
+         end;
+
+      aPath := LogSchemaBackupFileName(aLogFile, aBackupDir, aFrom, aTo);
+      backup := TLogFileBackup.Create(aLogFile);
+      try
+         Result := backup.Run(aPath, aReport);
+      finally
+         backup.Free;
+      end;
+   except
+      (* Run never raises; the name rule can (9999 names taken). *)
+      on E: Exception do
+         begin
+         Result := False;
+         aReport := E.Message;
+         end;
+   end;
 end;
 
 function PeriodicBackupDue(var aLoggedSinceBackup: integer;

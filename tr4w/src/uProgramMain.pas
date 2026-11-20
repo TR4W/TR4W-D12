@@ -1332,6 +1332,13 @@ begin
      Halt(0);
      end;
 
+  (* AN OLDER LOG IS BACKED UP BEFORE IT IS UPGRADED (NY4I, 2026-11-19), into
+    the folder every backup uses -- for a headless run too: /EXPORT of an
+    older log upgrades it, so it takes its backup. Assigned first, before
+    anything can open the store; BackupDir is asked only when an older log is
+    opened, by which time --settings has placed the settings directory. *)
+  LogStoreUpgradeBackupFolder := @BackupDir;
+
    // Enable thread-safe memory management. TR4W creates threads via Win32
    // CreateThread (not TThread), which does NOT set this flag automatically.
    // Without it, concurrent GetMem calls from different threads can corrupt

@@ -3274,13 +3274,21 @@ reasons above, not because a restriction applied.
 **Consequence, the usual one.** Schema 10 is in the v5.0.43 and v5.0.44 tags
 (draft releases on 2026-11-19), so logs stamped 10 exist. A log this build has opened is
 refused by every earlier build, so keep a copy of a log before trying a new build
-on it. **No migration takes a backup first, before or after this one.** Every
-migration relies on being one transaction: either everything lands or nothing
+on it. **When this was written, no migration took a backup first**: every
+migration relied on being one transaction, either everything lands or nothing
 does. Issue 94's comment said "a backup first, as the earlier migrations do",
-and that does not match the code. Whether a destructive migration should take a
-verified backup first (the store has `LogStoreBackupBefore`, but `TLogDatabase.Open`
-migrates in the leaf before the store gets control) is a decision left open for
-NY4I.
+and that did not match the code -- no earlier migration had taken one.
+
+**RULED BY NY4I, 2026-11-19: YES, opening an older log takes a BACKUP FIRST,
+before it is migrated -- every migration, not only this one.** Built the same
+day: `TLogDatabase.BeforeMigration`, asked by `Open` on a read-only connection
+before its write connection exists; the store's answer publishes a verified
+`<log> before schema <from> to <to>.db` in `uAppPaths.BackupDir` (never over an
+existing file), and a failed backup refuses the open with the file untouched.
+The seam is in the leaf, a per-instance property, because `Open` migrates
+before the store gets control and the unit tests' downgraded logs must never
+write into the real settings folder. Definition and the case-by-case rules:
+`docs/LOG_SCHEMA.md` section 1. Tests: `uTestLogMigrationBackup`.
 
 **Tests** (`uTestLogDroppedColumns`):
 

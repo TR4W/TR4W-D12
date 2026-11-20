@@ -37,8 +37,49 @@ Rules that apply to every open:
   file whose `user_version` is above the build's own.
 - **An older log is migrated in place by `TLogDatabase.Open`.** Opening is
   enough. Once a build has opened a log, every build older than it will
-  refuse that log. **Back up a log before opening it with a new build** if an
-  older build must read it again.
+  refuse that log.
+- **THE PROGRAM BACKS UP AN OLDER LOG BEFORE IT MIGRATES IT** (NY4I,
+  2026-11-19). `TLogDatabase.Open`, with `BeforeMigration` assigned, opens
+  the file READ-ONLY on a connection of its own, before its write connection
+  exists (so before `journal_mode = WAL` touches the header), and reads
+  `user_version`. Below `LOG_SCHEMA_VERSION` it asks for a backup;
+  the store's answer (`uLogStore.OpenExistingLog`) is
+  `uLogBackup.BackUpLogBeforeUpgrade`: the `TLogBackup` sequence (staged
+  `.new`, `integrity_check` on its own read-only connection, rename) to
+  `<log> before schema <from> to <to>.db` in `uAppPaths.BackupDir` (the
+  folder every backup uses; `--settings` moves it). **A taken name gets a
+  number** (`uLogNaming.FirstFreeLogFileName`), so no backup is overwritten
+  or displaced to `.bak`. **If the backup fails, the open is REFUSED**
+  (`ELogDatabaseError`, naming both versions and the reason) **and the file
+  has not been written**; the store stands down as for any failed open and
+  logs it at Error. What each open does:
+  - a log already at the current schema, and a new log: no backup;
+  - an older log: one backup, then the migration; opened again it is current,
+    so no second backup;
+  - a headless run (`/EXPORT`, `/RESCORE`, `/IMPORT`) of an older log: the
+    same backup, to the same folder -- the corpus's schema-2 logs each take
+    one, into the corpus's own settings folder (`corpus-lib.sh` clears it).
+    A refused one, MEASURED 2026-11-19 (`/EXPORT`, the backup folder a
+    file): two Error lines in `tr4w.log`, the log byte-identical with no
+    sidecar, no ADIF or Cabrillo written -- and **exit code 0**, which is
+    what every failed store open does under `/EXPORT` today (not new here;
+    open);
+  - a log from a newer build, or not a TR4W log: refused by the read-only
+    probe, never copied;
+  - the store's read-only mode and `OpenReadOnly`: never migrate, so never
+    back up.
+  `BeforeMigration` is a per-instance property, nil by default: a test or a
+  tool that opens a file it made itself takes no backup, and only the store
+  assigns it. The store's folder comes from `LogStoreUpgradeBackupFolder`
+  (`uProgramMain` assigns `BackupDir`; a test its own scratch folder); unset,
+  an older log is refused. **Not covered**: the one migration that can reach
+  a log already AT the current schema (`external_delivery.last_sent`, which
+  arrived inside schema 5; development logs only). A migration that fails
+  after its backup is backed up again on the next attempt, under a numbered
+  name. The version is read through `OpenToPeek`, so a refusal for a missing
+  folder leaves nothing beside a WAL-mode log; a backup that fails after its
+  snapshot began may leave SQLite's empty `-wal`/`-shm` beside it. Pinned by
+  `uTestLogMigrationBackup`.
 - **`TLogDatabase.OpenReadOnly` neither migrates nor writes.** It sets no
   write pragmas. The store's read-only mode cannot open an older-schema log
   at all, because the upgrade is a write.

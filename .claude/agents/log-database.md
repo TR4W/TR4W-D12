@@ -892,8 +892,9 @@ consistent, I do not see why we would keep those fields"*. Plan section 12o;
   `is_off_contest` to 0; the fixture test caught it. Use
   `TLogDatabase.PragmaRowsAsText` (one row per value). The same trap applies
   to any test that compares a `group_concat` of long text.
-- **No migration takes a backup first** -- this one neither. Issue 94's comment
-  said "as the earlier migrations do"; they do not. Open for NY4I.
+- ~~No migration takes a backup first~~ -- **RULED 2026-11-19: every
+  migration does now**; see "AN OLDER LOG IS BACKED UP BEFORE IT IS UPGRADED"
+  below. (Issue 94's comment claimed earlier migrations did; none had.)
 - **Tests: `uTestLogDroppedColumns`**, over a REAL schema-10 file
   (`test/unit/fixtures/logdb/florida_qp_schema10.db`: the corpus florida_qp
   log migrated 2 -> 10 by the schema-10 build's headless `/EXPORT`).
@@ -927,6 +928,62 @@ exchange only.
   `PostUnit.CurrentMyStationExchange(contest, facts, rec.ceRoverQTH)` ->
   `uContestBase.MyStationExchangeWithRoverPlace`. A row with none exports
   byte-for-byte as before, so no corpus fixture can move.
+
+## AN OLDER LOG IS BACKED UP BEFORE IT IS UPGRADED (NY4I, 2026-11-19)
+
+Every migration, not one schema's. Definition and the case-by-case list:
+`docs/LOG_SCHEMA.md` section 1.
+
+- **The seam is `TLogDatabase.BeforeMigration`**, a per-instance function
+  property (`TLogBeforeMigration`), nil by default. `Open` asks it FIRST,
+  before its write connection exists: `BackUpAnOlderLog` peeks the file
+  (`OpenToPeek` -- immutable with no sidecar, so a refusal leaves nothing
+  beside a WAL-mode log; `OpenReadOnly` left a `-wal`, measured on the
+  schema-10 fixture), reads `user_version`, and below `LOG_SCHEMA_VERSION`
+  calls the hook. False raises `ELogDatabaseError` ("NOT upgraded and has not
+  been changed") and the file is byte-identical (MD5-pinned). The peek runs
+  `VerifyIdentity`, so a newer or foreign file is refused before any copy.
+- **NOT a global like `LogContestKeepsYearInZone`, on purpose**: the store
+  links into the test program, and a global hook would send every
+  `DowngradeTestLog` -> `db.Open` test's backup into the real settings
+  folder. Only the store assigns it (`OpenExistingLog`, before the
+  busy-retry loop); a test or a tool that opens a file it made takes none.
+- **The store's answer** is `BackUpTheLogBeforeUpgrading` ->
+  `uLogBackup.BackUpLogBeforeUpgrade`: `TLogBackup.Run` (stage `.new`,
+  integrity-check on its own read-only connection, rename) with a by-path
+  source, `TLogFileBackup` -- **NEVER `TLogStoreBackup`**, whose
+  `SourceIsReady` calls `LogStoreEnsureOpen` and would re-enter the open in
+  progress. Name: `<base> before schema <from> to <to>.db`
+  (`LogSchemaBackupFileName`); **a taken name gets a number**
+  (`uLogNaming.FirstFreeLogFileName`), because `Run` would displace an
+  existing destination to `.bak` and replace an older `.bak`.
+  `LogBackupBaseName` strips that suffix too (exact shape, digits).
+- **The folder is `uLogStore.LogStoreUpgradeBackupFolder`**, a function
+  variable that `uProgramMain` assigns `@BackupDir` at the top of `RunTR4W`.
+  Asked only for an older log, so a current one never creates the folder.
+  **NIL FAILS CLOSED** (refused, the reason names the variable), so a store
+  test that opens a downgraded log must assign a scratch-folder function --
+  **never `BackupDir`**. A folder that does not exist fails the backup.
+- **Headless runs back up too** (`/EXPORT` of an older log migrates it). All
+  13 corpus logs are schema 2, so every corpus/rescore/round-trip/factory run
+  writes one backup per set into `tr4w/test/corpus/settings/backup/`
+  (`--settings` moves `BackupDir`); `corpus-lib.sh`'s
+  `corpus_clear_upgrade_backups` empties it at each run's start and
+  `.gitignore` lists it. Do NOT skip the backup to tidy a run. **A REFUSED
+  headless upgrade EXITS 0** (measured: `/EXPORT`, backup folder a file --
+  Error lines, log byte-identical, no artifact written). That is every
+  failed store open under `/EXPORT`, not this feature's; open for the
+  startup owner.
+- **The failure pin is a ROLLBACK-JOURNAL copy** (`journal_mode = DELETE`
+  first): the fixture is WAL, on which `ApplyPragmas` changes no header
+  byte, so an MD5 over it could not see the order. Mutation-tested: the
+  backup moved after `OpenConnection` fails the MD5 and the "not open" pin.
+- **Not covered**: `external_delivery.last_sent`, the one migration that can
+  reach a log already AT the current schema (development logs). A migration
+  that fails after its backup backs up again on the next try (numbered name),
+  and so does a busy retry in `OpenExistingLog`. A backup that fails AFTER
+  its snapshot started may leave the reader's empty `-wal`/`-shm` beside a
+  WAL-mode log (SQLite's own; no content). Tests: `uTestLogMigrationBackup`.
 
 ## A LOCKED LOG: THE STALE SNAPSHOT, THE BUSY WAIT, THE DIALOG, THE WATCHDOG (2026-10-31)
 
