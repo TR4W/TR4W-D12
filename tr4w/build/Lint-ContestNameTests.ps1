@@ -220,8 +220,13 @@ $CEILINGS = @{
    # Q136, 2026-10-22 -- RADIO-YOC's exchange is age + serial (SRR 2026
    # regulation): mainunit 1 -> 0 (the log loader's RADIOYOC previous-number
    # recovery is deleted; no contest sends a previous number). Unlisted now.
+   #
+   # 2026-11-20 -- the Cabrillo received QTH names no contest: postunit
+   # 1 -> 0 (CabrilloReceivedQTH's `Contest in [CUPRFCW, CUPRFSSB]` was a
+   # second statement of the RF Cups' own LITERAL DOMESTIC QTH; the 'LABRE'
+   # and 'EURASIA' name tests went with it -- strings, never counted here).
+   # Unlisted now, so any contest test in postunit fails.
    'trdos\logedit.pas'     = 3
-   'trdos\postunit.pas'    = 1
 }
 
 # Roughly two thirds of the count at the time of writing, and far above what a
@@ -261,6 +266,10 @@ $CEILINGS = @{
 #
 # Q136, 2026-10-22: 5 -> 3. The total fell 5 -> 4 (MainUnit's RADIOYOC test,
 # deleted with the previous-number exchange); 3 is about 80% of it.
+#
+# 2026-11-20: unchanged at 3. The total fell 4 -> 3 (postunit's RF Cup test,
+# deleted for the classes' own LITERAL DOMESTIC QTH); 3 is the whole of it,
+# logedit's three, and still far above what a parser that read nothing finds.
 $TOTAL_FLOOR  = 3
 $MEMBER_FLOOR = 130
 

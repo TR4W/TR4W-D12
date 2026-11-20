@@ -437,7 +437,10 @@ const
   LOGVERSION3                           = '.';
   LOGVERSION4                           = '7';     // ny4i Added QSO GUID (id field) to ContestExchange
   CURRENTVERSIONASINTEGER               = Ord(LOGVERSION1) + Ord(LOGVERSION2) * 256 + Ord(LOGVERSION3) * $10000 + Ord(LOGVERSION4) * $1000000;
-  TR4W_DOWNLOAD_LINK                    : string = 'https://tr4w.net/download/?' + TR4W_CURRENTVERSION_NUMBER;
+  (* Version.TR4W_WEBSITE's download page, the version after the '?':
+    https://tr4w.net/download/ -- written out for build\referenced-urls.txt
+    (issue 248), which probes it. Pinned by uTestTR4WWebsite. *)
+  TR4W_DOWNLOAD_LINK                    : string = TR4W_WEBSITE + '/download/?' + TR4W_CURRENTVERSION_NUMBER;
 
  // ' TR4W_DOWNLOAD_LINK_WITH_VER           = 'http://tr4w.net/4.42/tr4w_setup_4_42.1.exe';
 

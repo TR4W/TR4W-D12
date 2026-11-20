@@ -22,7 +22,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 (* THE RECEIVED QTH ON A CABRILLO QSO LINE, WHEN THE CONTEST SAYS "LITERAL
   DOMESTIC QTH" -- issue #109, 2026-10-26.
 
-  THE DEFECT. Fifteen contests state LiteralDomesticQTH in DescribeSession,
+  THE DEFECT. Fifteen contests (then) stated LiteralDomesticQTH in DescribeSession,
   and FCONTEST writes that statement into Settings.Contest.LiteralDomesticQth.
   The Cabrillo writer read LOGDOM's old global instead, which nothing had
   written since 2026-09-12, so the received column printed the domestic
@@ -53,6 +53,7 @@ interface
 
 uses
    uTR4WTestFramework,
+   VC,              (* ContestType -- ExportedQTH's parameter *)
    uContestBase;
 
 type
@@ -65,16 +66,21 @@ type
                                 const aWho: string;
                                 const aDomFile: string;
                                 const aTyped: string);
+      function ExportedQTH(aContest: ContestType;
+                           const aSessionName: string;
+                           aOperatorStatesOff: boolean;
+                           out aCountsDomesticMultiplier: boolean): string;
       procedure Test_NAQPWritesTheTypedQTH;
       procedure Test_PACCDutchEntrantWritesTheTypedQTH;
       procedure Test_WithoutTheFlagTheResolvedQTHIsWritten;
+      procedure Test_NoContestIsNamedInTheWriter;
+      procedure Test_AnOperatorsLiteralOffWinsForTheRFCupsAndLABRE;
    end;
 
 implementation
 
 uses
    SysUtils,
-   VC,
    uSettingsModel,
    uContestRegistry,
    LogDom,
@@ -144,8 +150,9 @@ begin
       CheckTrue(stated.IsStated(svLiteralDomesticQTH) and stated.LiteralDomesticQTH,
                 aWho + ': the contest states LITERAL DOMESTIC QTH');
 
-      (* AS FCONTEST.ApplySessionDefaults WRITES IT. The session's name and
-        contest are neither of the ones the writer tests by name. *)
+      (* AS FCONTEST.ApplySessionDefaults WRITES IT. The writer names no
+        contest since 2026-11-20; the name and contest are set so that a
+        name test, came one back, could not decide this case. *)
       Settings.Contest.LiteralDomesticQth := stated.LiteralDomesticQTH;
       Settings.Contest.Name := aWho;
       Contest := NoContest;
@@ -236,11 +243,122 @@ begin
       end;
 end;
 
+(* THE WRITER'S CHOICE FOR ONE CONTEST, WITH ITS SESSION DEFAULTS APPLIED AS
+  FCONTEST APPLIES THEM: the flag starts at its default (off), the contest's
+  DescribeSession statement is copied in only when it states one, the
+  session's name is aSessionName, and the operator may then state LITERAL
+  DOMESTIC QTH = FALSE, as a later .cfg or log line would. The QSO's typed and
+  resolved QTHs differ, so the answer says which reading was taken. *)
+function TCabrilloReceivedQTHTests.ExportedQTH(aContest: ContestType;
+                                               const aSessionName: string;
+                                               aOperatorStatesOff: boolean;
+                                               out aCountsDomesticMultiplier: boolean): string;
+var
+   obj: TContestBase;
+   station: TStationContext;
+   stated: TSessionDefaults;
+   qso: ContestExchange;
+   savedLiteral: boolean;
+   savedName: string;
+   savedContest: TContestHandle;
+begin
+   Result := '';
+   aCountsDomesticMultiplier := False;
+   savedLiteral := Settings.Contest.LiteralDomesticQth;
+   savedName := Settings.Contest.Name;
+   savedContest := Contest;
+   station := KansasStation(aSessionName);
+   obj := MakeContestOrNil(aContest, station);
+   stated := TSessionDefaults.Create;
+   try
+      CheckTrue(obj <> nil, aSessionName + ': the contest has a class');
+      if obj = nil then
+         begin
+         Exit;
+         end;
+      Settings.Contest.LiteralDomesticQth := False;
+      obj.DescribeSession(station, stated);
+      if stated.IsStated(svLiteralDomesticQTH) then
+         begin
+         Settings.Contest.LiteralDomesticQth := stated.LiteralDomesticQTH;
+         end;
+      Settings.Contest.Name := aSessionName;
+      Contest := ContestHandleOf(aContest);
+      if aOperatorStatesOff then
+         begin
+         Settings.Contest.LiteralDomesticQth := False;
+         end;
+
+      qso := Default(ContestExchange);
+      qso.QTHString := 'TYPED';
+      qso.DomesticQTH := 'RSLVD';
+      aCountsDomesticMultiplier := ContestHasDomesticMultiplier(obj);
+      Result := CabrilloReceivedQTH(aCountsDomesticMultiplier, qso);
+   finally
+      stated.Free;
+      obj.Free;
+      Settings.Contest.LiteralDomesticQth := savedLiteral;
+      Settings.Contest.Name := savedName;
+      Contest := savedContest;
+      end;
+end;
+
+(* NO CONTEST IS NAMED IN THE WRITER (2026-11-20). CabrilloReceivedQTH forced
+  the logged text for the session NAMES 'LABRE' and 'EURASIA' and for
+  `Contest in [CUPRFCW, CUPRFSSB]`. With those arms deleted, each contest's
+  own answer gives the same column: LABRE and the RF Cups state LITERAL
+  DOMESTIC QTH, and the European VHF contest -- which EURASIA is, renamed by
+  CONTEST NAME -- counts no domestic multiplier, so the logged text is written
+  whatever the flag says. *)
+procedure TCabrilloReceivedQTHTests.Test_NoContestIsNamedInTheWriter;
+var
+   counts: boolean;
+begin
+   BeginTest('Test_NoContestIsNamedInTheWriter');
+   CheckEquals('TYPED', ExportedQTH(LABRE, 'LABRE', False, counts),
+               'LABRE: the logged QTH, as the name arm wrote it');
+   CheckTrue(counts, 'LABRE counts a domestic multiplier (brazil.dom)');
+
+   CheckEquals('TYPED', ExportedQTH(CUPRFCW, 'CUPRFCW', False, counts),
+               'RF Cup CW: the logged QTH, as the enum arm wrote it');
+   CheckTrue(counts, 'RF Cup CW counts a domestic multiplier');
+   CheckEquals('TYPED', ExportedQTH(CUPRFSSB, 'CUPRFSSB', False, counts),
+               'RF Cup SSB: the logged QTH, as the enum arm wrote it');
+   CheckTrue(counts, 'RF Cup SSB counts a domestic multiplier');
+   CheckEquals('TYPED', ExportedQTH(CUPRFDIG, 'CUPRFDIG', False, counts),
+               'RF Cup DIG: the logged QTH (never in the arm; its own statement)');
+
+   CheckEquals('TYPED', ExportedQTH(EUROPEANVHF, 'EURASIA', False, counts),
+               'EURASIA: the logged QTH, as the name arm wrote it');
+   CheckFalse(counts,
+              'European VHF counts no domestic multiplier -- why EURASIA needs no statement');
+   CheckEquals('TYPED', ExportedQTH(EUROPEANVHF, 'EUROPEAN VHF', False, counts),
+               'European VHF under its own name: the logged QTH, as before');
+end;
+
+(* THE ONE CHANGE, AND IT IS THE RULE EVERY OTHER CONTEST ALREADY HAD: an
+  operator who states LITERAL DOMESTIC QTH = FALSE after the contest's own
+  statement is obeyed. The arms overrode him for LABRE and the RF Cups. *)
+procedure TCabrilloReceivedQTHTests.Test_AnOperatorsLiteralOffWinsForTheRFCupsAndLABRE;
+var
+   counts: boolean;
+begin
+   BeginTest('Test_AnOperatorsLiteralOffWinsForTheRFCupsAndLABRE');
+   CheckEquals('RSLVD', ExportedQTH(CUPRFCW, 'CUPRFCW', True, counts),
+               'RF Cup CW, operator off: the resolved multiplier');
+   CheckEquals('RSLVD', ExportedQTH(CUPRFSSB, 'CUPRFSSB', True, counts),
+               'RF Cup SSB, operator off: the resolved multiplier');
+   CheckEquals('RSLVD', ExportedQTH(LABRE, 'LABRE', True, counts),
+               'LABRE, operator off: the resolved multiplier');
+end;
+
 procedure TCabrilloReceivedQTHTests.RunAllTests;
 begin
    Test_NAQPWritesTheTypedQTH;
    Test_PACCDutchEntrantWritesTheTypedQTH;
    Test_WithoutTheFlagTheResolvedQTHIsWritten;
+   Test_NoContestIsNamedInTheWriter;
+   Test_AnOperatorsLiteralOffWinsForTheRFCupsAndLABRE;
 end;
 
 end.

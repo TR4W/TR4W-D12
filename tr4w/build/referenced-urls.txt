@@ -35,8 +35,8 @@ https://clublog.org/api/v1 | endpoint | root | uClubLogClient | API base
 https://logbook.qrz.com/api | endpoint | root | uQRZLogbookClient | POST only
 https://api.worldradioleague.com/v1 | endpoint | root | uWRLClient | API base, POST only
 # ---- links: opened in the operator's browser -------------------------------------------------
-https://tr4w.net | link | head | uAboutForm
-https://tr4w.net/ | link | head | MainUnit
+https://tr4w.net | link | head | Version | TR4W_WEBSITE, the one spelling of the site (About box); every tr4w.net address is built from it and written out in a comment beside its constant
+https://tr4w.net/ | link | head | MainUnit | Help > Home Page, TR4W_WEBSITE + '/'
 https://tr4w.net/download/ | link | head | VC | TR4W_DOWNLOAD_LINK, version appended after the '?'
 http://www.tr4w.com/wiki/ | link | head | MainUnit
 http://www.hornucopia.com/contestcal/weeklycont.php | link | skip | MainUnit | never contacted by a check (WA7BNM Contest Calendar terms forbid automated access)

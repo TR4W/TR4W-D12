@@ -27,6 +27,17 @@ const
 
   TR4WSERVER_CURRENTVERSION             = '1.41';
 
+  (* THE PROJECT'S WEBSITE -- the ONE spelling of it (2026-11-20). Every
+    address on the site is built from it: the About box's link, Help > Home
+    Page, the download page (VC.TR4W_DOWNLOAD_LINK), the version check
+    (uCheckLatestVersion.VERSION_URL), the TRMASTER.DTA download
+    (uTRMasterUpdate.TRMASTER_DOWNLOAD_URL) and the credit line the 3830 and
+    summary-sheet reports print (PostUnit.SoftwareCredit). It lives here, with
+    the version, because it is the product's identity and this unit is a
+    leaf every one of those already uses or can use without pulling in VC.
+    No trailing slash: a caller adds the path. Pinned by uTestTR4WWebsite. *)
+  TR4W_WEBSITE                          = 'https://tr4w.net';
+
  implementation
  end.
 

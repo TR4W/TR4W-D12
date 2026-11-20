@@ -362,9 +362,9 @@ begin
    BeginTest('Test_EveryArrlsectAliasExportsItsSection');
    asked := 0;
    differing := 0;
-   (* CabrilloReceivedQTH reads the session's LITERAL DOMESTIC QTH and the
-      contest (the Cup RF arm), so both are stated here, not inherited from
-      whichever suite ran before. *)
+   (* CabrilloReceivedQTH reads the session's LITERAL DOMESTIC QTH (and, until
+      2026-11-20, the contest -- the Cup RF arm), so both are stated here, not
+      inherited from whichever suite ran before. *)
    savedLiteral := Settings.Contest.LiteralDomesticQth;
    savedContest := Contest;
    Settings.Contest.LiteralDomesticQth := False;

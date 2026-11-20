@@ -194,6 +194,9 @@ procedure CreateCabrilloFile;
   domestic multiplier it resolved to. See the body. *)
 function CabrilloReceivedQTH( aCountsDomesticMultiplier: boolean;
                               const aQso: ContestExchange ): string;
+(* THE PROGRAM AND ITS SITE, as the 3830 report and the summary sheet credit
+  them: 'TR4W v.<n> https://tr4w.net'. See the body. *)
+function SoftwareCredit: string;
 procedure CheckForNewContestDate( Date: TQSOTime );
 
 procedure WriteADIFField( sFieldName: string; sFieldValue: string );
@@ -669,7 +672,8 @@ function ZoneSentForThisContest(aContest: TContestBase): string;
   (QTHString). D7's PostUnit made exactly that choice on exactly that flag.
 
   THE FLAG IS THE SESSION'S SETTING, Settings.Contest.LiteralDomesticQth --
-  NOT a class answer. Fifteen contests state it in DescribeSession, and
+  NOT a class answer. The contests that want the logged text state it in
+  DescribeSession, and
   FCONTEST.ApplySessionDefaults writes their statement into that setting; the
   operator may also state LITERAL DOMESTIC QTH himself, and a later line wins
   as for every session default. So the setting is the RESOLVED answer, and it
@@ -679,20 +683,21 @@ function ZoneSentForThisContest(aContest: TContestBase): string;
   the setting replaced it (c6131d81, 2026-09-12), so every one of those
   contests exported the resolved multiplier.
 
-  WWDIGI's own QTHString is TContestWWDigi's override since M4. LABRE and
-  EURASIA have no ContestType of those names and are told by the session's
-  name; the RF Cups state LITERAL DOMESTIC QTH as well, so their arm is a
-  second statement of that rule, kept as it stood. *)
+  WWDIGI's own QTHString is TContestWWDigi's override since M4.
+
+  NO CONTEST IS NAMED HERE (2026-11-20). Three arms forced the logged text
+  by contest: `Settings.Contest.Name = 'LABRE'`, `Contest in [CUPRFCW,
+  CUPRFSSB]` and `Settings.Contest.Name = 'EURASIA'`. LABRE states LITERAL
+  DOMESTIC QTH in its DescribeSession now; the RF Cups always did, so theirs
+  was a second statement; and EURASIA is the European VHF contest under
+  another CONTEST NAME, which counts no domestic multiplier, so the branch
+  below already wrote what was logged. Pinned by uTestCabrilloReceivedQTH. *)
 function CabrilloReceivedQTH( aCountsDomesticMultiplier: boolean;
                               const aQso: ContestExchange ): string;
 begin
    if aCountsDomesticMultiplier then
       begin
       if Settings.Contest.LiteralDomesticQth then
-         begin
-         Result := string( aQso.QTHString );
-         end
-      else if Settings.Contest.Name = 'LABRE' then
          begin
          Result := string( aQso.QTHString );
          end
@@ -705,16 +710,16 @@ begin
       begin
       Result := string( aQso.QTHString );
       end;
+end;
 
-   if LegacyContestOf( Contest ) in [ CUPRFCW, CUPRFSSB ] then
-      begin
-      Result := string( aQso.QTHString );
-      end;
-
-   if Settings.Contest.Name = 'EURASIA' then
-      begin
-      Result := string( aQso.QTHString );
-      end;
+(* THE PROGRAM AND ITS SITE, ONCE (2026-11-20). The 3830 report's
+  'SOFTWARE:' header and the summary sheet's 'SOFTWARE:' footer each spelled
+  the version and the site themselves; this is the text both print, and the
+  site is Version.TR4W_WEBSITE, the one spelling of it. Byte for byte what
+  both wrote before. Pinned by uTestTR4WWebsite. *)
+function SoftwareCredit: string;
+begin
+   Result := TR4W_CURRENTVERSION + ' ' + TR4W_WEBSITE;
 end;
 
 
@@ -1045,8 +1050,7 @@ procedure ExportTo3830Scores;
      Exit;
      end;
 
-  buf := sysutils.Format( 'SOFTWARE: %s https://tr4w.net'#13#10#13#10,
-     [ TR4W_CURRENTVERSION ] );
+  buf := 'SOFTWARE: ' + SoftwareCredit + #13#10#13#10;
   buf := buf + '3830Scores summary'#13#10#13#10;
 
   // Metadata from the Cabrillo Summary fields the operator saved, read
@@ -1190,8 +1194,7 @@ procedure WriteTitleBlockToSummarySheet;
      [ CQOpMode ] ) + '/' + IntToStr( tRestartInfo.riQSOByOpMode
      [ SearchAndPounceOpMode ] ) + ' Qs' + #13#10'      UNIQUE CALLSIGNS: ' +
      IntToStr( CallsignsList.GetTotalWorkedStations ) + #13#10 +
-     #13#10'            SOFTWARE: ' + TR4W_CURRENTVERSION +
-     ' https://tr4w.net'#13#10 );
+     #13#10'            SOFTWARE: ' + SoftwareCredit + #13#10 );
 
   end;
 
