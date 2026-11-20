@@ -43,6 +43,7 @@ type
       procedure Test_TennesseeCountyLineIsTwo;
       procedure Test_TennesseeK4TCGBonus;
       procedure Test_TennesseeRealEngineTakesDXInStateOnly;
+      procedure Test_TennesseeRefusesTheFTModes;
    end;
 
 implementation
@@ -212,8 +213,54 @@ begin
              'outside Tennessee the rule is not asked');
 end;
 
+(* "Phone-SSB, FM (no repeater QSOs) / CW / Digital (Any digital mode that
+   supports the required exchange)" -- NY4I, 2026-11-20: "That phrase about
+   supporting the exchange means FT8, FT4 nor FT2 are allowed." Every mode
+   and submode is walked; an FT QSO is an automatic X-QSO and scores
+   nothing, any other digital QSO scores its 3. *)
+procedure TContestTennesseeQPTests.Test_TennesseeRefusesTheFTModes;
+var
+   identity: TContestBase;
+   mode: ModeType;
+   ext: ExtendedModeType;
+   credited: boolean;
+   qso: ContestExchange;
+   inState: boolean;
+begin
+   BeginTest('Test_TennesseeRefusesTheFTModes');
+   identity := ContestIdentity(TENNESSEEQSOPARTY);
+   for mode := Low(ModeType) to High(ModeType) do
+      begin
+      for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
+         begin
+         credited := (mode in [CW, Phone, FM]) or
+                     ((mode = Digital) and not (ext in [eFT8, eFT4, eFT2]));
+         CheckTrue(identity.UsesMode(mode, ext) = credited,
+                   ModeStringArray[mode] + '/' + ExtendedModeStringArray[ext] +
+                   ': CW, phone, FM and every digital mode but FT8/FT4/FT2');
+         end;
+      end;
+   qso := Default(ContestExchange);
+   qso.ceRecordKind := rkQSO;
+   qso.Band := Band20;
+   qso.Mode := Digital;
+   qso.ExtMode := eFT8;
+   CheckTrue(QSOIsXQSO(identity, qso), 'FT8 is an X-QSO');
+   qso.ExtMode := eFT2;
+   CheckTrue(QSOIsXQSO(identity, qso), 'FT2 is');
+   qso.ExtMode := eJS8;
+   CheckFalse(QSOIsXQSO(identity, qso), 'JS8 is not');
+   for inState := False to True do
+      begin
+      CheckEquals(0, PartyPoints(TENNESSEEQSOPARTY, inState, Band20, Digital, eFT8), 'FT8 scores nothing');
+      CheckEquals(0, PartyPoints(TENNESSEEQSOPARTY, inState, Band20, Digital, eFT4), 'FT4 scores nothing');
+      CheckEquals(3, PartyPoints(TENNESSEEQSOPARTY, inState, Band20, Digital, ePSK31), 'PSK31 is 3');
+      end;
+end;
+
 procedure TContestTennesseeQPTests.RunAllTests;
 begin
+   Test_TennesseeRefusesTheFTModes;
    Test_TennesseeIsNoStateMultiplierInState;
    Test_TennesseePointsAreThreeInEveryMode;
    Test_TennesseeBands;

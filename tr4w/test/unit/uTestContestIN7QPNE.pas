@@ -408,6 +408,10 @@ begin
    CheckEquals(ScoreWith(INQSOPARTY, OutOfArea, QsoAt('INADA', Band20, Phone)),
                ScoreWith(IN7QPNE, OutOfArea, QsoAt('INADA', Band20, Phone)),
                'Indiana: the Indiana class''s answer');
+   (* Indiana credits no digital (NY4I, 2026-11-20): the Indiana component
+      refuses it, so an Indiana-judged digital QSO scores nothing here. *)
+   CheckEquals(0, ScoreWith(IN7QPNE, OutOfArea, QsoAt('INADA', Band20, Digital)),
+               'Indiana digital: refused by the Indiana component');
 
    (* 7QP: three on CW, two otherwise. *)
    CheckEquals(3, ScoreWith(IN7QPNE, OutOfArea, QsoAt('Azaph', Band40, CW)), '7QP CW');
@@ -415,6 +419,9 @@ begin
    CheckEquals(ScoreWith(SEVENQP, OutOfArea, QsoAt('Azaph', Band40, CW)),
                ScoreWith(IN7QPNE, OutOfArea, QsoAt('Azaph', Band40, CW)),
                '7QP: the 7QP class''s answer');
+   (* 7QP credits CW and SSB, not FM (NY4I, 2026-11-20). *)
+   CheckEquals(0, ScoreWith(IN7QPNE, OutOfArea, QsoAt('Azaph', Band10, FM)),
+               '7QP FM: refused by the 7QP component');
 
    (* NEW ENGLAND: two on CW and digital, one on phone -- the NEQP class's
       rule since its sponsor's 2026-10-23 text, which the composite follows

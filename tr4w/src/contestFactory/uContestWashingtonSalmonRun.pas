@@ -69,8 +69,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       "QSO POINTS  2 points for Phone  3 points for CW"
       "Contest Modes: Phone and CW. We cannot accept WJST modes (e.g.
        FT-8/FT-4) because they do not provide the proper exchange."
-  So CW 3 and phone 2, and DIGITAL 0 -- NY4I ruled 0 rather than refusing the
-  contact, which matches how TR4W treats any QSO a contest does not credit.
+  So CW 3 and phone 2. DIGITAL WAS SCORED 0 from NY4I's ruling of 2026-09-29;
+  since 2026-11-20 (NY4I: "Correct. Just CW and Phone.") it is REFUSED --
+  UsesMode, an automatic X-QSO: 0 points, no multiplier, no dupe slot, no
+  W7DX bonus.
 
   FM IS SCORED AS PHONE, 2, AND THAT IS THIS CLASS'S READING, NOT A RULING.
   The sponsor's modes are "Phone and CW"; FM is a phone emission, and 6 metres
@@ -136,14 +138,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   THE RECEIVED COLUMN of a DX station, for a Washington entrant, is its typed
     entity (CabrilloReceivedRSTDomesticQTHOrDXQTH).
 
-  NOT CHANGED, asked on #88: DIGITAL. "Contest Modes: Phone and CW. We cannot
-    accept WJST modes" -- NY4I's ruling of 2026-09-29 (above) scores digital 0
-    and does not refuse it, so a digital QSO still earns its county
-    multiplier and its dupe slot. The Q98 standard (a mode the contest does
-    not credit is UsesMode, an automatic X-QSO) would refuse it. A
-    single-mode entry's "contacts on modes other than the mode of entry may
-    not be counted" needs the entrant's CATEGORY-MODE in the QSO rule, which
-    UsesMode does not ask.
+  MODES -- "Contest Modes: Phone and CW. We cannot accept WJST modes" -- NY4I,
+    2026-11-20, asked on #88 whether digital should be an X-QSO rather than
+    score 0: "Correct. Just CW and Phone." UsesMode credits CW, phone and FM
+    (a phone emission, above) and refuses every digital submode. NOT BUILT:
+    a single-mode entry's "contacts on modes other than the mode of entry
+    may not be counted" needs the entrant's CATEGORY-MODE in the QSO rule,
+    which UsesMode does not ask.
 
   BOTH NAMES WERE BLANK UNTIL 2026-09-29, AND NY4I RULED BOTH.
 
@@ -244,6 +245,8 @@ type
    public
       (* 160-10 m and 6 m -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
+      (* CW and phone (FM is phone); no digital -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -468,6 +471,15 @@ begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10, Band6];
 end;
 
+(* "Contest Modes: Phone and CW" -- NY4I, 2026-11-20: "Just CW and Phone."
+   Any submode of CW, Phone or FM is credited (FM is a phone emission, the
+   header) and no submode of Digital is: a digital QSO is an automatic
+   X-QSO. An identity fact: no station is asked. *)
+function TContestWashingtonSalmonRun.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone, FM];
+end;
+
 function TContestWashingtonSalmonRun.GetCountyLineCountiesMax: integer;
 begin
    Result := 2;
@@ -493,7 +505,8 @@ begin
          end;
       else
          begin
-         (* Digital: "We cannot accept WJST modes" -- NY4I ruled 0. *)
+         (* Digital never reaches here since 2026-11-20 (UsesMode refuses
+            it); Both and NoMode are not modes a contact is made in. *)
          aQso.QSOPoints := 0;
          end;
       end;

@@ -75,8 +75,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     (no MultByBand, no MultByMode).
       out of state  northdakota_cty.dom: the 53 counties, each its own
                     multiplier.
-      in state      northdakota.dom: the 53 counties, then S50P13DC (the
-                    states, DC and the 13 Canadian provinces and territories).
+      in state      northdakota.dom: the 53 counties, then S50.DOM and DC.DOM
+                    (the states and DC), then the rules' own 13 "Canadian
+                    Abbreviations" written in the file (NY4I, 2026-11-20):
+                    AB BC LB MB NB NF NS NT ON PE QC SK YT. Labrador and
+                    Newfoundland are two multipliers; NL is read as NF, and
+                    Nunavut, not on the list, as NT (`Nu > Nt`) -- both
+                    readings, recorded in the file's header.
                     "49 states excluding North Dakota + DC": ND itself is
                     refused in CountsAsMultiplier, not by editing the shared S50.
                     "North Dakota stations may work DXCC countries for points
@@ -415,7 +420,7 @@ begin
 end;
 
 (* "49 states excluding North Dakota + DC": northdakota.dom includes the
-   shared S50P13DC.DOM, which holds Nd, so an in-state entrant's QSO whose
+   shared S50.DOM, which holds Nd, so an in-state entrant's QSO whose
    domestic multiplier is the host state earns no multiplier. The shared file
    is left alone. *)
 function TContestNorthDakotaQP.CountsAsMultiplier(const aQso: ContestExchange;

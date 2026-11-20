@@ -50,9 +50,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   DC (audit 2026-11-20): "The other 49 U.S. states (District of Columbia
   counts as Maryland)" -- in.dom maps `Dc > Md = DC` before S50.DOM, as
   Illinois does; until then a typed DC was refused as an improper QTH.
-  MODES -- the rules name CW and phone only ("once in each mode (CW/phone)")
-  and say nothing of digital; the class credits every mode (question for
-  NY4I, left as it was).
+  MODES -- the rules name CW and phone only ("once in each mode (CW/phone)").
+  NY4I, 2026-11-20: "Digital not allowed". UsesMode credits CW and phone (FM
+  is phone); a digital QSO is an automatic X-QSO.
  *)
 unit uContestIndianaQP;
 
@@ -128,6 +128,8 @@ type
    public
       (* 160 to 10 m without WARC -- the header. *)
       function UsesBand(aBand: BandType): boolean; override;
+      (* CW and phone (FM is phone); no digital -- the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
          this contest (4.116.5), moved here at M8: a multiplier QTH of 'DX'
          earns no multiplier of any kind. IN ANY CASE since Q84 (NY4I,
@@ -284,6 +286,14 @@ end;
 function TContestIndianaQP.UsesBand(aBand: BandType): boolean;
 begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* "once in each mode (CW/phone)"; NY4I, 2026-11-20: "Digital not
+   allowed". Any submode of CW, Phone or FM is credited and no submode of
+   Digital is. An identity fact: no station is asked. *)
+function TContestIndianaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone, FM];
 end;
 
 (* MULTIPLIERS ONCE PER MODE -- #88 round 3 (2026-10-26): "Multipliers

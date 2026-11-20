@@ -142,7 +142,7 @@ const
       Labrador, MB Manitoba, NB New Brunswick, NF Newfoundland, NS Nova
       Scotia, NT Northwest Territory, ON Ontario, PE Prince Edward Is., QC
       Quebec, SK Saskatchewan, YT Yukon Territory" -- every one the rules
-      list is accepted. *)
+      list is accepted, and is its own multiplier (NY4I, 2026-11-20). *)
    RULES_CANADIAN: array[0..12] of string = (
       'AB', 'BC', 'LB', 'MB', 'NB', 'NF', 'NS', 'NT', 'ON', 'PE', 'QC', 'SK', 'YT');
 
@@ -493,21 +493,23 @@ begin
    CheckEquals('HI', InStateMultiplierOf(h, 'HI'), 'Hawaii is');
    CheckEquals('DC', InStateMultiplierOf(h, 'DC'), '"+ DC": its own multiplier');
    CheckEquals('ON', InStateMultiplierOf(h, 'ON'), 'Ontario is');
-   CheckEquals('NU', InStateMultiplierOf(h, 'NU'), 'Nunavut is ("3 Canadian Territories")');
-   (* NEWFOUNDLAND AND LABRADOR: the standard NL, and the rules' own NF and
-      LB, are ONE multiplier. NL was refused for an ND entrant until
-      2026-10-26 -- S50P13DC.DOM's Newfoundland entry knew NF, LB and LAB
-      but not NL. *)
-   CheckEquals('NL', InStateMultiplierOf(h, 'NL'), 'Newfoundland and Labrador, as NL, is');
-   CheckEquals('NL', InStateMultiplierOf(h, 'NF'), 'NF is the SAME multiplier');
-   CheckEquals('NL', InStateMultiplierOf(h, 'LB'), 'and so is LB');
-   (* P13.DOM also spells Newfoundland LA. S50.DOM is included first and the
-      first alias added wins, so LA stays Louisiana. *)
+   (* THE RULES' 13 "Canadian Abbreviations" (NY4I, 2026-11-20): LB and NF
+      are TWO multipliers, and Nunavut is not on the list -- it was part of
+      the Northwest Territories, so NU counts as NT (a reading, recorded in
+      northdakota.dom). The combined NL, refused for an ND entrant until
+      2026-10-26, is read as NF. *)
+   CheckEquals('NT', InStateMultiplierOf(h, 'NU'), 'Nunavut counts as NT');
+   CheckEquals('NF', InStateMultiplierOf(h, 'NF'), 'Newfoundland is NF');
+   CheckEquals('LB', InStateMultiplierOf(h, 'LB'), 'Labrador is LB, its own multiplier');
+   CheckEquals('NF', InStateMultiplierOf(h, 'NL'), 'NL is read as Newfoundland');
+   CheckEquals('YT', InStateMultiplierOf(h, 'YT'), 'Yukon is YT');
+   (* S50.DOM is included first and the first alias added wins, so LA stays
+      Louisiana. *)
    CheckEquals('LA', InStateMultiplierOf(h, 'LA'), 'LA is Louisiana, not Labrador');
    for i := Low(RULES_CANADIAN) to High(RULES_CANADIAN) do
       begin
-      CheckTrue(InStateMultiplierOf(h, RULES_CANADIAN[i]) <> '',
-                'the rules'' Canadian abbreviation ' + RULES_CANADIAN[i] + ' is known');
+      CheckEquals(RULES_CANADIAN[i], InStateMultiplierOf(h, RULES_CANADIAN[i]),
+                  'the rules'' ' + RULES_CANADIAN[i] + ' is its own multiplier');
       end;
 
    (* "49 states excluding North Dakota": the shared file gives ND its
@@ -519,7 +521,8 @@ begin
    CheckTrue(CountsForEntrant(h, True, InStateMultiplierOf(h, 'MN'), rmDomestic), 'Minnesota counts');
    CheckTrue(CountsForEntrant(h, True, InStateMultiplierOf(h, 'CSS'), rmDomestic), 'a county counts');
    CheckTrue(CountsForEntrant(h, True, InStateMultiplierOf(h, 'DC'), rmDomestic), 'DC counts');
-   CheckTrue(CountsForEntrant(h, True, InStateMultiplierOf(h, 'NU'), rmDomestic), 'Nunavut counts');
+   CheckTrue(CountsForEntrant(h, True, InStateMultiplierOf(h, 'NU'), rmDomestic), 'Nunavut counts (as NT)');
+   CheckTrue(CountsForEntrant(h, True, InStateMultiplierOf(h, 'LB'), rmDomestic), 'Labrador counts');
    CheckTrue(CountsForEntrant(h, False, host, rmDomestic),
              'outside ND the in-state rule is not asked (the host-area rule is)');
 
@@ -803,14 +806,14 @@ end;
 
 (* northdakota.dom, read as text: the header holds no '=' (the loader has no
    comment syntax, so a header line holding '=' would be a multiplier); the
-   counties first, then S50.DOM, DC.DOM and P13.DOM -- S50 BEFORE P13,
-   because P13 also spells Newfoundland LA and the first alias added wins;
-   each INCLUDE spelt so the loader follows it; and ONE entry of its own,
-   Nl = NF,LB, so the rules' NF and LB are the standard NL.
-   Then loaded through the real loader: 53 counties + 50 states + DC + 13
-   provinces and territories = 117 multipliers (the Nl line adds aliases to
-   P13's Nl, not a multiplier), North Dakota among them, which the class
-   refuses -- the rules' "116 Total Multipliers". *)
+   counties first, then S50.DOM and DC.DOM, each INCLUDE spelt so the loader
+   follows it; then the rules' 13 Canadian abbreviations as entries of its
+   own (NY4I, 2026-11-20 -- P13.DOM is no longer included: it has neither LB
+   nor NF), and `Nu > Nt`, Nunavut counted as NT.
+   Then loaded through the real loader: 53 counties + 50 states + DC + the
+   13 = 117 multipliers (Nunavut adds a QTH, not a multiplier), North Dakota
+   among them, which the class refuses -- the rules' "116 Total
+   Multipliers". *)
 procedure TContestNorthDakotaQPTests.Test_NorthDakotaInStateFileIsTheRulesMultipliers;
 var
    lines: TStringList;
@@ -855,9 +858,23 @@ begin
                end;
             end;
          end;
-      CheckEquals('NORTHDAKOTA_CTY.DOM S50.DOM DC.DOM P13.DOM ', includes,
-                  'the counties first, then the states, DC, and the provinces after the states');
-      CheckEquals('Nl = NF,LB|', entries, 'one entry of its own: NF and LB are NL');
+      CheckEquals('NORTHDAKOTA_CTY.DOM S50.DOM DC.DOM ', includes,
+                  'the counties first, then the states and DC');
+      CheckEquals('Ab = VE6,AB,ALB,ALT,^Alberta|' +
+                  'Bc = VE7,BC,^British Columbia|' +
+                  'Lb = VO2,LB,LAB,^Labrador|' +
+                  'Mb = VE4,MB,MAN,^Manitoba|' +
+                  'Nb = VE9,NB,^New Brunswick|' +
+                  'Nf = VO1,NF,NL,^Newfoundland|' +
+                  'Ns = VE1,NS,^Nova Scotia|' +
+                  'Nt = VE8,NT,NW,NWT,^Northwest Territory|' +
+                  'On = VE3,ON,ONT,^Ontario|' +
+                  'Pe = VY2,PE,PEI,^Prince Edward Is.|' +
+                  'Qc = VE2,QC,QUE,QU,PQ,^Quebec|' +
+                  'Sk = VE5,SK,SAS,SASK,^Saskatchewan|' +
+                  'Yt = VY1,YT,YK,YU,^Yukon Territory|' +
+                  'Nu > Nt = VY0,NU|',
+                  entries, 'the rules'' 13 Canadian abbreviations, then Nunavut as NT');
    finally
       lines.Free;
    end;
@@ -876,9 +893,11 @@ begin
                  'and the class refuses it: 117 - 1 = the rules'' 116');
       CheckEquals('CSS', MultiplierOf(table, 'CSS'),
                   'the counties are loaded first, so a county keeps its own code');
-      CheckEquals('NL', MultiplierOf(table, 'NL'), 'NL is Newfoundland and Labrador');
-      CheckEquals('NL', MultiplierOf(table, 'NF'), 'and NF is the same multiplier');
-      CheckEquals('NL', MultiplierOf(table, 'LB'), 'and LB');
+      CheckEquals('NF', MultiplierOf(table, 'NL'), 'NL is read as Newfoundland');
+      CheckEquals('NF', MultiplierOf(table, 'NF'), 'NF is Newfoundland');
+      CheckEquals('LB', MultiplierOf(table, 'LB'), 'and LB is Labrador, its own multiplier');
+      CheckEquals('NT', MultiplierOf(table, 'NU'), 'Nunavut counts as NT');
+      CheckEquals('NU', QTHOf(table, 'NU'), 'and keeps its own QTH');
       CheckEquals('LA', MultiplierOf(table, 'LA'), 'LA is Louisiana');
       CheckEquals('DC', MultiplierOf(table, 'DC'), 'DC is its own multiplier');
    finally
@@ -1326,21 +1345,28 @@ begin
 
       dupe := EnterPartyQSO('VY0AAA', '599 NU', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 NU is taken: ' + string(ExchangeErrorMessage));
-      CheckTrue(rx.DomesticMult, 'Nunavut is a new multiplier');
+      CheckEquals('NT', UpperCase(string(rx.DomMultQTH)),
+                  'Nunavut counts as NT (not on the rules'' 13)');
+      CheckTrue(rx.DomesticMult, 'NT, through Nunavut, is a new multiplier');
+      dupe := EnterPartyQSO('VE8AAA', '599 NT', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted, '599 NT is taken: ' + string(ExchangeErrorMessage));
+      CheckFalse(rx.DomesticMult, 'the Northwest Territories after Nunavut: no new multiplier');
 
-      (* THE STANDARD NL -- refused for an ND entrant until 2026-10-26. *)
+      (* THE RULES' 13 (NY4I, 2026-11-20): NF and LB are two multipliers.
+         The combined NL -- refused for an ND entrant until 2026-10-26 -- is
+         read as Newfoundland. *)
       dupe := EnterPartyQSO('VO1AAA', '599 NL', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 NL is taken: ' + string(ExchangeErrorMessage));
-      CheckEquals('NL', UpperCase(string(rx.DomMultQTH)), 'NL is Newfoundland and Labrador');
-      CheckTrue(rx.DomesticMult, 'Newfoundland and Labrador is a new multiplier');
+      CheckEquals('NF', UpperCase(string(rx.DomMultQTH)), 'NL is read as Newfoundland');
+      CheckTrue(rx.DomesticMult, 'Newfoundland is a new multiplier');
       dupe := EnterPartyQSO('VO1BBB', '599 NF', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 NF is taken: ' + string(ExchangeErrorMessage));
-      CheckEquals('NL', UpperCase(string(rx.DomMultQTH)), 'NF is the same');
+      CheckEquals('NF', UpperCase(string(rx.DomMultQTH)), 'NF is the same');
       CheckFalse(rx.DomesticMult, 'so no new multiplier');
       dupe := EnterPartyQSO('VO2AAA', '599 LB', Band20, CW, eCW, accepted, rx);
       CheckTrue(accepted, '599 LB is taken: ' + string(ExchangeErrorMessage));
-      CheckEquals('NL', UpperCase(string(rx.DomMultQTH)), 'Labrador is Newfoundland and Labrador');
-      CheckFalse(rx.DomesticMult, 'so no new multiplier');
+      CheckEquals('LB', UpperCase(string(rx.DomMultQTH)), 'Labrador is LB');
+      CheckTrue(rx.DomesticMult, 'Labrador is its own multiplier');
 
       (* "North Dakota stations may work DXCC countries for points only - no
          multipliers." *)

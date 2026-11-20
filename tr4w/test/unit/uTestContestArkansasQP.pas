@@ -94,8 +94,12 @@ begin
             begin
             for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
                begin
+               (* CW, phone, FM and every digital submode but FT8, FT4 and
+                  FT2 (NY4I, 2026-11-20: a mode that cannot carry the
+                  exchange is refused -- an automatic X-QSO, 0 points). *)
                expected := 0;
-               if mode in [CW, Phone, FM, Digital] then
+               if (mode in [CW, Phone, FM]) or
+                  ((mode = Digital) and not (ext in [eFT8, eFT4, eFT2])) then
                   begin
                   expected := 1;
                   end;

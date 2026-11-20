@@ -142,7 +142,8 @@ end;
 
 (* "Any computer-to-computer mode is considered digital. WSJT modes do not
    support the 7QP exchange, so are not allowed." Every mode and submode is
-   walked: CW, phone and FM whole, digital but the WSJT-X ones; a refused QSO
+   walked: CW and phone whole, digital but the WSJT-X ones, and no FM (NY4I,
+   2026-11-20: "Just CW and SSB" -- the FM question); a refused QSO
    is an automatic X-QSO and scores nothing, an allowed digital one scores
    the sponsor's 4. *)
 procedure TContestSevenQPTests.Test_SevenQPRefusesTheWSJTModes;
@@ -178,12 +179,12 @@ begin
       begin
       for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
          begin
-         credited := (mode in [CW, Phone, FM]) or
+         credited := (mode in [CW, Phone]) or
                      ((mode = Digital) and
                       not (ext in [eFT8, eFT4, eFT2, eJT65, eFST4, eFST4W]));
          CheckTrue(identity.UsesMode(mode, ext) = credited,
                    ModeStringArray[mode] + '/' + ExtendedModeStringArray[ext] +
-                   ': every mode but the WSJT ones');
+                   ': CW, phone and every digital mode but the WSJT ones');
          end;
       end;
    qso := Default(ContestExchange);
@@ -196,6 +197,9 @@ begin
    CheckTrue(QSOIsXQSO(identity, qso), 'JT65 is');
    qso.ExtMode := eRTTY;
    CheckFalse(QSOIsXQSO(identity, qso), 'RTTY is not');
+   qso.Mode := FM;
+   qso.ExtMode := eFM;
+   CheckTrue(QSOIsXQSO(identity, qso), 'FM is an X-QSO');
    contestObject := Make(SEVENQP, Entrant(True));
    try
       CheckEquals(0, PointsIn(eFT8), 'FT8 scores nothing');

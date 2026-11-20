@@ -21,7 +21,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 (* ARKANSAS QSO PARTY -- #115, current sponsor rules fetched 2026-11-13.
   Sources/transcription: docs/ContestRules/QSOParties/Arkansas/.
-  160/80/40/20/15/10/6/2 m; CW/phone/digital with full report/location.
+  160/80/40/20/15/10/6/2 m; CW/phone/digital with full report/location --
+  no FT8/FT4/FT2, which cannot carry it (NY4I, 2026-11-20; UsesMode).
   Fixed entrants earn one point in every mode. Dupes per band/mode/county;
   digital submodes share a group, FM is phone. No repeater contacts.
   Multipliers overall: outside AR, 75 counties; inside, 75 counties plus
@@ -252,9 +253,29 @@ begin
    Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10, Band6, Band2];
 end;
 
+(* "DIGITAL (Any digital mode is acceptable if the proper exchange can be
+   accomplished and properly logged. This is not possible with some digital
+   modes." NY4I, 2026-11-20, on the same phrasing in Tennessee's rules: a
+   mode that "supports the required exchange" is NOT FT8, FT4 or FT2. So CW,
+   phone (FM is phone) and every digital submode but FT_SUBMODES; an FT QSO
+   is an automatic X-QSO. eNoMode and the generic data modes mean "some
+   submode" and are credited. *)
 function TContestArkansasQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
-   Result := aMode in [CW, Phone, FM, Digital];
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 function TContestArkansasQP.CQExchangeDefault(const aStation: TStationContext): string;

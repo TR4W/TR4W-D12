@@ -1,14 +1,28 @@
 Entries for the North Dakota QSO Party used by in-state stations
-The 53 North Dakota counties (each its own multiplier), then the 50 states, DC and the 13 Canadian provinces and territories.
+The 53 North Dakota counties (each its own multiplier), then the 50 states, DC and the rules' 13 Canadian abbreviations.
 North Dakota itself is not a multiplier for an in-state entrant: the class refuses it (49 states excluding North Dakota).
 DXCC countries count for points only, never as a multiplier, so there is no DX entry.
-NL, NF and LB all resolve to Newfoundland and Labrador (NL): P13 knows NL, and the last line adds the rules' NF and LB.
-S50 is included BEFORE P13: P13 also spells Newfoundland LA, and the first alias added wins, so LA stays Louisiana.
+The 13 are the rules' own list (NY4I, 2026-11-20): AB BC LB MB NB NF NS NT ON PE QC SK YT.
+Labrador (LB) and Newfoundland (NF) are TWO multipliers; the combined spelling NL is taken as Newfoundland.
+Nunavut is not on the list: it was part of the Northwest Territories, so NU keeps its own QTH and counts as NT.
+The provinces are written here, not taken from P13, which has no LB or NF and spells Newfoundland LA.
 No line of this header may hold an equals sign: the reader takes any such line as an entry.
 https://ndarrlsection.com
 
 INCLUDE FILE northdakota_cty.dom
 INCLUDE FILE S50.DOM
 INCLUDE FILE DC.DOM
-INCLUDE FILE P13.DOM
-Nl = NF,LB
+Ab = VE6,AB,ALB,ALT,^Alberta
+Bc = VE7,BC,^British Columbia
+Lb = VO2,LB,LAB,^Labrador
+Mb = VE4,MB,MAN,^Manitoba
+Nb = VE9,NB,^New Brunswick
+Nf = VO1,NF,NL,^Newfoundland
+Ns = VE1,NS,^Nova Scotia
+Nt = VE8,NT,NW,NWT,^Northwest Territory
+On = VE3,ON,ONT,^Ontario
+Pe = VY2,PE,PEI,^Prince Edward Is.
+Qc = VE2,QC,QUE,QU,PQ,^Quebec
+Sk = VE5,SK,SAS,SASK,^Saskatchewan
+Yt = VY1,YT,YK,YU,^Yukon Territory
+Nu > Nt = VY0,NU
