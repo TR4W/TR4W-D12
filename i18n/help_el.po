@@ -157,8 +157,8 @@ msgstr "Πότε FALSE, οι εγγραφές CQ δεν θα εμφανίζον�
 #. Config command: BAND MAP DISPLAY LIMIT   (default: 164)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
-msgid "This parameter allows you to limit the number of spots the bandmap will display. Above the limit the displayed spots will be centred on the operating frequency. The value must be an even number between 30 and 1000."
-msgstr "Αυτή η παράμετρος σας επιτρέπει να περιορίσετε τον αριθμό των σημείων που θα εμφανίζει ο χάρτης ζώνης. Πάνω από το όριο τα εμφανιζόμενα σημεία θα επικεντρώνονται στη συχνότητα λειτουργίας. Η τιμή πρέπει να είναι άρτιος αριθμός μεταξύ 30 και 1000."
+msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
+msgstr ""
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
@@ -178,11 +178,11 @@ msgctxt "TC_HELP_BAND_MAP_ENABLE"
 msgid "Determines whether the bandmap is displayed. See section 6.13 for more information. If you start TR4W with the bandmap disabled, you will have to restart the program for it to be in the correct video mode to display the bandmap."
 msgstr "Καθορίζει αν εμφανίζεται ο χάρτης ζώνης. Βλ. παράγραφο 6.13 για περισσότερες πληροφορίες. Αν ξεκινήσετε το TR4W με το bandmap απενεργοποιημένο, θα πρέπει να επανεκκινήσετε το πρόγραμμα για να είναι στη σωστή λειτουργία βίντεο για την εμφάνιση του bandmap."
 
-#. Config command: BAND MAP GUARD BAND   (default: 200)
+#. Config command: BAND MAP GUARD BAND   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
-msgid "Values: Integer (Hz). The bandmap will indicate if a displayed entry is near the frequency of your interfaced radio by causing the appropriate entry to highlight."
-msgstr "Τιμές: Ακέραιος (Hz). Ο χάρτης ζώνης θα δείξει αν μια εμφανιζόμενη καταχώρηση είναι κοντά στη συχνότητα του διεπαφών ραδιοφώνου σας προκαλώντας την κατάλληλη καταχώρηση για να τονίσει."
+msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
+msgstr ""
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 #, fuzzy
@@ -241,7 +241,7 @@ msgstr "Μπορείτε να επιλέξετε την μπάντα στην ο
 #. Config command: BAND MAP VFO MARKER COLOR   (default: RED)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
-msgid "The colour of the band map's VFO marker. The marker itself is not drawn yet, so this setting has no visible effect today. Set it on the Colors page of Preferences."
+msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
 msgstr ""
 
 #. Config command: BEEP ENABLE   (default: TRUE)

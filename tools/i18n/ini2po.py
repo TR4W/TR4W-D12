@@ -136,6 +136,21 @@ ENGLISH_CORRECTIONS = {
       "accepted and ignored. Set QUICK QSL CW MESSAGE instead.",
    "QUICK QSL SSB MESSAGE":
       "Short SSB voice acknowledgement message. Programmed via Alt+P.",
+   # Issue 65 (2026-11-19): the band map now draws the guard band and the
+   # nearest-spot outline, and DISPLAY LIMIT became a ceiling on what fits.
+   # The ini's DEFAULT=200 for GUARD BAND is wrong too (the code's default is
+   # 0); this dict carries descriptions only, so the text states the default.
+   "BAND MAP DISPLAY LIMIT":
+      "The most spots the band map will show, from 30 to 1000. The map shows "
+      "the smaller of this and the number that fit in its window, rounded down "
+      "to an even number and centred on the radio's frequency, so resizing the "
+      "window re-centres the map on the radio.",
+   "BAND MAP GUARD BAND":
+      "Values: Integer (Hz), default 0. A spot within this many Hz of your "
+      "interfaced radio's frequency has its frequency field drawn in BAND MAP "
+      "VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is "
+      "highlighted. The outline round the spot nearest the radio is drawn "
+      "whatever this is set to.",
 }
 
 

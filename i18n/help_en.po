@@ -132,8 +132,8 @@ msgstr "When FALSE, CQ entries will not appear in the band map."
 
 #. Config command: BAND MAP DISPLAY LIMIT   (default: 164)
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
-msgid "This parameter allows you to limit the number of spots the bandmap will display. Above the limit the displayed spots will be centred on the operating frequency. The value must be an even number between 30 and 1000."
-msgstr "This parameter allows you to limit the number of spots the bandmap will display. Above the limit the displayed spots will be centred on the operating frequency. The value must be an even number between 30 and 1000."
+msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
+msgstr "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
@@ -150,10 +150,10 @@ msgctxt "TC_HELP_BAND_MAP_ENABLE"
 msgid "Determines whether the bandmap is displayed. See section 6.13 for more information. If you start TR4W with the bandmap disabled, you will have to restart the program for it to be in the correct video mode to display the bandmap."
 msgstr "Determines whether the bandmap is displayed. See section 6.13 for more information. If you start TR4W with the bandmap disabled, you will have to restart the program for it to be in the correct video mode to display the bandmap."
 
-#. Config command: BAND MAP GUARD BAND   (default: 200)
+#. Config command: BAND MAP GUARD BAND   (default: 0)
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
-msgid "Values: Integer (Hz). The bandmap will indicate if a displayed entry is near the frequency of your interfaced radio by causing the appropriate entry to highlight."
-msgstr "Values: Integer (Hz). The bandmap will indicate if a displayed entry is near the frequency of your interfaced radio by causing the appropriate entry to highlight."
+msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
+msgstr "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 msgctxt "TC_HELP_BAND_MAP_ITEM_HEIGHT"
@@ -202,8 +202,8 @@ msgstr "You can select the band on which TR4W will start if no contacts have yet
 
 #. Config command: BAND MAP VFO MARKER COLOR   (default: RED)
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
-msgid "The colour of the band map's VFO marker. The marker itself is not drawn yet, so this setting has no visible effect today. Set it on the Colors page of Preferences."
-msgstr "The colour of the band map's VFO marker. The marker itself is not drawn yet, so this setting has no visible effect today. Set it on the Colors page of Preferences."
+msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
+msgstr "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 msgctxt "TC_HELP_BEEP_ENABLE"

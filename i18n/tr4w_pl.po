@@ -15564,7 +15564,7 @@ msgstr ""
 
 #: usettingscaptions.rs_bandmap_vfomarkercolor
 #, fuzzy
-msgid "Band map VFO marker (not drawn yet)"
+msgid "Band map VFO marker (nearest spot and guard band)"
 msgstr ""
 
 #: usettingscaptions.rs_cluster_ctrlj_autoselfspot
@@ -15595,4 +15595,44 @@ msgstr ""
 #: tfrmrover.btnoff.caption
 #, fuzzy
 msgid "Rover off"
+msgstr ""
+
+#: uappstrings.spostrepostrefused
+#, fuzzy
+msgid "the server answered the upload with a redirect (status %d) to %s and it was not repeated: %s"
+msgstr ""
+
+#: uappstrings.srepostbadlocation
+#, fuzzy
+msgid "the redirect address is not usable."
+msgstr ""
+
+#: uappstrings.srepostdowngrade
+#, fuzzy
+msgid "the redirect leads from https to plain http, which is never followed."
+msgstr ""
+
+#: uappstrings.srepostnolocation
+#, fuzzy
+msgid "the redirect named no address."
+msgstr ""
+
+#: uappstrings.srepostotherhost
+#, fuzzy
+msgid "the redirect leads to a different host or port, and the upload carries a key that only the original server may see."
+msgstr ""
+
+#: uappstrings.srepostseeother
+#, fuzzy
+msgid "status 303 means the upload was handled and the result is at that address; TR4W does not send it again."
+msgstr ""
+
+#: uappstrings.sreposttoomany
+#, fuzzy
+msgid "the server redirected the upload more than %d times."
+msgstr ""
+
+#: utr4wstrings.tc_cabrilloperactivation
+#, fuzzy
+msgid "This contest takes a separate Cabrillo log for each activation: %d files were written (%s). Each claims the whole log's score."
 msgstr ""

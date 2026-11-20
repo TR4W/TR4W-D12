@@ -157,8 +157,8 @@ msgstr "시간 : FALSE, CQ 항목은 밴드 맵에 나타나지 않습니다."
 #. Config command: BAND MAP DISPLAY LIMIT   (default: 164)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
-msgid "This parameter allows you to limit the number of spots the bandmap will display. Above the limit the displayed spots will be centred on the operating frequency. The value must be an even number between 30 and 1000."
-msgstr "이 매개 변수를 사용하면 붕소 맵의 수를 제한 할 수 있습니다. 한계의 위 표시된 반점은 작동 빈도에 집중될 것입니다. 값은 30과 1000 사이의 숫자가 있어야 합니다."
+msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
+msgstr ""
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
@@ -178,11 +178,11 @@ msgctxt "TC_HELP_BAND_MAP_ENABLE"
 msgid "Determines whether the bandmap is displayed. See section 6.13 for more information. If you start TR4W with the bandmap disabled, you will have to restart the program for it to be in the correct video mode to display the bandmap."
 msgstr "Bandmap이 표시된지 결정합니다. 더 많은 정보를 위한 단면도 6.13를 보십시오. Bandmap을 사용하지 않고 TR4W를 시작하면, Bandmap을 표시하기 위해 올바른 비디오 모드에 있어야합니다."
 
-#. Config command: BAND MAP GUARD BAND   (default: 200)
+#. Config command: BAND MAP GUARD BAND   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
-msgid "Values: Integer (Hz). The bandmap will indicate if a displayed entry is near the frequency of your interfaced radio by causing the appropriate entry to highlight."
-msgstr "가치: 정수 (Hz). Bandmap은 표시된 항목이 인터페이스 된 라디오의 주파수 근처에 있는지 나타냅니다."
+msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
+msgstr ""
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 #, fuzzy
@@ -241,7 +241,7 @@ msgstr "TR4W의 밴드를 선택하면 접촉이 아직 제작되지 않은 경�
 #. Config command: BAND MAP VFO MARKER COLOR   (default: RED)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
-msgid "The colour of the band map's VFO marker. The marker itself is not drawn yet, so this setting has no visible effect today. Set it on the Colors page of Preferences."
+msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
 msgstr ""
 
 #. Config command: BEEP ENABLE   (default: TRUE)

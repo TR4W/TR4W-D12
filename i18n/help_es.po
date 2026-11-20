@@ -134,9 +134,12 @@ msgctxt "TC_HELP_BAND_MAP_DISPLAY_CQ"
 msgid "When FALSE, CQ entries will not appear in the band map."
 msgstr "Cuando es FALSE, las entradas de CQ no aparecerán en el bandmap."
 
+# 2026-11-19: the English was reworded (issue 65); this translates the previous English, shown on the #| line
 #. Config command: BAND MAP DISPLAY LIMIT   (default: 164)
+#, fuzzy
+#| msgid "This parameter allows you to limit the number of spots the bandmap will display. Above the limit the displayed spots will be centred on the operating frequency. The value must be an even number between 30 and 1000."
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
-msgid "This parameter allows you to limit the number of spots the bandmap will display. Above the limit the displayed spots will be centred on the operating frequency. The value must be an even number between 30 and 1000."
+msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
 msgstr "Este parámetro le permite limitar el número de spots que mostrará el bandmap. Por encima del límite, los spots mostrados se centrarán en la frecuencia de operación. El valor debe ser un número par entre 30 y 1000."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
@@ -155,9 +158,12 @@ msgctxt "TC_HELP_BAND_MAP_ENABLE"
 msgid "Determines whether the bandmap is displayed. See section 6.13 for more information. If you start TR4W with the bandmap disabled, you will have to restart the program for it to be in the correct video mode to display the bandmap."
 msgstr "Determina si se muestra el bandmap. Véase la sección 6.13 para más información. Si inicia TR4W con el bandmap desactivado, tendrá que reiniciar el programa para que esté en el modo de vídeo correcto para mostrar el bandmap."
 
-#. Config command: BAND MAP GUARD BAND   (default: 200)
+# 2026-11-19: the English was reworded (issue 65); this translates the previous English, shown on the #| line
+#. Config command: BAND MAP GUARD BAND   (default: 0)
+#, fuzzy
+#| msgid "Values: Integer (Hz). The bandmap will indicate if a displayed entry is near the frequency of your interfaced radio by causing the appropriate entry to highlight."
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
-msgid "Values: Integer (Hz). The bandmap will indicate if a displayed entry is near the frequency of your interfaced radio by causing the appropriate entry to highlight."
+msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
 msgstr "Valores: entero (Hz). El bandmap indicará si una entrada mostrada está cerca de la frecuencia de su radio conectada resaltando la entrada correspondiente."
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
@@ -211,7 +217,7 @@ msgstr "Puede seleccionar la banda en la que TR4W se iniciará si aún no se ha 
 #. Config command: BAND MAP VFO MARKER COLOR   (default: RED)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
-msgid "The colour of the band map's VFO marker. The marker itself is not drawn yet, so this setting has no visible effect today. Set it on the Colors page of Preferences."
+msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
 msgstr ""
 
 #. Config command: BEEP ENABLE   (default: TRUE)
