@@ -60,7 +60,9 @@ unit uContestARRLRTTYRoundup;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestARRLRTTYRoundup = class(TContestBase)
@@ -130,6 +132,17 @@ type
    protected
       (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
       function GetSubmitsLogToARRL: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE STATE, PROVINCE OR SECTION -- the site file ARRL-RTTY carries Call, Exch1,
+         UserText (read 2026-11-20; 100% of rows). A few DX rows hold a country
+         NAME where the log would remember nothing (a DX station sends a serial).
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -349,6 +362,16 @@ end;
 function TContestARRLRTTYRoundup.GetSubmitsLogToARRL: boolean;
 begin
    Result := True;
+end;
+
+function TContestARRLRTTYRoundup.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestARRLRTTYRoundup.CallHistorySiteName: string;
+begin
+   Result := 'ARRL-RTTY';
 end;
 
 initialization

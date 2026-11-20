@@ -56,7 +56,9 @@ unit uContestTexasQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestTexasQP = class(TContestStateQSOPartyBase)
@@ -145,6 +147,18 @@ type
          #88 round 3 (2026-10-26). See the implementation. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_TX carries Call, Exch1, UserText
+         (read 2026-11-20): the county code the station sent (or its state, or
+         a DX prefix), which the log remembers as the QTH alone. Its county
+         codes were checked against this party's own county file: 101 of 104 non-state values are in texas_cty, the rest DX prefixes.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -407,6 +421,16 @@ function TContestTexasQP.CountsAsMultiplier(const aQso: ContestExchange;
 begin
    Result := not (Station.InHostState and
                   DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
+end;
+
+function TContestTexasQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestTexasQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_TX';
 end;
 
 initialization

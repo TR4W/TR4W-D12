@@ -31,7 +31,9 @@ unit uContestNASprintRTTY;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestNASprintRTTY = class(TContestBase)
@@ -96,6 +98,18 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         NAME THEN STATE -- the site file NA-SPRINT-CW carries Call, Name, State,
+         UserText (read 2026-11-20, 75.9% of rows carry both); the log
+         remembers a worked station as the Name, a blank, the QTH. The site
+         names the other Sprint the same way: INFERRED, not sampled.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -304,6 +318,16 @@ end;
 function TContestNASprintRTTY.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+function TContestNASprintRTTY.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfName, chfState]);
+end;
+
+function TContestNASprintRTTY.CallHistorySiteName: string;
+begin
+   Result := 'NA-SPRINT-RTTY';
 end;
 
 initialization

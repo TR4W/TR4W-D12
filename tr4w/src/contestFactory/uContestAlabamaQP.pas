@@ -52,7 +52,9 @@ unit uContestAlabamaQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    AL_QSO_PARTY_CONTEST_ID = 'AL-QSO-PARTY';
@@ -99,6 +101,18 @@ type
       function DXMultiplierKey(const aQso: ContestExchange;
          out aKey: DXMultiplierString): boolean; override;
       function CountryMode: CountryModeType; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_AL carries Call, Exch1, UserText
+         (read 2026-11-20): the county code the station sent (or its state, or
+         a DX prefix), which the log remembers as the QTH alone. Its county
+         codes were checked against this party's own county file: 32 of 33 codes are in alabama_cty.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -280,6 +294,16 @@ function TContestAlabamaQP.AdditionalDomesticMultiplierKey(const aQso: ContestEx
 begin
    (* A county also earns AL, in state -- the header (#317). *)
    Result := InStateCountyEarnsHostState(aQso, aKey);
+end;
+
+function TContestAlabamaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestAlabamaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_AL';
 end;
 
 initialization

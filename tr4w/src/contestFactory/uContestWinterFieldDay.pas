@@ -74,7 +74,9 @@ unit uContestWinterFieldDay;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestWinterFieldDay = class(TContestBase)
@@ -183,6 +185,17 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE CLASS THEN THE SECTION -- the site file WFD carries Call, Exch1, Sect, UserText
+         (read 2026-11-20, 72.7% of rows carry both); the log remembers the
+         class, a blank, the QTH.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -614,6 +627,16 @@ end;
 function TContestWinterFieldDay.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+function TContestWinterFieldDay.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1, chfSect]);
+end;
+
+function TContestWinterFieldDay.CallHistorySiteName: string;
+begin
+   Result := 'WFD';
 end;
 
 initialization

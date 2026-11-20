@@ -57,7 +57,9 @@ unit uContestCWOps;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestCWOps = class(TContestBase)
@@ -120,6 +122,17 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         NAME THEN MEMBER NUMBER OR STATE -- the site file CWOPS carries Call, Name, Exch1,
+         UserText (read 2026-11-20, 85.1% of rows carry both); the log remembers
+         the Name, a blank, the QTH.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -311,6 +324,16 @@ function TContestCWOps.PrefixMultiplierKey(const aQso: ContestExchange;
 begin
    aKey := aQso.Callsign;
    Result := True;
+end;
+
+function TContestCWOps.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfName, chfExch1]);
+end;
+
+function TContestCWOps.CallHistorySiteName: string;
+begin
+   Result := 'CWOPS';
 end;
 
 initialization

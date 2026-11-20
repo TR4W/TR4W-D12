@@ -119,7 +119,9 @@ unit uContestNewYorkQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestNewYorkQP = class(TContestStateQSOPartyBase)
@@ -209,6 +211,18 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_NY carries Call, Exch1, UserText
+         (read 2026-11-20): the county code the station sent (or its state, or
+         a DX prefix), which the log remembers as the QTH alone. Its county
+         codes were checked against this party's own county file: all 61 codes are in newyork_cty.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -458,6 +472,16 @@ end;
 function TContestNewYorkQP.LogsSeveralQTHsFromOneEntry: boolean;
 begin
    Result := True;
+end;
+
+function TContestNewYorkQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestNewYorkQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_NY';
 end;
 
 initialization

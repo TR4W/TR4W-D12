@@ -73,7 +73,9 @@ uses
    (* cpLOW / cpQRP -- the entrant's CATEGORY-POWER, as TStationContext
       carries it. First, so VC's names win wherever the two overlap. *)
    uSettingsModel,
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestFloridaQP = class(TContestStateQSOPartyBase)
@@ -163,6 +165,18 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_FL carries Call, Exch1, UserText
+         (read 2026-11-20): the county code the station sent (or its state, or
+         a DX prefix), which the log remembers as the QTH alone. Its county
+         codes were checked against this party's own county file: 58 of 61 non-state values are in florida_cty, the rest DX prefixes.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 (* THE POWER MULTIPLIER FOR A CATEGORY-POWER -- QRP x3, LOW x2, anything else
@@ -416,6 +430,16 @@ end;
 function TContestFloridaQP.CountryMode: CountryModeType;
 begin
    Result := DXCCCountryMode(True);
+end;
+
+function TContestFloridaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestFloridaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_FL';
 end;
 
 initialization

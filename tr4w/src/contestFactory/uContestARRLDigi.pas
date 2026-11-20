@@ -43,7 +43,9 @@ unit uContestARRLDigi;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestARRLDigi = class(TContestBase)
@@ -130,6 +132,16 @@ type
    protected
       (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
       function GetSubmitsLogToARRL: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE GRID SQUARE -- the site file ARRL-DIGI carries Call, Loc1, UserText (read
+         2026-11-20; 100% of rows, four characters, three of six).
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -397,6 +409,16 @@ end;
 function TContestARRLDigi.GetSubmitsLogToARRL: boolean;
 begin
    Result := True;
+end;
+
+function TContestARRLDigi.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfLoc1]);
+end;
+
+function TContestARRLDigi.CallHistorySiteName: string;
+begin
+   Result := 'ARRL-DIGI';
 end;
 
 initialization

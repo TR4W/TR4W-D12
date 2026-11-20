@@ -76,7 +76,9 @@ unit uContestSprintSSB;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestSprintSSB = class(TContestBase)
@@ -136,6 +138,18 @@ type
       (* THE DX MULTIPLIER -- see TContestBase.DXMultiplierKey. Q16. *)
       function DXMultiplierKey(const aQso: ContestExchange;
                                out aKey: DXMultiplierString): boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         NAME THEN STATE -- the site file NA-SPRINT-CW carries Call, Name, State,
+         UserText (read 2026-11-20, 75.9% of rows carry both); the log
+         remembers a worked station as the Name, a blank, the QTH. The site
+         names the other Sprint the same way: INFERRED, not sampled.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -350,6 +364,16 @@ begin
       aKey := aQso.QTH.CountryID;
       Result := True;
       end;
+end;
+
+function TContestSprintSSB.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfName, chfState]);
+end;
+
+function TContestSprintSSB.CallHistorySiteName: string;
+begin
+   Result := 'NA-SPRINT-SSB';
 end;
 
 initialization

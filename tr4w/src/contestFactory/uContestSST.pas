@@ -55,7 +55,9 @@ unit uContestSST;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestSST = class(TContestBase)
@@ -120,6 +122,17 @@ type
       (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         NAME THEN STATE -- the site file K1USNSST carries Call, Name, Exch1, UserText
+         (read 2026-11-20, 71.6% of rows carry both); the log remembers the
+         Name, a blank, the QTH.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -326,6 +339,16 @@ end;
 function TContestSST.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+function TContestSST.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfName, chfExch1]);
+end;
+
+function TContestSST.CallHistorySiteName: string;
+begin
+   Result := 'K1USNSST';
 end;
 
 initialization

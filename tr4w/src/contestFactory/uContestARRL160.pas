@@ -72,7 +72,9 @@ unit uContestARRL160;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestARRL160 = class(TContestBase)
@@ -161,6 +163,16 @@ type
    protected
       (* THE SPONSOR'S LOG PORTAL -- see TContestBase.SubmitsLogToARRL. *)
       function GetSubmitsLogToARRL: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE SECTION, STATE OR PROVINCE -- the site file ARRL-160M carries Call, Exch1,
+         UserText (read 2026-11-20; 100% of rows); the log remembers the QTH alone.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
+         for every contest. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -581,6 +593,16 @@ end;
 function TContestARRL160.GetSubmitsLogToARRL: boolean;
 begin
    Result := True;
+end;
+
+function TContestARRL160.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestARRL160.CallHistorySiteName: string;
+begin
+   Result := 'ARRL-160M';
 end;
 
 initialization
