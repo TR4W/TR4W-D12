@@ -12033,3 +12033,15 @@ msgstr ""
 #, fuzzy
 msgid "Contest logs already in the install folder were left where they are. To keep logging in one, copy it (with any file of the same name ending -wal or -shm) into the folder above."
 msgstr ""
+
+#: uappstrings.swritablerootmovedprogramfiles
+#, fuzzy
+msgid ""
+"TR4W is installed under Program Files, which Windows protects:\n"
+"    %0:s\n"
+"\n"
+"So your settings, contest logs, backups and the troubleshooting log (tr4w.log) are kept here instead, however TR4W is started (including Run as administrator):\n"
+"    %1:s\n"
+"\n"
+"Nothing is lost. To keep everything in one folder, install TR4W outside Program Files, in a folder you can write to such as C:\\tr4w."
+msgstr ""
