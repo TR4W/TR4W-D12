@@ -129,15 +129,21 @@ begin
    Result := 'Kansas QSO Party';
 end;
 
-(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row KS-QSO-PARTY: status candidate; rules
-   https://www.ksqsoparty.org/rules/KSQPRules2026.pdf?1=; rules year 2026.
-   CANDIDATE: date from a calendar, not yet checked against the sponsor's
-   rules. *)
+(* WHEN IT RUNS -- NY4I's dates (2026-11-20; the sponsor states no
+   recurrence): two sessions, 1400Z Saturday to 0200Z Sunday and 1400Z to
+   2000Z Sunday, for 2026 to 2031 --
+     Aug 29-30 2026, Aug 28-29 2027, Aug 26-27 2028, Aug 25-26 2029,
+     Aug 24-25 2030, Aug 30-31 2031.
+   A DATE LIST, NOT A RULE: after 2031 the contest is undated until the
+   next dates are added here. *)
 function TContestKansasQP.GetSchedule: string;
 begin
-   Result := 'last full weekend of August at 14:00 UTC for 12h; ' +
-             'last full weekend of August +1d at 14:00 UTC for 6h';
+   Result := '2026-08-29 at 14:00 UTC for 12h; 2026-08-30 at 14:00 UTC for 6h; ' +
+             '2027-08-28 at 14:00 UTC for 12h; 2027-08-29 at 14:00 UTC for 6h; ' +
+             '2028-08-26 at 14:00 UTC for 12h; 2028-08-27 at 14:00 UTC for 6h; ' +
+             '2029-08-25 at 14:00 UTC for 12h; 2029-08-26 at 14:00 UTC for 6h; ' +
+             '2030-08-24 at 14:00 UTC for 12h; 2030-08-25 at 14:00 UTC for 6h; ' +
+             '2031-08-30 at 14:00 UTC for 12h; 2031-08-31 at 14:00 UTC for 6h';
 end;
 
 function TContestKansasQP.GetFriendlyName: string;

@@ -232,10 +232,10 @@ type
          party judges (JudgingParty), totalled as the session totals them
          (points as stored, a multiplier wherever the record's flag is set),
          and scored by THAT PARTY'S OWN FinalScore: its formula, its caps,
-         its bonuses (Delaware's power factor and +50, the 7QP's DX cap). A
-         party with no QSO scores 0 -- the entrant took no part in it, and
-         Delaware's unconditional +50 would otherwise show a score for a
-         party never worked. Public so the tests ask it directly. *)
+         its bonuses (Delaware's power factor, the 7QP's DX cap). A party
+         with no QSO scores 0 -- the entrant took no part in it (Delaware's
+         unconditional +50, which once made that rule necessary, was removed
+         2026-11-20). Public so the tests ask it directly. *)
       function PartyScore(aParty: TIN7QPNEParty; const aTotals: TScoreTotals;
                           aView: TLoggedQSOView;
                           out aQSOs, aPoints, aMultipliers: longint): longint;

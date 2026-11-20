@@ -316,8 +316,12 @@ const
       (Contest: CQ160CW;                 Station: psDX;   Qso: pqVE3;  Assigns: False; Key: ''),
       (Contest: CQ160CW;                 Station: psDX;   Qso: pqKL7;  Assigns: True;  Key: 'KL'),
       (Contest: CQ160SSB;                Station: psUS;   Qso: pqXE1;  Assigns: True;  Key: 'XE'),
-      (Contest: ArizonaQsoParty;         Station: psUS;   Qso: pqW1AW; Assigns: False; Key: ''),
-      (Contest: ArizonaQsoParty;         Station: psUS;   Qso: pqKH6;  Assigns: True;  Key: 'KH6'),
+      (* ARIZONA, 2026-11-20 (the sponsor's 2026 rules): "DXCC countries"
+         for an Arizona station only, beside "the 50 US states" -- so KH6
+         and KL7 are states, not DX; an entrant elsewhere counts the 15
+         counties alone (no row: HAS_DX holds it). *)
+      (Contest: ArizonaQsoParty;         Station: psHost; Qso: pqKH6;  Assigns: False; Key: ''),
+      (Contest: ArizonaQsoParty;         Station: psHost; Qso: pqON4;  Assigns: True;  Key: 'ON'),
       (Contest: FLORIDAQSOPARTY;         Station: psDX;   Qso: pqON4;  Assigns: True;  Key: 'ON'),
       (Contest: IDAHOQSOPARTY;           Station: psHost; Qso: pqVE3;  Assigns: False; Key: ''),
       (Contest: IDAHOQSOPARTY;           Station: psUS;   Qso: pqJA1;  Assigns: True;  Key: 'JA'),
@@ -493,7 +497,7 @@ const
       (Contest: ARI_DX;            Station: psDX;   Mode: ARRLCountryMode),
       (Contest: JTDX;              Station: psUS;   Mode: ARRLCountryMode),
       (Contest: ARCI;              Station: psUS;   Mode: ARRLCountryMode),
-      (Contest: ArizonaQsoParty;   Station: psDX;   Mode: ARRLCountryMode),
+      (Contest: ArizonaQsoParty;   Station: psHost; Mode: ARRLCountryMode),
       (Contest: YBDX;              Station: psUS;   Mode: ARRLCountryMode),
       (Contest: NAQSOCW;           Station: psUS;   Mode: CQCountryMode),
       (Contest: CQ160CW;           Station: psUS;   Mode: CQCountryMode),
@@ -533,8 +537,10 @@ const
    (* A DX MULTIPLIER AT EVERY STATION: the 56 contests whose session ran a
       DX kind wherever it ran, and the SSB Sprint since Q16 (2026-10-16) --
       57; then 56 again, BY HAND, when Winter Field Day left it (Q38, NY4I
-      2026-10-15: it has no DX multiplier, at any station). *)
-   DX_EVERYWHERE = [ARCI, ARI_DX, ARRL10, ARRL_RTTY_ROUNDUP, ArizonaQsoParty,
+      2026-10-15: it has no DX multiplier, at any station); then 55, BY HAND,
+      when the Arizona QSO Party left it for the host-state set (2026-11-20:
+      its sponsor counts DXCC for an Arizona station only). *)
+   DX_EVERYWHERE = [ARCI, ARI_DX, ARRL10, ARRL_RTTY_ROUNDUP,
                     BATAVIA_FT8, BSCI, CIS, CQ160CW, CQ160SSB, CQM, CQMM,
                     CQWWCW, CQWWRTTY, CQWWSSB, DARC10M, EUDX, FLORIDAQSOPARTY,
                     FOCMARATHON, GACWWWSACW, HADX, IDAHOQSOPARTY,
@@ -552,7 +558,7 @@ const
       (an ARRL section country), ARRL DX x2 (W/VE), WAE x2 (outside Europe),
       WAG (DL), the All Asian x2 (Asia), JIDX x2 (JA), SAC x2 (Scandinavia),
       Helvetia (HB), the Croatian (9A), PACC (PA), RDA (Russia), NEQP (New
-      England), and Delaware, 7QP, Texas and the Salmon Run (in the host
+      England), and Arizona, Delaware, 7QP, Texas and the Salmon Run (in the host
       state). NEVER REGENERATE A SET TO CLEAR A FAILURE. *)
    HAS_DX: array[TPinStation] of TContestSet = (
       (* psUS K0AAA *)   DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB,
@@ -560,7 +566,7 @@ const
       (* psVE VE3AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB,
                                           DARCWAEDCCW, DARCWAEDCSSB],
       (* psDX DL1AAA *)  DX_EVERYWHERE + [ALRS_UA1DZ_CUP, WAG],
-      (* psHost K1AAA *) DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB,
+      (* psHost K1AAA *) DX_EVERYWHERE + [ALRS_UA1DZ_CUP, ARRL160, ARRLDXCW, ARRLDXSSB, ArizonaQsoParty,
                                           DARCWAEDCCW, DARCWAEDCSSB, DELAWAREQSOPARTY, NEBRASKAQSO,
                                           NEWENGLANDQSO, SALMONRUN, SEVENQP, TENNESSEEQSOPARTY,
                                           TEXASQSOPARTY, VAQP],

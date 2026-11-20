@@ -763,7 +763,8 @@ end;
    and the four lines add up to the session's points and multipliers. The
    expected score is asked of the party's class over the QSOs this test
    routes by their county (the shipped key spelling), never of the
-   composite. Power LOW, so Delaware's x2 shows, and its +50. *)
+   composite. Power LOW, so Delaware's x2 shows (its +50 electronic-log
+   bonus is the entrant's to add at submission -- NY4I, 2026-11-20). *)
 procedure TContestIN7QPNETests.Test_EachPartyScoresItsOwnQSOs;
 var
    station: TStationContext;
@@ -797,12 +798,12 @@ begin
       CheckEquals(8, score, 'Indiana: 4 x 2');
 
       (* DELAWARE BY NUMBER: 20 (CW) + 10 (phone) from outside, two
-         counties, x2 for LOW power, +50 for the electronic log. *)
+         counties, x2 for LOW power, and no electronic-log bonus. *)
       score := combined.PartyScore(ipDelaware, totals, log, qsos, points, mults);
       CheckEquals(2, qsos, 'Delaware: two QSOs');
       CheckEquals(30, points, 'Delaware: 20 + 10 points');
       CheckEquals(2, mults, 'Delaware: two counties');
-      CheckEquals(30 * 2 * 2 + 50, score, 'Delaware: its power factor and its +50');
+      CheckEquals(30 * 2 * 2, score, 'Delaware: its power factor, no bonus');
 
       sumPoints := 0;
       sumMults := 0;
@@ -846,7 +847,7 @@ begin
          partyAlone.Free;
       end;
       CheckEquals(8, parts.Part(0).Score, 'Indiana''s score');
-      CheckEquals(30 * 2 * 2 + 50, parts.Part(3).Score, 'Delaware last');
+      CheckEquals(30 * 2 * 2, parts.Part(3).Score, 'Delaware last');
 
       (* OUTSIDE ALL FOUR, THE CLAIM IS THE SUM, as before. *)
       CheckEquals(combined.FinalScore(totals, log), combined.ClaimedScore(totals, log),
@@ -860,8 +861,7 @@ end;
 
 (* AN ENTRANT INSIDE A PARTY CLAIMS THAT PARTY'S SCORE -- the number its own
    sponsor checks. New Contest refuses such an entrant since Q104, so this is
-   a log made before that, or imported. A party never worked scores 0, even
-   Delaware with its unconditional +50. *)
+   a log made before that, or imported. A party never worked scores 0. *)
 procedure TContestIN7QPNETests.Test_AnEntrantInAPartyClaimsItsOwnParty;
 var
    station: TStationContext;
@@ -888,7 +888,7 @@ begin
                 'which is not the combined score on screen');
 
       CheckEquals(0, combined.PartyScore(ipDelaware, totals, log, qsos, points, mults),
-                  'Delaware never worked: 0, not its +50');
+                  'Delaware never worked: 0');
       CheckEquals(0, qsos, 'Delaware never worked: no QSOs');
    finally
       combined.Free;

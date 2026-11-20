@@ -40,8 +40,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
     the sponsor's rules   https://www.fsarc.org/qsoparty/rules-2024.html
     the Cabrillo page     https://www.fsarc.org/qsoparty/cabrillo.htm
-    NY4I, 2026-10-13      the rule summary in design 7.14, and the decision
-                          that the electronic-log bonus always applies
+    NY4I, 2026-10-13      the rule summary in design 7.14 (its decision that
+                          the electronic-log bonus always applies was
+                          reversed 2026-11-20 -- see SCORE)
     ADIF 3.1.7 Contest_ID DE-QSO-PARTY
 
   The sponsor's pages were NOT re-read when this was written (2026-10-14);
@@ -97,11 +98,36 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     DUPE-KEY rule, and there is no dupe-key seam (M8, design 8.2l: the sheet
     keeps the state) -- design Q73.
 
-  SCORE -- QSO points x multipliers x POWER MULTIPLIER, + 50 for an
-    electronic log. Power is CATEGORY-POWER, the ONE value (design 7.6),
-    Station.MyPower: HIGH (over 100 W) x1, LOW (100 W or less) x2, QRP (5 W or
-    less) x3 -- CombineWithMultipliers. The 50 is BonusPoints, always: TR4W
-    submits electronically (decided, design 8.2q).
+  SCORE -- QSO points x multipliers x POWER MULTIPLIER. Power is
+    CATEGORY-POWER, the ONE value (design 7.6), Station.MyPower: HIGH (over
+    100 W) x1, LOW (100 W or less) x2, QRP (5 W or less) x3 --
+    CombineWithMultipliers. The sponsor's "+ 50 point electronic submission
+    bonus if applicable" is NOT added (NY4I, 2026-11-20, reversing design
+    8.2q: "You do not know how it is submitted at the time of report
+    generation so we cannot speak to that value"); the entrant adds it at
+    submission.
+
+  ---------------------------------------------------------------------------
+  NY4I'S RULINGS OF 2026-11-20 (the state-party audit; the sponsor's text is
+  docs/ContestRules/QSOParties/Delaware/DE-QSO-PARTY-Rules.txt):
+
+  HOURS -- "1700 UTC start and 2359 UTC finish": Saturday 1700 UTC through
+    Sunday 2359 UTC, the first full weekend of May (GetSchedule).
+
+  MULTIPLIERS BY BAND -- "Multipliers are counted only once AND Multipliers
+    are by Band": once PER BAND, so a state (FL) is a multiplier again on
+    each band, and not again in another mode on the same band. cfMultByBand
+    without cfMultByMode, pinned through the real engine.
+
+  6 M AND UP -- "I did not see special rules for VHF": the sponsor's "1 point
+    per voice contact, 2 points per digital contact to include CW" line for
+    6 m and up is not applied as a separate rule; a QSO there scores as on
+    HF, by the entrant's location.
+
+  WSJT-X -- FT8/FT4 QSOs are made with WSJT-X's Field Day overlay, so the
+    QSO WSJT-X logs carries no state or DE county and may carry CONTEST_ID
+    ARRL-FIELD-DAY. The import of WSJT-X's logged QSO does not read the
+    CONTEST_ID (MainUnit.ParseSessionADIFRecord): the QSO is this log's.
 
   CABRILLO -- CONTEST: DE-QSO-PARTY; modes CW, PH and RY, every digital mode
     being RY (CabrilloModeString). The QSO line is the shared
@@ -192,10 +218,6 @@ type
       function CabrilloModeString(aMode: ModeType;
                                   aExtMode: ExtendedModeType): string; override;
 
-      (* THE ELECTRONIC-LOG BONUS, 50, always -- the header. *)
-      function BonusPoints(const aTotals: TScoreTotals;
-                           aView: TLoggedQSOView): longint; override;
-
       (* A DE-TO-DE QSO EARNS NO MULTIPLIER -- #88 round 3 (2026-10-26). See
          the implementation. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
@@ -220,10 +242,6 @@ type
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
    end;
-
-const
-   (* "+ 50 points for submitting your log electronically". *)
-   DelawareElectronicLogBonus = 50;
 
 (* THE POWER MULTIPLIER FOR A CATEGORY-POWER -- HIGH x1, LOW x2, QRP x3.
    Public so the tests assert the mapping itself, not only a product. *)
@@ -264,10 +282,11 @@ begin
    Result := 'Delaware QSO Party';
 end;
 
-(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row DELAWARE QSO PARTY: status candidate; rules
-   https://www.fsarc.org/qsoparty/qsohome.htm; rules year 2026. CANDIDATE:
-   date from a calendar, not yet checked against the sponsor's rules. *)
+(* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16), the
+   sponsor's "First full weekend in May", and NY4I's hours (2026-11-20):
+   "1700 UTC start and 2359 UTC finish" -- Saturday 1700 UTC to the end of
+   Sunday's 2359 UTC minute. A period ends exclusive (uContestSchedule), so
+   31 hours from 17:00 Saturday closes at 00:00 Monday, after 23:59 Sunday. *)
 function TContestDelawareQP.GetSchedule: string;
 begin
    Result := '1st full weekend of May at 17:00 UTC for 31h';
@@ -484,12 +503,6 @@ begin
    (* Every digital QSO is RY, FM is PH -- the shared helper, lifted from
       here 2026-10-26. *)
    Result := FormatCabrilloModeDigitalAsRY(aMode, aExtMode);
-end;
-
-function TContestDelawareQP.BonusPoints(const aTotals: TScoreTotals;
-                                        aView: TLoggedQSOView): longint;
-begin
-   Result := inherited BonusPoints(aTotals, aView) + DelawareElectronicLogBonus;
 end;
 
 (* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)

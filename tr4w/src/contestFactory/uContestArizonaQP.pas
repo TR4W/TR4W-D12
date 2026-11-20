@@ -52,7 +52,59 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   the way Florida's two and California's four did. It must NOT be derived from
   ContestsArray's CountyLineAllowed boolean, which carries no limit at all --
   reading it as a number is the defect that made a class of any kind start
-  refusing a two-QTH exchange.
+  refusing a two-QTH exchange. (The 2026 rules, below, now say so: county
+  lines are logged as several contacts, with no maximum stated.)
+
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (2026-11-20; "AZQP Rules
+  2026, Rev 2502 10/05/2026", the PDF NY4I saved to
+  docs/ContestRules/QSOParties/Arizona/, beside the county list).
+
+  PERIOD -- "1500z Oct 10 to 0500z Oct 11, 2026 [2nd October Saturday]":
+    GetSchedule, unchanged.
+
+  BANDS AND MODES -- "MODES: CW, Phone"; "BANDS: 160, 80, 40, 20, 15, 10
+    meters". UsesBand, UsesMode (FM is phone); a digital or WARC QSO is an
+    automatic X-QSO. Neither was stated before: digital scored 1.
+
+  POINTS -- "CW=2; Phone=1". Unchanged.
+
+  EXCHANGE -- an Arizona station sends "RS(T) and 3-letter county
+    abbreviation"; anyone else "RS(T) and 2-letter state or Canadian
+    province / territory", a DX station "RS(T) and DXCC prefix". No serial:
+    the received fields are RST and QTH at every station (they declared a
+    QSO number outside Arizona, so ADIF wrote an SRX).
+
+  MULTIPLIERS -- "Arizona stations: ... the 50 US states, the 13 Canadian
+    provinces and territories, and DXCC countries. Multipliers count again
+    for each mode" (MultByBand False in state, DescribeSession); "Stations
+    outside of Arizona: ... the 15 Arizona counties. Multipliers count again
+    for each band and mode." So:
+      - the DX multiplier is an Arizona entrant's only (HasDXMultiplier),
+        and keyed on every country but the USA, Canada, Hawaii and Alaska --
+        KH6 and KL7 are two of the 50 states;
+      - "A valid contact consists of ... an Arizona station (AZ) and any
+        other station (Non-AZ or AZ)": an Arizona entrant's QSO with an
+        Arizona county earns the state AZ. arizona.dom listed the counties
+        behind a bracketed, never-followed include line, so an in-state
+        county was not in the table at all; each county now maps to Az
+        there (Idaho's form), and arizona_cty.dom -- the out-of-state
+        file, where each county is its own multiplier -- is unchanged.
+
+  BONUS -- "a one-time bonus of 100 points for a QSO with K7A on any band or
+    mode", added after multiplying: GetBonusStations, bsOnce, valid contacts
+    only (CountsTowardBonus).
+
+  RECEIVED COLUMN, IN STATE -- CabrilloReceivedRSTDomesticQTHOrDXQTH, as
+    North Dakota and Oklahoma: the QTHString helper wrote an empty column for
+    a DX entity typed through the engine.
+
+  NOT CHANGED, REPORTED: a DX ENTRANT SENDS ITS DXCC PREFIX, and this class
+    sends "DX" for one (the StateOrDX helpers, outside Arizona). The party
+    base's SentLocation (North Dakota's, Oklahoma's) is the fix; it moves
+    the enum-keyed sent-column pins of uTestCabrilloColumns and
+    uTestADIFSentExchange at every roster station, which this audit did not
+    re-derive without a build.
  *)
 unit uContestArizonaQP;
 
@@ -122,7 +174,17 @@ type
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+
+      (* K7A, 100 points once -- the header. *)
+      function GetBonusStations: TBonusStationList; override;
+
+      (* A K7A contact pays only if it is neither a dupe nor an X-QSO. *)
+      function CountsTowardBonus(const aQso: ContestExchange): boolean; override;
    public
+      (* 160-10 m without WARC; CW and phone -- the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
@@ -228,20 +290,17 @@ begin
    Result := RSTDomesticOrDXQTHExchange;
 end;
 
-(* AN ARIZONA ENTRANT RECEIVES THE RST AND A COUNTY, STATE OR COUNTRY
-   (RSTDomesticOrDXQTH); ANYONE ELSE THE RST, A NUMBER AND A COUNTY
-   (RSTDomesticQTH) -- the two shapes DescribeSession chooses between, on
-   Station.InHostState as it does. M11 S9a. *)
+(* THE RST AND A QTH, ON BOTH SIDES OF THE STATE LINE -- "Arizona stations:
+   Send signal report RS(T) and 3-letter county abbreviation"; "Stations
+   outside of Arizona: Send signal report RS(T) and 2-letter state or
+   Canadian province / territory. DX stations send signal report RS(T) and
+   DXCC prefix." No serial is sent by anyone (2026-11-20 audit: an entrant
+   outside Arizona declared a QSO number since M11 S9a, transcribed from
+   the RSTDomesticQTH shape, so its ADIF wrote an SRX the sponsor never
+   sends). *)
 function TContestArizonaQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
-   if Station.InHostState then
-      begin
-      Result := ExchangeFieldsRSTQTH;
-      end
-   else
-      begin
-      Result := ExchangeFieldsRSTQSONumberQTH;
-      end;
+   Result := ExchangeFieldsRSTQTH;
 end;
 
 function TContestArizonaQP.ParseReceivedExchangeFormat(const aText: string;
@@ -307,9 +366,14 @@ function TContestArizonaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExch
                                                        const aQso: ContestExchange;
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
+   (* In state: a DX station's QTH is the prefix it sent, read from the
+      record's DomesticQTH, else its DX QTH -- the 2026-11-20 audit, as for
+      North Dakota and Oklahoma: CabrilloReceivedRSTQTHOrDXQTH tests
+      QTHString, and wrote an empty column for a DX entity typed through
+      the engine. Out of state every QSO is with an Arizona county. *)
    if Station.InHostState then
       begin
-      Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
       end
    else
       begin
@@ -327,12 +391,46 @@ begin
    Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfMultByMode];
 end;
 
-(* OnePhoneTwoCW -- `if Mode = CW then 2 else 1`, so DIGITAL scores the
-   PHONE value. That is why the third number is stated rather than left to
-   a CW-versus-not test, which would be wrong here and silent about it. *)
+(* "QSO POINTS: CW=2; Phone=1". FM is phone. A digital QSO never reaches
+   here since the 2026-11-20 audit (UsesMode: "MODES: CW, Phone"); the
+   third number stays the phone value D7's OnePhoneTwoCW gave it. *)
 procedure TContestArizonaQP.CalculateQSOPoints(var aQso: ContestExchange);
 begin
    aQso.QSOPoints := FixedModePoints(aQso.Mode, 2, 1, 1);
+end;
+
+(* "Receive a one-time bonus of 100 points for a QSO with K7A on any band or
+   mode during the contest." "Total Score = (QSO POINTS x MULTIPLIERS) +
+   BONUS POINTS." *)
+function TContestArizonaQP.GetBonusStations: TBonusStationList;
+begin
+   Result := nil;
+   SetLength(Result, 1);
+   Result[0].Call := 'K7A';
+   Result[0].Points := 100;
+   Result[0].Scope := bsOnce;
+end;
+
+(* A VALID CONTACT ONLY: not a dupe, and not an X-QSO (IsCreditedContact,
+   the base's one statement of it -- British Columbia's form). *)
+function TContestArizonaQP.CountsTowardBonus(const aQso: ContestExchange): boolean;
+begin
+   Result := IsCreditedContact(aQso);
+end;
+
+(* "BANDS: 160, 80, 40, 20, 15, 10 meters". *)
+function TContestArizonaQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* "MODES: CW, Phone". Any submode of CW, Phone or FM -- FM is a phone mode,
+   simplex; the sponsor's "repeater contacts are not permitted" is the
+   operator's to observe -- and no submode of Digital. An identity fact: no
+   station is asked. *)
+function TContestArizonaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone, FM];
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
@@ -360,33 +458,34 @@ begin
       end;
 end;
 
-(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
-   this class stated (`ARRLDXCCWithNoUSAOrCanada`) until the kind was
-   deleted. *)
+(* A DX MULTIPLIER FOR AN ARIZONA STATION ONLY -- the 2026-11-20 audit:
+   "Arizona stations: Multipliers are the 50 US states, the 13 Canadian
+   provinces and territories, and DXCC countries"; "Stations outside of
+   Arizona: Multipliers are the 15 Arizona counties." It was True at every
+   station (the trait ARRLDXCCWithNoUSAOrCanada, M11 S4 part 2), so an
+   entrant outside Arizona could count a DX entity. HasDXMultiplier, the key
+   and the country list ask this one test, so they cannot disagree. *)
 function TContestArizonaQP.HasDXMultiplier: boolean;
 begin
-   Result := True;
+   Result := Station.InHostState;
 end;
 
-(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
-   Every country but the USA and Canada -- the ARRLDXCCWithNoUSAOrCanada arm. *)
+(* THE DX MULTIPLIER KEY -- every country but the USA, Canada, Hawaii and
+   Alaska (uDXMultiplierKey's one routine, issue #136): Hawaii and Alaska are
+   two of "the 50 US states", so a KH6 or KL7 station is a state multiplier
+   and not also a DXCC one. Until the 2026-11-20 audit the key was every
+   country but the USA and Canada, which counted KH6 and KL twice. *)
 function TContestArizonaQP.DXMultiplierKey(const aQso: ContestExchange;
                                            out aKey: DXMultiplierString): boolean;
 begin
-   aKey := '';
-   Result := False;
-   if not IsUSAOrCanadaCountry(aQso.QTH.CountryID) then
-      begin
-      aKey := aQso.QTH.CountryID;
-      Result := True;
-      end;
+   Result := DXCCKeyExceptUSACanadaHawaiiAlaska(HasDXMultiplier, aQso, aKey);
 end;
 
-(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
-   DXCC only, at every station. *)
+(* THE CTY COUNTRY LIST -- DXCC where the entrant counts the DX multiplier,
+   the CQ list where it counts none. *)
 function TContestArizonaQP.CountryMode: CountryModeType;
 begin
-   Result := ARRLCountryMode;
+   Result := DXCCCountryMode(HasDXMultiplier);
 end;
 
 (* OUT OF THE HOST STATE ONE ENTRY MAY CARRY SEVERAL QTHs (RSTDomesticQTH);

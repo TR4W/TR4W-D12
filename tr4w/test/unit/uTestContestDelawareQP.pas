@@ -33,7 +33,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     * multipliers per band, dupes per band per mode, both county files;
     * a county line is two QSOs, three is refused;
     * an out-of-state station working anyone but a DE county is refused;
-    * the score: points x multipliers x HIGH 1 / LOW 2 / QRP 3, plus 50;
+    * the score: points x multipliers x HIGH 1 / LOW 2 / QRP 3, no +50;
     * Cabrillo: the CONTEST name, CW / PH / RY, a LOCATION required;
     * ADIF: the id resolves back to this contest. *)
 unit uTestContestDelawareQP;
@@ -64,11 +64,22 @@ type
       procedure Test_DelawareToDelawareEarnsPointsOnly;
       procedure Test_DelawareADXEntrantSendsDX;
       procedure Test_DelawareReceivedColumnThroughTheEngine;
+      procedure Test_DelawareStateIsAMultiplierOnEachBand;
+      procedure Test_DelawareWSJTXFieldDayRecordStaysDelaware;
    end;
 
 implementation
 
 uses
+   (* THE ENGINE UNITS FOR THE WSJT-X RECORD TEST -- FIRST, so no name of
+      theirs hides one the units below give this test; their own names are
+      written qualified (PostUnit.Contest, MainUnit.ParseSessionADIFRecord,
+      ...), so a later unit cannot hide them either. *)
+   uTestAutomaticXQSO,   (* SourceText -- uWSJTX's call, read *)
+   uContestFactory,      (* ReleaseActiveContest *)
+   LogDupe,              (* ClearContestExchange *)
+   PostUnit,             (* Contest -- the active contest's handle *)
+   MainUnit,             (* ParseADIFRecord, ParseSessionADIFRecord *)
    (* cpHIGH / cpLOW / cpQRP. Before VC, so VC's names win where they
       overlap. *)
    uSettingsModel,
@@ -423,8 +434,11 @@ begin
    CheckTrue(ParseAs(True, 'SDE', msg), 'in DE, another DE county');
 end;
 
-(* "QSO points x multipliers x POWER MULTIPLIER, + 50": HIGH x1, LOW x2,
-   QRP x3, and the electronic bonus always (decided, design 8.2q). *)
+(* "QSO points x location multipliers x power multiplier, + 50 point
+   electronic submission bonus if applicable": HIGH x1, LOW x2, QRP x3. The
+   +50 is NOT added (NY4I, 2026-11-20: "You do not know how it is submitted
+   at the time of report generation so we cannot speak to that value") --
+   the entrant adds it at submission. *)
 procedure TContestDelawareQPTests.Test_DelawareScoreIsPowerTimesFormulaPlusFifty;
 var
    t: TScoreTotals;
@@ -433,20 +447,19 @@ begin
    CheckEquals(1, DelawarePowerMultiplier(cpHIGH), 'over 100 W: x1');
    CheckEquals(2, DelawarePowerMultiplier(cpLOW), '100 W or less: x2');
    CheckEquals(3, DelawarePowerMultiplier(cpQRP), '5 W or less: x3');
-   CheckEquals(50, DelawareElectronicLogBonus, 'the electronic-log bonus');
 
    t := Totals(100, 5);
    t.Mults[AllBands, Both, rmDX] := 2;
-   CheckEquals(100 * 7 + 50, FinalAt(cpHIGH, t), 'HIGH: points x every multiplier, + 50');
-   CheckEquals(100 * 7 * 2 + 50, FinalAt(cpLOW, t), 'LOW doubles before the bonus');
-   CheckEquals(100 * 7 * 3 + 50, FinalAt(cpQRP, t), 'QRP triples before the bonus');
+   CheckEquals(100 * 7, FinalAt(cpHIGH, t), 'HIGH: points x every multiplier, no bonus');
+   CheckEquals(100 * 7 * 2, FinalAt(cpLOW, t), 'LOW doubles');
+   CheckEquals(100 * 7 * 3, FinalAt(cpQRP, t), 'QRP triples');
 
    (* A SINGLE-BAND ENTRY counts its band's multipliers, as the base does. *)
    t.ScoredBand := Band40;
    t.Mults[Band40, Both, rmDomestic] := 3;
-   CheckEquals(100 * 3 * 2 + 50, FinalAt(cpLOW, t), 'a single-band entry');
+   CheckEquals(100 * 3 * 2, FinalAt(cpLOW, t), 'a single-band entry');
 
-   CheckEquals(50, FinalAt(cpQRP, Totals(0, 0)), 'an empty log is the bonus alone');
+   CheckEquals(0, FinalAt(cpQRP, Totals(0, 0)), 'an empty log scores nothing: no +50');
 end;
 
 (* CONTEST: DE-QSO-PARTY; "Modes CW / PH / RY (all digital = RY)"; the header
@@ -599,8 +612,86 @@ begin
    end;
 end;
 
+(* "Multipliers are counted only once. Multipliers are by Band." -- NY4I,
+   2026-11-20: "mults are counted once per band ... (so FL is a multiplier
+   on each band)". Through the real engine: Florida on 20 m CW is a
+   multiplier, on 40 m CW again, on 20 m phone not (no mode scope). *)
+procedure TContestDelawareQPTests.Test_DelawareStateIsAMultiplierOnEachBand;
+var
+   engine: TQSOPartyEngine;
+   rx: ContestExchange;
+   accepted: boolean;
+begin
+   BeginTest('Test_DelawareStateIsAMultiplierOnEachBand');
+   engine := TQSOPartyEngine.Create(ContestHandleOf(DELAWAREQSOPARTY));
+   try
+      engine.Activate(True);
+      engine.Enter('W4AAA', '599 FL', Band20, CW, eCW, accepted, rx);
+      CheckTrue(accepted and rx.DomesticMult, 'FL on 20 m: a multiplier');
+      engine.Enter('W4BBB', '599 FL', Band40, CW, eCW, accepted, rx);
+      CheckTrue(accepted, 'FL on 40 m is taken');
+      CheckTrue(rx.DomesticMult, 'and is a multiplier again: once per band');
+      engine.Enter('W4CCC', '59 FL', Band20, Phone, eUSB, accepted, rx);
+      CheckTrue(accepted, 'FL on 20 m phone is taken');
+      CheckFalse(rx.DomesticMult, 'but is no new multiplier: not again per mode');
+   finally
+      engine.Free;
+   end;
+end;
+
+(* A WSJT-X RECORD CARRYING THE FIELD DAY OVERLAY'S CONTEST_ID STAYS A
+   DELAWARE QSO -- NY4I, 2026-11-20: WSJT-X QSOs "will not have a state or
+   DE county", and their contest-id "may have arrl-field-day" without
+   raising a flag. The file import reads CONTEST_ID (a record of another
+   contest is that contest's); the session's own record, WSJT-X's logged
+   QSO, does not -- MainUnit.ParseSessionADIFRecord, which uWSJTX calls. *)
+procedure TContestDelawareQPTests.Test_DelawareWSJTXFieldDayRecordStaysDelaware;
+const
+   WSJTX_RECORD = '<CALL:4>W1AW<BAND:3>20m<MODE:3>FT8<QSO_DATE:8>20270501' +
+                  '<TIME_ON:6>180000<RST_SENT:3>-05<RST_RCVD:3>-10' +
+                  '<CONTEST_ID:14>ARRL-FIELD-DAY<CLASS:2>1A<ARRL_SECT:2>CT' +
+                  '<PROGRAMID:6>WSJT-X<EOR>';
+var
+   savedContest: TContestHandle;
+   rx: ContestExchange;
+   delaware: TContestHandle;
+   text: string;
+begin
+   BeginTest('Test_DelawareWSJTXFieldDayRecordStaysDelaware');
+   delaware := ContestHandleOf(DELAWAREQSOPARTY);
+   savedContest := PostUnit.Contest;
+   try
+      PostUnit.Contest := delaware;
+      uContestFactory.ReleaseActiveContest;
+
+      LogDupe.ClearContestExchange(rx);
+      CheckTrue(MainUnit.ParseSessionADIFRecord(WSJTX_RECORD, rx), 'the WSJT-X record parses');
+      CheckTrue(rx.ceContest = delaware,
+                'a session record stays the open contest''s, whatever its CONTEST_ID');
+      CheckEquals('W1AW', string(rx.Callsign), 'and is read otherwise as before');
+
+      (* THE CONTRAST: the file import reads the id, so the same record
+         names Field Day there. *)
+      LogDupe.ClearContestExchange(rx);
+      CheckTrue(MainUnit.ParseADIFRecord(WSJTX_RECORD, rx), 'the file import parses it too');
+      CheckTrue(rx.ceContest = ContestHandleOf(ARRLFIELDDAY),
+                'and takes the record''s CONTEST_ID');
+   finally
+      PostUnit.Contest := savedContest;
+      uContestFactory.ReleaseActiveContest;
+   end;
+
+   text := uTestAutomaticXQSO.SourceText('uWSJTX.pas');
+   CheckTrue(Pos('ParseSessionADIFRecord(adif, TempRXData)', text) > 0,
+             'WSJT-X''s logged QSO is read as the session''s record');
+   CheckEquals(0, Pos('ParseADIFRecord(adif, TempRXData)', text),
+               'and never through the file import''s reader');
+end;
+
 procedure TContestDelawareQPTests.RunAllTests;
 begin
+   Test_DelawareStateIsAMultiplierOnEachBand;
+   Test_DelawareWSJTXFieldDayRecordStaysDelaware;
    Test_DelawareReceivedColumnThroughTheEngine;
    Test_DelawareADXEntrantSendsDX;
    Test_DelawareToDelawareEarnsPointsOnly;

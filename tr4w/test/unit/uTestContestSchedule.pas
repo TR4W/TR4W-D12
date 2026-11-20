@@ -538,6 +538,33 @@ begin
    Add('MS-QSO-PARTY', At(2026, 4, 5, 1, 59), At(2026, 4, 5, 1, 59));
    Add('MS-QSO-PARTY', At(2026, 4, 5, 2, 0), At(2027, 4, 3, 14, 0));
    Add('NC QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 2, 28, 15, 0));
+   (* NY4I, 2026-11-20: "February 28, 2027 10AM to 8 PM EST" -- 1500Z to
+      0100Z March 1. *)
+   Add('NC QSO PARTY', At(2027, 3, 1, 0, 59), At(2027, 3, 1, 0, 59));
+   (* NY4I, 2026-11-20: Delaware runs "1700 UTC start and 2359 UTC finish",
+      Saturday to Sunday of the first full weekend of May. 2028's is May
+      6-7 (May 1 2028 is a Monday). *)
+   Add('DELAWARE QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 5, 1, 17, 0));
+   Add('DELAWARE QSO PARTY', At(2027, 5, 2, 23, 59), At(2027, 5, 2, 23, 59));
+   Add('DELAWARE QSO PARTY', At(2027, 5, 3, 0, 0), At(2028, 5, 6, 17, 0));
+   (* NY4I's Iowa dates, 2026-11-20: 1400Z Saturday to 0200Z Sunday. *)
+   Add('IA-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 9, 18, 14, 0));
+   Add('IA-QSO-PARTY', At(2027, 9, 19, 1, 59), At(2027, 9, 19, 1, 59));
+   Add('IA-QSO-PARTY', At(2027, 9, 19, 2, 0), At(2028, 9, 16, 14, 0));
+   Add('IA-QSO-PARTY', At(2029, 1, 1, 0, 0), At(2029, 9, 15, 14, 0));
+   Add('IA-QSO-PARTY', At(2030, 1, 1, 0, 0), At(2030, 9, 21, 14, 0));
+   (* NY4I's Kansas dates, 2026-11-20: two sessions, the overnight gap keys
+      on Sunday's 1400Z. *)
+   Add('KS-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 8, 28, 14, 0));
+   Add('KS-QSO-PARTY', At(2027, 8, 29, 5, 0), At(2027, 8, 29, 14, 0));
+   Add('KS-QSO-PARTY', At(2027, 8, 29, 20, 0), At(2028, 8, 26, 14, 0));
+   Add('KS-QSO-PARTY', At(2031, 1, 1, 0, 0), At(2031, 8, 30, 14, 0));
+   (* Oklahoma, NY4I 2026-11-20: split sessions, ONE log -- 1400Z-0200Z and
+      1400Z-2200Z of the 2nd full weekend of March; the gap is no period. *)
+   Add('OK-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 3, 13, 14, 0));
+   Add('OK-QSO-PARTY', At(2027, 3, 14, 1, 59), At(2027, 3, 14, 1, 59));
+   Add('OK-QSO-PARTY', At(2027, 3, 14, 5, 0), At(2027, 3, 14, 14, 0));
+   Add('OK-QSO-PARTY', At(2027, 3, 14, 22, 0), At(2028, 3, 11, 14, 0));
    Add('NEWEQP', At(2027, 1, 1, 0, 0), At(2027, 5, 1, 20, 0));
    Add('NEWEQP', At(2027, 5, 2, 6, 0), At(2027, 5, 2, 13, 0));
    (* The sponsor's 2026 rules v1.1: the third Saturday of October, October
@@ -581,6 +608,11 @@ begin
    CheckFalse(TryScheduleSortKey(s, At(2027, 6, 20, 4, 0), key), 'WV after 2027 is undated');
    s := Parsed(ScheduleOf('NC QSO PARTY'));
    CheckFalse(TryScheduleSortKey(s, At(2028, 1, 1, 0, 0), key), 'NC after 2027 is undated');
+   (* Iowa's list ends with 2030, Kansas's with 2031 (NY4I's dates). *)
+   s := Parsed(ScheduleOf('IA-QSO-PARTY'));
+   CheckFalse(TryScheduleSortKey(s, At(2030, 9, 22, 2, 0), key), 'Iowa after 2030 is undated');
+   s := Parsed(ScheduleOf('KS-QSO-PARTY'));
+   CheckFalse(TryScheduleSortKey(s, At(2031, 8, 31, 20, 0), key), 'Kansas after 2031 is undated');
    (* The Canadian Prairies states its 2026 date only, so it is undated today. *)
    s := Parsed(ScheduleOf('CP-QSO-PARTY'));
    CheckFalse(TryScheduleSortKey(s, At(2026, 5, 10, 3, 0), key), 'CP after 0300 UTC 2026-05-10 is undated');

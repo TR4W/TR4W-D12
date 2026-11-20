@@ -1,4 +1,20 @@
-
+Arizona QSO Party, for Arizona entrants: the 50 US states, the 13 Canadian provinces and territories, and DXCC countries as the DX multiplier.
+Each of the 15 Arizona counties counts as the state Arizona (an Arizona station works Arizona stations too), so each county maps to Az.
+The counties come first, so a county code wins over a state or province alias spelled the same.
+APH > Az=APH,^Apache
+CHS > Az=CHS,^Cochise
+CNO > Az=CNO,^Coconino
+GLA > Az=GLA,^Gila
+GHM > Az=GHM,^Graham
+GLE > Az=GLE,^Greenlee
+LPZ > Az=LPZ,^La Paz
+MCP > Az=MCP,^Maricopa
+MHV > Az=MHV,^Mohave
+NVO > Az=NVO,^Navajo
+PMA > Az=PMA,^Pima
+PNL > Az=PNL,^Pinal
+SCZ > Az=SCZ,^Santa Cruz
+YVP > Az=YVP,^Yavapai
+YMA > Az=YMA,^Yuma
 INCLUDE FILE S50.DOM
 INCLUDE FILE P13.DOM
-[INCLUDE FILE ARIZONA_CTY.DOM]

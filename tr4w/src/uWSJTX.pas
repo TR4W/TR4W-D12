@@ -1383,7 +1383,10 @@ begin
 
    ClearContestExchange(TempRXData);
 
-   if ParseADIFRecord(adif, TempRXData) then
+   (* THE OPEN CONTEST'S RECORD: WSJT-X's CONTEST_ID is its overlay's, not
+      this log's (the Delaware QSO Party's FT8 arrives as ARRL-FIELD-DAY), so
+      it is not read -- see MainUnit.ParseSessionADIFRecord. *)
+   if ParseSessionADIFRecord(adif, TempRXData) then
      // processed a record if true
       begin
       logger.Debug('[uWSJTX] QTHString is %s',[TempRXData.QTHString]);
