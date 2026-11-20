@@ -66,7 +66,9 @@ unit uContestSouthCarolinaQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    SC_QSO_PARTY_CONTEST_ID = 'SC-QSO-PARTY';
@@ -113,6 +115,18 @@ type
       function ExchangeCarriesDomesticQTH: boolean; override;
       function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
          out aKey: string): boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_SC carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 115 of 115 non-state rows are county keys of its
+         own county file; the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -321,6 +335,16 @@ end;
 function TContestSouthCarolinaQP.CountsTowardBonus(const aQso: ContestExchange): boolean;
 begin
    Result := IsCreditedContact(aQso);
+end;
+
+function TContestSouthCarolinaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestSouthCarolinaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_SC';
 end;
 
 initialization

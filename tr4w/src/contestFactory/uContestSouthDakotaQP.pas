@@ -194,7 +194,9 @@ unit uContestSouthDakotaQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    (* ITS ID -- stored data; see the header. *)
@@ -281,6 +283,18 @@ type
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_SD carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 26 of 26 non-state rows are county keys of its
+         own county file; the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 (* THE FOUR-CHARACTER GRID A RECEIVED TEXT NAMES -- '' when it is no
@@ -718,6 +732,16 @@ begin
       aExch.DomesticQTH := '';
       aExch.DomMultQTH := '';
       end;
+end;
+
+function TContestSouthDakotaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestSouthDakotaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_SD';
 end;
 
 initialization
