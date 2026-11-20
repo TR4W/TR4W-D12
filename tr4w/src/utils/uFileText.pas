@@ -42,6 +42,22 @@ function ReadAllTextUTF8(const aFileName: string): string;
 // Writes aText as UTF-8 with NO byte-order mark, replacing any existing file.
 procedure WriteAllTextUTF8(const aFileName: string; const aText: string);
 
+(* THE SAME WRITE, REPORTED INSTEAD OF RAISED (issue 165, 2026-11-20).
+
+  WriteAllTextUTF8 raises when the folder refuses a file. Uncaught, that
+  reached the LCL's last-resort handler as "Unable to create file
+  ...\settings\tr4w.json.new: Access is denied. Press OK to ignore and risk
+  data corruption" -- NY4I's Program Files test. The sequence already keeps
+  the previous file whole at every step (see WriteAllTextUTF8), so the right
+  answer to a refusal is to SAY SO: False, and aReason is the system's own
+  words, which name the file.
+
+  ONLY FILE ERRORS ARE CAUGHT (EStreamError, which includes EFCreateError,
+  and EInOutError for a refused rename). A defect in the caller -- an
+  access violation, a bad cast -- still surfaces as one. *)
+function TryWriteAllTextUTF8(const aFileName: string; const aText: string;
+                             out aReason: string): Boolean;
+
 // Thin wrapper so callers do not need SysUtils just for the existence test,
 // and so the whole file-access vocabulary of the config stores lives in one
 // place.
@@ -186,6 +202,27 @@ begin
       end;
 
    DeleteFileIfExists(bakName);
+end;
+
+function TryWriteAllTextUTF8(const aFileName: string; const aText: string;
+                             out aReason: string): Boolean;
+begin
+   aReason := '';
+   try
+      WriteAllTextUTF8(aFileName, aText);
+      Result := True;
+   except
+      on E: EStreamError do
+         begin
+         aReason := E.Message;
+         Result  := False;
+         end;
+      on E: EInOutError do
+         begin
+         aReason := E.Message;
+         Result  := False;
+         end;
+   end;
 end;
 
 function ReadAllBytesFile(const aFileName: string): TBytes;

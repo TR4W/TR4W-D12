@@ -388,7 +388,16 @@ begin
 
       if aApply and changed then
          begin
-         SaveSettings(aSettingsFile, aSettings);
+         (* SaveSettings REPORTS a refused write instead of raising (issue
+           165). Here that is this routine's own failure, with the system's
+           reason: tr4wconvert prints "FAILED:" and exits 1. It used to be an
+           unhandled exception. *)
+         if not SaveSettings(aSettingsFile, aSettings) then
+            begin
+            aError := 'could not write ' + aSettingsFile + ': '
+                      + LastConfigWriteFailure;
+            Exit;
+            end;
          end;
 
       Result := True;

@@ -981,6 +981,8 @@ uses
      and its identity (uContestRegistry), M11 S9e part 1. FIRST, so that
      neither can shadow a name this unit takes from the units below:
      Pascal resolves an identifier to the LAST unit that declares it. *)
+   uAppPaths,          (* StationStateDir -- GetRealPath's dvk folder; called
+                          qualified, and first so it shadows nothing *)
    PostUnit,
    uContestRegistry,
    uSettingsModel,     // Settings -- the settings that have left CFGCA
@@ -3911,10 +3913,13 @@ begin
      the program directory? *)
    if Pos('\', Settings.Dvk.Path) = 0 then
       begin
-      (* A GENUINE FIXED-BUFFER READ, so it keeps the NUL-terminated form:
-        TR4W_PATH_NAME is a FileNameType and a blanket cast would take the
-        padding with it. *)
-      Result := CharBufferText(TR4W_PATH_NAME) + Settings.Dvk.Path + '\';
+      (* THE STATION-STATE FOLDER, NOT TR4W_PATH_NAME (issue 165,
+        2026-11-20). The dvk tree is the operator's own recordings and TR4W
+        WRITES into it (MISSINGCALLSIGNS.TXT, an empty .wav for the editor),
+        so on a Windows install whose program folder refuses writes it lives
+        under %APPDATA%\TR4W with the other writable files. Everywhere else
+        StationStateDir is the same folder TR4W_PATH_NAME named. *)
+      Result := uAppPaths.StationStateDir + Settings.Dvk.Path + '\';
       end
    else
       begin

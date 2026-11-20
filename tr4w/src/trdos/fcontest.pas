@@ -205,11 +205,16 @@ begin
   (* PathDelim: this file is WRITTEN as well as read, so the separator has to
     be right when the name is built. Resolving it afterwards only helps a file
     that already exists -- see the note in uTelnet. *)
+  (* WRITTEN FILES, SO uAppPaths.StationStateDir AND NOT TR4W_PATH_NAME
+    (issue 165, 2026-11-20). TR4W_PATH_NAME is the read-only data tier; on a
+    Windows install the program folder refuses (C:\Program Files) these move
+    with every other writable file. Off Windows StationStateDir IS DataDir,
+    so the path there is exactly what it was. *)
   SetCharBuffer(TR4W_POS_FILENAME,
-                CharBufferText(TR4W_PATH_NAME) + 'settings' + PathDelim + 'tr4w.pos');
+                StationStateDir + 'settings' + PathDelim + 'tr4w.pos');
   ResolveDataFileInPlace(TR4W_POS_FILENAME);
   SetCharBuffer(TR4W_BANDMAPBIN_FILENAME,
-                CharBufferText(TR4W_PATH_NAME) + 'bandmap.bin');
+                WrittenFilePath(wfStationState, 'bandmap.bin'));
 
   //  asm push offset TR4W_PATH_NAME  end;
   //  wsprintf(TR4W_IODRIVER_FILENAME, '%sTR4WIO.SYS');

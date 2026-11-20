@@ -51,6 +51,15 @@ unit uAppPaths;
   SO DO NOT COLLAPSE THESE INTO ONE ACCESSOR. On Windows all three return the
   same directory today, which makes the collapse look free and is exactly how
   this comes back.
+
+  AND ON WINDOWS THE WRITABLE ONES CAN MOVE (issue 165, 2026-11-20). When the
+  program folder refuses a new file -- an install under C:\Program Files run
+  by a standard user -- the settings, log, contest and station-state
+  accessors answer %APPDATA%\TR4W\ instead, and DataDir stays the program
+  folder. The decision is made once, on first use, and is described with the
+  routines that make it (ChooseWritableRoot and below). A WRITTEN file asks
+  WrittenFilePath / BesideContestLogFilePath, never TR4W_PATH_NAME, which is
+  the read-only tier; build\Count-LiveWrites.ps1 ratchets the raw writes.
 }
 
 interface
@@ -103,7 +112,9 @@ function LogDir: string;
   file is not, which is why config and state stay under XDG.
 
   WINDOWS IS UNCHANGED and must be: contest files live beside the binary there
-  and twenty years of operators know it. *)
+  and twenty years of operators know it -- EXCEPT when that folder refuses new
+  files (C:\Program Files, issue 165), when they go under %APPDATA%\TR4W with
+  every other writable file. See "A READ-ONLY INSTALL FOLDER" below. *)
 function ContestDir: string;
 function ContestFilePath(const aName: string): string;
 
@@ -150,6 +161,12 @@ function DownloadedDataFilePath(const aName: string): string;
   hand-off file for the instance it starts (issue 228): --settings moves it,
   and the child is given the same --settings. *)
 function WritableSettingsDir: string;
+
+(* THE SAME ANSWER FROM ITS INPUTS: aOverride's folder when --settings named a
+  file (created), aDefault when it did not. --settings WINS OVER THE
+  PER-USER REDIRECT (issue 165) because this is asked first: the corpus and
+  the unit tests name their own settings and must keep writing there. *)
+function WritableSettingsDirFor(const aOverride, aDefault: string): string;
 
 (* WHERE TR4W'S OWN BACKUPS OF A CONTEST LOG GO -- 'backup' under the
   writable settings directory, with a trailing separator, created on first
@@ -361,9 +378,158 @@ function BesideProgramFilePath(const aName: string): string;
   the first answer is returned, so the log names where it looked. *)
 function HelpDir: string;
 
+(* ------------------------------------------------------------------------
+  A READ-ONLY INSTALL FOLDER ON WINDOWS (issue 165 option 3, 2026-11-20).
+
+  THE DEFECT. Every writable accessor above answers the program folder on
+  Windows -- settings\, tr4w.log, the contest .db and its -wal/-shm, the
+  backups, the downloads. Installed under C:\Program Files\TR4W and run with
+  a standard user's token, the 64-bit program is refused every one of those
+  writes (a 64-bit process gets no VirtualStore redirect). NY4I hit it on
+  2026-11-20: "could not open its log file" on the first run, then a raw RTL
+  "Unable to create file ...\settings\tr4w.json.new" after the setup wizard.
+
+  THE RULE. Once per run, on first use, TR4W asks whether the program folder
+  (the working directory, AppDir) accepts a new file: it creates and deletes a
+  uniquely named one. If it does -- C:\tr4w, C:\radio\tr4w, the developer's
+  tr4w\target, the corpus and the unit tests -- NOTHING CHANGES: every
+  accessor answers exactly what it answered before. If it does not, every
+  WRITABLE location moves under %APPDATA%\TR4W\, mirroring the install
+  layout (settings\, tr4w.log, the contest logs at its top), and the shipped
+  READ-ONLY data is still read from the program folder: DataDir and
+  DataFilePath are not touched, so the downloaded -> contest -> shipped
+  lookup keeps working.
+
+  ROAMING %APPDATA%, the folder NY4I named and the Windows counterpart of
+  ~/Library/Application Support on macOS. Not GetAppConfigDir: on Windows the
+  RTL answers LOCALAPPDATA and names the folder after the executable, which
+  would be tr4w_fpc for a developer build.
+
+  WINDOWS ONLY. macOS and Linux already put every writable file in the
+  operator's home and resolve exactly as before; there the probe never runs
+  and every new query answers "not redirected". *)
+
+type
+   (* "Does this folder accept a new file?" -- injected so a test can say no
+     without a read-only folder, which a unit test cannot make on Windows. *)
+   TDirectoryProbe = function(const aDir: string): boolean;
+
+(* The real probe: create, close and delete a uniquely named file in aDir.
+  True only when all of that worked. Leaves nothing behind either way. *)
+function DirectoryIsWritable(const aDir: string): boolean;
+
+(* THE DECISION, as a function of its inputs -- what the cached Windows answer
+  is computed from, and what the tests call.
+
+    aProbe(aInstallDir) True   -> aInstallDir, not redirected. Nothing is
+                                  created anywhere.
+    otherwise                  -> aPerUserBase\TR4W\, created if missing;
+                                  aCreated says THIS call made it, which is
+                                  the run that tells the operator.
+    no aPerUserBase, or the    -> aInstallDir, not redirected, and aProblem
+    folder cannot be made         says why. Today's behaviour is the fallback,
+                                  and the failures that follow are reported
+                                  where they happen.
+
+  The answer always ends in a separator. *)
+function ChooseWritableRoot(const aInstallDir, aPerUserBase: string;
+                            aProbe: TDirectoryProbe;
+                            out aRedirected, aCreated: boolean;
+                            out aProblem: string): string;
+
+(* THE FIRST RUN UNDER %APPDATA% CARRIES THE INSTALL'S SETTINGS ACROSS.
+  The installer's 32-bit migration copies an old install's settings\ into
+  $INSTDIR\settings, and a redirected program would otherwise ignore them and
+  start on defaults. Copies tr4w.json, tr4w.ini and tr4w.pos from
+  aInstallDir\settings\ to aRoot\settings\, each ONLY when the destination
+  does not have one. Never deletes or changes the install's copy. Returns
+  the names it copied, comma-separated, '' for none. *)
+function SeedPerUserSettings(const aInstallDir, aRoot: string): string;
+
+(* True when this run's writable files live under %APPDATA%\TR4W. False off
+  Windows and whenever the program folder is writable. *)
+function WritableFilesRedirected: boolean;
+
+(* Where this run writes: the per-user root when redirected, the program
+  folder otherwise (with a trailing separator). Off Windows, '' -- there is
+  no single root there; ask the per-kind accessors. *)
+function WritableFilesRoot: string;
+
+(* FOR tr4wconvert'S "settings\ beside the binary" RULE: may that folder be
+  used? On Windows, only when the binary's folder accepts new files -- the
+  installer creates $INSTDIR\settings, so under C:\Program Files the folder
+  EXISTS and the program, redirected, never reads it. Off Windows always
+  True: the portable rule there is unchanged. *)
+function PortableFolderUsable(const aBinaryDir: string): boolean;
+
+(* Why the redirect could not be made, '' when nothing went wrong. *)
+function WritableRootProblem: string;
+
+(* THE OPERATOR IS TOLD ONCE -- ONCE PER PER-USER ROOT, NOT ONCE PER RUN.
+
+  NOT "the run that created the root": tr4wconvert, run first as the
+  installer tells an upgrading operator to, resolves the same root and would
+  create it, and the program would then never say where the files went. So
+  the root carries a short text file, WRITABLE_ROOT_NOTE, written when the
+  program has told the operator; it also explains the folder to anyone who
+  finds it by browsing. Due = redirected and that file absent.
+
+  TakeWritableRootNotice answers True at most once per run and records the
+  note when it does. aInstallDir is the folder that refused, aRoot where TR4W
+  writes now, aCopied what SeedPerUserSettings carried ('' for none). *)
+const
+   WRITABLE_ROOT_NOTE = 'WHY TR4W FILES ARE HERE.txt';
+
+function WritableRootNoticeDue(aRedirected: boolean; const aRoot: string): boolean;
+procedure RecordWritableRootNotice(const aRoot, aInstallDir: string);
+function TakeWritableRootNotice(out aInstallDir, aRoot, aCopied: string): boolean;
+
+(* THE FOLDER THE OLD STATION-STATE FILES ARE WRITTEN BESIDE -- tr4w.pos
+  (under its settings\), bandmap.bin, the dvk\ recordings, dxcluster\.
+
+  These were composed from TR4W_PATH_NAME, which is DataDir, the READ-ONLY
+  tier. On Windows that is the program folder, so this answers the writable
+  root: unchanged when the folder is writable, %APPDATA%\TR4W\ when it is
+  not. OFF WINDOWS IT IS DataDir, EXACTLY AS BEFORE -- moving them there is
+  a separate decision (they are still written inside a .app bundle or an
+  AppImage mount, which is an open defect, not this change). *)
+function StationStateDir: string;
+
+(* ------------------------------------------------------------------------
+  ONE ANSWER PER KIND OF FILE TR4W WRITES (NY4I, 2026-11-20: "all writes
+  should be centralized as much as possible, or at least the path name
+  generation"). Each kind maps onto an accessor above, so the answer on
+  every platform is the one that accessor already gave:
+
+    wfSettings        SettingsDir          tr4w.json, tr4w.ini, ssl\
+    wfDiagnosticLog   LogDir               tr4w.log, tr4w-early.log,
+                                           hamlib_trace.log
+    wfCrashLog        LogDir               a crash report goes to tr4w.log
+    wfContestLog      ContestDir           the contest .db and its .cfg
+    wfBackup          BackupDir            a contest log's backups
+    wfDownload        DownloadedDataDir    CTY.DAT, TRMASTER.DTA, call history
+    wfStationState    StationStateDir      tr4w.pos's folder, bandmap.bin,
+                                           dvk\, dxcluster\
+
+  EXPORTS AND REPORTS (ADIF, Cabrillo, the summary sheet, the 3830 score)
+  are NOT a kind: they go BESIDE THE CONTEST LOG, wherever that is, and
+  BesideContestLogFilePath composes that. A log under %APPDATA% takes its
+  exports with it. *)
+type
+   TWrittenFileKind = (wfSettings, wfDiagnosticLog, wfCrashLog, wfContestLog,
+                       wfBackup, wfDownload, wfStationState);
+
+function WrittenFileDir(aKind: TWrittenFileKind): string;
+function WrittenFilePath(aKind: TWrittenFileKind; const aName: string): string;
+
+(* aName in the contest log's own folder. aLogPath is the log's full path;
+  when it names no folder the answer is aName alone, which is what a caller
+  composing ExtractFilePath(aLogPath) + aName produced. *)
+function BesideContestLogFilePath(const aLogPath, aName: string): string;
+
 implementation
 
-uses SysUtils, StrUtils;
+uses SysUtils, StrUtils, Classes;
 
 function DataFileNameOnly(const aValue: string): string;
 var
@@ -549,12 +715,195 @@ begin
       end;
 end;
 
+(* ------------------------------------------------------------------------
+  THE WRITABLE-ROOT DECISION. Plain RTL, compiled everywhere so the tests
+  run on every platform; only the Windows arm below ever ASKS it.
+  ------------------------------------------------------------------------ *)
+
+var
+   GProbeCounter: integer = 0;
+
+function DirectoryIsWritable(const aDir: string): boolean;
+var
+   probe: string;
+   h: THandle;
+begin
+   Result := False;
+   if (aDir = '') or (not DirectoryExists(aDir)) then
+      begin
+      Exit;
+      end;
+
+   (* A name nothing else uses: the process id and a counter, so two copies
+     of TR4W starting together, or two probes in one run, cannot collide. *)
+   Inc(GProbeCounter);
+   probe := IncludeTrailingPathDelimiter(aDir) + '.tr4w-write-probe-'
+            + IntToStr(GetProcessID) + '-' + IntToStr(GProbeCounter) + '.tmp';
+
+   h := FileCreate(probe);
+   if h = feInvalidHandle then
+      begin
+      Exit;
+      end;
+   FileClose(h);
+   Result := True;
+   DeleteFile(probe);
+end;
+
+function ChooseWritableRoot(const aInstallDir, aPerUserBase: string;
+                            aProbe: TDirectoryProbe;
+                            out aRedirected, aCreated: boolean;
+                            out aProblem: string): string;
+var
+   root: string;
+begin
+   aRedirected := False;
+   aCreated    := False;
+   aProblem    := '';
+   Result      := IncludeTrailingPathDelimiter(aInstallDir);
+
+   if aProbe(aInstallDir) then
+      begin
+      Exit;
+      end;
+
+   if aPerUserBase = '' then
+      begin
+      aProblem := 'the program folder ' + Result + ' does not accept new files '
+                  + 'and APPDATA is not set, so there is nowhere else to write';
+      Exit;
+      end;
+
+   root := IncludeTrailingPathDelimiter(
+              IncludeTrailingPathDelimiter(aPerUserBase) + 'TR4W');
+   if not DirectoryExists(root) then
+      begin
+      if not ForceDirectories(root) then
+         begin
+         aProblem := 'the program folder ' + Result + ' does not accept new '
+                     + 'files and ' + root + ' could not be created';
+         Exit;
+         end;
+      aCreated := True;
+      end;
+
+   aRedirected := True;
+   Result      := root;
+end;
+
+(* A byte copy that refuses to overwrite. A seed that failed is reported by
+  leaving the name out of the answer; the program then starts as a fresh
+  install would, which is not a reason to stop it. *)
+function CopyIfAbsent(const aSource, aTarget: string): boolean;
+var
+   src, dst: TFileStream;
+begin
+   Result := False;
+   if (not FileExists(aSource)) or FileExists(aTarget) then
+      begin
+      Exit;
+      end;
+   try
+      src := TFileStream.Create(AnsiString(aSource), fmOpenRead or fmShareDenyWrite);
+      try
+         dst := TFileStream.Create(AnsiString(aTarget), fmCreate);
+         try
+            dst.CopyFrom(src, 0);
+         finally
+            dst.Free;
+         end;
+      finally
+         src.Free;
+      end;
+      Result := True;
+   except
+      on E: EStreamError do
+         begin
+         Result := False;
+         end;
+   end;
+end;
+
+function SeedPerUserSettings(const aInstallDir, aRoot: string): string;
+const
+   SEEDED: array[0..2] of string = ('tr4w.json', 'tr4w.ini', 'tr4w.pos');
+var
+   fromDir, toDir: string;
+   i: integer;
+begin
+   Result  := '';
+   fromDir := IncludeTrailingPathDelimiter(aInstallDir) + 'settings' + PathDelim;
+   if not DirectoryExists(fromDir) then
+      begin
+      Exit;
+      end;
+   toDir := EnsureDir(IncludeTrailingPathDelimiter(aRoot) + 'settings');
+
+   for i := Low(SEEDED) to High(SEEDED) do
+      begin
+      if CopyIfAbsent(fromDir + SEEDED[i], toDir + SEEDED[i]) then
+         begin
+         if Result <> '' then
+            begin
+            Result := Result + ', ';
+            end;
+         Result := Result + SEEDED[i];
+         end;
+      end;
+end;
+
+var
+   (* The cached Windows answer. Resolved on first use, never re-asked: a
+     run that changed its mind half way would write half its files in each
+     place. *)
+   GRootResolved:   boolean = False;
+   GRootRedirected: boolean = False;
+   GRootCreated:    boolean = False;
+   GRootNoticeTaken: boolean = False;
+   GRoot:           string  = '';
+   GRootInstallDir: string  = '';
+   GRootProblem:    string  = '';
+   GRootCopied:     string  = '';
+
 {$IFDEF WINDOWS}
 
 { The working directory -- the same rule TR4W_PATH_NAME has always used. }
 function AppDir: string;
 begin
    Result := IncludeTrailingPathDelimiter(GetCurrentDir);
+end;
+
+procedure ResolveWritableRoot;
+begin
+   if GRootResolved then
+      begin
+      Exit;
+      end;
+   GRootResolved   := True;
+   GRootInstallDir := AppDir;
+   GRoot := ChooseWritableRoot(GRootInstallDir, GetEnvironmentVariable('APPDATA'),
+                               @DirectoryIsWritable, GRootRedirected,
+                               GRootCreated, GRootProblem);
+   if GRootRedirected and GRootCreated then
+      begin
+      GRootCopied := SeedPerUserSettings(GRootInstallDir, GRoot);
+      end;
+end;
+
+(* THE PROGRAM FOLDER, LIVE, WHEN IT IS WRITABLE -- not a cached copy of it.
+  AppDir is the working directory and has always been asked afresh on each
+  call; answering a cached string instead would be a change nobody asked for. *)
+function WindowsWritableRoot: string;
+begin
+   ResolveWritableRoot;
+   if GRootRedirected then
+      begin
+      Result := GRoot;
+      end
+   else
+      begin
+      Result := AppDir;
+      end;
 end;
 
 function DataFilePath(const aName: string): string;
@@ -564,17 +913,19 @@ end;
 
 function SettingsFilePath(const aName: string): string;
 begin
-   Result := EnsureDir(AppDir + 'settings') + aName;
+   Result := EnsureDir(WindowsWritableRoot + 'settings') + aName;
 end;
 
 function LogFilePath(const aName: string): string;
 begin
-   Result := AppDir + aName;
+   Result := WindowsWritableRoot + aName;
 end;
 
+(* DataDir STAYS THE PROGRAM FOLDER: it is the read-only tier. *)
 function DataDir: string;     begin Result := AppDir; end;
-function SettingsDir: string; begin Result := EnsureDir(AppDir + 'settings'); end;
-function LogDir: string;      begin Result := AppDir; end;
+function SettingsDir: string; begin Result := EnsureDir(WindowsWritableRoot + 'settings'); end;
+function LogDir: string;      begin Result := WindowsWritableRoot; end;
+function StationStateDir: string; begin Result := WindowsWritableRoot; end;
 
 (* THE BINARY'S OWN DIRECTORY, NOT AppDir. AppDir is the working directory
   here, which is right for data and wrong for libraries: the loader resolves a
@@ -583,8 +934,10 @@ function PrivateLibraryDir: string;
 begin
    Result := ExtractFilePath(ParamStr(0));
 end;
-// Beside the binary, exactly as it has always been. See the interface note.
-function ContestDir: string;  begin Result := AppDir; end;
+(* Beside the binary, exactly as it has always been -- unless the program
+  folder refuses writes, when the contests go to the per-user root with the
+  rest of the writable files. See the interface note. *)
+function ContestDir: string;  begin Result := WindowsWritableRoot; end;
 function ContestFilePath(const aName: string): string;
 begin
    Result := ContestDir + aName;
@@ -653,6 +1006,10 @@ end;
 
 function LogDir: string;      begin Result := EnsureDir(HomeDir + 'Library/Logs/TR4W'); end;
 
+(* DataDir, exactly what TR4W_PATH_NAME composed before -- see the interface
+  note. Unchanged on purpose. *)
+function StationStateDir: string; begin Result := DataDir; end;
+
 {$ENDIF}
 
 {$IF DEFINED(UNIX) AND NOT DEFINED(DARWIN)}
@@ -714,6 +1071,13 @@ end;
 function LogDir: string;
 begin
    Result := XdgDir('XDG_STATE_HOME', '.local/state');
+end;
+
+(* DataDir, exactly what TR4W_PATH_NAME composed before -- see the interface
+  note. Unchanged on purpose. *)
+function StationStateDir: string;
+begin
+   Result := DataDir;
 end;
 
 (* Beside the binary. Nothing is shipped here by the tarball -- OpenSSL,
@@ -790,14 +1154,11 @@ end;
   One answer for every writable file that belongs with the settings -- a
   download and a backup -- so the two cannot disagree about where --settings
   moved them. *)
-function WritableSettingsDir: string;
-var
-   settingsFile: string;
+function WritableSettingsDirFor(const aOverride, aDefault: string): string;
 begin
-   settingsFile := SettingsFileOverride;
-   if settingsFile = '' then
+   if aOverride = '' then
       begin
-      Result := SettingsDir;
+      Result := aDefault;
       Exit;
       end;
 
@@ -805,7 +1166,22 @@ begin
      all, and ExtractFilePath of that is the empty string -- which would put a
      downloaded country file wherever the program happened to be started from
      rather than beside the settings it belongs to. *)
-   Result := EnsureDir(ExtractFilePath(ExpandFileName(settingsFile)));
+   Result := EnsureDir(ExtractFilePath(ExpandFileName(aOverride)));
+end;
+
+function WritableSettingsDir: string;
+var
+   settingsFile: string;
+begin
+   settingsFile := SettingsFileOverride;
+   if settingsFile = '' then
+      begin
+      (* Only asked when there is no override, exactly as before: SettingsDir
+        creates its folder. *)
+      Result := SettingsDir;
+      Exit;
+      end;
+   Result := WritableSettingsDirFor(settingsFile, '');
 end;
 
 function DownloadedDataDir: string;
@@ -894,6 +1270,139 @@ begin
       begin
       Result := beside;
       end;
+end;
+
+(* ------------------------------------------------------------------------
+  THE REDIRECT, AS THE REST OF THE PROGRAM ASKS ABOUT IT. Off Windows the
+  decision is never made, so every answer is "not redirected".
+  ------------------------------------------------------------------------ *)
+
+function WritableFilesRedirected: boolean;
+begin
+{$IFDEF WINDOWS}
+   ResolveWritableRoot;
+   Result := GRootRedirected;
+{$ELSE}
+   Result := False;
+{$ENDIF}
+end;
+
+function WritableFilesRoot: string;
+begin
+{$IFDEF WINDOWS}
+   Result := WindowsWritableRoot;
+{$ELSE}
+   Result := '';
+{$ENDIF}
+end;
+
+function PortableFolderUsable(const aBinaryDir: string): boolean;
+begin
+{$IFDEF WINDOWS}
+   Result := DirectoryIsWritable(aBinaryDir);
+{$ELSE}
+   Result := True;
+{$ENDIF}
+end;
+
+function WritableRootProblem: string;
+begin
+{$IFDEF WINDOWS}
+   ResolveWritableRoot;
+{$ENDIF}
+   Result := GRootProblem;
+end;
+
+function WritableRootNoticeDue(aRedirected: boolean; const aRoot: string): boolean;
+begin
+   Result := aRedirected and (aRoot <> '')
+             and (not FileExists(IncludeTrailingPathDelimiter(aRoot) + WRITABLE_ROOT_NOTE));
+end;
+
+procedure RecordWritableRootNotice(const aRoot, aInstallDir: string);
+var
+   note: TStringList;
+begin
+   note := TStringList.Create;
+   try
+      note.Add('TR4W keeps its settings, its diagnostic log (tr4w.log) and');
+      note.Add('new contest logs in this folder because the folder it is');
+      note.Add('installed in does not accept new files:');
+      note.Add('');
+      note.Add(AnsiString('    ' + aInstallDir));
+      note.Add('');
+      note.Add('TR4W still reads its shipped files (CTY.DAT, TRMASTER.DTA, dom\,');
+      note.Add('help\) from that folder. Installing TR4W in a folder you can');
+      note.Add('write to, such as C:\tr4w, keeps everything in one place.');
+      try
+         note.SaveToFile(AnsiString(IncludeTrailingPathDelimiter(aRoot) + WRITABLE_ROOT_NOTE));
+      except
+         on E: EStreamError do
+            begin
+            (* Not fatal: the operator is told again next run, which is the
+              honest outcome of a note that could not be kept. *)
+            end;
+      end;
+   finally
+      note.Free;
+   end;
+end;
+
+function TakeWritableRootNotice(out aInstallDir, aRoot, aCopied: string): boolean;
+begin
+{$IFDEF WINDOWS}
+   ResolveWritableRoot;
+{$ENDIF}
+   aInstallDir := GRootInstallDir;
+   aRoot       := GRoot;
+   aCopied     := GRootCopied;
+   Result := (not GRootNoticeTaken) and WritableRootNoticeDue(GRootRedirected, GRoot);
+   if Result then
+      begin
+      GRootNoticeTaken := True;
+      RecordWritableRootNotice(GRoot, GRootInstallDir);
+      end;
+end;
+
+function WrittenFileDir(aKind: TWrittenFileKind): string;
+begin
+   case aKind of
+      wfSettings:
+         begin
+         Result := SettingsDir;
+         end;
+      wfDiagnosticLog, wfCrashLog:
+         begin
+         Result := LogDir;
+         end;
+      wfContestLog:
+         begin
+         Result := ContestDir;
+         end;
+      wfBackup:
+         begin
+         Result := BackupDir;
+         end;
+      wfDownload:
+         begin
+         Result := DownloadedDataDir;
+         end;
+   else
+      begin
+      Result := StationStateDir;
+      end;
+   end;
+   Result := IncludeTrailingPathDelimiter(Result);
+end;
+
+function WrittenFilePath(aKind: TWrittenFileKind; const aName: string): string;
+begin
+   Result := WrittenFileDir(aKind) + aName;
+end;
+
+function BesideContestLogFilePath(const aLogPath, aName: string): string;
+begin
+   Result := ExtractFilePath(aLogPath) + aName;
 end;
 
 end.

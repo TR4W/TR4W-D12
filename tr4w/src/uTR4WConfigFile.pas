@@ -109,14 +109,41 @@ const
 // so a TR4W started with a different settings folder finds its own config.
 function TR4WConfigFileName: string;
 
+(* A SAVE THE DISK REFUSED IS REPORTED, NOT RAISED (issue 165, 2026-11-20).
+
+  SaveConfig and SaveSettings answer False when the file could not be written
+  -- a folder that refuses new files (C:\Program Files), a full disk, a file
+  held open by another program. The previous file is untouched: the write
+  goes to <file>.new first (uFileText.WriteAllTextUTF8). Each failure is
+  logged as an Error, and the operator is told ONCE PER RUN through the hook
+  below: Preferences saves on every keystroke, so a notice per failure would
+  be a dialog per key. The program carries on with the settings it holds.
+
+  Until 2026-11-20 the exception escaped to the LCL's last-resort handler,
+  whose dialog offered "risk data corruption" or "kill the program" -- for a
+  save that had in fact corrupted nothing.
+
+  A HOOK, NOT A DIALOG: this unit is linked by tr4wconvert and the unit
+  tests, which have no window. uProgramMain installs the one the program
+  shows. LastConfigWriteFailure is the last refusal's reason, '' after a
+  write that worked -- tr4wconvert reports it and exits non-zero. *)
+type
+   TConfigWriteNotice = procedure(const aFileName, aReason: string);
+
+procedure SetConfigWriteNotice(aNotice: TConfigWriteNotice);
+function LastConfigWriteFailure: string;
+(* For the tests: the once-per-run latch, re-armed. *)
+procedure ForgetConfigWriteNotice;
+
 // Writes every library into one file, atomically. Creates the directory if it
 // does not exist, exactly as the radio store did when it owned the file.
-procedure SaveConfig(const aFileName: string;
-                     const aRadios: TRadioConfigStore;
-                     const aKeyers: TKeyerConfigStore;
-                     const aUDP: TUDPBroadcastConfig = nil;
-                     const aWindows: TWindowLayoutStore = nil;
-                     const aColumns: TColumnWidthStore = nil);
+// False when the file could not be written -- see the note above.
+function SaveConfig(const aFileName: string;
+                    const aRadios: TRadioConfigStore;
+                    const aKeyers: TKeyerConfigStore;
+                    const aUDP: TUDPBroadcastConfig = nil;
+                    const aWindows: TWindowLayoutStore = nil;
+                    const aColumns: TColumnWidthStore = nil): boolean;
 
 (* THE SETTINGS OBJECT ON ITS OWN.
 
@@ -130,9 +157,10 @@ procedure SaveConfig(const aFileName: string;
 
   REFUSED, with an Error line, for an object still AwaitingStartupLoad (see
   TR4WSettings): the section is replaced whole, so that save would reset the
-  station to defaults. *)
-procedure SaveSettings(const aFileName: string;
-                       const aSettings: TR4WSettings);
+  station to defaults. False for that refusal, a nil object and a failed
+  write alike: the file holds what it held. *)
+function SaveSettings(const aFileName: string;
+                      const aSettings: TR4WSettings): boolean;
 
 (* THE WHOLE SETTINGS OBJECT AT PROGRAM EXIT (NY4I, 2026-11-15, decision C).
 
@@ -451,17 +479,66 @@ begin
    Result := ReadRootReporting(aFileName, unreadable);
 end;
 
-procedure SaveConfig(const aFileName: string;
-                     const aRadios: TRadioConfigStore;
-                     const aKeyers: TKeyerConfigStore;
-                     const aUDP: TUDPBroadcastConfig = nil;
-                     const aWindows: TWindowLayoutStore = nil;
-                     const aColumns: TColumnWidthStore = nil);
+var
+   gConfigWriteNotice: TConfigWriteNotice = nil;
+   gConfigWriteNoticeShown: boolean = False;
+   gLastConfigWriteFailure: string = '';
+
+procedure SetConfigWriteNotice(aNotice: TConfigWriteNotice);
+begin
+   gConfigWriteNotice := aNotice;
+end;
+
+function LastConfigWriteFailure: string;
+begin
+   Result := gLastConfigWriteFailure;
+end;
+
+procedure ForgetConfigWriteNotice;
+begin
+   gConfigWriteNoticeShown := False;
+   gLastConfigWriteFailure := '';
+end;
+
+(* THE ONE PLACE THIS UNIT WRITES THE FILE -- see the note at
+  SetConfigWriteNotice. Logged every time, told once per run. *)
+function WriteConfigDocument(const aFileName: string;
+                             const aRoot: TJSONObject): boolean;
+var
+   reason: string;
+begin
+   // See the unit header: formatted, and no BOM.
+   Result := TryWriteAllTextUTF8(aFileName, aRoot.Format(2), reason);
+   if Result then
+      begin
+      gLastConfigWriteFailure := '';
+      Exit;
+      end;
+
+   gLastConfigWriteFailure := reason;
+   TLogLogger.GetLogger('uTR4WConfigFile').Error(
+      '[Config] could not save ' + aFileName + ': ' + reason +
+      ' -- the previous file is unchanged and TR4W carries on with the ' +
+      'settings it holds');
+   if (not gConfigWriteNoticeShown) and Assigned(gConfigWriteNotice) then
+      begin
+      gConfigWriteNoticeShown := True;
+      gConfigWriteNotice(aFileName, reason);
+      end;
+end;
+
+function SaveConfig(const aFileName: string;
+                    const aRadios: TRadioConfigStore;
+                    const aKeyers: TKeyerConfigStore;
+                    const aUDP: TUDPBroadcastConfig = nil;
+                    const aWindows: TWindowLayoutStore = nil;
+                    const aColumns: TColumnWidthStore = nil): boolean;
 var
    root, tenant: TJSONObject;
    dir: string;
    i: integer;
 begin
+   Result := False;
    (* A BATCH RUN NEVER WRITES SETTINGS (2026-11-05). Startup logs
      "settings are READ-ONLY for this run" for /EXPORT, and this is the ONE
      writer, so this is where the promise is kept. Merging the external
@@ -474,6 +551,8 @@ begin
       begin
       TLogLogger.GetLogger('uTR4WConfigFile').Info(
          '[Config] batch /EXPORT: not writing ' + aFileName);
+      (* Not a failure: the batch run deliberately writes nothing. *)
+      Result := True;
       Exit;
       end;
 
@@ -539,19 +618,19 @@ begin
          JSONSetSection(root, JSONKEY_COLUMNS, aColumns.ToJSON);
          end;
 
-      // See the unit header: formatted, and no BOM.
-      WriteAllTextUTF8(aFileName, root.Format(2));
+      Result := WriteConfigDocument(aFileName, root);
    finally
       root.Free;
    end;
 end;
 
-procedure SaveSettings(const aFileName: string;
-                       const aSettings: TR4WSettings);
+function SaveSettings(const aFileName: string;
+                      const aSettings: TR4WSettings): boolean;
 var
    root: TJSONObject;
    dir: string;
 begin
+   Result := False;
    if aSettings = nil then
       begin
       Exit;
@@ -582,7 +661,7 @@ begin
    root := ReadRootOrEmpty(aFileName);
    try
       JSONSetSection(root, JSONKEY_SETTINGS, aSettings.ToJSON);
-      WriteAllTextUTF8(aFileName, root.Format(2));
+      Result := WriteConfigDocument(aFileName, root);
    finally
       root.Free;
    end;
@@ -605,7 +684,12 @@ begin
       Exit;
       end;
    started := GetTickCount64;
-   SaveSettings(aFileName, aSettings);
+   if not SaveSettings(aFileName, aSettings) then
+      begin
+      (* WriteConfigDocument logged the reason; a success line here would
+        contradict it. *)
+      Exit;
+      end;
    TLogLogger.GetLogger('uTR4WConfigFile').Info(
       'Exit: settings saved to ' + aFileName + ' in ' +
       IntToStr(GetTickCount64 - started) + ' ms');
@@ -793,8 +877,12 @@ begin
         one without the other would lose them if the process died in
         between. *)
       JSONSetSection(root, JSONKEY_SETTINGS, aSettings.ToJSON);
-      WriteAllTextUTF8(aFileName, root.Format(2));
-      Result := removed;
+      (* A refused write consumed nothing: the bucket is still on disk, so
+        the next start converts it again. Reported by WriteConfigDocument. *)
+      if WriteConfigDocument(aFileName, root) then
+         begin
+         Result := removed;
+         end;
    finally
       root.Free;
    end;

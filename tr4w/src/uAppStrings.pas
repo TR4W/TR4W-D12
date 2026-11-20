@@ -93,15 +93,71 @@ resourcestring
      deliberate.  A caption is user-facing text and belongs here. }
    SAlreadyRunningTitle = 'TR4W';
 
-   { TR4W COULD NOT OPEN tr4w.log, AND KEPT RUNNING.  %s is the reason as the
-     RTL gives it, which names the file.  The last sentence is the cost that
-     matters to an operator: a fault reported from this session may have no
-     log behind it. }
-   SLogFileUnavailable =
-      'TR4W could not open its log file.' + sLineBreak + sLineBreak +
+   (* TR4W COULD NOT OPEN tr4w.log, AND KEPT RUNNING.  The first %s is the
+     reason as the RTL gives it, which names the file; the second is the
+     folder TR4W writes its own files to this run.
+
+     REWORDED 2026-11-20 (issue 165, NY4I's Program Files test): "its log
+     file" reads, in a CONTEST LOGGER, as the contest log -- the operator's
+     QSOs. tr4w.log is the troubleshooting log and nothing else, so the
+     message says so first. It does NOT promise the contest log is safe: if
+     this folder refuses files the contest log may be refused too, and that
+     failure is reported on its own, so the message says exactly that.
+
+     A NEW KEY, not new text under the old SLogFileUnavailable: the message
+     also gained a second argument (the folder), and an old translation
+     applied to it would silently drop that folder. Under a new key the old
+     translations simply stop applying and the English shows until the
+     catalogues are merged; the old entry is left in the .po files for the
+     i18n merge to retire. *)
+   SDiagnosticLogUnavailable =
+      'TR4W could not open its diagnostic log, tr4w.log.' + sLineBreak + sLineBreak +
       '%s' + sLineBreak + sLineBreak +
-      'TR4W will keep running and keep trying to open it. Until it can, ' +
-      'nothing from this session is written to the log.';
+      'This is the troubleshooting log TR4W keeps for problem reports. It is ' +
+      'NOT your contest log: your QSOs are kept in a separate contest log ' +
+      'file, and TR4W tells you separately if it cannot save to that.' +
+      sLineBreak + sLineBreak +
+      'TR4W writes its own files in:' + sLineBreak +
+      '    %s' + sLineBreak + sLineBreak +
+      'TR4W will keep running and keep trying to open tr4w.log. Until it can, ' +
+      'no troubleshooting details from this session are recorded.';
+
+   (* SHOWN ONCE: the program folder refuses new files (an install under
+     C:\Program Files run as a standard user), so TR4W writes under the
+     user's application data instead (issue 165, 2026-11-20). %0:s is the
+     program folder, %1:s the folder TR4W writes to now. *)
+   SWritableRootMoved =
+      'TR4W cannot save files in the folder it is installed in:' + sLineBreak +
+      '    %0:s' + sLineBreak + sLineBreak +
+      'So your settings, contest logs, backups and the troubleshooting log ' +
+      '(tr4w.log) are kept here instead:' + sLineBreak +
+      '    %1:s' + sLineBreak + sLineBreak +
+      'Nothing is lost. To keep everything in one folder, install TR4W in a ' +
+      'folder you can write to, such as C:\tr4w.';
+   (* Added to the notice when settings were carried across from the
+     install folder. %s is the file names. *)
+   SWritableRootCopied =
+      'Copied from the install folder''s settings: %s';
+   (* Added when contest logs (.db files) are in the install folder: TR4W
+     cannot open them there for writing. *)
+   SWritableRootOldLogs =
+      'Contest logs already in the install folder were left where they are. ' +
+      'To keep logging in one, copy it (with any file of the same name ' +
+      'ending -wal or -shm) into the folder above.';
+
+   (* A SETTINGS SAVE THE DISK REFUSED -- shown once per run; every failure
+     is logged. %0:s is the file, %1:s the system's reason. It replaced the
+     LCL's raw "risk data corruption / kill the program" dialog. *)
+   SSettingsNotSaved =
+      'TR4W could not save your settings to:' + sLineBreak +
+      '    %0:s' + sLineBreak + sLineBreak +
+      '%1:s' + sLineBreak + sLineBreak +
+      'The settings file on disk was not changed. TR4W keeps running with the ' +
+      'settings as you have them now, but changes made in this session will be ' +
+      'lost when TR4W closes unless a later save works.' + sLineBreak + sLineBreak +
+      'Check that the folder exists, that you can write to it, and that the ' +
+      'disk is not full. This message is shown once per session; later ' +
+      'failures are written to tr4w.log.';
 
    SIniRetireTitle = 'Old settings file';
 

@@ -186,6 +186,7 @@ uses
    uTestTCIProtocol     in 'uTestTCIProtocol.pas',
    uTestTCIServer       in 'uTestTCIServer.pas',
    uTestTR4WConfigFile  in 'uTestTR4WConfigFile.pas',
+   uTestWritableRoot    in 'uTestWritableRoot.pas',   (* issue 165: a read-only install folder *)
    uTestWindowLayoutStore in 'uTestWindowLayoutStore.pas',
    uTestComputerID in 'uTestComputerID.pas',
    uTestUDPBroadcaster  in 'uTestUDPBroadcaster.pas',
@@ -1520,6 +1521,7 @@ begin
    RegisterSuite(TTCIProtocolTests.Create('TCIProtocol'));
    RegisterSuite(TTCIServerTests.Create('TCIServer'));
    RegisterSuite(TTR4WConfigFileTests.Create('TR4WConfigFile'));
+   RegisterSuite(TWritableRootTests.Create('WritableRoot'));
    RegisterSuite(TWindowLayoutStoreTests.Create('WindowLayoutStore'));
    RegisterSuite(TComputerIDTests.Create('ComputerID'));
 

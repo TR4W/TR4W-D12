@@ -1023,6 +1023,77 @@ begin
       end;
 end;
 
+(* A SETTINGS SAVE THE DISK REFUSED (issue 165, 2026-11-20) -- what the
+  operator sees, once per run (uTR4WConfigFile latches it and logs every
+  failure). Never from a headless run, and never off the main thread: a
+  modal there would deadlock or vanish, and the log already has the line. *)
+procedure ConfigWriteNoticeToOperator(const aFileName, aReason: string);
+begin
+   if tSilentExport or (not OnMainThread) then
+      begin
+      Exit;
+      end;
+   ReportStartupWarning(UnicodeFormat(SSettingsNotSaved, [aFileName, aReason]));
+end;
+
+(* True when aDir holds a contest log -- the .db files a redirected TR4W no
+  longer lists. Only asked on the run that tells the operator. *)
+function FolderHoldsContestLogs(const aDir: string): boolean;
+var
+   rec: TSearchRec;
+begin
+   Result := FindFirst(AnsiString(IncludeTrailingPathDelimiter(aDir) + '*.db'), faAnyFile, rec) = 0;
+   if Result then
+      begin
+      FindClose(rec);
+      end;
+end;
+
+(* WHERE THIS RUN WRITES, said once in the log every start and once to the
+  operator per per-user root (issue 165). uAppPaths decides; this reports. *)
+procedure ReportWritableRoot;
+var
+   installDir, root, copied, text: string;
+begin
+   if WritableRootProblem <> '' then
+      begin
+      logger.Error('[Paths] ' + WritableRootProblem);
+      end;
+   if not WritableFilesRedirected then
+      begin
+      Exit;
+      end;
+
+   logger.Info('[Paths] the program folder does not accept new files; '
+               + 'settings, logs and contests are written under '
+               + WritableFilesRoot + ' (shipped data is still read from '
+               + DataDir + ')');
+
+   if not TakeWritableRootNotice(installDir, root, copied) then
+      begin
+      Exit;
+      end;
+   if copied <> '' then
+      begin
+      logger.Info('[Paths] copied from ' + installDir + 'settings: ' + copied);
+      end;
+   if tSilentExport then
+      begin
+      Exit;
+      end;
+
+   text := UnicodeFormat(SWritableRootMoved, [installDir, root]);
+   if copied <> '' then
+      begin
+      text := text + sLineBreak + sLineBreak + UnicodeFormat(SWritableRootCopied, [copied]);
+      end;
+   if FolderHoldsContestLogs(installDir) then
+      begin
+      text := text + sLineBreak + sLineBreak + SWritableRootOldLogs;
+      end;
+   ReportStartupWarning(text);
+end;
+
 procedure ReportConfigurationSources;
 var
    jsonPath: string;
@@ -1692,10 +1763,19 @@ begin
                  + appender.OpenError);
       if not tSilentExport then
          begin
-         ReportStartupWarning(SysUtils.Format(SLogFileUnavailable,
-                                              [appender.OpenError]));
+         ReportStartupWarning(UnicodeFormat(SDiagnosticLogUnavailable,
+                                            [appender.OpenError, LogDir]));
          end;
       end;
+
+   (* AFTER THE LOGGER AND ITS FAILURE REPORT, so both lines below have
+     somewhere to go -- the decision itself was made long before, on the
+     first path anything asked for (EarlyTrace). *)
+   ReportWritableRoot;
+
+   (* A SETTINGS SAVE THE DISK REFUSES IS TOLD TO THE OPERATOR, not raised
+     into the LCL's "risk data corruption" dialog. See uTR4WConfigFile. *)
+   SetConfigWriteNotice(ConfigWriteNoticeToOperator);
 
    { /IMPORTLOG -- AS EARLY AS IT CAN REPORT, AND NO EARLIER.
 
