@@ -34,7 +34,15 @@ unit uTestLogDroppedColumns;
 interface
 
 uses
-   uTR4WTestFramework;
+   sqldb, uTR4WTestFramework;
+
+(* EVERY FIELD OF EVERY ROW of aSql, as one text: fields by ',', rows by '|',
+  NULL as NULL. Also uTestLogMigrationBackup's, to compare a backup's rows
+  with the original's. *)
+function RowsText(aConnection: TSQLConnection; const aSql: string): string;
+
+(* aSource's bytes into a new aTarget. *)
+procedure CopyFileBytes(const aSource, aTarget: string);
 
 type
    TLogDroppedColumnsTests = class(TTestCase)
@@ -55,7 +63,7 @@ type
 implementation
 
 uses
-   SysUtils, Classes, sqldb, sqlite3conn,
+   SysUtils, Classes, sqlite3conn,
    uLogDatabase, uLogSchema,
    uTestLatestContest,   (* ScrubTestLog, TestLogHasColumn *)
    uTestLogDatabase;     (* CommitFramesInWal *)

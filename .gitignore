@@ -70,6 +70,9 @@ local-content/*
 tr4w/target/tr4w.exe
 tr4w/target/settings/TR4W.INI
 tr4w/target/settings/tr4w.json
+# The backups a corpus run takes of its older-schema logs before upgrading
+# them (--settings puts BackupDir here); corpus-lib.sh clears it per run.
+tr4w/test/corpus/settings/backup/
 *.pos
 *.CFG
 *.map
