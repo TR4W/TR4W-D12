@@ -101,7 +101,9 @@ unit uContestNorthDakotaQP;
 interface
 
 uses
-   VC, uContestBase, uContestStateQSOPartyBase;
+   VC, uContestBase, uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 const
    (* ITS ID -- stored data; see the header. *)
@@ -173,6 +175,18 @@ type
 
       (* WHAT THE EXCHANGE CARRIES -- a domestic QTH (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_ND carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 10 of 10 non-state rows are county keys of its
+         own county file (Pennsylvania: its in-state file pa.dom, which holds the ARRL sections); the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -409,6 +423,16 @@ function TContestNorthDakotaQP.CountsAsMultiplier(const aQso: ContestExchange;
 begin
    Result := not (Station.InHostState and
                   DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
+end;
+
+function TContestNorthDakotaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestNorthDakotaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_ND';
 end;
 
 initialization

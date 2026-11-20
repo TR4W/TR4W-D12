@@ -72,7 +72,9 @@ interface
 uses
    VC,
    uContestBase,   (* TContestFlags (M10 S5) *)
-   uContestStateQSOPartyBase;
+   uContestStateQSOPartyBase,
+   (* TCallHistoryFields, chf... -- CallHistoryFields. *)
+   uCallHistory;
 
 type
    TContestPennsylvaniaQP = class(TContestStateQSOPartyBase)
@@ -144,6 +146,18 @@ type
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
       function PerQSOExchangeLeadsWithSerial: boolean; override;
+   public
+      (* WHAT THE CALL HISTORY FILE PREFILLS --
+         THE COUNTY OR STATE -- the site file QSOP_PA carries Call, Exch1, UserText
+         (read 2026-11-20): the QTH the station sent (a county code, a state
+         or a DX prefix). This party remembers the QTH alone (its received
+         fields carry no name). 1632 of 1633 non-state rows are county keys of its
+         own county file (Pennsylvania: its in-state file pa.dom, which holds the ARRL sections); the rest are DX prefixes and a few spellings it lacks.
+         See TContestBase.CallHistoryFields. *)
+      function CallHistoryFields: TCallHistoryFields; override;
+
+      (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
+      function CallHistorySiteName: string; override;
    end;
 
 implementation
@@ -402,6 +416,16 @@ begin
          Result := '';
          end;
       end;
+end;
+
+function TContestPennsylvaniaQP.CallHistoryFields: TCallHistoryFields;
+begin
+   Result := CallHistoryFieldList([chfExch1]);
+end;
+
+function TContestPennsylvaniaQP.CallHistorySiteName: string;
+begin
+   Result := 'QSOP_PA';
 end;
 
 initialization
