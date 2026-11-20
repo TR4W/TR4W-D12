@@ -279,8 +279,8 @@ totals.mults Band20 CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band20 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands Both = dom=1 dx=0 zone=0 pfx=0
-totals.totalscore = 70
-totals.cabrillo = CLAIMED-SCORE: 70
+totals.totalscore = 20
+totals.cabrillo = CLAIMED-SCORE: 20
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -634,8 +634,8 @@ totals.mults AllBands CW = dom=2 dx=3 zone=0 pfx=0
 totals.mults AllBands Digital = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands Phone = dom=3 dx=4 zone=0 pfx=0
 totals.mults AllBands Both = dom=6 dx=7 zone=0 pfx=0
-totals.totalscore = 362
-totals.cabrillo = CLAIMED-SCORE: 362
+totals.totalscore = 312
+totals.cabrillo = CLAIMED-SCORE: 312
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -954,8 +954,8 @@ totals.mults Band20 CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band20 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands Both = dom=1 dx=0 zone=0 pfx=0
-totals.totalscore = 70
-totals.cabrillo = CLAIMED-SCORE: 70
+totals.totalscore = 20
+totals.cabrillo = CLAIMED-SCORE: 20
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
@@ -1272,8 +1272,8 @@ totals.mults Band20 CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults Band20 Both = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands CW = dom=1 dx=0 zone=0 pfx=0
 totals.mults AllBands Both = dom=1 dx=0 zone=0 pfx=0
-totals.totalscore = 70
-totals.cabrillo = CLAIMED-SCORE: 70
+totals.totalscore = 20
+totals.cabrillo = CLAIMED-SCORE: 20
 == initialexchange
 initialexchange.trmaster.program = FALSE
 initialexchange.trmaster.indexopen = FALSE
