@@ -422,32 +422,22 @@ begin
               rest := rest + part.Text;
               end;
 
-           mpOldCommand:
+           (* Both forms run the same line: the old body verbatim, the brace
+             body with its name upper-cased and '$' as the Ctrl-A it stands
+             for (uMessageText). *)
+           mpOldCommand, mpCommand:
               begin
               FoundCommand := True;
-              RunMessageCommand(ShortString(part.Text));
-              end;
-
-           mpCommand:
-              begin
-              FoundCommand := True;
-              if part.HasArgument then
-                 begin
-                 RunMessageCommand(ShortString(part.Name + '=' + part.Argument));
-                 end
-              else
-                 begin
-                 RunMessageCommand(ShortString(part.Name));
-                 end;
+              RunMessageCommand(ShortString(part.CommandLine));
               end;
 
            mpUnknownWord:
               begin
               FoundCommand := True;
               logger.Warn('[Message] {%s} is not a word TR4W knows -- skipped, not keyed',
-                          [part.Name]);
+                          [part.Body]);
               QuickDisplayError(UnicodeFormat(SMessageUnknownWordSkipped,
-                                              [string(part.Name)]));
+                                              [string(part.Body)]));
               end;
         end;
         end;
@@ -991,8 +981,9 @@ begin
 end;
 
 (* THE COMMAND TABLE'S NAMES ARE THE BRACE WORDS -- {MM_GRABLASTCALL},
-  {BANDUP}, {SPOTME}. A display row (it starts with a space) or a name that
-  is no brace word (ALT-D) is refused by the registration itself. *)
+  {BANDUP}, {SPOTME}, {ALT-D}: the same lookup the <03>..<04> bookend made.
+  A display row is registered too and is harmless -- it starts with a space
+  and holds ' = ', so no command name can be it. *)
 procedure RegisterCommandTableWords;
 var
   i                                     : integer;

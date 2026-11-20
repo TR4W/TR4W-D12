@@ -374,12 +374,17 @@ record's field order the wire format by accident. Adding or reordering a
 ## Brace words in a message, and the rover's call (NY4I, 2026-11-20)
 
 **ONE GRAMMAR: `src/uMessageText.pas`** (a leaf, pinned by
-`uTestMessageText`). `{NAME}` / `{NAME=ARGUMENT}`, NAME = letters, digits,
-`_`, any case. A word is a TOKEN (`ROVERCALL`, `ROVERQTH`), a COMMAND (every
-`sCommandsArray` name, registered by `uProcessCommand`'s initialization, plus
-`QSY` and `SPEEDnn`), or UNKNOWN. **A `{` that starts no word is still the
-cryptic worked call** (`{ TU`, `{}`, `{{X}}`, unclosed); the cryptic characters
-are text to the parser and `SendCrypticCWString` keys them as before.
+`uTestMessageText`). **NY4I's rule: `{` stands for `<03>` and `}` for
+`<04>`, nothing more.** A body is any text but a brace and runs exactly as
+`<03>BODY<04>` runs (`{SPEED+}`, `{ALT-D}`, `{SRS=PB1;}`); the name (up to the
+first `=`) matches in any case, the rest is verbatim. A leading `$` is the
+inactive radio, the old Ctrl-A (`{$SPEED+}`). A body is a TOKEN (`ROVERCALL`,
+`ROVERQTH`), a COMMAND (every `sCommandsArray` row, registered by
+`uProcessCommand`'s initialization -- the old lookup -- plus `QSY` and
+`SPEED` + digits or `+`/`-`), or UNKNOWN. **A `{` with no body is still the
+cryptic worked call** (`{}`, unclosed, the first `{` of `{{X}}`); the cryptic
+characters are text to the parser and `SendCrypticCWString` keys them as
+before.
 
 - `FoundCommand` (called first by `SendCrypticMessage`, every mode) runs every
   command -- brace or old `<03>..<04>` -- IN ORDER, BEFORE any text is keyed
@@ -389,8 +394,9 @@ are text to the parser and `SendCrypticCWString` keys them as before.
 - The chain test in `SendFunctionKeyMessage` is `MessageChainsOrCommands`: a
   Ctrl-D OR a brace command -- a command message has never flushed CW.
 - `SetCQMemoryString` / `SetEXMemoryString` convert `<03>X<04>` to `{X}` on
-  load (`UpgradeMessageBookends`, length-neutral); a body with no brace form
-  (Ctrl-A inactive radio, `SPEED+`, `ALT-D`, an unknown name) stays old.
+  load (`UpgradeMessageBookends`, byte for byte, a leading Ctrl-A becoming
+  `$`); only an unknown name, or a body holding a brace or another control
+  character, stays old.
 - The Alt-P editor refuses an unknown word; the picker inserts `{NAME}`.
 - `\` keys the PLAIN `Settings.My.Call`, always. `{ROVERCALL}` keys
   `uRoverState.RovingCall` (NY4I/KOH while roving), and so do the S&P space

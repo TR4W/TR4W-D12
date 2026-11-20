@@ -2209,10 +2209,10 @@ end;
   close) keeps that. The file the text came from is never rewritten.
 
   Called AFTER SniffOutControlCharacters, so a .cfg's textual '<03>' is the
-  byte by then. Two bytes become two bytes, so a 255-byte memory still fits.
-  A pair whose body is not a known brace word (a Ctrl-A inactive-radio
-  prefix, SPEED+, ALT-D, a typo) stays as it was and still runs as before;
-  the log says so. *)
+  byte by then. Byte for byte ({ for Ctrl-C, } for Ctrl-D, $ for a leading
+  Ctrl-A), so a 255-byte memory still fits. A pair whose body names no
+  command (a typo) or holds a brace or another control character stays as
+  it was and still runs as before; the log says so. *)
 procedure UpgradeMemoryBookends(const aBank: string; Mode: ModeType; Key: AnsiChar;
                                 var MemoryString: ShortString);
 var
@@ -2234,8 +2234,8 @@ begin
   if leftAlone > 0 then
      begin
      logger.Warn('[Messages] %s memory %d/%d: %d <03>..<04> command(s) have no brace ' +
-                 'form and are kept as they were (an inactive-radio Ctrl-A, SPEED+/-, ' +
-                 'ALT-D, or a name TR4W does not know)',
+                 'form and are kept as they were (a name TR4W does not know, or a ' +
+                 'brace or control character in the body)',
                  [aBank, Ord(Mode), Ord(Key), leftAlone]);
      end;
 end;
