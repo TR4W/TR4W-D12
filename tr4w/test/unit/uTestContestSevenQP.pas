@@ -46,6 +46,7 @@ type
       procedure Test_SevenQPScoresAtMostTenDXMultipliers;
       procedure Test_SevenQPMobileInANewCountyIsANewQSO;
       procedure Test_SevenQPCountsItsOwnStates;
+      procedure Test_SevenQPRefusesTheWSJTModes;
    end;
 
 implementation
@@ -139,11 +140,79 @@ begin
    CheckTrue(CountsForEntrant(SEVENQP, True, 'Ks', rmDomestic), 'as Kansas is');
 end;
 
+(* "Any computer-to-computer mode is considered digital. WSJT modes do not
+   support the 7QP exchange, so are not allowed." Every mode and submode is
+   walked: CW, phone and FM whole, digital but the WSJT-X ones; a refused QSO
+   is an automatic X-QSO and scores nothing, an allowed digital one scores
+   the sponsor's 4. *)
+procedure TContestSevenQPTests.Test_SevenQPRefusesTheWSJTModes;
+var
+   identity: TContestBase;
+   contestObject: TContestBase;
+   mode: ModeType;
+   ext: ExtendedModeType;
+   credited: boolean;
+   qso: ContestExchange;
+
+   function PointsIn(aExt: ExtendedModeType): integer;
+   var
+      q: ContestExchange;
+   begin
+      q := Default(ContestExchange);
+      q.ceRecordKind := rkQSO;
+      q.Callsign := 'W7XYZ';
+      q.Band := Band20;
+      q.Mode := Digital;
+      q.ExtMode := aExt;
+      q.QTHString := 'Azaph';
+      q.DomesticQTH := 'Azaph';
+      q.QSOPoints := 99;
+      contestObject.ScoreQSO(q);
+      Result := q.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_SevenQPRefusesTheWSJTModes');
+   identity := ContestIdentity(SEVENQP);
+   for mode := Low(ModeType) to High(ModeType) do
+      begin
+      for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
+         begin
+         credited := (mode in [CW, Phone, FM]) or
+                     ((mode = Digital) and
+                      not (ext in [eFT8, eFT4, eFT2, eJT65, eFST4, eFST4W]));
+         CheckTrue(identity.UsesMode(mode, ext) = credited,
+                   ModeStringArray[mode] + '/' + ExtendedModeStringArray[ext] +
+                   ': every mode but the WSJT ones');
+         end;
+      end;
+   qso := Default(ContestExchange);
+   qso.ceRecordKind := rkQSO;
+   qso.Band := Band20;
+   qso.Mode := Digital;
+   qso.ExtMode := eFT8;
+   CheckTrue(QSOIsXQSO(identity, qso), 'FT8 is an X-QSO');
+   qso.ExtMode := eJT65;
+   CheckTrue(QSOIsXQSO(identity, qso), 'JT65 is');
+   qso.ExtMode := eRTTY;
+   CheckFalse(QSOIsXQSO(identity, qso), 'RTTY is not');
+   contestObject := Make(SEVENQP, Entrant(True));
+   try
+      CheckEquals(0, PointsIn(eFT8), 'FT8 scores nothing');
+      CheckEquals(0, PointsIn(eFST4), 'FST4 scores nothing');
+      CheckEquals(4, PointsIn(eRTTY), 'RTTY is digital: 4');
+      CheckEquals(4, PointsIn(ePSK31), 'PSK31 is digital: 4');
+   finally
+      contestObject.Free;
+   end;
+end;
+
 procedure TContestSevenQPTests.RunAllTests;
 begin
    Test_SevenQPScoresAtMostTenDXMultipliers;
    Test_SevenQPMobileInANewCountyIsANewQSO;
    Test_SevenQPCountsItsOwnStates;
+   Test_SevenQPRefusesTheWSJTModes;
 end;
 
 end.

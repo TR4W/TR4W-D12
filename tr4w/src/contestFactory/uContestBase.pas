@@ -4398,6 +4398,12 @@ const
       "functionally specifically NOT FT8, FT4 or FT2". *)
    FT_SUBMODES: TExtendedModeSet = [eFT8, eFT4, eFT2];
 
+   (* THE WSJT-X STRUCTURED-MESSAGE MODES -- the FT modes and JT65, FST4 and
+      FST4W: "similar modes" to a sponsor who refuses the FT modes (Missouri,
+      issue 260) and the sponsor of "WSJT modes do not support the 7QP
+      exchange, so are not allowed" (the 7th Call Area QSO Party). *)
+   WSJT_SUBMODES: TExtendedModeSet = [eFT8, eFT4, eFT2, eJT65, eFST4, eFST4W];
+
    (* EVERY SUBMODE -- so an allow-list that is "everything but these" is
       written EVERY_SUBMODE - [...] and still goes through
       DigitalSubmodeAllowed. Such a list, unlike a named one, credits a

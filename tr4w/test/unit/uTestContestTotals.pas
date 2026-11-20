@@ -612,8 +612,13 @@ end;
 procedure TContestTotalsTests.Test_NCSweepNeedsFiveRareCounties;
 var
    view: TLoggedQSOList;
+   NCEntrant: TStationContext;
 begin
    BeginTest('Test_NCSweepNeedsFiveRareCounties');
+   (* An NC entrant: a QSO's validity now includes the sponsor's bands, and
+      outside the host state the host-area rule asks a table (none here). *)
+   NCEntrant := WithHostAreaTable(NoStation);
+   NCEntrant.InHostState := True;
 
    view := TLoggedQSOList.Create;
    try
@@ -627,17 +632,17 @@ begin
       view.Add(WithCounty(LoggedQSO('N4F', Band80, CW), 'GRA'));
       (* A dupe does not count. *)
       view.Add(AsDupe(WithCounty(LoggedQSO('N4G', Band20, CW), 'DAV')));
-      CheckEquals(0, Bonus(NCQSOPARTY, NoStation, view), 'four rare counties: no sweep');
+      CheckEquals(0, Bonus(NCQSOPARTY, NCEntrant, view), 'four rare counties: no sweep');
 
       view.Add(WithCounty(LoggedQSO('N4H', Band20, Digital), 'DAV'));
-      CheckEquals(500, Bonus(NCQSOPARTY, NoStation, view), 'five: the sweep');
+      CheckEquals(500, Bonus(NCQSOPARTY, NCEntrant, view), 'five: the sweep');
 
       view.Add(WithCounty(LoggedQSO('N4I', Band20, CW), 'CUR'));
       view.Add(WithCounty(LoggedQSO('N4J', Band20, CW), 'PAM'));
       view.Add(WithCounty(LoggedQSO('N4K', Band20, CW), 'ALL'));
       view.Add(WithCounty(LoggedQSO('N4L', Band20, CW), 'PER'));
       view.Add(WithCounty(LoggedQSO('N4M', Band20, CW), 'CAS'));
-      CheckEquals(500, Bonus(NCQSOPARTY, NoStation, view), 'all ten: still 500, once');
+      CheckEquals(500, Bonus(NCQSOPARTY, NCEntrant, view), 'all ten: still 500, once');
    finally
       view.Free;
    end;

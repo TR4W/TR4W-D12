@@ -100,7 +100,7 @@ const
       that already had them and the CQ WW three; the modes by the CQ WW three
       alone. Generated once from the frozen contest matrix's ids; edited by
       hand from then on, only ever DOWN. *)
-   BANDS_NOT_YET_STATED: array[0..161] of string = (
+   BANDS_NOT_YET_STATED: array[0..159] of string = (
       'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB', 'ALRS-UA1DZ-CUP',
       'AP-SPRINT', 'ARCI', 'ARI-DX', 'ARIZONA QSO PARTY',
       'ARKTIKA-SPRING', 'ARRL-DIGI', 'ARRL-DX-CW',
@@ -124,9 +124,9 @@ const
       'MINI40', 'MINI80', 'MINITEST',
       'MONGOLIAN DX', 'MST', 'MWC',
       'NA-SPRINT-CW', 'NA-SPRINT-RTTY', 'NAQP-CW', 'NAQP-RTTY',
-      'NAQP-SSB', 'NC QSO PARTY', 'NCCC-SPRINT', 'NRAU-BALTIC-CW',
+      'NAQP-SSB', 'NCCC-SPRINT', 'NRAU-BALTIC-CW',
       'NRAU-BALTIC-SSB', 'NZ FIELD DAY', 'OCEANIA-DX-CW',
-      'OCEANIA-DX-SSB', 'OHIO QSO PARTY', 'OK-OM DX CW', 'OK-OM DX SSB',
+      'OCEANIA-DX-SSB', 'OK-OM DX CW', 'OK-OM DX SSB',
       'OZCHR', 'OZCHR-TEAMS', 'OZHCR-VHF', 'PA QSO PARTY',
       'PACC', 'PCC', 'POTA', 'QCWA',
       'QCWA GOLDEN', 'R4W-CHAMP', 'R9W-UW9WK-MEMORIAL', 'RADIO-MEMORY',
@@ -147,8 +147,8 @@ const
       'YUDX'
       );
 
-   MODES_NOT_YET_STATED: array[0..170] of string = (
-      '7QP', 'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB',
+   MODES_NOT_YET_STATED: array[0..167] of string = (
+      'ALL JA', 'ALL-ASIAN-DX-CW', 'ALL-ASIAN-DX-SSB',
       'ALRS-UA1DZ-CUP', 'AP-SPRINT', 'ARCI', 'ARI-DX',
       'ARIZONA QSO PARTY', 'ARKTIKA-SPRING', 'ARRL-10', 'ARRL-160',
       'ARRL-DIGI', 'ARRL-DX-CW', 'ARRL-DX-SSB', 'ARRL-FD',
@@ -173,8 +173,8 @@ const
       'MINI40', 'MINI80', 'MINITEST',
       'MONGOLIAN DX', 'MST', 'MWC',
       'NA-SPRINT-CW', 'NA-SPRINT-RTTY', 'NAQP-CW', 'NAQP-RTTY',
-      'NAQP-SSB', 'NC QSO PARTY', 'NCCC-SPRINT', 'NEWEQP', 'NRAU-BALTIC-CW', 'NRAU-BALTIC-SSB',
-      'NZ FIELD DAY', 'OCEANIA-DX-CW', 'OCEANIA-DX-SSB', 'OHIO QSO PARTY',
+      'NAQP-SSB', 'NCCC-SPRINT', 'NEWEQP', 'NRAU-BALTIC-CW', 'NRAU-BALTIC-SSB',
+      'NZ FIELD DAY', 'OCEANIA-DX-CW', 'OCEANIA-DX-SSB',
       'OK-OM DX CW', 'OK-OM DX SSB', 'OZCHR', 'OZCHR-TEAMS',
       'OZHCR-VHF', 'PA QSO PARTY', 'PACC', 'PCC',
       'POTA', 'QCWA', 'QCWA GOLDEN', 'R4W-CHAMP',

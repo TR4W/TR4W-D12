@@ -40,17 +40,37 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   Import accepts it, export never writes it: NY4I, "Yes support old
   spellings."
 
-  NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
-  TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- which is exactly
-  what TR4W does today, because nothing in the program has ever counted the
-  queued counties.
+  ---------------------------------------------------------------------------
+  THE 2026 RULES, CHECKED AGAINST THE SPONSOR (audit, 2026-11-20). The text is
+  docs/ContestRules/QSOParties/Ohio/OH-QSO-PARTY-Rules.txt. Until then this
+  class was D7's row; five things in it were not the sponsor's.
 
-  THAT IS "NOT LOOKED UP YET", NOT "UNLIMITED BY DECISION", and the difference
-  matters: a number here would have to come from the sponsor's published rules,
-  the way Florida's two and California's four did. It must NOT be derived from
-  ContestsArray's CountyLineAllowed boolean, which carries no limit at all --
-  reading it as a number is the defect that made a class of any kind start
-  refusing a two-QTH exchange.
+  EXCHANGE HAS NO SERIAL -- "Ohio stations send RST and their Ohio county.
+    Non Ohio W/VE stations (including KH6/KL7) send RST and their state or
+    province. DX stations outside of W/VE send RST and "DX"." The row's
+    RSTQSONumberAndDomesticQTH asked for a serial too and logged "599 ADAM" as
+    serial 599. It is RSTDomesticQTHExchange now, as New York's and North
+    Carolina's: a DX station's "DX" is looked up in the file (ohio.dom's
+    Dx = DX), so an Ohio entrant can log one.
+
+  NO COUNTY LINES -- "No station may claim simultaneous operation in more than
+    one county, state, or province." GetCountyLineCountiesMax is 0, as
+    Michigan's: a second QTH in one exchange is refused. It was unlimited
+    ("not looked up yet") until this audit.
+
+  BANDS AND MODES -- "CW and SSB on 160, 80, 40, 20, 15, and 10 meters." UsesBand
+    is those six. UsesMode credits CW and phone; a digital QSO is an automatic
+    X-QSO ("All single operator entries are classified as mixed mode" means CW
+    plus SSB). FM is not named: it stays credited as phone, a question for
+    NY4I.
+
+  MULTIPLIERS -- "For OHIO STATIONS - multipliers are the 49 American States
+    (excluding Ohio), 1 Washington DC, 11 Canadian Provinces (NL, PE, NS,
+    NB,VE2-7, NT), 88 Ohio Counties and 1 DX." ohio.dom had no DC and no DX
+    entry, so an Ohio entrant could not log either; both are there now
+    (DC.DOM, Dx = DX). It still includes P13.DOM, which gives 13 provinces
+    and territories: the sponsor's 11 leave out YT and NU, a question for
+    NY4I. "Multipliers are counted once per mode" is cfMultByMode, as it was.
  *)
 unit uContestOhioQP;
 
@@ -120,6 +140,17 @@ type
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
+      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+
+      (* NO COUNTY LINES -- see the header. *)
+      function GetCountyLineCountiesMax: integer; override;
+   public
+      (* CW and SSB on 160 to 10 m -- see the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+      (* SEVERAL QTHs FROM ONE ENTRY -- the RSTDomesticQTH shape's rule (M11
+         S7). The count is still refused above one: no county lines. *)
+      function LogsSeveralQTHsFromOneEntry: boolean; override;
    public
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
@@ -149,6 +180,7 @@ type
 implementation
 
 uses
+   SysUtils,   (* Trim *)
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
@@ -161,9 +193,10 @@ begin
 end;
 
 (* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-16). CSV
-   row OHIO QSO PARTY: status candidate; rules https://www.ohqp.org/; rules
-   year 2026/2027. CANDIDATE: date from a calendar, not yet checked against
-   the sponsor's rules. *)
+   row OHIO QSO PARTY: rules https://www.ohqp.org/; rules year 2026/2027.
+   Checked against the sponsor's 2026 rules (2026-11-20): "the fourth
+   Saturday of August. The contest period extends from 1200 EDT [noon] to
+   2400 EDT [midnight] (1600Z Saturday until 0400Z Sunday)" -- 12 h. *)
 function TContestOhioQP.GetSchedule: string;
 begin
    Result := '4th Saturday of August at 16:00 UTC for 12h';
@@ -232,19 +265,29 @@ end;
 
 function TContestOhioQP.GetExchangeKind: ExchangeType;
 begin
-   Result := RSTQSONumberAndDomesticQTHExchange;
+   (* "Ohio stations send RST and their Ohio county" -- no serial number. *)
+   Result := RSTDomesticQTHExchange;
 end;
 
 function TContestOhioQP.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
+   (* The RSTDomesticQTH shape's field set, as New York's and North
+      Carolina's: uTestExchangeFields holds a class to the fields its session
+      shape marks. (It marks a serial though the rules send none -- a lead
+      for NY4I, reported by the audit.) *)
    Result := ExchangeFieldsRSTQSONumberQTH;
+end;
+
+procedure TContestOhioQP.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
+begin
+   aMessages.WriteRSTStateOrQSONumber;
 end;
 
 function TContestOhioQP.ParseReceivedExchangeFormat(const aText: string;
                                                     aParsers: TExchangeParsers;
                                                     var aExch: ContestExchange): boolean;
 begin
-   Result := aParsers.ParseRSTQSONumberAndDomesticQTH(aText, aExch);
+   Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
 end;
 
 function TContestOhioQP.ExchangeCarriesDomesticQTH: boolean;
@@ -255,21 +298,22 @@ end;
 function TContestOhioQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                             const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTQSONumberState(aMy, aQso);
+   (* A DX entrant sends "DX" -- the rules' "DX stations ... send RST and DX". *)
+   Result := ADIFSentRSTStateOrDX(aMy, aQso);
 end;
 
 function TContestOhioQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                 const aQso: ContestExchange;
                                                 const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTQSONumberState(aMy, aQso, aCtx);
+   Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
 end;
 
 function TContestOhioQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                     const aQso: ContestExchange;
                                                     const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTQSONumberQTH(aMy, aQso, aCtx);
+   Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
 end;
 
 function TContestOhioQP.GetInStateDomesticFileName: string;
@@ -295,7 +339,38 @@ end;
    TContestBase.CQExchangeDefault. *)
 function TContestOhioQP.CQExchangeDefault(const aStation: TStationContext): string;
 begin
-   Result := ' # ' + aStation.MyState;
+   (* RST and the sent county or state -- no serial (the header). A DX
+      entrant has none and sends "DX". *)
+   if Trim(aStation.MyState) = '' then
+      begin
+      Result := ' 5NN DX';
+      end
+   else
+      begin
+      Result := ' 5NN ' + aStation.MyState;
+      end;
+end;
+
+(* "No station may claim simultaneous operation in more than one county,
+   state, or province." Zero, so a second QTH in one exchange is refused --
+   the way Michigan's is. *)
+function TContestOhioQP.GetCountyLineCountiesMax: integer;
+begin
+   Result := 0;
+end;
+
+(* "CW and SSB on 160, 80, 40, 20, 15, and 10 meters." *)
+function TContestOhioQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band160, Band80, Band40, Band20, Band15, Band10];
+end;
+
+(* "CW and SSB": CW and phone. FM is not named and stays credited as phone;
+   a digital QSO is an automatic X-QSO. An identity fact: no station is
+   asked. *)
+function TContestOhioQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   Result := aMode in [CW, Phone, FM];
 end;
 
 (* OHIO IS NOT A STATE MULTIPLIER FOR A OHIO ENTRANT -- #88
@@ -312,6 +387,11 @@ function TContestOhioQP.CountsAsMultiplier(const aQso: ContestExchange;
 begin
    Result := not (Station.InHostState and
                   DomesticMultiplierIsHostState(string(aQso.DomMultQTH), HostState));
+end;
+
+function TContestOhioQP.LogsSeveralQTHsFromOneEntry: boolean;
+begin
+   Result := True;
 end;
 
 function TContestOhioQP.CallHistoryFields: TCallHistoryFields;

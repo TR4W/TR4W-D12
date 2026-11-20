@@ -104,6 +104,32 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   loader skipped in silence (D7 too), so an NC entrant could log no US state
   at all ("CT not in nc.dom"). The file now lists the 49 states itself (S50
   would bring NC), DC, P13 and DX, and the loader warns on such a line.
+
+  ---------------------------------------------------------------------------
+  BANDS, MODES AND FM, FROM THE SAME RULES (audit against the sponsor,
+  2026-11-20). Each was unstated or wrong before.
+
+  BANDS -- "Operate on 80/75, 40, 20, 15, 10, 6, and 2 meters. No 160, WARC,
+    or above 2 meters." UsesBand; cfVHFBandsEnabled so 6 m and 2 m can be
+    reached. An off-band QSO is an automatic X-QSO, so it earns no rare-county
+    points and does not count toward the sweep (BonusPoints asks
+    IsCreditedContact).
+
+  MODES -- "Phone - Includes SSB, AM, and FM voice", "CW", "Digital - Except
+    for FT-8/4 ..., all other digital modes are allowed and considered one
+    mode. (Note: QSO's made using FT-8/4 should not be included.)" UsesMode:
+    every digital submode but FT8, FT4 and FT2 (NY4I's standing ruling,
+    issue 88, 2026-11-19: "specifically NOT FT8, FT4 or FT2"), uContestBase.
+    DigitalSubmodeAllowed over EVERY_SUBMODE - FT_SUBMODES.
+
+  FM IS PHONE -- 2 points, 20 in a rare county. FixedModePoints gives FM its
+    "other" number, which here is DIGITAL's 5; the body states FM beside
+    Phone.
+
+  NOT BUILT -- "NC stations may include the county from which operation takes
+    place in the Multiplier count regardless of whether any QSOs are logged
+    from that same county": the multiplier sheet counts a QSO's key, never a
+    station fact (a question for NY4I, recorded in the audit report).
  *)
 unit uContestNorthCarolinaQP;
 
@@ -179,6 +205,11 @@ type
       function GetCountyLineCountiesMax: integer; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
+      (* 80, 40, 20, 15, 10, 6 and 2 m -- see the header. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      (* CW, phone (FM included) and every digital submode but FT8, FT4 and
+         FT2 -- see the header. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
       (* THE RAREST-OF-NC SWEEP -- see the header. *)
       function BonusPoints(const aTotals: TScoreTotals;
                            aView: TLoggedQSOView): longint; override;
@@ -372,7 +403,37 @@ end;
 
 function TContestNorthCarolinaQP.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode];
+   (* cfVHFBandsEnabled: 6 m and 2 m are credited -- see UsesBand. *)
+   Result := [cfQSOByBand, cfQSOByMode, cfVHFBandsEnabled];
+end;
+
+(* "Operate on 80/75, 40, 20, 15, 10, 6, and 2 meters. No 160, WARC, or above
+   2 meters." *)
+function TContestNorthCarolinaQP.UsesBand(aBand: BandType): boolean;
+begin
+   Result := aBand in [Band80, Band40, Band20, Band15, Band10, Band6, Band2];
+end;
+
+(* "Phone - Includes SSB, AM, and FM voice"; "Digital - Except for FT-8/4 ...
+   all other digital modes are allowed"; "QSO's made using FT-8/4 should not
+   be included." eNoMode and the generic data modes mean "some submode" and
+   are credited. An identity fact: no station is asked. *)
+function TContestNorthCarolinaQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 function TContestNorthCarolinaQP.GetCountyLineCountiesMax: integer;
@@ -413,7 +474,17 @@ procedure TContestNorthCarolinaQP.CalculateQSOPoints(var aQso: ContestExchange);
 var
    points: integer;
 begin
-   points := FixedModePoints(aQso.Mode, 3, 2, 5);
+   (* "Phone - 2 points each, CW - 3 points each, Digital - 5 points each",
+      and phone "Includes SSB, AM, and FM voice": FM is stated beside Phone,
+      because FixedModePoints would give it the digital 5. *)
+   if aQso.Mode = FM then
+      begin
+      points := 2;
+      end
+   else
+      begin
+      points := FixedModePoints(aQso.Mode, 3, 2, 5);
+      end;
 
    if IsRareNCCounty(string(aQso.DomesticQTH)) then
       begin
@@ -441,7 +512,8 @@ begin
    for i := 0 to aView.Count - 1 do
       begin
       qso := aView.QSO(i);
-      if qso.ceDupe then
+      (* A dupe, or an off-band or off-mode QSO (an X-QSO), pays no sweep. *)
+      if not IsCreditedContact(qso) then
          begin
          Continue;
          end;
