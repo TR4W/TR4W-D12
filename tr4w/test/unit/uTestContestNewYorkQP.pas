@@ -45,9 +45,12 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_NewYorkPoints;
+      procedure Test_NewYorkModes;
       procedure Test_NewYorkBands;
       procedure Test_NewYorkCountsMultipliersOnceOverall;
       procedure Test_NewYorkCountsAllThirteenProvinces;
+      procedure Test_NewYorkCountyAlsoEarnsNY;
+      procedure Test_NewYorkCabrilloHeader;
    end;
 
 implementation
@@ -60,7 +63,9 @@ uses
    uContestRegistry,
    LogDom,
    uTestContestObjects,
-   uTestShippedDom;
+   uTestShippedDom,
+   uCbrSum,    (* OverlayValuesWith -- the summary window's overlay list *)
+   PostUnit;   (* OverlayCategory -- the standard overlay list *)
 
 (* A New York entrant (Monroe) or one in Kansas; outside the state the
    host-area table knows every QTH, so a points test is not about that
@@ -141,6 +146,41 @@ begin
       end;
 end;
 
+(* "Only digital modes that natively support the NYQP exchange are permitted
+   for contest credit." NY4I, #88, 2026-11-19: "NOT FT8, FT4 or FT2". Every
+   mode and submode is walked: CW, phone and FM whole, digital but the FT
+   modes. An FT QSO is an automatic X-QSO and scores nothing. *)
+procedure TContestNewYorkQPTests.Test_NewYorkModes;
+var
+   identity: TContestBase;
+   mode: ModeType;
+   ext: ExtendedModeType;
+   credited: boolean;
+begin
+   BeginTest('Test_NewYorkModes');
+   identity := ContestIdentity(NYQP);
+   for mode := Low(ModeType) to High(ModeType) do
+      begin
+      for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
+         begin
+         credited := (mode in [CW, Phone, FM]) or
+                     ((mode = Digital) and not (ext in [eFT8, eFT4, eFT2]));
+         CheckTrue(identity.UsesMode(mode, ext) = credited,
+                   ModeStringArray[mode] + '/' + ExtendedModeStringArray[ext] +
+                   ': every mode but the FT ones');
+         end;
+      end;
+   CheckTrue(QSOIsXQSO(identity, NYQso(Band20, Digital, eFT8)), 'FT8 is an X-QSO');
+   CheckTrue(QSOIsXQSO(identity, NYQso(Band20, Digital, eFT4)), 'FT4 is');
+   CheckTrue(QSOIsXQSO(identity, NYQso(Band20, Digital, eFT2)), 'FT2 is');
+   CheckFalse(QSOIsXQSO(identity, NYQso(Band20, Digital, eJS8)), 'JS8 is not');
+   CheckEquals(0, PointsFor(True, Band20, Digital, eFT8), 'FT8 scores 0');
+   CheckEquals(0, PointsFor(False, Band20, Digital, eFT2), 'FT2 scores 0');
+   CheckEquals(3, PointsFor(True, Band20, Digital, eJTTY), 'JTTY is a 3-point digital QSO');
+   CheckEquals(1, PointsFor(True, Band2, FM, eC4FM), 'C4FM is phone: 1');
+   CheckEquals(1, PointsFor(False, Band2, FM, eDStar), 'D-STAR is phone: 1');
+end;
+
 (* "All FCC allocated amateur frequencies (excluding the 30, 17, and 12
    meter bands) are available for QSO credit." *)
 procedure TContestNewYorkQPTests.Test_NewYorkBands;
@@ -195,7 +235,13 @@ end;
 (* "Canadian provinces (13): AB, BC, MB, NB, NL, NT, NS, NU, ON, PE, QC, SK,
    YT" for a New York entrant -- newyork.dom, the in-state file, read
    through the real loader with its INCLUDEs. prov12.dom held twelve until
-   2026-11-19: NT was missing, so a New York entrant could not log it. *)
+   2026-11-19: NT was missing, so a New York entrant could not log it.
+
+   "US states (50)", no DC: NY4I (#88, 2026-11-19) names s50p13.dom, the
+   file without DC, which includes prov13.dom (prov12.dom renamed for what it
+   holds). The counties come FIRST, so ALB, which prov13 also gives Alberta,
+   stays Albany; the old s50p13 list's NF and LB are Newfoundland and
+   Labrador's NL. *)
 procedure TContestNewYorkQPTests.Test_NewYorkCountsAllThirteenProvinces;
 const
    PROVINCES: array[0..12] of string = (
@@ -216,15 +262,25 @@ begin
    MultipliersIsCounties := False;
    table := TDomQTHTable.Create;
    try
-      CheckEquals('NEWYORK_CTY.DOM S50.DOM PROV12.DOM',
+      CheckEquals('NEWYORK_CTY.DOM S50P13.DOM',
                   LoadShippedDomFollowingIncludes(table, 'newyork.dom', True, 0),
-                  'newyork.dom includes the counties, the 50 states and the provinces');
+                  'newyork.dom includes the counties, then the 50 states and 13 provinces');
       for i := Low(PROVINCES) to High(PROVINCES) do
          begin
          CheckEquals(PROVINCES[i], MultiplierOf(table, PROVINCES[i]),
                      PROVINCES[i] + ' is a multiplier for a New York entrant');
          end;
       CheckEquals('MON', MultiplierOf(table, 'MON'), 'and a county is one');
+      CheckEquals('ALB', MultiplierOf(table, 'ALB'), 'ALB is Albany County, not Alberta');
+      CheckEquals('AB', MultiplierOf(table, 'ALT'), 'ALT is Alberta');
+      CheckEquals('NL', MultiplierOf(table, 'NF'), 'NF is Newfoundland and Labrador''s NL');
+      CheckEquals('NL', MultiplierOf(table, 'LB'), 'and so is LB');
+      CheckEquals('NT', MultiplierOf(table, 'NW'), 'NW is the Northwest Territories');
+      CheckEquals('ON', MultiplierOf(table, 'VE3'), 'a call prefix names its province');
+      CheckEquals('LA', MultiplierOf(table, 'LA'), 'LA is Louisiana');
+      CheckEquals('PA', MultiplierOf(table, 'PA'), 'a state is a multiplier');
+      CheckEquals('', MultiplierOf(table, 'DC'), '"US states (50)": no DC');
+      CheckEquals('DX', MultiplierOf(table, 'DX'), 'DX is known (and earns no multiplier)');
    finally
       table.Free;
       mo.Free;
@@ -233,12 +289,104 @@ begin
    end;
 end;
 
+(* "The first valid New York county logged will count as the multiplier for
+   New York" -- NY4I (#88): a double multiplier, county and NY, for a New
+   York entrant (#317's second domestic key). Only a county earns it: a
+   state, a province or DX does not, and outside New York nothing does. The
+   sheet side -- the 126-key in-state list, the scope, load and rescore -- is
+   uTestAdditionalDomesticMultiplier's, which walks New York with the other
+   parties. *)
+procedure TContestNewYorkQPTests.Test_NewYorkCountyAlsoEarnsNY;
+
+   function KeyFor(aInState: boolean; const aQTH: string; out aKey: string): boolean;
+   var
+      contestObject: TContestBase;
+      qso: ContestExchange;
+   begin
+      contestObject := Make(NYQP, Entrant(aInState));
+      try
+         qso := NYQso(Band20, CW, eCW);
+         qso.QTHString := aQTH;
+         qso.DomesticQTH := aQTH;
+         qso.DomMultQTH := aQTH;
+         aKey := 'stale';
+         Result := contestObject.AdditionalDomesticMultiplierKey(qso, aKey);
+      finally
+         contestObject.Free;
+      end;
+   end;
+
+var
+   key: string;
+begin
+   BeginTest('Test_NewYorkCountyAlsoEarnsNY');
+   CheckTrue(KeyFor(True, 'MON', key), 'in NY, a county QSO earns a second key');
+   CheckEquals('NY', key, 'and it is NY');
+   CheckTrue(KeyFor(True, 'ALB', key), 'Albany too');
+   CheckFalse(KeyFor(True, 'PA', key), 'a state earns no second key');
+   CheckEquals('', key, 'and writes none');
+   CheckFalse(KeyFor(True, 'AB', key), 'nor a province');
+   CheckFalse(KeyFor(True, 'DX', key), 'nor DX');
+   CheckFalse(KeyFor(False, 'MON', key), 'outside NY, a county earns only itself');
+   CheckEquals('', key, 'and writes none');
+end;
+
+(* "Only these values are valid in the Overlay field: Rookie, Youth12,
+   Youth17, YL"; the LOCATION header is specified. The summary window offers
+   the standard list (which holds ROOKIE and YL), then YOUTH12 and YOUTH17. *)
+procedure TContestNewYorkQPTests.Test_NewYorkCabrilloHeader;
+var
+   identity: TContestBase;
+   overlays: TArray<string>;
+   offered: TArray<string>;
+   i, youth12, youth17, rookies: integer;
+begin
+   BeginTest('Test_NewYorkCabrilloHeader');
+   identity := ContestIdentity(NYQP);
+   CheckTrue(identity.RequiresCabrilloLocation, 'no Cabrillo file without a LOCATION');
+   overlays := identity.CabrilloOverlayCategories;
+   CheckEquals(4, Length(overlays), 'the sponsor names four overlays');
+   CheckEquals('Rookie', overlays[0], 'Rookie');
+   CheckEquals('Youth12', overlays[1], 'Youth12');
+   CheckEquals('Youth17', overlays[2], 'Youth17');
+   CheckEquals('YL', overlays[3], 'YL');
+
+   offered := OverlayValuesWith(OverlayCategory, overlays);
+   youth12 := 0;
+   youth17 := 0;
+   rookies := 0;
+   for i := 0 to High(offered) do
+      begin
+      if SameText(offered[i], 'Youth12') then
+         begin
+         Inc(youth12);
+         end;
+      if SameText(offered[i], 'Youth17') then
+         begin
+         Inc(youth17);
+         end;
+      if SameText(offered[i], 'Rookie') then
+         begin
+         Inc(rookies);
+         end;
+      end;
+   CheckEquals(1, youth12, 'Youth12 is offered once');
+   CheckEquals(1, youth17, 'Youth17 is offered once');
+   CheckEquals(1, rookies, 'Rookie is the standard ROOKIE, offered once');
+   CheckEquals(Length(OverlayCategory) + 2 + 1, Length(offered),
+               'the standard list, the two youth overlays, then the blank');
+   CheckEquals('', offered[High(offered)], 'the blank is last');
+end;
+
 procedure TContestNewYorkQPTests.RunAllTests;
 begin
    Test_NewYorkPoints;
+   Test_NewYorkModes;
    Test_NewYorkBands;
    Test_NewYorkCountsMultipliersOnceOverall;
    Test_NewYorkCountsAllThirteenProvinces;
+   Test_NewYorkCountyAlsoEarnsNY;
+   Test_NewYorkCabrilloHeader;
 end;
 
 end.

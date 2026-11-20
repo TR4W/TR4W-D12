@@ -3,7 +3,7 @@
 
    An in-state entrant's host-county QSO earns the county AND the host state
    in Alabama, West Virginia, Kentucky, Iowa (issue 120), South Carolina
-   (issue 111) and Vermont. NOT Illinois: NY4I withdrew it 2026-11-19 (issue
+   (issue 111), Vermont and New York (issue 88). NOT Illinois: NY4I withdrew it 2026-11-19 (issue
    119, "assume no for now as to not inflate the score"), so it is one of the
    NAMED parties that give no second key. The state is a second
    key on the DOMESTIC sheet (TContestBase.AdditionalDomesticMultiplierKey,
@@ -13,7 +13,7 @@
 
      - every other registered contest answers False (Florida, Arkansas and
        New Jersey named), so their sheets cannot move;
-     - the in-state lists: KY 184, AL 130, WV 118, VT 77 (VT's key is the
+     - the in-state lists: KY 184, AL 130, NY 126, WV 118, VT 77 (VT's key is the
        Vt S50.DOM already gives the file);
      - the table rule the helper relies on: every in-state key longer than
        two characters is a county of the party's county file;
@@ -89,7 +89,7 @@ type
    end;
 
 const
-   PARTY_COUNT = 6;
+   PARTY_COUNT = 7;
 
 function PartyCase(aIndex: integer): TPartyCase;
 begin
@@ -137,6 +137,17 @@ begin
          Result.CountyFile := 'southcarolina_cty.dom';
          Result.CountyA := 'CHAR';
          Result.CountyB := 'RICH';
+         end;
+      5:
+         begin
+         (* Issue 88 (NY4I, 2026-11-19): "NY does count as a state for NY
+            stations ... a double mult (county and state (NY))", once
+            overall. A legacy contest: its id is its ContestTypeSA spelling. *)
+         Result.Id := 'NY-QSO-PARTY';
+         Result.Host := 'NY';
+         Result.CountyFile := 'newyork_cty.dom';
+         Result.CountyA := 'MON';
+         Result.CountyB := 'ALB';
          end;
       else
          begin
@@ -280,7 +291,9 @@ end;
 
 procedure TAdditionalDomesticMultiplierTests.Test_InStateListsHoldTheHostKey;
 const
-   EXPECTED: array[0..PARTY_COUNT - 1] of integer = (130, 118, 184, 162, 110, 77);
+   (* NY: 62 counties + 50 states + 13 provinces + DX -- the DX key earns no
+      multiplier (CountsAsMultiplier), so the in-state maximum is 125. *)
+   EXPECTED: array[0..PARTY_COUNT - 1] of integer = (130, 118, 184, 162, 110, 126, 77);
 var
    i: integer;
    party: TPartyCase;

@@ -440,11 +440,18 @@ the target shape, the M-step migration order and the open questions.
   allowed)` (`TExtendedModeSet`, `RTTY_SUBMODES`), which also passes the
   "some submode" values -- eNoMode and the three generic data modes
   (eData, eData_R from CAT's DATA-R, eData_FM), so a submode appended later
-  (JTTY was) is refused until a contest names it. Louisiana (RTTY, JTTY,
-  PSK31) and Iowa (RTTY, PSK31/63, JS8, JTTY) use it; the deny-list parties
-  (Missouri, Illinois, Nebraska, Wisconsin, Mississippi, Vermont) were NOT
-  migrated -- they credit JTTY and JS8 today, so an allow-list is a rule
-  change for their sponsors to settle. JTTY is approved only where a
+  (JTTY was) is refused until a contest names it. Iowa (RTTY, PSK31/63,
+  JS8, JTTY) names its list. **"Any digital mode that carries the exchange"
+  is `EVERY_SUBMODE - FT_SUBMODES`** (NY4I, issues 88 and 122, 2026-11-19:
+  "Same as other QSO parties ... specifically NOT FT8, FT4 or FT2"):
+  Louisiana and New York, and the former deny-lists Illinois, Nebraska and
+  Wisconsin (Missouri also takes out JT65/FST4/FST4W) -- identical answers
+  plus FT2. `FT_SUBMODES` = FT8, FT4 and **FT2, appended to
+  `ExtendedModeType` after JTTY (ADIF 3.1.8 MFSK/FT2)**. NOT moved, on
+  purpose: Mississippi's `IsFTSubmode` and Vermont's WARC exception
+  (`UsesBandInMode`) are ALLOW rules naming FT8/FT4 only, so FT2 stays
+  refused there until a sponsor names it; Vermont's `VERMONT_WSJTX_MODES`
+  gained FT2. JTTY is approved only where a
   sponsor's rule allows free-form digital (NY4I: Iowa and Winter Field Day).
   Winter Field Day uses it since 2026-11-19 (its 2027 rules, v3, in
   `docs/ContestRules/WinterFieldDay/`: "All modes, except WSJT modes"): RTTY,
@@ -1599,7 +1606,7 @@ bare `FileExists` and failed on Linux. The files are renamed to the classes' spe
 (`git mv` through a temp name: Windows is case-insensitive) and
 `Lint-DomFileCase` gates it: a NEW class name or INCLUDE line must match its file
 exactly. Ten legacy upper-case class names (`S48P14DC`, `EUDX`, `GC`, `JIDX`,
-`NEQSOW1`, `NEQSO`, `OKOM`, `PACCPA`, `PACC`, `YOTA`) and 95 INCLUDE lines stay
+`NEQSOW1`, `NEQSO`, `OKOM`, `PACCPA`, `PACC`, `YOTA`) and the D7-era upper-case INCLUDE lines (a ceiling that only falls, `$INCLUDE_CEILING`) stay
 pinned, because changing a class literal changes a value saved settings and tests pin.
 **A new file in `target\dom` is lower case, always.**
 

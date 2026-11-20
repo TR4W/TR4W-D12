@@ -456,7 +456,9 @@ end;
 
 (* PHONE, CW AND DIGITAL BUT FT4 AND FT8 -- "FT4 and FT8 contacts will receive
    no contact credit". eNoMode and eData mean "some submode", so an old
-   record is never proven off-mode. An identity fact: no station is asked. *)
+   record is never proven off-mode. An identity fact: no station is asked.
+   FT2 is refused with them since it existed (NY4I, issues 88 and 122,
+   2026-11-19: "NOT FT8, FT4 or FT2"): the shared FT_SUBMODES. *)
 function TContestIllinoisQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
@@ -466,7 +468,7 @@ begin
          end;
       Digital:
          begin
-         Result := not (aExtMode in [eFT8, eFT4]);
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
          end;
       else
          begin

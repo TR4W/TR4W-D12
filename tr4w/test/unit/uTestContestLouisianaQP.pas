@@ -249,7 +249,7 @@ begin
                begin
                credited := (mode in [CW, Phone, FM]) or
                            ((mode = Digital) and
-                            (ext in [eNoMode, eData, eData_R, eData_FM, eRTTY, eRTTY_R, eJTTY, ePSK31]));
+                            not (ext in [eFT8, eFT4, eFT2]));
                expected := 0;
                if credited and (mode in [CW, Digital]) then
                   begin
@@ -263,18 +263,28 @@ begin
                party.ScoreQSO(qso);
                CheckEquals(expected, Integer(qso.QSOPoints), 'CW/digital 4, phone/FM 2, a digital mode not allowed none');
                CheckTrue(party.UsesMode(mode, ext) = credited,
-                         'CW, phone, FM; RTTY, JTTY and PSK31 only (NY4I, 2026-11-19)');
+                         'CW, phone, FM; every digital mode but FT8, FT4 and FT2 (NY4I, 2026-11-19)');
                end;
             end;
          CheckFalse(party.UsesMode(Digital, eFT8), 'FT8 cannot send the exchange');
-         CheckFalse(party.UsesMode(Digital, eJT65), 'nor JT65');
+         CheckFalse(party.UsesMode(Digital, eFT4), 'nor FT4');
+         CheckFalse(party.UsesMode(Digital, eFT2), 'nor FT2');
          CheckTrue(party.UsesMode(Digital, eRTTY), '3.3 "includes RTTY"');
          CheckTrue(party.UsesMode(Digital, ePSK31), 'PSK31 can send it');
-         CheckTrue(party.UsesMode(Digital, eJTTY), 'JTTY is on NY4I''s list');
+         CheckTrue(party.UsesMode(Digital, eJTTY), 'JTTY can');
          CheckTrue(party.UsesMode(Digital, eRTTY_R), 'reversed RTTY is RTTY');
-         CheckFalse(party.UsesMode(Digital, eJS8), 'JS8 is not on NY4I''s list');
-         CheckFalse(party.UsesMode(Digital, ePSK63), 'nor PSK63');
-         CheckFalse(party.UsesMode(Digital, eMFSK), 'nor MFSK');
+         (* "Same as other QSO parties ... specifically NOT FT8, FT4 or FT2"
+            (issues 88 and 122): these were X-QSOs under the earlier
+            RTTY/JTTY/PSK31 list and are credited since. *)
+         CheckTrue(party.UsesMode(Digital, eJS8), 'JS8 is credited');
+         CheckTrue(party.UsesMode(Digital, ePSK63), 'and PSK63');
+         CheckTrue(party.UsesMode(Digital, eMFSK), 'and MFSK');
+         CheckTrue(party.UsesMode(Digital, eJT65), 'and JT65 (not FT)');
+         CheckTrue(party.UsesMode(FM, eC4FM), 'C4FM is phone');
+         CheckTrue(party.UsesMode(FM, eDStar), 'and so is D-STAR');
+         qso := LAQSO('W5AAA', 'ORLE', Band20, FM, eDStar);
+         party.ScoreQSO(qso);
+         CheckEquals(2, Integer(qso.QSOPoints), 'a D-STAR QSO is a 2-point phone QSO');
          CheckTrue(party.UsesMode(Digital, eData_R), 'a radio data mode with no recorded submode is "some submode"');
          CheckTrue(party.UsesMode(Digital, eNoMode), 'an unknown submode is never proven off-mode');
          CheckEquals('RY', party.CabrilloModeString(Digital, eRTTY), 'RTTY is RY');
@@ -523,15 +533,16 @@ begin
       CheckTrue(accepted and rx.DomesticMult, 'Alaska is a state');
       CheckFalse(rx.DXMult, 'KL is no DXCC multiplier');
 
-      (* THE ALLOWED DIGITAL MODES (NY4I, 2026-11-19): JTTY is one; JS8 is
-         not on his list, so it is an automatic X-QSO. *)
-      engine.Enter('W5JS', '599 CADD', Band40, Digital, eJS8, accepted, rx);
-      CheckTrue(LoggedQSOIsXQSO(rx), 'JS8 is not an allowed mode: an X-QSO');
+      (* THE ALLOWED DIGITAL MODES (NY4I, issues 88 and 122, 2026-11-19):
+         every one but FT8, FT4 and FT2, so an FT2 QSO is an automatic
+         X-QSO and a JS8 one is credited. *)
+      engine.Enter('W5FT', '599 CADD', Band40, Digital, eFT2, accepted, rx);
+      CheckTrue(LoggedQSOIsXQSO(rx), 'FT2 is not an allowed mode: an X-QSO');
       CheckFalse(rx.DomesticMult, 'and it earns no parish');
-      engine.Enter('W5JT', '599 CADD', Band40, Digital, eJTTY, accepted, rx);
-      CheckFalse(LoggedQSOIsXQSO(rx), 'JTTY is allowed');
-      CheckTrue(accepted and rx.DomesticMult, 'and earns the parish the JS8 QSO did not');
-      CheckEquals(4, Integer(rx.QSOPoints), 'JTTY is digital: 4');
+      engine.Enter('W5JS', '599 CADD', Band40, Digital, eJS8, accepted, rx);
+      CheckFalse(LoggedQSOIsXQSO(rx), 'JS8 is allowed');
+      CheckTrue(accepted and rx.DomesticMult, 'and earns the parish the FT2 QSO did not');
+      CheckEquals(4, Integer(rx.QSOPoints), 'JS8 is digital: 4');
    finally
       engine.Free;
    end;

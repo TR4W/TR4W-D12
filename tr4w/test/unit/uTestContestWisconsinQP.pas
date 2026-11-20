@@ -191,7 +191,7 @@ begin
    identity := ContestIdentity(WISCONSINQSOPARTY);
    for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
       begin
-      refused := ext in [eFT8, eFT4];
+      refused := ext in [eFT8, eFT4, eFT2];
       CheckTrue(ContestCreditsMode(identity, Digital, ext) = (not refused),
                 'digital submode ' + IntToStr(Ord(ext)) + ' credited unless FT8 or FT4');
       qso := WisconsinQso('W9ABC', Band20, Digital, ext);

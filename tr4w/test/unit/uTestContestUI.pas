@@ -896,7 +896,7 @@ end;
   class's GetCabrilloOverlayCategories. *)
 procedure TContestUITests.Test_OnlyNamedContestsAddCabrilloOverlays;
 const
-   OVERLAY_SPONSORS: array[0..0] of string = ('LA-QSO-PARTY');
+   OVERLAY_SPONSORS: array[0..1] of string = ('LA-QSO-PARTY', 'NY-QSO-PARTY');
 var
    contests: TContestIdentityList;
    obj: TContestBase;

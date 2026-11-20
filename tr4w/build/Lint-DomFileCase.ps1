@@ -65,8 +65,9 @@ $LegacyNames = @(
 # THE INCLUDE RATCHET -- 95 INCLUDE FILE lines were written upper case
 # (INCLUDE FILE S50.DOM) against lower-case files in the D7 era; the loader
 # follows them case-tolerantly. A NEW line must be exact; the count may only
-# fall. Lower the ceiling when it does, never raise it.
-$INCLUDE_CEILING = 95
+# fall. Lower the ceiling when it does, never raise it. 93 since 2026-11-19
+# (issue 88: newyork.dom's S50.DOM and PROV12.DOM lines became s50p13.dom).
+$INCLUDE_CEILING = 93
 
 Import-Module (Join-Path $PSScriptRoot 'PascalSource.psm1') -Force
 

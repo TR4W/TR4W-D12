@@ -45,6 +45,7 @@ begin
    CheckEquals(549, WSJTXReceivedReportForExport(eFST4,  -2, True), 'FST4');
    CheckEquals(549, WSJTXReceivedReportForExport(eFST4W, -2, True), 'FST4W');
    CheckEquals(549, WSJTXReceivedReportForExport(eJTTY,  -2, True), 'JTTY');
+   CheckEquals(549, WSJTXReceivedReportForExport(eFT2,   -2, True), 'FT2');
    CheckEquals(599, WSJTXReceivedReportForExport(eJTTY, 599, True),
                'a JTTY 599 is an RST and is left alone');
 end;
@@ -56,7 +57,7 @@ begin
    BeginTest('Test_EveryOtherModeIsLeftAlone');
    for e := Low(ExtendedModeType) to High(ExtendedModeType) do
       begin
-      if not (e in [eFT8, eMFSK, eJT65, eFT4, eFST4, eFST4W, eJTTY]) then
+      if not (e in [eFT8, eMFSK, eJT65, eFT4, eFST4, eFST4W, eJTTY, eFT2]) then
          begin
          CheckEquals(-12, WSJTXReceivedReportForExport(e, -12, True),
                      'unchanged for ' + ExtendedModeStringArray[e]);

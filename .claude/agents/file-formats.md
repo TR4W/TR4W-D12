@@ -122,7 +122,7 @@ round trip and the contest matrix produce. A `Compliance error` fails; `Consiste
 findings are counted only. The corpus cannot do this job: the D7 references are themselves not
 valid ADIF. `ADIF_SPEC_VERSION` (`uADIF`) is 3.1.8 (2026-11-19: it lists the MFSK submode JTTY, which TR4W now
 writes as `MODE MFSK` + `SUBMODE JTTY`; 3.1.7/3.1.8 add no field), and `uTestADIF` pins every tag we write
-against 3.1.6's field list, which is still the field list. The validator's JTTY row is a recorded local patch.
+against 3.1.6's field list, which is still the field list. The validator's JTTY and FT2 rows are recorded local patches (FT2: `eFT2`, appended after `eJTTY` 2026-11-19 for issues 88/122, written `MODE MFSK` + `SUBMODE FT2`, the 3.1.8 spelling; WSJT-X 3.3.0-beta6's source has no FT2, so no real file has been seen).
 **adifmt (flwyd/adif-multitool v0.1.23, `go install`; NY4I 2026-11-19: it should supersede the vendored validator)** knows ADIF 3.1.8 and accepts `MFSK`/`JTTY`. `validate-adif-outputs.sh` runs it as an ADVISORY pass when it is on PATH or in `~/go/bin` (counts, first findings) and says so when it is absent; it is not the gate, because a clean clone cannot `go install` without a network fetch. It becomes the authority when its binary can be vendored (or CI installs a pinned version) and its STATE/DXCC and non-ASCII findings are triaged. A tag we write that the spec lacks is a finding to fix in the exporter, not
 something to patch into the validator (`DOK` became `DARC_DOK` and `FOC_NUM` became
 `APP_TR4W_FOC_NUM` on 2026-10-23; the import still reads the old names). **The export writes a

@@ -382,7 +382,9 @@ end;
 (* "FT8/FT4 QSO's are not accepted." The submode is tested only to EXCLUDE
    the two named: eNoMode and eData mean "some digital submode" and are
    credited, as the contract asks (ADDING_A_CONTEST, UsesMode). An identity
-   fact: no station is asked. *)
+   fact: no station is asked. FT2 is refused with them since it existed
+   (NY4I, issues 88 and 122, 2026-11-19: "NOT FT8, FT4 or FT2"):
+   FT_SUBMODES. *)
 function TContestWisconsinQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
 begin
    case aMode of
@@ -392,7 +394,7 @@ begin
          end;
       Digital:
          begin
-         Result := not (aExtMode in [eFT8, eFT4]);
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
          end;
       else
          begin

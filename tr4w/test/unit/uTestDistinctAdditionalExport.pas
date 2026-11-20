@@ -209,11 +209,11 @@ begin
    rules := ContestIdentity(VermontHandle);
    CheckTrue(rules.DistinctAdditionalExportFormat = defADIF, 'format');
    CheckEquals('ft', rules.DistinctAdditionalExportFileTag, 'tag');
-   CheckTrue(rules.DistinctAdditionalExportModes = [eFT8, eFT4, eJT65, eFST4, eFST4W],
+   CheckTrue(rules.DistinctAdditionalExportModes = [eFT8, eFT4, eJT65, eFST4, eFST4W, eFT2],
              'the WSJT-X modes Vermont already scores as such');
    for m := Low(ExtendedModeType) to High(ExtendedModeType) do
       begin
-      CheckTrue((m in [eFT8, eFT4, eJT65, eFST4, eFST4W]) =
+      CheckTrue((m in [eFT8, eFT4, eJT65, eFST4, eFST4W, eFT2]) =
                 rules.GoesToDistinctAdditionalExport(Qso('W1AW', Digital, m)),
                 ExtendedModeStringArray[m] + ' as a digital QSO');
       end;

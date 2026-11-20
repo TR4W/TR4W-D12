@@ -399,9 +399,9 @@ type
 
 const
    (* THE WSJT-X MODES -- the one list: IsWSJTXQSO and the separate ADIF file
-     (DistinctAdditionalExportModes) both read it. ADIF has no FT2 here
-     because the extended-mode list has none. *)
-   VERMONT_WSJTX_MODES: TExtendedModes = [eFT8, eFT4, eJT65, eFST4, eFST4W];
+     (DistinctAdditionalExportModes) both read it. FT2 joined when the
+     extended-mode list gained it (NY4I, issues 88 and 122, 2026-11-19). *)
+   VERMONT_WSJTX_MODES: TExtendedModes = [eFT8, eFT4, eJT65, eFST4, eFST4W, eFT2];
 
 (* THE CLUB-STATION FILE, READ -- issue 270. One call per line; a line
    whose first word is YEAR gives the contest year (`YEAR 2027`); blank

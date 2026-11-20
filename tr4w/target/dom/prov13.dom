@@ -1,0 +1,19 @@
+The 13 Canadian provinces and territories: AB, BC, MB, NB, NL, NT, NS, NU, ON, PE, QC, SK, YT
+Was prov12.dom, which held twelve (no NT) until 2026-11-19, when NT was added; renamed for what it holds (NY4I, issue 88).
+Each key is its two-letter code. The aliases are the old s50p13.dom list folded in: the call prefixes, NF, LB and LAB for Newfoundland and Labrador, NW for the Northwest Territories, QU and PQ for Quebec.
+Included by s50p13.dom. A file that includes it after its own entries keeps its own spelling of any alias both know (the first alias added wins).
+No line of this header may hold an equals sign: the reader takes any such line as an entry.
+
+NL = NL, NF, LB, LAB, VO1, VO2, ^Newfoundland and Labrador
+NB = NB, VE9
+NS = NS, VE1
+PE = PE, VY2
+QC = QC, QU, PQ, VE2
+ON = ON, VE3
+MB = MB, MAN, VE4
+SK = SK, SAS, VE5
+AB = AB, ALT, ALB, VE6
+BC = BC, VE7
+YT = YT, YU, YK, VY1
+NT = NT, NW, VE8
+NU = NU, VY0

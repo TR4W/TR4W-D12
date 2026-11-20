@@ -510,7 +510,7 @@ Section "Domestic multiplier files" Secdom
   SetOutPath "$INSTDIR\dom"
    ; EVERY FILE IN target\dom, by wildcard (NY4I, 2026-10-16): a new contest
    ; adds its .dom files and touches nothing here. This list named 107 files
-   ; by hand and had already drifted -- prov12.dom, which newyork.dom INCLUDEs,
+   ; by hand and had already drifted -- prov12.dom (prov13.dom since 2026-11-19), which newyork.dom INCLUDEd,
    ; was never shipped. Linux and macOS ship the whole folder too. Debris
    ; (eudx.dom.new, a copy whose name was a flattened Windows path) deleted.
    File ..\target\dom\*.*

@@ -1007,7 +1007,7 @@ begin
    case AnsiIndexText(AnsiUpperCase(sSubMode),
                       ['FT4', 'JS8', 'USB', 'LSB', 'PSK31',
                        'PSK63', 'C4FM', 'DSTAR', 'FST4', 'FST4W',
-                       'JTTY']) of
+                       'JTTY', 'FT2']) of
       0:                              // FT4
          begin
          Result.msmMode := Digital;
@@ -1067,6 +1067,17 @@ begin
          Result.msmMode := Digital;
          Result.msmExtendedMode := eJTTY;
          end;
+      11:                             // FT2 (an MFSK submode, ADIF 3.1.8)
+         begin
+         (* ADIF 3.1.8's Submode enumeration lists FT2 under MFSK (checked
+           against adif-multitool v0.1.23's generated 3.1.8 tables,
+           2026-11-19). WSJT-X 3.3.0-beta6 does not offer FT2 -- its
+           AdifQso::base_mode maps FT4, FST4, Q65 and JTTY only -- so a
+           program that does writes MODE MFSK + SUBMODE FT2 by the spec;
+           unverified against such a program. *)
+         Result.msmMode := Digital;
+         Result.msmExtendedMode := eFT2;
+         end;
    else
       Result.msmMode := NoMode;
    end;
@@ -1119,7 +1130,8 @@ const
        (Mode: 'FM';           SubMode: ''),        // eWFM
        (Mode: 'MFSK';         SubMode: 'FST4'),    // eFST4
        (Mode: 'MFSK';         SubMode: 'FST4W'),   // eFST4W
-       (Mode: 'MFSK';         SubMode: 'JTTY'));   // eJTTY (ADIF 3.1.8)
+       (Mode: 'MFSK';         SubMode: 'JTTY'),    // eJTTY (ADIF 3.1.8)
+       (Mode: 'MFSK';         SubMode: 'FT2'));    // eFT2  (ADIF 3.1.8)
 
 function ADIFModeForExtMode(aExtMode: ExtendedModeType): string;
 begin

@@ -238,7 +238,7 @@ begin
             for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
                begin
                credited := (mode in [CW, Phone, FM]) or
-                           ((mode = Digital) and not (ext in [eFT8, eFT4]));
+                           ((mode = Digital) and not (ext in [eFT8, eFT4, eFT2]));
                expected := 0;
                if credited and (mode in [CW, Digital]) then
                   begin
@@ -251,11 +251,12 @@ begin
                qso := ILQSO('W9AAA', 'COOK', Band20, mode, ext);
                party.ScoreQSO(qso);
                CheckEquals(expected, Integer(qso.QSOPoints), 'CW/digital 2, phone/FM 1, FT8/FT4 none');
-               CheckTrue(party.UsesMode(mode, ext) = credited, 'every submode but FT8 and FT4');
+               CheckTrue(party.UsesMode(mode, ext) = credited, 'every submode but FT8, FT4 and FT2');
                end;
             end;
          CheckFalse(party.UsesMode(Digital, eFT8), 'FT8 is an automatic X-QSO');
          CheckFalse(party.UsesMode(Digital, eFT4), 'FT4 is an automatic X-QSO');
+         CheckFalse(party.UsesMode(Digital, eFT2), 'FT2 too (NY4I, issues 88/122)');
          CheckTrue(party.UsesMode(Digital, eRTTY), '"Other digital modes are encouraged"');
          CheckTrue(party.UsesMode(Digital, eNoMode), 'an unknown submode is never proven off-mode');
          CheckEquals('RY', party.CabrilloModeString(Digital, eRTTY), 'RTTY is RY');

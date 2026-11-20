@@ -138,7 +138,7 @@ const
       'AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT');
 
    (* 7B(f), "FT8 and other WSJTx modes". *)
-   WSJTX_SUBMODES = [eFT8, eFT4, eJT65, eFST4, eFST4W];
+   WSJTX_SUBMODES = [eFT8, eFT4, eJT65, eFST4, eFST4W, eFT2];
 
 function VermontHandle: TContestHandle;
 begin

@@ -74,22 +74,43 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     in the contest, so GetFlags states no cfMultByBand or cfMultByMode (both
     were set until then). A QSO still counts once on each band in each mode.
 
-  THE 13 PROVINCES -- "AB, BC, MB, NB, NL, NT, NS, NU, ON, PE, QC, SK, YT".
-    newyork.dom includes prov12.dom, which held twelve (no NT) under a header
-    that lists thirteen; NT is added there. newyork.dom is its only user.
+  THE STATES AND THE 13 PROVINCES -- "US states (50) ... Canadian provinces
+    (13): AB, BC, MB, NB, NL, NT, NS, NU, ON, PE, QC, SK, YT". No DC. NY4I
+    (#88, 2026-11-19): the file for "50 states, no DC, 13 provinces" is
+    s50p13.dom (s50p13dc.dom is the one with DC). newyork.dom is the 62
+    counties FIRST, then s50p13.dom, then DX: the counties come first so
+    ALB stays Albany, not Alberta's alias. prov12.dom, which held the
+    provinces and to which NT was added the same day, is prov13.dom, and
+    s50p13.dom includes it (its inline list, with NF where the sponsor says
+    NL, went with it).
+
+  NEW YORK COUNTS AS A STATE FOR A NEW YORK ENTRANT -- "The first valid New
+    York county logged will count as the multiplier for New York." NY4I
+    (#88, 2026-11-19): "it would be a double mult (county and state (NY))".
+    AdditionalDomesticMultiplierKey (#317): an in-state entrant's county QSO
+    also earns NY, once overall like every multiplier here, so the in-state
+    maximum is the sponsor's 125 (62 + 50 + 13).
+
+  CABRILLO -- "Only these values are valid in the Overlay field: Rookie,
+    Youth12, Youth17, YL" (CabrilloOverlayCategories; ROOKIE and YL are on
+    the standard list already). The LOCATION header is specified (a county,
+    a state or province abbreviation, or DX): RequiresCabrilloLocation, NY4I
+    (#88): "Yes to locationHeader".
 
   STATED AS THE RULES SAY, UNCHANGED: two counties on a county line, no bonus
     station, DX earns points but no multiplier (CountsAsMultiplier), the 62
     county codes of newyork_cty.dom, the schedule, NY-QSO-PARTY.
 
-  NOT BUILT, OPEN FOR NY4I ON #88:
-    * "The first valid New York county logged will count as the multiplier
-      for New York" -- the county is one multiplier and the state of New York
-      a second, from one QSO. A QSO carries one domestic key, so an in-state
-      entrant's maximum is 124 here, not the sponsor's 125.
-    * MODES -- "Only digital modes that natively support the NYQP exchange
-      are permitted". Which submodes those are is not named, so UsesMode is
-      not stated (MODES_NOT_YET_STATED) and every digital QSO is credited.
+  BANDS, AGAIN -- NY4I (#88): every band but 30, 17 and 12 m, BandLight
+    included. 60 m is within the rules text, but TR4W's BandType has no 60 m
+    band (Band60 is commented out of VC), so there is nothing to state.
+
+  NO CATEGORY RULE -- "RTTY and digital modes are permitted in the Mixed
+    category only" is not built: NY4I (#88) would rather the allowed modes
+    dictate it than force a category up front.
+
+  MODES -- "Only digital modes that natively support the NYQP exchange are
+    permitted". NY4I (#88, 2026-11-19): "NOT FT8, FT4 or FT2". UsesMode.
  *)
 unit uContestNewYorkQP;
 
@@ -159,10 +180,18 @@ type
 
       (* The county-line maximum, from NY4I's ruling -- see the header. *)
       function GetCountyLineCountiesMax: integer; override;
+
+      (* The sponsor's CATEGORY-OVERLAY values and its LOCATION header --
+         see the header. *)
+      function GetCabrilloOverlayCategories: TArray<string>; override;
+      function GetRequiresCabrilloLocation: boolean; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
       (* Every band but 30, 17 and 12 m -- see the body. *)
       function UsesBand(aBand: BandType): boolean; override;
+      (* CW, phone, FM and every digital submode but FT8, FT4 and FT2 --
+         see the body. *)
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
 
       (* A DX STATION EARNS NO MULTIPLIER -- logdupe's SetMultFlags rule for
          this contest (4.116.5), moved here at M8: a multiplier QTH of 'DX'
@@ -171,6 +200,9 @@ type
          the one test Indiana and British Columbia ask too. *)
       function CountsAsMultiplier(const aQso: ContestExchange;
                                   aKind: RemainingMultiplierType): boolean; override;
+      (* AN IN-STATE COUNTY QSO ALSO EARNS NY -- #317, see the header. *)
+      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: string): boolean; override;
       (* SEVERAL QTHs FROM ONE ENTRY -- see TContestBase.LogsSeveralQTHsFromOneEntry (M11 S7). *)
       function LogsSeveralQTHsFromOneEntry: boolean; override;
    public
@@ -192,6 +224,38 @@ function TContestNewYorkQP.CountsAsMultiplier(const aQso: ContestExchange;
 begin
    (* Every kind: the legacy rule returned before any flag was set. *)
    Result := not DomesticMultiplierIsDX(string(aQso.DomMultQTH));
+end;
+
+function TContestNewYorkQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                                           out aKey: string): boolean;
+begin
+   (* "The first valid New York county logged will count as the multiplier
+      for New York" -- a county also earns NY, in state (#317). Every key of
+      newyork.dom longer than two characters is a county: the states and the
+      provinces are two letters. *)
+   Result := InStateCountyEarnsHostState(aQso, aKey);
+end;
+
+(* "Only these values are valid in the Overlay field: Rookie, Youth12,
+   Youth17, YL" -- in the sponsor's spelling; the summary window's merge
+   (uCbrSum.OverlayValuesWith) keeps the standard list's ROOKIE and YL and
+   adds the two it lacks. *)
+function TContestNewYorkQP.GetCabrilloOverlayCategories: TArray<string>;
+begin
+   Result := nil;
+   SetLength(Result, 4);
+   Result[0] := 'Rookie';
+   Result[1] := 'Youth12';
+   Result[2] := 'Youth17';
+   Result[3] := 'YL';
+end;
+
+(* "LOCATION field: For fixed stations outside New York, use your state
+   abbreviation, Canadian province abbreviation, or DX. For fixed stations in
+   New York, use your NYQP-approved three-letter county abbreviation." *)
+function TContestNewYorkQP.GetRequiresCabrilloLocation: boolean;
+begin
+   Result := True;
 end;
 
 function TContestNewYorkQP.GetDisplayName: string;
@@ -358,6 +422,34 @@ begin
                        Band6, Band2, Band222, Band432, Band902, Band1296,
                        Band2304, Band3456, Band5760, Band10G, Band24G,
                        BandLight];
+end;
+
+(* "Only digital modes that natively support the NYQP exchange are permitted
+   for contest credit." NY4I, issue 88, 2026-11-19: "Same as other QSO
+   parties. This functionally means specifically NOT FT8, FT4 or FT2." So
+   every digital submode is credited but those three, which are an automatic
+   X-QSO (uContestBase.DigitalSubmodeAllowed over EVERY_SUBMODE -
+   FT_SUBMODES, which also keeps eNoMode and the generic data modes, "some
+   submode", credited). CW, phone and FM are credited whole -- "Phone only
+   (SSB, FM, AM)"; C4FM and D-STAR are FM in TR4W and count as phone. No
+   category is forced (NY4I: the allowed modes dictate it). An identity
+   fact: no station is asked. *)
+function TContestNewYorkQP.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   case aMode of
+      CW, Phone, FM:
+         begin
+         Result := True;
+         end;
+      Digital:
+         begin
+         Result := DigitalSubmodeAllowed(aExtMode, EVERY_SUBMODE - FT_SUBMODES);
+         end;
+      else
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 (* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --

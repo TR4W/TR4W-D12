@@ -597,10 +597,13 @@ that contest, it is an X-QSO"*): the Digital arm calls
 `uContestBase.DigitalSubmodeAllowed(aExtMode, RTTY_SUBMODES + [...])`, which
 also passes the "some submode" values (eNoMode and the generic data modes
 eData, eData_R, eData_FM), so a submode added to `ExtendedModeType` later is
-refused until a contest names it. Louisiana and Iowa are the worked examples.
-JTTY (and JS8) go on the list only where the sponsor allows free-form digital
-modes -- never by default. Several older parties still use a deny-list; they
-are not examples to copy. Both answers are identity facts -- never ask the station
+refused until a contest names it. Iowa is the worked example of a named
+list. **A QSO party whose rule is "any digital mode that can carry the
+exchange" writes `EVERY_SUBMODE - FT_SUBMODES`** (NY4I, issues 88 and 122,
+2026-11-19: *"Same as other QSO parties. This functionally means
+specifically NOT FT8, FT4 or FT2"*) -- Louisiana and New York; Illinois,
+Nebraska, Wisconsin and Missouri (which also takes out JT65, FST4 and FST4W)
+say it the same way. Such a list credits a submode appended later. Both answers are identity facts -- never ask the station
 (`Test_BandsAndModesAreAnIdentityFact`). A family base may state the bands its
 whole family shares (CQ WW does); `TContestStateQSOPartyBase` never does.
 `RunsInMode` is NOT this rule. Design doc 8.2v.

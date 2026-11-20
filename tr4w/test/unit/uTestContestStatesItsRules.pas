@@ -73,6 +73,7 @@ type
                                          const aSetName: string);
       procedure Test_EveryContestStatesItsBandsAndModes;
       procedure Test_BandsAndModesAreAnIdentityFact;
+      procedure Test_FT2IsCreditedWhereFT4Is;
    end;
 
 implementation
@@ -172,7 +173,7 @@ const
       'MINI40', 'MINI80', 'MINITEST',
       'MONGOLIAN DX', 'MST', 'MWC',
       'NA-SPRINT-CW', 'NA-SPRINT-RTTY', 'NAQP-CW', 'NAQP-RTTY',
-      'NAQP-SSB', 'NC QSO PARTY', 'NCCC-SPRINT', 'NEWEQP', 'NRAU-BALTIC-CW', 'NRAU-BALTIC-SSB', 'NY-QSO-PARTY',
+      'NAQP-SSB', 'NC QSO PARTY', 'NCCC-SPRINT', 'NEWEQP', 'NRAU-BALTIC-CW', 'NRAU-BALTIC-SSB',
       'NZ FIELD DAY', 'OCEANIA-DX-CW', 'OCEANIA-DX-SSB', 'OHIO QSO PARTY',
       'OK-OM DX CW', 'OK-OM DX SSB', 'OZCHR', 'OZCHR-TEAMS',
       'OZHCR-VHF', 'PA QSO PARTY', 'PACC', 'PCC',
@@ -527,8 +528,60 @@ begin
       end;
 end;
 
+(* FT2 IS AN FT MODE -- issues 88 and 122 (NY4I, 2026-11-19: "NOT FT8, FT4
+   or FT2"). eFT2 was appended after the deny-lists and allow-lists were
+   written, so every registered contest is walked: each credits FT2 exactly
+   when it credits FT4, but the closed list below. A deny-list that names FT4
+   and forgets FT2, or an allow-list that names FT4 and not FT2, fails here.
+
+   THE EXCEPTIONS, each on its sponsor's words:
+     * MS-QSO-PARTY: "Modes: CW, SSB, RTTY, FT4/8" -- an ALLOW rule naming
+       FT4 and FT8, so FT2 stays an X-QSO until the sponsor names it.
+   (Vermont's 30/17/12 m rule, "except when operating FT8/FT4", is
+   UsesBandInMode, not UsesMode, and is pinned in uTestContestVermontQP.) *)
+procedure TContestStatesItsRulesTests.Test_FT2IsCreditedWhereFT4Is;
+const
+   FT4_NOT_FT2: array[0..0] of string = ('MS-QSO-PARTY');
+var
+   contests: TContestIdentityList;
+   k, i: integer;
+   listed: boolean;
+   seen: integer;
+   id: string;
+begin
+   BeginTest('Test_FT2IsCreditedWhereFT4Is');
+   seen := 0;
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      id := ContestId(HandleOf(contests[k]));
+      listed := False;
+      for i := Low(FT4_NOT_FT2) to High(FT4_NOT_FT2) do
+         begin
+         if id = FT4_NOT_FT2[i] then
+            begin
+            listed := True;
+            end;
+         end;
+      if listed then
+         begin
+         Inc(seen);
+         CheckTrue(contests[k].UsesMode(Digital, eFT4) and
+                   not contests[k].UsesMode(Digital, eFT2),
+                   ContestWho(contests[k]) + ' credits FT4 and not FT2 (its sponsor names FT4/8)');
+         end
+      else
+         begin
+         CheckTrue(contests[k].UsesMode(Digital, eFT2) = contests[k].UsesMode(Digital, eFT4),
+                   ContestWho(contests[k]) + ' credits FT2 exactly when it credits FT4');
+         end;
+      end;
+   CheckEquals(Length(FT4_NOT_FT2), seen, 'every exception was walked');
+end;
+
 procedure TContestStatesItsRulesTests.RunAllTests;
 begin
+   Test_FT2IsCreditedWhereFT4Is;
    Test_EveryContestStatesItsBandsAndModes;
    Test_BandsAndModesAreAnIdentityFact;
    Test_EveryContestStatesItsCabrilloSentColumn;

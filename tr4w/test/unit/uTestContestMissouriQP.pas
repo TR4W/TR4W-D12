@@ -200,7 +200,7 @@ begin
    identity := ContestIdentity(MOQSOPARTY);
    for ext := Low(ExtendedModeType) to High(ExtendedModeType) do
       begin
-      refused := ext in [eFT8, eFT4, eJT65, eFST4, eFST4W];
+      refused := ext in [eFT8, eFT4, eFT2, eJT65, eFST4, eFST4W];
       CheckTrue(ContestCreditsMode(identity, Digital, ext) = (not refused),
                 'digital submode ' + IntToStr(Ord(ext)) + ' credited unless FT8, FT4, JT65, FST4 or FST4W');
       qso := MissouriQso(Band20, Digital, ext);
