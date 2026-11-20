@@ -35,6 +35,10 @@ type
       procedure Test_ABoundaryEntryLogsOneQSOPerPlace;
       procedure Test_MyCountyOfARoverPlaceIsItsADIFCounty;
       procedure Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
+      procedure Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
+      procedure CheckEveryCountyNamed(const aContestId, aFile, aState: string;
+                                      aCount: integer;
+                                      const aPins: array of string);
    public
       procedure RunAllTests; override;
    end;
@@ -624,8 +628,40 @@ end;
   v1.1), spelled as the ADIF county list spells them. CAY is Cayuga and
   CHA Chautauqua. *)
 procedure TRoverStateTests.Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
+begin
+   BeginTest('Test_EveryNewYorkCountyCodeNamesItsADIFCounty');
+   CheckEveryCountyNamed('NY-QSO-PARTY', 'newyork_cty.dom', 'NY', 62,
+      ['KIN=NY,KINGS', 'QUE=NY,QUEENS', 'CAT=NY,CATTARAUGUS',
+       'CAY=NY,CAYUGA', 'CHA=NY,CHAUTAUQUA', 'ALB=NY,ALBANY',
+       'NEW=NY,NEW YORK', 'STL=NY,ST. LAWRENCE']);
+end;
+
+(* THE SAME FOR FLORIDA AND TENNESSEE (NY4I, 2026-11-20): their county
+  files had no ^Name either, so neither ever wrote a CNTY. The names are the
+  sponsors' tables -- docs/ContestRules/QSOParties/Florida/
+  FL-QSO-PARTY-Counties.txt and Tennessee/TN-QSO-PARTY-Rules.txt -- each
+  checked against the ADIF county list when it was written. Arizona,
+  Indiana, Michigan, North Carolina, the 7QP and Virginia stay unnamed: no
+  sponsor county table is in docs/ContestRules to take the names from. *)
+procedure TRoverStateTests.Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
+begin
+   BeginTest('Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty');
+   CheckEveryCountyNamed(ContestId(ContestHandleOf(FLORIDAQSOPARTY)), 'florida_cty.dom', 'FL', 67,
+      ['PIN=FL,PINELLAS', 'HIL=FL,HILLSBOROUGH', 'DAD=FL,MIAMI-DADE',
+       'STJ=FL,ST. JOHNS', 'BAY=FL,BAY', 'DES=FL,DESOTO']);
+   CheckEveryCountyNamed(ContestId(ContestHandleOf(TENNESSEEQSOPARTY)), 'tennessee_cty.dom', 'TN', 95,
+      ['ANDE=TN,ANDERSON', 'VANB=TN,VAN BUREN', 'MCMI=TN,MCMINN',
+       'HARN=TN,HARDIN', 'HARD=TN,HARDEMAN']);
+end;
+
+(* A COUNTY FILE, LOADED AS THE SESSION LOADS IT into a fresh table and a
+  fresh multiplier list, names an ADIF county '<aState>,...' for EVERY key it
+  holds (aCount of them), and the pins 'CODE=ST,NAME' exactly. *)
+procedure TRoverStateTests.CheckEveryCountyNamed(const aContestId, aFile, aState: string;
+                                                 aCount: integer;
+                                                 const aPins: array of string);
 var
-   handle: TContestHandle;
+   aHandle: TContestHandle;
    savedContest: TContestHandle;
    savedTable: TDomQTHTable;
    savedList: TSortedStringList;
@@ -633,34 +669,29 @@ var
    i, keys: integer;
    key, county: string;
 begin
-   BeginTest('Test_EveryNewYorkCountyCodeNamesItsADIFCounty');
-   CheckTrue(FindContestById('NY-QSO-PARTY', handle), 'New York is registered');
+   CheckTrue(FindContestById(aContestId, aHandle), aContestId + ' is registered');
    savedContest := Contest;
    savedTable := DomQTHTable;
    DomQTHTable := TDomQTHTable.Create;
-   (* A FRESH MULTIPLIER LIST, as a session that opened only this contest has.
-      mo.DomList is never emptied by a load (only its dupes are cleared), so
-      the list the rest of the suite left behind answers KIN with Oklahoma's
-      Kingfisher and QUE with a Quebec region -- reported, not changed here. *)
+   (* A FRESH MULTIPLIER LIST, as a session that opened only this contest has:
+      the list the rest of the suite left behind holds other contests' keys
+      (KIN is also Oklahoma's Kingfisher). *)
    savedList := mo.DomList;
    mo.DomList := TSortedStringList.Create;
    lines := TStringList.Create;
    try
-      CheckTrue(DomQTHTable.LoadInDomQTHFile(IncludeTrailingPathDelimiter(ShippedDomDir) +
-                                             'newyork_cty.dom'),
-                'newyork_cty.dom loads');
-      Contest := handle;
+      CheckTrue(DomQTHTable.LoadInDomQTHFile(IncludeTrailingPathDelimiter(ShippedDomDir) + aFile),
+                aFile + ' loads');
+      Contest := aHandle;
 
-      CheckEquals('NY,KINGS', RoverPlaceADIFCounty('KIN'), 'KIN is Kings county');
-      CheckEquals('NY,QUEENS', RoverPlaceADIFCounty('QUE'), 'QUE is Queens county');
-      CheckEquals('NY,CATTARAUGUS', RoverPlaceADIFCounty('CAT'), 'CAT is Cattaraugus');
-      CheckEquals('NY,CAYUGA', RoverPlaceADIFCounty('CAY'), 'CAY is Cayuga, not Chautauqua');
-      CheckEquals('NY,CHAUTAUQUA', RoverPlaceADIFCounty('CHA'), 'CHA is Chautauqua');
-      CheckEquals('NY,ALBANY', RoverPlaceADIFCounty('ALB'), 'ALB is Albany');
-      CheckEquals('NY,NEW YORK', RoverPlaceADIFCounty('NEW'), 'NEW is New York county');
-      CheckEquals('NY,ST. LAWRENCE', RoverPlaceADIFCounty('STL'), 'STL is St. Lawrence');
+      for i := Low(aPins) to High(aPins) do
+         begin
+         key := Copy(aPins[i], 1, Pos('=', aPins[i]) - 1);
+         CheckEquals(Copy(aPins[i], Pos('=', aPins[i]) + 1, MaxInt),
+                     RoverPlaceADIFCounty(key), aFile + ': ' + key);
+         end;
 
-      lines.LoadFromFile(IncludeTrailingPathDelimiter(ShippedDomDir) + 'newyork_cty.dom');
+      lines.LoadFromFile(IncludeTrailingPathDelimiter(ShippedDomDir) + aFile);
       keys := 0;
       for i := 0 to lines.Count - 1 do
          begin
@@ -668,11 +699,12 @@ begin
             begin
             key := Trim(Copy(lines[i], 1, Pos('=', lines[i]) - 1));
             county := RoverPlaceADIFCounty(key);
-            CheckTrue(Copy(county, 1, 3) = 'NY,', key + ' names an ADIF county: "' + county + '"');
+            CheckTrue(Copy(county, 1, 3) = aState + ',',
+                      aFile + ': ' + key + ' names an ADIF county: "' + county + '"');
             Inc(keys);
             end;
          end;
-      CheckEquals(62, keys, 'the sponsor''s 62 counties');
+      CheckEquals(aCount, keys, aFile + ': the sponsor''s counties');
    finally
       lines.Free;
       mo.DomList.Free;
@@ -698,6 +730,7 @@ begin
    Test_ABoundaryEntryLogsOneQSOPerPlace;
    Test_MyCountyOfARoverPlaceIsItsADIFCounty;
    Test_EveryNewYorkCountyCodeNamesItsADIFCounty;
+   Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
 end;
 
 end.
