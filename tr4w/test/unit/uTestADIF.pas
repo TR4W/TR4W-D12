@@ -84,6 +84,7 @@ type
       procedure Test_OldDOKAndFOCNamesStillImport;
       procedure Test_GenericDataMode_SaysSoInTheFile;
       procedure Test_JTTY_WritesAValidModeAndRoundTrips;
+      procedure Test_FT2_WritesAValidModeAndRoundTrips;
       procedure Test_OldTR4WSpellingsStillImport;
       procedure Test_ADIFDateStringToQSOTime_Valid;
       procedure Test_ADIFDateStringToQSOTime_InvalidLength;
@@ -842,7 +843,7 @@ const
      MODE:SUBMODE pairs. *)
    ADIFSubModeEnumeration =
       ',SSB:USB,SSB:LSB,PSK:PSK31,PSK:PSK63,MFSK:FT4,MFSK:JS8,' +
-      'MFSK:FST4,MFSK:FST4W,MFSK:JTTY,' +
+      'MFSK:FST4,MFSK:FST4W,MFSK:JTTY,MFSK:FT2,' +
       'DIGITALVOICE:C4FM,DIGITALVOICE:DSTAR,';
 
 procedure TADIFHelperTests.Test_ExtMode_ExportsAnADIFMode_Exhaustive;
@@ -903,6 +904,8 @@ begin
    Pair(eFST4W,  'MFSK', 'FST4W');
    // Issue 120: ADIF 3.1.8 added JTTY as a submode of MFSK.
    Pair(eJTTY,   'MFSK', 'JTTY');
+   // Issues 88/122: ADIF 3.1.8 lists FT2 as a submode of MFSK.
+   Pair(eFT2,    'MFSK', 'FT2');
    Pair(eMFSK,   'MFSK', '');
    Pair(eFT8,    'FT8',  '');
    Pair(eJT65,   'JT65', '');
@@ -1304,6 +1307,46 @@ begin
    CheckTrue(Pos('<SUBMODE:3>FT4', EmitADIFRecord(rec)) > 0, 'FT4 writes SUBMODE FT4');
 end;
 
+(* FT2, ISSUES 88 AND 122 (2026-11-19). ADIF 3.1.8 lists FT2 as a submode of
+  MFSK, so TR4W writes MODE MFSK + SUBMODE FT2 and reads that form back. It
+  is appended to ExtendedModeType (the ordinal is stored), and its token is
+  its own name. *)
+procedure TADIFHelperTests.Test_FT2_WritesAValidModeAndRoundTrips;
+var
+   rec     : ContestExchange;
+   s       : string;
+   records : TContestExchangeArray;
+   m       : ModeAndExtendedModeType;
+begin
+   BeginTest('Test_FT2_WritesAValidModeAndRoundTrips');
+   CheckTrue(eFT2 = High(ExtendedModeType), 'FT2 is appended last');
+   CheckEquals(Ord(eJTTY) + 1, Ord(eFT2), 'right after JTTY');
+   CheckEquals('MFSK', ADIFModeForExtMode(eFT2), 'MODE');
+   CheckEquals('FT2', ADIFSubModeForExtMode(eFT2), 'SUBMODE');
+   CheckEquals('FT2', ExtendedModeStringArray[eFT2], 'TR4W''s own token');
+
+   m := GetADIFSubMode('ft2');
+   CheckTrue(m.msmMode = Digital, 'SUBMODE FT2 is Digital');
+   CheckEquals(Integer(eFT2), Integer(m.msmExtendedMode), 'SUBMODE FT2 is eFT2');
+   CheckEquals(1, ImportADIFFromString(
+      '<CALL:4>KG1S <MODE:4>MFSK <SUBMODE:3>FT2 <BAND:3>20m <EOR>', records),
+      'the ADIF form read');
+   CheckTrue(records[0].Mode = Digital, 'imports as Digital');
+   CheckEquals(Integer(eFT2), Integer(records[0].ExtMode), 'and as eFT2');
+
+   rec := Default(ContestExchange);
+   rec.Callsign := 'KG1S';
+   rec.Band     := Band20;
+   rec.Mode     := Digital;
+   rec.ExtMode  := eFT2;
+   s := EmitADIFRecord(rec);
+   CheckTrue(Pos('<MODE:4>MFSK', s) > 0, 'MODE MFSK');
+   CheckTrue(Pos('<SUBMODE:3>FT2', s) > 0, 'SUBMODE FT2');
+   CheckEquals(1, ImportADIFFromString(s + '<EOR>', records), 'read back');
+   CheckTrue(records[0].Mode = Digital, 'round trip: Digital');
+   CheckEquals(Integer(eFT2), Integer(records[0].ExtMode), 'round trip: eFT2');
+end;
+
 procedure TADIFHelperTests.Test_OldTR4WSpellingsStillImport;
 var
    m : ModeAndExtendedModeType;
@@ -1555,6 +1598,7 @@ begin
    Test_OldDOKAndFOCNamesStillImport;
    Test_GenericDataMode_SaysSoInTheFile;
    Test_JTTY_WritesAValidModeAndRoundTrips;
+   Test_FT2_WritesAValidModeAndRoundTrips;
    Test_OldTR4WSpellingsStillImport;
 
    Test_ADIFDateStringToQSOTime_Valid;

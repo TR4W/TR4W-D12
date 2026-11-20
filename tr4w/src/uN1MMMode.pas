@@ -67,7 +67,8 @@ const
       (* eWFM     *) 'FM',
       (* eFST4    *) 'FST4',
       (* eFST4W   *) 'FST4W',
-      (* eJTTY    *) 'JTTY'   (* WSJT-X's own mode name, as for FT8 and FST4 *)
+      (* eJTTY    *) 'JTTY',  (* WSJT-X's own mode name, as for FT8 and FST4 *)
+      (* eFT2     *) 'FT2'    (* the mode's own name, as for FT8 and FT4 *)
       );
 
 function N1MMSidebandForFreq(aFreqHz: LongInt): string;

@@ -47,6 +47,7 @@ changed ("modernised") -- the version is otherwise upstream's byte for byte.
 | `ARRL_SECT` and `MY_ARRL_SECT` value lists | `enumerations` | upstream's 2022 list is stale: it lacks GH (Golden Horseshoe), NB, NS, TER (all added 2023-01-01), PE (2020-04-01), and the ONE/ONN/ONS split that came with 3.1.x. Replaced by the 90 codes of the ADIF 3.1.6 Section enumeration, III.B.2, **deleted codes included** (GTA, MAR, NT, NWT, ON are marked deleted but are still enumerated) | the Section enumeration is 3.1.6's; the codes were added 2012 to 2023 |
 | `FST4W` submode of `MFSK` | `enumerations` (submodes) | TR4W exports WSJT-X FST4W as MFSK/FST4W; ADIF 3.1.6 lists it (upstream lists FST4 only) | 3.1.6 Submode enumeration |
 | `JTTY` submode of `MFSK` | `enumerations` (submodes) | TR4W exports WSJT-X 3.3's JTTY as MFSK/JTTY (issue 120); the 3.1.8 spec lists it (checked against https://adif.org/318/ADIF_318.htm, 1.F "Changes from Previous Versions", 2026-11-19) | 3.1.8 Submode enumeration |
+| `FT2` submode of `MFSK` | `enumerations` (submodes) | TR4W exports FT2 as MFSK/FT2 (issues 88 and 122: NY4I names FT2 with FT8 and FT4 as modes that cannot carry a QSO party exchange); the 3.1.8 Submode enumeration lists it under MFSK (checked against adif-multitool v0.1.23's generated 3.1.8 tables, `adif/spec/enumerations.go`, 2026-11-19) | 3.1.8 Submode enumeration |
 
 Checked and NOT patched:
 

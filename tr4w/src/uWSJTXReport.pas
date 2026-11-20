@@ -20,6 +20,8 @@ unit uWSJTXReport;
   a dB value outside its RTTY/Field Day operating activities is not shown by
   its source, and inclusion is harmless either way -- only a stored value
   below WSJTX_SNR_RST_LIMIT is converted, so a logged 599 is left alone.
+  eFT2 (an MFSK submode in ADIF 3.1.8, issues 88/122) is FT8's and FT4's
+  sibling and reports a dB SNR the same way.
 
   WHICH MODES NOT.  Q65, JT9 and MSK144 have no ExtendedModeType value at all
   (their ADIF mode / submode parse to eNoMode), so no ExtMode can name them and
@@ -36,7 +38,7 @@ uses
 
 const
    (* The ExtMode values whose RSTReceived is a WSJT-X dB SNR. *)
-   WSJTX_SNR_MODES = [eFT8, eFT4, eJT65, eFST4, eFST4W, eMFSK, eJTTY];
+   WSJTX_SNR_MODES = [eFT8, eFT4, eJT65, eFST4, eFST4W, eMFSK, eJTTY, eFT2];
 
    (* A stored report below this is an SNR, not an RST (the legacy test). *)
    WSJTX_SNR_RST_LIMIT = 25;
