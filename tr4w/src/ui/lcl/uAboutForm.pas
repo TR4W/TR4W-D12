@@ -59,8 +59,8 @@ uses
   Version;        // TR4W_CURRENTVERSION and friends
 
 const
-  { The one place the site appears, so the label and the link cannot disagree. }
-  TR4W_WEBSITE = 'https://tr4w.net';
+  (* The site the label shows and the link opens is Version.TR4W_WEBSITE, the
+    one spelling of it -- one name, so the two cannot disagree. *)
 
   (* WHO A MACHINE TRANSLATION IS CREDITED TO. A product name, so it is not
     itself translated. A catalogue that credits nobody was seeded by it; one

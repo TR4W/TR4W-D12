@@ -742,6 +742,7 @@ implementation
 
 uses
    uSettingsModel,   // Settings -- where retired CFGCA rows live
+   Version,          (* TR4W_WEBSITE -- Help > Home Page *)
    uCategoryWindow,  (* CategoryOpeningWindow -- issue 201 *)
   uAppPaths,  // ContestDir, DownloadedDataFilePath, BackupDir -- where files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
@@ -6239,7 +6240,12 @@ begin
       OpenUrl('http://www.tr4w.com/wiki/');
 
     menu_home_page:
-      OpenUrl('https://tr4w.net/'); // n4af 04.42.5
+      begin
+      (* n4af 04.42.5. Version.TR4W_WEBSITE's home page:
+        https://tr4w.net/ -- written out for build\referenced-urls.txt
+        (issue 248), which probes it. *)
+      OpenUrl(TR4W_WEBSITE + '/');
+      end;
 
     menu_download_latest_cty_dat:
       begin

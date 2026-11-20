@@ -14,11 +14,16 @@ unit uTRMasterUpdate;
 
 interface
 
+uses
+   Version;   // TR4W_WEBSITE -- a leaf; this unit stays clear of VC and MainUnit
 
 const
 
-   TRMASTER_DOWNLOAD_URL = 'https://tr4w.net/TRMASTER.DTA';
-   // NY4I's own copy, 2026-08-16.  ~3.5 MB.
+   (* NY4I's own copy, 2026-08-16.  ~3.5 MB.  Built from Version.TR4W_WEBSITE,
+     the one spelling of the site: https://tr4w.net/TRMASTER.DTA -- written
+     out for build\referenced-urls.txt (issue 248), whose endpoint row probes
+     it. Pinned by uTestTR4WWebsite. *)
+   TRMASTER_DOWNLOAD_URL = TR4W_WEBSITE + '/TRMASTER.DTA';
 
 type
    (* Raised ON THE MAIN THREAD when the download finishes. *)

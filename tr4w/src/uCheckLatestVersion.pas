@@ -55,6 +55,20 @@ unit uCheckLatestVersion;
 
 interface
 
+uses
+  Version;        // TR4W_WEBSITE; and TR4W_CURRENTVERSION, TR4W_CURRENTVERSION_NUMBER
+
+const
+  (* PROVISIONAL, and expected to change -- NY4I: "We will update the exact
+    fields in the file (and to handle multi-platform) later." Both the URL and
+    the field name are here so that change is one edit.
+
+    BUILT FROM Version.TR4W_WEBSITE, the one spelling of the site, and in the
+    interface so uTestTR4WWebsite can pin it:
+    https://tr4w.net/version.json -- written out for
+    build\referenced-urls.txt (issue 248), whose endpoint row probes it. *)
+  VERSION_URL   = TR4W_WEBSITE + '/version.json';
+
 procedure CheckLatestVersion;
 
 (* THE PROGRAM IS EXITING (review M15): a check still in flight shows nothing
@@ -75,17 +89,14 @@ uses
   fpjson,
   LCLType,        // IDYES -- what YesOrNo answers with
   uJSON,          // GetJSON + the TJSONObject helpers, as the settings store uses
-  Version,        // TR4W_CURRENTVERSION, TR4W_CURRENTVERSION_NUMBER
   VC,             // TR4W_DOWNLOAD_LINK
   TF,             // OpenURL
   MainUnit,       // logger, YesOrNo, ShowMessage
   uTR4WStrings;
 
 const
-  (* PROVISIONAL, and expected to change -- NY4I: "We will update the exact
-    fields in the file (and to handle multi-platform) later." Both the URL and
-    the field name are here so that change is one edit. *)
-  VERSION_URL   = 'https://tr4w.net/version.json';
+  (* The field VERSION_URL's document carries -- see VERSION_URL in the
+    interface, which this changes with. *)
   VERSION_FIELD = 'version';
 
   { Short on purpose: this runs on the calling thread, so the worst case is how

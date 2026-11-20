@@ -194,6 +194,9 @@ procedure CreateCabrilloFile;
   domestic multiplier it resolved to. See the body. *)
 function CabrilloReceivedQTH( aCountsDomesticMultiplier: boolean;
                               const aQso: ContestExchange ): string;
+(* THE PROGRAM AND ITS SITE, as the 3830 report and the summary sheet credit
+  them: 'TR4W v.<n> https://tr4w.net'. See the body. *)
+function SoftwareCredit: string;
 procedure CheckForNewContestDate( Date: TQSOTime );
 
 procedure WriteADIFField( sFieldName: string; sFieldValue: string );
@@ -717,6 +720,16 @@ begin
       end;
 end;
 
+(* THE PROGRAM AND ITS SITE, ONCE (2026-11-20). The 3830 report's
+  'SOFTWARE:' header and the summary sheet's 'SOFTWARE:' footer each spelled
+  the version and the site themselves; this is the text both print, and the
+  site is Version.TR4W_WEBSITE, the one spelling of it. Byte for byte what
+  both wrote before. Pinned by uTestTR4WWebsite. *)
+function SoftwareCredit: string;
+begin
+   Result := TR4W_CURRENTVERSION + ' ' + TR4W_WEBSITE;
+end;
+
 
 procedure WriteADIFField( sFieldName: string; sFieldValue: string );
   var
@@ -1045,8 +1058,7 @@ procedure ExportTo3830Scores;
      Exit;
      end;
 
-  buf := sysutils.Format( 'SOFTWARE: %s https://tr4w.net'#13#10#13#10,
-     [ TR4W_CURRENTVERSION ] );
+  buf := 'SOFTWARE: ' + SoftwareCredit + #13#10#13#10;
   buf := buf + '3830Scores summary'#13#10#13#10;
 
   // Metadata from the Cabrillo Summary fields the operator saved, read
@@ -1190,8 +1202,7 @@ procedure WriteTitleBlockToSummarySheet;
      [ CQOpMode ] ) + '/' + IntToStr( tRestartInfo.riQSOByOpMode
      [ SearchAndPounceOpMode ] ) + ' Qs' + #13#10'      UNIQUE CALLSIGNS: ' +
      IntToStr( CallsignsList.GetTotalWorkedStations ) + #13#10 +
-     #13#10'            SOFTWARE: ' + TR4W_CURRENTVERSION +
-     ' https://tr4w.net'#13#10 );
+     #13#10'            SOFTWARE: ' + SoftwareCredit + #13#10 );
 
   end;
 
