@@ -255,6 +255,11 @@ msgctxt "TC_HELP_CATEGORY_POWER"
 msgid "Used to generate Cabrillo file and for posting score to on-line score systems."
 msgstr "Used to generate Cabrillo file and for posting score to on-line score systems."
 
+#. Config command: CATEGORY-STATION
+msgctxt "TC_HELP_CATEGORY_STATION"
+msgid "The Cabrillo CATEGORY-STATION for this contest (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). Saved with the contest; a contest whose sponsor names its own list offers only those values."
+msgstr "The Cabrillo CATEGORY-STATION for this contest (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). Saved with the contest; a contest whose sponsor names its own list offers only those values."
+
 #. Config command: CATEGORY-TRANSMITTER   (default: ONE)
 msgctxt "TC_HELP_CATEGORY_TRANSMITTER"
 msgid "Used to generate Cabrillo file and for posting score to on-line score systems."

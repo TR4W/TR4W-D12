@@ -44,8 +44,38 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   or DX (5.a), so pa.dom includes arrlsect.dom, not the states and
   provinces; bands are all but WARC (3.b); modes CW 2 and Phone 1 (6), no
   digital; QRP doubles the points (10.d); the 2026 bonus station K3ZMC pays
-  200 (11). NOT BUILT: the 500-point mobile and rover bonus (10.e), which
-  needs the county each QSO was sent from, and the category matrix.
+  200 (11). NOT BUILT: the category matrix.
+
+  THE ROVER AND ELECTRONIC-SUBMISSION BONUSES ARE THE OPERATOR'S, NOT OURS
+  (NY4I, 2026-11-20): "That is not something we could know unless we
+  calculate the different counties the rover operated from. That just like
+  the electronic submission is something the user needs to add at log
+  submission time." BonusPoints pays the bonus station alone; nothing here
+  computes 10.e's 500 points or the e-submission bonus, and a test pins it.
+
+  SECTION MULTIPLIERS FOR AN IN-STATE ENTRANT (NY4I, 2026-11-20, quoting the
+  sponsor): "For in-state stations, the first EPA and WPA county worked will
+  count both the county and the section multiplier in the score. Likewise,
+  the first DXCC station worked counts as the single DX multiplier." The
+  section is the #317 second domestic key (AdditionalDomesticMultiplierKey):
+  a credited PA county also earns EPA or WPA, on the domestic sheet, once
+  (no cfMultByBand / cfMultByMode). Both are keys of the in-state file
+  through arrlsect.dom (`EPA = EP,EPA`, `WPa = WP,WPA`; the sheet compares
+  without case). The DX multiplier is pa.dom's single `dx = dx` key, already.
+
+  THE COUNTY-TO-SECTION CROSSWALK is tr4w/tools/trmaster/
+  arrl-sections-counties.json (keyed by county NAME, read by the Python
+  county_section.py; there is no Pascal reader). PA_COUNTY_SECTIONS below
+  was generated from it by joining its names to pa_cty.dom's ^Name on
+  county_section.county_key: 66 of 67 joined, and the 67th is pa_cty.dom's
+  misspelling "Northhampton" (Northampton, EPA in the JSON). A test pins
+  every pa_cty.dom key to a section.
+
+  A STATION OUTSIDE PA SENDS ITS ARRL OR RAC SECTION (NY4I, 2026-11-20:
+  "Rather than an op in Florida sending FL to the PA station, I would send
+  WCF"). MY STATE holds it -- DescribeNewContestHostArea asks the New
+  Contest dialog for a section (OutsideTakesSection) -- and the sent
+  columns write MY STATE as they always did.
 
   NO COUNTY-LINE MAXIMUM IS ESTABLISHED FOR THIS PARTY, so it inherits
   TContestStateQSOPartyBase's CountyLineCountiesUnlimited -- exactly what TR4W
@@ -146,6 +176,12 @@ type
          and its neighbours (M11 S9d). *)
       function ExchangeCarriesDomesticQTH: boolean; override;
       function PerQSOExchangeLeadsWithSerial: boolean; override;
+      (* AN IN-STATE COUNTY ALSO EARNS ITS SECTION, EPA or WPA -- the header
+         (#317). *)
+      function AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                               out aKey: string): boolean; override;
+      (* OUTSIDE PA, MY STATE IS AN ARRL OR RAC SECTION -- the header. *)
+      function DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean; override;
    public
       (* WHAT THE CALL HISTORY FILE PREFILLS --
          THE COUNTY OR STATE -- the site file QSOP_PA carries Call, Exch1, UserText
@@ -159,6 +195,11 @@ type
       (* THE SITE'S FILE STEM. See TContestBase.CallHistorySiteName. *)
       function CallHistorySiteName: string; override;
    end;
+
+(* THE ARRL SECTION OF A PA COUNTY KEY of pa_cty.dom -- 'EPA' or 'WPA', in
+   any case and trimmed; '' for anything that is no PA county (a section, a
+   state, DX). Public so the tests assert the crosswalk itself. *)
+function PennsylvaniaSectionOfCounty(const aCountyKey: string): string;
 
 implementation
 
@@ -415,6 +456,145 @@ begin
          begin
          Result := '';
          end;
+      end;
+end;
+
+type
+   TPennsylvaniaCountySection = record
+      Key: string[3];
+      Section: string[3];
+   end;
+
+const
+   (* GENERATED FROM tr4w/tools/trmaster/arrl-sections-counties.json -- see
+      the header. One row per pa_cty.dom key, in its order. NHA is the file's
+      "Northhampton", the JSON's Northampton. *)
+   PA_COUNTY_SECTIONS: array[0..66] of TPennsylvaniaCountySection = (
+      (Key: 'ADA'; Section: 'EPA'),   (* Adams *)
+      (Key: 'ALL'; Section: 'WPA'),   (* Allegheny *)
+      (Key: 'ARM'; Section: 'WPA'),   (* Armstrong *)
+      (Key: 'BEA'; Section: 'WPA'),   (* Beaver *)
+      (Key: 'BED'; Section: 'WPA'),   (* Bedford *)
+      (Key: 'BER'; Section: 'EPA'),   (* Berks *)
+      (Key: 'BLA'; Section: 'WPA'),   (* Blair *)
+      (Key: 'BRA'; Section: 'EPA'),   (* Bradford *)
+      (Key: 'BUT'; Section: 'WPA'),   (* Butler *)
+      (Key: 'BUX'; Section: 'EPA'),   (* Bucks *)
+      (Key: 'CAR'; Section: 'EPA'),   (* Carbon *)
+      (Key: 'CEN'; Section: 'WPA'),   (* Centre *)
+      (Key: 'CHE'; Section: 'EPA'),   (* Chester *)
+      (Key: 'CLA'; Section: 'WPA'),   (* Clarion *)
+      (Key: 'CLE'; Section: 'WPA'),   (* Clearfield *)
+      (Key: 'CLI'; Section: 'WPA'),   (* Clinton *)
+      (Key: 'CMB'; Section: 'WPA'),   (* Cambria *)
+      (Key: 'COL'; Section: 'EPA'),   (* Columbia *)
+      (Key: 'CRA'; Section: 'WPA'),   (* Crawford *)
+      (Key: 'CRN'; Section: 'WPA'),   (* Cameron *)
+      (Key: 'CUM'; Section: 'EPA'),   (* Cumberland *)
+      (Key: 'DAU'; Section: 'EPA'),   (* Dauphin *)
+      (Key: 'DCO'; Section: 'EPA'),   (* Delaware *)
+      (Key: 'ELK'; Section: 'WPA'),   (* Elk *)
+      (Key: 'ERI'; Section: 'WPA'),   (* Erie *)
+      (Key: 'FAY'; Section: 'WPA'),   (* Fayette *)
+      (Key: 'FOR'; Section: 'WPA'),   (* Forest *)
+      (Key: 'FRA'; Section: 'WPA'),   (* Franklin *)
+      (Key: 'FUL'; Section: 'WPA'),   (* Fulton *)
+      (Key: 'GRE'; Section: 'WPA'),   (* Greene *)
+      (Key: 'HUN'; Section: 'WPA'),   (* Huntingdon *)
+      (Key: 'INN'; Section: 'WPA'),   (* Indiana *)
+      (Key: 'JEF'; Section: 'WPA'),   (* Jefferson *)
+      (Key: 'JUN'; Section: 'EPA'),   (* Juniata *)
+      (Key: 'LAC'; Section: 'EPA'),   (* Lackawanna *)
+      (Key: 'LAN'; Section: 'EPA'),   (* Lancaster *)
+      (Key: 'LAW'; Section: 'WPA'),   (* Lawrence *)
+      (Key: 'LEB'; Section: 'EPA'),   (* Lebanon *)
+      (Key: 'LEH'; Section: 'EPA'),   (* Lehigh *)
+      (Key: 'LUZ'; Section: 'EPA'),   (* Luzerne *)
+      (Key: 'LYC'; Section: 'EPA'),   (* Lycoming *)
+      (Key: 'MCK'; Section: 'WPA'),   (* McKean *)
+      (Key: 'MER'; Section: 'WPA'),   (* Mercer *)
+      (Key: 'MGY'; Section: 'EPA'),   (* Montgomery *)
+      (Key: 'MIF'; Section: 'WPA'),   (* Mifflin *)
+      (Key: 'MOE'; Section: 'EPA'),   (* Monroe *)
+      (Key: 'MTR'; Section: 'EPA'),   (* Montour *)
+      (Key: 'NHA'; Section: 'EPA'),   (* Northampton *)
+      (Key: 'NUM'; Section: 'EPA'),   (* Northumberland *)
+      (Key: 'PER'; Section: 'EPA'),   (* Perry *)
+      (Key: 'PHI'; Section: 'EPA'),   (* Philadelphia *)
+      (Key: 'PIK'; Section: 'EPA'),   (* Pike *)
+      (Key: 'POT'; Section: 'WPA'),   (* Potter *)
+      (Key: 'SCH'; Section: 'EPA'),   (* Schuylkill *)
+      (Key: 'SNY'; Section: 'EPA'),   (* Snyder *)
+      (Key: 'SOM'; Section: 'WPA'),   (* Somerset *)
+      (Key: 'SUL'; Section: 'EPA'),   (* Sullivan *)
+      (Key: 'SUS'; Section: 'EPA'),   (* Susquehanna *)
+      (Key: 'TIO'; Section: 'EPA'),   (* Tioga *)
+      (Key: 'UNI'; Section: 'EPA'),   (* Union *)
+      (Key: 'VEN'; Section: 'WPA'),   (* Venango *)
+      (Key: 'WAR'; Section: 'WPA'),   (* Warren *)
+      (Key: 'WAS'; Section: 'WPA'),   (* Washington *)
+      (Key: 'WAY'; Section: 'EPA'),   (* Wayne *)
+      (Key: 'WES'; Section: 'WPA'),   (* Westmoreland *)
+      (Key: 'WYO'; Section: 'EPA'),   (* Wyoming *)
+      (Key: 'YOR'; Section: 'EPA')    (* York *)
+      );
+
+function PennsylvaniaSectionOfCounty(const aCountyKey: string): string;
+var
+   key: string;
+   i: integer;
+begin
+   Result := '';
+   key := UpperCase(Trim(aCountyKey));
+   for i := Low(PA_COUNTY_SECTIONS) to High(PA_COUNTY_SECTIONS) do
+      begin
+      if key = string(PA_COUNTY_SECTIONS[i].Key) then
+         begin
+         Result := string(PA_COUNTY_SECTIONS[i].Section);
+         Exit;
+         end;
+      end;
+end;
+
+(* THE SECTION AS A SECOND DOMESTIC KEY -- the header.
+
+   NOT InStateCountyEarnsHostState: that helper relies on "every key longer
+   than two letters is a host county", which is false here -- pa.dom includes
+   arrlsect.dom, so NTX and ONS are three-letter keys the table knows. The
+   crosswalk is the county test: only a PA county key has a section. The key
+   read is the sheet's own (DomMultQTH, else DomesticQTH), as the helper's. *)
+function TContestPennsylvaniaQP.AdditionalDomesticMultiplierKey(const aQso: ContestExchange;
+                                                                out aKey: string): boolean;
+var
+   county: string;
+begin
+   aKey := '';
+   Result := False;
+   if not Station.InHostState then
+      begin
+      Exit;
+      end;
+
+   county := Trim(string(aQso.DomMultQTH));
+   if county = '' then
+      begin
+      county := Trim(string(aQso.DomesticQTH));
+      end;
+
+   aKey := PennsylvaniaSectionOfCounty(county);
+   Result := aKey <> '';
+end;
+
+(* OUTSIDE PA THE ROW TAKES AN ARRL OR RAC SECTION -- the header. EPA and WPA
+   are inside the area: the base's HostStates list carries them so the
+   dialog refuses them as "inside" (they would name a PA station). *)
+function TContestPennsylvaniaQP.DescribeNewContestHostArea(out aArea: TNewContestHostArea): boolean;
+begin
+   Result := inherited DescribeNewContestHostArea(aArea);
+   if Result then
+      begin
+      aArea.HostStates := HostState + ' EPA WPA';
+      aArea.OutsideTakesSection := True;
       end;
 end;
 

@@ -147,6 +147,14 @@ that in both directions.
   copy in the `commands/contest` bucket. Other `SetCFGCommandValue` callers
   still do (Q-M2a). The window's free-text header fields still go to the
   STATION's Cabrillo header store in `tr4w.json` -- open, see below.
+  **CATEGORY-OVERLAY (2026-11-19) and CATEGORY-STATION (2026-11-20) are
+  contest-scoped strings by the same route** (`Settings.Contest.CategoryOverlay`
+  / `CategoryStation`). The overlay's old `_CATEGORY-OVERLAY` is inert; the
+  station's old `_CATEGORY-STATION` is still READ as the station default when
+  the setting holds none and nothing stated it
+  (`uCbrSum.StationCategoryInForce`), and nothing writes it any more.
+  CATEGORY-STATION is NOT on the peer-shared list (`CommandIsSharedWithPeers`)
+  although the overlay is -- NY4I to rule.
 - **Credentials live in the OS vault**, not in settings. **And not in the
   contest log, and not in a log line** (2026-10-29). A `TSecretText`
   property is the mark; `TR4WSettings.CommandIsSecret` is the question. The

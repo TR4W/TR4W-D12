@@ -41,6 +41,12 @@ received instead of a county. The engine marks it on the domestic sheet in
 the domestic scope (`LOGDUPE.AdditionalDomesticMultiplierCredited`, from
 `AddQSOToSheets`); nothing is stored. Never use the prefix sheet for it.
 A party whose host state is excluded (Arkansas, New Jersey) does nothing.
+The second key need not be the host state: the Pennsylvania QSO Party gives an
+in-state county QSO its ARRL SECTION (EPA or WPA) from a county-to-section
+table in the class (`PennsylvaniaSectionOfCounty`, generated from
+`tr4w/tools/trmaster/arrl-sections-counties.json`). It does NOT call
+`InStateCountyEarnsHostState`, whose "every key longer than two letters is a
+county" rule is false for a file that also holds sections.
 
 The design behind all of this is `docs/CONTEST_OWNERSHIP_DESIGN.md`: **a
 contest class owns its rules outright**, through virtuals on `TContestBase`.

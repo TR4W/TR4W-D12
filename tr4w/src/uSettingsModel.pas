@@ -3277,6 +3277,7 @@ type
       FCategoryPower: tCategoryPower;
       FCategoryTransmitter: tCategoryTransmitter;
       FCategoryOverlay: string;
+      FCategoryStation: string;
       FBand: string;
       FContestToken: string;
       FInitialExchangeCursorPos: string;
@@ -3470,6 +3471,18 @@ type
         is no enum to move. *)
       property CategoryOverlay: string
          read FCategoryOverlay write FCategoryOverlay;
+      (* THE STATION CATEGORY, a contest item seeded by the station default
+        as the overlay is (NY4I, 2026-11-20, the Florida QSO Party: its
+        Cabrillo specification names FIXED, MOBILE, EXPEDITION, SCHOOL). It
+        was a copy in the global Cabrillo header store ('_CATEGORY-STATION'),
+        which nothing writes now and which is read only as the station
+        default when this holds none and nothing stated it
+        (uCbrSum.StationCategoryInForce). A STRING, as the overlay, because
+        the list is a
+        PostUnit string table and a contest may name its own
+        (TContestBase.CabrilloStationCategories). *)
+      property CategoryStation: string
+         read FCategoryStation write FCategoryStation;
       (* MORE TOKENS, on the pattern the four (retired) multiplier modes set.
 
         EACH ENUM STAYS WITH THE SUBSYSTEM THAT OWNS IT -- ContestType with
@@ -6782,6 +6795,7 @@ begin
    Alias('CATEGORY-POWER',       'Contest.CategoryPower');
    Alias('CATEGORY-TRANSMITTER', 'Contest.CategoryTransmitter');
    Alias('CATEGORY-OVERLAY',     'Contest.CategoryOverlay');
+   Alias('CATEGORY-STATION',     'Contest.CategoryStation');
    Alias('ROTATOR PORT',               'Rotator.Port');
    Alias('ROTATOR TYPE', 'Rotator.RotatorType');
    (* A CONTEST RULE THE STATION SETS, not one FCONTEST assigns -- nothing

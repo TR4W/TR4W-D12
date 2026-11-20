@@ -69,6 +69,7 @@ type
       procedure Test_AGapCountsUpToTheBreak;
       procedure Test_OnlyARRLContestsOfferTheARRLLogPortal;
       procedure Test_OnlyNamedContestsAddCabrilloOverlays;
+      procedure Test_OnlyNamedContestsStateCabrilloStationCategories;
       procedure Test_OverlayListComposition;
       procedure Test_TheOverlayIsAContestSetting;
       procedure Test_CategoryAssistedChoosesTheOpeningWindow;
@@ -931,6 +932,47 @@ begin
                'no contest: no overlays');
 end;
 
+(* CabrilloStationCategories (2026-11-20). EXACTLY the contests in
+  STATION_SPONSORS (by id) name their own CATEGORY-STATION set; every other
+  contest names none and offers the standard list. A registry walk. Add one
+  only from its sponsor's Cabrillo rules, in the same commit as its class's
+  GetCabrilloStationCategories. *)
+procedure TContestUITests.Test_OnlyNamedContestsStateCabrilloStationCategories;
+const
+   STATION_SPONSORS: array[0..0] of string = ('FLORIDA QSO PARTY');
+var
+   contests: TContestIdentityList;
+   obj: TContestBase;
+   k, i: integer;
+   listed: boolean;
+   answered: integer;
+begin
+   BeginTest('Test_OnlyNamedContestsStateCabrilloStationCategories');
+   answered := 0;
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      listed := False;
+      for i := Low(STATION_SPONSORS) to High(STATION_SPONSORS) do
+         begin
+         if ContestId(HandleOf(obj)) = STATION_SPONSORS[i] then
+            begin
+            listed := True;
+            end;
+         end;
+      CheckEquals(Ord(listed), Ord(Length(obj.CabrilloStationCategories) > 0),
+                  ContestWho(obj) + ': names its sponsor''s station categories');
+      if listed then
+         begin
+         Inc(answered);
+         end;
+      end;
+   CheckEquals(Length(STATION_SPONSORS), answered, 'every station-category sponsor was walked');
+   CheckEquals(0, Length(ContestIdentity(DUMMYCONTEST).CabrilloStationCategories),
+               'no contest: the standard list');
+end;
+
 (* uCbrSum.OverlayValuesWith: the standard list in its old places, then the
   sponsor's values it lacks (once, without case), then one blank, last. *)
 procedure TContestUITests.Test_OverlayListComposition;
@@ -1076,6 +1118,7 @@ begin
    Test_AGapCountsUpToTheBreak;
    Test_OnlyARRLContestsOfferTheARRLLogPortal;
    Test_OnlyNamedContestsAddCabrilloOverlays;
+   Test_OnlyNamedContestsStateCabrilloStationCategories;
    Test_TheOverlayIsAContestSetting;
    Test_OverlayListComposition;
    Test_CategoryAssistedChoosesTheOpeningWindow;

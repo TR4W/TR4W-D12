@@ -1216,7 +1216,13 @@ the target shape, the M-step migration order and the open questions.
   own -- else free entry taking a state, a province or DX, `uNewContestHostArea`;
   the queued command stays MY STATE, the row's FIELD, never its label;
   the base answers for every `IsUSQSOParty`, BC/ON/QC/IN7QPNE state False
-  with their reason; `uTestNewContestHostArea` walks the registry);
+  with their reason; `uTestNewContestHostArea` walks the registry; a party
+  whose outside stations send their ARRL/RAC SECTION sets
+  `OutsideTakesSection` (Pennsylvania, NY4I 2026-11-20: "send WCF, not FL")
+  -- the row is labelled MY SECTION, prefilled from the station's MY SECTION
+  by `uTR4WConfigFile.StartupMySection` (the dialog can run before the
+  settings load), and judged by `HostAreaOutsideSectionRefusal` (a section
+  or DX; PA lists `PA EPA WPA` as inside));
   `DescribeNewContestHome(out TNewContestHome)` (issue 167, 2026-11-15: an
   `OfferIAmIn` box's region in CTY terms -- `Countries`, or `Continent`
   (no class states a continent since review M16, 2026-11-16: the North
@@ -1321,6 +1327,19 @@ the target shape, the M-step migration order and the open questions.
   `uCbrSum.CabrilloTagText` and committed by the summary window through
   `ApplyContestEdit` + `LogStoreRecordContestStatement`, as the five
   categories are (Q61); `uCbrSum.OverlayChoiceToCommit` is the decision);
+  `CabrilloStationCategories` (2026-11-20, the Florida QSO Party's
+  Cabrillo specification, base empty: the sponsor's WHOLE CATEGORY-STATION
+  set -- unlike the overlay a stated list REPLACES the standard one,
+  `uCbrSum.StationValuesWith`, refilled at every opening by
+  `FillStationItems`; Florida's `FIXED MOBILE EXPEDITION SCHOOL`;
+  `STATION_SPONSORS` in
+  `uTestContestUI.Test_OnlyNamedContestsStateCabrilloStationCategories` is
+  the exact set. The value is the contest-scoped
+  `Settings.Contest.CategoryStation` (CATEGORY-STATION), committed as the
+  overlay is; UNLIKE THE OVERLAY the old global `_CATEGORY-STATION` is still
+  READ as the station default when the setting holds none and nothing stated
+  it -- `uCbrSum.StationCategoryInForce` -- which keeps the 13 D7 corpus refs'
+  `CATEGORY-STATION: FIXED`);
   `ContestOpenNotice(aCurrentYear)` (issue 270, base `''`: what the operator
   is told when the contest opens -- asked once by
   `LOGDUPE.ShowContestOpenNotice` at the end of `SheetInitAndLoad`, shown

@@ -2009,6 +2009,7 @@ begin
    aTable.Place('contest.categoryOperator',               NAV_CONTESTCABRILLO);
    aTable.Place('contest.categoryOverlay',                NAV_CONTESTCABRILLO);
    aTable.Place('contest.categoryPower',                  NAV_CONTESTCABRILLO);
+   aTable.Place('contest.categoryStation',                NAV_CONTESTCABRILLO);
    aTable.Place('contest.categoryTransmitter',            NAV_CONTESTCABRILLO);
 
    (* Special contest modes and rules. *)

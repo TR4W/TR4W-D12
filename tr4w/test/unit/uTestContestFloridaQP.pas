@@ -57,6 +57,7 @@ type
       procedure Test_FloridaSpecialOneByOneHasNoMultipliers;
       procedure Test_FloridaRoverLegsAreNewStationsAndSendTheirCounty;
       procedure Test_FloridaMobileAndMaritimeRealEngine;
+      procedure Test_FloridaStationCategoryIsTheSponsorsSetAndTheContests;
    end;
 
 implementation
@@ -909,6 +910,80 @@ begin
    end;
 end;
 
+(* THE FQP CABRILLO SPECIFICATION'S "CATEGORY-STATION: FIXED MOBILE
+   EXPEDITION SCHOOL" (NY4I, 2026-11-20: "Check the file in the rules for the
+   STATION and OVERLAY values"). The summary window offers exactly those, then
+   the blank; another contest offers the standard list. The value is the
+   contest-scoped Settings.Contest.CategoryStation, which the header reads;
+   with none stated, the old header-store value is the station default. *)
+procedure TContestFloridaQPTests.Test_FloridaStationCategoryIsTheSponsorsSetAndTheContests;
+const
+   FQP_STATION: array[0..4] of string = ('FIXED', 'MOBILE', 'EXPEDITION', 'SCHOOL', '');
+var
+   offered: TArray<string>;
+   standard: TArray<string>;
+   sponsor: TArray<string>;
+   i: integer;
+   saved: string;
+begin
+   BeginTest('Test_FloridaStationCategoryIsTheSponsorsSetAndTheContests');
+
+   offered := StationValuesWith(StationCategory,
+                                ContestIdentity(FLORIDAQSOPARTY).CabrilloStationCategories);
+   CheckEquals(Length(FQP_STATION), Length(offered), 'the sponsor''s four and the blank');
+   for i := 0 to High(FQP_STATION) do
+      begin
+      if i <= High(offered) then
+         begin
+         CheckEquals(FQP_STATION[i], offered[i], 'item ' + IntToStr(i));
+         end;
+      end;
+   CheckFalse(ListHas(offered, 'PORTABLE'), 'PORTABLE is not the FQP''s');
+   CheckFalse(ListHas(offered, 'ROVER'), 'nor ROVER');
+
+   (* Every other contest: the standard list, as CategoryValuesFor gives it. *)
+   standard := CategoryValuesFor(ctCategoryStation);
+   CheckEquals(0, Length(ContestIdentity(CQWWCW).CabrilloStationCategories),
+               'CQ WW names no station list');
+   CheckEquals(Length(standard),
+               Length(StationValuesWith(StationCategory,
+                         ContestIdentity(CQWWCW).CabrilloStationCategories)),
+               'and is offered the standard one');
+   CheckEquals('DISTRIBUTED', standard[0], 'the standard list starts where it did');
+   CheckEquals('', standard[High(standard)], 'and ends in the blank');
+   sponsor := nil;
+   SetLength(sponsor, 3);
+   sponsor[0] := ' MOBILE ';
+   sponsor[1] := '';
+   sponsor[2] := 'FIXED';
+   offered := StationValuesWith(StationCategory, sponsor);
+   CheckEquals(3, Length(offered), 'a sponsor list: a blank skipped, then the one blank');
+   if Length(offered) = 3 then
+      begin
+      CheckEquals('MOBILE', offered[0], 'trimmed');
+      CheckEquals('FIXED', offered[1], 'in the sponsor''s order');
+      CheckEquals('', offered[2], 'the blank last');
+      end;
+
+   (* THE SETTING IS THE CONTEST'S. *)
+   CheckFalse(CabrilloTagsArray[ctCategoryStation].ctrSave,
+              'the station category is not a global header-store value');
+   CheckTrue(Settings.CommandIsContestScoped('CATEGORY-STATION'),
+             'CATEGORY-STATION is contest-scoped: recorded in the contest log');
+   CheckFalse(CabrilloSummaryIsOpen, 'the window is closed, so the header reads the setting');
+   saved := Settings.Contest.CategoryStation;
+   try
+      Settings.Contest.CategoryStation := 'MOBILE';
+      CheckEquals('MOBILE', CabrilloTagText(ctCategoryStation), 'the header reads the setting');
+      CheckEquals('MOBILE', StationCategoryInForce, 'and so does the window''s selection');
+      CheckEquals('CATEGORY-STATION: MOBILE' + #13#10,
+                  CabrilloHeaderTagLine(ctCategoryStation, CabrilloTagText(ctCategoryStation)),
+                  'the line');
+   finally
+      Settings.Contest.CategoryStation := saved;
+   end;
+end;
+
 procedure TContestFloridaQPTests.RunAllTests;
 begin
    Test_FloridaSentExchange;
@@ -922,6 +997,7 @@ begin
    Test_FloridaSpecialOneByOneHasNoMultipliers;
    Test_FloridaRoverLegsAreNewStationsAndSendTheirCounty;
    Test_FloridaMobileAndMaritimeRealEngine;
+   Test_FloridaStationCategoryIsTheSponsorsSetAndTheContests;
 end;
 
 end.

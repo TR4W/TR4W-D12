@@ -478,6 +478,8 @@ begin
                           RS_CONTEST_CATEGORYOPERATOR);
    RegisterModelSetting( 'contest.categoryOverlay',     'CATEGORY-OVERLAY',
                           RS_CONTEST_CATEGORYOVERLAY);
+   RegisterModelSetting( 'contest.categoryStation',     'CATEGORY-STATION',
+                          RS_CONTEST_CATEGORYSTATION);
    RegisterModelSetting( 'contest.categoryPower',       'CATEGORY-POWER',
                           RS_CONTEST_CATEGORYPOWER);
    RegisterModelSetting( 'contest.categoryTransmitter', 'CATEGORY-TRANSMITTER',

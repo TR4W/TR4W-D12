@@ -1476,6 +1476,12 @@ type
                     names them (the Hawaii QSO Party's districts, #118).
       InsideNotice  the notice while the box is ticked, %s the Area; '' is
                     the dialog's "choose your county" notice.
+      OutsideTakesSection  True when a station OUTSIDE the area sends its
+                    ARRL or RAC SECTION, not its state or province (the
+                    Pennsylvania QSO Party, NY4I 2026-11-20): the free-entry
+                    row then takes a section or DX, and is prefilled with
+                    the station's MY SECTION. False (the base) for every
+                    other party.
 
       A RECORD BECAUSE IT IS AN INTERFACE PARAMETER -- pure data one getter
       answers, as TTotalsDisplay is. *)
@@ -1486,6 +1492,7 @@ type
       PlacesFile: string;
       PlaceLabel: string;
       InsideNotice: string;
+      OutsideTakesSection: boolean;
    end;
 
    (* WHERE THE "I AM IN <REGION>" BOX IS, IN CTY TERMS -- issue 167. The New
@@ -2010,6 +2017,7 @@ type
       function GetOffersParkTools: boolean; virtual;
       function GetSubmitsLogToARRL: boolean; virtual;
       function GetCabrilloOverlayCategories: TArray<string>; virtual;
+      function GetCabrilloStationCategories: TArray<string>; virtual;
       function GetZoneColumnHeading: string; virtual;
       function GetMyZoneIsAStationZone: boolean; virtual;
       function GetReceivedYearKind: TReceivedYearKind; virtual;
@@ -3852,6 +3860,17 @@ type
          The base names none, which is the list every contest offered before.
          Asked of ContestIdentity: no station. *)
       property CabrilloOverlayCategories: TArray<string> read GetCabrilloOverlayCategories;
+
+      (* THE CATEGORY-STATION VALUES THE SPONSOR ACCEPTS, when it names its
+         own set (NY4I, 2026-11-20, the Florida QSO Party's Cabrillo
+         specification: "CATEGORY-STATION: FIXED MOBILE EXPEDITION SCHOOL").
+         UNLIKE THE OVERLAY, a stated list REPLACES the standard one: the
+         sponsor's set is the whole set (uCbrSum.StationValuesWith composes
+         it, blank last). The base names none: the standard Cabrillo list.
+         The value chosen is the contest-scoped Settings.Contest.
+         CategoryStation. DATA, in the sponsor's spelling; asked of
+         ContestIdentity, no station. *)
+      property CabrilloStationCategories: TArray<string> read GetCabrilloStationCategories;
 
       (* THE LOG GRID'S HEADING OVER THE ZONE COLUMN -- what the operator
          reads, asked by uLogGrid for that one column (2026-11-11). The base
@@ -8420,6 +8439,7 @@ begin
    aArea.PlacesFile := '';
    aArea.PlaceLabel := '';
    aArea.InsideNotice := '';
+   aArea.OutsideTakesSection := False;
    Result := IsUSQSOParty;
    if Result then
       begin
@@ -8643,6 +8663,13 @@ end;
 (* No sponsor overlays: the standard list alone -- see the property
    CabrilloOverlayCategories. *)
 function TContestBase.GetCabrilloOverlayCategories: TArray<string>;
+begin
+   Result := nil;
+end;
+
+(* No sponsor station list: the standard one -- see the property
+   CabrilloStationCategories. *)
+function TContestBase.GetCabrilloStationCategories: TArray<string>;
 begin
    Result := nil;
 end;
