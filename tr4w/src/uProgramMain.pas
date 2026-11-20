@@ -1066,10 +1066,20 @@ begin
       Exit;
       end;
 
-   logger.Info('[Paths] the program folder does not accept new files; '
-               + 'settings, logs and contests are written under '
-               + WritableFilesRoot + ' (shipped data is still read from '
-               + DataDir + ')');
+   if WritableFilesRedirectedByPolicy then
+      begin
+      logger.Info('[Paths] the program folder is under Program Files; '
+                  + 'settings, logs and contests are written under '
+                  + WritableFilesRoot + ' whoever runs TR4W (shipped data is '
+                  + 'still read from ' + DataDir + ')');
+      end
+   else
+      begin
+      logger.Info('[Paths] the program folder does not accept new files; '
+                  + 'settings, logs and contests are written under '
+                  + WritableFilesRoot + ' (shipped data is still read from '
+                  + DataDir + ')');
+      end;
 
    (* NOBODY TO TELL IN A SCRIPTED RUN, and the notice must not be spent
      there: TakeWritableRootNotice records it as shown. /IMPORTLOG is not one
@@ -1088,7 +1098,14 @@ begin
       logger.Info('[Paths] copied from ' + installDir + 'settings: ' + copied);
       end;
 
-   text := UnicodeFormat(SWritableRootMoved, [installDir, root]);
+   if WritableFilesRedirectedByPolicy then
+      begin
+      text := UnicodeFormat(SWritableRootMovedProgramFiles, [installDir, root]);
+      end
+   else
+      begin
+      text := UnicodeFormat(SWritableRootMoved, [installDir, root]);
+      end;
    if copied <> '' then
       begin
       text := text + sLineBreak + sLineBreak + UnicodeFormat(SWritableRootCopied, [copied]);

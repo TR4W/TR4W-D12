@@ -53,9 +53,10 @@ unit uAppPaths;
   this comes back.
 
   AND ON WINDOWS THE WRITABLE ONES CAN MOVE (issue 165, 2026-11-20). When the
-  program folder refuses a new file -- an install under C:\Program Files run
-  by a standard user -- the settings, log, contest and station-state
-  accessors answer %APPDATA%\TR4W\ instead, and DataDir stays the program
+  program folder is under the shell's Program Files folders (BY POLICY, for
+  every user, elevated or not), or anywhere else refuses a new file, the
+  settings, log, contest and station-state accessors answer the shell's
+  Roaming AppData folder + TR4W\ instead, and DataDir stays the program
   folder. The decision is made once, on first use, and is described with the
   routines that make it (ChooseWritableRoot and below). A WRITTEN file asks
   WrittenFilePath / BesideContestLogFilePath, never TR4W_PATH_NAME, which is
@@ -389,21 +390,43 @@ function HelpDir: string;
   2026-11-20: "could not open its log file" on the first run, then a raw RTL
   "Unable to create file ...\settings\tr4w.json.new" after the setup wizard.
 
-  THE RULE. Once per run, on first use, TR4W asks whether the program folder
-  (the working directory, AppDir) accepts a new file: it creates and deletes a
-  uniquely named one. If it does -- C:\tr4w, C:\radio\tr4w, the developer's
-  tr4w\target, the corpus and the unit tests -- NOTHING CHANGES: every
-  accessor answers exactly what it answered before. If it does not, every
-  WRITABLE location moves under %APPDATA%\TR4W\, mirroring the install
-  layout (settings\, tr4w.log, the contest logs at its top), and the shipped
-  READ-ONLY data is still read from the program folder: DataDir and
-  DataFilePath are not touched, so the downloaded -> contest -> shipped
-  lookup keeps working.
+  THE RULE. Once per run, on first use, TR4W decides where the program
+  folder's writable files go (the working directory, AppDir):
 
-  ROAMING %APPDATA%, the folder NY4I named and the Windows counterpart of
-  ~/Library/Application Support on macOS. Not GetAppConfigDir: on Windows the
-  RTL answers LOCALAPPDATA and names the folder after the executable, which
-  would be tr4w_fpc for a developer build.
+    1. UNDER PROGRAM FILES -> THE PER-USER FOLDER, WITHOUT ASKING THE DISK
+       (NY4I, 2026-11-20). The program folder is compared with the shell's
+       FOLDERID_ProgramFiles and FOLDERID_ProgramFilesX86. A folder inside
+       either is treated as not writable BY POLICY, whoever runs TR4W. The
+       probe alone said "writable" to an elevated administrator, so "Run as
+       administrator" used the install folder and a normal start used the
+       per-user one: two sets of settings and logs for one operator.
+    2. ANYWHERE ELSE THE PROBE DECIDES, exactly as before: TR4W creates and
+       deletes a uniquely named file. If that works -- C:\tr4w,
+       C:\radio\tr4w, the developer's tr4w\target, the corpus and the unit
+       tests -- NOTHING CHANGES: every accessor answers exactly what it
+       answered before.
+
+  Redirected, every WRITABLE location moves under <Roaming AppData>\TR4W\,
+  mirroring the install layout (settings\, tr4w.log, the contest logs at its
+  top), and the shipped READ-ONLY data is still read from the program folder:
+  DataDir and DataFilePath are not touched, so the downloaded -> contest ->
+  shipped lookup keeps working.
+
+  ROAMING APPDATA, the folder NY4I named and the Windows counterpart of
+  ~/Library/Application Support on macOS, ASKED OF THE SHELL, NOT THE
+  ENVIRONMENT (NY4I, 2026-11-20): the APPDATA variable can be missing or
+  wrong (a service, a scheduled task, a launcher that clears the
+  environment, runas with other credentials), while the known-folder lookup
+  answers the token's own folder. The variable is the FALLBACK when the shell
+  does not answer, and that is reported as an error (WritableRootProblem).
+  The lookups are the RTL's WinDirs.GetWindowsSpecialDirUnicode, so this
+  unit declares no DLL entry point of its own. Not GetAppConfigDir: on
+  Windows the RTL answers LOCALAPPDATA and names the folder after the
+  executable, which would be tr4w_fpc for a developer build.
+
+  NOT COVERED: a working directory spelled in 8.3 form (C:\PROGRA~1\TR4W)
+  does not compare equal to the shell's long name, so the probe decides
+  there, as it did before the policy.
 
   WINDOWS ONLY. macOS and Linux already put every writable file in the
   operator's home and resolve exactly as before; there the probe never runs
@@ -418,9 +441,33 @@ type
   True only when all of that worked. Leaves nothing behind either way. *)
 function DirectoryIsWritable(const aDir: string): boolean;
 
+(* IS aPath aFolder ITSELF OR INSIDE IT? Pure string work, the same on every
+  platform: both separators are folded to '\', trailing separators are
+  ignored, case is ignored, and the match must end on a path component --
+  'C:\Program Files\TR4W' is inside 'C:\Program Files', 'C:\Program Files
+  Extra\x' is not. An empty aFolder contains nothing. No relative-path or
+  8.3 resolution: the caller passes absolute long names. *)
+function PathIsWithinFolder(const aPath, aFolder: string): boolean;
+
+(* THE POLICY: is the install folder inside either Program Files folder? The
+  two folders are what the shell answered (FOLDERID_ProgramFiles,
+  FOLDERID_ProgramFilesX86); an empty one -- a lookup that failed -- matches
+  nothing, so when both failed the probe alone decides. *)
+function InstallIsUnderProgramFiles(const aInstallDir, aProgramFiles,
+                                    aProgramFilesX86: string): boolean;
+
+(* WHICH PER-USER BASE: the shell's answer when it gave one, else the APPDATA
+  environment variable. aNote is '' when the shell answered, and otherwise
+  says which source was used (or that neither answered) -- the caller
+  reports it as an error. *)
+function ChoosePerUserBase(const aShellAnswer, aEnvironmentAnswer: string;
+                           out aNote: string): string;
+
 (* THE DECISION, as a function of its inputs -- what the cached Windows answer
   is computed from, and what the tests call.
 
+    aUnderProgramFiles True    -> the per-user root below, and aProbe is NOT
+                                  called: the policy, whoever runs TR4W.
     aProbe(aInstallDir) True   -> aInstallDir, not redirected. Nothing is
                                   created anywhere.
     otherwise                  -> aPerUserBase\TR4W\, created if missing;
@@ -433,6 +480,7 @@ function DirectoryIsWritable(const aDir: string): boolean;
 
   The answer always ends in a separator. *)
 function ChooseWritableRoot(const aInstallDir, aPerUserBase: string;
+                            aUnderProgramFiles: boolean;
                             aProbe: TDirectoryProbe;
                             out aRedirected, aCreated: boolean;
                             out aProblem: string): string;
@@ -450,19 +498,30 @@ function SeedPerUserSettings(const aInstallDir, aRoot: string): string;
   Windows and whenever the program folder is writable. *)
 function WritableFilesRedirected: boolean;
 
+(* True when this run is redirected BECAUSE the install is under Program
+  Files (the policy), False when the probe refused the folder or nothing is
+  redirected. The wording of the notice and the log depends on it: under
+  the policy the folder may well be writable (an elevated run). *)
+function WritableFilesRedirectedByPolicy: boolean;
+
 (* Where this run writes: the per-user root when redirected, the program
   folder otherwise (with a trailing separator). Off Windows, '' -- there is
   no single root there; ask the per-kind accessors. *)
 function WritableFilesRoot: string;
 
 (* FOR tr4wconvert'S "settings\ beside the binary" RULE: may that folder be
-  used? On Windows, only when the binary's folder accepts new files -- the
+  used? On Windows, only when the binary's folder is NOT under Program Files
+  (the same policy the program applies) AND accepts new files -- the
   installer creates $INSTDIR\settings, so under C:\Program Files the folder
-  EXISTS and the program, redirected, never reads it. Off Windows always
-  True: the portable rule there is unchanged. *)
+  EXISTS and the program, redirected, never reads it, even when an elevated
+  tr4wconvert could write there. Off Windows always True: the portable rule
+  there is unchanged. *)
 function PortableFolderUsable(const aBinaryDir: string): boolean;
 
-(* Why the redirect could not be made, '' when nothing went wrong. *)
+(* What went wrong deciding where this run writes, '' when nothing did: the
+  redirect could not be made, the shell did not name the Program Files
+  folders, or the per-user folder came from the APPDATA variable because the
+  shell did not answer. Reported as an error. *)
 function WritableRootProblem: string;
 
 (* THE OPERATOR IS TOLD ONCE -- ONCE PER PER-USER ROOT, NOT ONCE PER RUN.
@@ -475,13 +534,15 @@ function WritableRootProblem: string;
   finds it by browsing. Due = redirected and that file absent.
 
   TakeWritableRootNotice answers True at most once per run and records the
-  note when it does. aInstallDir is the folder that refused, aRoot where TR4W
-  writes now, aCopied what SeedPerUserSettings carried ('' for none). *)
+  note when it does. aInstallDir is the program folder, aRoot where TR4W
+  writes now, aCopied what SeedPerUserSettings carried ('' for none).
+  aByPolicy chooses the note's reason: under Program Files, or a folder that
+  refused a new file. *)
 const
    WRITABLE_ROOT_NOTE = 'WHY TR4W FILES ARE HERE.txt';
 
 function WritableRootNoticeDue(aRedirected: boolean; const aRoot: string): boolean;
-procedure RecordWritableRootNotice(const aRoot, aInstallDir: string);
+procedure RecordWritableRootNotice(const aRoot, aInstallDir: string; aByPolicy: boolean);
 function TakeWritableRootNotice(out aInstallDir, aRoot, aCopied: string): boolean;
 
 (* THE FOLDER THE OLD STATION-STATE FILES ARE WRITTEN BESIDE -- tr4w.pos
@@ -529,7 +590,14 @@ function BesideContestLogFilePath(const aLogPath, aName: string): string;
 
 implementation
 
-uses SysUtils, StrUtils, Classes;
+uses SysUtils, StrUtils, Classes
+{$IFDEF WINDOWS}
+   (* The RTL's own known-folder wrapper (rtl/win/windirs.pp): it binds
+     SHGetKnownFolderPath from shell32 by full path, so the Roaming AppData
+     and Program Files lookups need no DLL declaration in this tree. *)
+   , WinDirs
+{$ENDIF}
+   ;
 
 function DataFileNameOnly(const aValue: string): string;
 var
@@ -750,27 +818,112 @@ begin
    DeleteFile(probe);
 end;
 
+(* A folder in one spelling: '/' folded to '\', exactly one trailing '\'
+  ('' stays ''). Character by character rather than StringReplace, which in
+  SysUtils takes AnsiString and would narrow a non-ANSI path. *)
+function FoldedFolder(const aPath: string): string;
+var
+   i: integer;
+begin
+   Result := aPath;
+   for i := 1 to Length(Result) do
+      begin
+      if Result[i] = '/' then
+         begin
+         Result[i] := '\';
+         end;
+      end;
+   while (Result <> '') and (Result[Length(Result)] = '\') do
+      begin
+      SetLength(Result, Length(Result) - 1);
+      end;
+   if Result <> '' then
+      begin
+      Result := Result + '\';
+      end;
+end;
+
+function PathIsWithinFolder(const aPath, aFolder: string): boolean;
+var
+   path, folder: string;
+begin
+   Result := False;
+   folder := FoldedFolder(aFolder);
+   path   := FoldedFolder(aPath);
+   if (folder = '') or (Length(path) < Length(folder)) then
+      begin
+      Exit;
+      end;
+   (* Both end in '\', so a prefix match ends on a component boundary:
+     'C:\Program Files Extra\' does not start with 'C:\Program Files\'.
+     UnicodeSameText, not SameText, which takes AnsiString. *)
+   Result := UnicodeSameText(Copy(path, 1, Length(folder)), folder);
+end;
+
+function InstallIsUnderProgramFiles(const aInstallDir, aProgramFiles,
+                                    aProgramFilesX86: string): boolean;
+begin
+   Result := PathIsWithinFolder(aInstallDir, aProgramFiles)
+             or PathIsWithinFolder(aInstallDir, aProgramFilesX86);
+end;
+
+function ChoosePerUserBase(const aShellAnswer, aEnvironmentAnswer: string;
+                           out aNote: string): string;
+begin
+   aNote  := '';
+   Result := aShellAnswer;
+   if Result <> '' then
+      begin
+      Exit;
+      end;
+
+   Result := aEnvironmentAnswer;
+   if Result <> '' then
+      begin
+      aNote := 'the shell did not name the Roaming AppData folder '
+               + '(FOLDERID_RoamingAppData); using the APPDATA environment '
+               + 'variable instead: ' + Result;
+      end
+   else
+      begin
+      aNote := 'neither the shell (FOLDERID_RoamingAppData) nor the APPDATA '
+               + 'environment variable named the Roaming AppData folder';
+      end;
+end;
+
 function ChooseWritableRoot(const aInstallDir, aPerUserBase: string;
+                            aUnderProgramFiles: boolean;
                             aProbe: TDirectoryProbe;
                             out aRedirected, aCreated: boolean;
                             out aProblem: string): string;
 var
-   root: string;
+   root, why: string;
 begin
    aRedirected := False;
    aCreated    := False;
    aProblem    := '';
    Result      := IncludeTrailingPathDelimiter(aInstallDir);
 
-   if aProbe(aInstallDir) then
+   (* The policy first, and the probe not at all under it: an elevated run
+     would pass the probe, and that is the case the policy exists for. *)
+   if aUnderProgramFiles then
       begin
-      Exit;
+      why := 'is under Program Files';
+      end
+   else
+      begin
+      if aProbe(aInstallDir) then
+         begin
+         Exit;
+         end;
+      why := 'does not accept new files';
       end;
 
    if aPerUserBase = '' then
       begin
-      aProblem := 'the program folder ' + Result + ' does not accept new files '
-                  + 'and APPDATA is not set, so there is nowhere else to write';
+      aProblem := 'the program folder ' + Result + ' ' + why + ' and no '
+                  + 'per-user folder is known (the shell did not answer and '
+                  + 'APPDATA is not set), so there is nowhere else to write';
       Exit;
       end;
 
@@ -780,8 +933,8 @@ begin
       begin
       if not ForceDirectories(root) then
          begin
-         aProblem := 'the program folder ' + Result + ' does not accept new '
-                     + 'files and ' + root + ' could not be created';
+         aProblem := 'the program folder ' + Result + ' ' + why + ' and '
+                     + root + ' could not be created';
          Exit;
          end;
       aCreated := True;
@@ -858,6 +1011,7 @@ var
      place. *)
    GRootResolved:   boolean = False;
    GRootRedirected: boolean = False;
+   GRootByPolicy:   boolean = False;
    GRootCreated:    boolean = False;
    GRootNoticeTaken: boolean = False;
    GRoot:           string  = '';
@@ -873,7 +1027,61 @@ begin
    Result := IncludeTrailingPathDelimiter(GetCurrentDir);
 end;
 
+(* ONE KNOWN FOLDER FROM THE SHELL, '' when it does not answer. The RTL's
+  wrapper, Unicode flavour (the String one is AnsiString in its objfpc unit
+  and would narrow a non-ANSI profile name). CreateIfNotExists False: a
+  lookup creates nothing. The wrapper raises a plain Exception when shell32
+  has neither entry point; that is "no answer" here, and the caller falls
+  back and reports it. *)
+function ShellKnownFolder(const aId: TGUID): string;
+begin
+   Result := '';
+   try
+      Result := GetWindowsSpecialDirUnicode(aId, False);
+   except
+      on E: Exception do
+         begin
+         Result := '';
+         end;
+   end;
+end;
+
+(* THE POLICY AS THE PROGRAM ASKS IT: is aDir under either of the shell's
+  Program Files folders? aProblem says so when the shell named neither (the
+  probe then decides alone). One copy, for the program's own decision and for
+  tr4wconvert's portable rule. *)
+function UnderShellProgramFiles(const aDir: string; out aProblem: string): boolean;
+var
+   programFiles, programFilesX86: string;
+begin
+   aProblem        := '';
+   programFiles    := ShellKnownFolder(FOLDERID_ProgramFiles);
+   programFilesX86 := ShellKnownFolder(FOLDERID_ProgramFilesX86);
+   if (programFiles = '') and (programFilesX86 = '') then
+      begin
+      aProblem := 'the shell did not name the Program Files folders '
+                  + '(FOLDERID_ProgramFiles, FOLDERID_ProgramFilesX86), so only '
+                  + 'whether the program folder accepts new files decides';
+      end;
+   Result := InstallIsUnderProgramFiles(aDir, programFiles, programFilesX86);
+end;
+
+procedure AddRootProblem(const aText: string);
+begin
+   if aText = '' then
+      begin
+      Exit;
+      end;
+   if GRootProblem <> '' then
+      begin
+      GRootProblem := GRootProblem + '; ';
+      end;
+   GRootProblem := GRootProblem + aText;
+end;
+
 procedure ResolveWritableRoot;
+var
+   policyProblem, baseNote, chooseProblem, base: string;
 begin
    if GRootResolved then
       begin
@@ -881,9 +1089,22 @@ begin
       end;
    GRootResolved   := True;
    GRootInstallDir := AppDir;
-   GRoot := ChooseWritableRoot(GRootInstallDir, GetEnvironmentVariable('APPDATA'),
+   GRootProblem    := '';
+   GRootByPolicy   := UnderShellProgramFiles(GRootInstallDir, policyProblem);
+   base := ChoosePerUserBase(ShellKnownFolder(FOLDERID_RoamingAppData),
+                             GetEnvironmentVariable('APPDATA'), baseNote);
+   GRoot := ChooseWritableRoot(GRootInstallDir, base, GRootByPolicy,
                                @DirectoryIsWritable, GRootRedirected,
-                               GRootCreated, GRootProblem);
+                               GRootCreated, chooseProblem);
+
+   AddRootProblem(policyProblem);
+   (* Where the per-user folder came from matters only when it was wanted. *)
+   if GRootRedirected or (chooseProblem <> '') then
+      begin
+      AddRootProblem(baseNote);
+      end;
+   AddRootProblem(chooseProblem);
+
    if GRootRedirected and GRootCreated then
       begin
       GRootCopied := SeedPerUserSettings(GRootInstallDir, GRoot);
@@ -1287,6 +1508,16 @@ begin
 {$ENDIF}
 end;
 
+function WritableFilesRedirectedByPolicy: boolean;
+begin
+{$IFDEF WINDOWS}
+   ResolveWritableRoot;
+   Result := GRootRedirected and GRootByPolicy;
+{$ELSE}
+   Result := False;
+{$ENDIF}
+end;
+
 function WritableFilesRoot: string;
 begin
 {$IFDEF WINDOWS}
@@ -1297,9 +1528,16 @@ begin
 end;
 
 function PortableFolderUsable(const aBinaryDir: string): boolean;
+{$IFDEF WINDOWS}
+var
+   ignored: string;
+{$ENDIF}
 begin
 {$IFDEF WINDOWS}
-   Result := DirectoryIsWritable(aBinaryDir);
+   (* The program's own policy first, so an elevated tr4wconvert under
+     Program Files writes where the program will read: the per-user folder. *)
+   Result := (not UnderShellProgramFiles(aBinaryDir, ignored))
+             and DirectoryIsWritable(aBinaryDir);
 {$ELSE}
    Result := True;
 {$ENDIF}
@@ -1319,7 +1557,7 @@ begin
              and (not FileExists(IncludeTrailingPathDelimiter(aRoot) + WRITABLE_ROOT_NOTE));
 end;
 
-procedure RecordWritableRootNotice(const aRoot, aInstallDir: string);
+procedure RecordWritableRootNotice(const aRoot, aInstallDir: string; aByPolicy: boolean);
 var
    note: TStringList;
 begin
@@ -1327,13 +1565,27 @@ begin
    try
       note.Add('TR4W keeps its settings, its diagnostic log (tr4w.log) and');
       note.Add('new contest logs in this folder because the folder it is');
-      note.Add('installed in does not accept new files:');
+      if aByPolicy then
+         begin
+         note.Add('installed in is under Program Files, which Windows protects:');
+         end
+      else
+         begin
+         note.Add('installed in does not accept new files:');
+         end;
       note.Add('');
       note.Add(AnsiString('    ' + aInstallDir));
       note.Add('');
+      if aByPolicy then
+         begin
+         note.Add('It uses this folder however it is started, including Run as');
+         note.Add('administrator, so all of your files stay in one place.');
+         note.Add('');
+         end;
       note.Add('TR4W still reads its shipped files (CTY.DAT, TRMASTER.DTA, dom\,');
-      note.Add('help\) from that folder. Installing TR4W in a folder you can');
-      note.Add('write to, such as C:\tr4w, keeps everything in one place.');
+      note.Add('help\) from that folder. Installing TR4W outside Program Files,');
+      note.Add('in a folder you can write to such as C:\tr4w, keeps everything');
+      note.Add('in one place.');
       try
          note.SaveToFile(AnsiString(IncludeTrailingPathDelimiter(aRoot) + WRITABLE_ROOT_NOTE));
       except
@@ -1360,7 +1612,7 @@ begin
    if Result then
       begin
       GRootNoticeTaken := True;
-      RecordWritableRootNotice(GRoot, GRootInstallDir);
+      RecordWritableRootNotice(GRoot, GRootInstallDir, GRootByPolicy);
       end;
 end;
 

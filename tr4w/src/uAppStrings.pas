@@ -134,6 +134,21 @@ resourcestring
       '    %1:s' + sLineBreak + sLineBreak +
       'Nothing is lost. To keep everything in one folder, install TR4W in a ' +
       'folder you can write to, such as C:\tr4w.';
+   (* SHOWN ONCE, INSTEAD OF SWritableRootMoved, when TR4W is installed
+     under Program Files: it then writes under the user's application data
+     whoever starts it, including Run as administrator, so the folder may
+     well be writable and the text must not say otherwise (issue 165,
+     2026-11-20). %0:s is the program folder, %1:s the folder TR4W writes
+     to now. *)
+   SWritableRootMovedProgramFiles =
+      'TR4W is installed under Program Files, which Windows protects:' + sLineBreak +
+      '    %0:s' + sLineBreak + sLineBreak +
+      'So your settings, contest logs, backups and the troubleshooting log ' +
+      '(tr4w.log) are kept here instead, however TR4W is started (including ' +
+      'Run as administrator):' + sLineBreak +
+      '    %1:s' + sLineBreak + sLineBreak +
+      'Nothing is lost. To keep everything in one folder, install TR4W ' +
+      'outside Program Files, in a folder you can write to such as C:\tr4w.';
    (* Added to the notice when settings were carried across from the
      install folder. %s is the file names. *)
    SWritableRootCopied =
