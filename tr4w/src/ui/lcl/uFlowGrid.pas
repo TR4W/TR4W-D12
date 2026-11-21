@@ -145,11 +145,21 @@ type
 
 implementation
 
+type
+   TGridCracker = class(TStringGrid);
+
 constructor TFlowGrid.Create(const aGrid: TStringGrid;
                              const aCellWidth, aCellHeight: integer);
 begin
    inherited Create;
    FGrid := aGrid;
+   (* NO FOCUS RECTANGLE, set here and not in the .lfm. TStringGrid publishes
+     FocusRectVisible only in newer LCLs; Lazarus 3.0 (the Linux build)
+     publishes it on TDrawGrid and leaves it protected on TStringGrid, so a
+     form file carrying it fails to load there (EReadError, release run of
+     2026-11-21). The property itself exists in both, so the cracker class
+     reaches it. *)
+   TGridCracker(aGrid).FocusRectVisible := False;
    FCalls := TStringList.Create;
    FCalls.OwnsObjects := True;      // the cells -- see AddCell
 
