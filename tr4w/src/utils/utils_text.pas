@@ -256,7 +256,45 @@ function BinToHexStr(const aData: array of Byte; const aSeparator: string = ''):
   had nothing to do with PAnsiChar. *)
 function LclText(const s: string): RawByteString;
 
+(* ONE LINE OF THE LOOKUP TRACE -- what a typed call's lookup found and WHICH
+  LAYER supplied it, so the log can answer "where did that name / section come
+  from". Text only: '[Lookup] N4AF: name ''Howie'' from TRMASTER.DTA (<path>)'.
+  Plain logger text, not a resourcestring (debug lines are not translated).
+  aWhat is one or more fields built with LookupAddField. *)
+function LookupLogLine(const aCall, aWhat, aSource: string): string;
+
+(* APPENDS "field 'value'" to aList, ', ' between fields; an empty value adds
+  nothing, so a source that knew only some fields names only those. *)
+procedure LookupAddField(var aList: string; const aField, aValue: string);
+
+(* The line for a call that NO layer knew anything about. *)
+function LookupNothingLine(const aCall: string): string;
+
 implementation
+
+function LookupLogLine(const aCall, aWhat, aSource: string): string;
+begin
+   Result := '[Lookup] ' + aCall + ': ' + aWhat + ' from ' + aSource;
+end;
+
+procedure LookupAddField(var aList: string; const aField, aValue: string);
+begin
+   if aValue = '' then
+      begin
+      Exit;
+      end;
+   if aList <> '' then
+      begin
+      aList := aList + ', ';
+      end;
+   aList := aList + aField + ' ''' + aValue + '''';
+end;
+
+function LookupNothingLine(const aCall: string): string;
+begin
+   Result := '[Lookup] ' + aCall + ': nothing known (not in this contest''s log, '
+             + 'INITIAL.EX, the call history file or TRMASTER.DTA)';
+end;
 
 function LclText(const s: string): RawByteString;
 begin

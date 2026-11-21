@@ -39,6 +39,12 @@ uses
     position that decides the finalization order; this copy keeps the two
     lists in the same order, as the header above asks. *)
   Interfaces,
+{$IFDEF UNIX}
+  (* fpGetEuid -- ProcessElevationText's root test. After Interfaces, so the
+    finalization order the note above protects is untouched; before every
+    program unit, so a name both define resolves to the program's. *)
+  BaseUnix,
+{$ENDIF}
   (* QuestionDlg / MessageDlg and their results -- the CTY download prompt
     and the --help text, both of which were MessageBoxW. *)
   Dialogs, Controls,
@@ -1117,6 +1123,86 @@ begin
    ReportStartupWarning(text);
 end;
 
+(* IS THIS PROCESS RUNNING WITH ADMINISTRATOR (WINDOWS) OR ROOT (UNIX) RIGHTS?
+
+  Asked for the log: an elevated run behaves differently from an ordinary one
+  (it can write under Program Files, which the per-user redirect exists to
+  avoid), and "was it run as administrator?" is the first question about a
+  file that landed in the wrong folder.
+
+  WINDOWS: the process token's TokenElevation flag, read through the RTL's
+  own Windows unit (OpenProcessToken / GetTokenInformation, advapi32 -- no
+  binding of ours). An administrator user running WITHOUT elevating (UAC's
+  filtered token) correctly answers 'no'. There is no LCL or FPC routine for
+  this, which is why the raw call is justified here. UNIX: the effective user
+  id is root's (0). Anything the system will not tell is reported as
+  unknown, with the reason, and is never guessed. *)
+function ProcessElevationText: string;
+{$IFDEF WINDOWS}
+var
+   token: THandle;
+   elevation: TTokenElevation;
+   returned: DWORD;
+{$ENDIF}
+begin
+{$IFDEF WINDOWS}
+   Result := 'unknown (the process token could not be opened)';
+   token := 0;
+   if not Windows.OpenProcessToken(Windows.GetCurrentProcess, TOKEN_QUERY, token) then
+      begin
+      Exit;
+      end;
+   try
+      elevation.TokenIsElevated := 0;
+      returned := 0;
+      if not Windows.GetTokenInformation(token, Windows.TokenElevation,
+                                         @elevation, SizeOf(TTokenElevation),
+                                         returned) then
+         begin
+         Result := 'unknown (the token elevation could not be read)';
+         Exit;
+         end;
+      if elevation.TokenIsElevated <> 0 then
+         begin
+         Result := 'yes';
+         end
+      else
+         begin
+         Result := 'no';
+         end;
+   finally
+      Windows.CloseHandle(token);
+   end;
+{$ELSE}
+   {$IFDEF UNIX}
+   if BaseUnix.fpGetEuid = 0 then
+      begin
+      Result := 'yes (root)';
+      end
+   else
+      begin
+      Result := 'no';
+      end;
+   {$ELSE}
+   Result := 'not applicable';
+   {$ENDIF}
+{$ENDIF}
+end;
+
+(* WHERE THIS RUN READS AND WRITES, in the log every start (NY4I, 2026-11-20:
+  nothing in the log said which copy of a data file served a lookup).
+  The per-file lines -- CTY.DAT, TRMASTER.DTA, the call history file -- are
+  logged where each is resolved or loaded, with the tier it came from. *)
+procedure ReportDataLocations;
+begin
+   logger.Info('[Startup] program directory (shipped data is read from here): %s', [DataDir]);
+   logger.Info('[Startup] writable data directory (settings, downloaded CTY.DAT / TRMASTER.DTA / call history): %s',
+               [DownloadedDataDir]);
+   logger.Info('[Startup] writable files redirected away from the program directory: %s',
+               [BoolToStr(WritableFilesRedirected, 'yes', 'no')]);
+   logger.Info('[Startup] elevated (administrator): %s', [ProcessElevationText]);
+end;
+
 procedure ReportConfigurationSources;
 var
    jsonPath: string;
@@ -1795,6 +1881,7 @@ begin
      somewhere to go -- the decision itself was made long before, on the
      first path anything asked for (EarlyTrace). *)
    ReportWritableRoot;
+   ReportDataLocations;
 
    (* A SETTINGS SAVE THE DISK REFUSES IS TOLD TO THE OPERATOR, not raised
      into the LCL's "risk data corruption" dialog. See uTR4WConfigFile. *)

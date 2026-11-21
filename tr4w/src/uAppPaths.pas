@@ -203,6 +203,17 @@ function BackupDir: string;
   beside the contest, and FCONTEST.SetUpFileNames owns that order. *)
 function PreferredDataFilePath(const aName: string): string;
 
+(* WHICH LOCATION TIER A DATA FILE CAME FROM, for the log: 'downloaded' when
+  aPath is inside aDownloadedDir (the writable settings directory), 'shipped'
+  when it is inside aShippedDir (the program's data directory), else 'other'
+  (a copy beside the contest). The downloaded directory is asked first: with
+  --settings, or a portable install, one can lie inside the other. Pure string
+  work -- the inputs are parameters so a test needs no real directories. *)
+function DataFileTierFor(const aPath, aDownloadedDir, aShippedDir: string): string;
+
+(* The same answer for this run's own directories. *)
+function DataFileTierOf(const aPath: string): string;
+
 (* A SHIPPED DOMESTIC FILE -- dom<separator>aName under the data directory,
   matched case-tolerantly (see ExistingDataFile). aName is a file NAME,
   extension included: 'arrlsect.dom'.
@@ -1429,6 +1440,27 @@ begin
       end;
 
    Result := ExistingDataFile(DataFilePath(aName));
+end;
+
+function DataFileTierFor(const aPath, aDownloadedDir, aShippedDir: string): string;
+begin
+   if PathIsWithinFolder(aPath, aDownloadedDir) then
+      begin
+      Result := 'downloaded';
+      end
+   else if PathIsWithinFolder(aPath, aShippedDir) then
+      begin
+      Result := 'shipped';
+      end
+   else
+      begin
+      Result := 'other';
+      end;
+end;
+
+function DataFileTierOf(const aPath: string): string;
+begin
+   Result := DataFileTierFor(aPath, DownloadedDataDir, DataDir);
 end;
 
 function ShippedDomFilePath(const aName: string): string;

@@ -341,6 +341,7 @@ uses
   uMainGrids,  { the QSO-need and mult-need band strips }
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
+   uAppPaths,        // DataFileTierOf -- the lookup trace names the call history tier
    uSettingsModel,   // Settings.PossibleCall.Enable
    uDXSpotParse,     // SpotCommentCandidates, SpotNotesText -- the spot hint (issue 83)
 
@@ -2522,6 +2523,116 @@ begin
      end;
 end;
 
+(* THE LOOKUP TRACE -- ONE DEBUG LINE PER SOURCE THAT SUPPLIED SOMETHING for a
+  call the operator has just typed, and one when nothing did, so tr4w.log can
+  answer "where did that name / section come from". Called once per NEW call
+  (ShowStationInformation's latch), never per keystroke. It reads exactly what
+  the entry window reads and changes nothing:
+
+    the exchange   TCallsignsList.ExchangeLayerOf -- the lookup order the
+                   window uses: this contest's log, else INITIAL.EX, else the
+                   call history file (a call history entry the log outranks is
+                   named too, as not used);
+    name, QTH ...  CD.GetEntry -- the TRMASTER.DTA record.
+
+  Skipped when DEBUG is off: nothing below is worth its cost otherwise. *)
+procedure LogLookupSources(const Call: CallString);
+var
+   lookupCall: CallString;
+   data: DataBaseEntryRecord;
+   exchange: string;
+   history: string;
+   what: string;
+   source: string;
+   historyPath: string;
+   nameText: string;
+   qsos: Byte;
+   layer: TExchangeLayer;
+   foundSomething: boolean;
+begin
+   if not logger.IsDebugEnabled then
+      begin
+      Exit;
+      end;
+
+   foundSomething := False;
+   lookupCall := ShortString(RootCall(string(Call)));
+
+   historyPath := LoadedCallHistoryPath;
+   if historyPath = '' then
+      begin
+      historyPath := 'the call history file';
+      end
+   else
+      begin
+      historyPath := 'call history ' + historyPath + ' (' + DataFileTierOf(historyPath) + ')';
+      end;
+
+   layer := CallsignsList.ExchangeLayerOf(string(Call), exchange, qsos, history);
+   case layer of
+      xlLog:
+         begin
+         source := 'this contest''s log (' + IntToStr(qsos) + ' QSO(s) already with the call)';
+         end;
+      xlInitialEx:
+         begin
+         source := 'INITIAL.EX (' + Settings.Contest.InitialExchangeFilename + ')';
+         end;
+      xlCallHistory:
+         begin
+         source := historyPath;
+         end;
+   else
+      source := '';
+   end;
+
+   if layer <> xlNone then
+      begin
+      foundSomething := True;
+      what := '';
+      LookupAddField(what, 'exchange', exchange);
+      logger.Debug(LookupLogLine(string(Call), what, source));
+      if (layer in [xlLog, xlInitialEx]) and (history <> '') and (history <> exchange) then
+         begin
+         what := '';
+         LookupAddField(what, 'exchange', history);
+         logger.Debug(LookupLogLine(string(Call), what,
+                                    historyPath + ' -- NOT used, outranked by ' + source));
+         end;
+      end;
+
+   if CD.GetEntry(lookupCall, data) then
+      begin
+      nameText := LowerCase(string(data.mName));
+      if nameText <> '' then
+         begin
+         nameText[1] := UpCase(nameText[1]);
+         end;
+      what := '';
+      LookupAddField(what, 'name', nameText);
+      LookupAddField(what, 'QTH', string(data.QTH));
+      LookupAddField(what, 'section', string(data.Section));
+      LookupAddField(what, 'check', string(data.Check));
+      LookupAddField(what, 'grid', string(data.Grid));
+      LookupAddField(what, 'CQ zone', string(data.CQZone));
+      LookupAddField(what, 'ITU zone', string(data.ITUZone));
+      LookupAddField(what, 'FOC number', string(data.FOC));
+      LookupAddField(what, 'Ten-Ten', string(data.TENTEN));
+      LookupAddField(what, 'previous call', string(data.OldCall));
+      if what <> '' then
+         begin
+         foundSomething := True;
+         logger.Debug(LookupLogLine(string(lookupCall), what,
+                                    'TRMASTER.DTA (' + CharBufferText(CD.ActiveFilename) + ')'));
+         end;
+      end;
+
+   if not foundSomething then
+      begin
+      logger.Debug(LookupNothingLine(string(Call)));
+      end;
+end;
+
 procedure ShowStationInformation(const Call: CallString);
 begin
   { Took next line out in 6.27.  What if you are working the same guy
@@ -2544,6 +2655,8 @@ begin
   StationInformationCall := Call;
 
   //  if Copy(Call, 1, 3) = 'CQ-' then Exit;
+
+  LogLookupSources(Call);
 
   ShowName(Call);
 

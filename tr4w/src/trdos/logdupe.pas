@@ -602,6 +602,11 @@ procedure EnumInitialEx(var FileString: ShortString);
   history drops the layer. Answers 0 when nothing was applied. *)
 function LoadCallHistoryFile: integer;
 
+(* THE CALL HISTORY FILE IN SERVICE, for the lookup trace ('' when none is
+  loaded): the full path the last successful LoadCallHistoryFile read. Set at
+  the swap, cleared when the layer is dropped. *)
+function LoadedCallHistoryPath: string;
+
 (* THE FILE A BLANK CALL HISTORY FILENAME MEANS: the running contest's own
    default (TContestBase.CallHistoryFileName), '' when it names none. Asked
    by LoadCallHistoryFile and shown by Preferences as the box's hint. *)
@@ -649,6 +654,7 @@ implementation
 uses
   //  OZCHR,
   DateUtils,        // YearOf -- ShowContestOpenNotice's display-only year
+  uAppPaths,        // DataFileTierOf -- the call history load line names the tier
   uConfigValues,
   uSettingsModel,   // Settings.CallWindow
   (* The contest database replaced the .RST restart file -- see
@@ -1352,6 +1358,8 @@ var
     function, so its target is a unit variable; main thread only, set for the
     length of one ReadAll and nil otherwise. *)
   GCallHistoryBuild: TCallHistorySnapshot = nil;
+  (* The path of the file whose rows the call history layer holds now. *)
+  GLoadedCallHistoryPath: string = '';
 
 (* uCallHistory's store, here: the snapshot under construction. *)
 function AddCallHistoryToSnapshot(const aCall: string; const aExchange: string): TCallHistoryAddResult;
@@ -1362,6 +1370,11 @@ end;
 function ContestCallHistoryFileName: string;
 begin
   Result := ContestIdentity(Contest).CallHistoryFileName;
+end;
+
+function LoadedCallHistoryPath: string;
+begin
+  Result := GLoadedCallHistoryPath;
 end;
 
 function LoadCallHistoryFile: integer;
@@ -1380,15 +1393,17 @@ begin
   if not Settings.Contest.UseCallHistoryFile then
      begin
      CallsignsList.ReplaceCallHistory(nil);
+     GLoadedCallHistoryPath := '';
      Exit;
      end;
 
-  fields := ContestIdentity(Contest).CallHistoryFields;
+  fields :=ContestIdentity(Contest).CallHistoryFields;
   if Length(fields) = 0 then
      begin
      logger.Info('[CallHistory] USE CALL HISTORY FILE is on, but %s prefills nothing from one; no file read',
                  [ContestIdentity(Contest).DisplayName]);
      CallsignsList.ReplaceCallHistory(nil);
+     GLoadedCallHistoryPath := '';
      Exit;
      end;
 
@@ -1448,8 +1463,9 @@ begin
         end;
      (* THE SWAP: the snapshot is complete, the list changes in this one call. *)
      Result := CallsignsList.ReplaceCallHistory(snapshot);
-     logger.Info('[CallHistory] %s: %d rows, %d entries read, %d stored (the rest already known: INITIAL.EX, the log or an earlier row), %d missing a field the contest prefills, in %d ms',
-                 [path, reader.DataRows, reader.Added, Result, reader.Incomplete,
+     GLoadedCallHistoryPath := path;
+     logger.Info('[CallHistory] %s (%s): %d rows, %d entries read, %d stored (the rest already known: INITIAL.EX, the log or an earlier row), %d missing a field the contest prefills, in %d ms',
+                 [path, DataFileTierOf(path), reader.DataRows, reader.Added, Result, reader.Incomplete,
                   integer(GetTickCount64 - started)]);
      if reader.UnknownDirectives <> '' then
         begin

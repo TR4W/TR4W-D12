@@ -54,6 +54,12 @@ const
   MAXCALLSIGNSINLIST                    = 100000;           // 4.115.6
 
 type
+  (* WHICH LAYER ANSWERED A CALL'S REMEMBERED EXCHANGE -- for the lookup trace
+    only (TCallsignsList.ExchangeLayerOf). xlLog: the station is in this
+    contest's log; xlInitialEx: INITIAL.EX stated it and no QSO has been
+    logged; xlCallHistory: the call history file's text; xlNone: nothing. *)
+  TExchangeLayer = (xlNone, xlCallHistory, xlInitialEx, xlLog);
+
   (* ONE STATION IN THE LOG: its call as logged, its dupe bits per mode (a
     bit per band), how many QSOs (stops at 255), and the initial exchange
     TRMASTER or the log gave it. *)
@@ -128,6 +134,12 @@ type
     function AddCallsign(const s: string; Mode: ModeType; Band: BandType; JustAddToList: boolean): integer;
     function AddIniitialExchange(const Call: string; const InitialExchangeString: string): boolean;
     function GetIniitialExchange(const Call: string): string;
+    (* THE LOOKUP ORDER, ANSWERED WITH ITS REASON: the layer GetIniitialExchange
+      read, the text it gave (aExchange), how many QSOs the log holds for the
+      call, and what the call history file offers for it (aHistory -- which the
+      log's or INITIAL.EX's own text may be hiding). Changes nothing. *)
+    function ExchangeLayerOf(const Call: string; out aExchange: string;
+                             out aQSOs: Byte; out aHistory: string): TExchangeLayer;
     function GetIniitialExchangeByIndex(Index: integer): string;
     (* A CALL HISTORY FILE'S EXCHANGE -- 2026-11-07. Stored in the entry's
       OWN history layer, and ONLY when the call has no exchange yet (INITIAL.EX
@@ -312,6 +324,47 @@ begin
   else
      begin
      Result := '';
+     end;
+end;
+
+function TCallsignsList.ExchangeLayerOf(const Call: string; out aExchange: string;
+                                        out aQSOs: Byte; out aHistory: string): TExchangeLayer;
+var
+  Index                                 : integer;
+  entry                                 : TCallsignEntry;
+begin
+  Result := xlNone;
+  aExchange := '';
+  aQSOs := 0;
+  aHistory := '';
+  if not FindCallsign(Call, Index) then
+     begin
+     Exit;
+     end;
+
+  entry := FItems[Index];
+  aQSOs := entry.QSOs;
+  aHistory := string(entry.HistoryExchange);
+  aExchange := ExchangeOf(entry);
+  if aExchange = '' then
+     begin
+     Exit;
+     end;
+
+  if entry.OwnStated then
+     begin
+     if entry.QSOs > 0 then
+        begin
+        Result := xlLog;
+        end
+     else
+        begin
+        Result := xlInitialEx;
+        end;
+     end
+  else
+     begin
+     Result := xlCallHistory;
      end;
 end;
 
