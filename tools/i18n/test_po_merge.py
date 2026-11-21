@@ -118,5 +118,57 @@ class JoinNotDuplicate(unittest.TestCase):
          self.assertEqual(fh.read().decode('utf-8'), first)
 
 
+OBSOLETE_CATALOGUE = (
+   'msgid ""\r\n'
+   'msgstr ""\r\n'
+   '"Content-Type: text/plain; charset=UTF-8\\n"\r\n'
+   '\r\n'
+   '#: tfrmhamscore.btnresync.caption\r\n'
+   '#, fuzzy\r\n'
+   '#~ msgid "Resync from log"\r\n'
+   '#~ msgstr "Resync aus log"\r\n'
+)
+
+OBSOLETE_TEMPLATE = (
+   'msgid ""\r\n'
+   'msgstr ""\r\n'
+   '\r\n'
+   '#: tfrmhamscore.btnresync.caption\r\n'
+   'msgid "Re-send Log to HamScore..."\r\n'
+   'msgstr ""\r\n'
+)
+
+
+class ObsoleteClaimsNothing(unittest.TestCase):
+   """A reworded caption's old entry is retired as obsolete (#~); the merge
+   must then add the identifier back under the new English, empty and fuzzy,
+   and leave the obsolete entry (with its old translation) alone."""
+
+   def setUp(self):
+      self.dir = tempfile.mkdtemp(prefix='po_merge_test_')
+      self.po = os.path.join(self.dir, 'tr4w_de.po')
+      self.pot = os.path.join(self.dir, 'scratch.pot')
+      with open(self.po, 'wb') as fh:
+         fh.write(OBSOLETE_CATALOGUE.encode('utf-8'))
+      with open(self.pot, 'wb') as fh:
+         fh.write(OBSOLETE_TEMPLATE.encode('utf-8'))
+
+   def tearDown(self):
+      shutil.rmtree(self.dir)
+
+   def test_the_identifier_comes_back_and_the_obsolete_entry_stays(self):
+      template = [e for e in pofile.read_po(self.pot) if e.source.strip()]
+      added, _carried, _retired, _total = po_merge.merge(
+         self.po, template, {'tfrmhamscore'}, True, add_only=True)
+      self.assertEqual(added, 1)
+      entries = pofile.read_po(self.po)
+      live = [e for e in entries if not e.obsolete]
+      self.assertEqual([(e.source, e.target, e.fuzzy) for e in live],
+                       [('Re-send Log to HamScore...', '', True)])
+      gone = [e for e in entries if e.obsolete]
+      self.assertEqual([(e.source, e.target) for e in gone],
+                       [('Resync from log', 'Resync aus log')])
+
+
 if __name__ == '__main__':
    unittest.main()

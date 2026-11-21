@@ -174,6 +174,14 @@ def merge(path, template, ours, apply_changes, add_only=False):
    seen_ids = set()
    seen_sources = set()
    for e in existing:
+      # AN OBSOLETE ENTRY CLAIMS NOTHING (2026-11-21). Every other reader --
+      # po_coverage, lfm_harvest --check, Make-LanguageRes -- already ignores a
+      # #~ entry; counting its identifier here meant a caption whose old entry
+      # was retired as obsolete (a reworded .lfm caption) could never be added
+      # back, so the identifier silently had no live entry. Pinned by
+      # test_po_merge.ObsoleteClaimsNothing.
+      if e.obsolete:
+         continue
       ids = claimed_identifiers(e)
       seen_ids |= ids
       if not ids:

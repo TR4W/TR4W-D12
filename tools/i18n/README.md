@@ -122,6 +122,32 @@ byte-identical to individual output.
 A missing model is not a blocker: `pas2po.py --new-lang` produces a usable
 translator catalogue with no engine involved.
 
+### Seeding every language: `seed_all.ps1`
+
+```powershell
+powershell -File tools\i18n\seed_all.ps1 -DryRun            # what would be seeded; writes nothing
+powershell -File tools\i18n\seed_all.ps1                     # both catalogues, every seedable language
+powershell -File tools\i18n\seed_all.ps1 -Catalog tr4w -Lang CHN,JPN
+```
+
+Runs `mt_seed.py --lang X --catalog C --url U` for CHN CZE DAN DUT ESP FIN FRA
+GER GRE ITA JPN KOR POL POR PTB ROM RUS SWE UKR, tr4w then help (`-Catalog
+tr4w|help|both`), against the server above by default (`-Url`). **MNG and SER
+are not seeded** -- the server has no model for either -- and their catalogues
+are kept as they are. Each run has its own 45-minute limit (`-TimeoutMinutes`),
+an empty standard input, and is killed and reported `TIMEOUT` on expiry; a
+failure does not stop the loop. Per run, `build-out\i18n-seed\<code>-<catalog>.log`
+holds the exit status, the seconds taken, the entries still empty and the
+output's tail; the summary table at the end says the same. Only empty entries
+are filled and `--reseed` is never passed, so **Polish reviewed entries
+(G0DVJ) are never touched**.
+
+**Then rebuild.** The program strings reach the binary only through
+`res\tr4w_languages.res`: run `tr4w\build\Build-App.ps1` once (it regenerates
+the `.res` when the catalogues changed) and commit the `i18n\*.po` files with
+`tr4w\res\tr4w_languages.res` and its `.inputs`. The help catalogues are read
+from `help\` at run time and need no `.res`.
+
 ## The second catalogue: config-command help
 
 `tr4w/target/commands_help_<lang>.ini` holds the help text for the settings

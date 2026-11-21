@@ -115,6 +115,18 @@ draft, then `mt_seed --only`. If two keys shared one entry and their English
 now differs, take the second identifier off its `#:` lines first so `po_merge`
 adds it.
 
+**The other route, used 2026-11-21 for the eleven `lfm_harvest` warnings:**
+mark the old entry obsolete (`#~`, keeping its comments and a dated `# ` note
+naming the new English), then run the harvest template through
+`po_merge --apply --add-only`. An obsolete entry claims nothing since that day
+(`test_po_merge.ObsoleteClaimsNothing`; before it, `po_merge` counted the `#~`
+entry's identifier and never re-added it), so the caption comes back either as a
+new empty fuzzy entry or JOINED to a live resourcestring with the same English
+(the form assigns `SHamScoreResyncCaption`, `SServerLogTitle`,
+`SPrefsHardwareInfo`, `SPrefsOperatingInfo`, and those carried their drafts).
+The old translation stays readable in the `#~` block. A whitespace or URL-form
+change keeps its translation: rewrite the msgid in place.
+
 **The help catalogues do this for you.** `python tools\i18n\ini2po.py` merges the
 English ini into every `i18n\help_*.po`: a reworded msgid keeps a human
 translation (fuzzy, `#|` previous msgid, dated `# ` note) and clears a machine

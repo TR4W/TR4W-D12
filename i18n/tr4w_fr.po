@@ -3494,7 +3494,7 @@ msgstr "Plan de bande"
 
 #: tfrmbeacons.caption
 #, fuzzy
-msgid "Beacons  Monitor"
+msgid "Beacons Monitor"
 msgstr "Moniteur de balises"
 
 #: tfrmct1boh.caption
@@ -3798,10 +3798,11 @@ msgstr "Clés de fonction"
 msgid "Push Now"
 msgstr "Poussez maintenant"
 
+# 2026-11-21: obsolete -- the .lfm caption was reworded to 'Re-send Log to HamScore...'; the identifier moved to a new entry.
 #: tfrmhamscore.btnresync.caption
 #, fuzzy
-msgid "Resync from log"
-msgstr "Résync de log"
+#~ msgid "Resync from log"
+#~ msgstr "Résync de log"
 
 #: tfrmhamscore.caption
 #, fuzzy
@@ -4039,10 +4040,11 @@ msgstr "Étendue (zoom out)"
 msgid "Panadapter"
 msgstr "Panadapté"
 
+# 2026-11-21: obsolete -- the .lfm caption was reworded to '-- dB'; the identifier moved to a new entry.
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
-msgid "80 dB"
-msgstr "80 dB"
+#~ msgid "80 dB"
+#~ msgstr "80 dB"
 
 #: tfrmpanadapter.lblsource.caption
 #, fuzzy
@@ -4792,10 +4794,11 @@ msgctxt "tprefsform.chkspeedsync1.caption"
 msgid "Speed sync"
 msgstr "Synchronisation de vitesse"
 
+# 2026-11-21: obsolete -- the .lfm caption was reworded to 'Integrate with DXLab SpotCollector'; the identifier moved to a new entry.
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
-msgid "Collect spots from the cluster"
-msgstr "Recueillir les spots du cluster"
+#~ msgid "Collect spots from the cluster"
+#~ msgstr "Recueillir les spots du cluster"
 
 #: tprefsform.chkswappacketspotradios.caption
 #: usettingscaptions.rs_bandmap_swappacketspotradios
@@ -5217,10 +5220,11 @@ msgstr "Programme d'enregistreur DVK"
 msgid "DXLab"
 msgstr "DXLab"
 
+# 2026-11-21: obsolete -- the .lfm caption was reworded to 'TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that.'; the identifier moved to a new entry.
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
-msgid "DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr "DXLab n'a pas besoin de paramètres propres. TR4W offre une interface compatible DX Commander sur le port TCP 52002 chaque fois que le support WSJT-X fonctionne, et les programmes DXLab se connectent à cela."
+#~ msgid "DXLab needs no settings of its own.  TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
+#~ msgstr "DXLab n'a pas besoin de paramètres propres. TR4W offre une interface compatible DX Commander sur le port TCP 52002 chaque fois que le support WSJT-X fonctionne, et les programmes DXLab se connectent à cela."
 
 #: tprefsform.lbldxlabinfo2.caption
 #, fuzzy
@@ -5261,10 +5265,11 @@ msgctxt "tprefsform.lblhardwareheading.caption"
 msgid "Hardware"
 msgstr "Matériel"
 
+# 2026-11-21: obsolete -- the .lfm caption was reworded to 'Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers.'; the identifier moved to a new entry.
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
-msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators."
-msgstr "Matériel de la station. Les paramètres qui appartiennent à une radio sont sous Radio; les rotateurs sont sous Rotators."
+#~ msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators."
+#~ msgstr "Matériel de la station. Les paramètres qui appartiennent à une radio sont sous Radio; les rotateurs sont sous Rotators."
 
 #: tprefsform.lblkeyerhint.caption
 #, fuzzy
@@ -5503,10 +5508,11 @@ msgstr "CW pendant le fonctionnement"
 msgid "Operating"
 msgstr "Fonctionnement"
 
+# 2026-11-21: obsolete -- the .lfm caption was reworded to 'How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings.'; the identifier moved to a new entry.
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
-msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
-msgstr "Comment le journal se comporte pendant que vous dirigez le concours. Carte de bande, bandes, CW, score et deux paramètres radio sont sur les pages ci-dessous."
+#~ msgid "How the log behaves while you are running the contest. Band map, bands, CW, scoring and two-radio settings are on the pages below."
+#~ msgstr "Comment le journal se comporte pendant que vous dirigez le concours. Carte de bande, bandes, CW, score et deux paramètres radio sont sur les pages ci-dessous."
 
 #: tprefsform.lblpaddlehold.caption
 #, fuzzy
@@ -5729,10 +5735,11 @@ msgctxt "RC_STATIONINFO"
 msgid "Station information"
 msgstr "Informations sur la station"
 
+# 2026-11-21: obsolete -- the .lfm caption was reworded to 'These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.\r\nCall, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign.'; the identifier moved to a new entry.
 #: tprefsform.lblstationhint.caption
 #, fuzzy
-msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
-msgstr "Ils sont envoyés aux autres stations d'un réseau multi-opérateurs lorsque vous les changez, de sorte que toutes les positions conviennent de l'échange."
+#~ msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
+#~ msgstr "Ils sont envoyés aux autres stations d'un réseau multi-opérateurs lorsque vous les changez, de sorte que toutes les positions conviennent de l'échange."
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
@@ -6008,12 +6015,13 @@ msgctxt "tradioeditform.lblstartup.caption"
 msgid "Startup command"
 msgstr "Commande de démarrage"
 
+# 2026-11-21: obsolete -- the .lfm caption was reworded to 'IP port'; the identifier moved to a new entry.
 #: tradioeditform.lbltcpport.caption
 #: ulclformhelpers.tc_radioedit_tcpport
 #, fuzzy
-msgctxt "tradioeditform.lbltcpport.caption"
-msgid "TCP port"
-msgstr "Port TCP"
+#~ msgctxt "tradioeditform.lbltcpport.caption"
+#~ msgid "TCP port"
+#~ msgstr "Port TCP"
 
 #: tradioeditform.lbltype.caption
 #: ulclformhelpers.tc_radioedit_type
@@ -8117,7 +8125,7 @@ msgstr "Voulez-vous télécharger votre fichier Cabrillo sur SuperChecklPartial 
 
 #: tfrmabout.lblurl.caption
 #, fuzzy
-msgid "http://www.tr4w.net"
+msgid "https://tr4w.net"
 msgstr ""
 
 #: tfrmaltd.btncancel.caption
@@ -8306,7 +8314,6 @@ msgstr ""
 "Assurez-vous que ce fichier est dans le même répertoire que le programme."
 
 #: utr4wstrings.rc_synlog2
-#: tfrmserverlog.caption
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
@@ -9828,6 +9835,7 @@ msgid "Synchronize with the server..."
 msgstr "Synchronisez avec le serveur..."
 
 #: uappstrings.sserverlogtitle
+#: tfrmserverlog.caption
 #, fuzzy
 msgid "Synchronize with the server"
 msgstr "Synchroniser avec le serveur"
@@ -9871,6 +9879,7 @@ msgid "Plain http: your HamScore password is sent unencrypted. Use https://hamsc
 msgstr "Simple http: votre mot de passe HamScore est envoyé non chiffré. Utilisez https://hamscore.com/postxml/ si le serveur le supporte."
 
 #: uappstrings.shamscoreresynccaption
+#: tfrmhamscore.btnresync.caption
 #, fuzzy
 msgid "Re-send Log to HamScore..."
 msgstr "Re-envoyer le journal à HamScore..."
@@ -10098,6 +10107,7 @@ msgid "Initial exchange filter"
 msgstr "Filtre d'échange initial"
 
 #: uappstrings.sprefsoperatinginfo
+#: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings."
 msgstr "Comment le journal se comporte pendant que vous dirigez le concours. La carte de bande, les bandes, les messages, la notation et les paramètres à deux radios sont sur les pages ci-dessous; CW est sous Paramètres CW."
@@ -10477,6 +10487,7 @@ msgid "CW keyers"
 msgstr "Clés CW"
 
 #: uappstrings.sprefshardwareinfo
+#: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers."
 msgstr "Matériel de la station. Les paramètres qui appartiennent à une radio sont sous Radios; les rotateurs sont sous Rotators; WinKeyer et YCCC SO2R+ les clés sont sous les clés CW."
@@ -12926,4 +12937,31 @@ msgstr ""
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgid "Windows and log"
+msgstr ""
+
+#: tfrmpanadapter.lblscale.caption
+#, fuzzy
+msgid "-- dB"
+msgstr ""
+
+#: tprefsform.lblstationhint.caption
+#, fuzzy
+msgid ""
+"These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.\r\n"
+"Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign."
+msgstr ""
+
+#: tprefsform.lbldxlabinfo.caption
+#, fuzzy
+msgid "TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
+msgstr ""
+
+#: tprefsform.chkspotcollector.caption
+#, fuzzy
+msgid "Integrate with DXLab SpotCollector"
+msgstr ""
+
+#: tradioeditform.lbltcpport.caption
+#, fuzzy
+msgid "IP port"
 msgstr ""

@@ -2417,7 +2417,7 @@ msgid "Band plan"
 msgstr "Plan pasm"
 
 #: tfrmbeacons.caption
-msgid "Beacons  Monitor"
+msgid "Beacons Monitor"
 msgstr "Monitorowanie radiolatarni"
 
 #: tfrmct1boh.caption
@@ -6267,7 +6267,7 @@ msgid "Do you want to upload your Cabrillo file to SuperChecklPartial?"
 msgstr "Chcesz przesłać plik Cabrillo do SuperChecklPartial?"
 
 #: tfrmabout.lblurl.caption
-msgid "http://www.tr4w.net"
+msgid "https://tr4w.net"
 msgstr ""
 
 #: tfrmaltd.btncancel.caption

@@ -98,7 +98,13 @@ if (($code -ne 0) -or ($text -notmatch 'lfm_harvest: OK'))
 # 'Synchronize with the server'; tradioeditform.lbltcpport.caption 'TCP port' ->
 # 'IP port'). The rest are a URL, a double space and '80 dB' -> '-- dB', and three
 # Preferences hints whose rewording lies past the 70 characters the tool prints.
-$REWORDED_CEILING = 11
+#
+# 2026-11-21: 9. All eleven were fixed in 20 catalogues (the URL and the double
+# space rewritten in place; the meaning changes retired as #~ and re-added or
+# joined to the resourcestring the form assigns). The nine left are POLISH ONLY:
+# tr4w_pl.po is under G0DVJ's finished review, so its meaning-changed captions
+# wait for him rather than being cleared by a script.
+$REWORDED_CEILING = 9
 
 $reworded = 0
 if ($text -match 'lfm_harvest: WARNING -- (\d+) caption')
