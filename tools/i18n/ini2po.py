@@ -313,8 +313,8 @@ def write_gaps_doc(root, commands, by_lang, eng_desc, recoverable, blank,
      "`tr4w/docs/SETTINGS_INVENTORY.md`). Help is looked up by the name a "
      "control is registered under, with no alias resolution; that is always "
      "the primary name, so a second name's section in D is not shown. "
-     "`uTestCommandHelp.KNOWN_HELP_GAPS` pins the subset Preferences "
-     "registers.\n")
+     "`uTestCommandHelp` fails when a registered Preferences setting has "
+     "no English help (the pin is zero).\n")
    w("| | |")
    w("|---|---|")
    w("| live config commands (settings object, primary names) | %d |"

@@ -188,6 +188,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-21 -- EVERY RADIO EDITOR FIELD HAS A TOOLTIP (lcl-ui, i18n)
+
+Wired in `uRadioEditForm.ApplyFieldHelp` from `i18n/help_en.po` (`TC_HELP_RADIO_EDITOR_...`, agent-written, each starting "AGENT WRITTEN: " until reviewed). Nothing here has been seen on screen.
+
+- [ ] **Hover each field and its caption** on the Serial, Network and Advanced tabs and below them: every input shows a tooltip, and the caption beside it shows the same one. "Drive through HamLib" still shows its HamLib version tooltip.
+- [ ] **A greyed field** (CI-V on a K3, the Icom fields on a Kenwood, User name on a K4): say whether the tooltip shows at all; the LCL may not show hints on disabled controls.
+- [ ] **Another UI language** shows the English text until that catalogue is seeded (the English fallback in `uCommandHelp`). Check the same tooltips on the setup wizard's radio page, which hosts this form's panel.
+
+The other editor forms followed the same day (`ApplyFieldHelp` in each, `ApplyUnboundFieldHelp` in Preferences; `Lint-ControlHints` is 0 everywhere except Preferences' search box). Where a field edits what a real command sets it wears that command's existing help; the rest are new "AGENT WRITTEN: " entries. Hover each field and its caption:
+
+- [ ] **Keyer editor** (Preferences > CW keyers > Add/Edit, and the setup wizard's keyer page): Name, Keyer type, Port, and every WinKeyer setting (these show the `WK ...` commands' text).
+- [ ] **UDP destination editor** (Preferences > UDP > Add/Edit): Address, Port and the six stream boxes. The App info box is disabled: say whether its tooltip shows.
+- [ ] **External logger editor** (Preferences > External loggers, and the wizard's logger page): Name, Provider, Active. The provider's own rows are not covered.
+- [ ] **Preferences**: the station-profile row (profile, Radio 1/2, CW output 1/2, speed sync, SO2R, connect at startup), Station's continent, DX clusters (name, server, login, password, after connecting), Rotators (all seven fields), TCI server (enable, port, network, stop after), Logging (log level and the five detail boxes), UDP (Broadcast UDP data, all QSOs). The search box deliberately has none.
+- [ ] **Setup wizard**: the station boxes, the six checklist boxes, CW by CAT and speed sync on the radio page, the cluster page, the rotator page, the WSJT-X page and Show details on the result page.
+
 ## Added 2026-11-20 -- INSTALLED UNDER C:\Program Files: THE WRITABLE FILES MOVE TO %APPDATA%\TR4W (issue 165; settings-config)
 
 `uAppPaths` decides once per run where the program folder's (the working directory's) written files go.
@@ -288,7 +304,7 @@ The decision (contest answer, S&P, interval, 300 Hz) is unit-tested (`uTestSelfS
 - [ ] **S&P.** In Search & Pounce mode the menu, the macro and the automatic trigger all refuse; nothing is sent.
 - [ ] **The automatic trigger.** Turn CLUSTER AUTO SELF SPOT on (Preferences, or a config line), run in SS: the FIRST spot goes about a second after it is on and you are in CQ mode with a frequency, then one every 10 minutes while the radio stays on the frequency. It must stay silent when refused. It is off by default.
 - [ ] **No link.** With the cluster and the network both down: Control > Self-spot says neither is connected and nothing queues.
-- [ ] **Help text.** CLUSTER AUTO SELF SPOT and CLUSTER SELF SPOT INTERVAL have no `help_en.po` entry yet (their text is in the property comments in `uSettingsModel`); they are in `KNOWN_HELP_GAPS`. Add the entries and remove both names there.
+- [ ] **Help text.** CLUSTER AUTO SELF SPOT and CLUSTER SELF SPOT INTERVAL: check they have a `help_en.po` entry (the test pin is zero since 2026-11-21, so a missing one fails `uTestCommandHelp`; their text is in the property comments in `uSettingsModel`).
 
 ## Added 2026-11-19 -- NEW CONTEST "I SEND A STATE OR PROVINCE"; QSL AND LOG KEEPS THE TYPED TEXT (issues 167, 274; contest-scoring)
 
@@ -1029,7 +1045,7 @@ Every setting that was on **More settings** is now on a task page, and so is the
 - [x] **Advanced**: Radius Of Earth is at the end. — Windows GUI checked 2026-11-12; see [follow-up results](GUI_BENCH_RESULTS.md#follow-up-2026-11-12). Exchange entry used Ctrl+Enter to avoid sending CW.
 - [x] **The Operating page** has no *Stop sending when the call window changes* box; the boxes below it moved up with no gap, and Tab still moves down in order. Its introduction says CW is under CW Settings and fits in two lines.
   - Windows e1e4 GUI PASS 2026-11-12; focus cycle/screenshot reviewed. Current footer captions are Save and close / Cancel / Save; disabled Save is skipped. [Audit results](GUI_BENCH_RESULTS.md#preferences-focus-audit-e1e4-build).
-- [ ] **Search and deep link.** Search for a few old command names: `DE ENABLE`, `FREQUENCY POLL RATE`, `POSSIBLE CALL MODE`, `TELNET CONSOLE LINES`, `BAND MAP SIZE`, `DIGITAL MODE ENABLE`, `COUNTRY INFORMATION FILE`, `MAIN CALLSIGN`. Each hit names its NEW section and lands on its control. (Since issue 235 step 3 `FREQUENCY POLL RATE` is NOT a Preferences setting -- it is in the radio editor -- so it should find nothing in Preferences; drop it from this list once confirmed.)
+- [ ] **Search and deep link.** Search for a few old command names: `DE ENABLE`, `FREQUENCY POLL RATE`, `POSSIBLE CALL MODE`, `TELNET CONSOLE LINES`, `BAND MAP SIZE`, `DIGITAL MODE ENABLE`, `MAIN CALLSIGN`. Each hit names its NEW section and lands on its control. (Since issue 235 step 3 `FREQUENCY POLL RATE` is NOT a Preferences setting -- it is in the radio editor -- so it should find nothing in Preferences; drop it from this list once confirmed.)
 - [ ] **Save and Cancel.** Change one moved value on each of three pages and press Cancel: nothing changes on disk. Change them again and Save: `settings\tr4w.json` holds them under their OLD keys (`operating.ctrlj.*`, `cw.ctrlj.*`, ...).
   - Windows partial: DE ENABLE, SCP MINIMUM LETTERS and RADIUS OF EARTH Cancel unchanged, Save to typed JSON keys confirmed; first two reload correctly. Radius reload FAIL [#295](https://github.com/TR4W/TR4W-D12/issues/295). Original fixture values restored.
 - [ ] **150% scaling.** The blocks still sit below their pages' last designed control. They are anchored to it, but their own rows are 96-dpi pixels, like every generated row.
@@ -6065,15 +6081,16 @@ edits one, deletes one, or opens a log window.
 
 - [ ] **`NO CAPTION = TRUE`, on any tool window.**
 
-  **THE PREFERENCES LABEL IS WRONG AND WILL MISLEAD THIS TEST (found
-  2026-09-07).** It reads *"Main window has no title bar"*
-  (`RS_APPEARANCE_NOCAPTION`), and the setting does NOT touch the main window:
-  it is applied in `MainUnit.OpenTR4WWindow`, so it reaches the TOOL windows
-  only. The main form's BorderStyle is `bsSizeable` in its `.lfm` and nothing
-  overrides it at run time. Do not report "the main window still has its title
-  bar" as a defect -- that is the label's fault, not the code's. Correcting the
-  string is deferred because it is translated: changing the msgid drops the
-  existing catalogue entries, so it wants doing with `po_merge`.
+  **THE PREFERENCES LABEL WAS WRONG, AND IS FIXED (2026-11-21).** It read
+  *"Main window has no title bar"* (`RS_APPEARANCE_NOCAPTION`, found
+  2026-09-07), and the setting does NOT touch the main window: it is applied
+  in `MainUnit.OpenTR4WWindow`, so it reaches the TOOL windows only. The main
+  form's BorderStyle is `bsSizeable` in its `.lfm` and nothing overrides it at
+  run time. The label now reads *"Tool windows have no title bar"* (NY4I
+  approved the wording); every catalogue kept its translation of the old
+  sentence, flagged fuzzy with the old English as its `#|` previous msgid, so
+  a translated build may still say "main window" until a reviewer corrects
+  it. Either way, "the main window still has its title bar" is not a defect.
 
   Set it in Preferences
   (Appearance), open the band map and the function keys window, and check that
@@ -6096,6 +6113,31 @@ edits one, deletes one, or opens a log window.
   and no automated gate touches it**, so this is the only way to find out
   whether the new behaviour is the one an operator wants -- and whether the
   windows are still usable without a title bar to drag.
+
+  **A borderless tool window now moves by ALT + LEFT-BUTTON DRAG anywhere
+  inside it** (2026-11-21, `uAltDragMove`, installed by `OpenTR4WWindow`; the
+  arithmetic and the clamp are unit tested, the drag itself is not). With NO
+  CAPTION on, check each kind of tool window: a log grid window (View/Edit
+  Log), the Network list, the Stations list, the band map, and the telnet
+  window. For each:
+  - Alt + drag moves it, smoothly, from a grid cell, a list row, a label and
+    an empty area alike;
+  - a plain click and a plain drag without Alt still do what they did (select
+    a cell, select a row, place the caret) and never move the window;
+  - an Alt + click on a native list or edit may still select the row or place
+    the caret -- the LCL cannot stop the native control seeing the press on
+    Win32; note it, it is expected;
+  - dragged hard against every edge, at least 40 pixels stay on a monitor;
+  - after the drag, releasing Alt leaves no window in menu mode, and the next
+    keystroke goes where it should;
+  - the position survives a restart (the 5-second layout autosave reads the
+    form's bounds; nothing else saves it).
+  Repeat on a multi-monitor setup, including a monitor left of the primary
+  (negative X) and the dead corner beside a shorter monitor. On Linux gtk2, if
+  available: many window managers (Cinnamon on Mint, Xfce) take Alt + drag for
+  themselves before the program sees it. The window still moves and the
+  position is still saved, so that is not a failure -- record which one moved
+  it.
 
 - [ ] **Log a contest, properly.** Work a run of QSOs, watch the editable log
   fill, check the totals and the dupe sheet. The whole write path changed: the

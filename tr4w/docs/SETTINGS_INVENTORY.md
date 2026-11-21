@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (288)
+## Settings that have moved (308)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -64,25 +64,37 @@ comes last, a word run together.
 | `BACKUP DESTINATION` | `BACKUP LOG FILE NAME` | global | `Settings.Log.BackupDestination` | string |  |
 | `BACKUP LOG FREQUENCY` |  | global | `Settings.Log.BackupFrequency` | TBackupLogFrequency |  |
 | `BAND` |  | **CONTEST** | `Settings.Contest.Band` | string |  |
+| `BAND MAP ACTIVE BAND COLOR` |  | global | `Settings.BandMap.ActiveBandColor` | string |  |
 | `BAND MAP ALL BANDS` |  | global | `Settings.BandMap.AllBands` | boolean |  |
 | `BAND MAP ALL MODES` |  | global | `Settings.BandMap.AllModes` | boolean |  |
 | `BAND MAP CALL WINDOW ENABLE` |  | global | `Settings.BandMap.CallWindowEnable` | boolean |  |
+| `BAND MAP CENTER ON RADIO` |  | global | `Settings.BandMap.CenterOnRadio` | boolean |  |
 | `BAND MAP DECAY TIME` |  | global | `Settings.BandMap.DecayTime` | TBandMapDecayTime |  |
 | `BAND MAP DISPLAY CQ` |  | global | `Settings.BandMap.DisplayCQ` | boolean |  |
 | `BAND MAP DISPLAY GHZ` |  | global | `Settings.BandMap.DisplayGhz` | boolean |  |
 | `BAND MAP DISPLAY LIMIT` |  | global | `Settings.BandMap.DisplayLimit` | TBandMapDisplayLimit |  |
+| `BAND MAP DUPE COLOR` |  | global | `Settings.BandMap.DupeColor` | string |  |
 | `BAND MAP DUPE DISPLAY` |  | global | `Settings.BandMap.DupeDisplay` | boolean |  |
+| `BAND MAP FILTER OUT DIGITAL` |  | global | `Settings.BandMap.FilterOutDigital` | boolean |  |
 | `BAND MAP GUARD BAND` |  | global | `Settings.BandMap.GuardBand` | TBandMapGuardBand |  |
 | `BAND MAP ITEM HEIGHT` |  | global | `Settings.BandMap.ItemHeight` | TBandMapItemHeight |  |
 | `BAND MAP ITEM WIDTH` |  | global | `Settings.BandMap.ItemWidth` | TBandMapItemWidth |  |
+| `BAND MAP MULT COLOR` |  | global | `Settings.BandMap.MultColor` | string |  |
 | `BAND MAP MULTS ONLY` |  | global | `Settings.BandMap.MultsOnly` | boolean |  |
+| `BAND MAP OTHER BAND COLOR` |  | global | `Settings.BandMap.OtherBandColor` | string |  |
+| `BAND MAP SELECTION COLOR` |  | global | `Settings.BandMap.SelectionColor` | string |  |
 | `BAND MAP SIZE` |  | global | `Settings.BandMap.Size` | TBandMapSize |  |
 | `BAND MAP SO2R DISPLAY` |  | global | `Settings.BandMap.So2rDisplay` | boolean |  |
+| `BAND MAP SORT BY BEAM HEADING` |  | global | `Settings.BandMap.SortByBeamHeading` | boolean |  |
 | `BAND MAP SPLIT MODE` |  | global | `Settings.BandMap.SplitMode` | BandMapSplitModeType |  |
+| `BAND MAP VFO MARKER COLOR` |  | global | `Settings.BandMap.VfoMarkerColor` | string |  |
+| `BAND MAP WORKED MULT COLOR` |  | global | `Settings.BandMap.WorkedMultColor` | string |  |
+| `BAND MAP WORKED MULT LIMIT` |  | global | `Settings.BandMap.WorkedMultLimit` | TBandMapWorkedMultLimit |  |
 | `BEEP ENABLE` |  | global | `Settings.Operating.BeepEnable` | boolean |  |
 | `BEEP EVERY 10 QSOS` |  | global | `Settings.Log.BeepEvery10Qsos` | boolean |  |
 | `BOLD FONT` |  | global | `Settings.Font.Bold` | boolean |  |
 | `BROADCAST ALL PACKET DATA` |  | global | `Settings.Cluster.BroadcastAllPacketData` | boolean |  |
+| `CALL HISTORY FILENAME` |  | **CONTEST** | `Settings.Contest.CallHistoryFilename` | string |  |
 | `CALL OK NOW CW MESSAGE` | `CALL OK NOW MESSAGE` | **CONTEST** | `Settings.Messages.CallOkNowCw` | string |  |
 | `CALL OK NOW SSB MESSAGE` |  | **CONTEST** | `Settings.Messages.CallOkNowSsb` | string |  |
 | `CALL WINDOW SHOW ALL SPOTS` |  | global | `Settings.CallWindow.ShowAllSpots` | boolean |  |
@@ -93,8 +105,11 @@ comes last, a word run together.
 | `CATEGORY-OPERATOR` |  | **CONTEST** | `Settings.Contest.CategoryOperator` | tCategoryOperator |  |
 | `CATEGORY-OVERLAY` |  | **CONTEST** | `Settings.Contest.CategoryOverlay` | string |  |
 | `CATEGORY-POWER` |  | **CONTEST** | `Settings.Contest.CategoryPower` | tCategoryPower |  |
+| `CATEGORY-STATION` |  | **CONTEST** | `Settings.Contest.CategoryStation` | string |  |
 | `CATEGORY-TRANSMITTER` |  | **CONTEST** | `Settings.Contest.CategoryTransmitter` | tCategoryTransmitter |  |
 | `CHECK LOG FILE SIZE` |  | global | `Settings.Log.CheckFileSize` | boolean |  |
+| `CLUSTER AUTO SELF SPOT` |  | global | `Settings.Cluster.AutoSelfSpot` | boolean |  |
+| `CLUSTER SELF SPOT INTERVAL` |  | global | `Settings.Cluster.SelfSpotInterval` | TSelfSpotMinutes |  |
 | `CLUSTER SPOT COMMENT MULTIPLIER` |  | global | `Settings.Cluster.SpotCommentMultiplier` | boolean |  |
 | `CODE SPEED` |  | global | `Settings.Cw.CodeSpeed` | TCwCodeSpeed |  |
 | `COLUMN AUTOSIZE` |  | global | `Settings.Log.ColumnAutoSize` | boolean |  |
@@ -108,7 +123,6 @@ comes last, a word run together.
 | `CONTEST NAME` |  | **CONTEST** | `Settings.Contest.Name` | string |  |
 | `CONTEST TITLE` |  | **CONTEST** | `Settings.Contest.Title` | string |  |
 | `COUNT DOMESTIC COUNTRIES` |  | **CONTEST** | `Settings.Contest.CountDomesticCountries` | boolean |  |
-| `COUNTRY INFORMATION FILE` |  | global | `Settings.Country.InformationFile` | string |  |
 | `CQ CW EXCHANGE` | `CQ EXCHANGE` | **CONTEST** | `Settings.Messages.CqExchangeCw` | string |  |
 | `CQ CW EXCHANGE NAME KNOWN` | `CQ EXCHANGE NAME KNOWN` | **CONTEST** | `Settings.Messages.CqExchangeCwNameKnown` | string |  |
 | `CQ SSB EXCHANGE` |  | **CONTEST** | `Settings.Messages.CqExchangeSsb` | string |  |
@@ -151,7 +165,9 @@ comes last, a word run together.
 | `HAMSCORE PASSWORD` |  | global | `Settings.Hamscore.Password` | TSecretText |  |
 | `HAMSCORE SEND CONTACT INFO` |  | global | `Settings.Hamscore.SendContactInfo` | boolean |  |
 | `HAMSCORE URL` |  | global | `Settings.Hamscore.Url` | string |  |
+| `HAMSCORE URL DEFAULT MIGRATED` |  | global | `Settings.Hamscore.UrlDefaultMigrated` | boolean |  |
 | `HAMSCORE USERNAME` |  | global | `Settings.Hamscore.Username` | TCaseSensitiveText |  |
+| `HAMSCORE VERIFY SERVER` |  | global | `Settings.Hamscore.VerifyServer` | boolean |  |
 | `HAND LOG MODE` |  | global | `Settings.Operating.HandLogMode` | boolean |  |
 | `HF BAND ENABLE` |  | **CONTEST** | `Settings.Bands.HfEnabled` | boolean |  |
 | `HOUR DISPLAY` |  | global | `Settings.MainWindow.HourDisplay` | HourDisplayType |  |
@@ -275,7 +291,9 @@ comes last, a word run together.
 | `SAY HI ENABLE` |  | global | `Settings.SayHi.Enable` | boolean |  |
 | `SAY HI RATE CUTOFF` |  | global | `Settings.SayHi.RateCutoff` | TSayHiRateCutoff |  |
 | `SCORE POSTING URL` |  | global | `Settings.Score.PostingUrl` | string |  |
+| `SCORE POSTING URL DEFAULT MIGRATED` |  | global | `Settings.Score.PostingUrlDefaultMigrated` | boolean |  |
 | `SCORE READING URL` |  | global | `Settings.Score.ReadingUrl` | string |  |
+| `SCORE VERIFY SERVER` |  | global | `Settings.Score.VerifyServer` | boolean |  |
 | `SCP COUNTRY STRING` |  | global | `Settings.Scp.CountryString` | string |  |
 | `SCP MINIMUM LETTERS` |  | global | `Settings.Scp.MinimumLetters` | integer |  |
 | `SEND COMPLETE FOUR LETTER CALL` |  | global | `Settings.Cw.SendCompleteFourLetterCall` | boolean |  |
@@ -291,7 +309,6 @@ comes last, a word run together.
 | `SHORT 2` |  | global | `Settings.Cw.Short2` | AnsiChar |  |
 | `SHORT 9` |  | global | `Settings.Cw.Short9` | AnsiChar |  |
 | `SHORT INTEGERS` |  | global | `Settings.Cw.ShortIntegers` | boolean |  |
-| `SHOW ALL SERIAL PORTS` |  | global | `Settings.SerialPorts.ShowAll` | boolean |  |
 | `SHOW DOMESTIC MULTIPLIER NAME` |  | global | `Settings.RemainingMults.ShowDomesticName` | boolean |  |
 | `SHOW FREQUENCY IN LOG` |  | global | `Settings.Log.ShowFrequency` | boolean |  |
 | `SHOW GRIDLINES` |  | global | `Settings.MainWindow.ShowGridlines` | boolean |  |
@@ -317,6 +334,7 @@ comes last, a word run together.
 | `UNKNOWN COUNTRY FILE ENABLE` |  | global | `Settings.UnknownCountryFile.Enable` | boolean |  |
 | `UNKNOWN COUNTRY FILE NAME` |  | global | `Settings.UnknownCountryFile.Name` | string |  |
 | `UPDATE RESTART FILE ENABLE` |  | global | `Settings.Log.UpdateRestartFile` | boolean |  |
+| `USE CALL HISTORY FILE` |  | **CONTEST** | `Settings.Contest.UseCallHistoryFile` | boolean |  |
 | `USE RECORDED SIGNS` |  | global | `Settings.Dvk.UseRecordedSigns` | boolean |  |
 | `USER INFO SHOWN` |  | global | `Settings.MainWindow.UserInfoShown` | UserInfoType |  |
 | `VHF BAND ENABLE` |  | **CONTEST** | `Settings.Bands.VhfEnabled` | boolean |  |
@@ -355,7 +373,7 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-297 command names.
+319 command names.
 
 Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
 

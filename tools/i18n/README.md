@@ -135,6 +135,30 @@ python tools/i18n/ini2po.py --check    # drift report, writes nothing
 python tools/i18n/ini2po.py --todo     # commands whose ENGLISH help is missing
 ```
 
+**Adding English help for a command that has none** (the process, 2026-11-20):
+
+1. Put the English into `i18n/help_en.po` (`msgid` and `msgstr` the same; the entry
+   is there already, empty, if the command exists).
+2. `python tools/i18n/help_add.py` reports; `--apply` copies each new English `msgid`
+   into the other 21 `help_*.po` (only entries whose `msgid` is empty; nothing else
+   in those files changes; idempotent). `--list` shows entries with no English yet.
+3. `python tools/i18n/mt_seed.py --catalog help --lang FRA` seeds each language
+   (empty entries only).
+
+The English is the `msgid` in every `help_<code>.po`, so a command with no help has an
+empty `msgid` in all 22 files; that is why step 2 exists. Never use `ini2po.py` for
+this: the `.ini` files are historical.
+
+**Help for a field that is not a config command** (the radio editor, 2026-11-21) uses a
+stable pseudo-command name with a form prefix, e.g. `RADIO EDITOR CAT RTS` ->
+`TC_HELP_RADIO_EDITOR_CAT_RTS`, wired with `ApplyCommandHelpHint`. Such entries exist only
+in `help_en.po` until reviewed (they start "AGENT WRITTEN: ", which `help_add.py` skips);
+until then every other language shows the English. `Lint-ControlHints` counts the unhinted
+input controls per editor form. The other editors use the same shape with their own prefix
+(`KEYER EDITOR`, `UDP DESTINATION`, `EXTERNAL LOGGER EDITOR`, `PREFERENCES`, `SETUP WIZARD`);
+a field that edits what a real command sets wears that command's help instead, and the setup
+wizard points at the Preferences entry where both edit the same thing.
+
 **Only `DESCRIPTION` is translatable**, which is worth being explicit about:
 
 - The **section name** is the config command (`ALT-D CQ ENABLE`). It is the

@@ -81,12 +81,13 @@ like something an operator would type. Do not regenerate it blindly.
 Every control Preferences binds shows the setting's help on hover, looked up
 by the PRIMARY command name in `help_<code>.po` (`src/uCommandHelp.pas`).
 **A new setting has none, so `uTestCommandHelp.TestEveryRegisteredSettingHasHelp`
-fails** until you either write a `[YOUR COMMAND]` section with `DESCRIPTION=`
-in `tr4w/target/commands_help_eng.ini` and regenerate the catalogues
-(`python tools/i18n/ini2po.py` -- it rewrites every `i18n/help_*.po`, so read
-its `emit()` first), or add the name to `KNOWN_HELP_GAPS` in that test. The
-list is exact in both directions, so it also fails the day a gap gets help.
-`docs/HELP_TEXT_GAPS.md` (`ini2po.py --todo --write-doc`) is the work-list.
+fails** (the pin is ZERO since 2026-11-21: no list to add a name to) until its
+English help is written. `i18n/help_en.po` is the master, not the ini: add the
+entry there (`msgctxt "TC_HELP_<NAME>"`, the same sentence in `msgid` and
+`msgstr`), then `python tools/i18n/help_add.py --apply` copies it into the other
+21 `help_*.po`, and `mt_seed.py --catalog help --lang X` seeds each language
+(`tools/i18n/README.md`, "Adding English help for a command that has none").
+Never run `ini2po.py` on the real catalogues for this.
 
 ---
 
@@ -114,10 +115,10 @@ withdraw a command or to read an old file:
 
 | list | size | what it is really for |
 |---|---:|---|
-| `uCFG.RETIRED_COMMANDS` | 88 | **removing** a command: accepted so an old file does not error, then ignored |
+| `uCFG.RETIRED_COMMANDS` | 105 | **removing** a command: accepted so an old file does not error, then ignored |
 | `uCFG.OWNED_BY_A_STORE` | 40 | a name the RADIO / KEYER / CLUSTER library owns, not the settings model |
 | `uCFG.TryApplyCommandAction` | 4 | commands that DO something rather than set something |
-| `uRadioConfigApply.MIGRATED_COMMANDS` | 247 | seeding the store from a legacy `tr4w.ini` |
+| `uRadioConfigApply.MIGRATED_COMMANDS` | 233 | seeding the store from a legacy `tr4w.ini` |
 | `uRadioConfigLegacyMap` | 111 | legacy key → store field |
 | `ApplyJSONOwnedRadioKey` arms | 29 | the radio library's own per-slot keys |
 
@@ -248,11 +249,40 @@ operator to run the conversion once.
 
 ## Removing a setting
 
-1. Delete the property and its registration.
+1. Delete the property and its registration -- and its `Alias(...)` row, its
+   caption resourcestring, its Preferences placement (`TPrefsForm` `Place`
+   row), and the whole group if it was a group of one (field, property,
+   `Create` **and** `Free`).
 2. Add the command name to `RETIRED_COMMANDS` — otherwise an operator whose
    file still names it gets a **modal** *"invalid statement in config file"*,
-   once per stale line. That is the only reason the list exists.
-3. Update the frozen vocabulary literal and the `RetiredCommandCount` floor.
+   once per stale line. That is the only reason the list exists. Take it out
+   of `uRadioConfigApply.MIGRATED_COMMANDS` too: seeding a retired name from
+   an old ini puts a value in the bucket that nothing applies.
+3. Update the frozen vocabulary literal, the `names.Count` ratchet and the
+   `RetiredCommandCount` floor (`uTestSettingsModel`), and pin that a
+   `tr4w.json` still carrying the old member loads
+   (`uTestSettingsFreshInstall`). No loader change is needed: the
+   de-streamer skips a member no property carries, and the next save drops it.
+4. Translations: mark the caption obsolete (`#~`) in the 21
+   `i18n/tr4w_*.po`, never delete it and never run `pas2po`. `po_prune.py`
+   handles only `TC_`/`RC_` names, so for an `RS_` caption set
+   `obsolete = True` on its entry through `tools/i18n/pofile.py`
+   (`read_po`/`write_po`, lossless; precedent 6e70eb88). Then
+   drop it from `tr4w/languages/tr4w_laz.pot`. Help:
+   `python tools/i18n/help_add.py --remove "<COMMAND>"` (dry run first).
+5. Regenerate `SETTINGS_INVENTORY.md`.
+
+The worked example is COUNTRY INFORMATION FILE and SHOW ALL SERIAL PORTS
+(2026-11-21): neither had a reader here or in D7.
+
+A name with NO property -- one whose feature went earlier but whose name
+stayed in `MIGRATED_COMMANDS` -- skips steps 1 and 3 except the
+`RetiredCommandCount` floor. The six parallel-port names (LPT1/2/3 BASE
+ADDRESS, RELAY CONTROL PORT, STEREO CONTROL PORT, USE CONTROL PORT; NY4I,
+2026-11-21) are that case: until they joined `RETIRED_COMMANDS`, no arm of
+`CheckCommand` accepted them, so an old file naming one raised the modal.
+Their orphaned captions, including the deleted Preferences controls'
+`tprefsform.*` entries, went `#~` the same way.
 
 ## Moving a setting from the settings object into a store
 

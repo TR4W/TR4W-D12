@@ -183,8 +183,7 @@ You own how spots reach TR4W and how they are shown.
   `FoundCommand` paints `"X" command is executed.` after every handler returns, so a
   handler that QuickDisplays a refusal is overwritten; a command's own answer goes
   in `GCommandNotice` (`uProcessCommand`). The last spot SENT is session state, not
-  saved. The two settings' help text is in `uSettingsModel` comments and
-  `KNOWN_HELP_GAPS` until the `help_en.po` batch.
+  saved. The two settings' help text is in `help_en.po` (and the `uSettingsModel` comments).
 
 ## Open
 

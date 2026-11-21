@@ -543,8 +543,8 @@ Facts that bite:
   click; a toggle blanks the stale result.
 * **A for-in over an untyped literal array of strings truncates to the first element's width**
   (`['CLUBLOG', 'CLOUDLOG']` gave `CLOUDLO`). Use a typed `array of string` constant. A test found it.
-* NOT built and for NY4I: Q12's plain-http credential choice; help text for the two settings (they are in
-  `KNOWN_HELP_GAPS`); an OS trust-store option; a per-destination choice for the download verbs (CTY, TRMASTER,
+* NOT built and for NY4I: Q12's plain-http credential choice; help text for the two settings (now written in
+  `help_en.po`, AGENT WRITTEN until reviewed); an OS trust-store option; a per-destination choice for the download verbs (CTY, TRMASTER,
   POTA, call history, SCP, version check obey the master alone).
 
 ## Cloudlog / Wavelog provider (issue 204, 2026-11-07)

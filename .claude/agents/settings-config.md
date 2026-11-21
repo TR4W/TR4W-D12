@@ -42,9 +42,10 @@ Preferences showed three rows for one value. They went; the parser still resolve
 registration of any property. Hand-wired controls get the same hint
 from `AddHandWiredToSearchIndex` via `uSettingsBinding.ApplyCommandHelpHint`. The
 program does NOT read `commands_help_*.ini`; that is `ini2po.py`'s input.
-`uTestCommandHelp.KNOWN_HELP_GAPS` must list every registered command with no
-English help, exactly -- so a new setting fails there until it has help or is
-listed. `ini2po.py --todo --write-doc` writes `docs/HELP_TEXT_GAPS.md` from
+`uTestCommandHelp` pins ZERO registered commands without English help (the
+KNOWN_HELP_GAPS list is gone, 2026-11-21) -- so a new setting fails there until
+its entry is written in `i18n/help_en.po` and propagated with
+`tools/i18n/help_add.py`. `ini2po.py --todo --write-doc` writes `docs/HELP_TEXT_GAPS.md` from
 `settings_inventory.collect()` (no CFGCA). A dev tree has no `target\help\`, so
 a dev run shows no tooltips.
 
@@ -405,6 +406,24 @@ station setting.
   M10 S2.** Before that `CheckCommand` logged every occurrence, though this
   file and CLAUDE.md said "once". `RetiredCommandFirstSighting` is the latch;
   `ForgetRetiredCommandSightings` is for tests.
+- **COUNTRY INFORMATION FILE AND SHOW ALL SERIAL PORTS ARE RETIRED
+  (2026-11-21, NY4I)** -- registered, shown in Preferences, read by nothing
+  here or in D7. The worked example of REMOVING a setting
+  (`docs/ADDING_A_SETTING.md`, "Removing a setting"): `Settings.SerialPorts`
+  went whole, `Settings.Country` kept `UpdateCheckOnStartup`. Captions are
+  `#~` in the catalogues, help removed by `help_add.py --remove`. **THE SIX
+  PARALLEL-PORT NAMES ARE RETIRED TOO (2026-11-21, confirmed by NY4I: "all
+  retired")**: LPT1/2/3 BASE ADDRESS, RELAY CONTROL PORT, STEREO CONTROL PORT
+  and USE CONTROL PORT. No property carried them; they are in
+  `RETIRED_COMMANDS` (105 names) and out of `MIGRATED_COMMANDS` (233). Before
+  that, no `CheckCommand` arm accepted them, so an old file naming one raised
+  the modal. Their `RS_HARDWARE_CTRLJ_*` captions, the dead
+  `TC_SHOW_ALL_SERIAL_PORTS` / `TC_RELAYCONTROLPORTPADDLEPORT` strings and the
+  deleted Preferences controls' `tprefsform.*` entries are `#~`; the LPT help
+  is removed. `logk1ea.ReportControlPortUnavailable` (no caller) and the
+  parallel-port write path in `logk1ea` / `tree.Lpt*BaseAddress` were left
+  for a separate decision. TUNE WITH DITS and CALL WINDOW SHOW ALL SPOTS are NOT retired (issues 353,
+  354: to be implemented).
 - **FREQUENCY POLL RATE MOVED INTO THE RADIO LIBRARY (issue 235 step 3,
   2026-11-06)** -- the worked example of moving a setting into a store, written
   up in `docs/ADDING_A_SETTING.md`. The property, alias, registration and
@@ -424,7 +443,7 @@ station setting.
   enabling one is stored in the OPEN log only -- aliased, default off / `''`,
   placed at Contest > Initial exchange. Read once at contest open
   (`LOGDUPE.LoadCallHistoryFile`); changing them mid-session takes effect at
-  the next open. No help text yet (`KNOWN_HELP_GAPS`). Both file rows
+  the next open. Help text: see `help_en.po`. Both file rows
   (and INITIAL EXCHANGE FILENAME) have a Browse... button in Preferences
   (`TPrefsForm.AddFileBrowseButton`); a call history file is stored BARE
   when the lookup finds the picked file by its name
@@ -516,7 +535,7 @@ format's stated policy.
 `ValueForLog`), default `''`, trimmed by its setter, at most
 `TAILCAT_ADDRESS_MAX_LENGTH` = 1024 by a registered value check
 (`TailcatAddressLengthIsAllowed`). Hand-wired on Preferences > Network like its
-three siblings (no `RegisterModelSetting`, so no `KNOWN_HELP_GAPS` entry; no
+three siblings (no `RegisterModelSetting`, so the help pin does not apply; no
 `help_en.po` text yet). **`ApplyAndStoreCommand` used to send every owned value
 through `CheckCommand`'s ShortString parameters, cutting it at 255 characters in
 silence -- and the value check then judged the cut copy.** Issue 293 lifted the
@@ -704,8 +723,8 @@ section**. The rule is by HOW A VALUE ARRIVED, not a property list:
 existed loads True (the loader leaves a property the file does not carry at its constructor default).
 **Neither is in `uCFG.SHARED_WITH_PEERS`** -- an allow-list, so a new setting is local by default;
 pinned in `uTestPlainHttpUrl` -- one position must not switch another's certificate checking off.
-Vocabulary count 306 (derived names: group `Hamscore`/`Score` + `VerifyServer`). Help text is not
-written (both are in `KNOWN_HELP_GAPS`). An external logger's choice is a definition field, not a setting.
+Vocabulary count 306 (derived names: group `Hamscore`/`Score` + `VerifyServer`). Help text:
+in `help_en.po`. An external logger's choice is a definition field, not a setting.
 
 ## The setup wizard writes through the same doors (2026-11-14)
 
