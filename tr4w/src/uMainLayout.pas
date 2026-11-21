@@ -3,10 +3,9 @@ unit uMainLayout;
 (* THE MAIN WINDOW'S GEOMETRY, AS ARITHMETIC AND NOTHING ELSE.
 
   Every rectangle the main window's controls take is a function of the scale
-  step ws (Settings.MainWindow.WindowSize + 12, 13..27) and, for the band
-  below the log, of the log's height. Those functions lived inline in
-  MainUnit.CreateMainWindow and uMainGrids.PositionMainGrids, where no test
-  could reach them and only the default scale was ever checked (Lint-
+  step ws (Settings.MainWindow.WindowSize + 12, 13..27). Those functions lived
+  inline in MainUnit.CreateMainWindow and uMainGrids.PositionMainGrids, where
+  no test could reach them and only the default scale was ever checked (Lint-
   FormOverlap reads the .lfm, which shows ws 17).
 
   THIS UNIT HOLDS NO CONTROL AND USES NO WIDGET SET. MainUnit.LayOutMainWindow
@@ -15,9 +14,26 @@ unit uMainLayout;
   types unit, not a widget set), as uCategoryWindow does.
 
   THE LAYOUT, in ws units (docs/MAIN_WINDOW_WIDTH_PLAN.md, section a6): a grid
-  46 columns wide. Rows 0..6 are the top band, then the log, then rows 7..13
-  below it. A TWindows[] row with mweB = 1 is in the lower band, and its top
-  is mweiY * ws + the log's height.
+  46 columns wide. Rows 0..6 are the TOP BAND, then the log, then rows 7..13
+  in the BOTTOM BAND below it.
+
+  THE BANDS ARE CONTAINERS (plan stage e5, 2026-11-21). uMainForm.lfm holds
+  three panels, and every control is a child of one of them:
+
+    pnlTopBand      alTop, 7 * ws tall: the clocks, the totals grid, Total
+                    Score and Dupe Info;
+    pnlNeedsBlock   alRight INSIDE the top band, 14 * ws wide: the need
+                    headers, Beam Heading and the need strips (columns 32..46),
+                    so it follows the window's right edge;
+    pnlBottomBand   alBottom above the status strip, 7 * ws + 6 tall: every
+                    TWindows[] row with mweB = 1, the entry fields, the
+                    progress bars, the minitour row and the possible-call
+                    strip.
+
+  The log is alClient and takes whatever is left, so a taller or wider window
+  needs no code. EVERY RECTANGLE BELOW IS IN ITS BAND'S OWN COORDINATES, which
+  is why none of them takes the log's height: the log is no longer anybody's y
+  origin. BandOrigin turns one back into window coordinates, for the tests.
 
   tools/gen_main_elements.py computes the same formulas at ws 17 for the
   design-time picture. Two languages, so two copies; keep them in step. *)
@@ -38,10 +54,26 @@ const
    (* The width of the layout, in ws. *)
    LAYOUT_COLUMNS = 46;
 
-   (* THE LOG'S HEIGHT IN ROWS: the minimum the layout is built at (and so the
-     window's MinHeight), and how tall a first run opens. ROW COUNT, retired
-     2026-11-21, was 5 by default. *)
-   MAIN_LOG_MINIMUM_ROWS   = 5;
+   (* EACH BAND IS SEVEN ROWS. The bottom band has 6 px more, below the
+     possible-call strip and above the status strip. *)
+   BAND_ROWS          = 7;
+   BOTTOM_BAND_MARGIN = 6;
+
+   (* THE RIGHT-HAND BLOCK OF THE TOP BAND: the 14 columns from column 32. A
+     TWindows[] row of the top band that starts at or after this column lives
+     in pnlNeedsBlock. *)
+   NEEDS_BLOCK_COLUMNS      = 14;
+   NEEDS_BLOCK_FIRST_COLUMN = LAYOUT_COLUMNS - NEEDS_BLOCK_COLUMNS;
+
+   (* THE LOG'S HEIGHT IN ROWS.
+     - MINIMUM: the fewest the window may be dragged down to -- NY4I's three
+       (2026-11-21). It is the window's MinHeight; see MinLogHeight.
+     - START: the height CreateMainWindow builds the window at, and so the
+       window every absolute position in the e2 layout was measured from. ROW
+       COUNT, retired 2026-11-21, was 5 by default.
+     - FIRST_RUN: how tall a window with no saved size opens. *)
+   MAIN_LOG_MINIMUM_ROWS   = 3;
+   MAIN_LOG_START_ROWS     = 5;
    MAIN_LOG_FIRST_RUN_ROWS = 12;
 
    (* THE TOTALS GRID'S SHAPE, AND THE SINGLE SOURCE OF TRUTH FOR IT. See
@@ -55,40 +87,66 @@ type
      the same two, but that unit is not a leaf. *)
    TEntryFieldRow = (efrCall, efrExchange);
 
-(* 46 * ws: the client width the layout fills. *)
+   (* THE THREE CONTAINERS a control can live in -- see the unit note. *)
+   TMainBand = (mbTop, mbNeeds, mbBottom);
+
+(* 46 * ws: the client width the layout fills, and the window's MinWidth. *)
 function LayoutWidth(const aWS: integer): integer;
 
 (* The log grid's row height, and the height of the log pane for aRows rows.
   30 was the Win32 list view's header and border allowance; it is kept so the
-  five-row layout is the pixel height it always was. *)
+  five-row start layout is the pixel height it always was. *)
 function LogRowHeight(const aWS: integer): integer;
 function LogHeightForRows(const aRows, aWS: integer): integer;
 
-(* EVERYTHING THAT IS NOT THE LOG OR THE STATUS STRIP: seven rows above the
-  log, seven below it, and 6 px. The client height is this, plus the log,
-  plus the status strip (whose height is the widget set's). *)
+(* THE SMALLEST LOG PANE THAT SHOWS MAIN_LOG_MINIMUM_ROWS WHOLE DATA ROWS: the
+  header row, those rows, and LOG_FRAME_ALLOWANCE for the grid's border. Not
+  LogHeightForRows: its 30 px was a list view's allowance, and at ws 27 a
+  29 px header leaves it one pixel for a border the widget set draws wider. *)
+function MinLogHeight(const aWS: integer): integer;
+
+(* THE BANDS' OWN SIZES. *)
+function TopBandHeight(const aWS: integer): integer;
+function BottomBandHeight(const aWS: integer): integer;
+function NeedsBlockWidth(const aWS: integer): integer;
+
+(* EVERYTHING THAT IS NOT THE LOG OR THE STATUS STRIP: both bands. The client
+  height is this, plus the log, plus the status strip (whose height is the
+  widget set's). *)
 function FixedBandsHeight(const aWS: integer): integer;
 
-(* THE CLIENT HEIGHT AT THE MINIMUM LOG, LESS THE STATUS STRIP. *)
+(* THE SMALLEST CLIENT HEIGHT, LESS THE STATUS STRIP: both bands and
+  MinLogHeight. *)
 function MinClientHeight(const aWS: integer): integer;
 
-(* The log pane. *)
-function LogRect(const aWS, aLogHeight: integer): TRect;
+(* THE CLIENT HEIGHT CreateMainWindow BUILDS, LESS THE STATUS STRIP: both bands
+  and the MAIN_LOG_START_ROWS log. *)
+function StartClientHeight(const aWS: integer): integer;
 
 (* Whether the element-creation loop gives aElement a panel at all. A row
   whose style is 0..2 is the window itself, a duplicate, or a control built by
   its own routine (the entry fields, the log, the possible-call strip). *)
 function ElementHasPanel(const aElement: TMainWindowElement): boolean;
 
-(* An element's panel, from its TWindows[] row. *)
-function ElementRect(const aElement: TMainWindowElement;
-                     const aWS, aLogHeight: integer): TRect;
+(* WHICH BAND AN ELEMENT'S PANEL IS A CHILD OF: mweB = 1 is the bottom band; a
+  top-band row from column NEEDS_BLOCK_FIRST_COLUMN on is the needs block. *)
+function ElementBand(const aElement: TMainWindowElement): TMainBand;
 
-(* The entry fields: (3 * ws) div 2 - 1 tall, the exchange one pixel below
-  the call. *)
+(* An element's panel, from its TWindows[] row, IN ITS BAND. *)
+function ElementRect(const aElement: TMainWindowElement;
+                     const aWS: integer): TRect;
+
+(* WHERE A BAND'S (0, 0) SITS IN THE WINDOW'S CLIENT AREA, for a window
+  aClientWidth wide whose log is aLogHeight tall. The program never asks this
+  -- the LCL places the bands -- but a test that holds the window to its old
+  absolute positions does. *)
+function BandOrigin(const aBand: TMainBand;
+                    const aWS, aClientWidth, aLogHeight: integer): TPoint;
+
+(* The entry fields, in the bottom band: (3 * ws) div 2 - 1 tall, the exchange
+  one pixel below the call. *)
 function EntryFieldHeight(const aWS: integer): integer;
-function EntryFieldRect(const aRow: TEntryFieldRow;
-                        const aWS, aLogHeight: integer): TRect;
+function EntryFieldRect(const aRow: TEntryFieldRow; const aWS: integer): TRect;
 
 (* THE FONT HEIGHTS THAT FOLLOW ws, all character heights in pixels.
   aFontSize is Settings.Font.Size (0..2, a step added to the scale).
@@ -101,34 +159,40 @@ function ElementFontHeight(const aWS, aFontSize: integer): integer;
 function EntryFontHeight(const aWS: integer): integer;
 function WSJTXFontHeight(const aWS, aFontSize: integer): integer;
 
-(* The lower band's controls that are not TWindows[] rows. *)
-function LastHourBarRect(const aWS, aLogHeight: integer): TRect;
-function RateBarRect(const aWS, aLogHeight: integer): TRect;
+(* The bottom band's controls that are not TWindows[] rows, in that band. *)
+function LastHourBarRect(const aWS: integer): TRect;
+function RateBarRect(const aWS: integer): TRect;
 (* The minitour row (only when MINITOUR DURATION is set): the quick-command
   panel narrowed to make room, the tour's progress bar and its readout. *)
-function MinitourQuickCommandRect(const aWS, aLogHeight: integer): TRect;
-function TourDurationBarRect(const aWS, aLogHeight: integer): TRect;
-function TourDurationTextRect(const aWS, aLogHeight: integer): TRect;
-(* The possible-call strip, its row height and its column width. *)
-function PossibleCallRect(const aWS, aLogHeight: integer): TRect;
+function MinitourQuickCommandRect(const aWS: integer): TRect;
+function TourDurationBarRect(const aWS: integer): TRect;
+function TourDurationTextRect(const aWS: integer): TRect;
+(* THE POSSIBLE-CALL STRIP, at the layout width. It is alBottom in the band
+  with BOTTOM_BAND_MARGIN below it, so the program sets only its height; the
+  rectangle is where that puts it in a band LayoutWidth wide. *)
+function PossibleCallRect(const aWS: integer): TRect;
 function PossibleCallColumnWidth(const aWS: integer): integer;
 
-(* THE TOTALS GRID'S COLUMNS. Column 0 is the label column, ws * 5 wide to line
-  up with the clocks above it; column 7 ("All") is three units wide; the band
-  columns between them are one pitch, Round(ws * 2.5), each, starting AFTER the
-  label column. *)
+(* THE TOTALS GRID'S COLUMNS, in the top band. Column 0 is the label column,
+  ws * 5 wide to line up with the clocks above it; column 7 ("All") is three
+  units wide; the band columns between them are one pitch, Round(ws * 2.5),
+  each, starting AFTER the label column. *)
 function TotalsColumnPitch(const aWS: integer): integer;
 function TotalsLabelWidth(const aWS: integer): integer;
 procedure TotalsColumnGeometry(const aWS, aColumn: integer;
                               out aLeft, aWidth: integer);
 
-(* THE LEFT EDGE OF THE NEED STRIPS: 14 units in from the right of the client.
-  Their row labels start here and the band cells follow, one 2 * ws pitch
-  each. *)
-function NeedLeft(const aClientWidth, aWS: integer): integer;
+(* THE NEED STRIPS, in the needs block: each row's label starts at the
+  block's left edge and the band cells follow, one 2 * ws pitch each. *)
 function NeedCellPitch(const aWS: integer): integer;
 
 implementation
+
+const
+   (* THE GRID'S BORDER, generously: a win32 bsSingle grid draws a 2 px client
+     edge on each side. uTestMainLayout measures the rows at MinHeight on the
+     shown form, and gtk2 and cocoa are on BENCH_QUEUE. *)
+   LOG_FRAME_ALLOWANCE = 8;
 
 function LayoutWidth(const aWS: integer): integer;
 begin
@@ -145,19 +209,39 @@ begin
    Result := 30 + aRows * LogRowHeight(aWS);
 end;
 
+function MinLogHeight(const aWS: integer): integer;
+begin
+   Result := (MAIN_LOG_MINIMUM_ROWS + 1) * LogRowHeight(aWS) + LOG_FRAME_ALLOWANCE;
+end;
+
+function TopBandHeight(const aWS: integer): integer;
+begin
+   Result := BAND_ROWS * aWS;
+end;
+
+function BottomBandHeight(const aWS: integer): integer;
+begin
+   Result := BAND_ROWS * aWS + BOTTOM_BAND_MARGIN;
+end;
+
+function NeedsBlockWidth(const aWS: integer): integer;
+begin
+   Result := NEEDS_BLOCK_COLUMNS * aWS;
+end;
+
 function FixedBandsHeight(const aWS: integer): integer;
 begin
-   Result := 6 + aWS * 14;
+   Result := TopBandHeight(aWS) + BottomBandHeight(aWS);
 end;
 
 function MinClientHeight(const aWS: integer): integer;
 begin
-   Result := FixedBandsHeight(aWS) + LogHeightForRows(MAIN_LOG_MINIMUM_ROWS, aWS);
+   Result := FixedBandsHeight(aWS) + MinLogHeight(aWS);
 end;
 
-function LogRect(const aWS, aLogHeight: integer): TRect;
+function StartClientHeight(const aWS: integer): integer;
 begin
-   Result := Bounds(0, aWS * 7, LayoutWidth(aWS), aLogHeight);
+   Result := FixedBandsHeight(aWS) + LogHeightForRows(MAIN_LOG_START_ROWS, aWS);
 end;
 
 function ElementHasPanel(const aElement: TMainWindowElement): boolean;
@@ -165,14 +249,65 @@ begin
    Result := TWindows[aElement].mweiStyle > 2;
 end;
 
-function ElementRect(const aElement: TMainWindowElement;
-                     const aWS, aLogHeight: integer): TRect;
+function ElementBand(const aElement: TMainWindowElement): TMainBand;
 begin
-   Result := Bounds(TWindows[aElement].mweiX * aWS,
-                    TWindows[aElement].mweiY * aWS +
-                       TWindows[aElement].mweB * aLogHeight,
+   if TWindows[aElement].mweB = 1 then
+      begin
+      Result := mbBottom;
+      end
+   else if TWindows[aElement].mweiX >= NEEDS_BLOCK_FIRST_COLUMN then
+      begin
+      Result := mbNeeds;
+      end
+   else
+      begin
+      Result := mbTop;
+      end;
+end;
+
+function ElementRect(const aElement: TMainWindowElement;
+                     const aWS: integer): TRect;
+var
+   column, row: integer;
+begin
+   column := TWindows[aElement].mweiX;
+   row := TWindows[aElement].mweiY;
+   case ElementBand(aElement) of
+      mbNeeds:
+         begin
+         column := column - NEEDS_BLOCK_FIRST_COLUMN;
+         end;
+      mbBottom:
+         begin
+         row := row - BAND_ROWS;
+         end;
+      else
+         begin
+         (* mbTop: the top band's origin is the window's. *)
+         end;
+      end;
+   Result := Bounds(column * aWS, row * aWS,
                     TWindows[aElement].mweiWidth * aWS,
                     TWindows[aElement].mweiHeight * aWS);
+end;
+
+function BandOrigin(const aBand: TMainBand;
+                    const aWS, aClientWidth, aLogHeight: integer): TPoint;
+begin
+   case aBand of
+      mbNeeds:
+         begin
+         Result := Point(aClientWidth - NeedsBlockWidth(aWS), 0);
+         end;
+      mbBottom:
+         begin
+         Result := Point(0, TopBandHeight(aWS) + aLogHeight);
+         end;
+      else
+         begin
+         Result := Point(0, 0);
+         end;
+      end;
 end;
 
 function EntryFieldHeight(const aWS: integer): integer;
@@ -180,12 +315,11 @@ begin
    Result := ((aWS * 3) div 2) - 1;
 end;
 
-function EntryFieldRect(const aRow: TEntryFieldRow;
-                        const aWS, aLogHeight: integer): TRect;
+function EntryFieldRect(const aRow: TEntryFieldRow; const aWS: integer): TRect;
 var
    top: integer;
 begin
-   top := aLogHeight + aWS * 8;
+   top := aWS;
    if aRow = efrExchange then
       begin
       top := top + EntryFieldHeight(aWS) + 1;
@@ -217,34 +351,35 @@ begin
       end;
 end;
 
-function LastHourBarRect(const aWS, aLogHeight: integer): TRect;
+function LastHourBarRect(const aWS: integer): TRect;
 begin
-   Result := Bounds(aWS * 28, aLogHeight + aWS * 10, aWS * 5, aWS);
+   Result := Bounds(aWS * 28, aWS * 3, aWS * 5, aWS);
 end;
 
-function RateBarRect(const aWS, aLogHeight: integer): TRect;
+function RateBarRect(const aWS: integer): TRect;
 begin
-   Result := Bounds(aWS * 33, aLogHeight + aWS * 10, aWS * 5, aWS);
+   Result := Bounds(aWS * 33, aWS * 3, aWS * 5, aWS);
 end;
 
-function MinitourQuickCommandRect(const aWS, aLogHeight: integer): TRect;
+function MinitourQuickCommandRect(const aWS: integer): TRect;
 begin
-   Result := Bounds(0, aLogHeight + aWS * 12, aWS * 33, aWS);
+   Result := Bounds(0, aWS * 5, aWS * 33, aWS);
 end;
 
-function TourDurationBarRect(const aWS, aLogHeight: integer): TRect;
+function TourDurationBarRect(const aWS: integer): TRect;
 begin
-   Result := Bounds(aWS * 33, aLogHeight + aWS * 12, aWS * 5, aWS);
+   Result := Bounds(aWS * 33, aWS * 5, aWS * 5, aWS);
 end;
 
-function TourDurationTextRect(const aWS, aLogHeight: integer): TRect;
+function TourDurationTextRect(const aWS: integer): TRect;
 begin
-   Result := Bounds(aWS * 38, aLogHeight + aWS * 12, aWS * 8, aWS);
+   Result := Bounds(aWS * 38, aWS * 5, aWS * 8, aWS);
 end;
 
-function PossibleCallRect(const aWS, aLogHeight: integer): TRect;
+function PossibleCallRect(const aWS: integer): TRect;
 begin
-   Result := Bounds(0, aLogHeight + aWS * 13, LayoutWidth(aWS), aWS);
+   Result := Bounds(0, BottomBandHeight(aWS) - BOTTOM_BAND_MARGIN - aWS,
+                    LayoutWidth(aWS), aWS);
 end;
 
 function PossibleCallColumnWidth(const aWS: integer): integer;
@@ -286,11 +421,6 @@ begin
          aWidth := TotalsColumnPitch(aWS);
          end;
       end;
-end;
-
-function NeedLeft(const aClientWidth, aWS: integer): integer;
-begin
-   Result := aClientWidth - aWS * 14;
 end;
 
 function NeedCellPitch(const aWS: integer): integer;

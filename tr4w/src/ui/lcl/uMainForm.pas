@@ -23,10 +23,11 @@ unit uMainForm;
 
   NOT A DESIGNED .lfm, deliberately.  The main window's layout is a TABLE TIMES
   A RUNTIME SCALE FACTOR: every element is placed at TWindows[e].mweiX * ws,
-  where ws derives from the operator's font-size setting, and the vertical
-  origin depends on EditableLogHeight, which is MEASURED at run time from the
-  ListView.  A designed form would freeze 50 positions at one font size.  So the
-  form is created with CreateNew and the placement loop is kept.
+  where ws derives from the operator's font-size setting.  A designed form
+  would freeze 50 positions at one font size.  So the form is created with
+  CreateNew and the placement loop is kept.  (Superseded: the form IS designed
+  now, see TTR4WMainForm, and since plan stage e5 its controls live in three
+  band panels, each placed in its band's own coordinates.)
 
   THE ONE OBSERVABLE CHANGE: the window's Win32 CLASS name.  It was 'TR4W'; an
   LCL form's class is 'Window', hardcoded at win32int.pp:240 and used for forms
@@ -71,8 +72,8 @@ type
 
     WHAT IT DOES NOT OWN: the positions of the 50 legacy elements.  Those are
     placed at TWindows[e].mweiX * ws, where ws comes from the operator's
-    font-size setting and the vertical origin is measured from the log's height
-    at run time.  Freezing them into a designed layout would be a regression.
+    font-size setting, in the coordinates of the band each one is a child of.
+    Freezing them into a designed layout would be a regression.
     A designed control is still REPOSITIONED by that loop; being in the .lfm
     gives it an editable identity, not a fixed geometry. }
   TTR4WMainForm = class(TForm)
@@ -118,9 +119,28 @@ type
       data.  NY4I has been told and accepts it.  Do not wire it into
       tr4wColors. *)
     sbStatus: TStatusBar;
+
+    (* THE THREE BANDS EVERY CONTROL LIVES IN (plan stage e5, 2026-11-21).
+
+      pnlTopBand is alTop and holds the seven rows above the log; pnlNeedsBlock
+      is alRight inside it and holds the need headers, Beam Heading and the
+      need strips, so they follow the window's right edge; pnlBottomBand is
+      alBottom, above sbStatus, and holds everything below the log. The log is
+      alClient between them.
+
+      THEY REPLACE ANCHORS CAPTURED FROM ABSOLUTE POSITIONS. A child's
+      position is in its band's own coordinates, and the band is placed by
+      Align, so a taller or wider window needs no code. Their sizes follow ws,
+      and are PlaceMainBands' to set. Generated, with their children, by
+      tools/gen_main_elements.py. *)
+    pnlTopBand: TPanel;
+    pnlNeedsBlock: TPanel;
+    pnlBottomBand: TPanel;
+
     { PUBLISHED so the streaming loader finds it in uMainForm.lfm, and so
-      Lint-FormFields can check the two agree.  Declared in the designer,
-      REPOSITIONED at run time -- see SetPossibleCallBounds. }
+      Lint-FormFields can check the two agree.  Declared in the designer, in
+      pnlBottomBand, alBottom; its height and cell size are set at run time --
+      see SetPossibleCallSize. }
     lstPossibleCall: TStringGrid;
 
     { BEGIN GENERATED MAIN-WINDOW ELEMENT FIELDS -- tools/gen_main_elements.py }
@@ -599,17 +619,16 @@ function RaisedWithTheMainWindow(const aIsMain, aShowing, aMinimized,
   DESIGNED IN uMainForm.lfm (a TStringGrid that holds its callsigns) and
   configured here. It replaced an owner-drawn Win32 LISTBOX.
 
-  ITS GEOMETRY IS NOT APPLIED HERE: its place is the runtime scale times a
-  table entry, so it is MainUnit.LayOutMainWindow's, through
-  SetPossibleCallBounds. Designed identity, runtime placement -- the two are
-  not in conflict (NY4I, 2026-08-22). Each cell's own colours come from the
-  strip's OnPrepareCanvas. *)
+  ITS GEOMETRY IS NOT APPLIED HERE: it is alBottom in pnlBottomBand (the
+  .lfm), and its height and cell size follow the runtime scale, so they are
+  MainUnit.LayOutMainWindow's, through SetPossibleCallSize. Designed identity,
+  runtime size -- the two are not in conflict (NY4I, 2026-08-22). Each cell's
+  own colours come from the strip's OnPrepareCanvas. *)
 procedure CreateTR4WPossibleCallList;
 
-(* THE STRIP'S PLACE, ROW HEIGHT AND COLUMN WIDTH -- MainUnit.LayOutMainWindow's
-  to decide; CreateTR4WPossibleCallList gives it only its colours. *)
-procedure SetPossibleCallBounds(const aLeft, aTop, aWidth, aHeight,
-                                aItemHeight, aColumnWidth: integer);
+(* THE STRIP'S HEIGHT, ROW HEIGHT AND COLUMN WIDTH -- MainUnit.LayOutMainWindow's
+  to decide. Its place and width are its band's: it is alBottom there. *)
+procedure SetPossibleCallSize(const aHeight, aItemHeight, aColumnWidth: integer);
 
 
 (* THE EDITABLE LOG -- the contest log on the main window.
@@ -648,9 +667,6 @@ procedure TR4WEditableLogRefresh;
 procedure TR4WEditableLogApplyColors;
 procedure TR4WEditableLogSetGridLines(const aOn: boolean);
 
-(* Where the grid sits. *)
-procedure TR4WEditableLogSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
-
 (* Put the newest QSO in view, which is where an operator looks. *)
 procedure TR4WEditableLogScrollToEnd;
 
@@ -682,7 +698,6 @@ function  TR4WEditableLogCallsignAt(const aIndex: Int64): string;
   from its scan, and a handful of dupes is not worth a second pass. *)
 procedure TR4WPreviousDupesSet(const aQsos: array of ContestExchange);
 procedure TR4WPreviousDupesShow(const aVisible: boolean);
-procedure TR4WPreviousDupesSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
 
 (* THE MAIN WINDOW FONT AND aRowHeight ON BOTH LOG GRIDS -- the editable log
   and, once it exists, the B4 list. Both follow the main window's scale. *)
@@ -777,11 +792,8 @@ procedure EnableElement(const aElement: TMainWindowElement; const aEnabled: bool
 (* THE HEIGHT THE STRIP TAKES, ASKED OF THE CONTROL.
 
   MainUnit adds it to the client height it hands MakeMainWindowResizeable, so
-  the strip is space the window GAINED.  It has to be added: an absolutely
-  positioned child anchors to the parent's FULL ClientHeight -- DoPosition
-  reads ParentClientHeight (lcl/include/wincontrol.inc) -- so an alBottom
-  sibling does not push one out of the way, it covers it.  Every control on
-  this form is absolutely positioned; not one uses Align.
+  the strip is space the window GAINED: the bottom band sits on top of it,
+  both alBottom (plan stage e5), and nothing above it moved when it was added.
 
   ASKED, NOT STATED, because a status bar's height is the widget set's
   business and differs between Windows, gtk2 and Cocoa. *)
@@ -866,22 +878,35 @@ procedure SetElementFont(const aElement: TMainWindowElement;
                          const aName: string; const aHeight: integer;
                          const aBold: boolean);
 
-(* Decide which window edge every control on the main window holds to, so the
-  window can be resized. Called once, after the layout is built. *)
-(* Put the main window back where -- and at what height -- it was left.
+(* Put the main window back where -- and at what size -- it was left.
   Reads the rect FindAndSaveRectOfAllWindows wrote. A rect with no size (a
-  first run) keeps the laid-out height plus aUnsavedExtraHeight. *)
+  first run) keeps the laid-out size, plus aUnsavedExtraHeight in height. A
+  saved width narrower than the window's MinWidth is widened to it. *)
 procedure RestoreMainWindowBounds(const aSaved: TRect;
                                   const aUnsavedExtraHeight: integer);
 
-(* Let the operator resize the main window vertically. Width is pinned:
-  see the note at the call site.
+(* Size the main window and set what the operator may resize it to: never
+  narrower than aClientWidth (the layout width), never shorter than
+  aMinClientHeight, and otherwise free in both axes (plan stage e3). The
+  constraints are released before the client is sized, so a call at a
+  smaller scale can shrink the window.
 
-  BOTH FIGURES ARE CLIENT SIZES. The width was an OUTER size until 2026-09-09;
-  see the body for what that cost. *)
-procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight: integer);
+  ALL THREE FIGURES ARE CLIENT SIZES. The width was an OUTER size until
+  2026-09-09; see the body for what that cost. *)
+procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight,
+                                   aMinClientHeight: integer);
 
-procedure AnchorMainWindowControls;
+(* THE THREE BANDS' SIZES AT THE CURRENT CLIENT SIZE: the top band
+  aTopHeight tall, its needs block aNeedsWidth wide at the right edge, the
+  bottom band aBottomHeight tall above the status strip. MainUnit.
+  LayOutMainWindow's, from uMainLayout. See the body for why each band is
+  given its whole rectangle and not only the dimension that follows ws. *)
+procedure PlaceMainBands(const aTopHeight, aNeedsWidth, aBottomHeight: integer);
+
+(* ONE REPORT OF WHERE THE LAYOUT LANDED: every control past its parent's
+  client area at Warn, and every control's bounds at Debug. CreateMainWindow
+  calls it once the window is sized and laid out. *)
+procedure ReportMainWindowLayout;
 
 (* THE THREE PROGRESS BARS, AND THE TOUR-DURATION READOUT BESIDE ONE OF THEM.
 
@@ -981,7 +1006,8 @@ uses
    uGetServerLog,      // the headless-sync state
    uContestRegistry,   // StoredQSOIsXQSO -- a grid row greys an X-QSO (Q98 S1)
    SysUtils,           // UpperCase
-   uCrashLog,          // OnMainThread / ReportOffMainThread / LogCaughtException
+   Math,               // Max -- a restored width is never below MinWidth
+   uCrashLog,        // OnMainThread / ReportOffMainThread / LogCaughtException
    uMacMenuBar,        // ForceMenuBarRedraw -- the macOS bar, see ScheduleMainWindowActivation
    (* Grids moved to the INTERFACE clause -- lstPossibleCall is a TDrawGrid
       and a published field's type has to be visible there. It was here
@@ -1507,7 +1533,7 @@ begin
      PLUS aUnsavedExtraHeight, since ROW COUNT was retired (2026-11-21): the
      layout is built at the log's MINIMUM height, which is also the window's
      MinHeight, and a first run opens taller than that (MainUnit's
-     MAIN_LOG_FIRST_RUN_ROWS). The log is anchored to all four edges, so the
+     MAIN_LOG_FIRST_RUN_ROWS). The log is alClient between the bands, so the
      extra goes to it. *)
    r.Left := aSaved.Left;
    r.Top := aSaved.Top;
@@ -1525,9 +1551,22 @@ begin
          end;
       end;
 
-   (* WIDTH IS THE LAYOUT'S, NEVER THE FILE'S -- Constraints pin it, and
-     handing the LCL a width it will refuse just makes the two disagree. *)
-   r.Right := r.Left + TR4WMainForm.Width;
+   (* THE WIDTH IS THE FILE'S SINCE PLAN STAGE e3, never below MinWidth.
+
+     It was the layout's, never the file's, while Constraints pinned it. A
+     file written then holds exactly that pinned Width, so an upgrade restores
+     the window it had. A saved width narrower than MinWidth -- a WINDOW SIZE
+     raised since it was saved -- is widened here rather than handed to the
+     LCL to refuse, so this rect and the window agree. *)
+   if (aSaved.Right - aSaved.Left) > 0 then
+      begin
+      r.Right := r.Left + Max(aSaved.Right - aSaved.Left,
+                              TR4WMainForm.Constraints.MinWidth);
+      end
+   else
+      begin
+      r.Right := r.Left + TR4WMainForm.Width;
+      end;
 
    TR4WMainForm.BoundsRect := r;
 end;
@@ -1542,8 +1581,10 @@ end;
   reporting an overhang in the only way a widget set can.
 
   WHICH CHILD, AND BY HOW MANY PIXELS, is the thing nobody knows. This walks
-  the form's immediate children once, after the layout is built, and names any
-  whose right or bottom edge is outside the client rectangle.
+  every control on the form once, after the layout is built, and names any
+  whose right or bottom edge is outside its PARENT'S client rectangle -- the
+  form's for a band, the band's for everything in it (plan stage e5), since
+  a band clips what it holds.
 
   ONE LINE PER OFFENDER AND A COUNT, so a clean window costs a single line.
   Written as a diagnostic on purpose: what the fix is -- a wider window,
@@ -1556,43 +1597,57 @@ var
 
 procedure ReportMainWindowOverhang;
 var
-   i:       integer;
-   c:       TControl;
-   cw, ch:  integer;
    found:   integer;
+   checked: integer;
+
+   procedure Walk(const aParent: TWinControl);
+   var
+      i:      integer;
+      c:      TControl;
+      cw, ch: integer;
+   begin
+      cw := aParent.ClientWidth;
+      ch := aParent.ClientHeight;
+      for i := 0 to aParent.ControlCount - 1 do
+         begin
+         c := aParent.Controls[i];
+
+         if not c.Visible then
+            begin
+            Continue;
+            end;
+
+         Inc(checked);
+         if ((c.Left + c.Width) > cw) or ((c.Top + c.Height) > ch) then
+            begin
+            Inc(found);
+            logger.Warn('[Layout] %s "%s" is outside %s''s client area: ' +
+                        'right %d of %d, bottom %d of %d',
+                        [c.ClassName, c.Name, aParent.Name,
+                         c.Left + c.Width, cw,
+                         c.Top + c.Height, ch]);
+            end;
+
+         if c is TWinControl then
+            begin
+            Walk(TWinControl(c));
+            end;
+         end;
+   end;
+
 begin
    if (TR4WMainForm = nil) or (logger = nil) then
       begin
       Exit;
       end;
 
-   cw := TR4WMainForm.ClientWidth;
-   ch := TR4WMainForm.ClientHeight;
    found := 0;
+   checked := 0;
+   Walk(TR4WMainForm);
 
-   for i := 0 to TR4WMainForm.ControlCount - 1 do
-      begin
-      c := TR4WMainForm.Controls[i];
-
-      if not c.Visible then
-         begin
-         Continue;
-         end;
-
-      if ((c.Left + c.Width) > cw) or ((c.Top + c.Height) > ch) then
-         begin
-         Inc(found);
-         logger.Warn('[Layout] %s "%s" is outside the client area: ' +
-                     'right %d of %d, bottom %d of %d',
-                     [c.ClassName, c.Name,
-                      c.Left + c.Width, cw,
-                      c.Top + c.Height, ch]);
-         end;
-      end;
-
-   logger.Info('[Layout] %d of %d child control(s) extend past the client ' +
-               'area (%dx%d)',
-               [found, TR4WMainForm.ControlCount, cw, ch]);
+   logger.Info('[Layout] %d of %d control(s) extend past their parent''s ' +
+               'client area (window client %dx%d)',
+               [found, checked, TR4WMainForm.ClientWidth, TR4WMainForm.ClientHeight]);
 end;
 
 (* EVERY VISIBLE CHILD, WITH ITS CLASS AND ITS BOUNDS, ONCE.
@@ -1605,7 +1660,7 @@ end;
   have made that assumption in so many days."
 
   He is right, and the arithmetic says so: the possible-call strip is
-  placed at EditableLogHeight + ws * 13 (uMainLayout.PossibleCallRect), which is six rows BELOW the bottom of
+  placed six rows down the band below the log (uMainLayout.PossibleCallRect), which is six rows BELOW the bottom of
   the log, down among the status panels. Nothing about it is under the log.
 
   SO STOP READING GEOMETRY OUT OF THE SOURCE AND ASK THE RUNNING PROGRAM. One
@@ -1614,9 +1669,32 @@ end;
   height. Whatever is sitting at the log's bottom edge will be in this list
   with a Top that matches, and there will be no interpretation involved. *)
 procedure DumpMainWindowChildren;
-var
-   i: integer;
-   c: TControl;
+
+   (* EVERY CONTROL, WITH ITS PARENT AND ITS POSITION IN THE WINDOW as well
+     as in its parent: since plan stage e5 a control's own Left and Top are
+     in its band's coordinates, and a screenshot is measured in the window's. *)
+   procedure Walk(const aParent: TWinControl; const aOriginX, aOriginY: integer);
+   var
+      i: integer;
+      c: TControl;
+   begin
+      for i := 0 to aParent.ControlCount - 1 do
+         begin
+         c := aParent.Controls[i];
+
+         logger.Debug('[Layout]   %-18s %-22s in %-14s L=%4d T=%4d W=%4d H=%4d ' +
+                      '(window %d,%d) vis=%s',
+                      [c.ClassName, c.Name, aParent.Name, c.Left, c.Top,
+                       c.Width, c.Height, aOriginX + c.Left, aOriginY + c.Top,
+                       BoolToStr(c.Visible, True)]);
+
+         if (c is TPanel) and (TPanel(c).ControlCount > 0) then
+            begin
+            Walk(TPanel(c), aOriginX + c.Left, aOriginY + c.Top);
+            end;
+         end;
+   end;
+
 begin
    if (TR4WMainForm = nil) or (logger = nil) then
       begin
@@ -1631,14 +1709,7 @@ begin
    logger.Debug('[Layout] --- main window children, client %dx%d ---',
                 [TR4WMainForm.ClientWidth, TR4WMainForm.ClientHeight]);
 
-   for i := 0 to TR4WMainForm.ControlCount - 1 do
-      begin
-      c := TR4WMainForm.Controls[i];
-
-      logger.Debug('[Layout]   %-18s %-22s L=%4d T=%4d W=%4d H=%4d vis=%s',
-                   [c.ClassName, c.Name, c.Left, c.Top, c.Width, c.Height,
-                    BoolToStr(c.Visible, True)]);
-      end;
+   Walk(TR4WMainForm, 0, 0);
 
    (* AND THE LOG GRID'S INTERNALS, because the band NY4I is pointing at is
      INSIDE it: the grid bottom and the status-panel row below meet exactly,
@@ -1765,12 +1836,20 @@ begin
                 BoolToStr(TR4WMainForm.AutoScroll, True)]);
 end;
 
-procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight: integer);
+procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight,
+                                   aMinClientHeight: integer);
 begin
    if TR4WMainForm = nil then
       begin
       Exit;
       end;
+
+   (* THE OLD CONSTRAINTS GO FIRST. They are in force while the client is
+     sized below, so a call at a smaller scale than the last one would be
+     clamped back to the old minimum. *)
+   TR4WMainForm.Constraints.MinWidth := 0;
+   TR4WMainForm.Constraints.MinHeight := 0;
+   TR4WMainForm.Constraints.MaxWidth := 0;
 
    (* THE BORDER STYLE IS SET IN THE .lfm, NOT HERE, AND THAT IS THE WHOLE
      POINT OF THIS ROUTINE'S SHAPE.
@@ -1840,7 +1919,7 @@ begin
 
      TScrollingWinControl publishes both bars with Visible defaulting TRUE.
      That is the correct default for a TScrollBox and wrong for this window:
-     every control on it is positioned absolutely from ws, nothing here scrolls
+     every control on it is positioned from ws, nothing here scrolls
      or ever has, and the vertical resize moves the log's rows rather than a
      viewport. A bar that appears on this form is always spurious.
 
@@ -1867,14 +1946,18 @@ begin
                    TR4WMainForm.Width, TR4WMainForm.Height, aClientWidth]);
       end;
 
-   ReportMainWindowOverhang;
-   DumpMainWindowChildren;
+   (* THE FLOORS, IN Width / Height UNITS, which is what Constraints are: the
+     client figures plus what this form measures between its outer size and
+     its client size (the menu, on the widget sets that count it).
 
-   (* Measured after sizing rather than computed, so the floor is exactly the
-     height the layout just took. *)
-   TR4WMainForm.Constraints.MinHeight := TR4WMainForm.Height;
+     NO MaxWidth (plan stage e3). The width was pinned while the controls sat
+     at absolute positions across a fixed 46 * ws; in their bands, extra width
+     goes to the log, the possible-call strip and the status strip, and the
+     needs block follows the right edge. MinWidth stays the layout width, so
+     nothing is ever clipped. *)
    TR4WMainForm.Constraints.MinWidth := TR4WMainForm.Width;
-   TR4WMainForm.Constraints.MaxWidth := TR4WMainForm.Width;
+   TR4WMainForm.Constraints.MinHeight :=
+      aMinClientHeight + (TR4WMainForm.Height - TR4WMainForm.ClientHeight);
 
    (* EXPLICITLY, NOT ONLY OFF OnResize.  Assigning ClientWidth above does raise
      the status bar's OnResize when it changes the width -- but if the layout's
@@ -1886,105 +1969,65 @@ begin
    LayOutStatusPanels;
 end;
 
-procedure AnchorMainWindowControls;
+(* THE BANDS ARE GIVEN THEIR WHOLE RECTANGLES, NOT ONLY THE DIMENSION THAT
+  FOLLOWS ws, AND THE STATUS STRIP IS GIVEN ITS OWN.
+
+  THE ANCHORS THIS REPLACES (AnchorMainWindowControls, deleted 2026-11-21,
+  plan stage e5) captured each control's distance from an edge out of its
+  absolute position, so they were right only if the window was sized first
+  and anchored second, and the one designed control in the band below the log
+  needed UpdateBaseBounds because its captured base was the .lfm's. A child
+  of a band is placed in the band's coordinates; the band is placed by Align.
+
+  TWO FACTS ABOUT Align DECIDE THE SHAPE OF THIS ROUTINE (lcl/include/
+  wincontrol.inc, read for this):
+
+  - TWO alBottom SIBLINGS ARE ORDERED BY WHERE THEY ARE NOW. The one whose
+    bottom edge is lower goes to the bottom (CreateControlAlignList,
+    InsertBefore). Grow the bottom band's Height without moving its Top and
+    its bottom can pass the status strip's, which would then sit ABOVE the
+    band. So the band is given the Top that puts its bottom on the strip.
+  - A FORM THAT IS NOT SHOWN DOES NOT ALIGN (TControl.AutoSizeDelayed: an
+    invisible control delays). CreateMainWindow sizes the window before it is
+    shown, so the strip still sits at its .lfm Top then; it is placed at the
+    bottom of the CURRENT client here, which is where alignment will put it,
+    so the order above holds when the window is shown.
+
+  Inside DisableAlign / EnableAlign, so the form aligns once, after all four.
+  On a shown form the result is exactly what Align would have produced; on a
+  hidden one it is what Align will produce. *)
+procedure PlaceMainBands(const aTopHeight, aNeedsWidth, aBottomHeight: integer);
 var
-   e: TMainWindowElement;
-
-   (* NIL, NOT ControlUsable -- AND THE PROBE PROVED THIS ONE.
-
-     ControlUsable answers `(aCtrl <> nil) and aCtrl.HandleAllocated`, which is
-     right for the entry-field accessors it was written for: SelStart, SelLength
-     and SetFocus genuinely need a window. ANCHORS DO NOT -- they are a property
-     the LCL reads when it aligns children, and the form streamer sets them on
-     controls that have no handle at all.
-
-     This routine runs from CreateMainWindow, BEFORE the form is shown.
-     Measured on the bench 2026-09-08:
-
-       AFTER-ANCHOR EditableLog     handle=False
-       AFTER-ANCHOR CallEdit        handle=True
-       AFTER-ANCHOR lstPossibleCall handle=False
-
-     So the log grid and the possible-call strip were the two controls whose
-     anchors were SILENTLY SKIPPED -- no log line, no failure -- and they are
-     exactly the two that did not move when the window was resized. *)
-   procedure AnchorToBottom(const aControl: TWinControl);
-   begin
-      if aControl <> nil then
-         begin
-         aControl.Anchors := [akLeft, akBottom];
-         end;
-   end;
-
+   cw, ch, sh: integer;
 begin
    if TR4WMainForm = nil then
       begin
       Exit;
       end;
 
-   (* WHICH EDGE EACH CONTROL BELONGS TO -- IN ONE PLACE, ON PURPOSE.
+   cw := TR4WMainForm.ClientWidth;
+   ch := TR4WMainForm.ClientHeight;
+   (* THE HEIGHT AUTOSIZE WILL GIVE IT, not the .lfm's: see MainStatusBarHeight.
+     Placed with the .lfm's on a hidden form, the band would be restacked onto
+     the shorter strip at the show and every control below the log would
+     move. *)
+   sh := MainStatusBarHeight;
 
-     The main window is three horizontal bands: seven rows of status above the
-     log, the log, and everything below it. Until now that was expressed as
-     ARITHMETIC -- TWindows[e].mweiY * ws + mweB * EditableLogHeight -- so the
-     lower band's position was computed from the log's height and the window
-     could not be resized at all, because nothing would have moved.
+   TR4WMainForm.DisableAlign;
+   try
+      TR4WMainForm.sbStatus.SetBounds(0, ch - sh, cw, sh);
+      TR4WMainForm.pnlBottomBand.SetBounds(0, ch - sh - aBottomHeight, cw, aBottomHeight);
+      TR4WMainForm.pnlTopBand.SetBounds(0, 0, cw, aTopHeight);
+      TR4WMainForm.pnlNeedsBlock.SetBounds(cw - aNeedsWidth, 0, aNeedsWidth, aTopHeight);
+   finally
+      TR4WMainForm.EnableAlign;
+   end;
+end;
 
-     mweB IS the band. It has always been the band; it was just being used as a
-     multiplier. Read as an anchor instead, the same one bit says: rows above
-     the log hold to the TOP, rows below hold to the BOTTOM, and the log takes
-     up the slack between them.
-
-     The arithmetic STAYS -- it is what lays the window out initially, and it
-     is what follows the operator's font-size setting, which no anchor can do.
-     Anchors decide only what happens when the window is RESIZED, which
-     previously was nothing.
-
-     Scattering `Anchors := ...` through the six routines that create these
-     controls would have made the policy unreadable and left the next control
-     to be added with no obvious rule to follow. One routine, called once, after
-     everything exists. *)
-   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
-      begin
-      if not ControlUsable(GElements[e]) then
-         begin
-         Continue;
-         end;
-
-      if TWindows[e].mweB = 0 then
-         begin
-         GElements[e].Anchors := [akLeft, akTop];
-         end
-      else
-         begin
-         GElements[e].Anchors := [akLeft, akBottom];
-         end;
-      end;
-
-   (* THE LOG IS THE ONE CONTROL THAT ABSORBS THE CHANGE. Held to all four
-     edges, it grows and shrinks with the window while both bands keep their
-     size. That is what makes a taller window mean MORE QSOs on screen. *)
-   if TR4WEditableLog <> nil then
-      begin
-      TR4WEditableLog.Anchors := [akLeft, akTop, akRight, akBottom];
-      end;
-
-   (* The rest of the lower band, which is not in TWindows[] and so has no
-     mweB to read: the two entry fields, the possible-call strip, the three
-     progress bars and the tour readout. *)
-   AnchorToBottom(TR4WCallEdit);
-   AnchorToBottom(TR4WExchangeEdit);
-   AnchorToBottom(GTourDurationText);
-   AnchorToBottom(GProgressBars[mpbLastHour]);
-   AnchorToBottom(GProgressBars[mpbRate]);
-   AnchorToBottom(GProgressBars[mpbTourDuration]);
-
-   (* The possible-call strip spans the window, so it follows the right edge
-     as well as the bottom. *)
-   if TR4WMainForm.lstPossibleCall <> nil then
-      begin
-      TR4WMainForm.lstPossibleCall.Anchors := [akLeft, akRight, akBottom];
-      end;
+procedure ReportMainWindowLayout;
+begin
+   ReportMainWindowOverhang;
+   DumpMainWindowChildren;
 end;
 
 procedure SetTourDurationBounds(const aLeft, aTop, aWidth, aHeight: integer);
@@ -2036,12 +2079,43 @@ end;
   STATUS AND NOTICE.  See the interface for the split.
   --------------------------------------------------------------------------- *)
 
+(* THE HEIGHT IT WILL HAVE, NOT THE HEIGHT IT HAS YET.
+
+  The strip is AutoSize (the TStatusBar default), so its height is the widget
+  set's preferred one -- PreferredStatusBarHeight on win32, a system value --
+  but that is applied by the first AUTOSIZE, and a form that has not been
+  shown does not autosize. Until then Height is the .lfm's 23. Measured on
+  Windows (2026-11-21, uTestMainLayout): the shown strip is 1 px shorter than
+  that, and since the bottom band sits ON the strip (alBottom, plan stage e5)
+  everything below the log, and the log's bottom edge, came out 1 px lower
+  than the layout put them. Asking the preferred size answers what the
+  autosize will give, before the show as after it. *)
 function MainStatusBarHeight: integer;
+var
+   bar: TStatusBar;
+   w, h: integer;
 begin
    Result := 0;
-   if (TR4WMainForm <> nil) and (TR4WMainForm.sbStatus <> nil) then
+   if TR4WMainForm = nil then
       begin
-      Result := TR4WMainForm.sbStatus.Height;
+      Exit;
+      end;
+   bar := TR4WMainForm.sbStatus;
+   if bar = nil then
+      begin
+      Exit;
+      end;
+
+   Result := bar.Height;
+   if bar.AutoSize then
+      begin
+      w := 0;
+      h := 0;
+      bar.GetPreferredSize(w, h);
+      if h > 0 then
+         begin
+         Result := h;
+         end;
       end;
 end;
 
@@ -3033,6 +3107,10 @@ procedure TTR4WMainForm.BuildLogGrid;
 begin
    TR4WEditableLog := TLogGrid.Create(Self);
    TR4WEditableLog.Parent        := Self;
+
+   (* alClient, BETWEEN THE BANDS (plan stage e5): whatever height and width
+     the window has beyond the two bands is the log's, with no code. *)
+   TR4WEditableLog.Align         := alClient;
    TR4WEditableLog.OnFetchRows   := MainLogFetchRows;
    TR4WEditableLog.OnDblClick    := MainLogDblClick;
    TR4WEditableLog.OnKeyDown     := MainLogKeyDown;
@@ -3107,15 +3185,21 @@ begin
       Exit;
       end;
 
+   (* X AND Y ARE THE SENDER'S, which since plan stage e5 is usually a band
+     (pnlTopBand, pnlNeedsBlock, pnlBottomBand -- the .lfm wires all three
+     here): the bands cover the window's client area, so the background an
+     operator drags by is theirs. Converted through the SENDER, or the window
+     would jump by the band's offset on the first move. *)
    FDragging        := True;
-   FDragMouseOrigin := ClientToScreen(Point(X, Y));
+   FDragMouseOrigin := (Sender as TControl).ClientToScreen(Point(X, Y));
    FDragFormOrigin  := Point(Left, Top);
 
    (* CAPTURE, because a drag routinely leaves the window behind. Without it
      the pointer crosses onto another control or off the form and the moves
      stop arriving here, so the window sticks mid-drag and only catches up if
-     the pointer wanders back. The system move loop did this implicitly. *)
-   MouseCapture := True;
+     the pointer wanders back. The system move loop did this implicitly. On
+     the control that was pressed, so the moves keep arriving there. *)
+   SetCaptureControl(Sender as TControl);
 end;
 
 procedure TTR4WMainForm.MainFormMouseMove(Sender: TObject; Shift: TShiftState;
@@ -3131,7 +3215,7 @@ begin
       Exit;
       end;
 
-   here := ClientToScreen(Point(X, Y));
+   here := (Sender as TControl).ClientToScreen(Point(X, Y));
    newL := FDragFormOrigin.X + (here.X - FDragMouseOrigin.X);
    newT := FDragFormOrigin.Y + (here.Y - FDragMouseOrigin.Y);
 
@@ -3162,8 +3246,8 @@ begin
       Exit;
       end;
 
-   FDragging    := False;
-   MouseCapture := False;
+   FDragging := False;
+   SetCaptureControl(nil);
 end;
 
 (* SNAP TO THE SCREEN EDGES while the window is being moved.
@@ -3308,6 +3392,10 @@ procedure TTR4WMainForm.BuildDupesGrid;
 begin
    TR4WPreviousDupes := TLogGrid.Create(Self);
    TR4WPreviousDupes.Parent     := Self;
+
+   (* alClient like the log, whose place it takes: only one of the two is
+     visible at a time, and an invisible control is not aligned. *)
+   TR4WPreviousDupes.Align      := alClient;
    TR4WPreviousDupes.OnFetchRows := DupesFetchRows;
 
    (* The same sizing as the log it stands in for, or the B4 list would lay its
@@ -3326,6 +3414,8 @@ begin
    TR4WPreviousDupes.Font.Color := tr4wColorsArray[TWindows[mweEditableLog].mweColor];
    TR4WPreviousDupes.BuildColumns;
 
+   (* THE LOG'S RECTANGLE, for a form that has not been shown and so has not
+     aligned either grid yet; once shown, Align gives both the same one. *)
    if TR4WEditableLog <> nil then
       begin
       TR4WPreviousDupes.BoundsRect := TR4WEditableLog.BoundsRect;
@@ -3466,14 +3556,6 @@ begin
    TR4WEditableLogShow(not aVisible);
 end;
 
-procedure TR4WPreviousDupesSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
-begin
-   if TR4WPreviousDupes <> nil then
-      begin
-      TR4WPreviousDupes.SetBounds(aLeft, aTop, aWidth, aHeight);
-      end;
-end;
-
 procedure ScaleMainLogGrids(const aRowHeight: integer);
 begin
    (* ApplyMainFontTo writes the same name, height and style when nothing has
@@ -3590,10 +3672,11 @@ end;
 
   It rounded the grid's height down to a whole number of rows, which removed
   the dead strip at creation and did nothing at all in the case that mattered:
-  TR4WEditableLog is anchored [akLeft, akTop, akRight, akBottom], so when the
-  form is restored to its saved height the LCL STRETCHES the grid by the
-  anchor, never going near the setter. The leftover came straight back, at an
-  arbitrary size, and no amount of snapping at creation could reach it.
+  TR4WEditableLog was anchored [akLeft, akTop, akRight, akBottom] (alClient
+  since plan stage e5), so when the form is restored to its saved height the
+  LCL STRETCHES the grid, never going near a setter. The leftover came
+  straight back, at an arbitrary size, and no amount of snapping at creation
+  could reach it.
 
   THAT IS ALSO WHY IT LOOKED FIXED FROM HERE. A headless run has no saved
   window position to restore, so the grid kept its snapped height and the band
@@ -3601,51 +3684,26 @@ end;
   the defect. NY4I's was not.
 
   IT ALSO ARGUED WITH A DECISION ALREADY RECORDED. CheckEditableWindowHeight
-  says, of the loop that used to make whole rows fit: "THE QUESTION ITSELF IS
+  said, of the loop that used to make whole rows fit: "THE QUESTION ITSELF IS
   RETIRED. The list scrolls now, so there is no reason to make a whole number
   of rows fit." That is right. The grid is allowed a fractional height; what it
   is not allowed to do is leave the remainder unpainted.
 
+  THE BAND NY4I had been pointing at since 2026-09-09: a grid draws whole rows
+  and leaves whatever is over. Measured on his Mint box, the grid was 125
+  pixels of client with a row height of 19, so six rows filled 114 and ELEVEN
+  PIXELS AT THE BOTTOM belonged to no row. gtk2 paints that strip in the
+  theme's own background rather than the grid's colour, so a grey band ran the
+  full width of the window immediately below the last QSO -- indistinguishable
+  from a scroll-bar trough, which is exactly what it was reported as, five
+  times.
+
   TLogGrid.Paint fills it now -- see there. One mechanism, at the layer that
-  cannot be bypassed. *)
+  cannot be bypassed.
 
-procedure TR4WEditableLogSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
-begin
-   if TR4WEditableLog = nil then
-      begin
-      Exit;
-      end;
-
-   (* THROUGH THE LCL, and there is no other way now: the grid has no window
-     handle for anything to reposition behind its back. *)
-   TR4WEditableLog.SetBounds(aLeft, aTop, aWidth, aHeight);
-
-   (* NOT SNAPPED, WHATEVER THE HISTORY BELOW SAYS (corrected 2026-11-21). The
-     snap to whole rows was deleted -- see SnapEditableLogToWholeRows above --
-     and TLogGrid.Paint fills the remainder instead, so the grid takes exactly
-     the height it is given. MainUnit.LayOutMainWindow relies on that: it
-     places the band below the log from the height it asked for.
-
-     THE HISTORY: the band NY4I had been pointing at since 2026-09-09.
-
-     A grid draws whole rows and leaves whatever is over. Measured on his Mint
-     box: the grid was 125 pixels of client with a row height of 19, so six
-     rows filled 114 and ELEVEN PIXELS AT THE BOTTOM belonged to no row. gtk2
-     paints that strip in the theme's own background rather than the grid's
-     colour, so a grey band ran the full width of the window immediately below
-     the last QSO -- indistinguishable from a scroll-bar trough, which is
-     exactly what it was reported as, five times.
-
-     THE HEIGHT IT WAS GIVEN CAME FROM WIN32 ARITHMETIC. The caller asks for
-     `30 + rows * (ws + 2)` (MainUnit.MainLogHeightForRows), where 30 was an allowance for a
-     list view's header and border. This grid's header is a REAL ROW of
-     DefaultRowHeight, so the allowance is 19 here and 30 leaves a remainder.
-
-     FIXED HERE RATHER THAN AT THE CALLER, and that is deliberate: the caller
-     would have to know the row height, the fixed-row count and the border
-     inset, and the border inset is a widget-set answer -- 0 on gtk2, non-zero
-     on Win32. The control knows all three. *)
-end;
+  TR4WEditableLogSetBounds, which stood below this note, is deleted with the
+  anchors (2026-11-21): the log is alClient, so nothing sets its bounds after
+  CreateTR4WEditableLog. *)
 
 procedure TR4WEditableLogScrollToEnd;
 begin
@@ -3754,8 +3812,7 @@ begin
       end;
 end;
 
-procedure SetPossibleCallBounds(const aLeft, aTop, aWidth, aHeight,
-                                aItemHeight, aColumnWidth: integer);
+procedure SetPossibleCallSize(const aHeight, aItemHeight, aColumnWidth: integer);
 begin
    if TR4WMainForm = nil then
       begin
@@ -3786,41 +3843,18 @@ begin
          DefaultColWidth := aColumnWidth;
          end;
 
-      SetBounds(aLeft, aTop, aWidth, aHeight);
+      (* THE HEIGHT ONLY. The strip is alBottom in pnlBottomBand, with
+        BOTTOM_BAND_MARGIN below it (both in the .lfm), so the band gives it
+        its place and its width, and a wider window gives it more width.
 
-      (* RE-CAPTURE THE ANCHOR BASE, AND THIS IS NOT OPTIONAL FOR THIS CONTROL.
-
-        An anchored control does not remember a rule, it remembers a MEASUREMENT:
-        BaseBounds, plus the BaseParentClientSize they were taken against. The
-        LCL then reproduces that distance whenever the parent resizes.
-
-        lstPossibleCall is the only bottom-anchored control on this form that is
-        DESIGNED rather than built in code, so its base was captured by the
-        streamer against the .lfm's ClientHeight of 370 -- and the SetBounds
-        above then moved it to a runtime position the base knows nothing about.
-        Measured on the bench 2026-09-08, the stored gap to the bottom was
-
-            370 (design ClientHeight) - 458 (runtime bottom) = -88
-
-        so the strip tracked the window's bottom edge perfectly and sat 88
-        pixels BELOW the client area, off screen, at every size. The entry
-        fields are unaffected because they are created in code and have no
-        design-time base to be stale.
-
-        UpdateBaseBounds(True, True, False) stores the bounds AND the parent
-        client size as they are now, which is what makes the anchor mean what
-        the arithmetic above just said.
-
-        PROBABLY REDUNDANT NOW, read from the LCL rather than measured
-        (2026-11-21): ChangeBounds re-captures the base whenever SetBounds
-        moves a control (control.inc, UpdateAnchorRules), and so does a change
-        of Anchors, which AnchorMainWindowControls makes after this. Kept, so
-        the layout's extraction changed nothing; uTestMainLayout's anchor test
-        is what can retire it. *)
-      UpdateBaseBounds(True, True, False);
+        UpdateBaseBounds, which stood here, is deleted with the anchors (plan
+        stage e5). It re-captured the anchor base the streamer had taken
+        against the .lfm's ClientHeight -- measured on the bench 2026-09-08,
+        that stale base put the strip 88 px below the client area at every
+        size. An aligned control has no captured base to go stale. *)
+      Height := aHeight;
       end;
 end;
-
 
 (* THE DIALOG ID THE UI HARNESSES FIND AN ENTRY FIELD BY -- see the long note
   at the end of CreateTR4WEntryField for why this raw call stays and what
@@ -3843,7 +3877,10 @@ var
    edit: TEdit;
 begin
    edit := TEdit.Create(TR4WMainForm);
-   edit.Parent := TR4WMainForm;
+
+   (* IN THE BAND BELOW THE LOG (plan stage e5), placed in its coordinates by
+     SetEntryFieldBounds. Still OWNED by the form, as every control on it is. *)
+   edit.Parent := TR4WMainForm.pnlBottomBand;
 
    // The style bits CreateWindowExW used to pass, one by one:
    //   ES_UPPERCASE   -> CharCase

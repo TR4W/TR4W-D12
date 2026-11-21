@@ -774,30 +774,64 @@ labels, the right-click editor row and `MainUnit.GetRealVirtualKey` (the send).
 On gtk2 a modifier's own press arrives without its `ss` flag, so the caller
 counts the key itself.
 
-## The main window's height owns the log; FONT SIZE is a step (2026-11-21)
+## The main window is three bands and the log; FONT SIZE is a step (2026-11-21)
 
-- **ROW COUNT is retired.** `CreateMainWindow` builds the log at
-  `MainUnit.MAIN_LOG_MINIMUM_ROWS` (5, through `MainLogHeightForRows`), so the
-  layout -- and `Constraints.MinHeight`, measured from it -- is the old five-row
-  default. A first run (saved rect with no size) opens
+- **ROW COUNT is retired.** `CreateMainWindow` builds the window at
+  `MainUnit.MAIN_LOG_START_ROWS` (5, through `MainLogHeightForRows`), the old
+  five-row default. `Constraints.MinHeight` is `MAIN_LOG_MINIMUM_ROWS` (3,
+  NY4I) whole rows: `uMainLayout.MinLogHeight` (header + 3 rows + an 8 px
+  frame allowance, NOT `LogHeightForRows`, whose 30 px leaves 1 px of border
+  at ws 27). A first run (saved rect with no size) opens
   `MAIN_LOG_FIRST_RUN_ROWS` (12) tall: `RestoreMainWindowBounds`' second
-  argument. After that the saved window position decides. Nothing after
-  `CreateMainWindow` sets the log's height: `DispalayLogGridLines` (SHOW
-  GRIDLINES, live) used to call `CheckEditableWindowHeight` (deleted) and snap
-  a tall log back. Do not put that back.
-- **CREATION AND PLACEMENT ARE TWO ROUTINES** (plan stage e2,
-  `docs/MAIN_WINDOW_WIDTH_PLAN.md`). `CreateMainWindow` creates and styles;
-  `MainUnit.LayOutMainWindow(aWS, aLogHeight)` sets every position and every
-  ws-dependent font, idempotently, and the arithmetic is the leaf
-  `uMainLayout` (no widget set; `uTestMainLayout` checks it at ws 13..27 and
-  pins the streamed form against the `.lfm` at ws 17). A new main-window
-  control gets its rectangle in `uMainLayout` and its placement in
-  `LayOutMainWindow`, never in the creation code. `LayOutMainWindow` does not
-  size the window or anchor: `CreateMainWindow` calls
-  `MakeMainWindowResizeable` and `AnchorMainWindowControls` once, after it.
+  argument. After that the saved window position decides. Nothing sets the
+  log's height: `DispalayLogGridLines` (SHOW GRIDLINES, live) used to call
+  `CheckEditableWindowHeight` (deleted) and snap a tall log back. Do not put
+  that back.
+- **EVERY CONTROL IS A CHILD OF A BAND** (plan stage e5,
+  `docs/MAIN_WINDOW_WIDTH_PLAN.md`): `pnlTopBand` (alTop, 7 ws), inside it
+  `pnlNeedsBlock` (alRight, 14 ws: need headers, Beam Heading, need strips),
+  and `pnlBottomBand` (alBottom above `sbStatus`, 7 ws + 6). The log and the
+  B4 list are alClient; the possible-call strip is alBottom in the bottom band
+  with `BorderSpacing.Bottom = 6`. A child's position is IN ITS BAND
+  (`uMainLayout.ElementRect`/`ElementBand`; `BandOrigin` turns it back into
+  window coordinates for tests). There are NO anchors on this window:
+  `AnchorMainWindowControls`, the "size first, then anchor" rule,
+  `UpdateBaseBounds` on the strip and `EditableLogHeight` are gone. Do not
+  anchor a main-window control; put it in a band.
+- **THE WIDTH IS FREE** (e3): `MakeMainWindowResizeable(width, height,
+  minHeight)` releases the old constraints, sizes the client, sets MinWidth to
+  the layout width and NO MaxWidth. Extra width goes to the log, the strip and
+  the status strip, and the needs block follows the right edge; the rest of
+  both bands stays left. `RestoreMainWindowBounds` restores the saved width,
+  never below MinWidth.
+- **TWO alBottom SIBLINGS ARE ORDERED BY WHERE THEY ARE NOW** (LCL
+  `CreateControlAlignList`), and **a form that is not shown does not align**.
+  So `uMainForm.PlaceMainBands` gives `sbStatus`, the bottom band, the top
+  band and the needs block their WHOLE rectangles from the current client,
+  inside `DisableAlign`/`EnableAlign`. Growing the band's Height alone would
+  let its bottom pass the strip's and put the status strip above it.
+  `uTestMainLayout` pins the order at ws 13, 17 and 27.
+  **The strip's height is its PREFERRED height** (`MainStatusBarHeight` asks
+  `GetPreferredSize`): it is AutoSize, a hidden form does not autosize, and
+  the `.lfm`'s 23 is 1 px more than win32 gives -- read from `.Height` before
+  the show, it put the whole bottom band 1 px low.
+- **CREATION AND PLACEMENT ARE TWO ROUTINES** (plan stage e2). `CreateMainWindow`
+  creates and styles; `MainUnit.LayOutMainWindow(aWS)` places the bands and
+  sets every position and every ws-dependent font, idempotently, and the
+  arithmetic is the leaf `uMainLayout` (no widget set; `uTestMainLayout`
+  checks it at ws 13..27, pins the streamed form against the `.lfm` at ws 17,
+  and holds every control to its e2 position IN THE WINDOW). Call
+  `MakeMainWindowResizeable` BEFORE it (the bottom band is placed against the
+  client height), then `ReportMainWindowLayout`. A new main-window control is
+  a child of a band in the `.lfm` (via `tools/gen_main_elements.py`, which
+  owns all three bands and the five hand-written bottom-band controls), gets
+  its band rectangle in `uMainLayout` and its placement in `LayOutMainWindow`.
   An element's font goes through `SetElementFont`, which re-fits the caption
-  (`TElementPanel.SetFittedFontHeight`); setting `Font.Height` directly
-  leaves a caption fitted for the old scale.
+  (`TElementPanel.SetFittedFontHeight`); setting `Font.Height` directly leaves
+  a caption fitted for the old scale.
+- **The bands cover the client area, so they carry the drag-the-background
+  handlers** (`MainFormMouseDown/Move/Up`, wired in the `.lfm`), which convert
+  through the SENDER and capture on it.
 - **FONT SIZE is 0..2 added to the WINDOW SIZE scale** (`ws - 2 + Size`), not
   a point size. Preferences > Appearance shows MAIN FONT and BOLD FONT as one
   read-only box whose own `Font` holds the choice (the save reads

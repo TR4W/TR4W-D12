@@ -506,9 +506,10 @@ begin
          end;
       end;
 
-   (* The need strips hang off the RIGHT of the window, so their origin moves
-     with the window width rather than being a fixed column. *)
-   stripLeft := NeedLeft(MainWindowChildsWidth, ws);
+   (* THE NEED STRIPS ARE CHILDREN OF THE NEEDS BLOCK (uMainForm.lfm,
+     pnlNeedsBlock), which is alRight in the top band, so they start at its
+     left edge and follow the window's right edge with no arithmetic here. *)
+   stripLeft := 0;
    cellWidth := NeedCellPitch(ws);
 
    for row := Low(TNeedRow) to High(TNeedRow) do

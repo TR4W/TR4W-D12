@@ -2,39 +2,52 @@ unit uTestMainLayout;
 {$I ..\..\src\tr4w.inc}
 
 (*
-  THE MAIN WINDOW'S LAYOUT, AT EVERY SCALE (plan stage e2,
-  docs/MAIN_WINDOW_WIDTH_PLAN.md).
+  THE MAIN WINDOW'S LAYOUT, AT EVERY SCALE AND EVERY SIZE (plan stages e2, e3
+  and e5, docs/MAIN_WINDOW_WIDTH_PLAN.md).
 
-  Until now nothing checked the layout at any ws but 17: Lint-FormOverlap
-  reads the .lfm, which is the ws-17 picture. Four things are pinned here.
+  Since e5 every control is a child of one of three bands -- pnlTopBand
+  (alTop), pnlNeedsBlock (alRight inside it) and pnlBottomBand (alBottom,
+  above the status strip) -- placed in the band's own coordinates, and the log
+  is alClient. THE INVARIANT HELD THROUGHOUT: at the same ws, in a window of
+  the old size, every control is at the same place IN THE WINDOW as before
+  the bands. The oracle for that is the e2 formula, written out here from
+  TWindows[] (OldWindowRect), not asked of uMainLayout.
 
   1. THE ARITHMETIC (uMainLayout, no form): at every ws from WS_MIN to WS_MAX,
-     no two controls overlap and nothing runs past 46 * ws. Two overlaps exist
-     today and are pinned BY NAME, each with the condition under which it
-     happens; a pinned overlap that stops happening fails too, so the pin is
-     removed by whoever fixes it.
+     every rectangle lies inside its band, the band rectangles put each one
+     where the e2 formula did, no two controls overlap, and nothing in the
+     top band reaches under the needs block. Two overlaps exist and are pinned
+     BY NAME, each with the condition under which it happens; a pinned overlap
+     that stops happening fails too, so the pin is removed by whoever fixes
+     it.
 
   2. THE SAME BOUNDS (the streamed main form): LayOutMainWindow at ws 17 puts
-     every generated panel exactly where uMainForm.lfm has it. That is an
-     INDEPENDENT oracle: tools/gen_main_elements.py writes the .lfm from its own
-     Python copy of the formulas and Lint-MainElements pins it. Then ws 13 is
-     checked against literals worked out by hand from the arithmetic as it stood
-     at d689fef9 (before the extraction), then ws 17 again, then a second call
-     changes nothing.
+     every generated panel exactly where uMainForm.lfm has it in its band --
+     tools/gen_main_elements.py writes the .lfm from its own Python copy of
+     the formulas, and Lint-MainElements pins it -- and, shown, in the window
+     where the e2 formula put it. Then ws 13 against literals worked out by
+     hand at d689fef9 (before the bands), then ws 17 again, then a second
+     call changes nothing.
 
-  3. THE ANCHORS AFTER A RE-LAYOUT (plan risk d2), on the form shown off
-     screen: after LayOutMainWindow at another scale, growing the window moves
-     every bottom-anchored control by exactly the growth. Read from the LCL
-     (control.inc: SetBounds re-captures the anchor base when it moves a
-     control) and NOT measured when written -- this test is what decides it.
+  3. THE BANDS FOLLOW THE WINDOW (stages e3 and e5), on the form shown off
+     screen: taller gives the log the height and moves the bottom band with
+     the bottom edge; wider gives the log and the possible-call strip the
+     width and moves the needs block with the right edge, and nothing else
+     moves; narrower than the layout is refused by MinWidth; a re-layout at
+     ws 13 and at ws 27 keeps the status strip at the bottom and the bottom
+     band on top of it.
 
-  4. SHOW GRIDLINES (plan stage e1): on the shown form, with the log grid, a
-     gridline toggle leaves a log the window made taller as it is.
+  4. SHOW GRIDLINES (stage e1): a gridline toggle leaves a log the window made
+     taller as it is.
 
-  Tests 2 to 4 follow the program's start-up order as far as it runs without
+  5. THE MINIMUM HEIGHT shows three whole log rows (NY4I, 2026-11-21) at ws
+     13, 17 and 27, measured on the grid.
+
+  Tests 2 to 5 follow the program's start-up order as far as it runs without
   a contest: the form streamed, its window made, the grids bound, then
-  LayOutMainWindow, and in tests 3 and 4 MakeMainWindowResizeable and
-  AnchorMainWindowControls after it, as CreateMainWindow calls them.
+  MakeMainWindowResizeable and LayOutMainWindow, as CreateMainWindow calls
+  them. A form that is not shown does not align its children, so every check
+  of a position in the WINDOW is made on the form shown off screen.
 
   The numbers are printed (WriteLn) so a failure can be read without a
   debugger.
@@ -51,11 +64,14 @@ type
       procedure CheckBounds(const aName: string; const aActual: TRect;
                             const aLeft, aTop, aWidth, aHeight: integer;
                             const aWhere: string);
+      procedure CheckStatusStripAtTheBottom(const aWhere: string);
+      procedure CheckEveryControlInsideItsParent(const aWhere: string);
    protected
-      procedure Test_NoOverlapAndInsideTheWidthAtEveryScale;
+      procedure Test_EveryRectInsideItsBandAndWhereItWasAtEveryScale;
       procedure Test_LayOutReproducesTheDesignedFormAndMovesWithTheScale;
-      procedure Test_BottomAnchorsHoldAfterARelayout;
+      procedure Test_TheBandsFollowTheWindow;
       procedure Test_GridlinesLeaveATallLogAlone;
+      procedure Test_TheMinimumHeightShowsThreeLogRows;
    public
       procedure RunAllTests; override;
    end;
@@ -64,6 +80,7 @@ implementation
 
 uses
    Classes, SysUtils, Generics.Collections, Forms, Controls, StdCtrls, ComCtrls,
+   ExtCtrls,
    VC, uSettingsModel, uMainLayout, uElementPanel, uMainForm, uMainGrids,
    MainUnit,
    LogWind,          (* DispalayLogGridLines -- the SHOW GRIDLINES arm *)
@@ -91,6 +108,42 @@ begin
                      BoundsText(Bounds(aLeft, aTop, aWidth, aHeight))]));
 end;
 
+(* THE e2 FORMULA, FROM THE TABLE: where an element's panel sat in the window
+  before the bands, for a log aLogHeight tall. Written out here, not asked of
+  uMainLayout, so it is an independent oracle for the band arithmetic. *)
+function OldWindowRect(const aElement: TMainWindowElement;
+                       const aWS, aLogHeight: integer): TRect;
+begin
+   Result := Bounds(TWindows[aElement].mweiX * aWS,
+                    TWindows[aElement].mweiY * aWS + TWindows[aElement].mweB * aLogHeight,
+                    TWindows[aElement].mweiWidth * aWS,
+                    TWindows[aElement].mweiHeight * aWS);
+end;
+
+function Shifted(const aRect: TRect; const aBy: TPoint): TRect;
+begin
+   Result := Bounds(aRect.Left + aBy.X, aRect.Top + aBy.Y,
+                    aRect.Right - aRect.Left, aRect.Bottom - aRect.Top);
+end;
+
+function BandSize(const aBand: TMainBand; const aWS: integer): TPoint;
+begin
+   case aBand of
+      mbNeeds:
+         begin
+         Result := Point(NeedsBlockWidth(aWS), TopBandHeight(aWS));
+         end;
+      mbBottom:
+         begin
+         Result := Point(LayoutWidth(aWS), BottomBandHeight(aWS));
+         end;
+      else
+         begin
+         Result := Point(LayoutWidth(aWS), TopBandHeight(aWS));
+         end;
+      end;
+end;
+
 (* ---------------------------------------------------------------------------
   THE PURE HALF.
   --------------------------------------------------------------------------- *)
@@ -99,29 +152,35 @@ type
    TNamedRect = class
    public
       Name: string;
-      Rect: TRect;
-      constructor Create(const aName: string; const aRect: TRect);
+      Band: TMainBand;
+      InBand: TRect;
+      Rect: TRect;        (* in the window, at the layout width and start log *)
+      constructor Create(const aName: string; const aBand: TMainBand;
+                         const aInBand: TRect; const aWS: integer);
    end;
 
    TNamedRects = TObjectList<TNamedRect>;
 
-constructor TNamedRect.Create(const aName: string; const aRect: TRect);
+constructor TNamedRect.Create(const aName: string; const aBand: TMainBand;
+                              const aInBand: TRect; const aWS: integer);
 begin
    inherited Create;
    Name := aName;
-   Rect := aRect;
+   Band := aBand;
+   InBand := aInBand;
+   Rect := Shifted(aInBand, BandOrigin(aBand, aWS, LayoutWidth(aWS),
+                                       LogHeightForRows(MAIN_LOG_START_ROWS, aWS)));
 end;
 
-(* Every control the layout places, at aWS with the minimum log. aMinitour adds
-  the minitour row and narrows the quick-command panel, as LayOutMainWindow
-  does when MINITOUR DURATION is set. The caller frees the list. *)
+(* Every control the layout places in a band, at aWS. aMinitour adds the
+  minitour row and narrows the quick-command panel, as LayOutMainWindow does
+  when MINITOUR DURATION is set. The caller frees the list. *)
 function LayoutRects(const aWS: integer; const aMinitour: boolean): TNamedRects;
 var
    e: TMainWindowElement;
-   logH, c, r, row, i, left, width, stripLeft, pitch: integer;
+   c, r, row, i, left, width, pitch: integer;
 begin
    Result := TNamedRects.Create(True);
-   logH := LogHeightForRows(MAIN_LOG_MINIMUM_ROWS, aWS);
 
    for e := Low(TMainWindowElement) to High(TMainWindowElement) do
       begin
@@ -131,26 +190,25 @@ begin
          end;
       if aMinitour and (e = mweQuickCommand) then
          begin
-         Result.Add(TNamedRect.Create('element ' + TWindows[e].mweName,
-                                      MinitourQuickCommandRect(aWS, logH)));
+         Result.Add(TNamedRect.Create('element ' + TWindows[e].mweName, mbBottom,
+                                      MinitourQuickCommandRect(aWS), aWS));
          end
       else
          begin
-         Result.Add(TNamedRect.Create('element ' + TWindows[e].mweName,
-                                      ElementRect(e, aWS, logH)));
+         Result.Add(TNamedRect.Create('element ' + TWindows[e].mweName, ElementBand(e),
+                                      ElementRect(e, aWS), aWS));
          end;
       end;
 
-   Result.Add(TNamedRect.Create('log', LogRect(aWS, logH)));
-   Result.Add(TNamedRect.Create('call field', EntryFieldRect(efrCall, aWS, logH)));
-   Result.Add(TNamedRect.Create('exchange field', EntryFieldRect(efrExchange, aWS, logH)));
-   Result.Add(TNamedRect.Create('last-hour bar', LastHourBarRect(aWS, logH)));
-   Result.Add(TNamedRect.Create('rate bar', RateBarRect(aWS, logH)));
-   Result.Add(TNamedRect.Create('possible-call strip', PossibleCallRect(aWS, logH)));
+   Result.Add(TNamedRect.Create('call field', mbBottom, EntryFieldRect(efrCall, aWS), aWS));
+   Result.Add(TNamedRect.Create('exchange field', mbBottom, EntryFieldRect(efrExchange, aWS), aWS));
+   Result.Add(TNamedRect.Create('last-hour bar', mbBottom, LastHourBarRect(aWS), aWS));
+   Result.Add(TNamedRect.Create('rate bar', mbBottom, RateBarRect(aWS), aWS));
+   Result.Add(TNamedRect.Create('possible-call strip', mbBottom, PossibleCallRect(aWS), aWS));
    if aMinitour then
       begin
-      Result.Add(TNamedRect.Create('tour bar', TourDurationBarRect(aWS, logH)));
-      Result.Add(TNamedRect.Create('tour text', TourDurationTextRect(aWS, logH)));
+      Result.Add(TNamedRect.Create('tour bar', mbBottom, TourDurationBarRect(aWS), aWS));
+      Result.Add(TNamedRect.Create('tour text', mbBottom, TourDurationTextRect(aWS), aWS));
       end;
 
    for c := 0 to TOTALS_COLUMNS - 1 do
@@ -158,34 +216,32 @@ begin
       TotalsColumnGeometry(aWS, c, left, width);
       for r := 0 to TOTALS_ROWS - 1 do
          begin
-         Result.Add(TNamedRect.Create(Format('totals cell %d,%d', [c, r]),
-                                      Bounds(left, aWS * 2 + r * aWS, width, aWS)));
+         Result.Add(TNamedRect.Create(Format('totals cell %d,%d', [c, r]), mbTop,
+                                      Bounds(left, aWS * 2 + r * aWS, width, aWS), aWS));
          end;
       if c >= TOTALS_FIRST_HEADER then
          begin
-         Result.Add(TNamedRect.Create(Format('totals head %d', [c]),
-                                      Bounds(left, 0, width, aWS * 2)));
+         Result.Add(TNamedRect.Create(Format('totals head %d', [c]), mbTop,
+                                      Bounds(left, 0, width, aWS * 2), aWS));
          end;
       end;
 
-   (* As uMainGrids.PositionMainGrids places them: rows 1 and 2 of each strip,
-     a label and six band cells two pixels narrower than the pitch. *)
-   stripLeft := NeedLeft(LayoutWidth(aWS), aWS);
+   (* As uMainGrids.PositionMainGrids places them, in the needs block: rows 1
+     and 2 of each strip, a label and six band cells two pixels narrower than
+     the pitch. *)
    pitch := NeedCellPitch(aWS);
    for row := 1 to 2 do
       begin
-      Result.Add(TNamedRect.Create(Format('QSO need label %d', [row]),
-                                   Bounds(stripLeft, aWS * row, pitch, aWS)));
-      Result.Add(TNamedRect.Create(Format('mult need label %d', [row]),
-                                   Bounds(stripLeft, aWS * (row + 3), pitch, aWS)));
+      Result.Add(TNamedRect.Create(Format('QSO need label %d', [row]), mbNeeds,
+                                   Bounds(0, aWS * row, pitch, aWS), aWS));
+      Result.Add(TNamedRect.Create(Format('mult need label %d', [row]), mbNeeds,
+                                   Bounds(0, aWS * (row + 3), pitch, aWS), aWS));
       for i := 1 to 6 do
          begin
-         Result.Add(TNamedRect.Create(Format('QSO need %d,%d', [row, i]),
-                                      Bounds(stripLeft + i * pitch, aWS * row,
-                                             pitch - 2, aWS)));
-         Result.Add(TNamedRect.Create(Format('mult need %d,%d', [row, i]),
-                                      Bounds(stripLeft + i * pitch, aWS * (row + 3),
-                                             pitch - 2, aWS)));
+         Result.Add(TNamedRect.Create(Format('QSO need %d,%d', [row, i]), mbNeeds,
+                                      Bounds(i * pitch, aWS * row, pitch - 2, aWS), aWS));
+         Result.Add(TNamedRect.Create(Format('mult need %d,%d', [row, i]), mbNeeds,
+                                      Bounds(i * pitch, aWS * (row + 3), pitch - 2, aWS), aWS));
          end;
       end;
 end;
@@ -238,31 +294,55 @@ begin
       end;
 end;
 
-procedure TMainLayoutTests.Test_NoOverlapAndInsideTheWidthAtEveryScale;
+procedure TMainLayoutTests.Test_EveryRectInsideItsBandAndWhereItWasAtEveryScale;
 var
-   scale, i, j, known: integer;
+   scale, i, j, known, logH: integer;
    minitour: boolean;
    rects: TNamedRects;
+   size: TPoint;
+   e: TMainWindowElement;
+   old: TRect;
 begin
-   BeginTest('MainLayout: no two controls overlap, and none runs past 46 * ws, at every scale');
+   BeginTest('MainLayout: every rectangle inside its band, where the e2 layout put it, ' +
+             'and no two overlapping, at every scale');
    for minitour := False to True do
       begin
       for scale := WS_MIN to WS_MAX do
          begin
+         logH := LogHeightForRows(MAIN_LOG_START_ROWS, scale);
          rects := LayoutRects(scale, minitour);
          try
             known := 0;
             for i := 0 to rects.Count - 1 do
                begin
+               (* IN ITS BAND. *)
+               size := BandSize(rects[i].Band, scale);
+               CheckTrue((rects[i].InBand.Left >= 0) and (rects[i].InBand.Top >= 0) and
+                         (rects[i].InBand.Right <= size.X) and
+                         (rects[i].InBand.Bottom <= size.Y),
+                         Format('ws %d: %s is %s, outside its band''s %dx%d',
+                                [scale, rects[i].Name, BoundsText(rects[i].InBand),
+                                 size.X, size.Y]));
+
+               (* NEVER UNDER THE NEEDS BLOCK, at the narrowest window. *)
+               if rects[i].Band = mbTop then
+                  begin
+                  CheckTrue(rects[i].InBand.Right <= LayoutWidth(scale) - NeedsBlockWidth(scale),
+                            Format('ws %d: %s ends at %d, under the needs block at %d',
+                                   [scale, rects[i].Name, rects[i].InBand.Right,
+                                    LayoutWidth(scale) - NeedsBlockWidth(scale)]));
+                  end;
+
+               (* THE WINDOW, as before the bands. *)
                CheckTrue((rects[i].Rect.Left >= 0) and
                          (rects[i].Rect.Right <= LayoutWidth(scale)),
                          Format('ws %d: %s spans %d..%d, outside 0..%d',
                                 [scale, rects[i].Name, rects[i].Rect.Left,
                                  rects[i].Rect.Right, LayoutWidth(scale)]));
-               CheckTrue(rects[i].Rect.Bottom <= MinClientHeight(scale),
+               CheckTrue(rects[i].Rect.Bottom <= StartClientHeight(scale),
                          Format('ws %d: %s ends at %d, below the layout''s %d',
                                 [scale, rects[i].Name, rects[i].Rect.Bottom,
-                                 MinClientHeight(scale)]));
+                                 StartClientHeight(scale)]));
                for j := i + 1 to rects.Count - 1 do
                   begin
                   if not Overlaps(rects[i].Rect, rects[j].Rect) then
@@ -287,6 +367,44 @@ begin
          finally
             rects.Free;
          end;
+
+         (* EVERY ELEMENT, IN ITS BAND, IS WHERE THE e2 FORMULA PUT IT. *)
+         for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+            begin
+            if not ElementHasPanel(e) then
+               begin
+               Continue;
+               end;
+            old := OldWindowRect(e, scale, logH);
+            CheckTrue(SameBounds(Shifted(ElementRect(e, scale),
+                                         BandOrigin(ElementBand(e), scale,
+                                                    LayoutWidth(scale), logH)), old),
+                      Format('ws %d: %s in its band lands at %s, the e2 layout had %s',
+                             [scale, TWindows[e].mweName,
+                              BoundsText(Shifted(ElementRect(e, scale),
+                                                 BandOrigin(ElementBand(e), scale,
+                                                            LayoutWidth(scale), logH))),
+                              BoundsText(old)]));
+            end;
+
+         (* AND THE CONTROLS THAT ARE NOT TABLE ROWS, against the e2 literals'
+           formulas: the call field at (15, 8) units below the log, the
+           possible-call strip 13 units below it, the bars on row 10. *)
+         CheckTrue(SameBounds(Shifted(EntryFieldRect(efrCall, scale),
+                                      BandOrigin(mbBottom, scale, LayoutWidth(scale), logH)),
+                              Bounds(scale * 15, logH + scale * 8, scale * 13,
+                                     EntryFieldHeight(scale))),
+                   Format('ws %d: the call field moved', [scale]));
+         CheckTrue(SameBounds(Shifted(PossibleCallRect(scale),
+                                      BandOrigin(mbBottom, scale, LayoutWidth(scale), logH)),
+                              Bounds(0, logH + scale * 13, LayoutWidth(scale), scale)),
+                   Format('ws %d: the possible-call strip moved', [scale]));
+         CheckTrue(SameBounds(Shifted(LastHourBarRect(scale),
+                                      BandOrigin(mbBottom, scale, LayoutWidth(scale), logH)),
+                              Bounds(scale * 28, logH + scale * 10, scale * 5, scale)),
+                   Format('ws %d: the last-hour bar moved', [scale]));
+         CheckEquals(scale * 14 + 6, FixedBandsHeight(scale),
+                     Format('ws %d: the two bands are the e2 layout''s fixed height', [scale]));
          end;
       end;
 end;
@@ -300,7 +418,7 @@ type
      another suite must not inherit ws 13. *)
    TSavedLayoutState = class
    private
-      FWS, FWS2, FChildsWidth, FLogHeight: integer;
+      FWS, FWS2, FChildsWidth: integer;
       FMinitour: TTourDuration;
    public
       constructor Create;
@@ -313,7 +431,6 @@ begin
    FWS := ws;
    FWS2 := ws2;
    FChildsWidth := MainWindowChildsWidth;
-   FLogHeight := EditableLogHeight;
    FMinitour := Settings.Contest.MinitourDuration;
 end;
 
@@ -322,14 +439,15 @@ begin
    ws := FWS;
    ws2 := FWS2;
    MainWindowChildsWidth := FChildsWidth;
-   EditableLogHeight := FLogHeight;
    Settings.Contest.MinitourDuration := FMinitour;
 end;
 
 (* THE STREAMED MAIN FORM, WITH WHAT CreateMainWindow GIVES IT BEFORE THE
   LAYOUT: its window (CreateTR4WMainForm calls HandleNeeded, and the element
-  setters ask for one), the grids bound, and two entry fields. The log grid is
-  not built: building it reads the contest log. *)
+  setters ask for one), the grids bound, and two entry fields in the bottom
+  band, as CreateTR4WEntryField parents them. The log grid is not built here:
+  the tests that need it build it with no rows, so nothing reads a contest
+  log. *)
 procedure BuildTestMainWindow;
 var
    edit: TEdit;
@@ -341,21 +459,33 @@ begin
 
    edit := TEdit.Create(TR4WMainForm);
    edit.AutoSize := False;
-   edit.Parent := TR4WMainForm;
+   edit.Parent := TR4WMainForm.pnlBottomBand;
    TR4WCallEdit := edit;
 
    edit := TEdit.Create(TR4WMainForm);
    edit.AutoSize := False;
-   edit.Parent := TR4WMainForm;
+   edit.Parent := TR4WMainForm.pnlBottomBand;
    TR4WExchangeEdit := edit;
 end;
 
 procedure ReleaseTestMainWindow;
 begin
-   (* The edits are the form's; the globals would point into it. *)
+   (* The edits and the log grid are the form's; the globals would point into
+     it. *)
    TR4WCallEdit := nil;
    TR4WExchangeEdit := nil;
+   TR4WEditableLog := nil;
    ReleaseTestMainForm;
+end;
+
+(* CreateMainWindow's own sequence at aWS: size the window at the start log,
+  with the minimum log as its floor, then lay it out. *)
+procedure SizeAndLayOut(const aWS: integer);
+begin
+   MakeMainWindowResizeable(LayoutWidth(aWS),
+                            StartClientHeight(aWS) + MainStatusBarHeight,
+                            MinClientHeight(aWS) + MainStatusBarHeight);
+   LayOutMainWindow(aWS);
 end;
 
 (* LET THE WIDGET SET CATCH UP. gtk2 delivers a resize after the call that
@@ -372,6 +502,54 @@ begin
       end;
 end;
 
+(* THE SAME, ON A SHOWN WINDOW, and the client height held to the start
+  layout's. At 598 px (ws 13) the menu bar may wrap to a second line once the
+  window is that narrow, which takes its height out of the client area after
+  the client was sized; the bands would then sit a menu row higher than the
+  literals, for a reason that has nothing to do with them. Said in the output
+  when it happens, because on screen it is a finding of its own. *)
+procedure SizeAndLayOutShown(const aWS: integer);
+var
+   wanted: integer;
+begin
+   SizeAndLayOut(aWS);
+   Settle;
+   wanted := StartClientHeight(aWS) + MainStatusBarHeight;
+   if TR4WMainForm.ClientHeight <> wanted then
+      begin
+      WriteLn('  [MainLayout] ws ', aWS, ': the client came out ',
+              TR4WMainForm.ClientHeight, ' high, not ', wanted, '; set again');
+      TR4WMainForm.ClientHeight := wanted;
+      Settle;
+      end;
+end;
+
+(* WHETHER THIS DESKTOP CAN HOLD THE LAYOUT AT aWS. A sizeable window is held
+  to about the screen's width (Windows' maximum track size; a window manager
+  may do the same), so at ws 27 (1242 px) on a narrow test desktop the window
+  is clamped and its bands come out narrower than the layout -- a fact about
+  the desktop, not the code. The checks that need the full width ask this. *)
+function DesktopFits(const aWS: integer): boolean;
+begin
+   Result := LayoutWidth(aWS) + 32 <= Screen.Width;
+   if not Result then
+      begin
+      WriteLn('  [MainLayout] ws ', aWS, ': the desktop is ', Screen.Width,
+              ' px wide, too narrow for ', LayoutWidth(aWS),
+              '; its width checks are skipped');
+      end;
+end;
+
+(* Shown off screen, as a running program's window is shown. Its activation
+  handler moves focus and repaints the function keys, which is the running
+  program's business, not these tests'. *)
+procedure ShowTestMainWindow;
+begin
+   TR4WMainForm.OnActivate := nil;
+   ShowOffScreen(TR4WMainForm);
+   Settle;
+end;
+
 function ControlNamed(const aName: string): TControl;
 var
    c: TComponent;
@@ -384,7 +562,27 @@ begin
       end;
 end;
 
-function BoundsOf(const aName: string): TRect;
+(* WHERE A CONTROL IS IN THE WINDOW: its own bounds plus every parent's
+  offset up to the form. Exact because a band has no bevel, border or caption
+  (pinned in test 2), so its client area starts at its own corner. *)
+function FormRect(const aControl: TControl): TRect;
+var
+   p: TControl;
+   x, y: integer;
+begin
+   x := aControl.Left;
+   y := aControl.Top;
+   p := aControl.Parent;
+   while (p <> nil) and (p <> TR4WMainForm) do
+      begin
+      x := x + p.Left;
+      y := y + p.Top;
+      p := p.Parent;
+      end;
+   Result := Bounds(x, y, aControl.Width, aControl.Height);
+end;
+
+function FormRectOf(const aName: string): TRect;
 var
    c: TControl;
 begin
@@ -392,7 +590,25 @@ begin
    c := ControlNamed(aName);
    if c <> nil then
       begin
-      Result := c.BoundsRect;
+      Result := FormRect(c);
+      end;
+end;
+
+function BandPanel(const aBand: TMainBand): TPanel;
+begin
+   case aBand of
+      mbNeeds:
+         begin
+         Result := TR4WMainForm.pnlNeedsBlock;
+         end;
+      mbBottom:
+         begin
+         Result := TR4WMainForm.pnlBottomBand;
+         end;
+      else
+         begin
+         Result := TR4WMainForm.pnlTopBand;
+         end;
       end;
 end;
 
@@ -413,9 +629,56 @@ begin
       end;
 end;
 
+procedure TMainLayoutTests.CheckStatusStripAtTheBottom(const aWhere: string);
+var
+   bar: TStatusBar;
+begin
+   bar := TR4WMainForm.sbStatus;
+   CheckEquals(TR4WMainForm.ClientHeight, bar.Top + bar.Height,
+               aWhere + ': the status strip is at the bottom of the window');
+   CheckEquals(bar.Top, TR4WMainForm.pnlBottomBand.Top + TR4WMainForm.pnlBottomBand.Height,
+               aWhere + ': the bottom band sits on the status strip');
+   CheckEquals(0, TR4WMainForm.pnlTopBand.Top, aWhere + ': the top band is at the top');
+   CheckEquals(TR4WMainForm.ClientWidth,
+               TR4WMainForm.pnlNeedsBlock.Left + TR4WMainForm.pnlNeedsBlock.Width,
+               aWhere + ': the needs block is at the right edge');
+end;
+
+(* NOTHING CLIPPED: every visible control's right and bottom edge inside its
+  parent's client area, the window's for a band. *)
+procedure TMainLayoutTests.CheckEveryControlInsideItsParent(const aWhere: string);
+
+   procedure Walk(const aParent: TWinControl);
+   var
+      i: integer;
+      c: TControl;
+   begin
+      for i := 0 to aParent.ControlCount - 1 do
+         begin
+         c := aParent.Controls[i];
+         if not c.Visible then
+            begin
+            Continue;
+            end;
+         CheckTrue(((c.Left + c.Width) <= aParent.ClientWidth) and
+                   ((c.Top + c.Height) <= aParent.ClientHeight),
+                   Format('%s: %s ends at (%d,%d), outside %s''s %dx%d',
+                          [aWhere, c.Name, c.Left + c.Width, c.Top + c.Height,
+                           aParent.Name, aParent.ClientWidth, aParent.ClientHeight]));
+         if (c is TPanel) and not (c is TElementPanel) then
+            begin
+            Walk(TPanel(c));
+            end;
+         end;
+   end;
+
+begin
+   Walk(TR4WMainForm);
+end;
+
 procedure TMainLayoutTests.Test_LayOutReproducesTheDesignedFormAndMovesWithTheScale;
 const
-   (* The log at five rows: 30 + 5 * (ws + 2). *)
+   (* The log at the five-row start: 30 + 5 * (ws + 2). *)
    LOG_17 = 125;
    LOG_13 = 105;
 var
@@ -427,10 +690,11 @@ var
    i: integer;
    c: TControl;
    e: TMainWindowElement;
+   b: TMainBand;
    expected: TRect;
 begin
-   BeginTest('MainLayout: ws 17 reproduces uMainForm.lfm, ws 13 moves every control, ' +
-             'and a second call changes nothing');
+   BeginTest('MainLayout: ws 17 reproduces uMainForm.lfm and the e2 window, ws 13 moves ' +
+             'every control, and a second call changes nothing');
    (* THE .lfm IS A 96-PPI PICTURE. On a screen the LCL scales forms for, the
      streamed bounds are scaled and the layout's are not, so the oracle does
      not apply there. TR4W declares no DPI awareness, so Windows reports 96. *)
@@ -449,22 +713,79 @@ begin
    try
       Settings.Contest.MinitourDuration := 0;
 
-      (* THE ORACLE, BEFORE ANYTHING IS LAID OUT. *)
-      for i := 0 to TR4WMainForm.ControlCount - 1 do
+      (* THE ORACLE, BEFORE ANYTHING IS LAID OUT: every designed control's
+        bounds in its band. Components, not Controls: the form's own
+        children are the bands. *)
+      for i := 0 to TR4WMainForm.ComponentCount - 1 do
          begin
-         c := TR4WMainForm.Controls[i];
+         if not (TR4WMainForm.Components[i] is TControl) then
+            begin
+            Continue;
+            end;
+         c := TControl(TR4WMainForm.Components[i]);
          if IsDesignedLayoutControl(c) then
             begin
             controls.Add(c);
             designed.Add(c.BoundsRect);
+            CheckTrue((c.Parent = TR4WMainForm.pnlTopBand) or
+                      (c.Parent = TR4WMainForm.pnlNeedsBlock) or
+                      (c.Parent = TR4WMainForm.pnlBottomBand),
+                      Format('%s is a child of a band, not of %s',
+                             [c.Name, c.Parent.Name]));
             end;
          end;
-      WriteLn('  [MainLayout] ', controls.Count, ' designed controls on the form');
+      WriteLn('  [MainLayout] ', controls.Count, ' designed controls in the bands');
       CheckTrue(controls.Count > 100,
                 'the form carries its generated panels (the totals grid alone is 39)');
 
-      (* WS 17: THE .lfm, EXACTLY. *)
-      LayOutMainWindow(17, LOG_17);
+      (* THE GENERATOR AND uMainLayout AGREE ON EVERY ELEMENT'S BAND, and a
+        visible element has its window before the form is shown: the element
+        setters need one (ElementUsable), and CreateMainWindow writes captions
+        before the show. *)
+      for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+         begin
+         if (not ElementHasPanel(e)) or (MainElement(e) = nil) then
+            begin
+            Continue;
+            end;
+         b := ElementBand(e);
+         CheckTrue(MainElement(e).Parent = BandPanel(b),
+                   Format('%s is in %s; uMainLayout says %s',
+                          [MainElement(e).Name, MainElement(e).Parent.Name,
+                           BandPanel(b).Name]));
+         if MainElement(e).Visible then
+            begin
+            CheckTrue(MainElement(e).HandleAllocated,
+                      Format('%s has its window before the form is shown',
+                             [MainElement(e).Name]));
+            end;
+         end;
+
+      (* THE BANDS HAVE NO INSET, so a child's band coordinates are exact. *)
+      for b := Low(TMainBand) to High(TMainBand) do
+         begin
+         CheckEquals(BandPanel(b).Width, BandPanel(b).ClientWidth,
+                     BandPanel(b).Name + ': client width is its width');
+         CheckEquals(BandPanel(b).Height, BandPanel(b).ClientHeight,
+                     BandPanel(b).Name + ': client height is its height');
+         end;
+
+      (* WS 17, NOT YET SHOWN -- the start-up path: the .lfm, exactly. *)
+      SizeAndLayOut(17);
+      for i := 0 to controls.Count - 1 do
+         begin
+         CheckTrue(SameBounds(controls[i].BoundsRect, designed[i]),
+                   Format('ws 17 hidden: %s is %s, the .lfm has %s',
+                          [controls[i].Name, BoundsText(controls[i].BoundsRect),
+                           BoundsText(designed[i])]));
+         end;
+
+      (* SHOWN: the bands aligned, and every control where the e2 layout put
+        it in the window. The strip is shown so it is aligned too. *)
+      TR4WMainForm.lstPossibleCall.Visible := True;
+      ShowTestMainWindow;
+      CheckEquals(782, TR4WMainForm.ClientWidth, 'ws 17: the client width');
+      CheckStatusStripAtTheBottom('ws 17');
       for i := 0 to controls.Count - 1 do
          begin
          CheckTrue(SameBounds(controls[i].BoundsRect, designed[i]),
@@ -472,35 +793,6 @@ begin
                           [controls[i].Name, BoundsText(controls[i].BoundsRect),
                            BoundsText(designed[i])]));
          end;
-      (* Not in the .lfm's picture: worked out from the arithmetic. *)
-      CheckBounds('call field', TR4WCallEdit.BoundsRect, 255, 261, 221, 24, 'ws 17');
-      CheckBounds('exchange field', TR4WExchangeEdit.BoundsRect, 255, 286, 221, 24, 'ws 17');
-      CheckBounds('possible-call strip', TR4WMainForm.lstPossibleCall.BoundsRect,
-                  0, 346, 782, 17, 'ws 17');
-      CheckEquals(782, MainWindowChildsWidth, 'ws 17: the layout width');
-      CheckEquals(LOG_17, EditableLogHeight, 'ws 17: the log height the band hangs from');
-
-      (* WS 13: LITERALS, worked out by hand from the arithmetic at d689fef9. *)
-      LayOutMainWindow(13, LOG_13);
-      CheckEquals(13, ws, 'ws 13: the scale global');
-      CheckEquals(598, MainWindowChildsWidth, 'ws 13: the layout width');
-      CheckBounds('pnlBandMode', BoundsOf('pnlBandMode'), 0, 196, 52, 13, 'ws 13');
-      CheckBounds('pnlQSONumber', BoundsOf('pnlQSONumber'), 143, 196, 52, 26, 'ws 13');
-      CheckBounds('pnlInsert', BoundsOf('pnlInsert'), 546, 196, 52, 13, 'ws 13');
-      CheckBounds('pnlCQTotal', BoundsOf('pnlCQTotal'), 494, 222, 104, 13, 'ws 13');
-      CheckBounds('pnlWSJTX', BoundsOf('pnlWSJTX'), 104, 222, 39, 13, 'ws 13');
-      CheckBounds('pbLastHour', BoundsOf('pbLastHour'), 364, 235, 65, 13, 'ws 13');
-      CheckBounds('pnlTotalHead_1', BoundsOf('pnlTotalHead_1'), 65, 0, 32, 26, 'ws 13');
-      CheckBounds('pnlTotalHead_7', BoundsOf('pnlTotalHead_7'), 257, 0, 39, 26, 'ws 13');
-      CheckBounds('pnlTotalCell_7_3', BoundsOf('pnlTotalCell_7_3'), 257, 65, 39, 13, 'ws 13');
-      CheckBounds('pnlQSONeedR1Label', BoundsOf('pnlQSONeedR1Label'), 416, 13, 26, 13, 'ws 13');
-      CheckBounds('pnlMultNeedR2_10', BoundsOf('pnlMultNeedR2_10'), 572, 65, 24, 13, 'ws 13');
-      CheckBounds('call field', TR4WCallEdit.BoundsRect, 195, 209, 169, 18, 'ws 13');
-      CheckBounds('exchange field', TR4WExchangeEdit.BoundsRect, 195, 228, 169, 18, 'ws 13');
-      CheckBounds('possible-call strip', TR4WMainForm.lstPossibleCall.BoundsRect,
-                  0, 274, 598, 13, 'ws 13');
-
-      (* EVERY PANEL, not only the literals: at its uMainLayout rectangle. *)
       for e := Low(TMainWindowElement) to High(TMainWindowElement) do
          begin
          if (not ElementHasPanel(e)) or (MainElement(e) = nil) or
@@ -508,10 +800,61 @@ begin
             begin
             Continue;
             end;
-         expected := ElementRect(e, 13, LOG_13);
+         expected := OldWindowRect(e, 17, LOG_17);
+         CheckTrue(SameBounds(FormRect(MainElement(e)), expected),
+                   Format('ws 17: %s is at %s in the window, the e2 layout had %s',
+                          [MainElement(e).Name, BoundsText(FormRect(MainElement(e))),
+                           BoundsText(expected)]));
+         end;
+      CheckBounds('call field', FormRect(TR4WCallEdit), 255, 261, 221, 24, 'ws 17');
+      CheckBounds('exchange field', FormRect(TR4WExchangeEdit), 255, 286, 221, 24, 'ws 17');
+      CheckBounds('possible-call strip', FormRect(TR4WMainForm.lstPossibleCall),
+                  0, 346, 782, 17, 'ws 17');
+      CheckBounds('pnlQSONeedR1Label', FormRectOf('pnlQSONeedR1Label'),
+                  544, 17, 34, 17, 'ws 17');
+      CheckEquals(782, MainWindowChildsWidth, 'ws 17: the layout width');
+
+      (* WS 13: LITERALS, worked out by hand from the arithmetic at d689fef9,
+        IN THE WINDOW. *)
+      SizeAndLayOutShown(13);
+      CheckEquals(13, ws, 'ws 13: the scale global');
+      CheckEquals(598, MainWindowChildsWidth, 'ws 13: the layout width');
+      CheckEquals(598, TR4WMainForm.ClientWidth, 'ws 13: the client width');
+      CheckStatusStripAtTheBottom('ws 13');
+      CheckBounds('pnlBandMode', FormRectOf('pnlBandMode'), 0, 196, 52, 13, 'ws 13');
+      CheckBounds('pnlQSONumber', FormRectOf('pnlQSONumber'), 143, 196, 52, 26, 'ws 13');
+      CheckBounds('pnlInsert', FormRectOf('pnlInsert'), 546, 196, 52, 13, 'ws 13');
+      CheckBounds('pnlCQTotal', FormRectOf('pnlCQTotal'), 494, 222, 104, 13, 'ws 13');
+      CheckBounds('pnlWSJTX', FormRectOf('pnlWSJTX'), 104, 222, 39, 13, 'ws 13');
+      CheckBounds('pbLastHour', FormRectOf('pbLastHour'), 364, 235, 65, 13, 'ws 13');
+      CheckBounds('pnlTotalHead_1', FormRectOf('pnlTotalHead_1'), 65, 0, 32, 26, 'ws 13');
+      CheckBounds('pnlTotalHead_7', FormRectOf('pnlTotalHead_7'), 257, 0, 39, 26, 'ws 13');
+      CheckBounds('pnlTotalCell_7_3', FormRectOf('pnlTotalCell_7_3'), 257, 65, 39, 13, 'ws 13');
+      CheckBounds('pnlQSONeedR1Label', FormRectOf('pnlQSONeedR1Label'), 416, 13, 26, 13, 'ws 13');
+      CheckBounds('pnlMultNeedR2_10', FormRectOf('pnlMultNeedR2_10'), 572, 65, 24, 13, 'ws 13');
+      CheckBounds('call field', FormRect(TR4WCallEdit), 195, 209, 169, 18, 'ws 13');
+      CheckBounds('exchange field', FormRect(TR4WExchangeEdit), 195, 228, 169, 18, 'ws 13');
+      CheckBounds('possible-call strip', FormRect(TR4WMainForm.lstPossibleCall),
+                  0, 274, 598, 13, 'ws 13');
+
+      (* EVERY PANEL, not only the literals: at its uMainLayout rectangle in
+        its band, and at the e2 rectangle in the window. *)
+      for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+         begin
+         if (not ElementHasPanel(e)) or (MainElement(e) = nil) or
+            (e = mweAutoSendCount) then
+            begin
+            Continue;
+            end;
+         expected := ElementRect(e, 13);
          CheckTrue(SameBounds(MainElement(e).BoundsRect, expected),
-                   Format('ws 13: %s is %s, the layout says %s',
+                   Format('ws 13: %s is %s in its band, the layout says %s',
                           [MainElement(e).Name, BoundsText(MainElement(e).BoundsRect),
+                           BoundsText(expected)]));
+         expected := OldWindowRect(e, 13, LOG_13);
+         CheckTrue(SameBounds(FormRect(MainElement(e)), expected),
+                   Format('ws 13: %s is at %s in the window, the e2 layout had %s',
+                          [MainElement(e).Name, BoundsText(FormRect(MainElement(e))),
                            BoundsText(expected)]));
          end;
 
@@ -537,7 +880,8 @@ begin
                   'ws 13: a totals cell''s font');
 
       (* BACK TO 17: THE .lfm AGAIN. *)
-      LayOutMainWindow(17, LOG_17);
+      SizeAndLayOutShown(17);
+      CheckStatusStripAtTheBottom('ws 13 then 17');
       for i := 0 to controls.Count - 1 do
          begin
          CheckTrue(SameBounds(controls[i].BoundsRect, designed[i]),
@@ -552,7 +896,7 @@ begin
       (* AND A SECOND CALL AT THE SAME SCALE CHANGES NOTHING. *)
       for i := 0 to controls.Count - 1 do
          begin
-         afterFirst.Add(controls[i].BoundsRect);
+         afterFirst.Add(FormRect(controls[i]));
          if controls[i] is TElementPanel then
             begin
             fonts.Add(TElementPanel(controls[i]).Font.Height);
@@ -562,10 +906,11 @@ begin
             fonts.Add(0);
             end;
          end;
-      LayOutMainWindow(17, LOG_17);
+      LayOutMainWindow(17);
+      Settle;
       for i := 0 to controls.Count - 1 do
          begin
-         CheckTrue(SameBounds(controls[i].BoundsRect, afterFirst[i]),
+         CheckTrue(SameBounds(FormRect(controls[i]), afterFirst[i]),
                    Format('the second call moved %s', [controls[i].Name]));
          if controls[i] is TElementPanel then
             begin
@@ -584,102 +929,242 @@ begin
    end;
 end;
 
-(* PLAN RISK d2, DECIDED HERE. CreateMainWindow's order -- place, size the
-  window, anchor -- is what makes the anchors right at startup. A layout run
-  again later places controls that are ALREADY anchored. If the LCL re-captures
-  each moved control's anchor base (control.inc, ChangeBounds ->
-  UpdateAnchorRules), growing the window afterwards moves every bottom-anchored
-  control by exactly the growth; if it does not, they jump, and the band
-  containers of plan stage e5 are what replaces the anchors. *)
-procedure TMainLayoutTests.Test_BottomAnchorsHoldAfterARelayout;
+(* PLAN STAGES e3 AND e5, DECIDED HERE: the window resized in each axis, and
+  re-laid out at two other scales, with the bands doing all of it. *)
+procedure TMainLayoutTests.Test_TheBandsFollowTheWindow;
 const
-   GROWTH = 40;
+   GROWTH = 60;
+   WIDENING = 200;
 var
    saved: TSavedLayoutState;
-   watched: TList<TControl>;
-   before: TList<integer>;
-   e: TMainWindowElement;
-   logH: integer;
+   bottom, top, needs: TList<TControl>;
+   before: TList<TRect>;
+   k, logH, logW, stripW: integer;
+   r: TRect;
 
-   procedure Watch(const aControl: TControl);
+   procedure Watch(const aList: TList<TControl>; const aControl: TControl);
    begin
       if (aControl <> nil) and aControl.Visible then
          begin
-         watched.Add(aControl);
+         aList.Add(aControl);
          end;
    end;
 
-   procedure GrowAndCheck(const aWhere: string);
+   (* Each control's place in the window, in watched order: bottom, top,
+     needs. *)
+   procedure Record_;
    var
-      k: integer;
+      j: integer;
    begin
       before.Clear;
-      for k := 0 to watched.Count - 1 do
+      for j := 0 to bottom.Count - 1 do
          begin
-         before.Add(watched[k].Top);
+         before.Add(FormRect(bottom[j]));
          end;
-      TR4WMainForm.ClientHeight := TR4WMainForm.ClientHeight + GROWTH;
-      Settle;
-      for k := 0 to watched.Count - 1 do
+      for j := 0 to top.Count - 1 do
          begin
-         CheckEquals(before[k] + GROWTH, watched[k].Top,
-                     Format('%s: %s followed the bottom edge', [aWhere, watched[k].Name]));
+         before.Add(FormRect(top[j]));
+         end;
+      for j := 0 to needs.Count - 1 do
+         begin
+         before.Add(FormRect(needs[j]));
+         end;
+   end;
+
+   (* The needs block's controls are taken from the block itself -- its three
+     TWindows[] rows and the need strips alike -- so the table loop skips
+     them. *)
+   procedure WatchTheBands;
+   var
+      j: integer;
+      element: TMainWindowElement;
+   begin
+      bottom.Clear;
+      top.Clear;
+      needs.Clear;
+      for element := Low(TMainWindowElement) to High(TMainWindowElement) do
+         begin
+         if (not ElementHasPanel(element)) or (element = mweAutoSendCount) then
+            begin
+            Continue;
+            end;
+         case ElementBand(element) of
+            mbBottom:
+               begin
+               Watch(bottom, MainElement(element));
+               end;
+            mbTop:
+               begin
+               Watch(top, MainElement(element));
+               end;
+            else
+               begin
+               (* mbNeeds: taken from the block below. *)
+               end;
+            end;
+         end;
+      Watch(bottom, TR4WCallEdit);
+      Watch(bottom, TR4WExchangeEdit);
+      Watch(bottom, ControlNamed('pbLastHour'));
+      Watch(bottom, ControlNamed('pbRate'));
+      Watch(top, ControlNamed('pnlTotalCell_0_0'));
+      Watch(top, ControlNamed('pnlTotalHead_7'));
+      for j := 0 to TR4WMainForm.pnlNeedsBlock.ControlCount - 1 do
+         begin
+         if not (TR4WMainForm.pnlNeedsBlock.Controls[j] is TElementPanel) then
+            begin
+            Continue;
+            end;
+         Watch(needs, TR4WMainForm.pnlNeedsBlock.Controls[j]);
          end;
    end;
 
 begin
-   BeginTest('MainLayout: after a layout at another scale, the bottom band still ' +
-             'follows the window''s bottom edge (plan risk d2)');
+   BeginTest('MainLayout: the bands follow the window -- taller, wider, too narrow, ' +
+             'and re-laid out at ws 13 and 27 (plan stages e3 and e5)');
    saved := TSavedLayoutState.Create;
-   watched := TList<TControl>.Create;
-   before := TList<integer>.Create;
+   bottom := TList<TControl>.Create;
+   top := TList<TControl>.Create;
+   needs := TList<TControl>.Create;
+   before := TList<TRect>.Create;
    BuildTestMainWindow;
    try
       Settings.Contest.MinitourDuration := 0;
 
-      (* CreateMainWindow's own sequence, at ws 17. *)
-      LayOutMainWindow(17, LogHeightForRows(MAIN_LOG_MINIMUM_ROWS, 17));
-      MakeMainWindowResizeable(MainWindowChildsWidth,
-                               FixedBandsHeight(17) + EditableLogHeight + MainStatusBarHeight);
-      AnchorMainWindowControls;
+      (* SetWindowSize, then CreateMainWindow's own sequence at ws 17, with the
+        log grid (no rows) and the possible-call strip shown. *)
+      ApplyMainWindowScale(17);
+      CreateTR4WEditableLog(0, TopBandHeight(17), LayoutWidth(17),
+                            LogHeightForRows(MAIN_LOG_START_ROWS, 17));
+      TR4WMainForm.lstPossibleCall.Visible := True;
+      SizeAndLayOut(17);
+      ShowTestMainWindow;
+      CheckStatusStripAtTheBottom('ws 17');
+      CheckBounds('the log', FormRect(TR4WEditableLog), 0, 119, 782, 125, 'ws 17');
 
-      (* Shown, because anchors are applied when a shown form is resized. Its
-        activation handler moves focus and repaints the function keys, which
-        is the running program's business, not this test's. *)
-      TR4WMainForm.OnActivate := nil;
-      ShowOffScreen(TR4WMainForm);
+      WatchTheBands;
+      WriteLn('  [MainLayout] watching ', bottom.Count, ' bottom-band, ', top.Count,
+              ' top-band and ', needs.Count, ' needs-block controls');
+      CheckTrue(bottom.Count > 20, 'the bottom band has its controls');
+      CheckTrue(needs.Count > 3, 'the needs block has its controls');
 
-      for e := Low(TMainWindowElement) to High(TMainWindowElement) do
-         begin
-         if ElementHasPanel(e) and (TWindows[e].mweB = 1) and (e <> mweAutoSendCount) then
-            begin
-            Watch(MainElement(e));
-            end;
-         end;
-      Watch(TR4WCallEdit);
-      Watch(TR4WExchangeEdit);
-      Watch(ControlNamed('pbLastHour'));
-      Watch(ControlNamed('pbRate'));
-      WriteLn('  [MainLayout] watching ', watched.Count, ' bottom-band controls');
-      CheckTrue(watched.Count > 20, 'the bottom band has its controls');
-
-      (* The startup anchoring, as a baseline. *)
-      GrowAndCheck('after startup');
-
-      (* THE QUESTION: re-laid out at ws 13 for the window's current height,
-        then grown. *)
-      logH := TR4WMainForm.ClientHeight - MainStatusBarHeight - FixedBandsHeight(13);
-      WriteLn('  [MainLayout] re-laying out at ws 13 with a ', logH, ' px log');
-      LayOutMainWindow(13, logH);
+      (* (a) TALLER: the log takes it, the bottom band rides the bottom edge,
+        the top band stays. *)
+      Record_;
+      logH := TR4WEditableLog.Height;
+      TR4WMainForm.ClientHeight := TR4WMainForm.ClientHeight + GROWTH;
       Settle;
-      CheckBounds('call field', TR4WCallEdit.BoundsRect,
-                  195, logH + 13 * 8, 169, 18, 'ws 13 re-layout');
-      GrowAndCheck('after a re-layout at ws 13');
+      CheckEquals(logH + GROWTH, TR4WEditableLog.Height, 'taller: the log took the growth');
+      CheckStatusStripAtTheBottom('taller');
+      for k := 0 to bottom.Count - 1 do
+         begin
+         r := FormRect(bottom[k]);
+         CheckEquals(before[k].Top + GROWTH, r.Top,
+                     Format('taller: %s followed the bottom edge', [bottom[k].Name]));
+         end;
+      for k := 0 to top.Count + needs.Count - 1 do
+         begin
+         if k < top.Count then
+            begin
+            r := FormRect(top[k]);
+            end
+         else
+            begin
+            r := FormRect(needs[k - top.Count]);
+            end;
+         CheckTrue(SameBounds(r, before[bottom.Count + k]),
+                   Format('taller: a top-band control moved from %s to %s',
+                          [BoundsText(before[bottom.Count + k]), BoundsText(r)]));
+         end;
+
+      (* (b) WIDER: the log and the strip take it, the needs block rides the
+        right edge, and nothing else moves. *)
+      Record_;
+      logW := TR4WEditableLog.Width;
+      stripW := TR4WMainForm.lstPossibleCall.Width;
+      TR4WMainForm.ClientWidth := TR4WMainForm.ClientWidth + WIDENING;
+      Settle;
+      CheckEquals(LayoutWidth(17) + WIDENING, TR4WMainForm.ClientWidth,
+                  'wider: the window took the width (MaxWidth is gone)');
+      CheckEquals(logW + WIDENING, TR4WEditableLog.Width, 'wider: the log took the width');
+      CheckEquals(stripW + WIDENING, TR4WMainForm.lstPossibleCall.Width,
+                  'wider: the possible-call strip took the width');
+      CheckStatusStripAtTheBottom('wider');
+      for k := 0 to bottom.Count + top.Count - 1 do
+         begin
+         if k < bottom.Count then
+            begin
+            r := FormRect(bottom[k]);
+            end
+         else
+            begin
+            r := FormRect(top[k - bottom.Count]);
+            end;
+         CheckTrue(SameBounds(r, before[k]),
+                   Format('wider: a control outside the needs block moved from %s to %s',
+                          [BoundsText(before[k]), BoundsText(r)]));
+         end;
+      for k := 0 to needs.Count - 1 do
+         begin
+         r := FormRect(needs[k]);
+         CheckEquals(before[bottom.Count + top.Count + k].Left + WIDENING, r.Left,
+                     Format('wider: %s kept its distance from the right edge',
+                            [needs[k].Name]));
+         end;
+      CheckEveryControlInsideItsParent('wider');
+
+      (* (c) TOO NARROW: MinWidth refuses it, and nothing is clipped. *)
+      TR4WMainForm.ClientWidth := LayoutWidth(17) - 100;
+      Settle;
+      CheckTrue(TR4WMainForm.ClientWidth >= LayoutWidth(17),
+                Format('narrower: the client is %d, below the layout''s %d',
+                       [TR4WMainForm.ClientWidth, LayoutWidth(17)]));
+      CheckStatusStripAtTheBottom('narrower');
+      CheckEveryControlInsideItsParent('narrower');
+
+      (* (d) RE-LAID OUT AT ws 13, THEN TALLER: the old risk d2, which no
+        longer exists -- nothing is anchored. *)
+      SizeAndLayOut(13);
+      Settle;
+      CheckStatusStripAtTheBottom('ws 13 re-layout');
+      CheckBounds('call field', FormRect(TR4WCallEdit), 195,
+                  TR4WMainForm.pnlBottomBand.Top + 13, 169, 18, 'ws 13 re-layout');
+      CheckEquals(TR4WMainForm.pnlBottomBand.Top - TopBandHeight(13),
+                  TR4WEditableLog.Height, 'ws 13 re-layout: the log fills between the bands');
+      WatchTheBands;
+      Record_;
+      TR4WMainForm.ClientHeight := TR4WMainForm.ClientHeight + 40;
+      Settle;
+      for k := 0 to bottom.Count - 1 do
+         begin
+         CheckEquals(before[k].Top + 40, FormRect(bottom[k]).Top,
+                     Format('ws 13 then taller: %s followed the bottom edge',
+                            [bottom[k].Name]));
+         end;
+      CheckEveryControlInsideItsParent('ws 13 then taller');
+
+      (* (e) RE-LAID OUT AT ws 27: the band grows by 70 px, and the status
+        strip must stay below it (see uMainForm.PlaceMainBands). *)
+      SizeAndLayOut(27);
+      Settle;
+      CheckStatusStripAtTheBottom('ws 27 re-layout');
+      CheckEquals(TopBandHeight(27), TR4WMainForm.pnlTopBand.Height, 'ws 27: the top band');
+      CheckEquals(BottomBandHeight(27), TR4WMainForm.pnlBottomBand.Height,
+                  'ws 27: the bottom band');
+      CheckEquals(TopBandHeight(27), TR4WEditableLog.Top, 'ws 27: the log starts below the top band');
+      CheckEquals(TR4WMainForm.pnlBottomBand.Top, TR4WEditableLog.Top + TR4WEditableLog.Height,
+                  'ws 27: the log ends on the bottom band');
+      if DesktopFits(27) then
+         begin
+         CheckEveryControlInsideItsParent('ws 27');
+         end;
    finally
       ReleaseTestMainWindow;
       saved.Restore;
       saved.Free;
-      watched.Free;
+      bottom.Free;
+      top.Free;
+      needs.Free;
       before.Free;
    end;
 end;
@@ -709,14 +1194,10 @@ begin
       (* SetWindowSize, then CreateMainWindow's own sequence, at ws 17, with
         the log. *)
       ApplyMainWindowScale(17);
-      CreateTR4WEditableLog(0, 17 * 7, LayoutWidth(17),
-                            LogHeightForRows(MAIN_LOG_MINIMUM_ROWS, 17));
-      LayOutMainWindow(17, LogHeightForRows(MAIN_LOG_MINIMUM_ROWS, 17));
-      MakeMainWindowResizeable(MainWindowChildsWidth,
-                               FixedBandsHeight(17) + EditableLogHeight + MainStatusBarHeight);
-      AnchorMainWindowControls;
-      TR4WMainForm.OnActivate := nil;
-      ShowOffScreen(TR4WMainForm);
+      CreateTR4WEditableLog(0, TopBandHeight(17), LayoutWidth(17),
+                            LogHeightForRows(MAIN_LOG_START_ROWS, 17));
+      SizeAndLayOut(17);
+      ShowTestMainWindow;
 
       logBefore := TR4WEditableLog.BoundsRect;
       TR4WMainForm.ClientHeight := TR4WMainForm.ClientHeight + GROWTH;
@@ -725,7 +1206,7 @@ begin
                   TR4WEditableLog.Height, 'the log took the window''s growth');
 
       logBefore := TR4WEditableLog.BoundsRect;
-      callTop := TR4WCallEdit.Top;
+      callTop := FormRect(TR4WCallEdit).Top;
 
       (* BOTH STATES, THEN THE ARM ITSELF. The setting is not touched: its
         setter marks the settings changed, and the defect this guards against
@@ -741,10 +1222,59 @@ begin
       CheckTrue(SameBounds(logAfter, logBefore),
                 Format('the gridline toggle moved the log from %s to %s',
                        [BoundsText(logBefore), BoundsText(logAfter)]));
-      CheckEquals(callTop, TR4WCallEdit.Top, 'the gridline toggle moved the call field');
+      CheckEquals(callTop, FormRect(TR4WCallEdit).Top, 'the gridline toggle moved the call field');
    finally
-      (* The grid is the form's; the global would point into it. *)
-      TR4WEditableLog := nil;
+      ReleaseTestMainWindow;
+      saved.Restore;
+      saved.Free;
+   end;
+end;
+
+(* THE FLOOR IS THREE WHOLE LOG ROWS (NY4I, 2026-11-21), MEASURED ON THE GRID,
+  not trusted to the arithmetic: the window asked for one pixel of client,
+  the constraint answers, and the grid's own client area is counted in rows
+  under its header. At ws 27 the old 30 px allowance would have left a row
+  short. *)
+procedure TMainLayoutTests.Test_TheMinimumHeightShowsThreeLogRows;
+const
+   SCALES: array[0..2] of integer = (13, 17, 27);
+var
+   saved: TSavedLayoutState;
+   k, scale, rows: integer;
+begin
+   BeginTest('MainLayout: at its minimum height the window shows three whole log rows');
+   saved := TSavedLayoutState.Create;
+   BuildTestMainWindow;
+   try
+      Settings.Contest.MinitourDuration := 0;
+      ApplyMainWindowScale(17);
+      CreateTR4WEditableLog(0, TopBandHeight(17), LayoutWidth(17),
+                            LogHeightForRows(MAIN_LOG_START_ROWS, 17));
+      SizeAndLayOut(17);
+      ShowTestMainWindow;
+
+      for k := Low(SCALES) to High(SCALES) do
+         begin
+         scale := SCALES[k];
+         SizeAndLayOut(scale);
+         Settle;
+         TR4WMainForm.ClientHeight := 1;
+         Settle;
+         rows := (TR4WEditableLog.ClientHeight - TR4WEditableLog.RowHeights[0]) div
+                 TR4WEditableLog.DefaultRowHeight;
+         WriteLn('  [MainLayout] ws ', scale, ' at MinHeight: client ',
+                 TR4WMainForm.ClientHeight, ', log ', TR4WEditableLog.Height,
+                 ' (client ', TR4WEditableLog.ClientHeight, '), ', rows, ' whole rows');
+         CheckTrue(rows >= MAIN_LOG_MINIMUM_ROWS,
+                   Format('ws %d: the log shows %d whole rows at the window''s minimum ' +
+                          'height, wanted %d', [scale, rows, MAIN_LOG_MINIMUM_ROWS]));
+         CheckStatusStripAtTheBottom(Format('ws %d at MinHeight', [scale]));
+         if DesktopFits(scale) then
+            begin
+            CheckEveryControlInsideItsParent(Format('ws %d at MinHeight', [scale]));
+            end;
+         end;
+   finally
       ReleaseTestMainWindow;
       saved.Restore;
       saved.Free;
@@ -753,10 +1283,11 @@ end;
 
 procedure TMainLayoutTests.RunAllTests;
 begin
-   Test_NoOverlapAndInsideTheWidthAtEveryScale;
+   Test_EveryRectInsideItsBandAndWhereItWasAtEveryScale;
    Test_LayOutReproducesTheDesignedFormAndMovesWithTheScale;
-   Test_BottomAnchorsHoldAfterARelayout;
+   Test_TheBandsFollowTheWindow;
    Test_GridlinesLeaveATallLogAlone;
+   Test_TheMinimumHeightShowsThreeLogRows;
 end;
 
 end.

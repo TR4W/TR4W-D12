@@ -188,13 +188,37 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-21 -- THE MAIN WINDOW IS THREE BANDS AND THE LOG, AND IT WIDENS (width plan stages e5 + e3; lcl-ui)
+
+Every main-window control is now a child of one of three panels:
+
+- `pnlTopBand` (alTop): the seven rows above the log.
+- `pnlNeedsBlock` (alRight inside the top band): the need headers, Beam Heading and the need strips.
+- `pnlBottomBand` (alBottom, above the status strip): everything below the log.
+
+The log is alClient. The anchors are gone. At the old window size nothing should move: `uTestMainLayout` holds every control to its old position in the window at WINDOW SIZE 1 and 5, but only on a form shown off screen in the unit tests. Nothing here has been seen on a running program.
+
+- [ ] **The same window, at the old size.** Set DEBUG LOG LEVEL = DEBUG. Start the build before this change (a815719a) and the new one, each at WINDOW SIZE 1, 5 and 15, on Windows and on Mint, and compare by eye. The `[Layout]` dump now names each control's parent and gives its position in the window as `(window x,y)`. Those window positions must equal the old build's `L=`/`T=` values.
+- [ ] **Drag wider, on Windows and on Mint.** The corner and the right edge show the two-way and left-right resize cursors. Drag the right edge out about 200 px:
+  - the log and its columns widen, and so do the possible-call strip (type a partial call) and the status strip;
+  - the need strips and their headers (top right) and Beam Heading move with the right edge;
+  - the clocks, the totals grid, Total Score, Dupe Info, the entry fields and every panel below the log stay where they were.
+- [ ] **Drag narrower.** The window stops at its old width (the layout width) and nothing is cut off at the right.
+- [ ] **Drag taller and shorter.** Taller: the log gains rows and everything below it rides the bottom edge, as before. Shorter: the window now stops at **three** whole log rows, not five, and the band below the log and the status strip stay intact.
+- [ ] **The status strip is the bottom.** Check at WINDOW SIZE 1, 5 and 15, at startup and after a resize. The status strip is at the very bottom and the panels below the log sit directly above it. It must never be above them: two bottom-aligned panels are ordered by where they are, and `uMainForm.PlaceMainBands` is what holds the order.
+- [ ] **gtk2 sizes.** On Mint, at startup at WINDOW SIZE 15, is the minimum height right? Drag it as short as it goes and count three whole log rows. The floor is computed before the window is shown, and on gtk2 the menu bar's height may not be known yet. If the floor comes out short, the log shows two rows.
+- [ ] **Flicker while dragging** in either axis, on Windows and on Mint: the bands and the log should repaint without the panels jumping or the need strips smearing.
+- [ ] **Saved width.** Widen the window, close TR4W, start it: it opens at the wider width. Then raise WINDOW SIZE so the layout is wider than the saved width, and restart. The window opens at the new layout width, not narrower.
+- [ ] **Dragging the window by its background** (a gap between panels, above or below the log) still moves it, without a jump on the first move.
+- [ ] **Possible-call strip.** Type a partial call that has matches. The strip appears directly above the status strip with a 6 px gap, across the full width, at the height it had before.
+
 ## Added 2026-11-21 -- THE MAIN WINDOW IS PLACED BY ONE ROUTINE (width plan stage e2; lcl-ui)
 
 `CreateMainWindow` now creates the controls, and `LayOutMainWindow` places them and sets their fonts. The result should be identical, pixel for pixel. `uTestMainLayout` pins it on a streamed form against the `.lfm` at ws 17 and against hand-worked literals at ws 13. Nothing here has been seen on a running program.
 
 - [ ] **The same window, measured.** Set DEBUG LOG LEVEL = DEBUG and start the build from before this change (d689fef9) and the new one, each at WINDOW SIZE 1, 5 and 15, on Windows and on Mint. Diff the `[Layout]   <class> <name> L= T= W= H=` lines (DumpMainWindowChildren) between the two builds. They must match line for line. The `[Layout] main window: client WxH, outer ...` line must match too.
 - [ ] **Captions fitted as before.** MASTER, MULT, QSOB4, `CQ` in OP MODE, `OFF` in PTT and `WK` look as they did, and none is smaller. The WSJT-X indicator's `WSJTX` is in its smaller font, and the QSO number is in Lucida Console bold. The need-strip labels (`CW:`/`SSB:`/`Both:`) share one font size.
-- [ ] **The test that decides plan risk d2** is `MainLayout`'s "bottom band still follows the window's bottom edge" in the unit tests. If it fails on any platform, say so: it means a re-layout needs the band containers (plan stage e5), not anchors.
+- [ ] **The test that decides plan risk d2** -- superseded the same day (lcl-ui's note; NY4I to remove): the band containers (e5) replaced the anchors, so the risk no longer exists and the test is now `MainLayout`'s "the bands follow the window" (see the e5 section above).
 - [ ] **Two overlaps the new test found, both in the arithmetic BEFORE this change** (pinned as known in `uTestMainLayout.KnownOverlap`):
   - **Roving:** the ROVER panel (row 10, columns 15-25) covers the lower part of the exchange field at every WINDOW SIZE. Start roving (`ROVER`) and look at the exchange field.
   - **WINDOW SIZE 3, 7, 11 or 15:** the totals grid's "All" column runs 3 px under TOTAL SCORE and DUPE INFO CALL.
@@ -207,7 +231,7 @@ Nothing here has been seen on screen.
 - [ ] **Preferences > Appearance reads top to bottom**: Main window (Font, Font size step, Main window text size, the restart note, Language), then Windows and log (four check boxes). No "Layout" heading, no note about the Settings menu. Tab moves in that order.
 - [ ] **Font summary and Choose...**: the box shows e.g. `Arial, Bold` IN that typeface; Choose... opens the system font dialog at the current face and weight. On Windows it has no size list (`fdNoSizeSel`); on gtk2/cocoa a size list may show and is ignored -- say whether that confuses. Pick another face and Regular: the box changes, Save un-greys, Save, restart: the main window uses the new face, not bold. Cancel in the dialog changes nothing.
 - [ ] **Font size step 0..2 and Main window text size 1..15** are up/down boxes; typing a letter does nothing, typing 9 in the step box clamps to 2. Change the text size, restart: the whole main window is larger/smaller.
-- [ ] **Window height** (ROW COUNT retired): a station with a saved main window position restores its height exactly as before, and can now drag it SHORTER than a 12-row layout, down to five log rows. A first run (delete the main window's saved position) opens with about twelve log rows. Toggle Draw gridlines in the log in a window dragged tall: the log stays filling the window (it used to snap back to the ROW COUNT height -- read from the code, never observed).
+- [ ] **Window height** (ROW COUNT retired): a station with a saved main window position restores its height exactly as before, and can now drag it SHORTER than a 12-row layout, down to five log rows (three since stage e5, the same day). A first run (delete the main window's saved position) opens with about twelve log rows. Toggle Draw gridlines in the log in a window dragged tall: the log stays filling the window (it used to snap back to the ROW COUNT height -- read from the code, never observed).
 - [ ] **Ctrl-W** sends the newest QSO's name, whatever the window height (it used to send the 8th-newest at ROW COUNT 12 -- read from the code).
 - [ ] **An old config line `ROW COUNT = 12`** loads without the invalid-statement dialog, and `tr4w.log` says it is withdrawn.
 

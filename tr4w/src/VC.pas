@@ -3252,7 +3252,9 @@ var
   //EditableLogWindowHeight               : integer;
 //  MainWindowHeight                      : integer;
   MainWindowChildsWidth                 : integer;
-  EditableLogHeight                     : integer;
+  (* EditableLogHeight IS GONE (2026-11-21, plan stage e5). It was the y
+    origin of every control below the log; those are children of the bottom
+    band now, placed in the band's own coordinates, and the log is alClient. *)
 
 
 //  line1                                 : integer;

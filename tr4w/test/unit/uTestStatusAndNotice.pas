@@ -647,7 +647,8 @@ end;
 (* THE FOUR PANELS SHARE THE STRIP, WHATEVER WIDTH IT IS.
 
   A TStatusBar PANEL HAS A FIXED WIDTH AND DOES NOT FOLLOW ITS PARENT, and the
-  .lfm's four add up to exactly the DESIGN-TIME client width of 806.  The running
+  .lfm's four add up to 806, the design-time client width until the bands
+  (2026-11-21) made it 782; neither is what the strip gets at run time.  The running
   window is sized from the layout instead (ws * 46, a font measurement), so the
   panels overran the client area and the last one clipped -- NY4I, bench,
   2026-09-26: "we overran the border for radio 2 just a bit".
@@ -684,7 +685,7 @@ begin
    EnsureMainForm;
    bar := TR4WMainForm.sbStatus;
 
-   CheckSpansAt(782);      (* ws = 17: narrower than the designed 806 *)
+   CheckSpansAt(782);      (* ws = 17: narrower than the .lfm panels' 806 *)
    CheckSpansAt(829);      (* ws = 18, and not divisible by four *)
 end;
 

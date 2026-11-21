@@ -544,36 +544,39 @@ procedure ExecuteConfigurationFile(const f: AnsiString);
 
 const
   (* THE LOG PANE'S HEIGHT IN ROWS, now that ROW COUNT is retired
-    (2026-11-21). MINIMUM is what the window is laid out with and so what its
-    MinHeight allows: five rows, the old ROW COUNT default, so no window
-    shrinks below what a fresh install had. FIRST_RUN is how tall a window
-    with no saved size opens: twelve rows. After that the saved window
-    position decides. DEFINED in uMainLayout, with the arithmetic that uses
-    them (2026-11-21). *)
+    (2026-11-21). MINIMUM is the fewest the window may be dragged down to --
+    NY4I's three -- and so its MinHeight. START is what CreateMainWindow
+    builds the window at: five rows, the old ROW COUNT default. FIRST_RUN is
+    how tall a window with no saved size opens: twelve rows. After that the
+    saved window position decides. DEFINED in uMainLayout, with the
+    arithmetic that uses them (2026-11-21). *)
   MAIN_LOG_MINIMUM_ROWS   = uMainLayout.MAIN_LOG_MINIMUM_ROWS;
+  MAIN_LOG_START_ROWS     = uMainLayout.MAIN_LOG_START_ROWS;
   MAIN_LOG_FIRST_RUN_ROWS = uMainLayout.MAIN_LOG_FIRST_RUN_ROWS;
 
 function MainLogHeightForRows(const aRows: integer): integer;
 
 (* PUT EVERY CONTROL ON THE MAIN WINDOW WHERE SCALE aWS PUTS IT, WITH ITS FONT.
 
-  CreateMainWindow CREATES the controls; this PLACES them: the log, the
-  TWindows[] panels, the entry fields, the progress bars, the minitour row,
-  the possible-call strip, the totals grid and the need strips, and every
-  font that follows ws. aLogHeight is the log pane's height; the band below
-  it starts there. The arithmetic is uMainLayout's.
+  CreateMainWindow CREATES the controls; this PLACES them: the three bands,
+  the TWindows[] panels, the entry fields, the progress bars, the minitour
+  row, the possible-call strip, the totals grid and the need strips, and
+  every font that follows ws. The arithmetic is uMainLayout's, and every
+  position is in the control's own band (plan stage e5).
 
-  IDEMPOTENT: a second call with the same two numbers changes nothing, and a
-  call with another aWS re-places and re-fonts every control that depends on
-  it. It sets the scale globals (ws, MainWindowChildsWidth ...) first.
+  THE LOG IS NOT PLACED: it is alClient, and takes what the bands leave. So
+  there is no log height to pass, and a taller or wider window needs no call
+  here at all.
 
-  IT DOES NOT SIZE THE WINDOW OR ANCHOR ANYTHING. CreateMainWindow does both,
-  once, after the first call (MakeMainWindowResizeable,
-  AnchorMainWindowControls), and those two decide what a resize does. A
-  re-layout at another scale on a window already anchored is e4's, in
-  docs/MAIN_WINDOW_WIDTH_PLAN.md. Safe on a form that is never shown (the
-  headless /EXPORT path builds one). *)
-procedure LayOutMainWindow(const aWS, aLogHeight: integer);
+  IDEMPOTENT: a second call with the same aWS changes nothing, and a call with
+  another aWS re-places and re-fonts every control that depends on it. It sets
+  the scale globals (ws, MainWindowChildsWidth ...) first.
+
+  IT DOES NOT SIZE THE WINDOW. Call MakeMainWindowResizeable FIRST: the bottom
+  band is placed against the window's current client height, and a window
+  that is not shown yet does not re-align its children when it is resized.
+  Safe on a form that is never shown (the headless /EXPORT path builds one). *)
+procedure LayOutMainWindow(const aWS: integer);
 
 function CheckCommandInCallsignWindow(const aCommand: string): boolean;
 procedure ClearMultSheet_CtrlC;
@@ -4687,7 +4690,7 @@ end;
   10 the region would have stopped matching the frame the first time an operator
   dragged it. *)
 
-procedure LayOutMainWindow(const aWS, aLogHeight: integer);
+procedure LayOutMainWindow(const aWS: integer);
 var
   e: TMainWindowElement;
   r: Types.TRect;
@@ -4712,19 +4715,14 @@ begin
     changes nothing there. *)
   ApplyMainWindowScale(aWS);
 
-  (* THE LOG. ITS HEIGHT IS THE CALLER'S, and EditableLogHeight is that height,
-    not a read-back: the grid takes exactly the height it is given (the snap
-    that once made a read-back necessary is deleted -- see
-    uMainForm.TR4WEditableLogSetBounds). *)
-  r := LogRect(aWS, aLogHeight);
-  TR4WEditableLogSetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
-  TR4WPreviousDupesSetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+  (* THE BANDS FIRST, at this scale's sizes. The log (alClient) takes what
+    they leave; it is given only its row height and font here. *)
+  PlaceMainBands(TopBandHeight(aWS), NeedsBlockWidth(aWS), BottomBandHeight(aWS));
   ScaleMainLogGrids(LogRowHeight(aWS));
-  EditableLogHeight := aLogHeight;
 
-  (* THE TWindows[] PANELS: bounds and font. What each one IS -- bevel,
-    alignment, visibility, colours, a fixed caption -- CreateMainWindow set
-    once.
+  (* THE TWindows[] PANELS: bounds and font, each in its own band. What each
+    one IS -- bevel, alignment, visibility, colours, a fixed caption --
+    CreateMainWindow set once.
 
     THE PANEL'S OWN SetBounds, NOT A GUARDED SETTER: ElementUsable asks for a
     window as well, and CreateMainElement, which placed these before, checked
@@ -4742,11 +4740,11 @@ begin
        afterwards, so a second layout does not move the panel twice. *)
      if (e = mweQuickCommand) and (Settings.Contest.MinitourDuration <> 0) then
         begin
-        r := MinitourQuickCommandRect(aWS, aLogHeight);
+        r := MinitourQuickCommandRect(aWS);
         end
      else
         begin
-        r := ElementRect(e, aWS, aLogHeight);
+        r := ElementRect(e, aWS);
         end;
      if MainElement(e) <> nil then
         begin
@@ -4801,24 +4799,25 @@ begin
     The two colour arguments these calls used to carry are gone -- see the
     note on the progress bars in uMainForm, they had not reached the screen
     since the comctl32 v6 manifest was added. *)
-  PlaceBar(mpbLastHour, LastHourBarRect(aWS, aLogHeight));
-  PlaceBar(mpbRate, RateBarRect(aWS, aLogHeight));
+  PlaceBar(mpbLastHour, LastHourBarRect(aWS));
+  PlaceBar(mpbRate, RateBarRect(aWS));
 
-  PlaceEntry(efCall, EntryFieldRect(efrCall, aWS, aLogHeight));
-  PlaceEntry(efExchange, EntryFieldRect(efrExchange, aWS, aLogHeight));
+  PlaceEntry(efCall, EntryFieldRect(efrCall, aWS));
+  PlaceEntry(efExchange, EntryFieldRect(efrExchange, aWS));
 
   (* THE MINITOUR ROW: the tour's bar and readout, beside the quick-command
     panel the loop above narrowed. *)
   if Settings.Contest.MinitourDuration <> 0 then
      begin
-     r := TourDurationTextRect(aWS, aLogHeight);
+     r := TourDurationTextRect(aWS);
      SetTourDurationBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
-     PlaceBar(mpbTourDuration, TourDurationBarRect(aWS, aLogHeight));
+     PlaceBar(mpbTourDuration, TourDurationBarRect(aWS));
      end;
 
-  r := PossibleCallRect(aWS, aLogHeight);
-  SetPossibleCallBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top,
-                        aWS, PossibleCallColumnWidth(aWS));
+  (* THE STRIP IS alBottom IN ITS BAND, so only its height is the layout's;
+    the band gives it its width and its place. *)
+  r := PossibleCallRect(aWS);
+  SetPossibleCallSize(r.Bottom - r.Top, aWS, PossibleCallColumnWidth(aWS));
   SetPossibleCallFont(Settings.Font.Face,
                       ElementFontHeight(aWS, Settings.Font.Size), Settings.Font.Bold);
 
@@ -4869,18 +4868,18 @@ begin
     LVS_OWNERDATA and left the log blank. None of those are expressible against
     a control the LCL draws.
 
-    BUILT AT THE MINIMUM HEIGHT, and the layout below takes its height from
-    it, so the window's MinHeight is the five-row layout a fresh install had
-    before ROW COUNT was retired. A taller log is the window's height: the
-    saved window position restores it, or OpenOtherWindows grows a first-run
-    window to MAIN_LOG_FIRST_RUN_ROWS.
+    BUILT AT THE START HEIGHT, the five-row layout a fresh install had before
+    ROW COUNT was retired; the window is sized to it at the end of this
+    routine. A taller log is the window's height: the saved window position
+    restores it, or OpenOtherWindows grows a first-run window to
+    MAIN_LOG_FIRST_RUN_ROWS.
 
-    CREATED AT ITS LAYOUT BOUNDS so its columns are built against the width
-    they will have; LayOutMainWindow, at the end of this routine, owns the
-    bounds from then on and sets the same ones. CheckEditableWindowHeight,
-    which set them a second time here, is deleted (2026-11-21). *)
-  CreateTR4WEditableLog(0, ws * 7,
-    MainWindowChildsWidth, MainLogHeightForRows(MAIN_LOG_MINIMUM_ROWS));
+    IT IS alClient (plan stage e5), between the two bands. These bounds are
+    the ones alignment gives it at the start size, set here because a form
+    that has not been shown does not align its children, and the columns are
+    built against the width the grid has now. *)
+  CreateTR4WEditableLog(0, TopBandHeight(ws),
+    MainWindowChildsWidth, MainLogHeightForRows(MAIN_LOG_START_ROWS));
   DispalayLogGridLines;
 
   (* THE WINDOW IS SIZED AT THE END OF THIS ROUTINE, by
@@ -5105,23 +5104,25 @@ begin
 
   // AppendMenu(GetSubMenu(tr4w_main_menu, menu_rescore), MF_POPUP , 11010, 'NepItem');
   // InsertMenu(tr4w_main_menu, menu_rescore, MF_BYCOMMAND, 177, 'aa');
-  (* THE MAIN WINDOW BECOMES RESIZEABLE, AND THE LOG IS WHAT GROWS.
+  (* THE MAIN WINDOW IS RESIZEABLE IN BOTH AXES, AND THE LOG IS WHAT GROWS.
 
-    Everything above is unchanged: the layout is still computed from TWindows[]
-    scaled by ws, which is what follows the operator's font-size setting. What
-    is new is that the controls now know which edge they belong to, so the
-    window can be dragged taller and the extra height goes to the log instead
-    of nowhere.
+    The layout is still computed from TWindows[] scaled by ws, which is what
+    follows the operator's font-size setting. The controls live in three
+    container bands (plan stage e5): the top band alTop, its needs block
+    alRight inside it, the bottom band alBottom above the status strip, and the
+    log alClient between them. So a taller window gives the log more rows, and
+    a wider one gives the log, the possible-call strip and the status strip
+    more width and moves the needs block to the right edge -- with no code,
+    and no anchor captured from an absolute position.
 
-    THE HEIGHT IS THE ONLY FREE DIMENSION FOR NOW. The bands are laid out in
-    fixed ws-scaled columns across the full width, so a wider window would just
-    add empty space on the right; the columns following the width is a separate
-    piece of work. Pinning MinWidth = MaxWidth says that honestly rather than
-    offering a resize that does nothing useful.
+    THE WIDTH IS FREE ABOVE THE LAYOUT WIDTH (plan stage e3). MinWidth is the
+    layout's 46 * ws, so nothing is ever clipped; the text size is still
+    WINDOW SIZE until ws follows the width (e4).
 
-    MinHeight is the layout's own height, so the window can grow but never
-    shrink far enough to eat the entry fields, which is what a bare bsSizeable
-    would allow.
+    MinHeight keeps MAIN_LOG_MINIMUM_ROWS log rows (NY4I: three; it was the
+    five-row start layout until e5), so the
+    window can never shrink far enough to eat the entry fields, which is what a
+    bare bsSizeable would allow.
 
     THE SECOND ARGUMENT IS A CLIENT HEIGHT. The old sizing call asked for an
     OUTER height of `6 + MainWindowCaptionAndHeader + EditableLogHeight +
@@ -5131,46 +5132,30 @@ begin
     Handing over the client height directly drops both conversions and the
     assumption about how thick the frame is.
 
-    SIZE FIRST, THEN ANCHOR, AND THE ORDER IS LOAD-BEARING. An anchor holds a
-    control at a fixed DISTANCE from an edge, captured from wherever the
-    control is when the parent next resizes. Every control above was just
-    positioned in absolute coordinates by the ws arithmetic, for the finished
-    layout -- so if the form's client height changes AFTER anchoring, each
-    bottom-anchored control is dragged by that delta and lands somewhere the
-    arithmetic never put it.
+    THE ANCHORS ARE GONE (plan stage e5). AnchorMainWindowControls captured
+    each control's distance from an edge out of its absolute position, which
+    made "size first, then anchor" load-bearing and needed UpdateBaseBounds on
+    the one designed control whose base had gone stale. A child of a band is
+    placed in the band's own coordinates, and the band is placed by Align, so
+    there is nothing to capture and no order to get wrong.
 
-    The delta is near zero at the default font size, because the .lfm form
-    height and the computed height agree to a pixel there. It is not zero at
-    any other Settings.MainWindow.WindowSize, which is exactly the kind of defect that ships
-    looking fine on the machine it was written on. *)
-  (* PLUS THE STATUS STRIP, WHICH IS SPACE THE WINDOW GAINED.
+    PLUS THE STATUS STRIP, WHICH IS SPACE THE WINDOW GAINED. The bottom band
+    sits on top of it (both alBottom), so nothing an operator has muscle memory
+    for moved when the strip was added. Its height is READ FROM THE CONTROL
+    rather than written down, because how tall a status bar is belongs to the
+    widget set and differs on gtk2 and Cocoa. Its design-time twin is
+    STATUS_BAR_HEIGHT in tools/gen_main_elements.py, which only has to keep
+    the DESIGNER honest.
 
-    The strip is the only Align-ed control on this form; everything else is
-    absolutely positioned, and an absolutely positioned child anchors to the
-    parent's FULL ClientHeight -- DoPosition reads ParentClientHeight
-    (lcl/include/wincontrol.inc) -- so an alBottom sibling does NOT push one out
-    of its way, it covers it.  Adding the height here is what makes the strip
-    NEW space: nothing an operator has muscle memory for moves, and the bottom
-    row of status panels keeps its distance from the bottom edge, which is what
-    the anchoring below then preserves on every resize.
-
-    READ FROM THE CONTROL rather than written down, because how tall a status
-    bar is belongs to the widget set and differs on gtk2 and Cocoa.  Its
-    design-time twin is STATUS_BAR_HEIGHT in tools/gen_main_elements.py, which
-    only has to keep the DESIGNER honest.
-
-    AN OPERATOR'S SAVED WINDOW HEIGHT FROM AN EARLIER VERSION IS 23 px SHORT,
-    and the LCL fixes that for us: MakeMainWindowResizeable sets
-    Constraints.MinHeight from the height it just took, so the restore clamps
-    up rather than opening a window whose strip sits on the bottom panel row.
-
-    PLACED FIRST, BY LayOutMainWindow (2026-11-21): every control above was
-    only created. The order -- place, size the window, then anchor -- is the
-    order this note requires. *)
-  LayOutMainWindow(ws, MainLogHeightForRows(MAIN_LOG_MINIMUM_ROWS));
+    SIZE FIRST, THEN LAY OUT: LayOutMainWindow places the bottom band against
+    the client height, and this window is not shown yet, so it will not
+    re-align when it is resized. ReportMainWindowLayout then says where
+    everything landed. *)
   MakeMainWindowResizeable(MainWindowChildsWidth,
-                           FixedBandsHeight(ws) + EditableLogHeight + MainStatusBarHeight);
-  AnchorMainWindowControls;
+                           StartClientHeight(ws) + MainStatusBarHeight,
+                           MinClientHeight(ws) + MainStatusBarHeight);
+  LayOutMainWindow(ws);
+  ReportMainWindowLayout;
 
 end;
 
@@ -5294,16 +5279,16 @@ begin
     note in that routine records. Saving an outer rect and restoring it as a
     client rect is what grew a window by its frame on every restart.
 
-    THE WIDTH IS DELIBERATELY NOT RESTORED: MakeMainWindowResizeable pins it, so
-    the layout decides it, not a saved file.
+    THE WIDTH IS RESTORED TOO, since plan stage e3 freed it: never narrower
+    than the layout width, which is the window's MinWidth.
 
-    A WINDOW WITH NO SAVED SIZE GROWS BY THE ROWS BETWEEN THE MINIMUM LAYOUT AND
+    A WINDOW WITH NO SAVED SIZE GROWS BY THE ROWS BETWEEN THE START LAYOUT AND
     THE FIRST-RUN HEIGHT (2026-11-21, when ROW COUNT was retired). Whole rows of
-    ws + 2, so the log -- anchored to all four edges -- stays a whole number of
+    ws + 2, so the log -- alClient between the bands -- stays a whole number of
     rows. *)
   RestoreMainWindowBounds(tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect,
                           MainLogHeightForRows(MAIN_LOG_FIRST_RUN_ROWS) -
-                          MainLogHeightForRows(MAIN_LOG_MINIMUM_ROWS));
+                          MainLogHeightForRows(MAIN_LOG_START_ROWS));
   // ...and tell the LCL, which cannot see a raw SWP_SHOWWINDOW.  Without this
   // the form's Visible stays False and it never shows its CHILD CONTROLS --
   // which is how the callsign and exchange fields came to be created, sized and
@@ -9711,7 +9696,7 @@ begin
 
   (* MainWindowWidth (ChildsWidth + 7) and FKButtonWidth (4 * ws - 3) were
     assigned here and read by nothing -- deleted 2026-11-21 (plan stage e0),
-    with RightTopWidth, whose one reader now asks uMainLayout.NeedLeft, and
+    with RightTopWidth, whose one reader now asks uMainLayout.NeedsBlockWidth, and
     MainWindowEditHeight, whose readers ask uMainLayout.EntryFieldRect. *)
 end;
 

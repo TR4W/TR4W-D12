@@ -34,8 +34,6 @@ columns uUDPDestinationEditForm.lfm:grpStreams 204
 
 # THE RATCHET.  Delete an entry when its parent is fixed or declared.
 #
-# The main window: its children are display panels (status cells, the totals
-# grid, the needs strips), not Tab stops.  Focus there is set by code -- the
-# call and exchange fields are moved between programmatically -- so reading
-# order is not the rule that applies.
-allow uMainForm.lfm:TR4WMainForm
+# (The main window's entry went 2026-11-21: tools/gen_main_elements.py now
+# writes its three bands and everything in them in reading order, so the form
+# and each band agree.)

@@ -1,7 +1,9 @@
 # Main window: resizable in width (plan)
 
-Status, 2026-11-21: **e0, e1 and e2 are implemented** (`uMainLayout`,
-`MainUnit.LayOutMainWindow`, `uTestMainLayout`). Owner: `lcl-ui`. Also
+Status, 2026-11-21: **e0, e1, e2, and e5 with e3 folded in, are implemented**
+(`uMainLayout`, `MainUnit.LayOutMainWindow`, `uMainForm.PlaceMainBands`,
+`tools/gen_main_elements.py`, `uTestMainLayout`). e5+e3 is not yet built or
+run; it waits for NY4I's build. **Next: e4, then e6.** Owner: `lcl-ui`. Also
 touches `settings-config` (WINDOW SIZE), `i18n` (a retired setting's caption),
 `gui-test` (one heuristic) and `build-release` (corpus gate wording).
 
@@ -9,12 +11,68 @@ touches `settings-config` (WINDOW SIZE), `i18n` (a retired setting's caption),
 
 1. **Yes**, the band map and Log Search text follow the main window's scale,
    **live** (option (i) WITH the notification, c1).
-2. The minimum log when the scale grows is **3 rows** (b3). Today's minimum,
-   `MAIN_LOG_MINIMUM_ROWS`, is still 5; e4 introduces the 3.
+2. The minimum log is **3 rows** (b3). It is the window's MinHeight since e5:
+   `MAIN_LOG_MINIMUM_ROWS = 3`, with the start layout `MAIN_LOG_START_ROWS =
+   5` kept as a separate constant.
 3. ws stays **13..27** (`uMainLayout.WS_MIN` / `WS_MAX`).
 4. **Container bands (e5) come BEFORE scaling (e4).**
 
 **So the order is: e0, e1, e2, then e5 (with e3 folded into it), e4, e6.**
+
+**What e5 + e3 did (2026-11-21):**
+
+- **Three bands, generated.** `pnlTopBand` (alTop, 7 ws) holds the clocks,
+  the totals grid, Total Score and Dupe Info. Inside it, `pnlNeedsBlock`
+  (alRight, 14 ws) holds the need headers, Beam Heading and the need strips.
+  `pnlBottomBand` (alBottom, 7 ws + 6, above `sbStatus`) holds everything below
+  the log, including the five hand-written controls: both progress bars, the
+  tour bar and readout, and the possible-call strip.
+  - The strip is alBottom in that band with `BorderSpacing.Bottom = 6`.
+  - The log and the B4 list are alClient.
+  - `gen_main_elements.py` writes all three bands and their children in
+    reading order (`lfm_taborder.row_order`). The `allow` entry for the main
+    window in `lint-taborder.txt` is deleted.
+- **Band-relative arithmetic.** `uMainLayout.ElementRect(e, ws)` and every
+  bottom-band rectangle are in the band's coordinates; none takes a log
+  height. `ElementBand` says which band an element is in, and `BandOrigin`
+  turns a band rectangle back into window coordinates for the tests.
+  `NeedLeft` and `LogRect` are deleted.
+- **Gone:** `AnchorMainWindowControls`, `EditableLogHeight` (VC.pas; its
+  only readers were MainUnit and the test), `TR4WEditableLogSetBounds`,
+  `TR4WPreviousDupesSetBounds`, and `UpdateBaseBounds` on the strip
+  (`SetPossibleCallBounds` became `SetPossibleCallSize`, height only).
+- **`LayOutMainWindow(aWS)`** places the bands first (`PlaceMainBands`), then
+  every child in its band. **CreateMainWindow's order is now size, then lay
+  out, then report.** That is `MakeMainWindowResizeable(width, startHeight,
+  minHeight)`, `LayOutMainWindow`, `ReportMainWindowLayout`. The reason: a form
+  that is not shown does not align, and the bottom band is placed against the
+  current client height.
+- **The status strip stays the bottom.** Two alBottom siblings are ordered by
+  their current bottom edges, so `PlaceMainBands` gives `sbStatus`, the bottom
+  band, the top band and the needs block their whole rectangles inside
+  `DisableAlign`/`EnableAlign`.
+- **e3: the width is free.** `MakeMainWindowResizeable` releases the old
+  constraints, then sets MinWidth to the layout width and no MaxWidth.
+  `RestoreMainWindowBounds` restores the saved width, never below MinWidth.
+  MinHeight is `MinClientHeight(ws)`: both bands plus `MinLogHeight`, which is
+  header + 3 rows + an 8 px frame allowance.
+- **The bands carry the drag-the-background handlers.** They now cover the
+  form's background. The handlers convert through the Sender and capture on
+  it.
+- **The overhang and dump diagnostics walk every control**, each measured
+  against its parent's client area.
+- **Tests (uTestMainLayout):**
+  - every rectangle is inside its band and lands where the e2 formula put it
+    in the window, at ws 13..27;
+  - the streamed form matches the `.lfm` (band-relative). Shown, it matches
+    the e2 positions in the window at ws 17 and 13, and every element is in
+    the band uMainLayout names;
+  - taller, wider (+200), narrower than MinWidth, re-laid out at 13 and 27;
+  - gridlines;
+  - three whole log rows at MinHeight at ws 13, 17 and 27.
+- **Behaviour changes.** The window can be dragged wider, and shorter: three
+  log rows where the minimum was five. A saved width is restored where it was
+  discarded. Nothing moves at the old size.
 
 **What e0-e2 did:**
 
@@ -510,6 +568,9 @@ for Windows and Mint.
 
 ### e3. Width becomes free; the right-hand block follows the right edge (no scaling yet)
 
+**DONE 2026-11-21, folded into e5**, by bands rather than the anchors sketched
+below: see the status header.
+
 - `MakeMainWindowResizeable` stops pinning MaxWidth. MinWidth stays at the
   layout width.
 - `RestoreMainWindowBounds` restores the saved width, clamped to at least
@@ -558,6 +619,11 @@ for Windows and Mint.
   and the time per step in the log.
 
 ### e5 (optional; decide before e4). Container bands instead of anchors
+
+**DONE 2026-11-21, before e4 as NY4I ordered**: see the status header. Two
+details are not in the sketch below. The band is 7 ws + 6 as sketched, and the
+6 px sits under the possible-call strip as its `BorderSpacing.Bottom`. The
+status strip's order is held by `PlaceMainBands`.
 
 **The native-LCL shape:**
 

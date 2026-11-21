@@ -1,4 +1,4 @@
-"""Generate the main window's status panels into uMainForm.lfm.
+"""Generate the main window's bands and status panels into uMainForm.lfm.
 
 WHY THIS IS GENERATED AND NOT HAND-TYPED.
 
@@ -15,18 +15,42 @@ WHY THIS IS GENERATED AND NOT HAND-TYPED.
    --check fails if it has gone stale.
 
    THE .lfm BOUNDS ARE A DESIGN-TIME PICTURE, NOT THE RUNTIME LAYOUT. At run
-   time CreateMainElement still positions every element from
-   TWindows[e].mweiX * ws, where ws follows the operator's font-size setting
-   and the vertical origin follows the log's height. The .lfm holds those same
-   positions computed at the DEFAULT scale (WindowSize = 5, so ws = 17), which
-   is what makes the designer show something recognisable rather than a pile of
-   panels at 0,0.
+   time MainUnit.LayOutMainWindow still positions every element from
+   TWindows[e].mweiX * ws, where ws follows the operator's font-size setting.
+   The .lfm holds those same positions computed at the DEFAULT scale
+   (WindowSize = 5, so ws = 17), which is what makes the designer show
+   something recognisable rather than a pile of panels at 0,0.
 
-   That reconciles the note in CLAUDE.md -- "freezing them into a designed
-   layout would be a regression" -- with the designer: nothing is frozen, the
-   .lfm is a picture and the arithmetic still runs.
+THE BANDS (plan stage e5, 2026-11-21).
 
-   python tools/gen_main_elements.py            # rewrite the .lfm block
+   Every control lives in one of three panels, and this script writes all
+   three with everything in them:
+
+     pnlTopBand     alTop, 7 * ws tall: the clocks, the totals grid, Total
+                    Score and Dupe Info, and
+       pnlNeedsBlock  alRight inside it, 14 * ws wide: the need headers, Beam
+                      Heading and the need strips (TWindows[] columns 32..46);
+     pnlBottomBand  alBottom, 7 * ws + 6 tall: every row with mweB = 1, and
+                    the five hand-written controls below.
+
+   A CHILD'S POSITION IS IN ITS BAND'S COORDINATES, exactly as
+   uMainLayout.ElementRect computes it: a bottom-band row is (mweiY - 7) * ws
+   down the band, a needs-block row starts (mweiX - 32) * ws in. The log is
+   alClient at run time and is not in the .lfm.
+
+   THE FIVE HAND-WRITTEN CONTROLS of the bottom band -- the three progress
+   bars, the tour readout and the possible-call strip -- carry properties this
+   script does not know (Max, Smooth, the grid's options and its
+   OnPrepareCanvas). They are TAKEN from the file wherever they are, and put
+   back inside the bottom band with their geometry and TabOrder set here and
+   every other line kept. sbStatus and the timers are hand-written and stay
+   where they are; this script sets only sbStatus's place.
+
+   TAB ORDER AND STREAM ORDER ARE READING ORDER, per band, by
+   tools/lfm_taborder.py's own rule (row_order), so Lint-TabOrder judges the
+   bands and the form and has nothing to excuse.
+
+   python tools/gen_main_elements.py            # rewrite the .lfm
    python tools/gen_main_elements.py --check    # fail if it is out of date
 """
 
@@ -34,6 +58,10 @@ import io
 import os
 import re
 import sys
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _HERE)
+import lfm_taborder   # noqa: E402  -- the reading-order rule, not a copy of it
 
 # PATHS DERIVED FROM THIS FILE, NOT HARDCODED -- and the hardcoded ones were a
 # release blocker, not an untidiness.
@@ -54,7 +82,7 @@ import sys
 # c:/tr4w-d12 and reported "the .lfm is current" about a tree it never opened.
 # A check that silently answers about a different repository is worse than no
 # check, because it is believed.
-_REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_REPO = os.path.dirname(_HERE)
 
 VC = os.path.join(_REPO, 'tr4w', 'src', 'VC.pas')
 LFM = os.path.join(_REPO, 'tr4w', 'src', 'ui', 'lcl', 'uMainForm.lfm')
@@ -67,124 +95,269 @@ CRLF = '\r\n'
 # generated region is identified by the COMPONENT NAMES instead, which is what
 # a regeneration has to match anyway.
 
-# The default scale.  VC.pas: WindowSize = 5, and MainUnit does ws := WindowSize + 12.
-WS = 17
-# MainUnit: h := 30 + LinesInEditableLog * (ws + 2), with LinesInEditableLog = 5.
+# THE GEOMETRY, AT THE DEFAULT SCALE. Each is the Python twin of a function in
+# tr4w/src/uMainLayout.pas; keep the two in step.
+WS = 17                                   # VC.pas: WindowSize = 5; ws = WindowSize + 12
+LAYOUT_COLUMNS = 46
+LAYOUT_WIDTH = LAYOUT_COLUMNS * WS        # LayoutWidth
+BAND_ROWS = 7
+BOTTOM_BAND_MARGIN = 6
+TOP_BAND_HEIGHT = BAND_ROWS * WS          # TopBandHeight
+BOTTOM_BAND_HEIGHT = BAND_ROWS * WS + BOTTOM_BAND_MARGIN   # BottomBandHeight
+NEEDS_BLOCK_COLUMNS = 14
+NEEDS_FIRST_COLUMN = LAYOUT_COLUMNS - NEEDS_BLOCK_COLUMNS
+NEEDS_BLOCK_WIDTH = NEEDS_BLOCK_COLUMNS * WS                # NeedsBlockWidth
+# The log at its start height, MAIN_LOG_START_ROWS = 5: LogHeightForRows.
 EDITABLE_LOG_HEIGHT = 30 + 5 * (WS + 2)
-
-# Room for the things created in code -- the entry fields, the log grid and the
-# possible-call strip -- which this script does not measure.
-FORM_MARGIN = 24
 
 # THE STATUS BAR'S OWN HEIGHT, WHICH IS NEW SPACE AND NOT SPACE TAKEN.
 #
 # sbStatus is hand-written in the .lfm -- it is chrome, not an element of
-# TWindows[], and it has no geometry to generate: Align = alBottom decides
-# where it goes.  It survives a regeneration because strip_generated only
-# removes TElementPanel and TPanel blocks.
+# TWindows[] -- and Align = alBottom decides where it goes. The bottom band
+# sits on top of it. Its height is needed here only to size the FORM.
 #
-# BUT ITS HEIGHT HAS TO BE ADDED HERE, because size_form OVERWRITES the form's
-# Height/ClientHeight from the panels it measured.  Without this line a
-# regeneration would shrink the form back to 370 and the strip would sit ON TOP
-# of the bottom row of status panels -- not beside it: an alNone child anchors to
-# the parent's FULL ClientHeight (lcl/include/wincontrol.inc, DoPosition reads
-# ParentClientHeight), so an aligned sibling does NOT push absolutely-positioned
-# ones out of its way, and every control on this form is absolutely positioned.
-#
-# The runtime twin of this number is uMainForm.MainStatusBarHeight, which MainUnit
-# adds to the client height it hands MakeMainWindowResizeable -- and that is the
-# one that matters on screen, because the .lfm size is a design-time picture.
-# There it is READ FROM THE CONTROL rather than restated.
+# The runtime twin of this number is uMainForm.MainStatusBarHeight, which
+# MainUnit adds to the client height it hands MakeMainWindowResizeable -- and
+# that is the one that matters on screen, because the .lfm size is a
+# design-time picture. There it is READ FROM THE CONTROL rather than restated.
 STATUS_BAR_HEIGHT = 23
 
+CLIENT_HEIGHT = (TOP_BAND_HEIGHT + EDITABLE_LOG_HEIGHT + BOTTOM_BAND_HEIGHT
+                 + STATUS_BAR_HEIGHT)
+
+TOP_BAND = 'pnlTopBand'
+NEEDS_BLOCK = 'pnlNeedsBlock'
+BOTTOM_BAND = 'pnlBottomBand'
+BANDS = (TOP_BAND, NEEDS_BLOCK, BOTTOM_BAND)
+
+# THE HAND-WRITTEN CONTROLS OF THE BOTTOM BAND, and where each goes in it, in
+# band coordinates: (left, top, width, height, extra properties). The rects
+# are uMainLayout's LastHourBarRect, RateBarRect, TourDurationBarRect,
+# TourDurationTextRect and PossibleCallRect. The strip is alBottom in the
+# band, BOTTOM_BAND_MARGIN above the band's bottom edge.
+HAND_BLOCKS = {
+   'pbLastHour': (28 * WS, 3 * WS, 5 * WS, WS, []),
+   'pbRate': (33 * WS, 3 * WS, 5 * WS, WS, []),
+   'pbTourDuration': (33 * WS, 5 * WS, 5 * WS, WS, []),
+   'pnlTourDuration': (38 * WS, 5 * WS, 8 * WS, WS, []),
+   'lstPossibleCall': (0, BOTTOM_BAND_HEIGHT - BOTTOM_BAND_MARGIN - WS, LAYOUT_WIDTH, WS,
+                       [('Align', 'alBottom'),
+                        ('BorderSpacing.Bottom', str(BOTTOM_BAND_MARGIN))]),
+}
+
+
+# ---------------------------------------------------------------------------
+# THE .lfm AS A TREE.
+#
+#   An object is its header line, its own property lines (kept verbatim,
+#   relative to the object's indent, so a collection or a continued string
+#   survives untouched) and its child objects. The file is printed back from
+#   the tree, so everything this script does not own comes back as it was.
+
+OBJ_RE = re.compile(r'^(\s*)(object|inherited|inline)\s+(\w*)\s*:\s*(\w+)')
+COLLECTION_RE = re.compile(r'^[\w.]+\s*=\s*<\s*$')
+
+
+class Obj(object):
+   def __init__(self, head, name, cls):
+      self.head = head          # 'object Name: TClass'
+      self.name = name
+      self.cls = cls
+      self.props = []           # property lines, relative to the object's indent + 2
+      self.children = []        # Obj
+
+
+def parse_obj(lines, i):
+   """The object starting at lines[i], and the index after its `end`."""
+   m = OBJ_RE.match(lines[i])
+   indent = len(m.group(1))
+   obj = Obj(lines[i].strip(), m.group(3), m.group(4))
+   i += 1
+   while i < len(lines):
+      line = lines[i]
+      if OBJ_RE.match(line):
+         child, i = parse_obj(lines, i)
+         obj.children.append(child)
+         continue
+      if line.strip() == 'end' and len(line) - len(line.lstrip(' ')) == indent:
+         return obj, i + 1
+      if COLLECTION_RE.match(line.strip()):
+         # A collection closes on the first line that is `end>`; its items'
+         # `end` lines are not an object's.
+         while True:
+            obj.props.append(dedent(lines[i], indent + 2))
+            if lines[i].strip() == 'end>':
+               break
+            i += 1
+         i += 1
+         continue
+      obj.props.append(dedent(line, indent + 2))
+      i += 1
+   raise SystemExit('uMainForm.lfm: object %s has no end' % obj.name)
+
+
+def dedent(line, n):
+   if line[:n].strip() == '':
+      return line[n:]
+   return line.lstrip(' ')
+
+
+def render(obj, indent):
+   pad = ' ' * indent
+   out = [pad + obj.head]
+   out += [(pad + '  ' + p) if p else p for p in obj.props]
+   for child in obj.children:
+      out += render(child, indent + 2)
+   out.append(pad + 'end')
+   return out
+
+
+def set_prop(obj, key, value, after=None):
+   """Set the object's own `key = value` line, adding it after `after` (or at
+   the end) when it has none. Only the object's own lines: a nested
+   collection's are indented further and never match."""
+   text = '%s = %s' % (key, value)
+   for n, p in enumerate(obj.props):
+      if p.startswith(key + ' = '):
+         obj.props[n] = text
+         return
+   at = len(obj.props)
+   if after is not None:
+      for n, p in enumerate(obj.props):
+         if p.startswith(after + ' = '):
+            at = n + 1
+   obj.props.insert(at, text)
+
+
+def prop(obj, key, default=0):
+   for p in obj.props:
+      if p.startswith(key + ' = '):
+         try:
+            return int(p.split('=', 1)[1].strip())
+         except ValueError:
+            return default
+   return default
+
+
+def take(parent, names, found):
+   """Remove every object named in `names` from parent's subtree, recording
+   it in `found` by name. A removed object's own children are searched too,
+   so the hand-written controls are found inside an old band."""
+   kept = []
+   for child in parent.children:
+      take(child, names, found)
+      if child.name in names:
+         found[child.name] = child
+      else:
+         kept.append(child)
+   parent.children = kept
+
+
+# ---------------------------------------------------------------------------
+# WHAT THE TABLE SAYS.
 
 def style_flags(expr):
-    """Which of the four style properties a style expression implies.
+   """Which of the four style properties a style expression implies.
 
-    The named constants in VC.pas:
-      defStyle       = MainStyle or SS_CENTER or SS_SUNKEN or WS_VISIBLE
-      DefStyleBorder = defStyle or WS_BORDER
-      DefStyleDis    = defStyle or WS_DISABLED
-      DefStyleNoSun  = WS_CHILD or SS_NOTIFY or SS_CENTER or SS_NOPREFIX or WS_VISIBLE
-    """
-    e = expr.strip().lower()
-    sunken = 'defstyle' in e and 'nosun' not in e
-    centre = True                       # all four centre
-    visible = True                      # and all four are visible
-    enabled = 'dis' not in e
-    return sunken, centre, visible, enabled
+   The named constants in VC.pas:
+     defStyle       = MainStyle or SS_CENTER or SS_SUNKEN or WS_VISIBLE
+     DefStyleBorder = defStyle or WS_BORDER
+     DefStyleDis    = defStyle or WS_DISABLED
+     DefStyleNoSun  = WS_CHILD or SS_NOTIFY or SS_CENTER or SS_NOPREFIX or WS_VISIBLE
+   """
+   e = expr.strip().lower()
+   sunken = 'defstyle' in e and 'nosun' not in e
+   centre = True                       # all four centre
+   visible = True                      # and all four are visible
+   enabled = 'dis' not in e
+   return sunken, centre, visible, enabled
 
 
 def read_rows():
-    t = io.open(VC, encoding='utf-8', errors='replace').read()
+   t = io.open(VC, encoding='utf-8', errors='replace').read()
 
-    m = re.search(r'TMainWindowElement\s*=\s*\((.*?)\);', t, re.S)
-    order = [x.strip() for x in m.group(1).split(',') if x.strip()]
+   m = re.search(r'TMainWindowElement\s*=\s*\((.*?)\);', t, re.S)
+   order = [x.strip() for x in m.group(1).split(',') if x.strip()]
 
-    rows = re.findall(
-        r'\{\s*(mwe\w+)\s*\}\s*\(\s*mweName:\s*\'([^\']*)\';\s*'
-        r'mweiStyle:\s*([^;]+);\s*'
-        r'mweText:\s*\'([^\']*)\'\s*;\s*'
-        r'mweColor:\s*(\w+);\s*mweBackG:\s*(\w+);\s*'
-        r'mweI:\s*(\d+);\s*mweB:\s*(\d+);\s*'
-        r'mweiX:\s*(\d+);\s*mweiY:\s*(\d+);\s*'
-        r'mweiWidth:\s*(\d+);\s*mweiHeight:\s*(\d+)\s*\)', t)
+   rows = re.findall(
+      r'\{\s*(mwe\w+)\s*\}\s*\(\s*mweName:\s*\'([^\']*)\';\s*'
+      r'mweiStyle:\s*([^;]+);\s*'
+      r'mweText:\s*\'([^\']*)\'\s*;\s*'
+      r'mweColor:\s*(\w+);\s*mweBackG:\s*(\w+);\s*'
+      r'mweI:\s*(\d+);\s*mweB:\s*(\d+);\s*'
+      r'mweiX:\s*(\d+);\s*mweiY:\s*(\d+);\s*'
+      r'mweiWidth:\s*(\d+);\s*mweiHeight:\s*(\d+)\s*\)', t)
 
-    by = {r[0]: r for r in rows}
-    missing = [e for e in order if e not in by]
-    if missing:
-        raise SystemExit('TWindows[] has no row for: %s' % ', '.join(missing))
+   by = {r[0]: r for r in rows}
+   missing = [e for e in order if e not in by]
+   if missing:
+      raise SystemExit('TWindows[] has no row for: %s' % ', '.join(missing))
 
-    return order, by
+   return order, by
 
 
 def component_name(element):
-    return 'pnl' + element[3:]
+   return 'pnl' + element[3:]
 
 
-def panel_block(name, left, top, width, height, taborder,
-                caption='', sunken=True, alignment='taCenter',
-                enabled=True, visible=True):
-    """One TElementPanel, as .lfm object text.
+def panel(name, left, top, width, height, caption='', sunken=True,
+          alignment='taCenter', enabled=True, visible=True):
+   """One TElementPanel.
 
-    ONE EMITTER for every panel this script writes.  The property ORDER matters
-    beyond tidiness: --check compares the generated text to the file byte for
-    byte, so two emitters that agreed on content but not on order would make
-    the check fail with nothing actually wrong.
-    """
-    out = ['  object %s: TElementPanel' % name,
-           '    Left = %d' % left,
-           '    Height = %d' % height,
-           '    Top = %d' % top,
-           '    Width = %d' % width,
-           '    Alignment = %s' % alignment,
-           '    AutoSize = False',
-           '    BevelOuter = %s' % ('bvLowered' if sunken else 'bvNone'),
-           "    Caption = '%s'" % caption.replace("'", "''")]
-    if not enabled:
-        out.append('    Enabled = False')
-    out.append('    ParentColor = False')
-    out.append('    ParentFont = False')
-    out.append('    TabOrder = %d' % taborder)
-    if not visible:
-        out.append('    Visible = False')
-    out.append('  end')
-    return out
+   ONE EMITTER for every panel this script writes.  The property ORDER matters
+   beyond tidiness: --check compares the generated text to the file byte for
+   byte, so two emitters that agreed on content but not on order would make
+   the check fail with nothing actually wrong.  TabOrder is set later, once
+   the band's reading order is known.
+   """
+   obj = Obj('object %s: TElementPanel' % name, name, 'TElementPanel')
+   obj.props = ['Left = %d' % left,
+                'Height = %d' % height,
+                'Top = %d' % top,
+                'Width = %d' % width,
+                'Alignment = %s' % alignment,
+                'AutoSize = False',
+                'BevelOuter = %s' % ('bvLowered' if sunken else 'bvNone'),
+                "Caption = '%s'" % caption.replace("'", "''")]
+   if not enabled:
+      obj.props.append('Enabled = False')
+   obj.props.append('ParentColor = False')
+   obj.props.append('ParentFont = False')
+   obj.props.append('TabOrder = 0')
+   if not visible:
+      obj.props.append('Visible = False')
+   return obj
+
+
+def band(name, left, top, width, height, align):
+   """One band: a plain TPanel with no bevel, border or caption, so its client
+   area IS its bounds and a child's band coordinates are exact. ParentColor
+   is the TPanel default, so it shows the form's colour. Dragging it moves the
+   window, as dragging the form's own background did before the bands
+   covered it."""
+   obj = Obj('object %s: TPanel' % name, name, 'TPanel')
+   obj.props = ['Left = %d' % left,
+                'Height = %d' % height,
+                'Top = %d' % top,
+                'Width = %d' % width,
+                'Align = %s' % align,
+                'BevelOuter = bvNone',
+                "Caption = ''",
+                'TabOrder = 0',
+                'OnMouseDown = MainFormMouseDown',
+                'OnMouseMove = MainFormMouseMove',
+                'OnMouseUp = MainFormMouseUp']
+   return obj
 
 
 # ---------------------------------------------------------------------------
 # THE TWO GRIDS THAT ARE NOT IN TWindows[].
 #
-#   The score totals grid (8 columns x 4 rows, plus 7 band headers) and the
-#   QSO-need / mult-need band strips top right.  They were sixty-seven raw
-#   Win32 STATICs created in code -- MainUnit's CreateTotalWindows,
-#   CreateQSONeedWindows and CreateMultsWindows -- and they were the last
-#   children of the main form that were not LCL controls.
-#
-#   They are generated here rather than hand-typed for the same reason the
-#   TWindows[] panels are: their geometry is a FORMULA, and a hand-typed copy
-#   of a formula drifts.  The formulas below are the ones the deleted creators
-#   used, at the default scale.
+#   The score totals grid (8 columns x 4 rows, plus 7 band headers) in the top
+#   band, and the QSO-need / mult-need band strips in the needs block.  They
+#   were sixty-seven raw Win32 STATICs created in code -- MainUnit's
+#   CreateTotalWindows, CreateQSONeedWindows and CreateMultsWindows.  Their
+#   geometry is a FORMULA, and a hand-typed copy of a formula drifts.
 #
 #   Not from TWindows[] because they are not elements: they are addressed by
 #   (column, row) and by (row, band), which is what uMainGrids exposes.
@@ -196,244 +369,230 @@ TOT_HEAD_FIRST = 1           # TotWinheadHandles: array[1..7]
 # BandStringsArray, Band160..Band10 -- the six HF contest bands the strips show.
 NEED_BANDS = ['160', '80', '40', '20', '15', '10']
 
-# uMainLayout: LayoutWidth = 46 * ws;  NeedLeft = LayoutWidth - 14 * ws.
-NEED_LEFT = (46 - 14) * WS
-
 # How much wider than a band cell the row LABEL is.  ZERO, and it was tried
 # at WS and at WS*2 first: Lint-FormOverlap rejected both, because
-# pnlDupeInfoCall ends at exactly NEED_LEFT and there is no empty space to
-# take.  The labels get a smaller, UNIFORM font instead -- see
+# pnlDupeInfoCall ends at exactly the needs block's left edge and there is no
+# empty space to take.  The labels get a smaller, UNIFORM font instead -- see
 # uMainGrids.MatchNeedLabelFonts.  Kept as a named zero rather than deleted so
-# the next person does not re-derive the same rejection.
+# the next person does not re-derive the same rejection.  (In the needs block
+# a wider label would also start left of the block, outside it.)
 LABEL_EXTRA = 0
 
 
-def totals_blocks(taborder):
-    """The score totals grid, from CreateTotalWindows' own arithmetic.
+def totals_panels():
+   """The score totals grid, from CreateTotalWindows' own arithmetic.
 
-    Column 0 is the wide label column; column 7 ("All") is wider than the band
-    columns between them.  The header row sits above the cells and is what
-    carries the current-band highlight.
-    """
-    colw = round(WS * 2.5)
-    label_w = WS * 5
-    out, names = [], []
-    extent = [0, 0]
+   Column 0 is the wide label column; column 7 ("All") is wider than the band
+   columns between them.  The header row sits above the cells and is what
+   carries the current-band highlight.
+   """
+   colw = round(WS * 2.5)
+   label_w = WS * 5
+   out = []
 
-    def cell_geometry(c):
-        # THE BAND COLUMNS START AFTER THE LABEL COLUMN, not one pixel inside
-        # it.  Column 0 is WS * 5 to line up with the clock panels above it
-        # (TWindows[] gives those 5 units), while the pitch is round(WS * 2.5)
-        # = 42 -- so the old (c + 1) * colw put column 1 at 84 against a label
-        # column ending at 85.  uMainLayout.TotalsColumnGeometry is the runtime
-        # twin of this and carries the full note.
-        if c == 0:
-            return 0, label_w
-        return label_w + (c - 1) * colw, (round(WS * 3) if c == 7 else colw)
+   def cell_geometry(c):
+      # THE BAND COLUMNS START AFTER THE LABEL COLUMN, not one pixel inside
+      # it.  Column 0 is WS * 5 to line up with the clock panels above it
+      # (TWindows[] gives those 5 units), while the pitch is round(WS * 2.5)
+      # = 42 -- so the old (c + 1) * colw put column 1 at 84 against a label
+      # column ending at 85.  uMainLayout.TotalsColumnGeometry is the runtime
+      # twin of this and carries the full note.
+      if c == 0:
+         return 0, label_w
+      return label_w + (c - 1) * colw, (round(WS * 3) if c == 7 else colw)
 
-    for c in range(TOT_COLS):
-        left, width = cell_geometry(c)
-        for r in range(TOT_ROWS):
-            name = 'pnlTotalCell_%d_%d' % (c, r)
-            top = WS * 2 + r * WS
-            out += panel_block(name, left, top, width, WS, taborder,
-                               alignment=('taLeftJustify' if c == 0 else 'taCenter'))
-            names.append(name)
-            taborder += 1
-            extent[0] = max(extent[0], left + width)
-            extent[1] = max(extent[1], top + WS)
+   for c in range(TOT_COLS):
+      left, width = cell_geometry(c)
+      for r in range(TOT_ROWS):
+         out.append(panel('pnlTotalCell_%d_%d' % (c, r), left, WS * 2 + r * WS, width, WS,
+                          alignment=('taLeftJustify' if c == 0 else 'taCenter')))
 
-    for c in range(TOT_HEAD_FIRST, TOT_COLS):
-        left, width = cell_geometry(c)
-        name = 'pnlTotalHead_%d' % c
-        out += panel_block(name, left, 0, width, WS * 2, taborder)
-        names.append(name)
-        taborder += 1
-        extent[0] = max(extent[0], left + width)
-        extent[1] = max(extent[1], WS * 2)
+   for c in range(TOT_HEAD_FIRST, TOT_COLS):
+      left, width = cell_geometry(c)
+      out.append(panel('pnlTotalHead_%d' % c, left, 0, width, WS * 2))
 
-    return out, names, extent, taborder
+   return out
 
 
-def needs_blocks(taborder):
-    """The QSO-need and mult-need band strips.
+def needs_panels():
+   """The QSO-need and mult-need band strips, in needs-block coordinates.
 
-    THE CELLS ARE CREATED HIDDEN and revealed per band.  That is not a
-    decision made here: the Win32 style they used, uVisStyleNoSun, omits
-    WS_VISIBLE, so every cell started hidden and ShowWindow drove it.  A
-    generated `Visible = True` would put six band labels permanently on screen.
+   THE CELLS ARE CREATED HIDDEN and revealed per band.  That is not a
+   decision made here: the Win32 style they used, uVisStyleNoSun, omits
+   WS_VISIBLE, so every cell started hidden and ShowWindow drove it.  A
+   generated `Visible = True` would put six band labels permanently on screen.
 
-    Row 1 is CW when the contest counts by mode and Both when it does not; row
-    2 is SSB and is shown only in the by-mode case.  The row LABEL is visible
-    from the start and right-aligned, as its own style (SS_RIGHT, WS_VISIBLE)
-    said.
-    """
-    w = WS * 2
-    out, names = [], []
-    extent = [0, 0]
+   Row 1 is CW when the contest counts by mode and Both when it does not; row
+   2 is SSB and is shown only in the by-mode case.  The row LABEL is visible
+   from the start and right-aligned, as its own style (SS_RIGHT, WS_VISIBLE)
+   said.
+   """
+   w = WS * 2
+   out = []
 
-    for kind, row_tops in (('QSONeed', (WS, WS * 2)),
-                           ('MultNeed', (WS * 4, WS * 5))):
-        for row, top in enumerate(row_tops, start=1):
-            label = 'pnl%sR%dLabel' % (kind, row)
-            # THE LABEL IS WIDER THAN A BAND CELL, AND EXTENDS TO ITS LEFT.
-            # 'Both:' wants 47px at the main window font and a band cell gives
-            # it 30 -- measured on NY4I's Mint box, 2026-09-09, where it
-            # reached the screen as 'oth:'.  It is right-aligned, so the extra
-            # room is taken from the empty space to the LEFT and the labels
-            # still sit hard against the band columns.
-            out += panel_block(label, NEED_LEFT - LABEL_EXTRA, top,
-                               w + LABEL_EXTRA, WS, taborder,
-                               sunken=False, alignment='taRightJustify')
-            names.append(label)
-            taborder += 1
+   for kind, row_tops in (('QSONeed', (WS, WS * 2)),
+                          ('MultNeed', (WS * 4, WS * 5))):
+      for row, top in enumerate(row_tops, start=1):
+         out.append(panel('pnl%sR%dLabel' % (kind, row), 0 - LABEL_EXTRA, top,
+                          w + LABEL_EXTRA, WS, sunken=False,
+                          alignment='taRightJustify'))
+         for i, band_name in enumerate(NEED_BANDS):
+            out.append(panel('pnl%sR%d_%s' % (kind, row, band_name), (i + 1) * w, top,
+                             w - 2, WS, caption=band_name, sunken=False,
+                             visible=False))
 
-            for i, band in enumerate(NEED_BANDS):
-                name = 'pnl%sR%d_%s' % (kind, row, band)
-                left = NEED_LEFT + (i + 1) * w
-                out += panel_block(name, left, top, w - 2, WS, taborder,
-                                   caption=band, sunken=False, visible=False)
-                names.append(name)
-                taborder += 1
-                extent[0] = max(extent[0], left + w - 2)
-            extent[1] = max(extent[1], top + WS)
-
-    return out, names, extent, taborder
+   return out
 
 
-def generate():
-    order, by = read_rows()
-    out = []
-    made = []
-    extent = [0, 0]         # widest right edge, lowest bottom edge
+def element_panels():
+   """Every TWindows[] row that gets a panel, as (band name, panel), placed in
+   its band as uMainLayout.ElementBand / ElementRect place it."""
+   order, by = read_rows()
+   out = []
 
-    for element in order:
-        (_, _, style, text, _colour, _back, _i, b, x, y, w, h) = by[element]
+   for element in order:
+      (_, _, style, text, _colour, _back, _i, b, x, y, w, h) = by[element]
 
-        # The runtime loop skips these: they are not status panels.  The call
-        # and exchange fields, the log grid, the possible-call strip and the
-        # two network windows are built by their own routines, and
-        # mweWholeScreen is the main window itself.
-        if style.strip() in ('0', '1', '2'):
-            continue
+      # The runtime loop skips these: they are not status panels.  The call
+      # and exchange fields, the log grid, the possible-call strip and the
+      # two network windows are built by their own routines, and
+      # mweWholeScreen is the main window itself.
+      if style.strip() in ('0', '1', '2'):
+         continue
 
-        sunken, centre, visible, enabled = style_flags(style)
+      sunken, centre, visible, enabled = style_flags(style)
+      column, row = int(x), int(y)
 
-        left = int(x) * WS
-        top = int(y) * WS + int(b) * EDITABLE_LOG_HEIGHT
-        width = int(w) * WS
-        height = int(h) * WS
+      if int(b) == 1:
+         where = BOTTOM_BAND
+         row -= BAND_ROWS
+      elif column >= NEEDS_FIRST_COLUMN:
+         where = NEEDS_BLOCK
+         column -= NEEDS_FIRST_COLUMN
+      else:
+         where = TOP_BAND
 
-        out += panel_block(component_name(element), left, top, width, height,
-                           len(made), caption=text, sunken=sunken,
-                           alignment=('taCenter' if centre else 'taLeftJustify'),
-                           enabled=enabled, visible=visible)
-        made.append(element)
+      out.append((where, panel(component_name(element), column * WS, row * WS,
+                               int(w) * WS, int(h) * WS, caption=text,
+                               sunken=sunken,
+                               alignment=('taCenter' if centre else 'taLeftJustify'),
+                               enabled=enabled, visible=visible)))
 
-        extent[0] = max(extent[0], left + width)
-        extent[1] = max(extent[1], top + height)
-
-    return made, out, extent
-
-
-def strip_generated(raw, wanted):
-    """Remove the top-level objects this script owns, by name.
-
-    A regeneration must not append a second copy, and the names are the only
-    handle there is -- see the note above on why there are no marker comments.
-    """
-    lines = raw.split(CRLF)
-    out = []
-    i = 0
-    while i < len(lines):
-        stripped = lines[i].strip()
-        # BOTH CLASS NAMES.  These were plain TPanels until TElementPanel gave
-        # them the off-thread report and the caption fit; a strip that knew
-        # only the new name would leave the old blocks in place and append a
-        # second copy of every element.
-        if (stripped.startswith('object ')
-                and (stripped.endswith(': TElementPanel')
-                     or stripped.endswith(': TPanel'))):
-            name = stripped[len('object '):stripped.rindex(':')]
-            if name in wanted:
-                i += 1
-                while i < len(lines) and lines[i].strip() != 'end':
-                    i += 1
-                i += 1                          # the matching `end`
-                continue
-        out.append(lines[i])
-        i += 1
-    return CRLF.join(out)
+   return out
 
 
-def size_form(raw, extent):
-    """Make the FORM big enough for the panels it now contains.
+def in_reading_order(children):
+   """The children sorted as Lint-TabOrder reads them, with TabOrder set to
+   match: lfm_taborder.row_order, the lint's own rule."""
+   stubs = []
+   for n, child in enumerate(children):
+      node = lfm_taborder.Node(child.name, child.cls, 0, None)
+      node.props = {'Top': str(prop(child, 'Top')), 'Left': str(prop(child, 'Left')),
+                    'TabOrder': str(n)}
+      node.obj = child
+      stubs.append(node)
+   ordered = [node.obj for node in lfm_taborder.row_order(stubs)]
+   for n, child in enumerate(ordered):
+      set_prop(child, 'TabOrder', n)
+   return ordered
 
-    The designer draws the form at its .lfm size, and the runtime window is
-    sized separately (MainUnit: ws * 46 wide).  Left at the old 400x200 the
-    designer would clip most of the layout, and Lint-FormOverlap would report --
-    correctly -- that thirty controls hang outside their parent.
 
-    Sized from the generated panels themselves rather than from a second copy of
-    MainUnit's arithmetic.
-    """
-    w = extent[0] + FORM_MARGIN
-    h = extent[1] + FORM_MARGIN + STATUS_BAR_HEIGHT
+def generate(root):
+   """Rebuild the bands inside the parsed form `root`; answer the count of
+   generated panels."""
+   elements = element_panels()
+   totals = totals_panels()
+   needs = needs_panels()
 
-    out = []
-    for line in raw.split(CRLF):
-        s = line.strip()
-        if line.startswith('  Width = '):
-            line = '  Width = %d' % w
-        elif line.startswith('  Height = '):
-            line = '  Height = %d' % h
-        elif s.startswith('ClientWidth = '):
-            line = '  ClientWidth = %d' % w
-        elif s.startswith('ClientHeight = '):
-            line = '  ClientHeight = %d' % h
-        out.append(line)
-    return CRLF.join(out)
+   owned = set(BANDS) | set(HAND_BLOCKS)
+   owned |= {p.name for _, p in elements} | {p.name for p in totals + needs}
+
+   found = {}
+   take(root, owned, found)
+
+   missing = [n for n in HAND_BLOCKS if n not in found]
+   if missing:
+      raise SystemExit('uMainForm.lfm has no %s -- a hand-written control of the '
+                       'bottom band is missing' % ', '.join(missing))
+
+   hands = []
+   for name, (left, top, width, height, extra) in sorted(HAND_BLOCKS.items()):
+      obj = found[name]
+      set_prop(obj, 'Left', left)
+      set_prop(obj, 'Height', height)
+      set_prop(obj, 'Top', top)
+      set_prop(obj, 'Width', width)
+      after = 'Width'
+      for key, value in extra:
+         set_prop(obj, key, value, after=after)
+         after = key
+      hands.append(obj)
+
+   top = band(TOP_BAND, 0, 0, LAYOUT_WIDTH, TOP_BAND_HEIGHT, 'alTop')
+   block = band(NEEDS_BLOCK, LAYOUT_WIDTH - NEEDS_BLOCK_WIDTH, 0, NEEDS_BLOCK_WIDTH,
+                TOP_BAND_HEIGHT, 'alRight')
+   bottom = band(BOTTOM_BAND, 0, TOP_BAND_HEIGHT + EDITABLE_LOG_HEIGHT, LAYOUT_WIDTH,
+                 BOTTOM_BAND_HEIGHT, 'alBottom')
+
+   block.children = in_reading_order([p for w, p in elements if w == NEEDS_BLOCK] + needs)
+   top.children = in_reading_order([p for w, p in elements if w == TOP_BAND] + totals
+                                   + [block])
+   bottom.children = in_reading_order([p for w, p in elements if w == BOTTOM_BAND] + hands)
+
+   # The form's own children: the bands join whatever is hand-written there
+   # (the timers and sbStatus), in reading order among the windowed ones.
+   root.children += [top, bottom]
+   set_prop(top, 'TabOrder', 0)
+   set_prop(bottom, 'TabOrder', 1)
+
+   return len(elements) + len(totals) + len(needs)
+
+
+def size_form(root):
+   """The FORM at the layout's client size, and the status strip at its
+   bottom.
+
+   The designer draws the form at its .lfm size, and the runtime window is
+   sized separately (MainUnit: ws * 46 wide).  Sized to the layout EXACTLY,
+   with no margin, so the alRight needs block is drawn where it sits at run
+   time.  sbStatus is aligned, so its place is only a picture too; it is set
+   so the picture is consistent.
+   """
+   for key, value in (('Height', CLIENT_HEIGHT), ('Width', LAYOUT_WIDTH),
+                      ('ClientHeight', CLIENT_HEIGHT), ('ClientWidth', LAYOUT_WIDTH)):
+      set_prop(root, key, value)
+   for child in root.children:
+      if child.name == 'sbStatus':
+         set_prop(child, 'Top', CLIENT_HEIGHT - STATUS_BAR_HEIGHT)
+         set_prop(child, 'Width', LAYOUT_WIDTH)
 
 
 def main():
-    made, lines, extent = generate()
+   raw = io.open(LFM, 'rb').read().decode('utf-8-sig')
+   lines = raw.split(CRLF)
+   if not OBJ_RE.match(lines[0]):
+      raise SystemExit('uMainForm.lfm: the first line is not the form')
 
-    grid_lines, grid_names, grid_extent, _ = totals_blocks(len(made))
-    need_lines, need_names, need_extent, _ = needs_blocks(len(made) + len(grid_names))
+   root, after = parse_obj(lines, 0)
+   tail = lines[after:]
 
-    lines = lines + grid_lines + need_lines
-    names = [component_name(e) for e in made] + grid_names + need_names
-    for e in (grid_extent, need_extent):
-        extent[0] = max(extent[0], e[0])
-        extent[1] = max(extent[1], e[1])
+   count = generate(root)
+   size_form(root)
 
-    block = CRLF.join(lines)
+   new = CRLF.join(render(root, 0) + tail)
 
-    raw = io.open(LFM, 'rb').read().decode('utf-8-sig')
-    body = strip_generated(raw, set(names))
+   if '--check' in sys.argv:
+      if new != raw:
+         raise SystemExit(
+            'uMainForm.lfm is out of date with VC.pas TWindows[].\n'
+            'Run: python tools/gen_main_elements.py')
+      print('gen_main_elements: %d panel(s) in 3 bands, .lfm is current' % count)
+      return
 
-    cut = body.rstrip().rfind(CRLF + 'end')
-    if cut < 0:
-        raise SystemExit('uMainForm.lfm: cannot find the form terminator')
-
-    new = body[:cut + 2] + block + CRLF + body[cut + 2:]
-    new = size_form(new, extent)
-
-    if '--check' in sys.argv:
-        if new != raw:
-            raise SystemExit(
-                'uMainForm.lfm is out of date with VC.pas TWindows[].\n'
-                'Run: python tools/gen_main_elements.py')
-        print('gen_main_elements: %d panel(s), .lfm is current' % len(names))
-        return
-
-    io.open(LFM, 'wb').write(new.encode('utf-8'))
-    print('gen_main_elements: %d panel(s) at ws=%d (%d element, %d totals, '
-          '%d needs), form %dx%d'
-          % (len(names), WS, len(made), len(grid_names), len(need_names),
-             extent[0] + FORM_MARGIN,
-             extent[1] + FORM_MARGIN + STATUS_BAR_HEIGHT))
+   io.open(LFM, 'wb').write(new.encode('utf-8'))
+   print('gen_main_elements: %d panel(s) at ws=%d in 3 bands, form %dx%d'
+         % (count, WS, LAYOUT_WIDTH, CLIENT_HEIGHT))
 
 
 if __name__ == '__main__':
-    main()
+   main()
