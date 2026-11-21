@@ -3342,9 +3342,9 @@ msgstr "(연결되지 않음)"
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
 #: utr4wstrings.tc_show_all_serial_ports
 #, fuzzy
-msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
-msgid "Show all serial ports"
-msgstr "모든 직렬 포트 표시"
+#~ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
+#~ msgid "Show all serial ports"
+#~ msgstr "모든 직렬 포트 표시"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -4669,7 +4669,8 @@ msgstr "메인 창에는 경계가 없습니다"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "메인 창에는 제목 표시줄이 없습니다"
 
 #: tprefsform.chknocolumnheader.caption
@@ -4842,8 +4843,8 @@ msgstr "재시작 파일 유지"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "패들 및 발 스위치용 라디오 제어 포트 사용"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "패들 및 발 스위치용 라디오 제어 포트 사용"
 
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
@@ -5554,13 +5555,13 @@ msgstr "TCP 포트:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "릴레이 제어 포트"
+#~ msgid "Relay control port"
+#~ msgstr "릴레이 제어 포트"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "이 역을 위한 평행한 (LPT) 항구 배선: 릴레이 엇바꾸기, 활동 위치 당 암호로 하는 악대 자료, 및 입체 음향 오디오 통제. 이들은 DESK를 따르고, 라디오가 아닌, 다른 라디오를 활성화 할 때 넣어. 만약 TR4W가 LPT를 지원하지 않는 경우, 아래 회색 상자가 위주인 개방적인 질문입니다."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "이 역을 위한 평행한 (LPT) 항구 배선: 릴레이 엇바꾸기, 활동 위치 당 암호로 하는 악대 자료, 및 입체 음향 오디오 통제. 이들은 DESK를 따르고, 라디오가 아닌, 다른 라디오를 활성화 할 때 넣어. 만약 TR4W가 LPT를 지원하지 않는 경우, 아래 회색 상자가 위주인 개방적인 질문입니다."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
@@ -5701,8 +5702,8 @@ msgstr "이것은 당신이 그들을 변경할 때 다 가동자 네트워크�
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "입체 음향 제어 포트"
+#~ msgid "Stereo control port"
+#~ msgstr "입체 음향 제어 포트"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7900,9 +7901,9 @@ msgstr "자주 묻는 질문 로그인하려면 ENTER를 누르십시오."
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8746,8 +8747,8 @@ msgstr "Rfobl 형태"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "모든 직렬 포트 표시"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "모든 직렬 포트 표시"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -8856,8 +8857,8 @@ msgstr "Callsign 업데이트 사용 가능"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "국가 정보 파일"
+#~ msgid "Country Information File"
+#~ msgstr "국가 정보 파일"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -8886,18 +8887,18 @@ msgstr "Unknown 국가 파일 이름"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "LPT1 기본 주소"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "LPT1 기본 주소"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "LPT2 기본 주소"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "LPT2 기본 주소"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "LPT3 기본 주소"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "LPT3 기본 주소"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -8911,8 +8912,8 @@ msgstr "높은 입체 음향 Pin"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "연결 항구"
+#~ msgid "Use Control Port"
+#~ msgstr "연결 항구"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy

@@ -540,16 +540,6 @@ msgctxt "TC_HELP_FOOT_SWITCH_PORT"
 msgid ""
 msgstr "Команда определяет параллельный порт, к которому подключена педаль."
 
-#. Config command: FREQUENCY ADDER RADIO ONE   (default: 0)
-msgctxt "TC_HELP_FREQUENCY_ADDER_RADIO_ONE"
-msgid ""
-msgstr "СМЕЩЕНИЕ ЧАСТОТЫ ДЛЯ РАДИО ОДИН"
-
-#. Config command: FREQUENCY ADDER RADIO TWO   (default: 0)
-msgctxt "TC_HELP_FREQUENCY_ADDER_RADIO_TWO"
-msgid ""
-msgstr "СМЕЩЕНИЕ ЧАСТОТЫ ДЛЯ РАДИО ДВА"
-
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 msgctxt "TC_HELP_FREQUENCY_MEMORY_ENABLE"
 msgid "When set to TRUE, this parameter will enable the frequency memory. This means that you will return to the frequency you were last using when returning to a band (even with the other radio)."
@@ -649,11 +639,6 @@ msgctxt "TC_HELP_KEYPAD_CW_MEMORIES"
 msgid "When this parameter is TRUE, the keys 0 to 9 on the keypad will send CQ MEMORIES ctrl-F1 to ctrl-F10 respectively."
 msgstr "Команда используется, если вы хотите использовать цифровую клавиатуру, чтобы передавать CW сообщения. Установите этот параметр в TRUE и клавиши 0…9 на вспомогательной клавиатуре будут эквивалентны нажатию CQ MEMORIES Control F1–F10 соответственно."
 
-#. Config command: LATEST CONFIG FILE   (default: NONE)
-msgctxt "TC_HELP_LATEST_CONFIG_FILE"
-msgid ""
-msgstr "ПОСЛЕДНИЙ ФАЙЛ КОНФИГУРАЦИИ"
-
 #. Config command: LEADING ZERO CHARACTER   (default: T)
 msgctxt "TC_HELP_LEADING_ZERO_CHARACTER"
 msgid "This parameter allows you to customize the character used as a leading zero when generating serial numbers and LEADING ZEROS has a value greater than zero. Normally, the character is T. However, you might prefer the number 0 or the letter O. If you use the ctrl-J menu to access this parameter, it will let you cycle among those three characters."
@@ -703,21 +688,6 @@ msgstr "При значении TRUE регистрация связи буде�
 msgctxt "TC_HELP_LOOK_FOR_RST_SENT"
 msgid "When this parameter is TRUE, a transmitted RST may be entered into the Exchange Window by preceding it with S. For example, typing S57 would place 57 into the log as the transmitted exchange for this QSO."
 msgstr "При значении TRUE переданный RST может быть введен в окне контрольного номера в виде буквы S и рапорта (т.е. S57)."
-
-#. Config command: LPT1 BASE ADDRESS   (default: 888)
-msgctxt "TC_HELP_LPT1_BASE_ADDRESS"
-msgid "The base address of parallel port LPT1 (PARALLEL 1)."
-msgstr "Базовый адрес параллельного порта LPT1 (PARALLEL 1)."
-
-#. Config command: LPT2 BASE ADDRESS   (default: 632)
-msgctxt "TC_HELP_LPT2_BASE_ADDRESS"
-msgid "The base address of parallel port LPT2 (PARALLEL 2)."
-msgstr "Значение: число в десятичном формате Базовый адрес параллельного порта LPT2 (PARALLEL 2)."
-
-#. Config command: LPT3 BASE ADDRESS   (default: 956)
-msgctxt "TC_HELP_LPT3_BASE_ADDRESS"
-msgid "The base address of parallel port LPT3 (PARALLEL 3)."
-msgstr "Базовый адрес параллельного порта LPT3 (PARALLEL 3)."
 
 #. Config command: MAIN CALLSIGN   (default: NONE)
 msgctxt "TC_HELP_MAIN_CALLSIGN"
@@ -911,8 +881,9 @@ msgid ""
 msgstr "БЕЗ ГРАНИЦ"
 
 #. Config command: NO CAPTION   (default: FALSE)
+#, fuzzy
 msgctxt "TC_HELP_NO_CAPTION"
-msgid "If the value is TRUE after startup all windows except the main will not have a title."
+msgid "If the value is TRUE after startup all windows except the main will not have a title. Hold Alt and drag anywhere in a window to move it."
 msgstr "При значении равном TRUE при запуске программы все окна, кроме основного не будут иметь заголовка. Это позволит уменьшить пространство экрана, занимаемого программой. Для изменения параметров окон в таком режиме можно использовать Окно Windows control."
 
 #. Config command: NO COLUMN HEADER   (default: FALSE)
@@ -959,16 +930,6 @@ msgstr "Устанавливает скорость передачи CW с ма�
 msgctxt "TC_HELP_PARTIAL_CALL_ENABLE"
 msgid "This command allows you to control the partial call function. This is a separate feature from the super check partial (which uses the TRMASTER.DTA database). The callsigns used by the partial call function come from the dupesheet and initial exchange file. When this function is enabled, partial calls will be shown on the bottom of the screen after the second character of a call has been typed into the Call Window. A partial call is defined to be any call that starts with the same letters as those in the Call Window. The WILDCARD PARTIALS parameter determines whether the partial call must appear at the start of"
 msgstr "Значение по умолчанию: TRUE. Позволяет управлять функцией частичных позывных. Эта опция отличается от проверки частичных позывных, использующей базу данных TRMASTER.DTA. Позывные берутся только из листа повторных связей или начального файла обмена (INITIAL.EX и т.п.). При установке в TRUE частичные позывные появятся в нижней части экрана после ввода хотя бы двух символов в окно ввода позывного. Показанные позывные берутся только из листа повторов и памяти начального обмена (а не базы данных имен или TRMASTER.DTA). Частичный — это любой позывной, который начинается теми же самыми символами, которые вы ввели в окно ввода позывного. Команда WILDCARD PARTIALS определит, как программа будет определять совпадения — по началу позывного, или по любому его фрагменту."
-
-#. Config command: POLL RADIO ONE   (default: TRUE)
-msgctxt "TC_HELP_POLL_RADIO_ONE"
-msgid ""
-msgstr "Включение опроса частоты Радио 1."
-
-#. Config command: POLL RADIO TWO   (default: TRUE)
-msgctxt "TC_HELP_POLL_RADIO_TWO"
-msgid ""
-msgstr "Включение опроса частоты Радио 2."
 
 #. Config command: POSSIBLE CALL ACCEPT KEY   (default: ;)
 msgctxt "TC_HELP_POSSIBLE_CALL_ACCEPT_KEY"
@@ -1052,11 +1013,6 @@ msgctxt "TC_HELP_QSO_NUMBER_BY_BAND"
 msgid "When set to TRUE, the QSO numbers that are displayed on the screen, those that are sent in a CW message with the # character, and those shown in the log will be calculated from the total number of contacts on the active band. This is useful in a multi-transmitter situation where QSO numbers are being sent (e.g., the CQ WPX contest)."
 msgstr "При значении TRUE контрольные номера, содержащие порядковый номер связи будут нумероваться по диапазонам, т.е. на каждом диапазоне нумерация связей будет начинаться с 001. Это касается отображения на экране, формирования CW сообщений и записи в лог. Такая настройка требуется, например, для коллективных станций в CQ WPX contest."
 
-#. Config command: QSO POINT METHOD   (default: NONE)
-msgctxt "TC_HELP_QSO_POINT_METHOD"
-msgid ""
-msgstr "QSO POINT METHOD сообщает программе, как вычислить очки за QSO. Это обычно установлено командой CONTEST файла *.CFG"
-
 #. Config command: QSO POINTS DOMESTIC CW   (default: -1)
 msgctxt "TC_HELP_QSO_POINTS_DOMESTIC_CW"
 msgid "These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated."
@@ -1128,35 +1084,15 @@ msgctxt "TC_HELP_R150S_MODE"
 msgid "If TRUE calculation of contriyes-multipliers will be based on R-150-S list."
 msgstr "При значении TRUE учет множителей-стран будет вестись на основе списка диплома Р-150-С."
 
-#. Config command: RADIO ONE BAND OUTPUT PORT   (default: NONE)
-msgctxt "TC_HELP_RADIO_ONE_BAND_OUTPUT_PORT"
-msgid ""
-msgstr "Параллельный порт, используемый для вывода информации о текущем диапазоне Радио №1."
-
 #. Config command: RADIO ONE BAUD RATE   (default: 0)
 msgctxt "TC_HELP_RADIO_ONE_BAUD_RATE"
 msgid "This command controls the baud rate between the computer and the connected rigs."
 msgstr "Если вы связываете с помощью интерфейса последовательного порта трансивер и компьютер, то по умолчанию задается скорость 4800 бод, которая работает для большинства трансиверов. Однако иногда может потребоваться изменить это значение, например, увеличить для трансиверов Kenwood."
 
-#. Config command: RADIO ONE CAT DTR   (default: OFF)
-msgctxt "TC_HELP_RADIO_ONE_CAT_DTR"
-msgid ""
-msgstr "Команда определяет уровень, который будет выставлен на выводе DTR последовательного порта, указанного в команде RADIO ONE CONTROL PORT после запуска программы."
-
-#. Config command: RADIO ONE CAT RTS   (default: OFF)
-msgctxt "TC_HELP_RADIO_ONE_CAT_RTS"
-msgid ""
-msgstr "Команда определяет уровень, который будет выставлен на выводе RTS последовательного порта, указанного в команде RADIO ONE CONTROL PORT после запуска программы."
-
 #. Config command: RADIO ONE CONTROL PORT   (default: NONE)
 msgctxt "TC_HELP_RADIO_ONE_CONTROL_PORT"
 msgid "Use these commands to specify the serial port to use for each connected rig."
 msgstr "Используйте эти команды, чтобы определить последовательный порт для каждого связанного с помощью интерфейса трансивера."
-
-#. Config command: RADIO ONE FREQUENCY ADDER   (default: 0)
-msgctxt "TC_HELP_RADIO_ONE_FREQUENCY_ADDER"
-msgid ""
-msgstr "СМЕЩЕНИЕ ЧАСТОТЫ ДЛЯ РАДИО ОДИН"
 
 #. Config command: RADIO ONE CW BY CAT   (default: FALSE)
 msgctxt "TC_HELP_RADIO_ONE_CW_BY_CAT"
@@ -1238,35 +1174,15 @@ msgctxt "TC_HELP_RADIO_ONE_WIDE_CW_FILTER"
 msgid "Set width of CW filter. Actual for FT747GX, FT840, FT890, FT900, FT990, FT1000 rigs."
 msgstr "Команда устанавливает ширину CW фильтра Радио 1. Актуальна для трансиверов FT747GX, FT840, FT890, FT900, FT990, FT1000."
 
-#. Config command: RADIO TWO BAND OUTPUT PORT   (default: NONE)
-msgctxt "TC_HELP_RADIO_TWO_BAND_OUTPUT_PORT"
-msgid ""
-msgstr "Параллельный порт, используемый для вывода информации о текущем диапазоне Радио №2."
-
 #. Config command: RADIO TWO BAUD RATE   (default: 0)
 msgctxt "TC_HELP_RADIO_TWO_BAUD_RATE"
 msgid "This command controls the baud rate between the computer and the connected rigs."
 msgstr "Если вы связываете с помощью интерфейса последовательного порта трансивер и компьютер, то по умолчанию задается скорость 4800 бод, которая работает для большинства трансиверов. Однако иногда может потребоваться изменить это значение, например, увеличить для трансиверов Kenwood."
 
-#. Config command: RADIO TWO CAT DTR   (default: OFF)
-msgctxt "TC_HELP_RADIO_TWO_CAT_DTR"
-msgid ""
-msgstr "Команда определяет уровень, который будет выставлен на выводе DTR последовательного порта, указанного в команде RADIO TWO CONTROL PORT после запуска программы."
-
-#. Config command: RADIO TWO CAT RTS   (default: OFF)
-msgctxt "TC_HELP_RADIO_TWO_CAT_RTS"
-msgid ""
-msgstr "Команда определяет уровень, который будет выставлен на выводе RTS последовательного порта, указанного в команде RADIO TWO CONTROL PORT после запуска программы."
-
 #. Config command: RADIO TWO CONTROL PORT   (default: NONE)
 msgctxt "TC_HELP_RADIO_TWO_CONTROL_PORT"
 msgid "Use these commands to specify the serial port to use for each connected rig."
 msgstr "Используйте эти команды, чтобы определить последовательный порт для каждого связанного с помощью интерфейса трансивера."
-
-#. Config command: RADIO TWO FREQUENCY ADDER   (default: 0)
-msgctxt "TC_HELP_RADIO_TWO_FREQUENCY_ADDER"
-msgid ""
-msgstr "СМЕЩЕНИЕ ЧАСТОТЫ ДЛЯ РАДИО ДВА"
 
 #. Config command: RADIO TWO CW BY CAT   (default: FALSE)
 msgctxt "TC_HELP_RADIO_TWO_CW_BY_CAT"
@@ -1350,11 +1266,6 @@ msgstr "При установке в TRUE функция Авто-CQ будет 
 msgctxt "TC_HELP_RATE_DISPLAY"
 msgid "Values: QSOS or QSO POINTS. The rate display can show either the rate at which you are making QSOs, or the rate at which your QSO points are increasing."
 msgstr "Дисплей темпа может показывать или скорость проведения QSO или набора очков за QSO."
-
-#. Config command: RELAY CONTROL PORT   (default: NONE)
-msgctxt "TC_HELP_RELAY_CONTROL_PORT"
-msgid ""
-msgstr "Команда определяет параллельный порт, который будет использоваться для вывода сигнала переключения реле. Этот сигнал будет выводиться на вывод 14 и может использоваться для переключения CW, PTT или микрофона между первым и вторым радио. Высокий уровень на данном выводе указывает, что активным является Радио 1. Весь функционал режима двух радио может быть реализован при помощи данного сигнала. Обратите внимание, что данный вывод также используется для подключения телеграфного манипулятора. Вы не можете использовать этот порт для обеих функций."
 
 #. Config command: REMAINING MULT DISPLAY MODE   (default: HILIGHT)
 msgctxt "TC_HELP_REMAINING_MULT_DISPLAY_MODE"
@@ -1554,11 +1465,6 @@ msgctxt "TC_HELP_STEREO_CONTROL_PIN"
 msgid "Values: 5 or 9. This command sets the number of the pin to be used for controlling stereo on the STEREO CONTROL PORT. If you use pin 5, then you cannot use the same port for controlling a DVK; if you use pin 9 then you cannot use the same port for band output."
 msgstr "Устанавливает номер контакта для управления стерео сигнала в STEREO CONTROL PORT. При установке значения 5 вы не сможете использовать этот же порт для управления DVK, а при 9 — для декодера диапазонов."
 
-#. Config command: STEREO CONTROL PORT   (default: NONE)
-msgctxt "TC_HELP_STEREO_CONTROL_PORT"
-msgid ""
-msgstr "Команда определяет параллельный порт, к которому подключено стерео-устройство, такое как WBX SO2R или ZS4TX Super Combo Keyer II."
-
 #. Config command: STEREO PIN HIGH   (default: FALSE)
 msgctxt "TC_HELP_STEREO_PIN_HIGH"
 msgid "This command sets the state of the STEREO CONTROL PIN on the STEREO CONTROL PORT. The value may be toggled with the function key command TOGGLESTEREOPIN."
@@ -1685,11 +1591,6 @@ msgstr "Команда управляет созданием файла неиз
 msgctxt "TC_HELP_UNKNOWN_COUNTRY_FILE_NAME"
 msgid "Values: Any valid filename. TR4W will save log entries for QSOs with unknown countries to the named file if UNKNOWN COUNTRY FILE ENABLE is TRUE."
 msgstr "Программа сохранит записи QSO с неизвестными странами в указанном файле, если UNKNOWN COUNTRY FILE ENABLE=TRUE."
-
-#. Config command: USE CONTROL PORT   (default: FALSE)
-msgctxt "TC_HELP_USE_CONTROL_PORT"
-msgid ""
-msgstr "При значении равном TRUE программа позволяет подключить внешний телеграфный ключ и педаль к последовательному порту, указанному в команде RADIO ONE CONTROL PORT. Команда перекрывает команды FOOT SWITCH PORT и PADDLE PORT, т.е. если эти команды имеют значения отличные от NONE, опрос ключа и педали все равно будет происходить через последовательный порт."
 
 #. Config command: USE RECORDED SIGNS   (default: FALSE)
 msgctxt "TC_HELP_USE_RECORDED_SIGNS"

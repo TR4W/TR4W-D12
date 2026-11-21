@@ -3961,8 +3961,8 @@ msgstr "(未连接)"
 #: tr4w/src/lang/tr4w_consts_eng.pas:820
 #: utr4wstrings.tc_show_all_serial_ports
 #, fuzzy
-msgid "Show all serial ports"
-msgstr "显示全部串行端口"
+#~ msgid "Show all serial ports"
+#~ msgstr "显示全部串行端口"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:825
@@ -4335,8 +4335,8 @@ msgstr "输入交换。 按 ENDER 进行登录, ESCAPE 中止 QSO ."
 #: tr4w/src/lang/tr4w_consts_eng.pas:877
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: tr4w/src/lang/tr4w_consts_eng.pas:878
@@ -5471,7 +5471,8 @@ msgstr "主窗口没有边框"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "主窗口没有标题栏"
 
 #: tprefsform.chknocolumnheader.caption
@@ -5642,8 +5643,8 @@ msgstr "不断更新重新启动文件"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "使用无线电控制端口进行划桨和脚开关"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "使用无线电控制端口进行划桨和脚开关"
 
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
@@ -6350,13 +6351,13 @@ msgstr "TCP 端口 :"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "中继控制端口"
+#~ msgid "Relay control port"
+#~ msgstr "中继控制端口"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "本站的平行(LPT)端口线路:中继切换,波段数据向每个操作位置解码器输出,以及立体声控制. 这些跟随DESK,而不是收音机,所以当你激活另一个收音机时,它们就留在原地. 除非您有这样的接口 - TR4W 是否一直支持 LPT 仍然是一个未决问题, 下面的灰色框是一个占位符 ."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "本站的平行(LPT)端口线路:中继切换,波段数据向每个操作位置解码器输出,以及立体声控制. 这些跟随DESK,而不是收音机,所以当你激活另一个收音机时,它们就留在原地. 除非您有这样的接口 - TR4W 是否一直支持 LPT 仍然是一个未决问题, 下面的灰色框是一个占位符 ."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
@@ -6487,8 +6488,8 @@ msgstr "这些在换乘时会通过多操作网络发送给其他台站,所以�
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "立体声控制端口"
+#~ msgid "Stereo control port"
+#~ msgstr "立体声控制端口"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7612,8 +7613,8 @@ msgstr "Rfobl 模式"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "显示全部串行端口"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "显示全部串行端口"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -7722,8 +7723,8 @@ msgstr "调用更新启用"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "国家信息文件"
+#~ msgid "Country Information File"
+#~ msgstr "国家信息文件"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -7752,18 +7753,18 @@ msgstr "未知的国家文件名称"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "LPT1 基本地址"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "LPT1 基本地址"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "LPT2 基础地址"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "LPT2 基础地址"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "LPT3 基本地址"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "LPT3 基本地址"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -7777,8 +7778,8 @@ msgstr "立体声高"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "使用控制端口"
+#~ msgid "Use Control Port"
+#~ msgstr "使用控制端口"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy

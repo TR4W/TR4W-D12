@@ -3359,9 +3359,9 @@ msgstr "(接続しない)"
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
 #: utr4wstrings.tc_show_all_serial_ports
 #, fuzzy
-msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
-msgid "Show all serial ports"
-msgstr "すべてのシリアルポートを表示"
+#~ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
+#~ msgid "Show all serial ports"
+#~ msgstr "すべてのシリアルポートを表示"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -4693,7 +4693,8 @@ msgstr "メインウィンドウが境界線を持たない"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "メインウィンドウにはタイトルバーはありません"
 
 #: tprefsform.chknocolumnheader.caption
@@ -4868,8 +4869,8 @@ msgstr "再起動ファイルを最新の状態に保つ"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "パドルおよびフィート スイッチのための無線制御港を使用して下さい"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "パドルおよびフィート スイッチのための無線制御港を使用して下さい"
 
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
@@ -5587,13 +5588,13 @@ msgstr "TCPポート:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "リレー制御ポート"
+#~ msgid "Relay control port"
+#~ msgstr "リレー制御ポート"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "パラレル(LPT)ポート配線:リレースイッチ、バンドデータを操作位置ごとのデコーダーに出力し、ステレオオーディオ制御。 これらは、ラジオではなく、DESKに従うので、別のラジオを活性化するときに置くままです。 そのようなインターフェイスを持っている場合を除き、それらを残してください - TR4WがすべてでLPTをサポートし続けるかどうかは、下の灰色の箱がプレースホルダーであるオープン質問です."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "パラレル(LPT)ポート配線:リレースイッチ、バンドデータを操作位置ごとのデコーダーに出力し、ステレオオーディオ制御。 これらは、ラジオではなく、DESKに従うので、別のラジオを活性化するときに置くままです。 そのようなインターフェイスを持っている場合を除き、それらを残してください - TR4WがすべてでLPTをサポートし続けるかどうかは、下の灰色の箱がプレースホルダーであるオープン質問です."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
@@ -5736,8 +5737,8 @@ msgstr "これらは、変更時にマルチオペレーターネットワーク
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "ステレオ制御ポート"
+#~ msgid "Stereo control port"
+#~ msgstr "ステレオ制御ポート"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7942,9 +7943,9 @@ msgstr "交換する ENTER を押して、ESCAPE を QSO を中止します."
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8791,8 +8792,8 @@ msgstr "Rfoblモード"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "すべてのシリアルポートを表示する"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "すべてのシリアルポートを表示する"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -8901,8 +8902,8 @@ msgstr "Callsign Updateを有効にする"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "国の情報ファイル"
+#~ msgid "Country Information File"
+#~ msgstr "国の情報ファイル"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -8931,18 +8932,18 @@ msgstr "未知の国 ファイル名"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "LPT1 ベースアドレス"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "LPT1 ベースアドレス"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "LPT2 ベースアドレス"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "LPT2 ベースアドレス"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "LPT3 ベースアドレス"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "LPT3 ベースアドレス"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -8956,8 +8957,8 @@ msgstr "ステレオ ピン高い"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "制御港の使用"
+#~ msgid "Use Control Port"
+#~ msgstr "制御港の使用"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy

@@ -3046,9 +3046,9 @@ msgstr "(neconectat)"
 #: utr4wstrings:tc_show_all_serial_ports
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
 #: utr4wstrings.tc_show_all_serial_ports
-msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
-msgid "Show all serial ports"
-msgstr "Arata toate porturile seriale"
+#~ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
+#~ msgid "Show all serial ports"
+#~ msgstr "Arata toate porturile seriale"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -4338,7 +4338,8 @@ msgstr "Fereastra principală nu are frontieră"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "Fereastra principală nu are bara de titlu"
 
 #: tprefsform.chknocolumnheader.caption
@@ -4511,8 +4512,8 @@ msgstr "Păstrați fișierul de repornire la zi"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "Utilizați portul de control radio pentru padele și comutator picior"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "Utilizați portul de control radio pentru padele și comutator picior"
 
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
@@ -5223,13 +5224,13 @@ msgstr "Port TCP:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "Portul de control al releului"
+#~ msgid "Relay control port"
+#~ msgstr "Portul de control al releului"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "Cabluri portuare paralele (LPT) pentru această stație: comutare releu, bandă de date la un decodor per poziție de operare, și control audio stereo. Acestea urmează DESK, nu radio, astfel încât acestea să rămână pus atunci când activați un alt radio. Lasă-le Nici una dacă nu aveți o astfel de interfață - dacă TR4W continuă să susțină LPT la toate este încă o întrebare deschisă, care caseta gri de mai jos este un titular de loc."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "Cabluri portuare paralele (LPT) pentru această stație: comutare releu, bandă de date la un decodor per poziție de operare, și control audio stereo. Acestea urmează DESK, nu radio, astfel încât acestea să rămână pus atunci când activați un alt radio. Lasă-le Nici una dacă nu aveți o astfel de interfață - dacă TR4W continuă să susțină LPT la toate este încă o întrebare deschisă, care caseta gri de mai jos este un titular de loc."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
@@ -5369,8 +5370,8 @@ msgstr "Acestea sunt trimise la alte stații într-o rețea multi-operator atunc
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "Portul de control Stereo"
+#~ msgid "Stereo control port"
+#~ msgstr "Portul de control Stereo"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7467,9 +7468,9 @@ msgstr "Intră în schimb. Apăsați ENTER pentru a loga, ESCAPE pentru a anula 
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8312,8 +8313,8 @@ msgstr "Modul Rfobl"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "Arată toate porturile în serie"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "Arată toate porturile în serie"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -8422,8 +8423,8 @@ msgstr "Actualizează indicativul"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "Fișier informativ de țară"
+#~ msgid "Country Information File"
+#~ msgstr "Fișier informativ de țară"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -8452,18 +8453,18 @@ msgstr "Nume fișier țară necunoscută"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "Adresa bazei LPT1"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "Adresa bazei LPT1"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "Adresa bazei LPT2"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "Adresa bazei LPT2"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "Adresa bazei LPT3"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "Adresa bazei LPT3"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -8477,8 +8478,8 @@ msgstr "Liceul Stereo Pin"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "Folosește portul de control"
+#~ msgid "Use Control Port"
+#~ msgstr "Folosește portul de control"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy

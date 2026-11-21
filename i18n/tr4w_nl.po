@@ -3349,9 +3349,9 @@ msgstr "(niet verbonden)"
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
 #: utr4wstrings.tc_show_all_serial_ports
 #, fuzzy
-msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
-msgid "Show all serial ports"
-msgstr "Alle seriële poorten tonen"
+#~ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
+#~ msgid "Show all serial ports"
+#~ msgstr "Alle seriële poorten tonen"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -4673,7 +4673,8 @@ msgstr "Hoofdvenster heeft geen rand"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "Hoofdvenster heeft geen titelbalk"
 
 #: tprefsform.chknocolumnheader.caption
@@ -4846,8 +4847,8 @@ msgstr "Het herstartbestand up-to-date houden"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "Gebruik de radio control poort voor peddel en voetschakelaar"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "Gebruik de radio control poort voor peddel en voetschakelaar"
 
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
@@ -5558,13 +5559,13 @@ msgstr "TCP-poort:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "Relaiscontrolepoort"
+#~ msgid "Relay control port"
+#~ msgstr "Relaiscontrolepoort"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "Parallelle (LPT) poortbedrading voor dit station: relaisschakeling, band data uit naar een decoder per bedrijfspositie, en stereo audio control. Deze volgen de DESK, niet de radio, dus blijven ze zitten als je een andere radio activeert. Laat ze Geen Geen tenzij u een dergelijke interface - of TR4W blijft ondersteunen LPT is nog steeds een open vraag, die de grijze doos hieronder is een plaatshouder voor."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "Parallelle (LPT) poortbedrading voor dit station: relaisschakeling, band data uit naar een decoder per bedrijfspositie, en stereo audio control. Deze volgen de DESK, niet de radio, dus blijven ze zitten als je een andere radio activeert. Laat ze Geen Geen tenzij u een dergelijke interface - of TR4W blijft ondersteunen LPT is nog steeds een open vraag, die de grijze doos hieronder is een plaatshouder voor."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
@@ -5705,8 +5706,8 @@ msgstr "Deze worden verzonden naar de andere stations in een multi-operator netw
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "Stereocontrolepoort"
+#~ msgid "Stereo control port"
+#~ msgstr "Stereocontrolepoort"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7915,9 +7916,9 @@ msgstr "Kom binnen. Druk op ENTER om te loggen, ESCAPE om QSO af te breken."
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8760,8 +8761,8 @@ msgstr "Rfobl-modus"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "Alle seriële poorten tonen"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "Alle seriële poorten tonen"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -8870,8 +8871,8 @@ msgstr "Aanroepteken bijwerken inschakelen"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "Landinformatiebestand"
+#~ msgid "Country Information File"
+#~ msgstr "Landinformatiebestand"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -8900,18 +8901,18 @@ msgstr "Onbekende naam van het landbestand"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "LPT1-basisadres"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "LPT1-basisadres"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "LPT2-basisadres"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "LPT2-basisadres"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "LPT3-basisadres"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "LPT3-basisadres"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -8925,8 +8926,8 @@ msgstr "Stereo Pin High"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "Controlepoort gebruiken"
+#~ msgid "Use Control Port"
+#~ msgstr "Controlepoort gebruiken"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy

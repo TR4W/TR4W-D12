@@ -3340,9 +3340,9 @@ msgstr "(non collegato)"
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
 #: utr4wstrings.tc_show_all_serial_ports
 #, fuzzy
-msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
-msgid "Show all serial ports"
-msgstr "Mostra tutte le porte seriali"
+#~ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
+#~ msgid "Show all serial ports"
+#~ msgstr "Mostra tutte le porte seriali"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -4676,7 +4676,8 @@ msgstr "La finestra principale non ha confini"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "La finestra principale non ha una barra del titolo"
 
 #: tprefsform.chknocolumnheader.caption
@@ -4854,8 +4855,8 @@ msgstr "Tenere aggiornato il file di riavvio"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "Utilizzare la porta di controllo radio per paddle e footswitch"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "Utilizzare la porta di controllo radio per paddle e footswitch"
 
 # 2026-10-19: term from the EU DX Contest rules, Italian edition (EUDXCC, https://www.eudx-contest.com/regolamento/): 'caratteri callsign' -> 'caratteri del nominativo', s.10 'nominativo'. Previous text: "Invia audio registrato per caratteri callsign"
 #: tprefsform.chkuserecordedsigns.caption
@@ -5573,13 +5574,13 @@ msgstr "Porta TCP:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "Porta di controllo del relè"
+#~ msgid "Relay control port"
+#~ msgstr "Porta di controllo del relè"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "Cablaggio porta parallelo (LPT) per questa stazione: commutazione relè, dati della banda su un decoder per posizione operativa e controllo audio stereo. Questi seguono la DESK, non la radio, quindi rimangono messi quando si attiva una radio diversa. Lasciali Nessuno a meno che non abbia una tale interfaccia - se TR4W continua a sostenere LPT a tutti è ancora una domanda aperta, che la scatola grigia qui sotto è un segnaposto per."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "Cablaggio porta parallelo (LPT) per questa stazione: commutazione relè, dati della banda su un decoder per posizione operativa e controllo audio stereo. Questi seguono la DESK, non la radio, quindi rimangono messi quando si attiva una radio diversa. Lasciali Nessuno a meno che non abbia una tale interfaccia - se TR4W continua a sostenere LPT a tutti è ancora una domanda aperta, che la scatola grigia qui sotto è un segnaposto per."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
@@ -5720,8 +5721,8 @@ msgstr "Queste sono inviate alle altre stazioni in una rete multi-operatore quan
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "Porta di controllo Stereo"
+#~ msgid "Stereo control port"
+#~ msgstr "Porta di controllo Stereo"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7933,9 +7934,9 @@ msgstr "Inserisci lo scambio. Premere ENTER per registrare, ESCAPE per interromp
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8793,8 +8794,8 @@ msgstr "Modalità Rfobl"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "Mostra tutti i porti seriali"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "Mostra tutti i porti seriali"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -8904,8 +8905,8 @@ msgstr "Attiva aggiornamento nominativi"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "Informazioni sul paese File"
+#~ msgid "Country Information File"
+#~ msgstr "Informazioni sul paese File"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -8934,18 +8935,18 @@ msgstr "Nome del file di paese sconosciuto"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "LPT1 Indirizzo di base"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "LPT1 Indirizzo di base"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "LPT2 Indirizzo di base"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "LPT2 Indirizzo di base"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "LPT3 Indirizzo di base"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "LPT3 Indirizzo di base"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -8959,8 +8960,8 @@ msgstr "Perno Stereo Alto"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "Usa la porta di controllo"
+#~ msgid "Use Control Port"
+#~ msgstr "Usa la porta di controllo"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy

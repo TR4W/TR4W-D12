@@ -2656,8 +2656,8 @@ msgstr "(ikke forbundet)"
 #: tr4w/src/lang/tr4w_consts_eng.pas:818
 #: utr4wstrings.tc_show_all_serial_ports
 #, fuzzy
-msgid "Show all serial ports"
-msgstr "Vis alle serielle porte"
+#~ msgid "Show all serial ports"
+#~ msgstr "Vis alle serielle porte"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -3979,7 +3979,8 @@ msgstr "Hovedvinduet har ingen grænse"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "Hovedvinduet har ingen titellinje"
 
 #: tprefsform.chknocolumnheader.caption
@@ -4152,8 +4153,8 @@ msgstr "Hold genstart filen opdateret"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "Brug radiokontrolporten til pad- og fodkontakt"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "Brug radiokontrolporten til pad- og fodkontakt"
 
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
@@ -4863,13 +4864,13 @@ msgstr "TCP port:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "Relækontrolport"
+#~ msgid "Relay control port"
+#~ msgstr "Relækontrolport"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "Parallel (LPT) port ledninger til denne station: relæ skifte, band data ud til en dekoder per driftsposition, og stereo audio kontrol. Disse følger DESK, ikke radioen, så de bliver siddende, når du aktiverer en anden radio. Efterlad dem Ingen, medmindre du har en sådan grænseflade - om TR4W holder understøtter LPT på alle er stadig et åbent spørgsmål, som gråt boks nedenfor er en pladsholder til."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "Parallel (LPT) port ledninger til denne station: relæ skifte, band data ud til en dekoder per driftsposition, og stereo audio kontrol. Disse følger DESK, ikke radioen, så de bliver siddende, når du aktiverer en anden radio. Efterlad dem Ingen, medmindre du har en sådan grænseflade - om TR4W holder understøtter LPT på alle er stadig et åbent spørgsmål, som gråt boks nedenfor er en pladsholder til."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
@@ -5010,8 +5011,8 @@ msgstr "Disse sendes til de andre stationer i et multioperatørnetværk, når du
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "Stereokontrolport"
+#~ msgid "Stereo control port"
+#~ msgstr "Stereokontrolport"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7199,9 +7200,9 @@ msgstr "Indtast udveksling. Tryk på ENTER for at logge, ESCAPE for at afbryde Q
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8044,8 +8045,8 @@ msgstr "Rfobl tilstand"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "Vis alle serielle porte"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "Vis alle serielle porte"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -8154,8 +8155,8 @@ msgstr "Opdatering af kaldesignal Aktivér"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "Landeinformationsfil"
+#~ msgid "Country Information File"
+#~ msgstr "Landeinformationsfil"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -8184,18 +8185,18 @@ msgstr "Ukendt landefilnavn"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "LPT1- basisadresse"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "LPT1- basisadresse"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "LPT2- basisadresse"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "LPT2- basisadresse"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "LPT3- basisadresse"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "LPT3- basisadresse"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -8209,8 +8210,8 @@ msgstr "Stereo Pin High"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "Brug kontrolport"
+#~ msgid "Use Control Port"
+#~ msgstr "Brug kontrolport"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy

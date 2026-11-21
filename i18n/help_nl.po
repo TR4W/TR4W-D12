@@ -604,18 +604,6 @@ msgctxt "TC_HELP_FOOT_SWITCH_PORT"
 msgid ""
 msgstr ""
 
-#. Config command: FREQUENCY ADDER RADIO ONE   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_FREQUENCY_ADDER_RADIO_ONE"
-msgid ""
-msgstr ""
-
-#. Config command: FREQUENCY ADDER RADIO TWO   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_FREQUENCY_ADDER_RADIO_TWO"
-msgid ""
-msgstr ""
-
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_MEMORY_ENABLE"
@@ -730,12 +718,6 @@ msgctxt "TC_HELP_KEYPAD_CW_MEMORIES"
 msgid "When this parameter is TRUE, the keys 0 to 9 on the keypad will send CQ MEMORIES ctrl-F1 to ctrl-F10 respectively."
 msgstr "Wanneer deze parameter WAAR is, sturen de toetsen 0 tot 9 op het toetsenbord CQ MEMORIES ctrl-F1 naar respectievelijk ctrl-F10."
 
-#. Config command: LATEST CONFIG FILE   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_LATEST_CONFIG_FILE"
-msgid ""
-msgstr ""
-
 #. Config command: LEADING ZERO CHARACTER   (default: T)
 #, fuzzy
 msgctxt "TC_HELP_LEADING_ZERO_CHARACTER"
@@ -795,24 +777,6 @@ msgstr "Als deze parameter WAAR is, wordt de QSO ingelogd zodra u op de eerste <
 msgctxt "TC_HELP_LOOK_FOR_RST_SENT"
 msgid "When this parameter is TRUE, a transmitted RST may be entered into the Exchange Window by preceding it with S. For example, typing S57 would place 57 into the log as the transmitted exchange for this QSO."
 msgstr "Wanneer deze parameter WAAR is, kan een verzonden RST in het Exchange Window worden ingevoerd door ervoor te gaan met S. Bijvoorbeeld, het typen van S57 zou plaats in het log als de verzonden uitwisseling voor deze QSO."
-
-#. Config command: LPT1 BASE ADDRESS   (default: 888)
-#, fuzzy
-msgctxt "TC_HELP_LPT1_BASE_ADDRESS"
-msgid "The base address of parallel port LPT1 (PARALLEL 1)."
-msgstr "Het basisadres van parallelle poort LPT1 (PAROLEL 1)."
-
-#. Config command: LPT2 BASE ADDRESS   (default: 632)
-#, fuzzy
-msgctxt "TC_HELP_LPT2_BASE_ADDRESS"
-msgid "The base address of parallel port LPT2 (PARALLEL 2)."
-msgstr "Het basisadres van parallelle poort LPT2 (PAROLEL 2)."
-
-#. Config command: LPT3 BASE ADDRESS   (default: 956)
-#, fuzzy
-msgctxt "TC_HELP_LPT3_BASE_ADDRESS"
-msgid "The base address of parallel port LPT3 (PARALLEL 3)."
-msgstr "Het basisadres van parallelle poort LPT3 (PAROLEL 3)."
 
 #. Config command: MAIN CALLSIGN   (default: NONE)
 #, fuzzy
@@ -1040,7 +1004,7 @@ msgstr ""
 #. Config command: NO CAPTION   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_CAPTION"
-msgid "If the value is TRUE after startup all windows except the main will not have a title."
+msgid "If the value is TRUE after startup all windows except the main will not have a title. Hold Alt and drag anywhere in a window to move it."
 msgstr "Als de waarde TRUE is na het opstarten van alle vensters behalve de hoofdvensters zal geen titel hebben."
 
 #. Config command: NO COLUMN HEADER   (default: FALSE)
@@ -1096,18 +1060,6 @@ msgstr "Dit commando regelt de snelheid van CW verzonden met de peddel. Een waar
 msgctxt "TC_HELP_PARTIAL_CALL_ENABLE"
 msgid "This command allows you to control the partial call function. This is a separate feature from the super check partial (which uses the TRMASTER.DTA database). The callsigns used by the partial call function come from the dupesheet and initial exchange file. When this function is enabled, partial calls will be shown on the bottom of the screen after the second character of a call has been typed into the Call Window. A partial call is defined to be any call that starts with the same letters as those in the Call Window. The WILDCARD PARTIALS parameter determines whether the partial call must appear at the start of"
 msgstr "Met dit commando kunt u de gedeeltelijke aanroepfunctie controleren. Dit is een aparte functie van de super check partial (die gebruik maakt van de TRMASTER.DTA database). De aanroeptekens die gebruikt worden door de gedeeltelijke aanroepfunctie komen uit het dupesheet en het eerste uitwisselingsbestand. Wanneer deze functie is ingeschakeld, zullen gedeeltelijke oproepen worden getoond onderaan het scherm nadat het tweede teken van een oproep is getypt in het oproepvenster. Een \"individueel gesprek\" is gedefinieerd als een oproep die begint met dezelfde letters als die in het Call Window. De parameter WILDCARD PARTIALS bepaalt of de gedeeltelijke aanroep aan het begin van"
-
-#. Config command: POLL RADIO ONE   (default: TRUE)
-#, fuzzy
-msgctxt "TC_HELP_POLL_RADIO_ONE"
-msgid ""
-msgstr ""
-
-#. Config command: POLL RADIO TWO   (default: TRUE)
-#, fuzzy
-msgctxt "TC_HELP_POLL_RADIO_TWO"
-msgid ""
-msgstr ""
 
 #. Config command: POSSIBLE CALL ACCEPT KEY   (default: ;)
 #, fuzzy
@@ -1205,12 +1157,6 @@ msgctxt "TC_HELP_QSO_NUMBER_BY_BAND"
 msgid "When set to TRUE, the QSO numbers that are displayed on the screen, those that are sent in a CW message with the # character, and those shown in the log will be calculated from the total number of contacts on the active band. This is useful in a multi-transmitter situation where QSO numbers are being sent (e.g., the CQ WPX contest)."
 msgstr "Wanneer op TRUE wordt ingesteld, worden de QSO-nummers die op het scherm worden weergegeven, die welke worden verzonden in een CW-bericht met het #-teken, en die in het logboek worden weergegeven berekend op basis van het totale aantal contacten op de actieve band. Dit is nuttig in een multi-transmitter situatie waar QSO-nummers worden verzonden (bv. de CQ WPX wedstrijd)."
 
-#. Config command: QSO POINT METHOD   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_QSO_POINT_METHOD"
-msgid ""
-msgstr ""
-
 #. Config command: QSO POINTS DOMESTIC CW   (default: -1)
 #, fuzzy
 msgctxt "TC_HELP_QSO_POINTS_DOMESTIC_CW"
@@ -1295,41 +1241,17 @@ msgctxt "TC_HELP_R150S_MODE"
 msgid "If TRUE calculation of contriyes-multipliers will be based on R-150-S list."
 msgstr "Indien TRUE-berekening van berouw-multipliers wordt gebaseerd op R-150-S-lijst."
 
-#. Config command: RADIO ONE BAND OUTPUT PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_BAND_OUTPUT_PORT"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO ONE BAUD RATE   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_ONE_BAUD_RATE"
 msgid "This command controls the baud rate between the computer and the connected rigs."
 msgstr "Dit commando regelt de baud rate tussen de computer en de aangesloten platforms."
 
-#. Config command: RADIO ONE CAT DTR   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_CAT_DTR"
-msgid ""
-msgstr ""
-
-#. Config command: RADIO ONE CAT RTS   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_CAT_RTS"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO ONE CONTROL PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_ONE_CONTROL_PORT"
 msgid "Use these commands to specify the serial port to use for each connected rig."
 msgstr "Gebruik deze commando's om de seriële poort te specificeren die voor elke verbonden rig gebruikt moet worden."
-
-#. Config command: RADIO ONE FREQUENCY ADDER   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_FREQUENCY_ADDER"
-msgid ""
-msgstr ""
 
 #. Config command: RADIO ONE CW BY CAT   (default: FALSE)
 #, fuzzy
@@ -1421,41 +1343,17 @@ msgctxt "TC_HELP_RADIO_ONE_WIDE_CW_FILTER"
 msgid "Set width of CW filter. Actual for FT747GX, FT840, FT890, FT900, FT990, FT1000 rigs."
 msgstr "De breedte van CW filter instellen. Eigenlijk voor FT747GX, FT840, FT890, FT900, FT990, FT1000 rigs."
 
-#. Config command: RADIO TWO BAND OUTPUT PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_BAND_OUTPUT_PORT"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO TWO BAUD RATE   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_TWO_BAUD_RATE"
 msgid "This command controls the baud rate between the computer and the connected rigs."
 msgstr "Dit commando regelt de baud rate tussen de computer en de aangesloten platforms."
 
-#. Config command: RADIO TWO CAT DTR   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_CAT_DTR"
-msgid ""
-msgstr ""
-
-#. Config command: RADIO TWO CAT RTS   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_CAT_RTS"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO TWO CONTROL PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_TWO_CONTROL_PORT"
 msgid "Use these commands to specify the serial port to use for each connected rig."
 msgstr "Gebruik deze commando's om de seriële poort te specificeren die voor elke verbonden rig gebruikt moet worden."
-
-#. Config command: RADIO TWO FREQUENCY ADDER   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_FREQUENCY_ADDER"
-msgid ""
-msgstr ""
 
 #. Config command: RADIO TWO CW BY CAT   (default: FALSE)
 #, fuzzy
@@ -1552,12 +1450,6 @@ msgstr "Wanneer deze parameter WAAR is, zal de Auto-CQ functie zich anders gedra
 msgctxt "TC_HELP_RATE_DISPLAY"
 msgid "Values: QSOS or QSO POINTS. The rate display can show either the rate at which you are making QSOs, or the rate at which your QSO points are increasing."
 msgstr "Waarden: QSOS of QSO POINTS. Het tariefdisplay kan de snelheid tonen waarmee u QSO's maakt, of de snelheid waarmee uw QSO-punten toenemen."
-
-#. Config command: RELAY CONTROL PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RELAY_CONTROL_PORT"
-msgid ""
-msgstr ""
 
 #. Config command: REMAINING MULT DISPLAY MODE   (default: HILIGHT)
 #, fuzzy
@@ -1787,12 +1679,6 @@ msgctxt "TC_HELP_STEREO_CONTROL_PIN"
 msgid "Values: 5 or 9. This command sets the number of the pin to be used for controlling stereo on the STEREO CONTROL PORT. If you use pin 5, then you cannot use the same port for controlling a DVK; if you use pin 9 then you cannot use the same port for band output."
 msgstr "Waarden: 5 of 9. Dit commando bepaalt het nummer van de pin die gebruikt moet worden om stereo aan te sturen op de STEREO CONTROL PORT. Als u pin 5 gebruikt, dan kunt u niet dezelfde poort gebruiken om een DVK te bedienen; als u pin 9 gebruikt dan kunt u niet dezelfde poort gebruiken voor de uitvoer van de band."
 
-#. Config command: STEREO CONTROL PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_STEREO_CONTROL_PORT"
-msgid ""
-msgstr ""
-
 #. Config command: STEREO PIN HIGH   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_STEREO_PIN_HIGH"
@@ -1936,12 +1822,6 @@ msgstr "Deze parameter controleert de aanmaak van het onbekende landbestand. Dit
 msgctxt "TC_HELP_UNKNOWN_COUNTRY_FILE_NAME"
 msgid "Values: Any valid filename. TR4W will save log entries for QSOs with unknown countries to the named file if UNKNOWN COUNTRY FILE ENABLE is TRUE."
 msgstr "Waarden: Elke geldige bestandsnaam. TR4W zal log entries voor QSO's met onbekende landen opslaan in het genoemde bestand als ONBEKEND LAND BESTAND WAAR IS."
-
-#. Config command: USE CONTROL PORT   (default: FALSE)
-#, fuzzy
-msgctxt "TC_HELP_USE_CONTROL_PORT"
-msgid ""
-msgstr ""
 
 #. Config command: USE RECORDED SIGNS   (default: FALSE)
 #, fuzzy

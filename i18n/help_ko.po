@@ -604,18 +604,6 @@ msgctxt "TC_HELP_FOOT_SWITCH_PORT"
 msgid ""
 msgstr ""
 
-#. Config command: FREQUENCY ADDER RADIO ONE   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_FREQUENCY_ADDER_RADIO_ONE"
-msgid ""
-msgstr ""
-
-#. Config command: FREQUENCY ADDER RADIO TWO   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_FREQUENCY_ADDER_RADIO_TWO"
-msgid ""
-msgstr ""
-
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_MEMORY_ENABLE"
@@ -730,12 +718,6 @@ msgctxt "TC_HELP_KEYPAD_CW_MEMORIES"
 msgid "When this parameter is TRUE, the keys 0 to 9 on the keypad will send CQ MEMORIES ctrl-F1 to ctrl-F10 respectively."
 msgstr "이 매개 변수가 TRUE, 키패드에 열쇠 0에서 9는 CQ MEMORIES ctrl-F1를 ctrl-F10에 각각 보낼 것입니다."
 
-#. Config command: LATEST CONFIG FILE   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_LATEST_CONFIG_FILE"
-msgid ""
-msgstr ""
-
 #. Config command: LEADING ZERO CHARACTER   (default: T)
 #, fuzzy
 msgctxt "TC_HELP_LEADING_ZERO_CHARACTER"
@@ -795,24 +777,6 @@ msgstr "이 매개 변수가 있다면 TRUE, QSO는 처음 <Enter> (교환을 �
 msgctxt "TC_HELP_LOOK_FOR_RST_SENT"
 msgid "When this parameter is TRUE, a transmitted RST may be entered into the Exchange Window by preceding it with S. For example, typing S57 would place 57 into the log as the transmitted exchange for this QSO."
 msgstr "이 매개 변수가 TRUE, 전송된 RST는 S.에 그것을 전진해서 교환 창에 입력될지도 모릅니다. 예를 들면, S57를 입력하는 것은 이 QSO를 위한 전송한 교환으로 5-257\"를 붙일 것입니다."
-
-#. Config command: LPT1 BASE ADDRESS   (default: 888)
-#, fuzzy
-msgctxt "TC_HELP_LPT1_BASE_ADDRESS"
-msgid "The base address of parallel port LPT1 (PARALLEL 1)."
-msgstr "평행한 항구 LPT1 (PARALLEL 1)의 기본 주소."
-
-#. Config command: LPT2 BASE ADDRESS   (default: 632)
-#, fuzzy
-msgctxt "TC_HELP_LPT2_BASE_ADDRESS"
-msgid "The base address of parallel port LPT2 (PARALLEL 2)."
-msgstr "평행 포트 LPT2 (PARALLEL 2)의 기본 주소."
-
-#. Config command: LPT3 BASE ADDRESS   (default: 956)
-#, fuzzy
-msgctxt "TC_HELP_LPT3_BASE_ADDRESS"
-msgid "The base address of parallel port LPT3 (PARALLEL 3)."
-msgstr "평행한 항구 LPT3 (PARALLEL 3)의 기본 주소."
 
 #. Config command: MAIN CALLSIGN   (default: NONE)
 #, fuzzy
@@ -1039,7 +1003,7 @@ msgstr ""
 #. Config command: NO CAPTION   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_CAPTION"
-msgid "If the value is TRUE after startup all windows except the main will not have a title."
+msgid "If the value is TRUE after startup all windows except the main will not have a title. Hold Alt and drag anywhere in a window to move it."
 msgstr "값이 있는 경우 TRUE 메인을 제외하고 모든 창을 시작 후 제목이 없습니다."
 
 #. Config command: NO COLUMN HEADER   (default: FALSE)
@@ -1095,18 +1059,6 @@ msgstr "이 명령은 패들로 보낸 CW의 속도를 제어합니다. 0의 값
 msgctxt "TC_HELP_PARTIAL_CALL_ENABLE"
 msgid "This command allows you to control the partial call function. This is a separate feature from the super check partial (which uses the TRMASTER.DTA database). The callsigns used by the partial call function come from the dupesheet and initial exchange file. When this function is enabled, partial calls will be shown on the bottom of the screen after the second character of a call has been typed into the Call Window. A partial call is defined to be any call that starts with the same letters as those in the Call Window. The WILDCARD PARTIALS parameter determines whether the partial call must appear at the start of"
 msgstr "이 명령은 부분 호출 기능을 제어 할 수 있습니다. 이것은 슈퍼 체크 부분 (TRMASTER.DTA 데이터베이스를 사용하는)의 별도의 기능입니다. 부분 호출 기능에 의해 사용되는 호출은 dupesheet 및 초기 교환 파일에서 제공됩니다. 이 함수가 활성화되면 부분 호출은 호출의 두 번째 문자가 호출 창에 입력 된 후 화면 하단에 표시됩니다. \"partial call\"은 Call Window에서 같은 문자로 시작하는 모든 통화로 정의됩니다. 더 보기 WILDCARD PARTIALS 매개변수는 부분 호출이 시작될지 결정합니다."
-
-#. Config command: POLL RADIO ONE   (default: TRUE)
-#, fuzzy
-msgctxt "TC_HELP_POLL_RADIO_ONE"
-msgid ""
-msgstr ""
-
-#. Config command: POLL RADIO TWO   (default: TRUE)
-#, fuzzy
-msgctxt "TC_HELP_POLL_RADIO_TWO"
-msgid ""
-msgstr ""
 
 #. Config command: POSSIBLE CALL ACCEPT KEY   (default: ;)
 #, fuzzy
@@ -1204,12 +1156,6 @@ msgctxt "TC_HELP_QSO_NUMBER_BY_BAND"
 msgid "When set to TRUE, the QSO numbers that are displayed on the screen, those that are sent in a CW message with the # character, and those shown in the log will be calculated from the total number of contacts on the active band. This is useful in a multi-transmitter situation where QSO numbers are being sent (e.g., the CQ WPX contest)."
 msgstr "설정할 때 TRUE, 화면에 표시된 QSO 번호, # 문자와 CW 메시지에 전송되는 사람들, 로그에 표시된 사람들은 활성 밴드에 접촉의 총 수에서 계산됩니다. 이것은 QSO 번호가 전송되는 멀티 트랜스미터 상황에서 유용합니다 (예 : CQ WPX 콘테스트)."
 
-#. Config command: QSO POINT METHOD   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_QSO_POINT_METHOD"
-msgid ""
-msgstr ""
-
 #. Config command: QSO POINTS DOMESTIC CW   (default: -1)
 #, fuzzy
 msgctxt "TC_HELP_QSO_POINTS_DOMESTIC_CW"
@@ -1294,41 +1240,17 @@ msgctxt "TC_HELP_R150S_MODE"
 msgid "If TRUE calculation of contriyes-multipliers will be based on R-150-S list."
 msgstr "이름 * TRUE contriyes-multipliers의 계산은 R-150-S 명부에 근거를 둡니다."
 
-#. Config command: RADIO ONE BAND OUTPUT PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_BAND_OUTPUT_PORT"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO ONE BAUD RATE   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_ONE_BAUD_RATE"
 msgid "This command controls the baud rate between the computer and the connected rigs."
 msgstr "이 명령은 컴퓨터와 연결된 rigs 사이 배드 속도를 제어합니다."
 
-#. Config command: RADIO ONE CAT DTR   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_CAT_DTR"
-msgid ""
-msgstr ""
-
-#. Config command: RADIO ONE CAT RTS   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_CAT_RTS"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO ONE CONTROL PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_ONE_CONTROL_PORT"
 msgid "Use these commands to specify the serial port to use for each connected rig."
 msgstr "이 명령을 사용하여 직렬 포트를 지정하여 각 연결 rig에 사용할 수 있습니다."
-
-#. Config command: RADIO ONE FREQUENCY ADDER   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_FREQUENCY_ADDER"
-msgid ""
-msgstr ""
 
 #. Config command: RADIO ONE CW BY CAT   (default: FALSE)
 #, fuzzy
@@ -1420,41 +1342,17 @@ msgctxt "TC_HELP_RADIO_ONE_WIDE_CW_FILTER"
 msgid "Set width of CW filter. Actual for FT747GX, FT840, FT890, FT900, FT990, FT1000 rigs."
 msgstr "CW 필터의 폭을 설정합니다. FT747GX, FT840, FT890, FT900, FT990, FT1000 의장을 위해 실제."
 
-#. Config command: RADIO TWO BAND OUTPUT PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_BAND_OUTPUT_PORT"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO TWO BAUD RATE   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_TWO_BAUD_RATE"
 msgid "This command controls the baud rate between the computer and the connected rigs."
 msgstr "이 명령은 컴퓨터와 연결된 rigs 사이 배드 속도를 제어합니다."
 
-#. Config command: RADIO TWO CAT DTR   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_CAT_DTR"
-msgid ""
-msgstr ""
-
-#. Config command: RADIO TWO CAT RTS   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_CAT_RTS"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO TWO CONTROL PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_TWO_CONTROL_PORT"
 msgid "Use these commands to specify the serial port to use for each connected rig."
 msgstr "이 명령을 사용하여 직렬 포트를 지정하여 각 연결 rig에 사용할 수 있습니다."
-
-#. Config command: RADIO TWO FREQUENCY ADDER   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_FREQUENCY_ADDER"
-msgid ""
-msgstr ""
 
 #. Config command: RADIO TWO CW BY CAT   (default: FALSE)
 #, fuzzy
@@ -1551,12 +1449,6 @@ msgstr "이 매개 변수가 TRUE, 자동 CQ 기능은 CQ MEMORY F1를 선정할
 msgctxt "TC_HELP_RATE_DISPLAY"
 msgid "Values: QSOS or QSO POINTS. The rate display can show either the rate at which you are making QSOs, or the rate at which your QSO points are increasing."
 msgstr "가치: QSOS 또는 QSO 포인트. 요금 표시는 QSO 또는 QSO 포인트가 증가하는 비율을 표시 할 수 있습니다."
-
-#. Config command: RELAY CONTROL PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RELAY_CONTROL_PORT"
-msgid ""
-msgstr ""
 
 #. Config command: REMAINING MULT DISPLAY MODE   (default: HILIGHT)
 #, fuzzy
@@ -1786,12 +1678,6 @@ msgctxt "TC_HELP_STEREO_CONTROL_PIN"
 msgid "Values: 5 or 9. This command sets the number of the pin to be used for controlling stereo on the STEREO CONTROL PORT. If you use pin 5, then you cannot use the same port for controlling a DVK; if you use pin 9 then you cannot use the same port for band output."
 msgstr "가치: 5 또는 9. 이 명령은 핀의 수를 설정하여 스테레오 제어에 사용됩니다. STEREO CONTROL PORT. 핀 5를 사용하는 경우에, 당신은 DVK 통제를 위한 동일한 항구를 사용할 수 없습니다; 당신이 핀 9를 사용하는 경우에 당신은 밴드 산출을 위한 동일한 항구를 사용할 수 없습니다."
 
-#. Config command: STEREO CONTROL PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_STEREO_CONTROL_PORT"
-msgid ""
-msgstr ""
-
 #. Config command: STEREO PIN HIGH   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_STEREO_PIN_HIGH"
@@ -1935,12 +1821,6 @@ msgstr "이 매개 변수는 알 수없는 국가 파일의 생성을 제어합�
 msgctxt "TC_HELP_UNKNOWN_COUNTRY_FILE_NAME"
 msgid "Values: Any valid filename. TR4W will save log entries for QSOs with unknown countries to the named file if UNKNOWN COUNTRY FILE ENABLE is TRUE."
 msgstr "값: 유효한 파일명. TR4W는 알 수없는 국가에 QSOs에 대한 로그 항목을 저장합니다. UNKNOWN COUNTRY FILE ENABLE 이름 * TRUE·"
-
-#. Config command: USE CONTROL PORT   (default: FALSE)
-#, fuzzy
-msgctxt "TC_HELP_USE_CONTROL_PORT"
-msgid ""
-msgstr ""
 
 #. Config command: USE RECORDED SIGNS   (default: FALSE)
 #, fuzzy

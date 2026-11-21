@@ -3030,9 +3030,9 @@ msgstr "(не подключено)"
 #: utr4wstrings:tc_show_all_serial_ports
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
 #: utr4wstrings.tc_show_all_serial_ports
-msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
-msgid "Show all serial ports"
-msgstr "Показать все COM-порты"
+#~ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
+#~ msgid "Show all serial ports"
+#~ msgstr "Показать все COM-порты"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -4346,7 +4346,8 @@ msgstr "Главное окно не имеет границы"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "Главное окно не имеет титульной строки"
 
 #: tprefsform.chknocolumnheader.caption
@@ -4524,8 +4525,8 @@ msgstr "Держите файл перезагрузки в актуальном
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "Используйте порт радиоуправления для весла и переключателя стопы"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "Используйте порт радиоуправления для весла и переключателя стопы"
 
 # 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'для вызывающих символов' -> 'для символов позывного', the reviewed 'позывных'. Previous text: "Отправить записанное аудио для вызывающих символов"
 #: tprefsform.chkuserecordedsigns.caption
@@ -5250,13 +5251,13 @@ msgstr "TCP порт:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "Порт управления реле"
+#~ msgid "Relay control port"
+#~ msgstr "Порт управления реле"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "Параллельная (LPT) проводка порта для этой станции: переключение реле, передача данных в декодер в рабочем положении и управление стереозвуком. Они следуют за DESK, а не за радио, поэтому они остаются на месте, когда вы активируете другое радио. Не оставляйте их, если у вас нет такого интерфейса - поддерживает ли TR4W LPT вообще, все еще остается открытым вопросом, для которого серая коробка ниже является заполнителем."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "Параллельная (LPT) проводка порта для этой станции: переключение реле, передача данных в декодер в рабочем положении и управление стереозвуком. Они следуют за DESK, а не за радио, поэтому они остаются на месте, когда вы активируете другое радио. Не оставляйте их, если у вас нет такого интерфейса - поддерживает ли TR4W LPT вообще, все еще остается открытым вопросом, для которого серая коробка ниже является заполнителем."
 
 # 2026-10-19: term from the EU DX Contest rules, Russian edition (EUDXCC, https://www.eudx-contest.com/%d1%83%d1%81%d0%bb%d0%be%d0%b2%d0%b8%d1%8f-%d1%81%d0%be%d1%80%d0%b5%d0%b2%d0%bd%d0%be%d0%b2%d0%b0%d0%bd%d0%b8%d0%b9/): 'Группы:' -> 'Диапазоны:', s.2.g 'Диапазоны' (группы = groups). Previous text: "Группы:"
 #: tprefsform.lblrotatorbands.caption
@@ -5400,8 +5401,8 @@ msgstr "Они отправляются на другие станции в му
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "Порт управления стереосистемой"
+#~ msgid "Stereo control port"
+#~ msgstr "Порт управления стереосистемой"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7488,9 +7489,9 @@ msgstr "Введите обмен. Нажмите Enter to log, ESCAPE to abort 
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8359,8 +8360,8 @@ msgstr "Режим Rfobl"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "Показать все серийные порты"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "Показать все серийные порты"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -8470,8 +8471,8 @@ msgstr "Обновление позывных включено"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "Информационный файл страны"
+#~ msgid "Country Information File"
+#~ msgstr "Информационный файл страны"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -8500,18 +8501,18 @@ msgstr "Неизвестное название файла страны"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "Базовый адрес LPT1"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "Базовый адрес LPT1"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "Базовый адрес LPT2"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "Базовый адрес LPT2"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "Базовый адрес LPT3"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "Базовый адрес LPT3"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -8525,8 +8526,8 @@ msgstr "Стерео Пин Хай"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "Использование Control Port"
+#~ msgid "Use Control Port"
+#~ msgstr "Использование Control Port"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy

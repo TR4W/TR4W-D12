@@ -1648,7 +1648,7 @@ msgstr ""
 
 #: tprefsform.chknocaption.caption
 msgctxt "tprefsform.chknocaption.caption"
-msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr ""
 
 #: tprefsform.chknocolumnheader.caption
@@ -1790,10 +1790,6 @@ msgstr ""
 #: tprefsform.chkupdaterestartfile.caption
 msgctxt "tprefsform.chkupdaterestartfile.caption"
 msgid "Keep the restart file up to date"
-msgstr ""
-
-#: tprefsform.chkusecontrolport.caption
-msgid "Use the radio control port for paddle and foot switch"
 msgstr ""
 
 #: tprefsform.chkuserecordedsigns.caption
@@ -2404,14 +2400,6 @@ msgstr ""
 msgid "TCP port:"
 msgstr ""
 
-#: tprefsform.lblrelayport.caption
-msgid "Relay control port"
-msgstr ""
-
-#: tprefsform.lblrelayportinfo.caption
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr ""
-
 #: tprefsform.lblrotatorbands.caption
 msgid "Bands:"
 msgstr ""
@@ -2534,10 +2522,6 @@ msgstr ""
 
 #: tprefsform.lblstationhint.caption
 msgid "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange."
-msgstr ""
-
-#: tprefsform.lblstereoport.caption
-msgid "Stereo control port"
 msgstr ""
 
 #: tprefsform.lbltcibindallwarning.caption
@@ -3180,7 +3164,7 @@ msgstr ""
 
 #: usettingscaptions.rs_appearance_nocaption
 msgctxt "usettingscaptions.rs_appearance_nocaption"
-msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr ""
 
 #: usettingscaptions.rs_appearance_nocolumnheader
@@ -3506,10 +3490,6 @@ msgstr ""
 msgid "Rfobl Mode"
 msgstr ""
 
-#: usettingscaptions.rs_contest_showallserialports
-msgid "Show All Serial Ports"
-msgstr ""
-
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 msgid "Show Domestic Multiplier Name"
 msgstr ""
@@ -3639,10 +3619,6 @@ msgstr ""
 msgid "Callsign Update Enable"
 msgstr ""
 
-#: usettingscaptions.rs_files_ctrlj_countryinformationfile
-msgid "Country Information File"
-msgstr ""
-
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 msgid "Cty Update Check On Startup"
 msgstr ""
@@ -3663,28 +3639,12 @@ msgstr ""
 msgid "Unknown Country File Name"
 msgstr ""
 
-#: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
-msgid "LPT1 Base Address"
-msgstr ""
-
-#: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
-msgid "LPT2 Base Address"
-msgstr ""
-
-#: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
-msgid "LPT3 Base Address"
-msgstr ""
-
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 msgid "Stereo Control Pin"
 msgstr ""
 
 #: usettingscaptions.rs_hardware_ctrlj_stereopinhigh
 msgid "Stereo Pin High"
-msgstr ""
-
-#: usettingscaptions.rs_hardware_ctrlj_usecontrolport
-msgid "Use Control Port"
 msgstr ""
 
 #: usettingscaptions.rs_logging_checklogfilesize
@@ -6249,10 +6209,6 @@ msgstr ""
 msgid "Records"
 msgstr ""
 
-#: utr4wstrings.tc_relaycontrolportpaddleport
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr ""
-
 #: utr4wstrings.tc_removeclusters
 #, object-pascal-format
 msgid "Remove the cluster \"%s\"?"
@@ -6377,10 +6333,6 @@ msgstr ""
 #: utr4wstrings.tc_set_value_of_set_now
 #, object-pascal-format
 msgid "Set value of %s. Set now?"
-msgstr ""
-
-#: utr4wstrings.tc_show_all_serial_ports
-msgid "Show all serial ports"
 msgstr ""
 
 #: utr4wstrings.tc_show_passwords

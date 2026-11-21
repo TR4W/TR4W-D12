@@ -122,7 +122,7 @@ msgstr ""
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_ACTIVE_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on the active band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Il colore della frequenza di un punto nella mappa della band quando il punto è sulla band attiva. Si predefinisce il colore che la mappa della banda l'ha sempre disegnato, quindi nulla cambia fino a quando non si sceglie un altro. Impostare sulla pagina Colori di Preferenze."
 
 #. Config command: BAND MAP ALL BANDS   (default: FALSE)
 #, fuzzy
@@ -158,13 +158,13 @@ msgstr "Quando FALSE, le voci CQ non compariranno nella mappa della band."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
-msgstr ""
+msgstr "La maggior parte dei posti che la mappa della band mostrerà, da 30 a 1000. La mappa mostra il più piccolo di questo e il numero che si adatta nella sua finestra, arrotondato a un numero pari e incentrato sulla frequenza della radio, in modo da ridimensionare la finestra ri-centra la mappa sulla radio."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
 msgid "The fill colour behind a dupe's D in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Il colore di riempimento dietro un duppolo nella mappa della band. Si predefinisce il colore che la mappa della banda l'ha sempre disegnato, quindi nulla cambia fino a quando non si sceglie un altro. Impostare sulla pagina Colori di Preferenze."
 
 #. Config command: BAND MAP DUPE DISPLAY   (default: TRUE)
 #, fuzzy
@@ -182,7 +182,7 @@ msgstr "Determina se viene visualizzata la mappa della banda. Vedere sezione 6.1
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
 msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
-msgstr ""
+msgstr "Valori: Integer (Hz), default 0. Un punto all'interno di questo molti Hz della frequenza della radio interfacciata ha il suo campo di frequenza disegnato in BAND MAP VFO MARKER COLOR. A 0, solo un punto sulla frequenza della radio è evidenziato. Il profilo intorno al punto più vicino alla radio è disegnato qualsiasi cosa questo è impostato a."
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 #, fuzzy
@@ -200,7 +200,7 @@ msgstr "Larghezza dell'elemento Band Map. Modificare questo secondo BAND MAP SIZ
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_MULT_COLOR"
 msgid "The fill colour behind a multiplier's M in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Il colore di riempimento dietro un M del moltiplicatore nella mappa della band. Si predefinisce il colore che la mappa della banda l'ha sempre disegnato, quindi nulla cambia fino a quando non si sceglie un altro. Impostare sulla pagina Colori di Preferenze."
 
 #. Config command: BAND MAP MULTS ONLY   (default: FALSE)
 #, fuzzy
@@ -212,13 +212,13 @@ msgstr "Solo moltiplicatori di visualizzazione."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_OTHER_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on another band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Il colore della frequenza di un punto nella mappa della band quando il punto è su un'altra band. Si predefinisce il colore che la mappa della banda l'ha sempre disegnato, quindi nulla cambia fino a quando non si sceglie un altro. Impostare sulla pagina Colori di Preferenze."
 
 #. Config command: BAND MAP SELECTION COLOR   (default: HIGHLIGHT)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SELECTION_COLOR"
 msgid "The colour of the selected spot in the band map. The default, HIGHLIGHT, is the system highlight colour. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Il colore del punto selezionato nella mappa della band. L'impostazione predefinita, HIGHLIGHT, è il colore evidenziato dal sistema. Si predefinisce il colore che la mappa della banda l'ha sempre disegnato, quindi nulla cambia fino a quando non si sceglie un altro. Impostare sulla pagina Colori di Preferenze."
 
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
@@ -242,7 +242,7 @@ msgstr "È possibile selezionare la banda su cui TR4W inizierà se non sono anco
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
 msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Il colore che segna la frequenza della radio nella mappa della banda: il campo di frequenza di ogni punto all'interno BAND MAP GUARD BAND della radio, e un profilo di 1 pixel intorno a un punto più vicino alla radio. Né la selezione, e senza radiofrequenza nulla è segnato. Impostare sulla pagina Colori di Preferenze."
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 #, fuzzy
@@ -326,13 +326,13 @@ msgstr "Il programma eliminerà il dupesheet quando questo parametro viene impos
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_AUTO_SELF_SPOT"
 msgid "Spots your own call on the DX cluster automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while you are running (CQ mode). Only in a contest whose rules allow self-spotting; ignored otherwise. Off by default."
-msgstr ""
+msgstr "Avvia automaticamente la tua chiamata sul cluster DX, all'intervallo impostato da CLUSTER SELF SPOT INTERVAL, mentre sei in esecuzione (modalità CQ). Solo in un concorso le cui regole permettono di auto-spotting; ignorato altrimenti. Per impostazione predefinita."
 
 #. Config command: CLUSTER SELF SPOT INTERVAL   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_SELF_SPOT_INTERVAL"
 msgid "Minutes between automatic self-spots. 10 minutes is the established minimum; review the contest's rules before changing it. The contest's own minimum, where it states one, is never undercut."
-msgstr ""
+msgstr "Minuti tra auto-spot automatici. 10 minuti è il minimo stabilito; rivedere le regole del concorso prima di cambiarlo. Il minimo del concorso, dove si afferma uno, non è mai sottovalutato."
 
 #. Config command: CODE SPEED   (default: 35)
 #, fuzzy
@@ -604,18 +604,6 @@ msgctxt "TC_HELP_FOOT_SWITCH_PORT"
 msgid ""
 msgstr ""
 
-#. Config command: FREQUENCY ADDER RADIO ONE   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_FREQUENCY_ADDER_RADIO_ONE"
-msgid ""
-msgstr ""
-
-#. Config command: FREQUENCY ADDER RADIO TWO   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_FREQUENCY_ADDER_RADIO_TWO"
-msgid ""
-msgstr ""
-
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_MEMORY_ENABLE"
@@ -626,7 +614,7 @@ msgstr "Quando impostato su TRUE, questo parametro consentirà la memoria di fre
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
 msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr ""
+msgstr "Valori: Integer da 10 a 1000 (msec). Questo dice a TR4W quanto spesso sondare la piattaforma per una nuova frequenza. È impostato per ogni radio, nell'editor radiofonico, quindi due radio possono sondare a tariffe diverse. Il valore è in millisecondi, e i valori consentiti sono nell'intervallo da 10 a 1000."
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy
@@ -730,12 +718,6 @@ msgctxt "TC_HELP_KEYPAD_CW_MEMORIES"
 msgid "When this parameter is TRUE, the keys 0 to 9 on the keypad will send CQ MEMORIES ctrl-F1 to ctrl-F10 respectively."
 msgstr "Quando questo parametro è TRUE, i tasti da 0 a 9 sulla tastiera invieranno CQ MEMORIES ctrl-F1 a ctrl-F10 rispettivamente."
 
-#. Config command: LATEST CONFIG FILE   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_LATEST_CONFIG_FILE"
-msgid ""
-msgstr ""
-
 #. Config command: LEADING ZERO CHARACTER   (default: T)
 #, fuzzy
 msgctxt "TC_HELP_LEADING_ZERO_CHARACTER"
@@ -795,24 +777,6 @@ msgstr "Se questo parametro è TRUE, il QSO verrà registrato non appena si prem
 msgctxt "TC_HELP_LOOK_FOR_RST_SENT"
 msgid "When this parameter is TRUE, a transmitted RST may be entered into the Exchange Window by preceding it with S. For example, typing S57 would place 57 into the log as the transmitted exchange for this QSO."
 msgstr "Quando questo parametro è TRUE, un RST trasmesso può essere inserito nella finestra di scambio precedendolo con S. Ad esempio, digitando S57 avrebbe posto -57 nel registro come scambio trasmesso per questo QSO."
-
-#. Config command: LPT1 BASE ADDRESS   (default: 888)
-#, fuzzy
-msgctxt "TC_HELP_LPT1_BASE_ADDRESS"
-msgid "The base address of parallel port LPT1 (PARALLEL 1)."
-msgstr "L'indirizzo di base della porta parallela LPT1 (PARALLEL 1)."
-
-#. Config command: LPT2 BASE ADDRESS   (default: 632)
-#, fuzzy
-msgctxt "TC_HELP_LPT2_BASE_ADDRESS"
-msgid "The base address of parallel port LPT2 (PARALLEL 2)."
-msgstr "L'indirizzo di base della porta parallela LPT2 (PARALLEL 2)."
-
-#. Config command: LPT3 BASE ADDRESS   (default: 956)
-#, fuzzy
-msgctxt "TC_HELP_LPT3_BASE_ADDRESS"
-msgid "The base address of parallel port LPT3 (PARALLEL 3)."
-msgstr "L'indirizzo di base della porta parallela LPT3 (PARALLEL 3)."
 
 #. Config command: MAIN CALLSIGN   (default: NONE)
 #, fuzzy
@@ -975,7 +939,7 @@ msgstr "Effettua la riammissione. Valori: designatore IOTA. Imposta l'identifica
 #, fuzzy
 msgctxt "TC_HELP_MY_LICENSE_YEAR"
 msgid "Enter the year you were first licensed, for the contests that exchange it (the European HF Championship, KVP). Four digits (1985) or the last two (85) are both accepted; the contest decides what is sent -- two digits, four digits or the number of years licensed. A contest may state its own value; this is the default. It is read when the contest is set up, so a change takes effect for the next contest or when TR4W next starts."
-msgstr ""
+msgstr "Immetti l'anno in cui sei stato rilasciato, per i concorsi che lo scambiano (il Campionato Europeo HF, KVP). Quattro cifre (1985) o le ultime due (85) sono accettate; il concorso decide cosa viene inviato -- due cifre, quattro cifre o il numero di anni concesso in licenza. Un concorso può indicare il proprio valore; questo è il default. Si legge quando il concorso è impostato, quindi una modifica ha effetto per il prossimo contest o quando TR4W inizia."
 
 #. Config command: MY NAME   (default: NONE)
 #, fuzzy
@@ -1040,7 +1004,7 @@ msgstr ""
 #. Config command: NO CAPTION   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_CAPTION"
-msgid "If the value is TRUE after startup all windows except the main will not have a title."
+msgid "If the value is TRUE after startup all windows except the main will not have a title. Hold Alt and drag anywhere in a window to move it."
 msgstr "Se il valore è TRUE dopo l'avvio tutte le finestre tranne il principale non avrà un titolo."
 
 #. Config command: NO COLUMN HEADER   (default: FALSE)
@@ -1096,18 +1060,6 @@ msgstr "Questo comando controlla la velocità di CW inviata con la pagaia. Un va
 msgctxt "TC_HELP_PARTIAL_CALL_ENABLE"
 msgid "This command allows you to control the partial call function. This is a separate feature from the super check partial (which uses the TRMASTER.DTA database). The callsigns used by the partial call function come from the dupesheet and initial exchange file. When this function is enabled, partial calls will be shown on the bottom of the screen after the second character of a call has been typed into the Call Window. A partial call is defined to be any call that starts with the same letters as those in the Call Window. The WILDCARD PARTIALS parameter determines whether the partial call must appear at the start of"
 msgstr "Questo comando consente di controllare la funzione di chiamata parziale. Si tratta di una funzione separata dal super check parziale (che utilizza il database TRMASTER.DTA). I segni di chiamata utilizzati dalla funzione di chiamata parziale provengono dal foglio di lavoro e dal file di scambio iniziale. Quando questa funzione è abilitata, le chiamate parziali saranno mostrate sul fondo dello schermo dopo che il secondo carattere di una chiamata è stato digitato nella finestra di chiamata. Una chiamata parziale è definita per essere qualsiasi chiamata che inizia con le stesse lettere di quelle nella finestra di chiamata. Il parametro WILDCARD PARTIALS determina se la chiamata parziale deve essere visualizzata all'inizio di"
-
-#. Config command: POLL RADIO ONE   (default: TRUE)
-#, fuzzy
-msgctxt "TC_HELP_POLL_RADIO_ONE"
-msgid ""
-msgstr ""
-
-#. Config command: POLL RADIO TWO   (default: TRUE)
-#, fuzzy
-msgctxt "TC_HELP_POLL_RADIO_TWO"
-msgid ""
-msgstr ""
 
 #. Config command: POSSIBLE CALL ACCEPT KEY   (default: ;)
 #, fuzzy
@@ -1205,12 +1157,6 @@ msgctxt "TC_HELP_QSO_NUMBER_BY_BAND"
 msgid "When set to TRUE, the QSO numbers that are displayed on the screen, those that are sent in a CW message with the # character, and those shown in the log will be calculated from the total number of contacts on the active band. This is useful in a multi-transmitter situation where QSO numbers are being sent (e.g., the CQ WPX contest)."
 msgstr "Quando impostato su TRUE, i numeri QSO che vengono visualizzati sullo schermo, quelli che vengono inviati in un messaggio CW con il carattere #, e quelli visualizzati nel registro saranno calcolati dal numero totale di contatti sulla banda attiva. Questo è utile in una situazione multi-trasmettitore in cui vengono inviati i numeri QSO (ad esempio, il contest CQ WPX)."
 
-#. Config command: QSO POINT METHOD   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_QSO_POINT_METHOD"
-msgid ""
-msgstr ""
-
 #. Config command: QSO POINTS DOMESTIC CW   (default: -1)
 #, fuzzy
 msgctxt "TC_HELP_QSO_POINTS_DOMESTIC_CW"
@@ -1295,41 +1241,17 @@ msgctxt "TC_HELP_R150S_MODE"
 msgid "If TRUE calculation of contriyes-multipliers will be based on R-150-S list."
 msgstr "Se il calcolo TRUE di contriyes-multipliers sarà basato sulla lista R-150-S."
 
-#. Config command: RADIO ONE BAND OUTPUT PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_BAND_OUTPUT_PORT"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO ONE BAUD RATE   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_ONE_BAUD_RATE"
 msgid "This command controls the baud rate between the computer and the connected rigs."
 msgstr "Questo comando controlla il tasso di baud tra il computer e le piattaforme collegate."
 
-#. Config command: RADIO ONE CAT DTR   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_CAT_DTR"
-msgid ""
-msgstr ""
-
-#. Config command: RADIO ONE CAT RTS   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_CAT_RTS"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO ONE CONTROL PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_ONE_CONTROL_PORT"
 msgid "Use these commands to specify the serial port to use for each connected rig."
 msgstr "Utilizzare questi comandi per specificare la porta seriale da utilizzare per ogni piattaforma collegata."
-
-#. Config command: RADIO ONE FREQUENCY ADDER   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_ONE_FREQUENCY_ADDER"
-msgid ""
-msgstr ""
 
 #. Config command: RADIO ONE CW BY CAT   (default: FALSE)
 #, fuzzy
@@ -1421,41 +1343,17 @@ msgctxt "TC_HELP_RADIO_ONE_WIDE_CW_FILTER"
 msgid "Set width of CW filter. Actual for FT747GX, FT840, FT890, FT900, FT990, FT1000 rigs."
 msgstr "Impostare la larghezza del filtro CW. Effettivamente per FT747GX, FT840, FT890, FT900, FT990, FT1000 rigs."
 
-#. Config command: RADIO TWO BAND OUTPUT PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_BAND_OUTPUT_PORT"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO TWO BAUD RATE   (default: 0)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_TWO_BAUD_RATE"
 msgid "This command controls the baud rate between the computer and the connected rigs."
 msgstr "Questo comando controlla il tasso di baud tra il computer e le piattaforme collegate."
 
-#. Config command: RADIO TWO CAT DTR   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_CAT_DTR"
-msgid ""
-msgstr ""
-
-#. Config command: RADIO TWO CAT RTS   (default: OFF)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_CAT_RTS"
-msgid ""
-msgstr ""
-
 #. Config command: RADIO TWO CONTROL PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_RADIO_TWO_CONTROL_PORT"
 msgid "Use these commands to specify the serial port to use for each connected rig."
 msgstr "Utilizzare questi comandi per specificare la porta seriale da utilizzare per ogni piattaforma collegata."
-
-#. Config command: RADIO TWO FREQUENCY ADDER   (default: 0)
-#, fuzzy
-msgctxt "TC_HELP_RADIO_TWO_FREQUENCY_ADDER"
-msgid ""
-msgstr ""
 
 #. Config command: RADIO TWO CW BY CAT   (default: FALSE)
 #, fuzzy
@@ -1552,12 +1450,6 @@ msgstr "Quando questo parametro è TRUE, la funzione Auto-CQ si comporta in modo
 msgctxt "TC_HELP_RATE_DISPLAY"
 msgid "Values: QSOS or QSO POINTS. The rate display can show either the rate at which you are making QSOs, or the rate at which your QSO points are increasing."
 msgstr "Valori: QSOS o QSO POINTS. Il display del tasso può mostrare il tasso a cui si sta facendo QSO, o il tasso a cui i punti QSO stanno aumentando."
-
-#. Config command: RELAY CONTROL PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_RELAY_CONTROL_PORT"
-msgid ""
-msgstr ""
 
 #. Config command: REMAINING MULT DISPLAY MODE   (default: HILIGHT)
 #, fuzzy
@@ -1665,13 +1557,13 @@ msgstr "Numero porta Ethernet, che utilizzerà la connessione con TR4WSERVER."
 #, fuzzy
 msgctxt "TC_HELP_SERVER_TAILCAT_ADDRESS"
 msgid "The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel's key, so treat it like a password."
-msgstr ""
+msgstr "L'indirizzo dell'operatore di un TR4WSERVER ti dà in modo che questo computer possa raggiungere il server da un'altra rete attraverso un tunnel di Tailcat. Incolla esattamente come indicato. È usato solo mentre SERVER USE TAILCAT è TRUE. Contiene la chiave del tunnel, quindi trattala come una password."
 
 #. Config command: SERVER USE TAILCAT   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SERVER_USE_TAILCAT"
 msgid "Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server's port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server's own network; the address is kept for next time."
-msgstr ""
+msgstr "Set to TRUE per raggiungere TR4WSERVER attraverso il tunnel Tailcat denominato da SERVER TAILCAT ADDRESS invece di SERVER ADDRESS. Mentre è TRUE♪ SERVER ADDRESS non viene utilizzato; SERVER PORT lo è ancora, perché è la porta del server all'interno del tunnel. Se SERVER TAILCAT ADDRESS è vuoto la connessione fallisce e lo dice; TR4W non torna a SERVER ADDRESS. Impostarlo a FALSE quando sei sulla rete del server; l'indirizzo viene mantenuto per la prossima volta."
 
 #. Config command: SHIFT KEY ENABLE   (default: TRUE)
 #, fuzzy
@@ -1786,12 +1678,6 @@ msgstr ""
 msgctxt "TC_HELP_STEREO_CONTROL_PIN"
 msgid "Values: 5 or 9. This command sets the number of the pin to be used for controlling stereo on the STEREO CONTROL PORT. If you use pin 5, then you cannot use the same port for controlling a DVK; if you use pin 9 then you cannot use the same port for band output."
 msgstr "Valori: 5 o 9. Questo comando imposta il numero del perno da utilizzare per il controllo dello stereo sul PORT STEREO CONTROL. Se si utilizza il pin 5, non è possibile utilizzare la stessa porta per il controllo di un DVK; se si utilizza il pin 9 non è possibile utilizzare la stessa porta per l'uscita della banda."
-
-#. Config command: STEREO CONTROL PORT   (default: NONE)
-#, fuzzy
-msgctxt "TC_HELP_STEREO_CONTROL_PORT"
-msgid ""
-msgstr ""
 
 #. Config command: STEREO PIN HIGH   (default: FALSE)
 #, fuzzy
@@ -1936,12 +1822,6 @@ msgstr "Questo parametro controlla la generazione del file country sconosciuto. 
 msgctxt "TC_HELP_UNKNOWN_COUNTRY_FILE_NAME"
 msgid "Values: Any valid filename. TR4W will save log entries for QSOs with unknown countries to the named file if UNKNOWN COUNTRY FILE ENABLE is TRUE."
 msgstr "Valori: Qualsiasi nome di file valido. TR4W salverà le voci di registro per QSOs con paesi sconosciuti al file denominato se UNKNOWN COUNTRY FILE ENABLE è TRUE."
-
-#. Config command: USE CONTROL PORT   (default: FALSE)
-#, fuzzy
-msgctxt "TC_HELP_USE_CONTROL_PORT"
-msgid ""
-msgstr ""
 
 #. Config command: USE RECORDED SIGNS   (default: FALSE)
 #, fuzzy

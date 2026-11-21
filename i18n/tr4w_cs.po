@@ -3011,9 +3011,9 @@ msgstr "(nepřipojeno)"
 #: utr4wstrings:tc_show_all_serial_ports
 #: tr4w/src/lang/tr4w_consts_eng.pas:854
 #: utr4wstrings.tc_show_all_serial_ports
-msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
-msgid "Show all serial ports"
-msgstr "Zobrazit všechny sériové porty"
+#~ msgctxt "TC_SHOW_ALL_SERIAL_PORTS"
+#~ msgid "Show all serial ports"
+#~ msgstr "Zobrazit všechny sériové porty"
 
 #: tfrmabout.caption
 #, fuzzy
@@ -4305,7 +4305,8 @@ msgstr "Hlavní okno nemá hranice"
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
 #, fuzzy
-msgid "Main window has no title bar"
+#| msgid "Main window has no title bar"
+msgid "Tool windows have no title bar"
 msgstr "Hlavní okno nemá žádnou tyčinku"
 
 #: tprefsform.chknocolumnheader.caption
@@ -4478,8 +4479,8 @@ msgstr "Udržet soubor restartování aktuální"
 
 #: tprefsform.chkusecontrolport.caption
 #, fuzzy
-msgid "Use the radio control port for paddle and foot switch"
-msgstr "Použijte rádiový ovladač pro pádlo a přepínač chodidel"
+#~ msgid "Use the radio control port for paddle and foot switch"
+#~ msgstr "Použijte rádiový ovladač pro pádlo a přepínač chodidel"
 
 #: tprefsform.chkuserecordedsigns.caption
 #: usettingscaptions.rs_audio_userecordedsigns
@@ -5189,13 +5190,13 @@ msgstr "TCP port:"
 
 #: tprefsform.lblrelayport.caption
 #, fuzzy
-msgid "Relay control port"
-msgstr "Ovládací port relé"
+#~ msgid "Relay control port"
+#~ msgstr "Ovládací port relé"
 
 #: tprefsform.lblrelayportinfo.caption
 #, fuzzy
-msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
-msgstr "Paralelní (LPT) portové zapojení pro tuto stanici: přepínání relé, data z pásma na dekodér na operační pozici a stereo audio ovládání. Tyhle následují DESK, ne rádio, takže zůstanou na místě, když aktivujete jiné rádio. Nezanechte žádné, pokud nemáte takové rozhraní - zda TR4W udržuje podporu LPT vůbec je stále otevřená otázka, která šedá krabice níže je prostředníkem pro."
+#~ msgid "Parallel (LPT) port wiring for this station: relay switching, band data out to a decoder per operating position, and stereo audio control. These follow the DESK, not the radio, so they stay put when you activate a different radio. Leave them None unless you have such an interface - whether TR4W keeps supporting LPT at all is still an open question, which the greyed box below is a placeholder for."
+#~ msgstr "Paralelní (LPT) portové zapojení pro tuto stanici: přepínání relé, data z pásma na dekodér na operační pozici a stereo audio ovládání. Tyhle následují DESK, ne rádio, takže zůstanou na místě, když aktivujete jiné rádio. Nezanechte žádné, pokud nemáte takové rozhraní - zda TR4W udržuje podporu LPT vůbec je stále otevřená otázka, která šedá krabice níže je prostředníkem pro."
 
 #: tprefsform.lblrotatorbands.caption
 #, fuzzy
@@ -5335,8 +5336,8 @@ msgstr "Tyto jsou odesílány do ostatních stanic v síti multioperátorů, kdy
 
 #: tprefsform.lblstereoport.caption
 #, fuzzy
-msgid "Stereo control port"
-msgstr "Port ovládání Stereo"
+#~ msgid "Stereo control port"
+#~ msgstr "Port ovládání Stereo"
 
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
@@ -7426,9 +7427,9 @@ msgstr "Zadejte výměnu. Stiskněte ENTER pro záznam, ESCAPE pro zrušení QSO
 #: tr4w/src/lang/tr4w_consts_eng.pas:879
 #: utr4wstrings.tc_relaycontrolportpaddleport
 #, fuzzy
-msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
-msgid "RELAY CONTROL PORT = PADDLE PORT"
-msgstr "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgctxt "TC_RELAYCONTROLPORTPADDLEPORT"
+#~ msgid "RELAY CONTROL PORT = PADDLE PORT"
+#~ msgstr "RELAY CONTROL PORT = PADDLE PORT"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_locationfieldempty
@@ -8270,8 +8271,8 @@ msgstr "Režim Rfobl"
 
 #: usettingscaptions.rs_contest_showallserialports
 #, fuzzy
-msgid "Show All Serial Ports"
-msgstr "Zobrazit všechny sériové porty"
+#~ msgid "Show All Serial Ports"
+#~ msgstr "Zobrazit všechny sériové porty"
 
 #: usettingscaptions.rs_contest_showdomesticmultipliername
 #, fuzzy
@@ -8380,8 +8381,8 @@ msgstr "Povolit aktualizaci volacího znaku"
 
 #: usettingscaptions.rs_files_ctrlj_countryinformationfile
 #, fuzzy
-msgid "Country Information File"
-msgstr "Soubor informací o zemi"
+#~ msgid "Country Information File"
+#~ msgstr "Soubor informací o zemi"
 
 #: usettingscaptions.rs_files_ctrlj_ctyupdatecheckonstartup
 #, fuzzy
@@ -8410,18 +8411,18 @@ msgstr "Název neznámého souboru země"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt1baseaddress
 #, fuzzy
-msgid "LPT1 Base Address"
-msgstr "Základní adresa LPT1"
+#~ msgid "LPT1 Base Address"
+#~ msgstr "Základní adresa LPT1"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt2baseaddress
 #, fuzzy
-msgid "LPT2 Base Address"
-msgstr "Základní adresa LPT2"
+#~ msgid "LPT2 Base Address"
+#~ msgstr "Základní adresa LPT2"
 
 #: usettingscaptions.rs_hardware_ctrlj_lpt3baseaddress
 #, fuzzy
-msgid "LPT3 Base Address"
-msgstr "Základní adresa LPT3"
+#~ msgid "LPT3 Base Address"
+#~ msgstr "Základní adresa LPT3"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
@@ -8435,8 +8436,8 @@ msgstr "Stereo Pin High"
 
 #: usettingscaptions.rs_hardware_ctrlj_usecontrolport
 #, fuzzy
-msgid "Use Control Port"
-msgstr "Použít ovládací port"
+#~ msgid "Use Control Port"
+#~ msgstr "Použít ovládací port"
 
 #: usettingscaptions.rs_network_ctrlj_computername
 #, fuzzy
