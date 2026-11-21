@@ -11791,7 +11791,7 @@ msgstr ""
 #: uappstrings.snewcontestboxsendsarrlorracsection
 #, fuzzy
 msgid "&I send an ARRL/RAC section"
-msgstr "Lähetän ARRL/RAC-osuuden"
+msgstr "&Lähetän ARRL/RAC-osuuden"
 
 #: uappstrings.snewcontestboxsendsstateorprovince
 #, fuzzy

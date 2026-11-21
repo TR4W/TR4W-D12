@@ -11792,12 +11792,12 @@ msgstr ""
 #: uappstrings.snewcontestboxsendsarrlorracsection
 #, fuzzy
 msgid "&I send an ARRL/RAC section"
-msgstr "Στέλνω ένα τμήμα ARRL/RAC"
+msgstr "&Στέλνω ένα τμήμα ARRL/RAC"
 
 #: uappstrings.snewcontestboxsendsstateorprovince
 #, fuzzy
 msgid "&I send a state or province"
-msgstr "Στέλνω μια πολιτεία ή μια επαρχία."
+msgstr "&Στέλνω μια πολιτεία ή μια επαρχία."
 
 #: uappstrings.snewcontestboxtickedoutside
 #, fuzzy
