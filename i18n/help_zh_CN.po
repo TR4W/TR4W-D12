@@ -115,14 +115,14 @@ msgstr "如果你是用手输入日志的话, AUTO TIME INCREMENT 特性可以�
 #. Config command: AUTO-CQ DELAY TIME   (default: 3000)
 #, fuzzy
 msgctxt "TC_HELP_AUTO_CQ_DELAY_TIME"
-msgid ""
-msgstr ""
+msgid "The amount of time to wait between AUTO CQ in milliseconds."
+msgstr "AUTO CQ之间的等待时间以毫秒为单位."
 
 #. Config command: BAND MAP ACTIVE BAND COLOR   (default: BLUE)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_ACTIVE_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on the active band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "正在运行的乐队中被点的频率在乐队图中的颜色. 它默认了乐队地图一直画入的颜色,所以在你选择另一个颜色之前没有什么变化. 设置在首选项的颜色页上 。"
 
 #. Config command: BAND MAP ALL BANDS   (default: FALSE)
 #, fuzzy
@@ -158,13 +158,13 @@ msgstr "何时 FALSE,CQ条目将不会出现在波段图中."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
-msgstr ""
+msgstr "乐队图将显示的最多斑点,从30到1000. 映射图显示了其中较小的和与其窗口相适应的数字,四舍五入为偶数并以收音机频率为中心,因此重新调整了窗口的大小,重新将映射到收音机上."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
 msgid "The fill colour behind a dupe's D in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "乐队地图上杜佩D后面的填充颜色. 它默认了乐队地图一直画入的颜色,所以在你选择另一个颜色之前没有什么变化. 设置在首选项的颜色页上 。"
 
 #. Config command: BAND MAP DUPE DISPLAY   (default: TRUE)
 #, fuzzy
@@ -182,7 +182,7 @@ msgstr "确定是否显示带图。 更多信息见第6.13节。 如果启动TR4
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
 msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
-msgstr ""
+msgstr "值:整数 (Hz),默认为0. 在如此多的Hz中 你接口的无线电频率的一分 其频率域被拉入 BAND (原始内容存档于2018-10-12). MAP VFO Marker Color. 0时,仅在电台的频率上突出一个斑点. 电台最靠近的点的轮廓是任意绘制的。"
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 #, fuzzy
@@ -200,7 +200,7 @@ msgstr "乐队地图项目宽度. 根据 BAND MAP SIZE范围=100-200。"
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_MULT_COLOR"
 msgid "The fill colour behind a multiplier's M in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "乐队地图上乘数的M后面的填充颜色. 它默认了乐队地图一直画入的颜色,所以在你选择另一个颜色之前没有什么变化. 设置在首选项的颜色页上 。"
 
 #. Config command: BAND MAP MULTS ONLY   (default: FALSE)
 #, fuzzy
@@ -212,13 +212,13 @@ msgstr "只显示乘数."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_OTHER_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on another band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "当一个斑点出现在另一个乐队时,在乐队图中的斑点频率的颜色. 它默认了乐队地图一直画入的颜色,所以在你选择另一个颜色之前没有什么变化. 设置在首选项的颜色页上 。"
 
 #. Config command: BAND MAP SELECTION COLOR   (default: HIGHLIGHT)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SELECTION_COLOR"
 msgid "The colour of the selected spot in the band map. The default, HIGHLIGHT, is the system highlight colour. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "乐队地图中选定位置的颜色。 默认,HHLIGHT,是系统突出颜色. 它默认了乐队地图一直画入的颜色,所以在你选择另一个颜色之前没有什么变化. 设置在首选项的颜色页上 。"
 
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
@@ -242,7 +242,7 @@ msgstr "如果还没有联系人, 您可以选择 TR4W 将启动的频段 。 �
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
 msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "在波段图中标出无线电频率的颜色: BAND MAP GUARD BAND 一个像素的轮廓 绕着离无线电最近的一个点 选择也不是,没有无线电频率,没有标记。 设置在首选项的颜色页上 。"
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 #, fuzzy
@@ -326,13 +326,13 @@ msgstr "当设定此参数为 TRUE 在使用 ctrl-V 命令执行的 *.CFG 文件
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_AUTO_SELF_SPOT"
 msgid "Spots your own call on the DX cluster automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while you are running (CQ mode). Only in a contest whose rules allow self-spotting; ignored otherwise. Off by default."
-msgstr ""
+msgstr "在运行( CQ 模式) 时, 在 CLUSTER SELF SPOT INTERVAL 设定的间隔时自动点出您自己对 DX 集群的调用 。 只在比赛中,其规则允许自选;另当别论. 默认关闭。"
 
 #. Config command: CLUSTER SELF SPOT INTERVAL   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_SELF_SPOT_INTERVAL"
 msgid "Minutes between automatic self-spots. 10 minutes is the established minimum; review the contest's rules before changing it. The contest's own minimum, where it states one, is never undercut."
-msgstr ""
+msgstr "自动自点之间的分钟。 10分钟是设定的最低限;在修改前审查比赛规则. 比赛本身的最低限度, 其中它说一个, 从来没有被削弱。"
 
 #. Config command: CODE SPEED   (default: 35)
 #, fuzzy
@@ -445,8 +445,8 @@ msgstr "当此参数属实时, TR4W将在 TRMASTER 数据库中查找您正在�
 #. Config command: CW SPEED INCREMENT   (default: 3)
 #, fuzzy
 msgctxt "TC_HELP_CW_SPEED_INCREMENT"
-msgid ""
-msgstr ""
+msgid "When pressing page up or page down, this is the increment the CW increases or decreases respectively."
+msgstr "在按上或下页时,这是CW增减的递增。"
 
 #. Config command: CW TONE   (default: 700)
 #, fuzzy
@@ -517,14 +517,14 @@ msgstr "此命令决定 DVK 是否启用 。"
 #. Config command: DVK PATH   (default: DVK)
 #, fuzzy
 msgctxt "TC_HELP_DVK_PATH"
-msgid ""
-msgstr ""
+msgid "This is the location of the program used to playback DVK messages when using the computer for audio."
+msgstr "这是用于在使用计算机进行音频时播放 DVK 消息的程序的位置."
 
 #. Config command: DVK RECORDER   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_DVK_RECORDER"
-msgid ""
-msgstr ""
+msgid "This is the program that is run to playback DVK messages form the computer."
+msgstr "这是运行以播放DVK消息构成计算机的程序."
 
 #. Config command: DX MULTIPLIER   (default: NONE)
 #, fuzzy
@@ -589,7 +589,7 @@ msgstr "数值:整数(WPM)。 控制法恩斯沃思效应启动的CW速度. 当�
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "AGENT WRITTEN: A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
+msgid "A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "将一些字体大小调整到“ 0” 和“ 2” 。 这可能影响其他窗口, 如带图( 见带图大小设置)"
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -601,8 +601,8 @@ msgstr "此命令决定了在按下一个连接到指定端口的15号针的脚�
 #. Config command: FOOT SWITCH PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_FOOT_SWITCH_PORT"
-msgid ""
-msgstr ""
+msgid "The serial port to which the foot switch is connected."
+msgstr "连接到脚开关的序列端口 。"
 
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 #, fuzzy
@@ -614,7 +614,7 @@ msgstr "当设定为 TRUE,此参数将启用频率内存。 这意味着你会�
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
 msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr ""
+msgstr "值:整数为10至1000 (毫秒). 这告诉TR4W如何频繁地对钻机进行新频率的测试. 它为每个电台设定,在电台编辑器中,所以两个电台可以以不同的速度投票. 值以毫秒为单位,允许值在10至1000之间."
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy
@@ -625,8 +625,8 @@ msgstr "数值:四或六特征网格参考. 此参数将设置一个网格图的
 #. Config command: HAND LOG MODE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_HAND_LOG_MODE"
-msgid ""
-msgstr ""
+msgid "For entering a paper log after the event. When this parameter is TRUE, the QSO time no longer follows the computer clock; it moves only when you advance it with Alt-1 to Alt-0 (1 to 10 minutes) or through AUTO TIME INCREMENT; when it is FALSE, those increment-time menu items are greyed out. TR4W shows a warning at startup while this is TRUE; restart TR4W after changing it."
+msgstr "用于在事件结束后输入纸质日志. 当此参数是 TRUE,QSO时间不再跟随计算机时钟;它只有在与Alt-1推进到Alt-0(1至10分钟)或通过时才会移动. AUTO TIME INCREMENT当它是 FALSE,这些递增时间菜单项 灰出。 TR4W 启动时显示警告 TRUE; 更改后重新启动TR4W."
 
 #. Config command: HF BAND ENABLE   (default: TRUE)
 #, fuzzy
@@ -655,8 +655,8 @@ msgstr "数值:真/假。 默认 TRUE 防止将两台收音机都放入单个波
 #. Config command: INCLUDE F-KEY NUMBER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_INCLUDE_F_KEY_NUMBER"
-msgid ""
-msgstr ""
+msgid "When viewing the F-Keys window, if this option is true, the F key name/number is displayed (e.g., F1 - <caption>)."
+msgstr "在查看F-Keys窗口时,如果此选项是真实的,则会显示F密钥名称/数字(例如F1 - <caption>)."
 
 #. Config command: INCREMENT TIME ENABLE   (default: FALSE)
 #, fuzzy
@@ -781,13 +781,13 @@ msgstr "当此参数是 TRUE中,传送的 RST 可以通过与 S 的键入交换�
 #. Config command: MAIN CALLSIGN   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_CALLSIGN"
-msgid ""
-msgstr ""
+msgid "Your station's own callsign, remembered from contest to contest. The New Contest dialog fills its callsign box from it (or from MY CALL when this is empty), and the first callsign you enter there is saved here if it is empty. It is not the callsign you log with: that is MY CALL, which a contest may change (for example to a club call) without touching this one."
+msgstr "你站自己的呼号 从比赛到比赛都记得 新竞技对话框从它(或来自 MY CALL 当它是空的时, 您输入的第一个调用符如果是空的, 将保存在这里 。 这不是您登录的呼号: MY CALL,而比赛可能改变(例如俱乐部的电话)而不触及这个。"
 
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "AGENT WRITTEN: The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
+msgid "The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
 msgstr "命令指定在主程序窗口中显示信息时使用的字体名称."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -805,14 +805,14 @@ msgstr "值:整数从5到60. 在多轮比赛中指定几分钟的行程。"
 #. Config command: MISSINGCALLSIGNS FILE ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_MISSINGCALLSIGNS_FILE_ENABLE"
-msgid ""
-msgstr ""
+msgid "Works with USE RECORDED SIGNS. When this parameter is TRUE and the voice keyer has no recording <callsign>.WAV in its FULLCALLSIGNS folder for a callsign it has to say, that callsign is added to the file MISSINGCALLSIGNS.TXT in the same folder, so you can record it later."
+msgstr "与 USE RECORDED SIGNS当此参数是 TRUE 而语音键器没有录入“调用符号” 。 WAV在它的FulLCALLSIGNS文件夹中用于一个调用符号,它不得不说,这个调用符号被添加到文件MISSINGCALLSIGNS中. TXT在同一文件夹中,所以以后可以录取."
 
 #. Config command: MMTTY ENGINE   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MMTTY_ENGINE"
-msgid ""
-msgstr ""
+msgid "The path to the MMTTY program for working RTTY contests (experimental)."
+msgstr "工作RTTY比赛的MMTTY程序路径(实验)."
 
 #. Config command: MODE   (default: CW)
 #, fuzzy
@@ -841,8 +841,8 @@ msgstr "MP3 记录器比特率."
 #. Config command: MP3 RECORDER DURATION   (default: EACH QSO)
 #, fuzzy
 msgctxt "TC_HELP_MP3_RECORDER_DURATION"
-msgid ""
-msgstr ""
+msgid "To be determined"
+msgstr "待定"
 
 #. Config command: MP3 RECORDER ENABLE   (default: FALSE)
 #, fuzzy
@@ -938,7 +938,7 @@ msgstr "(原始内容存档于2017-09-21). Pending re-IMP. 数值:IOTA代号. �
 #, fuzzy
 msgctxt "TC_HELP_MY_LICENSE_YEAR"
 msgid "Enter the year you were first licensed, for the contests that exchange it (the European HF Championship, KVP). Four digits (1985) or the last two (85) are both accepted; the contest decides what is sent -- two digits, four digits or the number of years licensed. A contest may state its own value; this is the default. It is read when the contest is set up, so a change takes effect for the next contest or when TR4W next starts."
-msgstr ""
+msgstr "输入您首次获得许可的年份, 用于进行交换的比赛( 欧洲高频锦标赛, KVP) 。 四个数字(1985年)或最后两个数字(85年)均被接受;比赛决定什么是发送的 -- -- 两位数字、四位数字或许可的年数。 比赛可能声明自己的值;这是默认值. 它在比赛设置时被读取,因此在下一场比赛或TR4W下一场比赛开始时,一个变化生效."
 
 #. Config command: MY NAME   (default: NONE)
 #, fuzzy
@@ -991,14 +991,14 @@ msgstr "当此参数是 TRUE,在日志中显示星号,当您制作一个带有�
 #. Config command: NET STATUS UPDATE INTERVAL   (default: 5000)
 #, fuzzy
 msgctxt "TC_HELP_NET_STATUS_UPDATE_INTERVAL"
-msgid ""
-msgstr ""
+msgid "Values: 1000 to 10000 milliseconds. While you want to be connected to the multi-op network and the link is down, TR4W tries to connect again at this interval. A change takes effect the next time you connect."
+msgstr "数值:1000-1000毫秒. 在想被连接到多op网络而链接被关闭的同时,TR4W试图在此间隔再次连接. 改变在下次连接时生效 。"
 
 #. Config command: NO BORDER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_BORDER"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE, the panels of the main window and the call and exchange entry fields are drawn flat, without their sunken edge. It takes effect the next time TR4W starts."
+msgstr "当此参数是 TRUE,主窗口和呼叫和交换输入字段的面板被平地划出,没有下沉的边缘. 它在下次TR4W开始时生效."
 
 #. Config command: NO CAPTION   (default: FALSE)
 #, fuzzy
@@ -1009,8 +1009,8 @@ msgstr "如果数值是 TRUE 启动后,除主窗口外,所有窗口都不会有�
 #. Config command: NO COLUMN HEADER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_COLUMN_HEADER"
-msgid ""
-msgstr ""
+msgid "If the value is TRUE, the log windows show no row of column headings: the log on the main window (and the B4 list that takes its place), View/Edit Log, Log Search and the downloaded server log, and also the Network and Stations windows. The QSOs themselves are unchanged. The change takes effect at once in every open window; a column's width cannot be dragged while its heading is hidden."
+msgstr "如果值是 TRUE,日志窗口不显示列标题:主窗口上的日志(和取而代之的 B4 列表),查看/编辑日志,日志搜索和已下载的服务器日志,以及网络和站台窗口. QSO本身没有变化. 更改会立即在每个打开的窗口中生效;当一个列的宽度被隐藏时不能被拖动."
 
 #. Config command: NO LOG   (default: FALSE)
 #, fuzzy
@@ -1039,8 +1039,8 @@ msgstr "计算机扬声器显示器通常在使用连接到平行端口的划桨
 #. Config command: PADDLE PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_PADDLE_PORT"
-msgid ""
-msgstr ""
+msgid "The Serial port used to connect the CW paddle."
+msgstr "串行口用于连接CW桨."
 
 #. Config command: PADDLE PTT HOLD COUNT   (default: 13)
 #, fuzzy
@@ -1231,8 +1231,8 @@ msgstr "值:任意键. 当您在 CW 上运行时完成联系人时,通常您会�
 #. Config command: QZB RANDOM OFFSET ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_QZB_RANDOM_OFFSET_ENABLE"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE and you are on CW, tuning the radio to a band map spot adds a small random offset of up to 30 Hz either side of the spot frequency (and of its split frequency, if the spot has one), so you do not land exactly on the spotted frequency. When FALSE, the radio is tuned exactly to the spot."
+msgstr "当此参数是 TRUE 在CW中,将无线电调取到一个波段地图点, 增加一个小的随机相抵, 最多为30赫兹的频率( 及其分频, 如果该频率有一个) , 所以你不会完全降落在斑点频率上。 何时 FALSE收音机的收音机完全对准现场"
 
 #. Config command: R150S MODE   (default: FALSE)
 #, fuzzy
@@ -1550,13 +1550,13 @@ msgstr "以太网端口号,将使用与TR4WSERVER的连接."
 #, fuzzy
 msgctxt "TC_HELP_SERVER_TAILCAT_ADDRESS"
 msgid "The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel's key, so treat it like a password."
-msgstr ""
+msgstr "TR4WSERVER的操作员给你的地址使得这台计算机可以通过Tailcat地道从另一个网络到达服务器. 贴到底如给定. 它只在使用SERVER TAILCAT时使用 TRUE里面有隧道的钥匙 所以把它当作密码"
 
 #. Config command: SERVER USE TAILCAT   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SERVER_USE_TAILCAT"
 msgid "Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server's port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server's own network; the address is kept for next time."
-msgstr ""
+msgstr "设定为 TRUE 通过由SERVER TAILCAT ADDRESS命名的Tailcat地道到达TR4WSERVER,而不是在 SERVER ADDRESS虽然是 TRUE, (中文(简体) ). SERVER ADDRESS 未使用; SERVER PORT 仍然是,因为它是服务器的端口 在隧道内部。 如果 SERVER TAILCAT 解析器是空的, 连接失败并说是这样的 。 TR4W 不返回到 SERVER ADDRESS设置它 FALSE 当您在服务器自己的网络上时;地址将保留到下一次。"
 
 #. Config command: SHIFT KEY ENABLE   (default: TRUE)
 #, fuzzy
@@ -1597,8 +1597,8 @@ msgstr "当此参数是 TRUE,TR4W会允许一些整数作为QSO数字的一部�
 #. Config command: SHOW DOMESTIC MULTIPLIER NAME   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SHOW_DOMESTIC_MULTIPLIER_NAME"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE, the remaining multipliers window lists each domestic multiplier by the name its domestic multiplier (.dom) file gives it (the entry starting with ^), where it has one, instead of its abbreviation, and widens the column to fit. The change is shown at once."
+msgstr "当此参数是 TRUE,其余的乘数窗口按其国内乘数(.dom)文件给出的名称列出每个国内乘数(从^开始的条目),其中它有一个,而不是它的缩写,并扩展了列以适应. 变化一时示出."
 
 #. Config command: SHOW FREQUENCY IN LOG   (default: TRUE)
 #, fuzzy
@@ -1609,8 +1609,8 @@ msgstr "如果数值是 TRUE Cabrillo日志中将替换QSO的实际频率。"
 #. Config command: SHOW GRIDLINES   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SHOW_GRIDLINES"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE, grid lines are drawn between the rows and columns of the log grid in the main window. The change is shown at once."
+msgstr "当此参数是 TRUE,网格线被绘制在主窗口中日志网格的行和列之间. 变化一时示出."
 
 #. Config command: SHOW TYPED CALLSIGN   (default: TRUE)
 #, fuzzy
@@ -1663,8 +1663,8 @@ msgstr "值:任意键. 如果你在CW上运行的站台和已经回答的站台�
 #. Config command: STATIONS CALLSIGNS MASK   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_STATIONS_CALLSIGNS_MASK"
-msgid ""
-msgstr ""
+msgid "Values: any text. The Stations window lists only the callsigns that contain this text anywhere in them (it is a plain match, not a wildcard pattern); leave it empty to list every station. The list on screen is filtered again as soon as you change it."
+msgstr "值:任意文本。 站台窗口只列出其中任何地方包含此文本的呼号(这是平面匹配,不是通配符图案);留空以列出每个站台. 屏幕上的列表一旦更改就再次被过滤."
 
 #. Config command: STEREO CONTROL PIN   (default: 9)
 #, fuzzy
@@ -1819,8 +1819,8 @@ msgstr "值: 任何有效的文件名 。 TR4W 将会将未知国家的 QSO 的�
 #. Config command: USE RECORDED SIGNS   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_USE_RECORDED_SIGNS"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE, the voice keyer speaks every word of a voice message that is not a .WAV file name, including # (the QSO number) and @ (the call in the call window), from recordings: a number from <number>.WAV in the FULLSERIALNUMBERS folder, else digit by digit from the LETTERSANDNUMBERS folder; anything else from <callsign>.WAV in the FULLCALLSIGNS folder, else letter by letter from LETTERSANDNUMBERS (a / is played from _.WAV). These folders are in the voice keyer folder. When FALSE, only the .WAV file names in a voice message are played."
+msgstr "当此参数是 TRUE,语音键器会从录音中说出一个不是.WAV文件名的语音消息的每个字,包括#(QSO号码)和@(呼叫窗口的呼叫),从录音中:一个数字来自\"数字\". 在 FulLSERIALNUMBERS 文件夹中的WAV,其他数字来自 FleteSANDNUMBERS 文件夹;其他任何来自 \" callsign \" . WAV 在 FulLCALLSIGNS 文件夹中的WAV,其他字母来自 FleteSANDNUMBERS (a / 从 .WAV 播放). 这些文件夹在语音密钥文件夹中 。 何时 FALSE,只播放语音信息中的.WAV文件名。"
 
 #. Config command: USER INFO SHOWN   (default: NONE)
 #, fuzzy
@@ -1969,7 +1969,7 @@ msgstr "数值:整数在10-90%之间。 此命令允许从发送的所有 dits �
 #. Config command: WINDOW SIZE   (default: 5)
 #, fuzzy
 msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "AGENT WRITTEN: Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
+msgid "Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
 msgstr "1比15的相对比决定了主程序窗口的大小."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)
@@ -2499,4 +2499,434 @@ msgstr "何时 TRUE,TR4W将提供一个无线电服务器,这样WSJT-X就可以�
 msgctxt "TC_HELP_YCCC_SO2R_ENABLE"
 msgid "If TRUE, the YCCC SO2R box is supported for switching radio audio streams and other steps involving two-radio mode."
 msgstr "若为 TRUE,支持YCCC SO2R盒用于转换无线电音频流和涉及双无线电模式的其他步骤."
+
+#. Config command: ALERT COLOR   (default: ALERT)
+msgctxt "TC_HELP_ALERT_COLOR"
+msgid "The color TR4W uses for an alert in the main window: the text of a radio's name and frequency while that radio is disconnected, and the background of the PTT indicator when a key-up is inhibited because the radio will not transmit. Choose from the color list; the default is ALERT."
+msgstr "颜色 TR4W 在主窗口中用于提示:在收音机断开时,收音机名称和频率的文本,以及由于收音机不会传输而抑制按键时PTT指示器的背景. 从颜色列表中选择;默认为ALERT."
+
+#. Config command: BAND MAP WORKED MULT COLOR   (default: ORANGE)
+msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_COLOR"
+msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window. The default is ORANGE."
+msgstr "乐队地图上的M的颜色,你已经工作了,但比 BAND MAP工作MULT LIMIT, 在一个电话,这不是哑弹。 在DX集群窗口中,这样的点行使用相同的颜色. 默认为ORANGE."
+
+#. Config command: BAND MAP WORKED MULT LIMIT   (default: 1)
+msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_LIMIT"
+msgid "How many times a multiplier must be worked (non-dupe QSOs, counted per band and mode where the contest counts them that way) before its spots stop showing an M. From 1 to 9. With 1 the M goes away at the first QSO; with 2 or more a spot shows an M in BAND MAP WORKED MULT COLOR until the limit is reached."
+msgstr "一次乘数必须工作多少次(非dupe QSO,每段计数,以及比赛以同样方式计算的模式),然后其出场点才停止显示M. 从1到9. 1 M在第一个QSO中消失; 2个或更多点显示 M in BAND MAP工作 Mult Color直到达到极限."
+
+#. Config command: CALL HISTORY FILENAME
+msgctxt "TC_HELP_CALL_HISTORY_FILENAME"
+msgid "The call history file to read when USE CALL HISTORY FILE is TRUE: a bare file name, looked for in the CallHistoryFiles folder, or a full path. Leave it blank to use the contest's own default file, which Preferences shows in the empty box. The file is read when the contest is opened, so a change takes effect the next time the contest is opened."
+msgstr "需要读取的调用历史文件 当用户呼叫历史文件是 TRUE: 一个空文件名, 在 CallHistory 文件夹中查找, 或者一个完整路径 。 留空以使用比赛本身的默认文件, 此选项在空框中显示 。 文件在打开比赛时会被读取,所以在下次打开比赛时一个更改会生效."
+
+#. Config command: CALL WINDOW SHOW ALL SPOTS   (default: FALSE)
+msgctxt "TC_HELP_CALL_WINDOW_SHOW_ALL_SPOTS"
+msgid "When this parameter is TRUE and you tune in S&P mode, every callsign TR4W knows appears in the call window, even when it does not appear on the band map. For example, with BAND MAP DUPE DISPLAY set to FALSE, dupes stay off the band map but still appear in the call window. (Not yet implemented.)"
+msgstr "当此参数是 TRUE 而您以 S&P 模式调音, 每个调用符号 TR4W 都知道出现在调用窗口中, 即使它没有出现在带图中 。 例如,与 BAND MAP DUPE DISPLAY 设置为 FALSE,dupes远离乐队地图,但仍出现在呼叫窗口. (尚未执行。 )"
+
+#. Config command: CATEGORY-STATION
+msgctxt "TC_HELP_CATEGORY_STATION"
+msgid "The Cabrillo CATEGORY-STATION for this contest (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). Saved with the contest; a contest whose sponsor names its own list offers only those values."
+msgstr "本次比赛的卡布里略类别(FEXED,MOBILE,Portable,ROVER,Expediation,SCHOOL.). 与比赛一起保存;该比赛的赞助商名单仅提供这些价值。"
+
+#. Config command: CLUSTER SPOT COMMENT MULTIPLIER   (default: FALSE)
+msgctxt "TC_HELP_CLUSTER_SPOT_COMMENT_MULTIPLIER"
+msgid "When this parameter is set to TRUE and the contest looks its domestic multiplier (section or state) up in its domestic file, a DX cluster spot whose comment names a section or state is shown as a needed multiplier when that one is needed. The first UPPER CASE word of the comment that the contest's domestic file knows is used; a section the cluster appends with a plus sign (+NC) is used only when no earlier word qualifies. A section already known for the station from the call history or from a contact in the log overrules the comment. Beacon spots (NCDXF) are ignored. Not every spot has one, and the cluster's section can be where a station lives rather than where it is operating, so leave this FALSE unless you want it."
+msgstr "当此参数设定为 TRUE 而比赛将国内的乘数(区或州)看上其国内档案,DX群集点,当需要时,其注释名称或州被显示为需要的乘数. 评语中第一个UPPER CASE单词是参赛国内文件所知道的被使用;一个带加号(+NC)的分组附加部分只有在没有更早的单词符合条件时才被使用. 从呼叫历史或日志中的联系人中已经知道该站的部分推翻了评论. 灯塔斑点(NCDXF)被忽略. 并不是每个地方都有一个, 集群的路段可以是一个车站住的地方而不是它运行的地方, 所以离开这个 FALSE 除非你喜欢"
+
+#. Config command: DISPLAY LANGUAGE
+msgctxt "TC_HELP_DISPLAY_LANGUAGE"
+msgid "The language TR4W's menus, windows, messages and these tooltips are shown in. Blank follows the operating system's language. The language is chosen once at startup, so a change takes effect the next time TR4W starts; a --lang switch on the command line overrides this setting."
+msgstr "语言TR4W的菜单,窗口,消息和这些工具提示都显示在其中. Blank遵循操作系统的语言. 语言在启动时被选中, 因此在下一次 TR4W 启动时, 更改会生效; 命令行上的 -- lang 切换会覆盖此设置 。"
+
+#. Config command: EXTERNAL LOGGER EDITOR ACTIVE
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_ACTIVE"
+msgid "When ticked, each newly logged QSO is also sent to this logger. Each active logger sends on its own. For a logger that was running when TR4W started, a change takes effect when it is saved, with no restart; a logger added since then, or one whose key, host or logbook changed, applies after TR4W is restarted."
+msgstr "选中时, 每个新登录的 QSO 也会发送到此日志 。 每个活动日志员自己发送. 对于在TR4W开始运行时运行的日志器,更改在保存时生效,没有重启;此后添加的日志器,或者一个键,主机或日志已更改的日志,在TR4W重新启动后适用."
+
+#. Config command: EXTERNAL LOGGER EDITOR NAME
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_NAME"
+msgid "The name this logger is listed under. It is required and must differ from every other external logger's name (capitals do not count as a difference)."
+msgstr "此日志名列于下. 它是必要的,必须不同于所有其他外部日志者的名称(资本不计为差异)。"
+
+#. Config command: EXTERNAL LOGGER EDITOR PROVIDER
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_PROVIDER"
+msgid "The logbook program or online service this logger sends QSOs to. The fields below change to the ones that provider needs. Changing the provider keeps the host and port, clears any key or password, and moves a port still at the old provider's default to the new provider's default."
+msgstr "日志程序或在线服务 此日志发送QSO 。 下面的字段改为供货商需要的字段. 更改提供者保留主机和端口,清除任何密钥或密码,并移动一个仍然处于旧提供者默认状态的端口到新的提供者默认状态."
+
+#. Config command: HAMSCORE VERIFY SERVER   (default: TRUE)
+msgctxt "TC_HELP_HAMSCORE_VERIFY_SERVER"
+msgid "When TRUE, TR4W checks the HamScore server's certificate before uploading, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send, including your HamScore password. It is read when the uploader starts, at TR4W startup."
+msgstr "何时 TRUE,TR4W在上传前检查HamScore服务器的证书,只要设置/tr4w.json的全程序证书检查(默认情况下)在上传. 只为无法检查证书的服务器清除它:然后不检查服务器的身份,在您和它之间任何人都可以读取您发送的东西,包括您的汉姆分数密码 。 它在上传器启动时,在TR4W启动时被读取."
+
+#. Config command: KEYER EDITOR NAME
+msgctxt "TC_HELP_KEYER_EDITOR_NAME"
+msgid "The name this keying device is listed under in the keyer library and in a station profile's CW output choices. It is required. A profile refers to the keyer by a hidden identity, so renaming it is safe."
+msgstr "此密钥设备的名称在密钥库下以及一个站名配置的 CW 输出选择中列出. 这是必要的。 一个剖面图通过隐藏身份来指代键器,因此重命名是安全的."
+
+#. Config command: KEYER EDITOR PORT
+msgctxt "TC_HELP_KEYER_EDITOR_PORT"
+msgid "The serial port the keyer is connected to. A keyer cannot be saved without one."
+msgstr "键器连接到的序列端口 。 密钥无法保存 。"
+
+#. Config command: KEYER EDITOR TYPE
+msgctxt "TC_HELP_KEYER_EDITOR_TYPE"
+msgid "What kind of device this is: a WinKeyer, or a YCCC SO2R+ box. The WinKeyer settings below apply only to a WinKeyer and are greyed for any other type."
+msgstr "什么样的设备是: WinKeyer,或YCCC SO2R+盒. 下面的 WinKeyer 设置仅适用于 WinKeyer , 对于任何其他类型都是灰色的."
+
+#. Config command: NETWORK AUTO CONNECT   (default: FALSE)
+msgctxt "TC_HELP_NETWORK_AUTO_CONNECT"
+msgid "When TRUE, TR4W connects to the multi-op server when it starts, provided COMPUTER ID is set to a letter A to Z. When FALSE, connect with Connect on the Net menu. Leave it FALSE on a single-operator station."
+msgstr "何时 TRUE, TR4W 启动时连接到多操作服务器, 条件是 COMPUTER ID 设为字母A至Z。 何时 FALSE,在网络菜单上连接 Connect。 别管了 FALSE 在一个单操作站。"
+
+#. Config command: NETWORK HTTP TRANSPORT   (default: generic)
+msgctxt "TC_HELP_NETWORK_HTTP_TRANSPORT"
+msgid "Chooses what carries TR4W's internet requests: the downloads (country file, TRMASTER, call history, POTA parks, version check) and the uploads (the external logging services, HamScore, contest scores, SuperCheckPartial). generic is TR4W's own connection code, which checks server certificates against the cacert.pem shipped with the program. auto and platform use the operating system's own connection code where this platform has one (Windows only, today: WinHTTP). It trusts the Windows certificate store, follows the system proxy settings and needs no cacert.pem. Where there is none, both use generic, and platform says so in the log. A change applies from the next request, with no restart. A request that fails is never repeated on the other transport. The Windows transport is new: leave this on generic unless you were asked to try it."
+msgstr "选择携带TR4W互联网请求的内容:下载(国家文件,TRMASTER,呼叫历史,POTA公园,版本检查)和上传(外部日志服务,HamScore,比赛分数,SuperCheckPartial). 通用是TR4W自己的连接代码,它对照cacert检查服务器证书. pem与程序一起运出. 自动和平台使用操作系统本身的连接代码,在这个平台上有一个(只有Windows,今天:WinHTTP). 它信任Windows证书商店,遵循系统代理设置,不需要cacert.pem. 如果没有,则使用通用,平台在日志中也这么说。 更改适用于下一个请求, 没有重新启动 。 如果请求失败,在另一起运输中永远不会重复。 Windows 传输是新的 : 把它放在通用上, 除非你被要求尝试它 。"
+
+#. Config command: NETWORK SHARE SPOTS   (default: TRUE)
+msgctxt "TC_HELP_NETWORK_SHARE_SPOTS"
+msgid "When TRUE, this station sends the DX spots its own cluster connection receives to the other stations on the multi-op network, and accepts the spots they send. When FALSE it does neither. Each station has its own setting, and a change takes effect at once."
+msgstr "何时 TRUE,本站将DX点发送其自己的集群连接接收到多op网络上的其他站点,并接受它们发送的点. 何时 FALSE 也没有 每个车站都有自己的设置,一个变化立即生效."
+
+#. Config command: OPERATING STANDARD EDIT KEYS   (default: FALSE)
+msgctxt "TC_HELP_OPERATING_STANDARD_EDIT_KEYS"
+msgid "When TRUE, Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A copy, paste, cut and select all in a text box or drop-down list of any window other than the main window, instead of running the TR4W command assigned to that key. The main window always keeps TR4W's commands."
+msgstr "何时 TRUE, Ctrl+C, Ctrl+V, Ctrl++X和 Ctrl+ 复制,粘贴,剪接和选择除主窗口以外的任何窗口在文本框或下拉列表中的全部内容,而不是运行分配给该密钥的TR4W命令. 主窗口总是保留TR4W的命令."
+
+#. Config command: PREFERENCES CLUSTER LOGIN
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_LOGIN"
+msgid "The callsign to log in to the cluster with. Leave it blank to log in with your station callsign, which is looked up each time TR4W connects."
+msgstr "要登录到集群的调用符号 。 留空以登录您的站点呼号, 每次 TR4W 连接时都会被检查."
+
+#. Config command: PREFERENCES CLUSTER NAME
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_NAME"
+msgid "The name this cluster is listed under. Clearing the box keeps the old name. Renaming the cluster in use keeps it in use."
+msgstr "此集群的名称列于下. 取出盒子就保留了旧名 重新命名正在使用的集群使其继续使用。"
+
+#. Config command: PREFERENCES CLUSTER PASSWORD
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_PASSWORD"
+msgid "The password, for a cluster that asks for one. Spaces at either end are kept. It is stored in the operating system's credential store (Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux), not in the settings file; where no store can be reached it is kept for this session only."
+msgstr "密码,用于一个需要密码的集群 。 两端的空格保持不变。 它被存储在操作系统的证书存储库(Windows Creditential Manager,macOS keychain,或Linux上的特务服务)中,而不是设置文件中;在无法到达的存储库中,它只保存在本次会话中."
+
+#. Config command: PREFERENCES CONNECT RADIOS AT STARTUP   (default: TRUE)
+msgctxt "TC_HELP_PREFERENCES_CONNECT_RADIOS_AT_STARTUP"
+msgid "Whether TR4W connects this profile's radios when it starts. Activating the profile and Reset Radio Ports always connect, whatever this says."
+msgstr "TR4W启动时是否连接了这个配置的收音机. 激活剖面和重置无线电端口 总是连接,不管上面怎么说。"
+
+#. Config command: PREFERENCES CW OUTPUT 1
+msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_1"
+msgid "How CW is sent for Radio 1: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
+msgstr "如何将 CW 发送到 Radio 1: 无, CW 由 CAT(仅在 收音机能完成时才发出), 收音机自己的键器端口(在收音机有一个设置时发出),或者从键器库中发出一个设备."
+
+#. Config command: PREFERENCES CW OUTPUT 2
+msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_2"
+msgid "How CW is sent for Radio 2: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
+msgstr "如何将 CW 发送到 Radio 2: no, CW by CAT(仅在收音机能完成时才发出),收音机自己的键器端口(收音机有一个设置时发出),或从键器库得到一个设备."
+
+#. Config command: PREFERENCES PROFILE
+msgctxt "TC_HELP_PREFERENCES_PROFILE"
+msgid "The station profile shown below for editing. A profile names the radios in the two slots and how each one sends CW. Choosing one here does not switch to it: the Activate this profile now button does."
+msgstr "以下所显示的站名简介供编辑. 一个剖面图命名了两个槽中的收音机,以及每个收发CW的方式. 在此选择一个不切换到它: 激活此配置文件现在按下按钮 。"
+
+#. Config command: PREFERENCES RADIO 1
+msgctxt "TC_HELP_PREFERENCES_RADIO_1"
+msgid "The radio from the radio library that this profile uses as Radio 1. A radio already in the Radio 2 slot is marked as in use there and cannot be chosen for both slots."
+msgstr "本简介作为\"一号电台\"使用的收音机库中的收音机. 已在电台2档的收音机标记为该档使用的收音机,不能选择两个档."
+
+#. Config command: PREFERENCES RADIO 2
+msgctxt "TC_HELP_PREFERENCES_RADIO_2"
+msgid "The radio from the radio library that this profile uses as Radio 2. A radio already in the Radio 1 slot is marked as in use there and cannot be chosen for both slots."
+msgstr "本简介作为\"二号电台\"使用的收音机从收音机库收音机. 已经在1号无线电台中的收音机标注为该台使用中,不能选择两个收音机。"
+
+#. Config command: PREFERENCES ROTATOR BANDS
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_BANDS"
+msgid "The bands this rotator turns for, separated by spaces, for example 20 15 10. Blank means every band, which is what a station with one antenna wants. Only the rotator in use turns, and only on a band it lists."
+msgstr "这个转子转向的波段,由空格分隔,例如20 15 10. 空白意味着每个乐队,这就是一个有天线的站想要的. 只有旋转器在使用旋转, 并且只在它的乐队列表。"
+
+#. Config command: PREFERENCES ROTATOR BAUD RATE
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_BAUD_RATE"
+msgid "The serial speed for the rotator controller. Blank or 0 uses the default for the chosen type, which is shown greyed in the box."
+msgstr "转子控制器的序列速度 。 空白或 0 对所选类型使用默认值,在框中显示为灰色。"
+
+#. Config command: PREFERENCES ROTATOR IP ADDRESS
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_IP_ADDRESS"
+msgid "For a network rotator (PstRotator), the IP address of the computer it runs on. Blank uses the PSTROTATOR IP ADDRESS setting, 127.0.0.1 unless changed."
+msgstr "对于一个网络转子(PstRotator),它所运行的计算机的IP地址. 空白使用 PSTROTATOR IP ADDRESS 设置,127.0.0.1,除非更改。"
+
+#. Config command: PREFERENCES ROTATOR NAME
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_NAME"
+msgid "The name this rotator is listed under. Clearing the box keeps the old name."
+msgstr "这个转子的名称列于下. 取出盒子就保留了旧名"
+
+#. Config command: PREFERENCES ROTATOR PORT
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_PORT"
+msgid "The serial port the rotator controller is connected to. Used only by a type that has a serial port; greyed for a network rotator."
+msgstr "转子控制器连接的序列端口. 仅被具有串行端口的类型所使用;灰色为网络转子所使用."
+
+#. Config command: PREFERENCES ROTATOR TYPE
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_TYPE"
+msgid "The rotator controller and the protocol TR4W speaks to it. PstRotator is reached over UDP; every other type uses a serial port."
+msgstr "转子控制器和协议TR4W与之对接. PstRotator通过UDP到达;其他类型都使用串行端口."
+
+#. Config command: PREFERENCES ROTATOR UDP PORT
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_UDP_PORT"
+msgid "For a network rotator (PstRotator), the UDP port it listens on. Blank uses the PSTROTATOR UDP PORT setting, 12000 unless changed."
+msgstr "对于一个网络转子(PstRotator),它听取的UDP端口. 空白使用 PSTROTATOR UDP PORT 设置, 2000 除非更改。"
+
+#. Config command: PREFERENCES SO2R ENABLED
+msgctxt "TC_HELP_PREFERENCES_SO2R_ENABLED"
+msgid "Marks this profile as a two-radio (SO2R) station. The flag is saved with the profile, but in this build nothing else reads it, so ticking or clearing it changes no behaviour."
+msgstr "将此剖面标为双收音机(SO2R)站. 旗子与剖面图一起被保存,但在这个构件中没有其他内容读取,所以勾选或清除它不会改变任何行为."
+
+#. Config command: PREFERENCES TCI LISTEN ON NETWORK   (default: FALSE)
+msgctxt "TC_HELP_PREFERENCES_TCI_LISTEN_ON_NETWORK"
+msgid "Lets other computers connect to the TCI server, not just this one. The server has no password: anything that can reach the port can move your VFO and key your transmitter. A change made while the server is running applies the next time it starts."
+msgstr "让其他计算机连接到TCI服务器,而不只是这个. 服务器没有密码:任何能到达端口的东西都可以移动你的VFO并按键你的发报机. 服务器运行时所做的更改在下次启动时应用 。"
+
+#. Config command: PREFERENCES TCI PORT   (default: 50001)
+msgctxt "TC_HELP_PREFERENCES_TCI_PORT"
+msgid "The TCP port the TCI server listens on. Blank uses the default, 50001; a value that is not 1 to 65535 is refused and the previous port kept. A change made while the server is running applies the next time it starts."
+msgstr "TCP端口TCI服务器收听. Blank使用默认值50001;一个不是1到65535的值被拒绝并保留了上个端口. 服务器运行时所做的更改在下次启动时应用 。"
+
+#. Config command: PREFERENCES TCI SERVER   (default: FALSE)
+msgctxt "TC_HELP_PREFERENCES_TCI_SERVER"
+msgid "Runs a TCI server so other programs (WSJT-X, JTDX, a skimmer) can control the radio TR4W has open, even one with no TCI of its own; Radio 1 is trx 0 and Radio 2 is trx 1. Saving starts or stops it. It listens only on this computer unless network listening is ticked."
+msgstr "运行一个 TCI 服务器,所以其他程序(WSJT-X,JTDX,滑动器)可以控制收音机TR4W已开通,甚至一个没有自己TCI的收音机;收音机1为tx 0,收音机2为tx 1. 保存开始或停止它。 除非网络监听被勾选,否则它只能在这个计算机上监听."
+
+#. Config command: PREFERENCES UDP BROADCAST ENABLED   (default: TRUE)
+msgctxt "TC_HELP_PREFERENCES_UDP_BROADCAST_ENABLED"
+msgid "The master switch for UDP broadcasting. Cleared, nothing is sent to any destination, and the destinations are kept as they are."
+msgstr "UDP广播的主开关. 清出所出,所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出所出."
+
+#. Config command: PTT TX INHIBIT BEEP   (default: FALSE)
+msgctxt "TC_HELP_PTT_TX_INHIBIT_BEEP"
+msgid "When TRUE, TR4W beeps once when you key up a radio that reports it will not transmit (for example a K4 in TX test mode). The PTT indicator and the status line show this whatever the setting. BEEP ENABLE must also be TRUE for the beep to sound."
+msgstr "何时 TRUE,TR4W在键入一个报告它不会传输的收音机(例如TX测试模式中的K4)时会哔一次. PTT 指示器和状态行显示此设置。 BEEP ENABLE 也必须是 TRUE 呼叫到声音。"
+
+#. Config command: RADIO EDITOR AUTO INFO LEVEL
+msgctxt "TC_HELP_RADIO_EDITOR_AUTO_INFO_LEVEL"
+msgid "The Elecraft auto-information level (the AI command): how much the radio reports by itself when something changes, instead of waiting to be asked. Leave it empty to let TR4W choose, which is 2; 0 turns it off, and the radio is then asked for everything, which is slower. Shown only for the K2, K3, KX3, and the K4 on a serial connection (on a network connection the K4 is always set to AI5 and this field is ignored). Saving a typed value asks you to confirm it."
+msgstr "Elecraft自动信息级别(AI命令):当某事发生改变时,电台自己报道了多少,而不是等待询问. 留空让TR4W选择,即为2;0关闭,然后要求收音机获取一切,速度更慢. 仅在序列连接上显示K2,K3,KX3和K4(在网络连接上,K4总是设置到AI5,而这个字段被忽略了). 保存输入值需要您确认 。"
+
+#. Config command: RADIO EDITOR BAUD RATE
+msgctxt "TC_HELP_RADIO_EDITOR_BAUD_RATE"
+msgid "The speed of the CAT serial port. It must match the setting in the radio's own menu. Choosing a radio type fills in that model's usual speed when the box is empty, and an empty box uses the model's default. The keyer output port is opened at this speed too."
+msgstr "CAT系列端口的速度. 它必须符合电台自己菜单中的设置. 选择收音机类型在收发箱为空时会填入该型号的通常速度,而空箱则会使用该型号的默认. 键器输出端口也以这种速度打开."
+
+#. Config command: RADIO EDITOR CAT DTR   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_CAT_DTR"
+msgid "The DTR line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
+msgstr "收音机CAT系列端口的DTR线. On在TR4W打开端口时持有所主张的线条,有些接口电缆需要打开端口;所有其他选择(NONE、OF、CW、PTT)都未加固。 这不是 CW 或 PTT 密钥: 用于 Keyer RTS 线和 Keyer DTR 线 。"
+
+#. Config command: RADIO EDITOR CAT RTS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_CAT_RTS"
+msgid "The RTS line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
+msgstr "收音机CAT串行口的RTS线. On在TR4W打开端口时持有所主张的线条,有些接口电缆需要打开端口;所有其他选择(NONE、OF、CW、PTT)都未加固。 这不是 CW 或 PTT 密钥: 用于 Keyer RTS 线和 Keyer DTR 线 。"
+
+#. Config command: RADIO EDITOR CIV ADDRESS
+msgctxt "TC_HELP_RADIO_EDITOR_CIV_ADDRESS"
+msgid "The radio's CI-V address, in hexadecimal as the radio's menu and manual show it. Empty uses the model's default address, shown in grey in the box. It must match the address set in the radio. Offered only for radios that have a CI-V address."
+msgstr "收音机的CI-V地址,以十六进制作为收音机的菜单和手动显示. 空使用模型的默认地址,在框中以灰色显示. 它必须与电台的地址一致 仅供有CI-V地址的收音机使用."
+
+#. Config command: RADIO EDITOR DATA BITS
+msgctxt "TC_HELP_RADIO_EDITOR_DATA_BITS"
+msgid "The number of data bits on the CAT serial port, 7 or 8. Together with parity and stop bits it is the serial frame, which must match the radio's own setting. Most radios use 8 data bits, no parity and 1 stop bit; choosing the type of a new radio fills in that model's usual frame."
+msgstr "CAT系列端口上的数据位数,为7或8. 再加上对等和停止比特,它就是串行框,它必须与电台自己的设置相匹配. 大多数收音机使用8个数据位,没有等同和1个站位;选择新收音机的类型填入了该模型的常用帧."
+
+#. Config command: RADIO EDITOR DISCOVER
+msgctxt "TC_HELP_RADIO_EDITOR_DISCOVER"
+msgid "Searches the local network for radios of the chosen type and lists those that answer under Found. The search takes a few seconds. Offered only for radio types that announce themselves on the network."
+msgstr "搜索所选类型的无线电的本地网络,并列出在“查找”下回答的无线电。 搜索需要几秒钟。 仅供在网络上宣布的无线电类型使用."
+
+#. Config command: RADIO EDITOR FOUND
+msgctxt "TC_HELP_RADIO_EDITOR_FOUND"
+msgid "The radios Discover found on the network. Choosing one copies its IP address into the IP address box."
+msgstr "网络上发现的收音机 选择一个复制其IP地址入IP地址框."
+
+#. Config command: RADIO EDITOR FREQUENCY OFFSET
+msgctxt "TC_HELP_RADIO_EDITOR_FREQUENCY_OFFSET"
+msgid "For a transverter: the offset in Hz added to every frequency the radio reports and subtracted from every frequency TR4W tells it to tune, so TR4W shows and logs the frequency on the air. Empty or 0 means no transverter. Note: at present a value above 65535 or below 0 is refused when the radio is set up (the log says NOT applied), so a typical VHF or UHF transverter offset does not take effect yet."
+msgstr "对于一个倒转器:Hz中的偏移将无线电报告加到每个频率上,再从每个频率TR4W中减出,告诉它去调谐,所以TR4W显示并记录了广播中的频率. 空或0表示没有倒转. 注:目前无线电安装时,超过65535或低于0的数值被拒绝(日志称没有应用),所以典型的甚高频或超高频倒置器相抵消尚未生效."
+
+#. Config command: RADIO EDITOR FT1000MP CW REVERSE
+msgctxt "TC_HELP_RADIO_EDITOR_FT1000MP_CW_REVERSE"
+msgid "When ticked, TR4W asks the radio for reverse CW (CW-R) instead of CW whenever it sets the radio to CW. Offered only for the Yaesu FT-1000MP."
+msgstr "被勾选时,TR4W在将收音机设置为CW时要求收音机反向CW(CW-R)而不是CW. 仅为Yaesu FT-1000MP提供."
+
+#. Config command: RADIO EDITOR HAMLIB MODEL ID
+msgctxt "TC_HELP_RADIO_EDITOR_HAMLIB_MODEL_ID"
+msgid "The HamLib model number (rig_model) used when the radio is driven through HamLib. Empty uses the model's registered number, shown in grey in the box. Offered only when the radio is driven through HamLib, and emptied when the radio type changes, because a number belongs to one model."
+msgstr "收音机通过HamLib驱动时使用的hamLib型号(rig model). 空使用模型的注册编号,在框中以灰色显示. 仅在收音机通过HamLib驱动时提供,而收音机类型改变后空出,因为一个数字属于一个模型."
+
+#. Config command: RADIO EDITOR ICOM DATA MODE ID
+msgctxt "TC_HELP_RADIO_EDITOR_ICOM_DATA_MODE_ID"
+msgid "Which Icom data mode TR4W selects when it puts the radio into a data mode: 1, 2 or 3 for D1, D2 or D3 (for example USB-D1). Empty means 1. Offered for Icom radios only."
+msgstr "Icom数据模式TR4W在将收音机放入数据模式时会选择:1,2或3为D1,D2或D3(例如USB-D1). 空表示1. 只为Icom收音机提供."
+
+#. Config command: RADIO EDITOR ICOM FILTER BYTE
+msgctxt "TC_HELP_RADIO_EDITOR_ICOM_FILTER_BYTE"
+msgid "An Icom filter choice: 1, 2 or 3 for the wide, normal or narrow filter, empty or 0 for none. Offered for Icom radios only. At present nothing in TR4W reads this value, so it has no effect: the code that used it is commented out."
+msgstr "Icom过滤选择:1,2或3用于宽,平或窄的过滤,空或0用于无. 仅供Icom收音机使用. 目前TR4W没有读取这个值,所以没有效果:使用它的代码被评论出来."
+
+#. Config command: RADIO EDITOR IP ADDRESS
+msgctxt "TC_HELP_RADIO_EDITOR_IP_ADDRESS"
+msgid "The IP address of a radio connected over the network (the Network tab). The radio's manual or network menu shows its address; where Discover is offered, it can find the radio for you."
+msgstr "通过网络连接的收音机的IP地址(网络分页). 收音机的手册或网络菜单显示其地址;提供\"发现\"的地方,可以为你找到收音机."
+
+#. Config command: RADIO EDITOR IP PORT
+msgctxt "TC_HELP_RADIO_EDITOR_IP_PORT"
+msgid "The network port the radio listens on. It is called IP port because the radios differ: the Icom network protocol uses UDP, while Elecraft and Flex use TCP. Choosing a radio type fills in that model's usual port when the box is empty, and an empty box uses the model's default."
+msgstr "网络端口收听收听. 它被称为IP端口是因为收音机的不同:Icom网络协议使用UDP,而Elecraft和Flex则使用TCP. 选择收音机类型在收件箱为空时会填入该型号的通常端口,而空箱则使用该型号的默认."
+
+#. Config command: RADIO EDITOR KEYER DTR   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_DTR"
+msgid "What the DTR line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention DTR is used for CW. If both lines are set to PTT, DTR switches it. This is the keyer port, not the CAT port (see CAT DTR)."
+msgstr "键器输出端口的 DTR 线所做的: CW 按键 CW, PTT 切换发报机, ON 和 Off 保持行上或下行, NoneE 让它单独离开. 根据公约DTR用于CW. 如果两行都设置为PTT,则DTR将其切换. 这是密钥端口,而不是CAT端口(参见CAT DTR)."
+
+#. Config command: RADIO EDITOR KEYER OUTPUT PORT   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_OUTPUT_PORT"
+msgid "The serial port TR4W keys CW and PTT on for this radio, through the Keyer RTS line and Keyer DTR line choices. It is not used when the station profile sends CW by CAT, sends no CW, or uses a keyer device such as a WinKeyer, which opens its own port."
+msgstr "此收音机的串接端口TR4W键CW和PTT,通过Keyer RTS行和Keyer DTR行选择. 当站名剖面图由CAT发送CW,不发送CW,或使用诸如WinKeyer等键器设备打开自有端口时,不使用."
+
+#. Config command: RADIO EDITOR KEYER RTS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_RTS"
+msgid "What the RTS line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention RTS is used for PTT. If both lines are set to CW, RTS keys. This is the keyer port, not the CAT port (see CAT RTS)."
+msgstr "键器输出端口的RTS线所做的: CW按键 CW, PTT 切换发报机, On和 Off 按住线上或下, None leave it alone. 根据公约RTS用于PTT. 如果两行被设定为CW,则RTS键. 这是密钥端口,而不是CAT端口(参见CAT RTS)."
+
+#. Config command: RADIO EDITOR KEYER STOP BITS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_STOP_BITS"
+msgid "The stop bits used when the keyer output port is opened: 2 opens it with 2 stop bits, while 1 or (none) opens it with 1. It rarely matters; try 2 only if keying through this port misbehaves. It is separate from the CAT port's Stop bits on the Serial tab."
+msgstr "键器输出端口打开时使用的站点比特:2以2站点比特打开,而1或(无)则以1开. 它很少重要; 只有在通过此端口键入时才会尝试 2 。 它与\"序列\"标签上的CAT端口\"停止位相分离."
+
+#. Config command: RADIO EDITOR NAME
+msgctxt "TC_HELP_RADIO_EDITOR_NAME"
+msgid "The name this radio is listed under in the radio library and in the station profile's radio choices. It is required and must differ from every other radio's name. Renaming is safe: a profile refers to the radio by a hidden identity, not by this name."
+msgstr "此收音机名称列在收音机库和收音机简介的收音机选择中. 它是必要的,必须不同于其他电台的名称。 Renamining是安全的:一个剖面图是指由隐藏身份,而不是由这个名字来表示的收音机."
+
+#. Config command: RADIO EDITOR PARITY
+msgctxt "TC_HELP_RADIO_EDITOR_PARITY"
+msgid "The parity of the CAT serial port: None, Odd or Even. Part of the serial frame with data bits and stop bits, and it must match the radio's own setting. Almost every radio uses None."
+msgstr "CAT系列端口的等同性:无,奇或偶. 部分有数据比特并停止比特的串行框,它必须符合收音机自身的设置. 几乎每个电台都使用\"无\"."
+
+#. Config command: RADIO EDITOR PASSWORD
+msgctxt "TC_HELP_RADIO_EDITOR_PASSWORD"
+msgid "The password for a network radio that asks for a login, used with User name. The eye button beside the box shows or hides what you typed. The box is greyed and emptied for a radio type that needs no login."
+msgstr "要求登录的网络收音机密码,使用用户名. 框边的眼睛按钮显示或隐藏您输入的内容 。 该框为灰色并空出,用于不需要登录的收音机类型."
+
+#. Config command: RADIO EDITOR POLL THIS RADIO   (default: TRUE)
+msgctxt "TC_HELP_RADIO_EDITOR_POLL_THIS_RADIO"
+msgid "When ticked, TR4W keeps reading the radio's frequency and mode, at the Frequency Poll Rate. When cleared, no polling is started for this radio, so TR4W does not follow its frequency, band or mode."
+msgstr "被勾选时,TR4W继续以频率波尔率读取收音机的频率和模式. 清除后,该收音机没有开始投票,因此TR4W不遵循它的频率,波段或模式."
+
+#. Config command: RADIO EDITOR PORT   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_PORT"
+msgid "The serial port the radio's CAT (control) cable is connected to. A port marked (not present) is the port this radio is set to but which is not plugged in right now; it is kept unless you choose another."
+msgstr "串行端口 收音机的CAT(控制)电缆相接. 标有(不在场)的端口是此收音机设定到的端口,但目前没有插入;除非您选择另一个端口,否则该端口会保留."
+
+#. Config command: RADIO EDITOR STARTUP COMMAND
+msgctxt "TC_HELP_RADIO_EDITOR_STARTUP_COMMAND"
+msgid "Text sent to the radio exactly as typed (up to 50 characters), once each time the link to the radio comes up, after a short wait for the radio to settle; it is sent again after the radio is power-cycled. Use it for a radio setting you always want. On an Icom radio it is not sent: a CI-V frame must begin with the bytes FE FE and end with FD, which typed text is not, and the log says why."
+msgstr "发送到收音机的文字与打字时完全一样(可达50个字符),每次接通收音机的链接出现后,在短时间等待收音机解决后再发送;收音机被电循环后再次发送. 用它来做你一直想要的无线电设备 在Icom收音机上,它不会被发送:一个CI-V帧必须从字节FE FE开始,以FD结尾,而FD输入的文本不是,日志上说原因."
+
+#. Config command: RADIO EDITOR STOP BITS
+msgctxt "TC_HELP_RADIO_EDITOR_STOP_BITS"
+msgid "The number of stop bits on the CAT serial port, 1 or 2. Part of the serial frame with data bits and parity, and it must match the radio's own setting. This is the CAT port; the keyer output port has its own Stop bits choice below the tabs."
+msgstr "CAT系列端口上站位数 1或 2. 部分有数据比特和等同的串行框,它必须符合电台自己的设置. 这是 CAT 端口; 密钥输出端口在标签下方有自己的 Stop 位选择 。"
+
+#. Config command: RADIO EDITOR TYPE
+msgctxt "TC_HELP_RADIO_EDITOR_TYPE"
+msgid "The radio model. It chooses the driver TR4W uses to talk to the radio, fills in that model's usual baud rate, serial frame and network port where those are empty, and decides which tabs and fields on this form apply. It is required."
+msgstr "收音机模型. 它选择驱动程序TR4W用来与收音机交谈,填入该模型常用的baud速率,串行框和那些是空的网络端口,并决定该表单上哪些分页和字段适用. 这是必要的。"
+
+#. Config command: RADIO EDITOR USER NAME
+msgctxt "TC_HELP_RADIO_EDITOR_USER_NAME"
+msgid "The user name for a network radio that asks for a login, such as the network Icom radios and the Kenwood LAN radios. The box is greyed and emptied for a radio type that needs no login, such as the Elecraft K4."
+msgstr "一个要求登录的网络收音机的用户名,如网络Icom收音机和肯伍德局域网收音机. 盒被灰色并被清空,用于不需要登录的收音机类型,例如\"大象\"K4."
+
+#. Config command: RADIO EDITOR WIDE CW FILTER
+msgctxt "TC_HELP_RADIO_EDITOR_WIDE_CW_FILTER"
+msgid "Meant to select the wide CW filter on older Yaesu radios (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). At present nothing in TR4W reads this value, so it has no effect."
+msgstr "意在从更古老的雅苏收音机(FT-747GX,FT-840,FT-890,FT-900,FT-990,FT-1000)上选择宽CW滤波器. 目前TR4W没有读取这个值,所以没有效果."
+
+#. Config command: SCORE VERIFY SERVER   (default: TRUE)
+msgctxt "TC_HELP_SCORE_VERIFY_SERVER"
+msgid "When TRUE, TR4W checks the score board server's certificate when it posts your score to the Posting URL, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send."
+msgstr "何时 TRUE,TR4W在将你的分数发布到Posting URL时检查分数板服务器的证书,只要设置/tr4w.json中全程序证书的检查在(默认情况下)进行. 仅清除无法检查证书的服务器: 然后不检查服务器的身份, 在您和它之间任何人都可以读取您发送的 。"
+
+#. Config command: SETUP WIZARD CLUSTER
+msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER"
+msgid "Tick to add a page that sets up a DX cluster connection for spots. The cluster is added to the cluster list and becomes the one TR4W connects to."
+msgstr "选中可添加一个为斑点设置 DX 集群连接的页面 。 集群被添加到集群列表中,并成为TR4W连接到的一个集群."
+
+#. Config command: SETUP WIZARD CLUSTER PORT
+msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER_PORT"
+msgid "The cluster's TCP port, from 1 to 65535. Leave it blank for the standard port, 23."
+msgstr "该集群的TCP端口从1到65535. 给标准口留空,23号"
+
+#. Config command: SETUP WIZARD KEYER
+msgctxt "TC_HELP_SETUP_WIZARD_KEYER"
+msgid "Tick to add a page that sets up a WinKeyer. It is added to the keyer library and becomes the CW output for Radio 1, used instead of CW by CAT when both are chosen."
+msgstr "选中可添加一个设置 WinKeyer 的页面 。 它被添加到键器库中并成为了Radio 1的CW输出,在两者都被选择时被CAT使用而不是CW."
+
+#. Config command: SETUP WIZARD LOGGER
+msgctxt "TC_HELP_SETUP_WIZARD_LOGGER"
+msgid "Tick to add a page that sets up an external logger (a logbook program or online service) that each QSO is also sent to. It is added to the external logger list, active if its Active box is ticked."
+msgstr "选中可添加一个设置外部日志( 日志程序或在线服务) 的页面, 每个 QSO 也会被发送到 。 它被添加到外部日志列表中, 如果它的活性框被勾选则活动 。"
+
+#. Config command: SETUP WIZARD RADIO
+msgctxt "TC_HELP_SETUP_WIZARD_RADIO"
+msgid "Tick to add a page that sets up a radio for rig control. The radio is added to the radio library and put in Radio 1 of the active station profile; when no profile is active, of one the wizard makes active."
+msgstr "选中要添加一个设置用于钻机控制的收音机的页面 。 该收音机被添加到无线电文库中,并放入活动站简介的1号收音机;当没有动态的收音机时,其中一号收音机由向导激活."
+
+#. Config command: SETUP WIZARD ROTATOR
+msgctxt "TC_HELP_SETUP_WIZARD_ROTATOR"
+msgid "Tick to add a page that sets up an antenna rotator. It is added to the rotator list and becomes the rotator in use."
+msgstr "选中可添加设置天线转子的页面 。 它被加入转子列表并成为正在使用的转子."
+
+#. Config command: SETUP WIZARD SHOW DETAILS
+msgctxt "TC_HELP_SETUP_WIZARD_SHOW_DETAILS"
+msgid "Shows the full report of what the wizard did, with the detail lines added to the summary."
+msgstr "显示向导所作所为的全部报告,并在摘要中加入细节行."
+
+#. Config command: SETUP WIZARD WSJT-X
+msgctxt "TC_HELP_SETUP_WIZARD_WSJT_X"
+msgid "Tick to add a page for the WSJT-X settings. Only the values changed on that page are saved."
+msgstr "勾选为 WSJT-X 设置添加一页 。 只保存该页面上更改的值 。"
+
+#. Config command: TCI DEBUG   (default: FALSE)
+msgctxt "TC_HELP_TCI_DEBUG"
+msgid "Writes every TCI server command, in both directions, to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
+msgstr "将每个 TCI 服务器命令双向写入 tr4w.log 。 该行被写入INFO级别,因此仅在日志级别为INFO,DEBUG或TRACE时才会出现. 保存时适用."
+
+#. Config command: TCI MAX TX SECONDS   (default: 180)
+msgctxt "TC_HELP_TCI_MAX_TX_SECONDS"
+msgid "A safety limit in seconds, 0 to 3600. When a TCI client has kept the transmitter keyed this long, TR4W unkeys it, which covers a client that crashed or lost its connection while transmitting. 0 means no limit. A transmission you start yourself is never cut."
+msgstr "安全限制在秒 0到3600 当一个TCI客户端将发送器按了这么长的键后,TR4W解密了它,它涵盖了一个在传输时崩溃或失去连接的客户端. 0表示无限制. 你开始的传输是不会中断的"
+
+#. Config command: TELNET CONSOLE LINES   (default: 10000)
+msgctxt "TC_HELP_TELNET_CONSOLE_LINES"
+msgid "The most lines the DX cluster window keeps, from 1000 to 100000. When the window goes over the limit, the oldest lines are removed, down to nine tenths of the limit."
+msgstr "DX集群窗口保存的线路最多,从1000到100000. 窗出过限后取出最古老的行,下至限分之九."
+
+#. Config command: TELNET DEBUG   (default: FALSE)
+msgctxt "TC_HELP_TELNET_DEBUG"
+msgid "Writes every line sent to and received from the DX cluster to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
+msgstr "将DX集群发送和收到的每行写入tr4w.log. 该行被写入INFO级别,因此仅在日志级别为INFO,DEBUG或TRACE时才会出现. 保存时适用."
+
+#. Config command: TUNE WITH DITS   (default: FALSE)
+msgctxt "TC_HELP_TUNE_WITH_DITS"
+msgid "If this parameter is TRUE, TR4W sends a string of dits at 75 WPM when you press Ctrl-Left-Shift, instead of a solid carrier. (Not yet implemented.)"
+msgstr "如果此参数是 TRUE,TR4W在75WPM时发送一串dits,当你按下Ctrl-Left-Shift,而不是一个固态的载体. (尚未执行。 )"
+
+#. Config command: UDP DESTINATION PORT
+msgctxt "TC_HELP_UDP_DESTINATION_PORT"
+msgid "The UDP port the receiving program listens on, from 1 to 65535. The port belongs to this destination, so a program that wants different kinds of data on different ports needs one destination for each port."
+msgstr "UDP端口接收程序听取,从1到65535. 端口属于这个目的地,因此一个想要不同端口的不同种类数据的程序需要每个端口有一个目的地."
+
+#. Config command: USE CALL HISTORY FILE   (default: FALSE)
+msgctxt "TC_HELP_USE_CALL_HISTORY_FILE"
+msgid "When TRUE, TR4W reads a call history file when the contest is opened and uses it to fill in a station's exchange from the call. The file is CALL HISTORY FILENAME, or the contest's own default when that is blank; a contest that takes nothing from a call history file reads none. A change takes effect the next time the contest is opened."
+msgstr "何时 TRUE,TR4W在开赛时会读取一个呼叫历史文件,并用它来填写一个站从呼叫的交换. 文件是Call History FILENAME,或者在空白时是比赛本身的默认;一个从一个呼叫历史文件中不取任何内容的比赛是没有的. 更改在下次比赛开始时生效."
 

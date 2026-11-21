@@ -104,14 +104,14 @@ msgstr "hodnota: celé číslo. Pokud je program TR4W použit pro vytvoření de
 
 #. Config command: AUTO-CQ DELAY TIME   (default: 3000)
 msgctxt "TC_HELP_AUTO_CQ_DELAY_TIME"
-msgid ""
+msgid "The amount of time to wait between AUTO CQ in milliseconds."
 msgstr "hodnota: celé číslo [ms]. Je-li příkaz NASTAVENÍ AUTO CQ (ALT-C) aktivní, určuje tato hodnota čas v milisekundách, po který je automatické opakování CQ přerušeno, tedy dobu pro poslech."
 
 #. Config command: BAND MAP ACTIVE BAND COLOR   (default: BLUE)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_ACTIVE_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on the active band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Barva frekvence spotu v mapě pásma, když je spot na aktivním pásmu. Je defaultní na barvu, do které ji vždy nakreslila mapa kapely, takže se nic nezmění, dokud si nevyberete jinou. Nastavte to na stranu Barvy preferencí."
 
 #. Config command: BAND MAP ALL BANDS   (default: FALSE)
 msgctxt "TC_HELP_BAND_MAP_ALL_BANDS"
@@ -144,13 +144,13 @@ msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, zobrazí se v o
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
-msgstr ""
+msgstr "Nejvíce míst, kde se ukáže mapa kapely, od 30 do 1000. Mapa ukazuje menší z toho a číslo, které se vejde do okna, zaokrouhlené dolů na sudé číslo a soustředěné na frekvenci rádia, takže velikost okna recentruje mapu rádia."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
 msgid "The fill colour behind a dupe's D in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Barva náplně za dupe D na mapě kapely. Je defaultní na barvu, do které ji vždy nakreslila mapa kapely, takže se nic nezmění, dokud si nevyberete jinou. Nastavte to na stranu Barvy preferencí."
 
 #. Config command: BAND MAP DUPE DISPLAY   (default: TRUE)
 msgctxt "TC_HELP_BAND_MAP_DUPE_DISPLAY"
@@ -186,7 +186,7 @@ msgstr "Šířka položky Band Map. Změňte to podle BAND MAP Size. Vzdálenost
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_MULT_COLOR"
 msgid "The fill colour behind a multiplier's M in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Barva vyplnění za multiplikátorem M v mapě kapely. Je defaultní na barvu, do které ji vždy nakreslila mapa kapely, takže se nic nezmění, dokud si nevyberete jinou. Nastavte to na stranu Barvy preferencí."
 
 #. Config command: BAND MAP MULTS ONLY   (default: FALSE)
 msgctxt "TC_HELP_BAND_MAP_MULTS_ONLY"
@@ -197,13 +197,13 @@ msgstr "hodnota: TRUE nebo FALSE. Příkazem se nastaví, že se v okně BANDMAP
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_OTHER_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on another band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Barva frekvence místa v mapě pásma, když je místo na jiné skupině. Je defaultní na barvu, do které ji vždy nakreslila mapa kapely, takže se nic nezmění, dokud si nevyberete jinou. Nastavte to na stranu Barvy preferencí."
 
 #. Config command: BAND MAP SELECTION COLOR   (default: HIGHLIGHT)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SELECTION_COLOR"
 msgid "The colour of the selected spot in the band map. The default, HIGHLIGHT, is the system highlight colour. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Barva vybraného místa na mapě pásma. Výchozí, HIGHLIGHT, je barva zvýraznění systému. Je defaultní na barvu, do které ji vždy nakreslila mapa kapely, takže se nic nezmění, dokud si nevyberete jinou. Nastavte to na stranu Barvy preferencí."
 
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
@@ -225,7 +225,7 @@ msgstr "hodnota: celé číslo, určuje pásmo [metrů]. Pokud není transceiver
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
 msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Barva, která označuje frekvenci rádia v mapě pásma: frekvenční pole každého místa v rámci BAND MAP GUARD BAND rádia a 1pixelový obrys kolem jednoho místa nejbližšího rádia. Ani výběr a bez rádiové frekvence není nic označeno. Nastavte to na stranu Barvy preferencí."
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 msgctxt "TC_HELP_BEEP_ENABLE"
@@ -296,13 +296,13 @@ msgstr "hodnota: TRUE nebo FALSE. Funkce není připravena."
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_AUTO_SELF_SPOT"
 msgid "Spots your own call on the DX cluster automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while you are running (CQ mode). Only in a contest whose rules allow self-spotting; ignored otherwise. Off by default."
-msgstr ""
+msgstr "Save your own call on the DX cluster automatic, at the interval set by CLUSTER SEE SPOT INTERVAL, while you are running (CQ mode). Pouze v soutěži, jejíž pravidla umožňují sebepoznání; ignorováno jinak. Vypnuto."
 
 #. Config command: CLUSTER SELF SPOT INTERVAL   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_SELF_SPOT_INTERVAL"
 msgid "Minutes between automatic self-spots. 10 minutes is the established minimum; review the contest's rules before changing it. The contest's own minimum, where it states one, is never undercut."
-msgstr ""
+msgstr "Zápisy mezi automatickými samopaly. 10 minut je stanovené minimum; přezkoumat pravidla soutěže před změnou. Vlastní minimum soutěže, kde se uvádí jeden, není nikdy podhodnoceno."
 
 #. Config command: CODE SPEED   (default: 35)
 msgctxt "TC_HELP_CODE_SPEED"
@@ -396,7 +396,7 @@ msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, bude program TR
 
 #. Config command: CW SPEED INCREMENT   (default: 3)
 msgctxt "TC_HELP_CW_SPEED_INCREMENT"
-msgid ""
+msgid "When pressing page up or page down, this is the increment the CW increases or decreases respectively."
 msgstr "hodnota: celé číslo. Příkaz určuje velikost kroku v jednotkách WPM (slov/min, asi 5 písmen PARIS), o kterou se změní rychlost klíčování CW při stisknutí kláves PAGE UP/PAGE DWN."
 
 #. Config command: CW TONE   (default: 700)
@@ -458,14 +458,14 @@ msgstr "Tento příkaz určuje, zda je zapnuto DVK."
 #. Config command: DVK PATH   (default: DVK)
 #, fuzzy
 msgctxt "TC_HELP_DVK_PATH"
-msgid ""
-msgstr ""
+msgid "This is the location of the program used to playback DVK messages when using the computer for audio."
+msgstr "Toto je umístění programu používaného k přehrávání zpráv DVK při použití počítače pro audio."
 
 #. Config command: DVK RECORDER   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_DVK_RECORDER"
-msgid ""
-msgstr ""
+msgid "This is the program that is run to playback DVK messages form the computer."
+msgstr "Toto je program, který běží k přehrávání zpráv DVK z počítače."
 
 #. Config command: DX MULTIPLIER   (default: NONE)
 msgctxt "TC_HELP_DX_MULTIPLIER"
@@ -526,7 +526,7 @@ msgstr "hodnota: celé číslo. Příkaz nastavuje rychlost, do které je aktivn
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "AGENT WRITTEN: A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
+msgid "A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "Nastavte některé velikosti písma až na '0' a až '2'. To může mít vliv na ostatní okna, jako je mapa bandmap (Viz nastavení velikosti mapy pásma)"
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -536,7 +536,7 @@ msgstr "hodnota: text, výběr z daných možností. Pokud je šlapka připojena
 
 #. Config command: FOOT SWITCH PORT   (default: NONE)
 msgctxt "TC_HELP_FOOT_SWITCH_PORT"
-msgid ""
+msgid "The serial port to which the foot switch is connected."
 msgstr "hodnota: textová zkratka, obsahující název portu počítače, ke kterému bude připojeno ovládání šlapky. Musí odpovídat definici programu TR4W."
 
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
@@ -559,7 +559,7 @@ msgstr "hodnota: NONE nebo čtyř- nebo šestimístný údaj lokátoru. Tento pa
 
 #. Config command: HAND LOG MODE   (default: FALSE)
 msgctxt "TC_HELP_HAND_LOG_MODE"
-msgid ""
+msgid "For entering a paper log after the event. When this parameter is TRUE, the QSO time no longer follows the computer clock; it moves only when you advance it with Alt-1 to Alt-0 (1 to 10 minutes) or through AUTO TIME INCREMENT; when it is FALSE, those increment-time menu items are greyed out. TR4W shows a warning at startup while this is TRUE; restart TR4W after changing it."
 msgstr "hodnoty: TRUE nebo FALSE. Je-li nastavena volba na TRUE, zapíná se režim programu TR4W pro ruční vedení deníku a přepis deníku po závodu."
 
 #. Config command: HF BAND ENABLE   (default: TRUE)
@@ -586,7 +586,7 @@ msgstr "hodnoty: Pravda / lež. Výchozí hodnota TRUE zabraňuje výběru mapy 
 
 #. Config command: INCLUDE F-KEY NUMBER   (default: FALSE)
 msgctxt "TC_HELP_INCLUDE_F_KEY_NUMBER"
-msgid ""
+msgid "When viewing the F-Keys window, if this option is true, the F key name/number is displayed (e.g., F1 - <caption>)."
 msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak se v okně F-kláves zobrazí kromě zkráceného obsahu jejich paměti i označení kláves (F1 až F12). Okno musí být aktivováno v záložce OKNA nebo příkazem kombinací kláves SHIFT-CTRL-2."
 
 #. Config command: INCREMENT TIME ENABLE   (default: FALSE)
@@ -691,13 +691,13 @@ msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak je vyslaný
 
 #. Config command: MAIN CALLSIGN   (default: NONE)
 msgctxt "TC_HELP_MAIN_CALLSIGN"
-msgid ""
+msgid "Your station's own callsign, remembered from contest to contest. The New Contest dialog fills its callsign box from it (or from MY CALL when this is empty), and the first callsign you enter there is saved here if it is empty. It is not the callsign you log with: that is MY CALL, which a contest may change (for example to a club call) without touching this one."
 msgstr "hodnota:text, značka stanice v závodu"
 
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "AGENT WRITTEN: The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
+msgid "The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
 msgstr "hodnota: text, výběr z daných možností. Příkazem lze nastavit typ písma (font), kterým se zobrazují hlavní informace v okně programu TR4W. Možnosti jsou dány seznamem písem (fontů), která jsou instalována v použité verzi Windows."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -712,14 +712,14 @@ msgstr "hodnota: celé číslo od 5 do 60 [min]. Číslice 0 funkci vypíná. P�
 
 #. Config command: MISSINGCALLSIGNS FILE ENABLE   (default: FALSE)
 msgctxt "TC_HELP_MISSINGCALLSIGNS_FILE_ENABLE"
-msgid ""
+msgid "Works with USE RECORDED SIGNS. When this parameter is TRUE and the voice keyer has no recording <callsign>.WAV in its FULLCALLSIGNS folder for a callsign it has to say, that callsign is added to the file MISSINGCALLSIGNS.TXT in the same folder, so you can record it later."
 msgstr "hodnota: TRUE nebo FALSE. Příkaz aktivuje zápis do souboru, který obsahuje ztracené značky."
 
 #. Config command: MMTTY ENGINE   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MMTTY_ENGINE"
-msgid ""
-msgstr ""
+msgid "The path to the MMTTY program for working RTTY contests (experimental)."
+msgstr "Cesta k programu MMTTY pro pracovní RTTY soutěže (experimentální)."
 
 #. Config command: MODE   (default: CW)
 msgctxt "TC_HELP_MODE"
@@ -743,7 +743,7 @@ msgstr "hodnota: celé číslo [kbps], výběr z daných možností. Příkazem 
 
 #. Config command: MP3 RECORDER DURATION   (default: EACH QSO)
 msgctxt "TC_HELP_MP3_RECORDER_DURATION"
-msgid ""
+msgid "To be determined"
 msgstr "hodnota: EACH QSO nebo EACH HOUR nebo NON-STOP. Příkaz určuje, jak má být zvukový záznam MP3 členěn: EACH QSO = každé QSO samostatně; EACH HOUR = po celých hodinách; NON-STOP = bez přerušení. Je třeba upozornit, že na rozdíl od jiných programů dojde při ukončení a opětném spuštění záznamu v režimu NON-STOP nebo EACH HOUR během téže hodiny k přepsání původního záznamu. Označení záznamů je poněkud nepřehledné a obsahuje vždy údaj celé hodiny (TEMP_HH_DD.MP3, kde HH je hodina začátku zápisu a DD je den v měsíci). V režimu EACH QSO je označení záznamu nejpodrobnější, a to ve formátu YYYYMMDD_hhmmss_BANDm_CALLSIGN.MP3 (DATUM_ČAS_PÁSMO_ZNAČKA)."
 
 #. Config command: MP3 RECORDER ENABLE   (default: FALSE)
@@ -831,7 +831,7 @@ msgstr "hodnota: referenční číslo IOTA. Volba umožňuje nastavit referenčn
 #, fuzzy
 msgctxt "TC_HELP_MY_LICENSE_YEAR"
 msgid "Enter the year you were first licensed, for the contests that exchange it (the European HF Championship, KVP). Four digits (1985) or the last two (85) are both accepted; the contest decides what is sent -- two digits, four digits or the number of years licensed. A contest may state its own value; this is the default. It is read when the contest is set up, so a change takes effect for the next contest or when TR4W next starts."
-msgstr ""
+msgstr "Zadejte rok, kdy jste měli první licenci, pro soutěže, které ji vyměňují (European HF Championship, KVP). Přijímají se čtyři číslice (1985) nebo poslední dva (85); soutěž rozhoduje o tom, co je odesláno -- dvě číslice, čtyři číslice nebo počet let s licencí. Soutěž může uvádět svou vlastní hodnotu; to je výchozí hodnota. Čte se, když je soutěž nastavena, takže změna nabývá účinku pro další soutěž nebo když TR4W začíná."
 
 #. Config command: MY NAME   (default: NONE)
 msgctxt "TC_HELP_MY_NAME"
@@ -875,12 +875,12 @@ msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, jsouspojení se
 
 #. Config command: NET STATUS UPDATE INTERVAL   (default: 5000)
 msgctxt "TC_HELP_NET_STATUS_UPDATE_INTERVAL"
-msgid ""
+msgid "Values: 1000 to 10000 milliseconds. While you want to be connected to the multi-op network and the link is down, TR4W tries to connect again at this interval. A change takes effect the next time you connect."
 msgstr "hodnota: celé číslo [ms]. Příkaz nastaví čas v milisekundách, po kterém dojde k obnovení údajů stanice v okně SÍŤ."
 
 #. Config command: NO BORDER   (default: FALSE)
 msgctxt "TC_HELP_NO_BORDER"
-msgid ""
+msgid "When this parameter is TRUE, the panels of the main window and the call and exchange entry fields are drawn flat, without their sunken edge. It takes effect the next time TR4W starts."
 msgstr "hodnota:TRUE nebo FALSE. Příkaz FALSE ponechá zobrazení hlavní stránky deníku beze změny. Příkaz TRUE odebere orámování."
 
 #. Config command: NO CAPTION   (default: FALSE)
@@ -891,7 +891,7 @@ msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak při startu
 
 #. Config command: NO COLUMN HEADER   (default: FALSE)
 msgctxt "TC_HELP_NO_COLUMN_HEADER"
-msgid ""
+msgid "If the value is TRUE, the log windows show no row of column headings: the log on the main window (and the B4 list that takes its place), View/Edit Log, Log Search and the downloaded server log, and also the Network and Stations windows. The QSOs themselves are unchanged. The change takes effect at once in every open window; a column's width cannot be dragged while its heading is hidden."
 msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak při startu programu se nezobrazí záhlaví jednotlivých položek (sloupců). To umožní zmenšit plochu, obsazenou programem."
 
 #. Config command: NO LOG   (default: FALSE)
@@ -916,7 +916,7 @@ msgstr "hodnota: celé číslo [Hz]. Příkaz nastaví kmitočet tónu příposl
 
 #. Config command: PADDLE PORT   (default: NONE)
 msgctxt "TC_HELP_PADDLE_PORT"
-msgid ""
+msgid "The Serial port used to connect the CW paddle."
 msgstr "hodnota: text, název portu, ke kterému bude připojena pastička."
 
 #. Config command: PADDLE PTT HOLD COUNT   (default: 13)
@@ -1079,8 +1079,8 @@ msgstr "hodnota: libovolný znak. Po stisku zvolené klávesy místo ENTER je od
 #. Config command: QZB RANDOM OFFSET ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_QZB_RANDOM_OFFSET_ENABLE"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE and you are on CW, tuning the radio to a band map spot adds a small random offset of up to 30 Hz either side of the spot frequency (and of its split frequency, if the spot has one), so you do not land exactly on the spotted frequency. When FALSE, the radio is tuned exactly to the spot."
+msgstr "Pokud je tento parametr TRUE a jste na CW, ladění rádia na pásmovou mapu spot přidává malý náhodný posun až 30 Hz na obou stranách spotové frekvence (a jeho split frekvence, pokud bod má), takže nepřistanete přesně na spot frekvenci. Kdy FALSERádio je naladěno přesně na místo."
 
 #. Config command: R150S MODE   (default: FALSE)
 msgctxt "TC_HELP_R150S_MODE"
@@ -1358,13 +1358,13 @@ msgstr "hodnota: celé číslo. Příkaz zadává označení portu Ethernet, na 
 #, fuzzy
 msgctxt "TC_HELP_SERVER_TAILCAT_ADDRESS"
 msgid "The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel's key, so treat it like a password."
-msgstr ""
+msgstr "Adresa operátora TR4WSERVER vám dává, aby se tento počítač dostal na server z jiné sítě přes Tailcat tunel. Vložte ji přesně tak, jak byla podána. Používá se pouze v době, kdy je přípravek SERVER USE TAILCAT TRUEObsahuje klíč tunelu, takže s ním zacházejte jako s heslem."
 
 #. Config command: SERVER USE TAILCAT   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SERVER_USE_TAILCAT"
 msgid "Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server's port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server's own network; the address is kept for next time."
-msgstr ""
+msgstr "Nastavit na TRUE dosáhnout TR4WSERVER přes Tailcat tunel pojmenovaný Server TAILCAT ADRESA místo na SERVER ADDRESSDokud je. TRUE, SERVER ADDRESS se nepoužívá; SERVER PORT Pořád je, protože je to server v tunelu. Pokud je adresa SERVER TAILCAT prázdná, spojení selže a říká to; TR4W se nevrací do SERVER ADDRESSNastavit na FALSE když jste na vlastní síti serveru; adresa je uchovávána pro příště."
 
 #. Config command: SHIFT KEY ENABLE   (default: TRUE)
 msgctxt "TC_HELP_SHIFT_KEY_ENABLE"
@@ -1398,7 +1398,7 @@ msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, pak při provoz
 
 #. Config command: SHOW DOMESTIC MULTIPLIER NAME   (default: FALSE)
 msgctxt "TC_HELP_SHOW_DOMESTIC_MULTIPLIER_NAME"
-msgid ""
+msgid "When this parameter is TRUE, the remaining multipliers window lists each domestic multiplier by the name its domestic multiplier (.dom) file gives it (the entry starting with ^), where it has one, instead of its abbreviation, and widens the column to fit. The change is shown at once."
 msgstr "hodnota: TRUE nebo FALSE. Běžně se násobiče DOM v okně REMAINING MULTS (CHYBÍ NÁSOBIČE OD:) zobrazují ve  zkratce, jako ID. Je-li volba nastavena na TRUE, pak se místo standardních identifikátorů budou zobrazovat alternativní názvy násobičů DOM. Tento způsob zobrazení dovolí lepší orientaci v seznamu násobičů. Například v RDXC se místo UD zobrazí R4W. Pro tento účel musí být alternativní názvy násobičů uloženy v souboru *.DOM (začínají znakem ^)."
 
 #. Config command: SHOW FREQUENCY IN LOG   (default: TRUE)
@@ -1408,7 +1408,7 @@ msgstr "hodnota: TRUE nebo FALSE. Příkaz stanoví, jak se zapíše kmitočet v
 
 #. Config command: SHOW GRIDLINES   (default: FALSE)
 msgctxt "TC_HELP_SHOW_GRIDLINES"
-msgid ""
+msgid "When this parameter is TRUE, grid lines are drawn between the rows and columns of the log grid in the main window. The change is shown at once."
 msgstr "hodnota: TRUE nebo FALSE. Je-li volba nastavena na TRUE, bude v okně QSO zobrazeno linkování řádků, jako v TRLOGu."
 
 #. Config command: SHOW TYPED CALLSIGN   (default: TRUE)
@@ -1455,7 +1455,7 @@ msgstr "hodnota: libovolný znak. Default nastavení lze tímto příkazem změn
 
 #. Config command: STATIONS CALLSIGNS MASK   (default: NONE)
 msgctxt "TC_HELP_STATIONS_CALLSIGNS_MASK"
-msgid ""
+msgid "Values: any text. The Stations window lists only the callsigns that contain this text anywhere in them (it is a plain match, not a wildcard pattern); leave it empty to list every station. The list on screen is filtered again as soon as you change it."
 msgstr "hodnota: text, žádný údaj nebo alfanumerické znaky. Příkaz určuje masku volací značky, která bude vložena do okna zápisu značky. Využití tohoto příkazu může být užitečné v závodech, kde pracuje větší množství stanic s volacími značkami, které se liší jen o jeden až dva znaky (písmena nebo číslice)."
 
 #. Config command: STEREO CONTROL PIN   (default: 9)
@@ -1597,7 +1597,7 @@ msgstr "hodnota: text. Seznam neznámých zemí je ukládán do souboru, jehož 
 
 #. Config command: USE RECORDED SIGNS   (default: FALSE)
 msgctxt "TC_HELP_USE_RECORDED_SIGNS"
-msgid ""
+msgid "When this parameter is TRUE, the voice keyer speaks every word of a voice message that is not a .WAV file name, including # (the QSO number) and @ (the call in the call window), from recordings: a number from <number>.WAV in the FULLSERIALNUMBERS folder, else digit by digit from the LETTERSANDNUMBERS folder; anything else from <callsign>.WAV in the FULLCALLSIGNS folder, else letter by letter from LETTERSANDNUMBERS (a / is played from _.WAV). These folders are in the voice keyer folder. When FALSE, only the .WAV file names in a voice message are played."
 msgstr "hodnota: TRUE nebo FALSE"
 
 #. Config command: USER INFO SHOWN   (default: NONE)
@@ -1723,7 +1723,7 @@ msgstr "hodnota: celé číslo v mezích od 10 do 90 [%], určující procentuá
 #. Config command: WINDOW SIZE   (default: 5)
 #, fuzzy
 msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "AGENT WRITTEN: Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
+msgid "Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
 msgstr "hodnota: celé číslo od 1 do 15. Příkaz nastaví poměrný koeficient velikosti zobrazení hlavního okna programu TR4W."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)
@@ -2817,4 +2817,434 @@ msgstr "Pokud TRUE, YCCC SO2R box je podporován pro přepínání rádiových z
 #~ msgctxt "TC_HELP_WINKEYER_WINDOW_COLOR"
 #~ msgid "hodnota: text, výběr ze zobrazené předvolby. Příkaz určuje barvu písma v okně WINKEYER"
 #~ msgstr "hodnota: text, výběr ze zobrazené předvolby. Příkaz určuje barvu písma v okně WINKEYER"
+
+#. Config command: ALERT COLOR   (default: ALERT)
+msgctxt "TC_HELP_ALERT_COLOR"
+msgid "The color TR4W uses for an alert in the main window: the text of a radio's name and frequency while that radio is disconnected, and the background of the PTT indicator when a key-up is inhibited because the radio will not transmit. Choose from the color list; the default is ALERT."
+msgstr "Barva TR4W používá pro výstrahu v hlavním okně: text jména a frekvence rádia, když je toto rádio odpojeno, a pozadí ukazatele PTT, když je klávesa zablokována, protože rádio nebude vysílat. Vyberte si ze seznamu barev, výchozí je ALERT."
+
+#. Config command: BAND MAP WORKED MULT COLOR   (default: ORANGE)
+msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_COLOR"
+msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window. The default is ORANGE."
+msgstr "Barva M na místě mapy kapely, jehož násobitel jste již pracovali, ale méně než BAND MAP PRACOVANÝ MULT LIMIT, na výjezdu, který není dupe. Stejná barva se používá pro linku takového místa v okně DX clusteru. Výchozí je ORANGE."
+
+#. Config command: BAND MAP WORKED MULT LIMIT   (default: 1)
+msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_LIMIT"
+msgid "How many times a multiplier must be worked (non-dupe QSOs, counted per band and mode where the contest counts them that way) before its spots stop showing an M. From 1 to 9. With 1 the M goes away at the first QSO; with 2 or more a spot shows an M in BAND MAP WORKED MULT COLOR until the limit is reached."
+msgstr "Kolikrát je třeba pracovat na multiplikátoru (non-dupe QSO, počítáno za pásmo a režim, kde se soutěž počítá tímto způsobem), než její skvrny přestanou zobrazovat M. Od 1 do 9. S 1 M odejde na první QSO; s 2 nebo více místě ukazuje M v BAND MAP PRACOVANÝ MULT COLOR, dokud není dosaženo limitu."
+
+#. Config command: CALL HISTORY FILENAME
+msgctxt "TC_HELP_CALL_HISTORY_FILENAME"
+msgid "The call history file to read when USE CALL HISTORY FILE is TRUE: a bare file name, looked for in the CallHistoryFiles folder, or a full path. Leave it blank to use the contest's own default file, which Preferences shows in the empty box. The file is read when the contest is opened, so a change takes effect the next time the contest is opened."
+msgstr "Soubor historie hovorů, který je třeba číst, když Using CALL HISTORY FILE je TRUE: holý název souboru, hledaný ve složce CallHistorisFiles, nebo celá cesta. Zanechat prázdný použít vlastní výchozí soubor soutěže, který Preferences zobrazuje v prázdné krabici. Soubor se čte při otevření soutěže, takže změna nabude účinnosti při příštím otevření soutěže."
+
+#. Config command: CALL WINDOW SHOW ALL SPOTS   (default: FALSE)
+msgctxt "TC_HELP_CALL_WINDOW_SHOW_ALL_SPOTS"
+msgid "When this parameter is TRUE and you tune in S&P mode, every callsign TR4W knows appears in the call window, even when it does not appear on the band map. For example, with BAND MAP DUPE DISPLAY set to FALSE, dupes stay off the band map but still appear in the call window. (Not yet implemented.)"
+msgstr "Pokud je tento parametr TRUE a naladíte v režimu S & P, každý volací znak TR4W se objeví v okně volání, i když se neobjeví na mapě kapely. Například s BAND MAP DUPE DISPLAY nastaveno na FALSE, dupes zůstat mimo mapu kapely, ale stále se objeví v okně volání. (Dosud neprovedeno.)"
+
+#. Config command: CATEGORY-STATION
+msgctxt "TC_HELP_CATEGORY_STATION"
+msgid "The Cabrillo CATEGORY-STATION for this contest (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). Saved with the contest; a contest whose sponsor names its own list offers only those values."
+msgstr "Cabrillo CATEGORY-STATION pro tuto soutěž (FIXED, MOBILE, PORTUGLE, ROVER, EXPEDITION, School...). Závod, jehož sponzorem je vlastní seznam, nabízí pouze tyto hodnoty."
+
+#. Config command: CLUSTER SPOT COMMENT MULTIPLIER   (default: FALSE)
+msgctxt "TC_HELP_CLUSTER_SPOT_COMMENT_MULTIPLIER"
+msgid "When this parameter is set to TRUE and the contest looks its domestic multiplier (section or state) up in its domestic file, a DX cluster spot whose comment names a section or state is shown as a needed multiplier when that one is needed. The first UPPER CASE word of the comment that the contest's domestic file knows is used; a section the cluster appends with a plus sign (+NC) is used only when no earlier word qualifies. A section already known for the station from the call history or from a contact in the log overrules the comment. Beacon spots (NCDXF) are ignored. Not every spot has one, and the cluster's section can be where a station lives rather than where it is operating, so leave this FALSE unless you want it."
+msgstr "Když je tento parametr nastaven na TRUE a soutěž se dívá na svůj domácí multiplikátor (sekce nebo stát) ve svém domácím souboru, DX cluster spot, jehož komentář pojmenuje sekci nebo stav je zobrazen jako potřebný multiplikátor, pokud je to nutné. První UPPER CASE slovo komentáře, že domácí soubor soutěže ví, se používá; část cluster doplňuje s plus znaménko (+ NC) se používá pouze tehdy, když žádné dřívější slovo kvalifikuje. Sekce již známá pro stanici z historie volání nebo z kontaktu v záznamu převládne komentář. Beacon skvrny (NCDXF) jsou ignorovány. Ne každé místo má jedno, a sekce clusteru může být tam, kde stanice žije, spíše než tam, kde pracuje, takže nechte tohle. FALSE Pokud to nechceš."
+
+#. Config command: DISPLAY LANGUAGE
+msgctxt "TC_HELP_DISPLAY_LANGUAGE"
+msgid "The language TR4W's menus, windows, messages and these tooltips are shown in. Blank follows the operating system's language. The language is chosen once at startup, so a change takes effect the next time TR4W starts; a --lang switch on the command line overrides this setting."
+msgstr "Menu jazyka TR4W, okna, zprávy a tyto tipy jsou uvedeny v. Prázdné následuje jazyk operačního systému. Jazyk je vybrán jednou při spuštění, takže změna nabude účinnosti při příštím spuštění TR4W; --lang přepínač na příkazovém řádku překoná toto nastavení."
+
+#. Config command: EXTERNAL LOGGER EDITOR ACTIVE
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_ACTIVE"
+msgid "When ticked, each newly logged QSO is also sent to this logger. Each active logger sends on its own. For a logger that was running when TR4W started, a change takes effect when it is saved, with no restart; a logger added since then, or one whose key, host or logbook changed, applies after TR4W is restarted."
+msgstr "Při zaškrtnutí je každý nově zaznamenaný QSO také odeslán do tohoto záznamníku. Každý aktivní záznamník posílá sám. Pro záznamník, který byl spuštěn při spuštění TR4W, změna nabude účinku, když je uložen, bez restartu; záznamník přidán od té doby, nebo ten, jehož klíč, hostitel nebo lodní deník změnil, platí po obnovení TR4W."
+
+#. Config command: EXTERNAL LOGGER EDITOR NAME
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_NAME"
+msgid "The name this logger is listed under. It is required and must differ from every other external logger's name (capitals do not count as a difference)."
+msgstr "Název tohoto záznamníku je uveden pod. Je vyžadována a musí se lišit od všech ostatních externích loggerů jméno (hlavní města se nepočítají jako rozdíl)."
+
+#. Config command: EXTERNAL LOGGER EDITOR PROVIDER
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_PROVIDER"
+msgid "The logbook program or online service this logger sends QSOs to. The fields below change to the ones that provider needs. Changing the provider keeps the host and port, clears any key or password, and moves a port still at the old provider's default to the new provider's default."
+msgstr "Logaritmický program nebo on-line služba tento logger posílá QSP. Níže uvedená pole se mění na ta, která poskytovatel potřebuje. Změna poskytovatele udržuje hostitele a port, vymaže jakýkoliv klíč nebo heslo, a přesune port stále na staré poskytovatele výchozí do nového poskytovatele výchozí."
+
+#. Config command: HAMSCORE VERIFY SERVER   (default: TRUE)
+msgctxt "TC_HELP_HAMSCORE_VERIFY_SERVER"
+msgid "When TRUE, TR4W checks the HamScore server's certificate before uploading, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send, including your HamScore password. It is read when the uploader starts, at TR4W startup."
+msgstr "Kdy TRUE, TR4W kontroluje certifikát HamScore serveru před nahráním, pokud je celoprogramová kontrola certifikátu v nastavení / tr4w.json zapnuta (je ve výchozím nastavení). Vymažte jej pouze pro server, jehož certifikát nelze zkontrolovat: totožnost serveru není pak kontrolována a kdokoliv mezi vámi a může číst, co posíláte, včetně hesla HamScore. Čte se při spuštění nahrávače, při spuštění TR4W."
+
+#. Config command: KEYER EDITOR NAME
+msgctxt "TC_HELP_KEYER_EDITOR_NAME"
+msgid "The name this keying device is listed under in the keyer library and in a station profile's CW output choices. It is required. A profile refers to the keyer by a hidden identity, so renaming it is safe."
+msgstr "Název tohoto keyingového zařízení je uveden pod v keyerské knihovně a ve výkonech CW profilu stanice. Je to nutné. Profil odkazuje na keyera pomocí skryté identity, takže přejmenování je bezpečné."
+
+#. Config command: KEYER EDITOR PORT
+msgctxt "TC_HELP_KEYER_EDITOR_PORT"
+msgid "The serial port the keyer is connected to. A keyer cannot be saved without one."
+msgstr "Sériový port, ke kterému je keyer připojen. Keyer nemůže být bez něj zachráněn."
+
+#. Config command: KEYER EDITOR TYPE
+msgctxt "TC_HELP_KEYER_EDITOR_TYPE"
+msgid "What kind of device this is: a WinKeyer, or a YCCC SO2R+ box. The WinKeyer settings below apply only to a WinKeyer and are greyed for any other type."
+msgstr "Co je to za zařízení: WinKeyer, nebo YCCC SO2R + box. Nastavení WinKeyer níže platí pouze pro WinKeyer a jsou šedé pro jakýkoli jiný typ."
+
+#. Config command: NETWORK AUTO CONNECT   (default: FALSE)
+msgctxt "TC_HELP_NETWORK_AUTO_CONNECT"
+msgid "When TRUE, TR4W connects to the multi-op server when it starts, provided COMPUTER ID is set to a letter A to Z. When FALSE, connect with Connect on the Net menu. Leave it FALSE on a single-operator station."
+msgstr "Kdy TRUE, TR4W připojuje k multi- op serveru při spuštění, za předpokladu COMPUTER ID je nastaven na písmeno A až Z. Kdy FALSE, připojit se s Connect v nabídce Net. Nech to být. FALSE na jediné stanici obsluhy."
+
+#. Config command: NETWORK HTTP TRANSPORT   (default: generic)
+msgctxt "TC_HELP_NETWORK_HTTP_TRANSPORT"
+msgid "Chooses what carries TR4W's internet requests: the downloads (country file, TRMASTER, call history, POTA parks, version check) and the uploads (the external logging services, HamScore, contest scores, SuperCheckPartial). generic is TR4W's own connection code, which checks server certificates against the cacert.pem shipped with the program. auto and platform use the operating system's own connection code where this platform has one (Windows only, today: WinHTTP). It trusts the Windows certificate store, follows the system proxy settings and needs no cacert.pem. Where there is none, both use generic, and platform says so in the log. A change applies from the next request, with no restart. A request that fails is never repeated on the other transport. The Windows transport is new: leave this on generic unless you were asked to try it."
+msgstr "Výběr, co nese požadavky TR4W na internet: stahování (soubor země, TRMASTER, historie volání, POTA parky, kontrola verzí) a nahrávání (externí loging služby, HamScore, soutěžní skóre, SuperCheckPartial). generický je vlastní propojovací kód TR4W, který kontroluje certifikáty serveru proti cacertu. Pem poslal program. auto a platforma používají vlastní propojovací kód operačního systému, kde tato platforma má jeden (pouze Windows, dnes: WinHTTP). Důvěřuje obchodu s certifikáty Windows, sleduje nastavení systémového proxy a nepotřebuje cacert.pem. Tam, kde žádný není, jak používat generické, a platforma říká, že v deníku. Změna platí od dalšího požadavku, bez restartu. Požadavek, který selže, se nikdy nezopakuje na druhé přepravě. Transport Windows je nový: ponechte to na generickém, pokud jste nebyli požádáni, abyste to vyzkoušeli."
+
+#. Config command: NETWORK SHARE SPOTS   (default: TRUE)
+msgctxt "TC_HELP_NETWORK_SHARE_SPOTS"
+msgid "When TRUE, this station sends the DX spots its own cluster connection receives to the other stations on the multi-op network, and accepts the spots they send. When FALSE it does neither. Each station has its own setting, and a change takes effect at once."
+msgstr "Kdy TRUE, Tato stanice odesílá DX skvrny své vlastní cluster připojení přijímá do ostatních stanic v síti multi- op, a přijímá místa, které posílají. Kdy FALSE To ani jedno. Každá stanice má své vlastní nastavení, a změna nabývá účinnosti najednou."
+
+#. Config command: OPERATING STANDARD EDIT KEYS   (default: FALSE)
+msgctxt "TC_HELP_OPERATING_STANDARD_EDIT_KEYS"
+msgid "When TRUE, Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A copy, paste, cut and select all in a text box or drop-down list of any window other than the main window, instead of running the TR4W command assigned to that key. The main window always keeps TR4W's commands."
+msgstr "Kdy TRUE, Ctrl + C, Ctrl + V, Ctrl + X a Ctrl + Kopie, pasta, střih a vyberte vše v textovém okně nebo rozbalovacím seznamu jakéhokoliv jiného okna, než je hlavní okno, místo spuštění příkazu TR4W, který byl k tomuto klíči přidělen. Hlavní okno vždy udržuje příkazy TR4W."
+
+#. Config command: PREFERENCES CLUSTER LOGIN
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_LOGIN"
+msgid "The callsign to log in to the cluster with. Leave it blank to log in with your station callsign, which is looked up each time TR4W connects."
+msgstr "Volací znak k přihlášení do clusteru. Zanechte to prázdné pro přihlášení k vaší stanici volací znak, který je vyhledal pokaždé, když TR4W připojí."
+
+#. Config command: PREFERENCES CLUSTER NAME
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_NAME"
+msgid "The name this cluster is listed under. Clearing the box keeps the old name. Renaming the cluster in use keeps it in use."
+msgstr "Název tohoto seskupení je uveden pod. Očištění krabice si nechává staré jméno. Přejmenování používaného clusteru ji udržuje v provozu."
+
+#. Config command: PREFERENCES CLUSTER PASSWORD
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_PASSWORD"
+msgid "The password, for a cluster that asks for one. Spaces at either end are kept. It is stored in the operating system's credential store (Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux), not in the settings file; where no store can be reached it is kept for this session only."
+msgstr "Heslo, pro shluk, který si ho žádá. Prostory na obou koncích jsou zachovány. Je uložen v úvěrovém obchodě operačního systému (Windows Credential Manager, MacOS Keychain, nebo Tajná služba na Linuxu), nikoli v souboru nastavení; kde není k dispozici žádný obchod, je uchováván pouze pro tuto relaci."
+
+#. Config command: PREFERENCES CONNECT RADIOS AT STARTUP   (default: TRUE)
+msgctxt "TC_HELP_PREFERENCES_CONNECT_RADIOS_AT_STARTUP"
+msgid "Whether TR4W connects this profile's radios when it starts. Activating the profile and Reset Radio Ports always connect, whatever this says."
+msgstr "Zda TR4W při startu spojuje rádia tohoto profilu. Aktivuji profil a Reset Radio Ports se vždy spojí, ať je to cokoliv."
+
+#. Config command: PREFERENCES CW OUTPUT 1
+msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_1"
+msgid "How CW is sent for Radio 1: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
+msgstr "Jak se CW odesílá pro Rádio 1: žádné, CW od CAT (nabízené pouze tehdy, když to rádio zvládne), vlastní keyerský port (nabízené, když má rádio jednu sadu) nebo zařízení z keyerské knihovny."
+
+#. Config command: PREFERENCES CW OUTPUT 2
+msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_2"
+msgid "How CW is sent for Radio 2: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
+msgstr "Jak se CW odesílá pro Rádio 2: žádné, CW od CAT (nabízeno pouze tehdy, když to rádio zvládne), vlastní keyerský port (nabízeno, když má rádio jednu sadu), nebo zařízení z keyerské knihovny."
+
+#. Config command: PREFERENCES PROFILE
+msgctxt "TC_HELP_PREFERENCES_PROFILE"
+msgid "The station profile shown below for editing. A profile names the radios in the two slots and how each one sends CW. Choosing one here does not switch to it: the Activate this profile now button does."
+msgstr "Profil stanice uvedený níže pro editaci. Profil pojmenuje rádia v obou sloty a jak každý z nich vysílá CW. Volba zde nepřepíná na něj: tlačítko Aktivovat tento profil nyní dělá."
+
+#. Config command: PREFERENCES RADIO 1
+msgctxt "TC_HELP_PREFERENCES_RADIO_1"
+msgid "The radio from the radio library that this profile uses as Radio 1. A radio already in the Radio 2 slot is marked as in use there and cannot be chosen for both slots."
+msgstr "Rádio z radiové knihovny, které tento profil používá jako Rádio 1. Rádio již ve slotu Radio 2 je označeno jako zde používané a nemůže být vybráno pro obě sloty."
+
+#. Config command: PREFERENCES RADIO 2
+msgctxt "TC_HELP_PREFERENCES_RADIO_2"
+msgid "The radio from the radio library that this profile uses as Radio 2. A radio already in the Radio 1 slot is marked as in use there and cannot be chosen for both slots."
+msgstr "Rádio z radiové knihovny, které tento profil používá jako Rádio 2. Rádio již ve slotu Radio 1 je označeno tak, jak se tam používá a nemůže být vybráno pro obě sloty."
+
+#. Config command: PREFERENCES ROTATOR BANDS
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_BANDS"
+msgid "The bands this rotator turns for, separated by spaces, for example 20 15 10. Blank means every band, which is what a station with one antenna wants. Only the rotator in use turns, and only on a band it lists."
+msgstr "Pásky, pro které rotátor otáčí, oddělené mezerami, například 20 15 10. Prázdné znamená každá kapela, což je to, co stanice s jednou anténou chce. Pouze rotátor, který se používá, se otáčí, a pouze na kapele, která je na seznamu."
+
+#. Config command: PREFERENCES ROTATOR BAUD RATE
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_BAUD_RATE"
+msgid "The serial speed for the rotator controller. Blank or 0 uses the default for the chosen type, which is shown greyed in the box."
+msgstr "Sériová rychlost ovladače rotátoru. Prázdné nebo 0 používá výchozí hodnotu pro zvolený typ, který je zobrazen šedě v rámečku."
+
+#. Config command: PREFERENCES ROTATOR IP ADDRESS
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_IP_ADDRESS"
+msgid "For a network rotator (PstRotator), the IP address of the computer it runs on. Blank uses the PSTROTATOR IP ADDRESS setting, 127.0.0.1 unless changed."
+msgstr "Pro síťový rotátor (PstRotator), IP adresa počítače, který běží na. Prázdné používá PSTROTATOR IP ADDRESS nastavení, 127.0.0.1, pokud se nemění."
+
+#. Config command: PREFERENCES ROTATOR NAME
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_NAME"
+msgid "The name this rotator is listed under. Clearing the box keeps the old name."
+msgstr "Název tohoto rotátoru je uveden pod. Očištění krabice si nechává staré jméno."
+
+#. Config command: PREFERENCES ROTATOR PORT
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_PORT"
+msgid "The serial port the rotator controller is connected to. Used only by a type that has a serial port; greyed for a network rotator."
+msgstr "Sériový port, ke kterému je připojen ovladač rotátoru. Používá se pouze pro typ, který má sériový port; šedý pro síťový rotátor."
+
+#. Config command: PREFERENCES ROTATOR TYPE
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_TYPE"
+msgid "The rotator controller and the protocol TR4W speaks to it. PstRotator is reached over UDP; every other type uses a serial port."
+msgstr "Mluví k ní ovladač rotátoru a protokol TR4W. PstRotator je dosažen přes UDP; každý jiný typ používá sériový port."
+
+#. Config command: PREFERENCES ROTATOR UDP PORT
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_UDP_PORT"
+msgid "For a network rotator (PstRotator), the UDP port it listens on. Blank uses the PSTROTATOR UDP PORT setting, 12000 unless changed."
+msgstr "Pro síťový rotátor (PstRotator), UDP port naslouchá. Prázdné používá PSTROTATOR UDP PORT nastavení, 12000, pokud se nemění."
+
+#. Config command: PREFERENCES SO2R ENABLED
+msgctxt "TC_HELP_PREFERENCES_SO2R_ENABLED"
+msgid "Marks this profile as a two-radio (SO2R) station. The flag is saved with the profile, but in this build nothing else reads it, so ticking or clearing it changes no behaviour."
+msgstr "Označuje tento profil jako dvourádiovou (SO2R) stanici. Vlajka je uložena s profilem, ale v této konstrukci nic jiného nečte, takže tikání nebo čištění to nemění žádné chování."
+
+#. Config command: PREFERENCES TCI LISTEN ON NETWORK   (default: FALSE)
+msgctxt "TC_HELP_PREFERENCES_TCI_LISTEN_ON_NETWORK"
+msgid "Lets other computers connect to the TCI server, not just this one. The server has no password: anything that can reach the port can move your VFO and key your transmitter. A change made while the server is running applies the next time it starts."
+msgstr "Umožní jiným počítačům připojit se k serveru TCI, nejen k tomuto. Server nemá žádné heslo: cokoliv, co se dostane na port, může přesunout VFO a aktivovat vysílač. Změna provedená při spuštění serveru platí při dalším spuštění."
+
+#. Config command: PREFERENCES TCI PORT   (default: 50001)
+msgctxt "TC_HELP_PREFERENCES_TCI_PORT"
+msgid "The TCP port the TCI server listens on. Blank uses the default, 50001; a value that is not 1 to 65535 is refused and the previous port kept. A change made while the server is running applies the next time it starts."
+msgstr "TCP port na serveru TCI. Prázdné používá default, 50001; hodnota, která není 1 až 65535 je odmítnuta a předchozí port zachován. Změna provedená při spuštění serveru platí při dalším spuštění."
+
+#. Config command: PREFERENCES TCI SERVER   (default: FALSE)
+msgctxt "TC_HELP_PREFERENCES_TCI_SERVER"
+msgid "Runs a TCI server so other programs (WSJT-X, JTDX, a skimmer) can control the radio TR4W has open, even one with no TCI of its own; Radio 1 is trx 0 and Radio 2 is trx 1. Saving starts or stops it. It listens only on this computer unless network listening is ticked."
+msgstr "Provozuje TCI server, takže ostatní programy (WSJT-X, JTDX, skimmer) mohou ovládat rádio TR4W má otevřeno, i jeden bez TCI vlastní; Radio 1 je trx 0 a Radio 2 je trx 1. Zachraňování to začíná nebo zastaví. Poslouchá pouze na tomto počítači, pokud není zaškrtnuto poslouchání sítě."
+
+#. Config command: PREFERENCES UDP BROADCAST ENABLED   (default: TRUE)
+msgctxt "TC_HELP_PREFERENCES_UDP_BROADCAST_ENABLED"
+msgid "The master switch for UDP broadcasting. Cleared, nothing is sent to any destination, and the destinations are kept as they are."
+msgstr "Hlavní vypínač pro UDP vysílání. Vyloučeno, nic není posláno do žádného místa určení, a místa určení jsou držena tak, jak jsou."
+
+#. Config command: PTT TX INHIBIT BEEP   (default: FALSE)
+msgctxt "TC_HELP_PTT_TX_INHIBIT_BEEP"
+msgid "When TRUE, TR4W beeps once when you key up a radio that reports it will not transmit (for example a K4 in TX test mode). The PTT indicator and the status line show this whatever the setting. BEEP ENABLE must also be TRUE for the beep to sound."
+msgstr "Kdy TRUE, TR4W pípá jednou, když zašifrujete rádio, které hlásí, že nebude vysílat (například K4 v TX zkušebním režimu). Indikátor PTT a stavová čára ukazují toto bez ohledu na nastavení. BEEP ENABLE musí být také TRUE na pípnutí."
+
+#. Config command: RADIO EDITOR AUTO INFO LEVEL
+msgctxt "TC_HELP_RADIO_EDITOR_AUTO_INFO_LEVEL"
+msgid "The Elecraft auto-information level (the AI command): how much the radio reports by itself when something changes, instead of waiting to be asked. Leave it empty to let TR4W choose, which is 2; 0 turns it off, and the radio is then asked for everything, which is slower. Shown only for the K2, K3, KX3, and the K4 on a serial connection (on a network connection the K4 is always set to AI5 and this field is ignored). Saving a typed value asks you to confirm it."
+msgstr "Autoinformační úroveň Voliče (příkaz AI): jak moc se rádio hlásí samo, když se něco změní, místo aby čekalo, až bude požádáno. Nechte to prázdné, ať si TR4W vybere, což je 2; 0 vypne, a rádio je pak požádáno o všechno, což je pomalejší. Zobrazeno pouze pro K2, K3, KX3 a K4 na sériovém připojení (na síťovém připojení je K4 vždy nastaveno na AI5 a toto pole je ignorováno). Uložení zadané hodnoty vás žádá, abyste to potvrdil."
+
+#. Config command: RADIO EDITOR BAUD RATE
+msgctxt "TC_HELP_RADIO_EDITOR_BAUD_RATE"
+msgid "The speed of the CAT serial port. It must match the setting in the radio's own menu. Choosing a radio type fills in that model's usual speed when the box is empty, and an empty box uses the model's default. The keyer output port is opened at this speed too."
+msgstr "Rychlost sériového portu CAT. Musí odpovídat nastavení v rozhlase. Volba rádiového typu vyplní obvyklou rychlost tohoto modelu, když je krabice prázdná, a prázdná krabice použije výchozí hodnotu modelu. Výstupní port keyeru se otevírá také touto rychlostí."
+
+#. Config command: RADIO EDITOR CAT DTR   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_CAT_DTR"
+msgid "The DTR line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
+msgstr "DTR linka rádiového CAT sériového portu. ON drží linku uplatněnou, zatímco TR4W má otevřený port, který některé propojovací kabely potřebují; každá jiná volba (NONE, OFF, CW, PTT) ji nechává neaplikovanou. To není CW nebo PTT keying: pro toto použití Keyer RTS linka a Keyer DTR linka."
+
+#. Config command: RADIO EDITOR CAT RTS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_CAT_RTS"
+msgid "The RTS line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
+msgstr "RTS linka rádiového CAT sériového portu. ON drží linku uplatněnou, zatímco TR4W má otevřený port, který některé propojovací kabely potřebují; každá jiná volba (NONE, OFF, CW, PTT) ji nechává neaplikovanou. To není CW nebo PTT keying: pro toto použití Keyer RTS linka a Keyer DTR linka."
+
+#. Config command: RADIO EDITOR CIV ADDRESS
+msgctxt "TC_HELP_RADIO_EDITOR_CIV_ADDRESS"
+msgid "The radio's CI-V address, in hexadecimal as the radio's menu and manual show it. Empty uses the model's default address, shown in grey in the box. It must match the address set in the radio. Offered only for radios that have a CI-V address."
+msgstr "Adresa CIV rádia, v hexadecimálním menu rádia a manuálně. Prázdná používá výchozí adresu modelu, která je v krabici zobrazena šedě. Musí odpovídat adrese v rádiu. Nabízeno pouze pro rádia s CI- V adresou."
+
+#. Config command: RADIO EDITOR DATA BITS
+msgctxt "TC_HELP_RADIO_EDITOR_DATA_BITS"
+msgid "The number of data bits on the CAT serial port, 7 or 8. Together with parity and stop bits it is the serial frame, which must match the radio's own setting. Most radios use 8 data bits, no parity and 1 stop bit; choosing the type of a new radio fills in that model's usual frame."
+msgstr "Počet datových bitů na sériovém portu CAT, 7 nebo 8. Spolu s paritou a zastavením bitů je to sériový rám, který musí odpovídat nastavení rádia. Většina rádia používá 8 datových bitů, bez parity a 1 stop bit; výběr typu nového rádia vyplňuje obvyklý rámec tohoto modelu."
+
+#. Config command: RADIO EDITOR DISCOVER
+msgctxt "TC_HELP_RADIO_EDITOR_DISCOVER"
+msgid "Searches the local network for radios of the chosen type and lists those that answer under Found. The search takes a few seconds. Offered only for radio types that announce themselves on the network."
+msgstr "Vyhledává lokální síť pro rádia zvoleného typu a vyjmenovává ty, které odpovídají pod Nalezeno. Hledání zabere pár vteřin. Nabízeno pouze pro rádiové typy, které se ohlásí v síti."
+
+#. Config command: RADIO EDITOR FOUND
+msgctxt "TC_HELP_RADIO_EDITOR_FOUND"
+msgid "The radios Discover found on the network. Choosing one copies its IP address into the IP address box."
+msgstr "Rádia se našla v síti. Výběr jedné kopie své IP adresy do políčka IP adresy."
+
+#. Config command: RADIO EDITOR FREQUENCY OFFSET
+msgctxt "TC_HELP_RADIO_EDITOR_FREQUENCY_OFFSET"
+msgid "For a transverter: the offset in Hz added to every frequency the radio reports and subtracted from every frequency TR4W tells it to tune, so TR4W shows and logs the frequency on the air. Empty or 0 means no transverter. Note: at present a value above 65535 or below 0 is refused when the radio is set up (the log says NOT applied), so a typical VHF or UHF transverter offset does not take effect yet."
+msgstr "Pro převodník: posun v Hz přidaný na každou frekvenci rádiové hlásiče a odečítané od každé frekvence TR4W mu říká, aby naladil, takže TR4W zobrazuje a zaznamenává frekvenci ve vzduchu. Prázdný nebo 0 znamená žádný převodník. Poznámka: v současné době je hodnota vyšší než 65535 nebo nižší než 0 zamítnuta, když je zapnuto rádio (log říká NEUPLATŇUJE), takže typický VHF nebo UHF převodník ještě nepůsobí."
+
+#. Config command: RADIO EDITOR FT1000MP CW REVERSE
+msgctxt "TC_HELP_RADIO_EDITOR_FT1000MP_CW_REVERSE"
+msgid "When ticked, TR4W asks the radio for reverse CW (CW-R) instead of CW whenever it sets the radio to CW. Offered only for the Yaesu FT-1000MP."
+msgstr "Při zaškrtnutí se TR4W ptá rádia pro reverzní CW (CW-R) místo CW, kdykoli nastaví rádio na CW. Nabízeno pouze pro Yesku FT- 1000MP."
+
+#. Config command: RADIO EDITOR HAMLIB MODEL ID
+msgctxt "TC_HELP_RADIO_EDITOR_HAMLIB_MODEL_ID"
+msgid "The HamLib model number (rig_model) used when the radio is driven through HamLib. Empty uses the model's registered number, shown in grey in the box. Offered only when the radio is driven through HamLib, and emptied when the radio type changes, because a number belongs to one model."
+msgstr "Číslo modelu HamLib (fig _ model) použité při jízdě rádiem přes HamLib. Prázdná používá registrované číslo modelu, uvedené v šedé krabici. Nabízeno pouze tehdy, když je rádio řízeno přes HamLib, a vyprázdněno, když se radiový typ změní, protože číslo patří k jednomu modelu."
+
+#. Config command: RADIO EDITOR ICOM DATA MODE ID
+msgctxt "TC_HELP_RADIO_EDITOR_ICOM_DATA_MODE_ID"
+msgid "Which Icom data mode TR4W selects when it puts the radio into a data mode: 1, 2 or 3 for D1, D2 or D3 (for example USB-D1). Empty means 1. Offered for Icom radios only."
+msgstr "Který datový režim Icom TR4W vybere, když umístí rádio do datového režimu: 1, 2 nebo 3 pro D1, D2 nebo D3 (např. USB-D1). Prázdná znamená 1. Nabízeno pouze pro Icom rádia."
+
+#. Config command: RADIO EDITOR ICOM FILTER BYTE
+msgctxt "TC_HELP_RADIO_EDITOR_ICOM_FILTER_BYTE"
+msgid "An Icom filter choice: 1, 2 or 3 for the wide, normal or narrow filter, empty or 0 for none. Offered for Icom radios only. At present nothing in TR4W reads this value, so it has no effect: the code that used it is commented out."
+msgstr "Volba filtru Icom: 1, 2 nebo 3 pro široký, normální nebo úzký filtr, prázdný nebo 0 pro žádný. Nabízeno pouze pro vysílačky Icom. V současné době nic v TR4W čte tuto hodnotu, takže to nemá žádný účinek: kód, který používá je komentován ven."
+
+#. Config command: RADIO EDITOR IP ADDRESS
+msgctxt "TC_HELP_RADIO_EDITOR_IP_ADDRESS"
+msgid "The IP address of a radio connected over the network (the Network tab). The radio's manual or network menu shows its address; where Discover is offered, it can find the radio for you."
+msgstr "IP adresa rádia připojeného po síti (záložka Síť). Příručka rádia nebo síťové menu zobrazuje svou adresu; kde je nabízena Discover, může vám najít rádio."
+
+#. Config command: RADIO EDITOR IP PORT
+msgctxt "TC_HELP_RADIO_EDITOR_IP_PORT"
+msgid "The network port the radio listens on. It is called IP port because the radios differ: the Icom network protocol uses UDP, while Elecraft and Flex use TCP. Choosing a radio type fills in that model's usual port when the box is empty, and an empty box uses the model's default."
+msgstr "Síťový port, který rádio poslouchá. Nazývá se IP port, protože se rádia liší: protokol sítě Icom používá UDP, zatímco Electraft a Flex používají TCP. Výběr typu rádia vyplní obvyklý port tohoto modelu, když je krabice prázdná, a prázdný box použije výchozí hodnotu modelu."
+
+#. Config command: RADIO EDITOR KEYER DTR   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_DTR"
+msgid "What the DTR line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention DTR is used for CW. If both lines are set to PTT, DTR switches it. This is the keyer port, not the CAT port (see CAT DTR)."
+msgstr "Co DTR linka keyerského výstupního portu dělá: CW klávesy CW, PTT přepíná vysílač, ON a OFF drží linku zapnutou nebo vypnutou a NONE ji nechává samotnou. Podle úmluvy se DTR používá pro CW. Pokud jsou obě linky nastaveny na PTT, DTR jej přepne. Toto je keyerský port, ne CAT port (viz CAT DTR)."
+
+#. Config command: RADIO EDITOR KEYER OUTPUT PORT   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_OUTPUT_PORT"
+msgid "The serial port TR4W keys CW and PTT on for this radio, through the Keyer RTS line and Keyer DTR line choices. It is not used when the station profile sends CW by CAT, sends no CW, or uses a keyer device such as a WinKeyer, which opens its own port."
+msgstr "Sériový port TR4W kláves CW a PTT pro toto rádio, prostřednictvím řady Keyer RTS a volby řady Keyer DTR. Nepoužije se, pokud profil stanice vysílá CW podle CAT, neposílá žádné CW nebo používá keyerské zařízení, jako je WinKeyer, které otevírá svůj vlastní port."
+
+#. Config command: RADIO EDITOR KEYER RTS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_RTS"
+msgid "What the RTS line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention RTS is used for PTT. If both lines are set to CW, RTS keys. This is the keyer port, not the CAT port (see CAT RTS)."
+msgstr "Co dělá řada RTS výstupního portu: CW klávesy CW, PTT přepíná vysílač, ON a OFF drží linku zapnutou nebo vypnutou a NONE ji nechává samotnou. Konventem RTS se používá pro PTT. Pokud jsou obě linky nastaveny na CW, RTS klíče. Toto je keyerský port, ne CAT port (viz CAT RTS)."
+
+#. Config command: RADIO EDITOR KEYER STOP BITS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_STOP_BITS"
+msgid "The stop bits used when the keyer output port is opened: 2 opens it with 2 stop bits, while 1 or (none) opens it with 1. It rarely matters; try 2 only if keying through this port misbehaves. It is separate from the CAT port's Stop bits on the Serial tab."
+msgstr "Zastavovací bity používané při otevření výstupního portu keyeru: 2 otevřou s 2 stopbity, zatímco 1 nebo (žádný) otevře s 1. To málokdy záleží; zkuste 2 pouze v případě, že hrabání přes tento port se chová špatně. Je oddělen od položek CAT port Stop na záložce Serial."
+
+#. Config command: RADIO EDITOR NAME
+msgctxt "TC_HELP_RADIO_EDITOR_NAME"
+msgid "The name this radio is listed under in the radio library and in the station profile's radio choices. It is required and must differ from every other radio's name. Renaming is safe: a profile refers to the radio by a hidden identity, not by this name."
+msgstr "Název tohoto rádia je uveden pod v radiové knihovně a v rádiovém profilu stanice volby. Je vyžadována a musí se lišit od jména každého jiného rádia. Přejmenování je bezpečné: profil odkazuje na rádio skrytou identitou, ne tímto jménem."
+
+#. Config command: RADIO EDITOR PARITY
+msgctxt "TC_HELP_RADIO_EDITOR_PARITY"
+msgid "The parity of the CAT serial port: None, Odd or Even. Part of the serial frame with data bits and stop bits, and it must match the radio's own setting. Almost every radio uses None."
+msgstr "Parita sériového portu CAT: Žádné, podivné nebo dokonce. Část sériového rámečku s datovými bity a přerušovanými bity, a musí odpovídat vlastnímu nastavení rádia. Téměř každé rádio používá žádné."
+
+#. Config command: RADIO EDITOR PASSWORD
+msgctxt "TC_HELP_RADIO_EDITOR_PASSWORD"
+msgid "The password for a network radio that asks for a login, used with User name. The eye button beside the box shows or hides what you typed. The box is greyed and emptied for a radio type that needs no login."
+msgstr "Heslo pro síťové rádio, které žádá o přihlášení s uživatelským jménem. Oční tlačítko vedle krabice ukazuje nebo skrývá, co jste napsal. Krabice je šedá a vyprázdněná pro radiový typ, který nepotřebuje přihlášení."
+
+#. Config command: RADIO EDITOR POLL THIS RADIO   (default: TRUE)
+msgctxt "TC_HELP_RADIO_EDITOR_POLL_THIS_RADIO"
+msgid "When ticked, TR4W keeps reading the radio's frequency and mode, at the Frequency Poll Rate. When cleared, no polling is started for this radio, so TR4W does not follow its frequency, band or mode."
+msgstr "Když zaškrtnuto, TR4W stále čte frekvenci a režim rádia, na frekvenci Poll. Po uvolnění není pro toto rádio zahájeno žádné hlasování, takže TR4W nesleduje svou frekvenci, pásmo ani režim."
+
+#. Config command: RADIO EDITOR PORT   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_PORT"
+msgid "The serial port the radio's CAT (control) cable is connected to. A port marked (not present) is the port this radio is set to but which is not plugged in right now; it is kept unless you choose another."
+msgstr "K sériovému portu je připojen radiový kabel CAT (control). Port označený (není přítomen) je port, na který je toto rádio nastaveno, ale který není nyní připojen; zůstává, pokud si nevyberete jiný."
+
+#. Config command: RADIO EDITOR STARTUP COMMAND
+msgctxt "TC_HELP_RADIO_EDITOR_STARTUP_COMMAND"
+msgid "Text sent to the radio exactly as typed (up to 50 characters), once each time the link to the radio comes up, after a short wait for the radio to settle; it is sent again after the radio is power-cycled. Use it for a radio setting you always want. On an Icom radio it is not sent: a CI-V frame must begin with the bytes FE FE and end with FD, which typed text is not, and the log says why."
+msgstr "Text odeslaný do rádia přesně jako napsaný (až 50 znaků), jednou pokaždé, když se objeví odkaz do rádia, po krátkém čekání, než se rádio usadí; je zaslán znovu poté, co je rádio zapnuto. Používej to pro rádio, které vždycky chceš. Na Icom rádiu není odeslán: CI-V rámec musí začít s bytes FE FE a konec s FD, který zadaný text není, a log říká proč."
+
+#. Config command: RADIO EDITOR STOP BITS
+msgctxt "TC_HELP_RADIO_EDITOR_STOP_BITS"
+msgid "The number of stop bits on the CAT serial port, 1 or 2. Part of the serial frame with data bits and parity, and it must match the radio's own setting. This is the CAT port; the keyer output port has its own Stop bits choice below the tabs."
+msgstr "Počet stop bitů na sériovém portu CAT, 1 nebo 2. Část sériového rámečku s datovými bity a paritou, a musí odpovídat nastavení rádia. Toto je CAT port; keyerský výstupní port má vlastní možnost stop bitů pod záložky."
+
+#. Config command: RADIO EDITOR TYPE
+msgctxt "TC_HELP_RADIO_EDITOR_TYPE"
+msgid "The radio model. It chooses the driver TR4W uses to talk to the radio, fills in that model's usual baud rate, serial frame and network port where those are empty, and decides which tabs and fields on this form apply. It is required."
+msgstr "Rádiový model. Vybere si řidiče TR4W pro komunikaci s rádiem, vyplní obvyklou rychlost modelu, sériový rám a síťový port, kde jsou prázdné, a rozhodne, které karty a pole na tomto formuláři platí. Je to nutné."
+
+#. Config command: RADIO EDITOR USER NAME
+msgctxt "TC_HELP_RADIO_EDITOR_USER_NAME"
+msgid "The user name for a network radio that asks for a login, such as the network Icom radios and the Kenwood LAN radios. The box is greyed and emptied for a radio type that needs no login, such as the Elecraft K4."
+msgstr "Uživatelské jméno pro síťové rádio, které žádá o přihlášení, jako jsou vysílačky Icom a vysílačky Kenwood LAN. Krabice je šedivá a vyprázdněná pro radiový typ, který nepotřebuje přihlášení, jako je například Volič K4."
+
+#. Config command: RADIO EDITOR WIDE CW FILTER
+msgctxt "TC_HELP_RADIO_EDITOR_WIDE_CW_FILTER"
+msgid "Meant to select the wide CW filter on older Yaesu radios (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). At present nothing in TR4W reads this value, so it has no effect."
+msgstr "Zvolte široký CW filtr na starších polohách Yesu (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). V současné době nic v TR4W čte tuto hodnotu, takže nemá žádný účinek."
+
+#. Config command: SCORE VERIFY SERVER   (default: TRUE)
+msgctxt "TC_HELP_SCORE_VERIFY_SERVER"
+msgid "When TRUE, TR4W checks the score board server's certificate when it posts your score to the Posting URL, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send."
+msgstr "Kdy TRUE, TR4W kontroluje certifikát serveru skóre, když umístí vaše skóre na URL vysílání, pokud je v nastaveních / tr4w.json celoprogramová kontrola (je to ve výchozím nastavení). Vymažte jej pouze pro server, jehož certifikát nelze zkontrolovat: totožnost serveru není pak kontrolována a kdokoliv mezi vámi a může číst, co posíláte."
+
+#. Config command: SETUP WIZARD CLUSTER
+msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER"
+msgid "Tick to add a page that sets up a DX cluster connection for spots. The cluster is added to the cluster list and becomes the one TR4W connects to."
+msgstr "Tick přidat stránku, která nastavuje DX cluster připojení pro skvrny. Shluky se přidávají do seznamu shluků a stávají se spojkami TR4W."
+
+#. Config command: SETUP WIZARD CLUSTER PORT
+msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER_PORT"
+msgid "The cluster's TCP port, from 1 to 65535. Leave it blank for the standard port, 23."
+msgstr "TCP port clusteru od1 do65535. Nechte to prázdné pro standardní port,23."
+
+#. Config command: SETUP WIZARD KEYER
+msgctxt "TC_HELP_SETUP_WIZARD_KEYER"
+msgid "Tick to add a page that sets up a WinKeyer. It is added to the keyer library and becomes the CW output for Radio 1, used instead of CW by CAT when both are chosen."
+msgstr "Tick přidat stránku, která nastavuje WinKeyer. Přidává se do keyerovy knihovny a stává se výstupem CW pro Radio 1, který místo CW používá CAT při výběru obou."
+
+#. Config command: SETUP WIZARD LOGGER
+msgctxt "TC_HELP_SETUP_WIZARD_LOGGER"
+msgid "Tick to add a page that sets up an external logger (a logbook program or online service) that each QSO is also sent to. It is added to the external logger list, active if its Active box is ticked."
+msgstr "Tick přidat stránku, která stanoví externí logger (lodní deník programu nebo on-line služby), že každý QSO je také zaslán. Přidává se do externího seznamu loggerů, pokud je zaškrtnuto aktivní políčko."
+
+#. Config command: SETUP WIZARD RADIO
+msgctxt "TC_HELP_SETUP_WIZARD_RADIO"
+msgid "Tick to add a page that sets up a radio for rig control. The radio is added to the radio library and put in Radio 1 of the active station profile; when no profile is active, of one the wizard makes active."
+msgstr "Zaškrtněte pro přidání stránky, která nastavuje rádio pro ovládání plošiny. Rádio je přidáno do radiové knihovny a vloženo do Rádia 1 profilu aktivní stanice; když není aktivní profil, tak průvodce dělá aktivní."
+
+#. Config command: SETUP WIZARD ROTATOR
+msgctxt "TC_HELP_SETUP_WIZARD_ROTATOR"
+msgid "Tick to add a page that sets up an antenna rotator. It is added to the rotator list and becomes the rotator in use."
+msgstr "Tick přidat stránku, která nastavuje anténní rotátor. Je přidán do seznamu rotátorů a stává se rotátorem v provozu."
+
+#. Config command: SETUP WIZARD SHOW DETAILS
+msgctxt "TC_HELP_SETUP_WIZARD_SHOW_DETAILS"
+msgid "Shows the full report of what the wizard did, with the detail lines added to the summary."
+msgstr "Ukazuje kompletní zprávu o tom, co čaroděj udělal, s detaily řádky přidány do shrnutí."
+
+#. Config command: SETUP WIZARD WSJT-X
+msgctxt "TC_HELP_SETUP_WIZARD_WSJT_X"
+msgid "Tick to add a page for the WSJT-X settings. Only the values changed on that page are saved."
+msgstr "Zaškrtněte pro přidání stránky pro nastavení WSJT- X. Uloží se pouze hodnoty změněné na této stránce."
+
+#. Config command: TCI DEBUG   (default: FALSE)
+msgctxt "TC_HELP_TCI_DEBUG"
+msgid "Writes every TCI server command, in both directions, to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
+msgstr "Zapíše každý příkaz TCI serveru v obou směrech na tr4w.log. Řádky jsou napsány na úrovni INFO, takže se objevují pouze v případě, že úroveň záznamu je INFO, DEBUG nebo TRACE. Platí, když zachraňuješ."
+
+#. Config command: TCI MAX TX SECONDS   (default: 180)
+msgctxt "TC_HELP_TCI_MAX_TX_SECONDS"
+msgid "A safety limit in seconds, 0 to 3600. When a TCI client has kept the transmitter keyed this long, TR4W unkeys it, which covers a client that crashed or lost its connection while transmitting. 0 means no limit. A transmission you start yourself is never cut."
+msgstr "Bezpečnostní limit v sekundách, 0 až 3600. Když klient TCI drží vysílač tak dlouhý, TR4W ho odpojí, což pokrývá klienta, který při přenosu havaroval nebo ztratil spojení. 0 znamená žádný limit. Vysílání, které se spustí sám, není nikdy přerušeno."
+
+#. Config command: TELNET CONSOLE LINES   (default: 10000)
+msgctxt "TC_HELP_TELNET_CONSOLE_LINES"
+msgid "The most lines the DX cluster window keeps, from 1000 to 100000. When the window goes over the limit, the oldest lines are removed, down to nine tenths of the limit."
+msgstr "Nejvíce řádků DX cluster okno drží, od 1000 do 100000. Když okno jde přes limit, nejstarší řádky jsou odstraněny, až devět desetin limitu."
+
+#. Config command: TELNET DEBUG   (default: FALSE)
+msgctxt "TC_HELP_TELNET_DEBUG"
+msgid "Writes every line sent to and received from the DX cluster to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
+msgstr "Napíše každý řádek odeslaný a přijatý z DX clusteru na tr4w.log. Řádky jsou napsány na úrovni INFO, takže se objevují pouze v případě, že úroveň záznamu je INFO, DEBUG nebo TRACE. Platí, když zachraňuješ."
+
+#. Config command: TUNE WITH DITS   (default: FALSE)
+msgctxt "TC_HELP_TUNE_WITH_DITS"
+msgid "If this parameter is TRUE, TR4W sends a string of dits at 75 WPM when you press Ctrl-Left-Shift, instead of a solid carrier. (Not yet implemented.)"
+msgstr "Pokud je tento parametr TRUE, TR4W posílá řetězec ditů v 75 WPM, když stisknete Ctrl- Left- Shift, místo pevné nosiče. (Dosud neprovedeno.)"
+
+#. Config command: UDP DESTINATION PORT
+msgctxt "TC_HELP_UDP_DESTINATION_PORT"
+msgid "The UDP port the receiving program listens on, from 1 to 65535. The port belongs to this destination, so a program that wants different kinds of data on different ports needs one destination for each port."
+msgstr "UDP port přijímací program poslouchá, od 1 do 65535. Port patří do této destinace, takže program, který chce různé druhy dat na různých portech potřebuje jednu destinaci pro každý port."
+
+#. Config command: USE CALL HISTORY FILE   (default: FALSE)
+msgctxt "TC_HELP_USE_CALL_HISTORY_FILE"
+msgid "When TRUE, TR4W reads a call history file when the contest is opened and uses it to fill in a station's exchange from the call. The file is CALL HISTORY FILENAME, or the contest's own default when that is blank; a contest that takes nothing from a call history file reads none. A change takes effect the next time the contest is opened."
+msgstr "Kdy TRUE, TR4W čte soubor historie hovorů, když je soutěž otevřena a používá ji k vyplnění ústředny stanice z hovoru. Soubor je CALL HISTORY FILENAME, nebo vlastní výchozí, pokud je to prázdné; soutěž, která nebere nic ze souboru historie hovorů nečte žádné. Změna nabude účinnosti při příštím zahájení soutěže."
 

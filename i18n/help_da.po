@@ -115,14 +115,14 @@ msgstr "Hvis du indtaster en log i hånden, AUTO TIME INCREMENT funktion kan væ
 #. Config command: AUTO-CQ DELAY TIME   (default: 3000)
 #, fuzzy
 msgctxt "TC_HELP_AUTO_CQ_DELAY_TIME"
-msgid ""
-msgstr ""
+msgid "The amount of time to wait between AUTO CQ in milliseconds."
+msgstr "Den tid at vente mellem AUTO CQ i millisekunder."
 
 #. Config command: BAND MAP ACTIVE BAND COLOR   (default: BLUE)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_ACTIVE_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on the active band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Farven på et spot frekvens i bandet kortet, når spot er på det aktive band. Det er en standardfarve, som bandets kort altid har tegnet i, så intet ændrer sig, før du vælger en anden. Sæt det på siden Farver af Indstillinger."
 
 #. Config command: BAND MAP ALL BANDS   (default: FALSE)
 #, fuzzy
@@ -158,13 +158,13 @@ msgstr "Hvornår FALSE, CQ indgange vil ikke vises i bandet kort."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
-msgstr ""
+msgstr "De fleste steder bandets kort vil vise, fra 30 til 1000. Kortet viser det mindste af dette og det tal, der passer i sit vindue, rundet ned til et lige tal og centreret om radioens frekvens, så resizing vinduet re-centrerer kortet på radioen."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
 msgid "The fill colour behind a dupe's D in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Farven bag en dupes D på bandet. Det er en standardfarve, som bandets kort altid har tegnet i, så intet ændrer sig, før du vælger en anden. Sæt det på siden Farver af Indstillinger."
 
 #. Config command: BAND MAP DUPE DISPLAY   (default: TRUE)
 #, fuzzy
@@ -182,7 +182,7 @@ msgstr "Bestemmer om båndkortet vises. Se afsnit 6.13 for mere information. Hvi
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
 msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
-msgstr ""
+msgstr "Værdier: Integrer (Hz), standard 0. Et sted inden for så mange Hz af din interfaced radio frekvens har sin frekvens felt trukket i BAND MAP VFO MARKER COLOR. Ved 0 er kun et sted på præcis radioens frekvens fremhævet. Omridset omkring det sted, der er tættest på radioen, trækkes, uanset hvad dette er indstillet til."
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 #, fuzzy
@@ -200,7 +200,7 @@ msgstr "Båndkortets bredde. Ændr dette i overensstemmelse med BAND MAP SIZE. O
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_MULT_COLOR"
 msgid "The fill colour behind a multiplier's M in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Fyldfarven bag en multiplikators M i bandets kort. Det er en standardfarve, som bandets kort altid har tegnet i, så intet ændrer sig, før du vælger en anden. Sæt det på siden Farver af Indstillinger."
 
 #. Config command: BAND MAP MULTS ONLY   (default: FALSE)
 #, fuzzy
@@ -212,13 +212,13 @@ msgstr "Kun display multiplikatorer."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_OTHER_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on another band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Farven på et spot frekvens i bandet kort, når stedet er på et andet band. Det er en standardfarve, som bandets kort altid har tegnet i, så intet ændrer sig, før du vælger en anden. Sæt det på siden Farver af Indstillinger."
 
 #. Config command: BAND MAP SELECTION COLOR   (default: HIGHLIGHT)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SELECTION_COLOR"
 msgid "The colour of the selected spot in the band map. The default, HIGHLIGHT, is the system highlight colour. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Farven på det valgte sted i bandets kort. Standard, HIGHLIGHT, er systemets højdefarve. Det er en standardfarve, som bandets kort altid har tegnet i, så intet ændrer sig, før du vælger en anden. Sæt det på siden Farver af Indstillinger."
 
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
@@ -242,7 +242,7 @@ msgstr "Du kan vælge det bånd TR4W starter på, hvis der endnu ikke er oprette
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
 msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Farven, der markerer radioens frekvens i bankkortet: frekvensfeltet for hvert sted inden for BAND MAP GUARD BAND af radioen, og en 1-pixel omrids rundt det ene sted nærmest radioen. Heller ikke udvælgelsen, og uden radiofrekvens er intet markeret. Sæt det på siden Farver af Indstillinger."
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 #, fuzzy
@@ -326,13 +326,13 @@ msgstr "Programmet vil rydde dupesheet, når denne parameter er indstillet til T
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_AUTO_SELF_SPOT"
 msgid "Spots your own call on the DX cluster automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while you are running (CQ mode). Only in a contest whose rules allow self-spotting; ignored otherwise. Off by default."
-msgstr ""
+msgstr "Spotter dit eget opkald på DX klyngen automatisk, på intervallet indstillet af CLUSTER SELF SPOT INTERVAL, mens du kører (CQ mode). Kun i en konkurrence, hvis regler tillader selvspisning; ignoreres ellers. Fra som standard."
 
 #. Config command: CLUSTER SELF SPOT INTERVAL   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_SELF_SPOT_INTERVAL"
 msgid "Minutes between automatic self-spots. 10 minutes is the established minimum; review the contest's rules before changing it. The contest's own minimum, where it states one, is never undercut."
-msgstr ""
+msgstr "Minutter mellem automatiske selvpletter. 10 minutter er det fastsatte minimum; gennemgå konkurrencen regler, før du ændrer det. Konkurrencen er selv minimum, hvor det hedder en, er aldrig undercut."
 
 #. Config command: CODE SPEED   (default: 35)
 #, fuzzy
@@ -445,8 +445,8 @@ msgstr "Når denne parameter er sand, vil TR4W kigge i TRMASTER databasen for en
 #. Config command: CW SPEED INCREMENT   (default: 3)
 #, fuzzy
 msgctxt "TC_HELP_CW_SPEED_INCREMENT"
-msgid ""
-msgstr ""
+msgid "When pressing page up or page down, this is the increment the CW increases or decreases respectively."
+msgstr "Når du trykker side op eller side ned, er dette den tilvækst CW øger eller reducerer henholdsvis."
 
 #. Config command: CW TONE   (default: 700)
 #, fuzzy
@@ -517,14 +517,14 @@ msgstr "Denne kommando afgør om DVK er aktiveret."
 #. Config command: DVK PATH   (default: DVK)
 #, fuzzy
 msgctxt "TC_HELP_DVK_PATH"
-msgid ""
-msgstr ""
+msgid "This is the location of the program used to playback DVK messages when using the computer for audio."
+msgstr "Dette er placeringen af det program, der bruges til at afspille DVK-beskeder, når du bruger computeren til lyd."
 
 #. Config command: DVK RECORDER   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_DVK_RECORDER"
-msgid ""
-msgstr ""
+msgid "This is the program that is run to playback DVK messages form the computer."
+msgstr "Dette er det program, der køres til afspilning DVK beskeder danner computeren."
 
 #. Config command: DX MULTIPLIER   (default: NONE)
 #, fuzzy
@@ -589,7 +589,7 @@ msgstr "Værdier: Integrer (WPM). Styrer den hastighed, hvormed Farnsworth-effek
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "AGENT WRITTEN: A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
+msgid "A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "Juster nogle skriftstørrelser ned til '0' og op til '2'. Dette kan påvirke andre vinduer, såsom bandmap (Se Band Kort størrelse indstilling)"
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -601,8 +601,8 @@ msgstr "Denne kommando bestemmer hvad der sker når du trykker på en fodkontakt
 #. Config command: FOOT SWITCH PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_FOOT_SWITCH_PORT"
-msgid ""
-msgstr ""
+msgid "The serial port to which the foot switch is connected."
+msgstr "Den serielle port, som fodkontakten er forbundet til."
 
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 #, fuzzy
@@ -614,7 +614,7 @@ msgstr "Når indstillet til TRUE, denne parameter vil muliggøre frekvenshukomme
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
 msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr ""
+msgstr "Værdier: Indbygger 10 til 1000 (msec). Dette fortæller TR4W, hvor ofte man skal måle riggen for en ny frekvens. Det er indstillet til hver radio, i radio editor, så to radioer kan foretage meningsmålinger på forskellige satser. Værdien er i millisekunder, og de tilladte værdier er i intervallet 10 til 1000."
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy
@@ -625,8 +625,8 @@ msgstr "Værdier: Four- eller six- tegn gitterreference. Denne parameter vil sæ
 #. Config command: HAND LOG MODE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_HAND_LOG_MODE"
-msgid ""
-msgstr ""
+msgid "For entering a paper log after the event. When this parameter is TRUE, the QSO time no longer follows the computer clock; it moves only when you advance it with Alt-1 to Alt-0 (1 to 10 minutes) or through AUTO TIME INCREMENT; when it is FALSE, those increment-time menu items are greyed out. TR4W shows a warning at startup while this is TRUE; restart TR4W after changing it."
+msgstr "Til indtastning af en papirlog efter begivenheden. Når denne parameter er TRUE, QSO tid ikke længere følger computeruret; det bevæger sig kun, når du går videre med Alt-1 til Alt- 0 (1 til 10 minutter) eller gennem AUTO TIME INCREMENT; når det er FALSE, disse trin- tid menupunkter er gråt ud. TR4W viser en advarsel ved opstart mens dette er TRUE; Genstart TR4W efter ændring af den."
 
 #. Config command: HF BAND ENABLE   (default: TRUE)
 #, fuzzy
@@ -655,8 +655,8 @@ msgstr "værdier: True / False. Standard for TRUE forhindrer Band Map valg, der 
 #. Config command: INCLUDE F-KEY NUMBER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_INCLUDE_F_KEY_NUMBER"
-msgid ""
-msgstr ""
+msgid "When viewing the F-Keys window, if this option is true, the F key name/number is displayed (e.g., F1 - <caption>)."
+msgstr "Når du ser F- Keys - vinduet, vises F - nøglenavnet / -nummeret (fx F1 - < billedtekst >)."
 
 #. Config command: INCREMENT TIME ENABLE   (default: FALSE)
 #, fuzzy
@@ -781,13 +781,13 @@ msgstr "Når denne parameter er TRUE, en transmitteret RST kan indtastes i Excha
 #. Config command: MAIN CALLSIGN   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_CALLSIGN"
-msgid ""
-msgstr ""
+msgid "Your station's own callsign, remembered from contest to contest. The New Contest dialog fills its callsign box from it (or from MY CALL when this is empty), and the first callsign you enter there is saved here if it is empty. It is not the callsign you log with: that is MY CALL, which a contest may change (for example to a club call) without touching this one."
+msgstr "Din stations egen kaldesignal, husket fra konkurrence til konkurrence. Dialogen Ny konkurrence udfylder sit kaldenavn fra det (eller fra MY CALL når dette er tomt), og det første kaldenavn du indtaster der er gemt her, hvis det er tomt. Det er ikke det kaldesignal du logger med: det er MY CALL, som en konkurrence kan ændre (for eksempel til en klub opkald) uden at røre denne ene."
 
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "AGENT WRITTEN: The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
+msgid "The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
 msgstr "Kommandoen angiver navnet på den skrifttype der skal bruges når informationen vises i hovedprogramvinduet."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -805,14 +805,14 @@ msgstr "Værdi: heltal fra 5 til 60. Angiver i minutter tour varighed i multi-tu
 #. Config command: MISSINGCALLSIGNS FILE ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_MISSINGCALLSIGNS_FILE_ENABLE"
-msgid ""
-msgstr ""
+msgid "Works with USE RECORDED SIGNS. When this parameter is TRUE and the voice keyer has no recording <callsign>.WAV in its FULLCALLSIGNS folder for a callsign it has to say, that callsign is added to the file MISSINGCALLSIGNS.TXT in the same folder, so you can record it later."
+msgstr "Arbejder med USE RECORDED SIGNS. Når denne parameter er TRUE og voice keyer har ingen optagelse < callsign >. WAV i sin FULLCALLSIGNS mappe for et kaldesignal det har at sige, at kaldesignal tilføjes til filen MISSINCALLSIGNS. TXT i samme mappe, så du kan optage det senere."
 
 #. Config command: MMTTY ENGINE   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MMTTY_ENGINE"
-msgid ""
-msgstr ""
+msgid "The path to the MMTTY program for working RTTY contests (experimental)."
+msgstr "Vejen til MMTY program til at arbejde RTTY konkurrencer (eksperimentelle)."
 
 #. Config command: MODE   (default: CW)
 #, fuzzy
@@ -841,8 +841,8 @@ msgstr "MP3-optager bitrate."
 #. Config command: MP3 RECORDER DURATION   (default: EACH QSO)
 #, fuzzy
 msgctxt "TC_HELP_MP3_RECORDER_DURATION"
-msgid ""
-msgstr ""
+msgid "To be determined"
+msgstr "Skal bestemmes"
 
 #. Config command: MP3 RECORDER ENABLE   (default: FALSE)
 #, fuzzy
@@ -938,7 +938,7 @@ msgstr "NÆGTELSE AF GENNEMFØRELSEN Værdier: IOTA designator. Angiver IOTA-ide
 #, fuzzy
 msgctxt "TC_HELP_MY_LICENSE_YEAR"
 msgid "Enter the year you were first licensed, for the contests that exchange it (the European HF Championship, KVP). Four digits (1985) or the last two (85) are both accepted; the contest decides what is sent -- two digits, four digits or the number of years licensed. A contest may state its own value; this is the default. It is read when the contest is set up, so a change takes effect for the next contest or when TR4W next starts."
-msgstr ""
+msgstr "Indtast det år, du først blev licenseret, for de konkurrencer, der udveksler det (European HF Championship, KVP). Fire cifre (1985) eller de sidste to (85) accepteres begge; konkurrencen afgør, hvad der sendes -- to cifre, fire cifre eller antallet af år med licens. En konkurrence kan angive sin egen værdi; dette er standard. Det læses, når konkurrencen er sat op, så en ændring træder i kraft for den næste konkurrence, eller når TR4W næste starter."
 
 #. Config command: MY NAME   (default: NONE)
 #, fuzzy
@@ -991,14 +991,14 @@ msgstr "Når denne parameter er TRUE, en stjerne vises i loggen, når du laver e
 #. Config command: NET STATUS UPDATE INTERVAL   (default: 5000)
 #, fuzzy
 msgctxt "TC_HELP_NET_STATUS_UPDATE_INTERVAL"
-msgid ""
-msgstr ""
+msgid "Values: 1000 to 10000 milliseconds. While you want to be connected to the multi-op network and the link is down, TR4W tries to connect again at this interval. A change takes effect the next time you connect."
+msgstr "Værdier: 1000 til 10000 millisekunder. Mens du ønsker at blive tilsluttet til multi- op netværket og linket er nede, TR4W forsøger at forbinde igen på dette interval. En ændring træder i kraft næste gang du tilslutter."
 
 #. Config command: NO BORDER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_BORDER"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE, the panels of the main window and the call and exchange entry fields are drawn flat, without their sunken edge. It takes effect the next time TR4W starts."
+msgstr "Når denne parameter er TRUE, panelerne i hovedvinduet og opkalds- og ombytningsfeltet er tegnet fladt, uden deres sænkede kant. Det virker næste gang TR4W starter."
 
 #. Config command: NO CAPTION   (default: FALSE)
 #, fuzzy
@@ -1009,8 +1009,8 @@ msgstr "Hvis værdien er TRUE efter opstart alle vinduer undtagen de vigtigste v
 #. Config command: NO COLUMN HEADER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_COLUMN_HEADER"
-msgid ""
-msgstr ""
+msgid "If the value is TRUE, the log windows show no row of column headings: the log on the main window (and the B4 list that takes its place), View/Edit Log, Log Search and the downloaded server log, and also the Network and Stations windows. The QSOs themselves are unchanged. The change takes effect at once in every open window; a column's width cannot be dragged while its heading is hidden."
+msgstr "Hvis værdien er TRUE, logvinduerne viser ingen række af kolonneoverskrifter: loggen på hovedvinduet (og B4-listen, der finder sted), Vis / Redigér log, Logsøgning og den downloadede serverlog, og også netværks- og stationerne vinduer. De QSO selv er uændrede. Ændringen træder i kraft på én gang i hvert åbent vindue; en søjles bredde kan ikke trækkes, mens dens overskrift er skjult."
 
 #. Config command: NO LOG   (default: FALSE)
 #, fuzzy
@@ -1039,8 +1039,8 @@ msgstr "Computerhøjttalerskærmen bruges normalt, når du sender med en padle f
 #. Config command: PADDLE PORT   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_PADDLE_PORT"
-msgid ""
-msgstr ""
+msgid "The Serial port used to connect the CW paddle."
+msgstr "Seriel port bruges til at forbinde CW padle."
 
 #. Config command: PADDLE PTT HOLD COUNT   (default: 13)
 #, fuzzy
@@ -1231,8 +1231,8 @@ msgstr "Værdier: Enhver nøgle. Når du afslutter en kontakt, mens du kører p�
 #. Config command: QZB RANDOM OFFSET ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_QZB_RANDOM_OFFSET_ENABLE"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE and you are on CW, tuning the radio to a band map spot adds a small random offset of up to 30 Hz either side of the spot frequency (and of its split frequency, if the spot has one), so you do not land exactly on the spotted frequency. When FALSE, the radio is tuned exactly to the spot."
+msgstr "Når denne parameter er TRUE og du er på CW, tuning radioen til et band kort stedet tilføjer en lille tilfældig forskydning på op til 30 Hz hver side af stedet frekvens (og af dens split frekvens, hvis stedet har en), så du ikke lander præcis på plettet frekvens. Hvornår FALSERadioen er lige på plads."
 
 #. Config command: R150S MODE   (default: FALSE)
 #, fuzzy
@@ -1550,13 +1550,13 @@ msgstr "Ethernet port nummer, som vil bruges forbindelse med TR4WSERVER."
 #, fuzzy
 msgctxt "TC_HELP_SERVER_TAILCAT_ADDRESS"
 msgid "The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel's key, so treat it like a password."
-msgstr ""
+msgstr "Adressen operatøren af en TR4WSERVER giver dig, så denne computer kan nå serveren fra et andet netværk gennem en Tailcat tunnel. Indsæt det nøjagtigt som givet. Det bruges kun, mens service USE TAILCAT er TRUEDen indeholder tunnelens nøgle."
 
 #. Config command: SERVER USE TAILCAT   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SERVER_USE_TAILCAT"
 msgid "Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server's port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server's own network; the address is kept for next time."
-msgstr ""
+msgstr "Sæt til TRUE til at nå TR4WSERVER gennem Tailcat tunnel navngivet af SERVER TAILCAT ADDRESS i stedet for på SERVER ADDRESS. Mens det er TRUE, SERVER ADDRESS anvendes ikke SERVER PORT Det er serverens port inde i tunnelen. Hvis SERVER TAILCAT ADDREST er tom forbindelsen mislykkes og siger det; TR4W falder ikke tilbage til SERVER ADDRESS. Sæt det til FALSE når du er på serverens eget netværk; adressen opbevares for næste gang."
 
 #. Config command: SHIFT KEY ENABLE   (default: TRUE)
 #, fuzzy
@@ -1597,8 +1597,8 @@ msgstr "Når denne parameter er TRUE, TR4W vil tillade korte forkortelser for no
 #. Config command: SHOW DOMESTIC MULTIPLIER NAME   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SHOW_DOMESTIC_MULTIPLIER_NAME"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE, the remaining multipliers window lists each domestic multiplier by the name its domestic multiplier (.dom) file gives it (the entry starting with ^), where it has one, instead of its abbreviation, and widens the column to fit. The change is shown at once."
+msgstr "Når denne parameter er TRUE, de resterende multiplikatorer vindue viser hver indenlandsk multiplikator ved navnet sin indenlandske multiplikator (.dom) fil giver det (indgangen starter med ^), hvor det har en, i stedet for sin forkortelse, og udvider kolonnen til at passe. Ændringen vises straks."
 
 #. Config command: SHOW FREQUENCY IN LOG   (default: TRUE)
 #, fuzzy
@@ -1609,8 +1609,8 @@ msgstr "Hvis værdien er TRUE i Cabrillo log vil erstatte den faktiske frekvens 
 #. Config command: SHOW GRIDLINES   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SHOW_GRIDLINES"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE, grid lines are drawn between the rows and columns of the log grid in the main window. The change is shown at once."
+msgstr "Når denne parameter er TRUE, gitterlinjerne tegnes mellem rækkerne og kolonnerne i loggitteret i hovedvinduet. Ændringen vises straks."
 
 #. Config command: SHOW TYPED CALLSIGN   (default: TRUE)
 #, fuzzy
@@ -1663,8 +1663,8 @@ msgstr "Værdier: Enhver nøgle. Hvis du kører stationer på CW og en station, 
 #. Config command: STATIONS CALLSIGNS MASK   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_STATIONS_CALLSIGNS_MASK"
-msgid ""
-msgstr ""
+msgid "Values: any text. The Stations window lists only the callsigns that contain this text anywhere in them (it is a plain match, not a wildcard pattern); leave it empty to list every station. The list on screen is filtered again as soon as you change it."
+msgstr "Værdier: enhver tekst. Vinduet Stationer viser kun de tegn, der indeholder denne tekst overalt i dem (det er en almindelig match, ikke et wildcard mønster); lad det tomt til at liste hver station. Listen på skærmen filtreres igen, så snart du ændrer den."
 
 #. Config command: STEREO CONTROL PIN   (default: 9)
 #, fuzzy
@@ -1819,8 +1819,8 @@ msgstr "Værdier: Ethvert gyldigt filnavn. TR4W vil gemme log poster til QSO med
 #. Config command: USE RECORDED SIGNS   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_USE_RECORDED_SIGNS"
-msgid ""
-msgstr ""
+msgid "When this parameter is TRUE, the voice keyer speaks every word of a voice message that is not a .WAV file name, including # (the QSO number) and @ (the call in the call window), from recordings: a number from <number>.WAV in the FULLSERIALNUMBERS folder, else digit by digit from the LETTERSANDNUMBERS folder; anything else from <callsign>.WAV in the FULLCALLSIGNS folder, else letter by letter from LETTERSANDNUMBERS (a / is played from _.WAV). These folders are in the voice keyer folder. When FALSE, only the .WAV file names in a voice message are played."
+msgstr "Når denne parameter er TRUE, voice keyer taler hvert ord i en voice message, der ikke er en .WAV filnavn, herunder # (QSO nummer) og @ (opkald i opkaldsvinduet), fra optagelser: et tal fra < nummer >. WAV i FULLSERIALMEDLEMMER mappen, ellers ciffer for ciffer fra LETTERSANDMEDLEMMER mappen; alt andet fra < kalltegn > .WAV i FULLSALSIGNS mappen, andet bogstav ved brev fra LETTERSANDMEDLEMMER (a / spilles fra _ .WAV). Disse mapper er i stemmen keyer mappe. Hvornår FALSE, kun .WAV filnavne i en stemme besked spilles."
 
 #. Config command: USER INFO SHOWN   (default: NONE)
 #, fuzzy
@@ -1969,7 +1969,7 @@ msgstr "Værdi: heltal i intervallet 10-90%. Denne kommando tillader at et propo
 #. Config command: WINDOW SIZE   (default: 5)
 #, fuzzy
 msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "AGENT WRITTEN: Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
+msgid "Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
 msgstr "Det relative forhold mellem 1 til 15, som bestemmer størrelsen af hovedprogramvinduet."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)
@@ -2499,4 +2499,434 @@ msgstr "Hvornår TRUE, TR4W vil tilbyde en radioserver, således at WSJT- X kan 
 msgctxt "TC_HELP_YCCC_SO2R_ENABLE"
 msgid "If TRUE, the YCCC SO2R box is supported for switching radio audio streams and other steps involving two-radio mode."
 msgstr "Hvis TRUE, YCCC SO2R boks er understøttet til at skifte radio lydstrømme og andre trin, der involverer to- radio mode."
+
+#. Config command: ALERT COLOR   (default: ALERT)
+msgctxt "TC_HELP_ALERT_COLOR"
+msgid "The color TR4W uses for an alert in the main window: the text of a radio's name and frequency while that radio is disconnected, and the background of the PTT indicator when a key-up is inhibited because the radio will not transmit. Choose from the color list; the default is ALERT."
+msgstr "Farven TR4W bruger til en alarm i hovedvinduet: teksten til en radios navn og frekvens, mens radioen er afbrudt, og baggrunden for PTT indikator, når en key- up er hæmmet, fordi radioen ikke vil sende. Vælg fra farvelisten; standarden er ALERT."
+
+#. Config command: BAND MAP WORKED MULT COLOR   (default: ORANGE)
+msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_COLOR"
+msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window. The default is ORANGE."
+msgstr "Farven på M på et band kort stedet hvis multiplikator du allerede har arbejdet, men færre gange end BAND MAP ARBEJDET MULT LIMIT, på et opkald, der ikke er en dupe. Den samme farve bruges til et sådant sted linje i DX klyngevinduet. Standard er ORANGE."
+
+#. Config command: BAND MAP WORKED MULT LIMIT   (default: 1)
+msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_LIMIT"
+msgid "How many times a multiplier must be worked (non-dupe QSOs, counted per band and mode where the contest counts them that way) before its spots stop showing an M. From 1 to 9. With 1 the M goes away at the first QSO; with 2 or more a spot shows an M in BAND MAP WORKED MULT COLOR until the limit is reached."
+msgstr "Hvor mange gange en multiplikator skal arbejdes (non-dupe QSO, tælles per band og tilstand, hvor konkurrencen tæller dem på den måde), før dens pletter stopper viser en M. Fra 1 til 9. Med 1 M går væk ved den første QSO; med 2 eller flere en plet viser en M i BAND MAP ARBEJDET MULT COLOR indtil grænsen er nået."
+
+#. Config command: CALL HISTORY FILENAME
+msgctxt "TC_HELP_CALL_HISTORY_FILENAME"
+msgid "The call history file to read when USE CALL HISTORY FILE is TRUE: a bare file name, looked for in the CallHistoryFiles folder, or a full path. Leave it blank to use the contest's own default file, which Preferences shows in the empty box. The file is read when the contest is opened, so a change takes effect the next time the contest is opened."
+msgstr "Opkaldshistoriefilen der skal læses når brug CALL HISTORY FILE er TRUE: et tomt filnavn, der er vist i mappen CallHistoryFiles, eller en fuld sti. Lad det være tomt at bruge konkurrencen egen standard fil, som Indstillinger viser i det tomme felt. Filen læses når konkurrencen åbnes, så en ændring træder i kraft næste gang konkurrencen åbnes."
+
+#. Config command: CALL WINDOW SHOW ALL SPOTS   (default: FALSE)
+msgctxt "TC_HELP_CALL_WINDOW_SHOW_ALL_SPOTS"
+msgid "When this parameter is TRUE and you tune in S&P mode, every callsign TR4W knows appears in the call window, even when it does not appear on the band map. For example, with BAND MAP DUPE DISPLAY set to FALSE, dupes stay off the band map but still appear in the call window. (Not yet implemented.)"
+msgstr "Når denne parameter er TRUE og du tune i S & P-tilstand, hver kaldesignal TR4W kender vises i opkaldsvinduet, selv når det ikke vises på bandet kort. For eksempel med BAND MAP DUPE DISPLAY indstillet til FALSEDupes holder sig fra bandet kortet men stadig vises i call vinduet. (Endnu ikke gennemført)"
+
+#. Config command: CATEGORY-STATION
+msgctxt "TC_HELP_CATEGORY_STATION"
+msgid "The Cabrillo CATEGORY-STATION for this contest (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). Saved with the contest; a contest whose sponsor names its own list offers only those values."
+msgstr "Cabrillo KATEGORY- STATION for denne konkurrence (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SKOOL...). Gemt med konkurrencen; en konkurrence, hvis sponsor navngiver sin egen liste tilbyder kun disse værdier."
+
+#. Config command: CLUSTER SPOT COMMENT MULTIPLIER   (default: FALSE)
+msgctxt "TC_HELP_CLUSTER_SPOT_COMMENT_MULTIPLIER"
+msgid "When this parameter is set to TRUE and the contest looks its domestic multiplier (section or state) up in its domestic file, a DX cluster spot whose comment names a section or state is shown as a needed multiplier when that one is needed. The first UPPER CASE word of the comment that the contest's domestic file knows is used; a section the cluster appends with a plus sign (+NC) is used only when no earlier word qualifies. A section already known for the station from the call history or from a contact in the log overrules the comment. Beacon spots (NCDXF) are ignored. Not every spot has one, and the cluster's section can be where a station lives rather than where it is operating, so leave this FALSE unless you want it."
+msgstr "Når denne parameter er indstillet til TRUE og konkurrencen ser sin indenlandske multiplikator (sektion eller stat) op i sin indenlandske fil, en DX klynge spot, hvis kommentar navne et afsnit eller tilstand vises som en nødvendig multiplikator, når der er brug for den. Den første UPPER CASE ord i kommentaren, at konkurrencen indenlandske fil kender bruges; et afsnit klyngen afhænger af et plus tegn (+ NC) bruges kun, når ingen tidligere ord kvalificerer. Et afsnit, der allerede er kendt for stationen fra opkaldshistorikken eller fra en kontakt i loggen, tilsidesætter kommentaren. Beacon spots (NCDXF) ignoreres. Ikke alle steder har en, og klyngens sektion kan være hvor en station bor snarere end hvor den opererer, så lad dette FALSE med mindre du vil have det."
+
+#. Config command: DISPLAY LANGUAGE
+msgctxt "TC_HELP_DISPLAY_LANGUAGE"
+msgid "The language TR4W's menus, windows, messages and these tooltips are shown in. Blank follows the operating system's language. The language is chosen once at startup, so a change takes effect the next time TR4W starts; a --lang switch on the command line overrides this setting."
+msgstr "Sproget TR4W menuer, vinduer, beskeder og disse værktøjstips vises i. Blank følger operativsystemets sprog. Sproget vælges én gang ved opstart, så en ændring træder i kraft næste gang TR4W starter; en -- lang kontakt på kommandolinjen tilsidesætter denne indstilling."
+
+#. Config command: EXTERNAL LOGGER EDITOR ACTIVE
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_ACTIVE"
+msgid "When ticked, each newly logged QSO is also sent to this logger. Each active logger sends on its own. For a logger that was running when TR4W started, a change takes effect when it is saved, with no restart; a logger added since then, or one whose key, host or logbook changed, applies after TR4W is restarted."
+msgstr "Når der sættes kryds, sendes hver nyligt logget QSO også til denne logger. Hver aktiv logger sender selv. For en logger, der kørte, når TR4W startede, træder en ændring i kraft, når den gemmes, uden genstart; en logger, der er tilføjet siden da, eller en, hvis nøgle, vært eller logbog er ændret, gælder efter TR4W genstartes."
+
+#. Config command: EXTERNAL LOGGER EDITOR NAME
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_NAME"
+msgid "The name this logger is listed under. It is required and must differ from every other external logger's name (capitals do not count as a difference)."
+msgstr "Navnet denne logger er opført under. Det er påkrævet og skal afvige fra alle andre eksterne loggers navn (hovedstæder tæller ikke som en forskel)."
+
+#. Config command: EXTERNAL LOGGER EDITOR PROVIDER
+msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_PROVIDER"
+msgid "The logbook program or online service this logger sends QSOs to. The fields below change to the ones that provider needs. Changing the provider keeps the host and port, clears any key or password, and moves a port still at the old provider's default to the new provider's default."
+msgstr "Logbogen program eller online service denne logger sender QSO til. Felterne nedenfor skifter til dem, som udbyderen har brug for. Ændring af udbyder holder værten og port, rydder enhver nøgle eller adgangskode, og flytter en port stadig på den gamle udbyders standard til den nye udbyders standard."
+
+#. Config command: HAMSCORE VERIFY SERVER   (default: TRUE)
+msgctxt "TC_HELP_HAMSCORE_VERIFY_SERVER"
+msgid "When TRUE, TR4W checks the HamScore server's certificate before uploading, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send, including your HamScore password. It is read when the uploader starts, at TR4W startup."
+msgstr "Hvornår TRUE, TR4W kontrollerer HamScore-serverens certifikat før upload, så længe program- wide certifikat check i indstillinger / tr4w.json er på (det er som standard). Ryd det kun for en server, hvis certifikat ikke kan kontrolleres: Serverens identitet er så ikke markeret, og nogen mellem dig, og det kan læse, hvad du sender, herunder din HamScore adgangskode. Det læses, når uploader starter, ved TR4W opstart."
+
+#. Config command: KEYER EDITOR NAME
+msgctxt "TC_HELP_KEYER_EDITOR_NAME"
+msgid "The name this keying device is listed under in the keyer library and in a station profile's CW output choices. It is required. A profile refers to the keyer by a hidden identity, so renaming it is safe."
+msgstr "Navnet denne keying enhed er opført under i Keyer biblioteket og i en station profils CW output valg. Det er nødvendigt. En profil refererer til Keyer ved en skjult identitet, så omdøbning det er sikkert."
+
+#. Config command: KEYER EDITOR PORT
+msgctxt "TC_HELP_KEYER_EDITOR_PORT"
+msgid "The serial port the keyer is connected to. A keyer cannot be saved without one."
+msgstr "Den serielle port keyeren er forbundet til. En keyer kan ikke reddes uden en."
+
+#. Config command: KEYER EDITOR TYPE
+msgctxt "TC_HELP_KEYER_EDITOR_TYPE"
+msgid "What kind of device this is: a WinKeyer, or a YCCC SO2R+ box. The WinKeyer settings below apply only to a WinKeyer and are greyed for any other type."
+msgstr "Hvilken slags enhed dette er: en WinKeyer, eller en YCCC SO2R + boks. WinKeyer indstillingerne nedenfor gælder kun for en WinKeyer og er grådige for enhver anden type."
+
+#. Config command: NETWORK AUTO CONNECT   (default: FALSE)
+msgctxt "TC_HELP_NETWORK_AUTO_CONNECT"
+msgid "When TRUE, TR4W connects to the multi-op server when it starts, provided COMPUTER ID is set to a letter A to Z. When FALSE, connect with Connect on the Net menu. Leave it FALSE on a single-operator station."
+msgstr "Hvornår TRUETR4W forbinder til multi- op serveren, når den starter, forudsat COMPUTER ID er sat til et brev A til Z. Hvornår FALSE, tilslut med Connect på Net menuen. Lad det være. FALSE på en enkelt operatørstation."
+
+#. Config command: NETWORK HTTP TRANSPORT   (default: generic)
+msgctxt "TC_HELP_NETWORK_HTTP_TRANSPORT"
+msgid "Chooses what carries TR4W's internet requests: the downloads (country file, TRMASTER, call history, POTA parks, version check) and the uploads (the external logging services, HamScore, contest scores, SuperCheckPartial). generic is TR4W's own connection code, which checks server certificates against the cacert.pem shipped with the program. auto and platform use the operating system's own connection code where this platform has one (Windows only, today: WinHTTP). It trusts the Windows certificate store, follows the system proxy settings and needs no cacert.pem. Where there is none, both use generic, and platform says so in the log. A change applies from the next request, with no restart. A request that fails is never repeated on the other transport. The Windows transport is new: leave this on generic unless you were asked to try it."
+msgstr "Vælger hvad der bærer TR4W \"s internet anmodninger: downloads (land fil, TRMASTER, opkaldshistorik, POTA parker, version check) og uploads (den eksterne logning tjenester, HamScore, konkurrence score, SuperCheckPartial). generisk er TR4W 's egen forbindelseskode, som kontrollerer servercertifikater mod kakerten. Pete blev sendt med programmet. auto og platform bruge operativsystemets egen forbindelse kode, hvor denne platform har en (Windows kun i dag: WinHTTP). Det stoler på Windows-certifikat butik, følger systemet proxy indstillinger og behøver ingen cacert.pem. Hvor der ikke er nogen, både bruge generiske, og platform siger det i loggen. En ændring gælder fra næste anmodning, uden genstart. En anmodning, der mislykkes, gentages aldrig på den anden transport. Windows transport er ny: lad dette på generisk medmindre du blev bedt om at prøve det."
+
+#. Config command: NETWORK SHARE SPOTS   (default: TRUE)
+msgctxt "TC_HELP_NETWORK_SHARE_SPOTS"
+msgid "When TRUE, this station sends the DX spots its own cluster connection receives to the other stations on the multi-op network, and accepts the spots they send. When FALSE it does neither. Each station has its own setting, and a change takes effect at once."
+msgstr "Hvornår TRUE, denne station sender DX spots sin egen klyngeforbindelse modtager til de andre stationer på multi- op netværket, og accepterer de pletter, de sender. Hvornår FALSE Det gør det heller ikke. Hver station har sin egen indstilling, og en ændring træder i kraft på én gang."
+
+#. Config command: OPERATING STANDARD EDIT KEYS   (default: FALSE)
+msgctxt "TC_HELP_OPERATING_STANDARD_EDIT_KEYS"
+msgid "When TRUE, Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A copy, paste, cut and select all in a text box or drop-down list of any window other than the main window, instead of running the TR4W command assigned to that key. The main window always keeps TR4W's commands."
+msgstr "Hvornår TRUE, Ctrl + C, Ctrl + V, Ctrl + X og Ctrl + En kopi, indsætte, klippe og vælge alle i et tekstfelt eller drop- down liste over et andet vindue end hovedvinduet, i stedet for at køre TR4W kommando tildelt den pågældende nøgle. Hovedvinduet holder altid TR4W 's kommandoer."
+
+#. Config command: PREFERENCES CLUSTER LOGIN
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_LOGIN"
+msgid "The callsign to log in to the cluster with. Leave it blank to log in with your station callsign, which is looked up each time TR4W connects."
+msgstr "Det kaldesignal at logge ind i klyngen med. Lad det være tomt at logge ind med din station kaldesignal, som er kigget op hver gang TR4W forbinder."
+
+#. Config command: PREFERENCES CLUSTER NAME
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_NAME"
+msgid "The name this cluster is listed under. Clearing the box keeps the old name. Renaming the cluster in use keeps it in use."
+msgstr "Navnet denne klynge er opført under. Rydning af boksen holder det gamle navn. Omdøbning af klyngen i brug holder den i brug."
+
+#. Config command: PREFERENCES CLUSTER PASSWORD
+msgctxt "TC_HELP_PREFERENCES_CLUSTER_PASSWORD"
+msgid "The password, for a cluster that asks for one. Spaces at either end are kept. It is stored in the operating system's credential store (Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux), not in the settings file; where no store can be reached it is kept for this session only."
+msgstr "Adgangskoden til en klynge, der beder om en. Der er plads i begge ender. Det er gemt i operativsystemets creditial store (Windows Creditial Manager, macOS Keychain, eller Secret Service på Linux), ikke i indstillingerne fil; hvor ingen butik kan nås det er kun opbevares til denne session."
+
+#. Config command: PREFERENCES CONNECT RADIOS AT STARTUP   (default: TRUE)
+msgctxt "TC_HELP_PREFERENCES_CONNECT_RADIOS_AT_STARTUP"
+msgid "Whether TR4W connects this profile's radios when it starts. Activating the profile and Reset Radio Ports always connect, whatever this says."
+msgstr "Om TR4W forbinder profilens radioer, når den starter. Aktiverer profilen og Nulstil Radio Ports altid forbinde, uanset hvad dette siger."
+
+#. Config command: PREFERENCES CW OUTPUT 1
+msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_1"
+msgid "How CW is sent for Radio 1: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
+msgstr "Hvordan CW sendes til Radio 1: ingen, CW af CAT (tilbydes kun, når radioen kan gøre det), radioens egen Keyer port (tilbydes, når radioen har et sæt), eller en enhed fra Keyer biblioteket."
+
+#. Config command: PREFERENCES CW OUTPUT 2
+msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_2"
+msgid "How CW is sent for Radio 2: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
+msgstr "Hvordan CW sendes til Radio 2: ingen, CW af CAT (tilbydes kun, når radioen kan gøre det), radioens egen keyer port (tilbydes, når radioen har et sæt), eller en enhed fra Keyer biblioteket."
+
+#. Config command: PREFERENCES PROFILE
+msgctxt "TC_HELP_PREFERENCES_PROFILE"
+msgid "The station profile shown below for editing. A profile names the radios in the two slots and how each one sends CW. Choosing one here does not switch to it: the Activate this profile now button does."
+msgstr "Stationsprofilen vist nedenfor for redigering. En profil navngiver radioerne i de to slots og hvordan hver enkelt sender CW. Valg af en her ikke skifte til det: Aktivér denne profil nu knappen gør."
+
+#. Config command: PREFERENCES RADIO 1
+msgctxt "TC_HELP_PREFERENCES_RADIO_1"
+msgid "The radio from the radio library that this profile uses as Radio 1. A radio already in the Radio 2 slot is marked as in use there and cannot be chosen for both slots."
+msgstr "Radioen fra radiobiblioteket, som denne profil bruger som Radio 1. En radio allerede i Radio 2 slot er markeret som i brug der og kan ikke vælges til begge slots."
+
+#. Config command: PREFERENCES RADIO 2
+msgctxt "TC_HELP_PREFERENCES_RADIO_2"
+msgid "The radio from the radio library that this profile uses as Radio 2. A radio already in the Radio 1 slot is marked as in use there and cannot be chosen for both slots."
+msgstr "Radioen fra radiobiblioteket, som denne profil bruger som Radio 2. En radio allerede i Radio 1 slot er markeret som i brug der og kan ikke vælges til begge slots."
+
+#. Config command: PREFERENCES ROTATOR BANDS
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_BANDS"
+msgid "The bands this rotator turns for, separated by spaces, for example 20 15 10. Blank means every band, which is what a station with one antenna wants. Only the rotator in use turns, and only on a band it lists."
+msgstr "De bånd, denne rotator drejer for, adskilt af mellemrum, for eksempel 20 15 10. Blank betyder hvert band, hvilket er hvad en station med en antenne ønsker. Kun rotatoren i brug drejer, og kun på et band det lister."
+
+#. Config command: PREFERENCES ROTATOR BAUD RATE
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_BAUD_RATE"
+msgid "The serial speed for the rotator controller. Blank or 0 uses the default for the chosen type, which is shown greyed in the box."
+msgstr "Seriehastigheden for rotatorcontrolleren. Blank eller 0 bruger standardværdien for den valgte type, som vises gråt i feltet."
+
+#. Config command: PREFERENCES ROTATOR IP ADDRESS
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_IP_ADDRESS"
+msgid "For a network rotator (PstRotator), the IP address of the computer it runs on. Blank uses the PSTROTATOR IP ADDRESS setting, 127.0.0.1 unless changed."
+msgstr "For en netværksrotator (PstRotator), IP-adressen på den computer, den kører på. Blank bruger PSTROTATOR IP ADDRESS indstilling, 127.0.0.1 medmindre ændret."
+
+#. Config command: PREFERENCES ROTATOR NAME
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_NAME"
+msgid "The name this rotator is listed under. Clearing the box keeps the old name."
+msgstr "Navnet på denne rotator er anført under. Rydning af boksen holder det gamle navn."
+
+#. Config command: PREFERENCES ROTATOR PORT
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_PORT"
+msgid "The serial port the rotator controller is connected to. Used only by a type that has a serial port; greyed for a network rotator."
+msgstr "Den serielle port rotatorcontrolleren er forbundet til. Bruges kun af en type, der har en seriel port; gråt for en netværk rotator."
+
+#. Config command: PREFERENCES ROTATOR TYPE
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_TYPE"
+msgid "The rotator controller and the protocol TR4W speaks to it. PstRotator is reached over UDP; every other type uses a serial port."
+msgstr "Rotatorcontrolleren og protokollen TR4W taler til den. PstRotator nås over UDP; hver anden type bruger en seriel port."
+
+#. Config command: PREFERENCES ROTATOR UDP PORT
+msgctxt "TC_HELP_PREFERENCES_ROTATOR_UDP_PORT"
+msgid "For a network rotator (PstRotator), the UDP port it listens on. Blank uses the PSTROTATOR UDP PORT setting, 12000 unless changed."
+msgstr "For en netværksrotator (PstRotator) lytter UDP-porten til den. Blank bruger PSTROTATOR UDP PORT 12000, medmindre ændret."
+
+#. Config command: PREFERENCES SO2R ENABLED
+msgctxt "TC_HELP_PREFERENCES_SO2R_ENABLED"
+msgid "Marks this profile as a two-radio (SO2R) station. The flag is saved with the profile, but in this build nothing else reads it, so ticking or clearing it changes no behaviour."
+msgstr "Markerer denne profil som en toradiostation (SO2R). Flaget er gemt med profilen, men i denne bygning intet andet læser det, så tikkende eller rydde det ændrer ingen adfærd."
+
+#. Config command: PREFERENCES TCI LISTEN ON NETWORK   (default: FALSE)
+msgctxt "TC_HELP_PREFERENCES_TCI_LISTEN_ON_NETWORK"
+msgid "Lets other computers connect to the TCI server, not just this one. The server has no password: anything that can reach the port can move your VFO and key your transmitter. A change made while the server is running applies the next time it starts."
+msgstr "Lader andre computere forbinde til TCI-serveren, ikke kun denne. Serveren har ingen adgangskode: alt, der kan nå porten kan flytte din VFO og taster din sender. En ændring foretaget, mens serveren kører gælder næste gang den starter."
+
+#. Config command: PREFERENCES TCI PORT   (default: 50001)
+msgctxt "TC_HELP_PREFERENCES_TCI_PORT"
+msgid "The TCP port the TCI server listens on. Blank uses the default, 50001; a value that is not 1 to 65535 is refused and the previous port kept. A change made while the server is running applies the next time it starts."
+msgstr "TCP porten TCI serveren lytter på. Blank bruger standard, 50001; en værdi, der ikke er 1 til 65535 nægtes, og den tidligere havn holdes. En ændring foretaget, mens serveren kører gælder næste gang den starter."
+
+#. Config command: PREFERENCES TCI SERVER   (default: FALSE)
+msgctxt "TC_HELP_PREFERENCES_TCI_SERVER"
+msgid "Runs a TCI server so other programs (WSJT-X, JTDX, a skimmer) can control the radio TR4W has open, even one with no TCI of its own; Radio 1 is trx 0 and Radio 2 is trx 1. Saving starts or stops it. It listens only on this computer unless network listening is ticked."
+msgstr "Kører en TCI server, så andre programmer (WSJT- X, JTDX, en skimmer) kan styre radio TR4W har åben, selv en med ingen TCI af sin egen; Radio 1 er trx 0 og Radio 2 er trx 1. At redde starter eller stopper det. Det lytter kun på denne computer, medmindre netværket lytter med."
+
+#. Config command: PREFERENCES UDP BROADCAST ENABLED   (default: TRUE)
+msgctxt "TC_HELP_PREFERENCES_UDP_BROADCAST_ENABLED"
+msgid "The master switch for UDP broadcasting. Cleared, nothing is sent to any destination, and the destinations are kept as they are."
+msgstr "Master switch til UDP-transmission. Cleared, intet sendes til nogen destination, og destinationerne holdes som de er."
+
+#. Config command: PTT TX INHIBIT BEEP   (default: FALSE)
+msgctxt "TC_HELP_PTT_TX_INHIBIT_BEEP"
+msgid "When TRUE, TR4W beeps once when you key up a radio that reports it will not transmit (for example a K4 in TX test mode). The PTT indicator and the status line show this whatever the setting. BEEP ENABLE must also be TRUE for the beep to sound."
+msgstr "Hvornår TRUE, TR4W bipper én gang, når du taster op en radio, der rapporterer det ikke vil sende (for eksempel en K4 i TX test mode). PTT-indikatoren og statuslinjen viser dette uanset indstillingen. BEEP ENABLE skal også TRUE for bippet at lyde."
+
+#. Config command: RADIO EDITOR AUTO INFO LEVEL
+msgctxt "TC_HELP_RADIO_EDITOR_AUTO_INFO_LEVEL"
+msgid "The Elecraft auto-information level (the AI command): how much the radio reports by itself when something changes, instead of waiting to be asked. Leave it empty to let TR4W choose, which is 2; 0 turns it off, and the radio is then asked for everything, which is slower. Shown only for the K2, K3, KX3, and the K4 on a serial connection (on a network connection the K4 is always set to AI5 and this field is ignored). Saving a typed value asks you to confirm it."
+msgstr "Elecraft auto- information niveau (AI kommando): hvor meget radioen rapporterer af sig selv, når noget ændres, i stedet for at vente på at blive spurgt. Lad det være tomt at lade TR4W vælge, hvilket er 2; 0 slukker det, og radioen bliver derefter bedt om alt, hvilket er langsommere. Vist kun for K2, K3, KX3 og K4 på en seriel forbindelse (på en netværksforbindelse sættes K4 altid til AI5 og dette felt ignoreres). At gemme en indtastet værdi beder dig bekræfte det."
+
+#. Config command: RADIO EDITOR BAUD RATE
+msgctxt "TC_HELP_RADIO_EDITOR_BAUD_RATE"
+msgid "The speed of the CAT serial port. It must match the setting in the radio's own menu. Choosing a radio type fills in that model's usual speed when the box is empty, and an empty box uses the model's default. The keyer output port is opened at this speed too."
+msgstr "Hastigheden af CAT seriel port. Det skal matche indstillingen i radios egen menu. At vælge en radiotype udfylder modellens sædvanlige hastighed, når boksen er tom, og en tom boks bruger modellens standard. Keyers udgangsport åbnes også med denne hastighed."
+
+#. Config command: RADIO EDITOR CAT DTR   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_CAT_DTR"
+msgid "The DTR line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
+msgstr "DTR linjen af radioens CAT serieport. ON holder linjen bekræftet, mens TR4W har porten åben, som nogle grænsefladekabler har brug for; ethvert andet valg (NONE, OFF, CW, PTT) efterlader det ubesvaret. Dette er ikke CW eller PTT Keying: til dette brug Keyer RTS linje og Keyer DTR linje."
+
+#. Config command: RADIO EDITOR CAT RTS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_CAT_RTS"
+msgid "The RTS line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
+msgstr "RTS linjen af radioens CAT serielle port. ON holder linjen bekræftet, mens TR4W har porten åben, som nogle grænsefladekabler har brug for; ethvert andet valg (NONE, OFF, CW, PTT) efterlader det ubesvaret. Dette er ikke CW eller PTT Keying: til dette brug Keyer RTS linje og Keyer DTR linje."
+
+#. Config command: RADIO EDITOR CIV ADDRESS
+msgctxt "TC_HELP_RADIO_EDITOR_CIV_ADDRESS"
+msgid "The radio's CI-V address, in hexadecimal as the radio's menu and manual show it. Empty uses the model's default address, shown in grey in the box. It must match the address set in the radio. Offered only for radios that have a CI-V address."
+msgstr "Radioens CI- V adresse, hexadecimal som radiens menu og manual viser det. Tomme bruger modellens standardadresse, vist i grå i boksen. Det skal matche adressen i radioen. Tilbydes kun for radioer, der har en CI- V adresse."
+
+#. Config command: RADIO EDITOR DATA BITS
+msgctxt "TC_HELP_RADIO_EDITOR_DATA_BITS"
+msgid "The number of data bits on the CAT serial port, 7 or 8. Together with parity and stop bits it is the serial frame, which must match the radio's own setting. Most radios use 8 data bits, no parity and 1 stop bit; choosing the type of a new radio fills in that model's usual frame."
+msgstr "antallet af databits på CAT seriel port, 7 eller 8. Sammen med paritet og stop bits er det den serielle ramme, som skal matche radioens egen indstilling. De fleste radioer bruger 8 data bits, ingen paritet og 1 stop bit; vælge typen af en ny radio fylder i denne models sædvanlige ramme."
+
+#. Config command: RADIO EDITOR DISCOVER
+msgctxt "TC_HELP_RADIO_EDITOR_DISCOVER"
+msgid "Searches the local network for radios of the chosen type and lists those that answer under Found. The search takes a few seconds. Offered only for radio types that announce themselves on the network."
+msgstr "Gennemsøger det lokale netværk for radioer af den valgte type og lister dem, der svarer under Fundet. Eftersøgningen tager et par sekunder. Tilbudt kun for radiotyper, der annoncerer sig selv på netværket."
+
+#. Config command: RADIO EDITOR FOUND
+msgctxt "TC_HELP_RADIO_EDITOR_FOUND"
+msgid "The radios Discover found on the network. Choosing one copies its IP address into the IP address box."
+msgstr "Radios Discover fundet på netværket. At vælge en kopi af sin IP-adresse i IP-adresseboksen."
+
+#. Config command: RADIO EDITOR FREQUENCY OFFSET
+msgctxt "TC_HELP_RADIO_EDITOR_FREQUENCY_OFFSET"
+msgid "For a transverter: the offset in Hz added to every frequency the radio reports and subtracted from every frequency TR4W tells it to tune, so TR4W shows and logs the frequency on the air. Empty or 0 means no transverter. Note: at present a value above 65535 or below 0 is refused when the radio is set up (the log says NOT applied), so a typical VHF or UHF transverter offset does not take effect yet."
+msgstr "For en transverter: den forskydning i Hz tilføjet til hver frekvens radio rapporter og trukket fra hver frekvens TR4W fortæller det til at tune, så TR4W viser og logger frekvensen på luften. Tomt eller 0 betyder ingen transverter. Bemærk: på nuværende tidspunkt afvises en værdi over 65535 eller under 0, når radioen er sat op (loggen siger IKKE anvendt), så en typisk VHF eller UHF transverter forskydning ikke får virkning endnu."
+
+#. Config command: RADIO EDITOR FT1000MP CW REVERSE
+msgctxt "TC_HELP_RADIO_EDITOR_FT1000MP_CW_REVERSE"
+msgid "When ticked, TR4W asks the radio for reverse CW (CW-R) instead of CW whenever it sets the radio to CW. Offered only for the Yaesu FT-1000MP."
+msgstr "Når der sættes kryds, beder TR4W radioen om reverse CW (CW- R) i stedet for CW, når den sætter radioen til CW. Tilbydes kun for Yabu FT- 1000MP."
+
+#. Config command: RADIO EDITOR HAMLIB MODEL ID
+msgctxt "TC_HELP_RADIO_EDITOR_HAMLIB_MODEL_ID"
+msgid "The HamLib model number (rig_model) used when the radio is driven through HamLib. Empty uses the model's registered number, shown in grey in the box. Offered only when the radio is driven through HamLib, and emptied when the radio type changes, because a number belongs to one model."
+msgstr "Det HamLib-modelnummer (rig _ model), der anvendes, når radioen køres gennem HamLib. Tomme bruger modellens registrerede nummer, vist i grå i boksen. Tilbydes kun, når radioen køres gennem HamLib, og tømmes, når radiotypen ændres, fordi et nummer tilhører en model."
+
+#. Config command: RADIO EDITOR ICOM DATA MODE ID
+msgctxt "TC_HELP_RADIO_EDITOR_ICOM_DATA_MODE_ID"
+msgid "Which Icom data mode TR4W selects when it puts the radio into a data mode: 1, 2 or 3 for D1, D2 or D3 (for example USB-D1). Empty means 1. Offered for Icom radios only."
+msgstr "Som Icom datatilstand TR4W vælger, når det sætter radioen i en datatilstand: 1, 2 eller 3 for D1, D2 eller D3 (for eksempel USB- D1). Tom betyder 1. Tilbydes kun for Icom radioer."
+
+#. Config command: RADIO EDITOR ICOM FILTER BYTE
+msgctxt "TC_HELP_RADIO_EDITOR_ICOM_FILTER_BYTE"
+msgid "An Icom filter choice: 1, 2 or 3 for the wide, normal or narrow filter, empty or 0 for none. Offered for Icom radios only. At present nothing in TR4W reads this value, so it has no effect: the code that used it is commented out."
+msgstr "Et Icom-filtervalg: 1, 2 eller 3 for det brede, normale eller smalle filter, tomt eller 0 for ingen. Tilbydes kun for Icom radioer. I øjeblikket er der ikke noget i TR4W, der læser denne værdi, så det har ingen effekt: den kode, der brugte det er kommenteret ud."
+
+#. Config command: RADIO EDITOR IP ADDRESS
+msgctxt "TC_HELP_RADIO_EDITOR_IP_ADDRESS"
+msgid "The IP address of a radio connected over the network (the Network tab). The radio's manual or network menu shows its address; where Discover is offered, it can find the radio for you."
+msgstr "IP-adressen på en radio, der er tilsluttet via netværket (fanen Netværk). Radioens manual eller netværksmenu viser sin adresse; hvor Discover tilbydes, kan den finde radioen for dig."
+
+#. Config command: RADIO EDITOR IP PORT
+msgctxt "TC_HELP_RADIO_EDITOR_IP_PORT"
+msgid "The network port the radio listens on. It is called IP port because the radios differ: the Icom network protocol uses UDP, while Elecraft and Flex use TCP. Choosing a radio type fills in that model's usual port when the box is empty, and an empty box uses the model's default."
+msgstr "Netværket sender radio lytter på. Det kaldes IP-port, fordi radioerne er forskellige: Icom netværksprotokollen bruger UDP, mens Elecraft og Flex bruger TCP. At vælge en radiotype udfylder modellens sædvanlige port, når boksen er tom, og en tom boks bruger modellens standard."
+
+#. Config command: RADIO EDITOR KEYER DTR   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_DTR"
+msgid "What the DTR line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention DTR is used for CW. If both lines are set to PTT, DTR switches it. This is the keyer port, not the CAT port (see CAT DTR)."
+msgstr "Hvad DTR linje keyer output port gør: CW nøgler CW, PTT tænder senderen, ON og OFF holde linjen på eller fra, og NONE lader det være. Ved konvention DTR anvendes til CW. Hvis begge linjer er indstillet til PTT, DTR skifter det. Dette er Keyer-porten, ikke CAT-porten (se CAT DTR)."
+
+#. Config command: RADIO EDITOR KEYER OUTPUT PORT   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_OUTPUT_PORT"
+msgid "The serial port TR4W keys CW and PTT on for this radio, through the Keyer RTS line and Keyer DTR line choices. It is not used when the station profile sends CW by CAT, sends no CW, or uses a keyer device such as a WinKeyer, which opens its own port."
+msgstr "Den serielle port TR4W nøgler CW og PTT til denne radio, gennem Keyer RTS linje og Keyer DTR linje valg. Den anvendes ikke, når stationsprofilen sender CW af CAT, sender ingen CW eller bruger en keyer-anordning som f.eks. en WinKeyer, der åbner sin egen havn."
+
+#. Config command: RADIO EDITOR KEYER RTS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_RTS"
+msgid "What the RTS line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention RTS is used for PTT. If both lines are set to CW, RTS keys. This is the keyer port, not the CAT port (see CAT RTS)."
+msgstr "Hvad RTS linje af keyer output port gør: CW nøgler CW, PTT tænder senderen, ON og OFF holde linjen på eller fra, og NONE forlader det alene. Ved konvention RTS anvendes til PTT. Hvis begge linjer er indstillet til CW, RTS nøgler. Dette er Keyer port, ikke CAT port (se CAT RTS)."
+
+#. Config command: RADIO EDITOR KEYER STOP BITS   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_KEYER_STOP_BITS"
+msgid "The stop bits used when the keyer output port is opened: 2 opens it with 2 stop bits, while 1 or (none) opens it with 1. It rarely matters; try 2 only if keying through this port misbehaves. It is separate from the CAT port's Stop bits on the Serial tab."
+msgstr "De stopbits, der bruges, når Keyers udgangsport åbnes: 2 åbner den med 2 stopbits, mens 1 eller (ingen) åbner den med 1. Det betyder sjældent noget; prøv kun 2, hvis kålen gennem denne port mishandler. Det er adskilt fra CAT-portens Stop bits på Serialfanebladet."
+
+#. Config command: RADIO EDITOR NAME
+msgctxt "TC_HELP_RADIO_EDITOR_NAME"
+msgid "The name this radio is listed under in the radio library and in the station profile's radio choices. It is required and must differ from every other radio's name. Renaming is safe: a profile refers to the radio by a hidden identity, not by this name."
+msgstr "Navnet denne radio er opført under i radio biblioteket og i stationsprofilens radiovalg. Det er nødvendigt og skal afvige fra enhver anden radios navn. Omdøbning er sikker: en profil refererer til radioen ved en skjult identitet, ikke ved dette navn."
+
+#. Config command: RADIO EDITOR PARITY
+msgctxt "TC_HELP_RADIO_EDITOR_PARITY"
+msgid "The parity of the CAT serial port: None, Odd or Even. Part of the serial frame with data bits and stop bits, and it must match the radio's own setting. Almost every radio uses None."
+msgstr "Paritet i CAT seriel port: Ingen, Odd eller Even. En del af den serielle ramme med databits og stopbits, og det skal matche radioens egen indstilling. Næsten alle radio bruger ingen."
+
+#. Config command: RADIO EDITOR PASSWORD
+msgctxt "TC_HELP_RADIO_EDITOR_PASSWORD"
+msgid "The password for a network radio that asks for a login, used with User name. The eye button beside the box shows or hides what you typed. The box is greyed and emptied for a radio type that needs no login."
+msgstr "Adgangskoden for en netværksradio, der beder om et login, bruges med brugernavn. Øjenknappen ved siden af boksen viser eller skjuler, hvad du skrev. Boksen er grådig og tømt for en radiotype, der ikke behøver login."
+
+#. Config command: RADIO EDITOR POLL THIS RADIO   (default: TRUE)
+msgctxt "TC_HELP_RADIO_EDITOR_POLL_THIS_RADIO"
+msgid "When ticked, TR4W keeps reading the radio's frequency and mode, at the Frequency Poll Rate. When cleared, no polling is started for this radio, so TR4W does not follow its frequency, band or mode."
+msgstr "TR4W bliver ved med at læse radioens frekvens og tilstand. Når denne radio er ryddet, startes ingen afstemning, så TR4W følger ikke dens frekvens, band eller tilstand."
+
+#. Config command: RADIO EDITOR PORT   (default: NONE)
+msgctxt "TC_HELP_RADIO_EDITOR_PORT"
+msgid "The serial port the radio's CAT (control) cable is connected to. A port marked (not present) is the port this radio is set to but which is not plugged in right now; it is kept unless you choose another."
+msgstr "Den serielle port radioets CAT (kontrol) kabel er forbundet til. En port markeret (ikke til stede) er den port denne radio er indstillet til, men som ikke er tilsluttet lige nu; det er holdt, medmindre du vælger en anden."
+
+#. Config command: RADIO EDITOR STARTUP COMMAND
+msgctxt "TC_HELP_RADIO_EDITOR_STARTUP_COMMAND"
+msgid "Text sent to the radio exactly as typed (up to 50 characters), once each time the link to the radio comes up, after a short wait for the radio to settle; it is sent again after the radio is power-cycled. Use it for a radio setting you always want. On an Icom radio it is not sent: a CI-V frame must begin with the bytes FE FE and end with FD, which typed text is not, and the log says why."
+msgstr "Tekst sendt til radioen præcis som skrevet (op til 50 tegn), en gang hver gang linket til radioen kommer op, efter en kort ventetid for radioen til at bosætte sig; det sendes igen efter radioen er power- cycled. Brug det til en radioindstilling, du altid vil have. På en Icom radio er det ikke sendt: en CI-V ramme skal begynde med bytes FE og slutte med FD, som indtastet tekst er ikke, og loggen siger hvorfor."
+
+#. Config command: RADIO EDITOR STOP BITS
+msgctxt "TC_HELP_RADIO_EDITOR_STOP_BITS"
+msgid "The number of stop bits on the CAT serial port, 1 or 2. Part of the serial frame with data bits and parity, and it must match the radio's own setting. This is the CAT port; the keyer output port has its own Stop bits choice below the tabs."
+msgstr "Antallet af stopbits på CAT seriel port, 1 eller 2. En del af den serielle ramme med data bits og paritet, og det skal matche radioens egen indstilling. Dette er CAT-porten; Keyer-udgangsporten har sit eget stop bits valg under fanerne."
+
+#. Config command: RADIO EDITOR TYPE
+msgctxt "TC_HELP_RADIO_EDITOR_TYPE"
+msgid "The radio model. It chooses the driver TR4W uses to talk to the radio, fills in that model's usual baud rate, serial frame and network port where those are empty, and decides which tabs and fields on this form apply. It is required."
+msgstr "Radiomodellen. Det vælger føreren TR4W bruger til at tale med radioen, udfylder denne models sædvanlige baud rate, serielle ramme og netværk port, hvor de er tomme, og beslutter, hvilke faner og felter på denne formular gælder. Det er nødvendigt."
+
+#. Config command: RADIO EDITOR USER NAME
+msgctxt "TC_HELP_RADIO_EDITOR_USER_NAME"
+msgid "The user name for a network radio that asks for a login, such as the network Icom radios and the Kenwood LAN radios. The box is greyed and emptied for a radio type that needs no login, such as the Elecraft K4."
+msgstr "Brugernavnet på et netværk radio, der beder om et login, såsom netværket Icom radioer og Kenwood LAN radioer. Boksen er grådig og tømt for en radiotype, der ikke behøver login, såsom elektriciteten K4."
+
+#. Config command: RADIO EDITOR WIDE CW FILTER
+msgctxt "TC_HELP_RADIO_EDITOR_WIDE_CW_FILTER"
+msgid "Meant to select the wide CW filter on older Yaesu radios (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). At present nothing in TR4W reads this value, so it has no effect."
+msgstr "Måtte vælge det brede CW-filter på ældre Yalopu radioer (FT- 747GX, FT- 840, FT- 890, FT- 900, FT- 990, FT- 1000). I øjeblikket er der intet i TR4W, der læser denne værdi, så det har ingen effekt."
+
+#. Config command: SCORE VERIFY SERVER   (default: TRUE)
+msgctxt "TC_HELP_SCORE_VERIFY_SERVER"
+msgid "When TRUE, TR4W checks the score board server's certificate when it posts your score to the Posting URL, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send."
+msgstr "Hvornår TRUE, TR4W kontrollerer score bord serverens certifikat, når det lægger din score til Posting URL, så længe programmet-wide certifikat check i indstillinger / tr4w.json er på (det er som standard). Ryd det kun for en server, hvis certifikat ikke kan kontrolleres: serverens identitet er så ikke markeret, og nogen mellem dig, og det kan læse, hvad du sender."
+
+#. Config command: SETUP WIZARD CLUSTER
+msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER"
+msgid "Tick to add a page that sets up a DX cluster connection for spots. The cluster is added to the cluster list and becomes the one TR4W connects to."
+msgstr "Tik for at tilføje en side, der opsætter en DX klynge forbindelse til pletter. klyngen tilføjes til klyngelisten og bliver den ene TR4W forbinder til."
+
+#. Config command: SETUP WIZARD CLUSTER PORT
+msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER_PORT"
+msgid "The cluster's TCP port, from 1 to 65535. Leave it blank for the standard port, 23."
+msgstr "Klyngens TCP port, fra 1 til 65535. Lad det stå tomt for standardporten, 23."
+
+#. Config command: SETUP WIZARD KEYER
+msgctxt "TC_HELP_SETUP_WIZARD_KEYER"
+msgid "Tick to add a page that sets up a WinKeyer. It is added to the keyer library and becomes the CW output for Radio 1, used instead of CW by CAT when both are chosen."
+msgstr "Tik for at tilføje en side, der sætter en WinKeyer op. Det tilføjes til Keyer biblioteket og bliver CW output for Radio 1, anvendes i stedet for CW af CAT, når begge er valgt."
+
+#. Config command: SETUP WIZARD LOGGER
+msgctxt "TC_HELP_SETUP_WIZARD_LOGGER"
+msgid "Tick to add a page that sets up an external logger (a logbook program or online service) that each QSO is also sent to. It is added to the external logger list, active if its Active box is ticked."
+msgstr "Tik for at tilføje en side, der opretter en ekstern logbog (en logbog program eller online service), som hver QSO også sendes til. Det tilføjes til den eksterne logger liste, aktiv, hvis dens Aktive boks er markeret."
+
+#. Config command: SETUP WIZARD RADIO
+msgctxt "TC_HELP_SETUP_WIZARD_RADIO"
+msgid "Tick to add a page that sets up a radio for rig control. The radio is added to the radio library and put in Radio 1 of the active station profile; when no profile is active, of one the wizard makes active."
+msgstr "Tik for at tilføje en side, der sætter en radio op for rig kontrol. Radioen tilføjes til radiobiblioteket og sættes i Radio 1 af den aktive station profil; når ingen profil er aktiv, af en guiden gør aktiv."
+
+#. Config command: SETUP WIZARD ROTATOR
+msgctxt "TC_HELP_SETUP_WIZARD_ROTATOR"
+msgid "Tick to add a page that sets up an antenna rotator. It is added to the rotator list and becomes the rotator in use."
+msgstr "Tik for at tilføje en side, der sætter en antenne rotator op. Det tilføjes til rotator listen og bliver rotator i brug."
+
+#. Config command: SETUP WIZARD SHOW DETAILS
+msgctxt "TC_HELP_SETUP_WIZARD_SHOW_DETAILS"
+msgid "Shows the full report of what the wizard did, with the detail lines added to the summary."
+msgstr "Viser den fulde rapport om, hvad guiden gjorde, med de detaljerede linjer tilføjet til resuméet."
+
+#. Config command: SETUP WIZARD WSJT-X
+msgctxt "TC_HELP_SETUP_WIZARD_WSJT_X"
+msgid "Tick to add a page for the WSJT-X settings. Only the values changed on that page are saved."
+msgstr "Tik for at tilføje en side til WSJT- X indstillingerne. Kun værdier ændret på denne side gemmes."
+
+#. Config command: TCI DEBUG   (default: FALSE)
+msgctxt "TC_HELP_TCI_DEBUG"
+msgid "Writes every TCI server command, in both directions, to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
+msgstr "Skriver hver TCI server kommando, i begge retninger, til tr4w.log. Linjerne er skrevet på INFO-niveau, så de vises kun, når logniveauet er INFO, DEBUG eller TRACE. Det gælder, når du redder."
+
+#. Config command: TCI MAX TX SECONDS   (default: 180)
+msgctxt "TC_HELP_TCI_MAX_TX_SECONDS"
+msgid "A safety limit in seconds, 0 to 3600. When a TCI client has kept the transmitter keyed this long, TR4W unkeys it, which covers a client that crashed or lost its connection while transmitting. 0 means no limit. A transmission you start yourself is never cut."
+msgstr "En sikkerhedsgrænse på 0-3600 sekunder. Når en TCI klient har holdt senderen keyed så længe, TR4W unkeys det, som dækker en klient, der styrtede ned eller mistede sin forbindelse under transmission. 0 betyder ingen grænse. En transmission du starter dig selv er aldrig skåret."
+
+#. Config command: TELNET CONSOLE LINES   (default: 10000)
+msgctxt "TC_HELP_TELNET_CONSOLE_LINES"
+msgid "The most lines the DX cluster window keeps, from 1000 to 100000. When the window goes over the limit, the oldest lines are removed, down to nine tenths of the limit."
+msgstr "De fleste linjer DX klyngevinduet holder, fra 1000 til 100000. Når vinduet går over grænsen, fjernes de ældste linjer, ned til ni tiendedele af grænsen."
+
+#. Config command: TELNET DEBUG   (default: FALSE)
+msgctxt "TC_HELP_TELNET_DEBUG"
+msgid "Writes every line sent to and received from the DX cluster to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
+msgstr "Skriver hver linje sendt til og modtaget fra DX klyngen til tr4w.log. Linjerne er skrevet på INFO-niveau, så de vises kun, når logniveauet er INFO, DEBUG eller TRACE. Det gælder, når du redder."
+
+#. Config command: TUNE WITH DITS   (default: FALSE)
+msgctxt "TC_HELP_TUNE_WITH_DITS"
+msgid "If this parameter is TRUE, TR4W sends a string of dits at 75 WPM when you press Ctrl-Left-Shift, instead of a solid carrier. (Not yet implemented.)"
+msgstr "Hvis denne parameter er TRUETR4W sender en række dits ved 75 WPM, når du trykker på ECL-Left- Shift, i stedet for en solid bærer. (Endnu ikke gennemført)"
+
+#. Config command: UDP DESTINATION PORT
+msgctxt "TC_HELP_UDP_DESTINATION_PORT"
+msgid "The UDP port the receiving program listens on, from 1 to 65535. The port belongs to this destination, so a program that wants different kinds of data on different ports needs one destination for each port."
+msgstr "UDP porten modtager programmet lytter på, fra 1 til 65535. Havnen tilhører denne destination, så et program, der ønsker forskellige slags data om forskellige havne har brug for en destination for hver port."
+
+#. Config command: USE CALL HISTORY FILE   (default: FALSE)
+msgctxt "TC_HELP_USE_CALL_HISTORY_FILE"
+msgid "When TRUE, TR4W reads a call history file when the contest is opened and uses it to fill in a station's exchange from the call. The file is CALL HISTORY FILENAME, or the contest's own default when that is blank; a contest that takes nothing from a call history file reads none. A change takes effect the next time the contest is opened."
+msgstr "Hvornår TRUETR4W læser en opkaldshistorikfil når konkurrencen åbnes og bruger den til at udfylde en stations udveksling fra opkaldet. Filen er CALL HISTORY FILENAME, eller konkurrencen egen standard, når det er blank; en konkurrence, der tager intet fra et opkald historie fil læser ingen. En ændring træder i kraft næste gang konkurrencen åbnes."
 

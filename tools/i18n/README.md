@@ -105,6 +105,8 @@ help reader keeps them), by NY4I's decision; corrections come back through
 Weblate. Only the legacy `po2pas.py` write-back into `.pas` files still skips them.
 Reviewed (non-fuzzy) entries are never touched, including by `--reseed`.
 
+**The LibreTranslate server (NY4I, 2026-11-21): `http://docker.bettersoftwaresolutions.com:5000/`, always up.** Pass it with `--url http://docker.bettersoftwaresolutions.com:5000` (the script's default is still `http://localhost:5000`). Everything above applies unchanged, including one string per request: the server is remote, so budget for network time as well as inference.
+
 **One string per request by default.** Batching maps results back by position
 and would silently mispair a reordered batch. Measured against the local
 engine: `--batch 1` is 2.04 s/string (~15 min per language) against
