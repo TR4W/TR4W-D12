@@ -75,6 +75,29 @@ else
    Write-Host "  symbols  : bundled (tr4w.dbg) -- testing build, pass -ExcludeSymbols for a public release"
    }
 
+# The Start-menu "Release notes" shortcut opens a plain-text copy of
+# RELEASE_NOTES.md, converted HERE so every installer build carries a fresh one
+# and none can ship without it: a missing .md, a missing Python or a failed
+# conversion stops the build. The .txt goes under build-out (gitignored).
+$REPO_ROOT = Split-Path $TR4W_DIR -Parent
+$notesMd   = Join-Path $REPO_ROOT 'RELEASE_NOTES.md'
+$notesTxt  = Join-Path $REPO_ROOT 'build-out\release-notes\RELEASE_NOTES.txt'
+$notesTool = Join-Path $REPO_ROOT 'tools\release_notes_to_txt.py'
+if (-not (Get-Command python -ErrorAction SilentlyContinue))
+   {
+   Write-Host 'python not found -- needed to convert RELEASE_NOTES.md for the installer' -ForegroundColor Red
+   exit 1
+   }
+if (Test-Path -LiteralPath $notesTxt) { Remove-Item -LiteralPath $notesTxt -Force }
+& python -I $notesTool $notesMd $notesTxt
+if (($LASTEXITCODE -ne 0) -or (-not (Test-Path -LiteralPath $notesTxt)))
+   {
+   Write-Host "release notes conversion failed ($notesMd)" -ForegroundColor Red
+   exit 1
+   }
+Write-Host "  notes    : $notesTxt"
+$nsisArgs += "/DNOTESTXT=$notesTxt"
+
 $suffix = '-x64'
 
 if ($StageDir -ne '')

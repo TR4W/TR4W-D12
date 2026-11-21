@@ -31,6 +31,11 @@
 !endif
 ; The architecture is in the file name, so users can tell which they have.
 !define TR4WSUFFIX "-x64"
+; The plain-text release notes, converted from RELEASE_NOTES.md by
+; build\Build-Installer.ps1 (the only caller), which passes the absolute path.
+!ifndef NOTESTXT
+  !error "NOTESTXT is not defined -- build with build\Build-Installer.ps1, which converts RELEASE_NOTES.md"
+!endif
 !include LogicLib.nsh
 !include x64.nsh
 
@@ -364,6 +369,13 @@ Section "tr4w.exe" secexe
 	; uLogDatabase.DiagnoseSQLiteLoad reads the PE header and says so.
 	File "${BINDIR}\sqlite3.dll"
 
+	; THE RELEASE NOTES, AS PLAIN TEXT, for the "Release notes" Start-menu
+	; shortcut.  Generated from RELEASE_NOTES.md by tools\release_notes_to_txt.py
+	; inside build\Build-Installer.ps1, which passes the path as /DNOTESTXT and
+	; fails the build if the conversion fails.  (The old shortcut named
+	; history.txt, a file no installer ever shipped; it opened nothing.)
+	File "${NOTESTXT}"
+
 	; THE CONVERTER, WHICH IS THE TOOL THE UPGRADE MESSAGE AT THE END OF THIS
 	; SCRIPT TELLS AN OPERATOR TO RUN.  It was not shipped until 2026-09-19,
 	; which made that message unfollowable: it named a program the operator
@@ -537,7 +549,10 @@ SectionEnd
 Section "" SecSC
   CreateDirectory "$SMPROGRAMS\TR4W"
   CreateShortCut "$SMPROGRAMS\TR4W\TR4W.lnk" "$INSTDIR\tr4w.exe" "" "$INSTDIR\tr4w.exe" 0
-  CreateShortCut "$SMPROGRAMS\TR4W\history.lnk" "$INSTDIR\history.txt" "" "$INSTDIR\history.txt" 0
+  ; history.lnk pointed at a history.txt that was never shipped; an upgrade
+  ; must not leave it behind.
+  Delete "$SMPROGRAMS\TR4W\history.lnk"
+  CreateShortCut "$SMPROGRAMS\TR4W\Release notes.lnk" "$INSTDIR\RELEASE_NOTES.txt" "" "$INSTDIR\RELEASE_NOTES.txt" 0
 
 !ifdef TR4WLANG
 	!If ${TR4WLANG} == "rus"
