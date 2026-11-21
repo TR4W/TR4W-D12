@@ -270,8 +270,6 @@ const
    AUTO_SEND_CHARACTER_COUNT_ARRAY: array[0..06] of integer = (0, 1, 2, 3, 4, 5,
       6);
    AUTO_QSL_INTERVAL: array[0..06] of integer = (0, 1, 2, 3, 4, 5, 6);
-   ROW_COUNT_ARRAY: array[0..10] of integer = (5, 6, 7, 8, 9, 10, 11, 12, 13,
-      14, 15);
    WINDOW_SIZE_ARRAY: array[0..14] of integer = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
       11, 12, 13, 14, 15);
    CW_SPEED_INCREMENT: array[1..10] of integer = (1, 2, 3, 4, 5, 6, 7, 8, 9,
@@ -1089,7 +1087,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..104] of string = (
+   RETIRED_COMMANDS: array[0..105] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -1237,7 +1235,13 @@ const
       'LPT3 BASE ADDRESS',
       'RELAY CONTROL PORT',
       'STEREO CONTROL PORT',
-      'USE CONTROL PORT'
+      'USE CONTROL PORT',
+      (* RETIRED 2026-11-21 (NY4I). Settings.MainWindow.RowCount had become
+        only the log pane's starting height; the main window's height decides
+        it now, restored from the saved window position. Its property,
+        Preferences row, caption and help went with it, and it left
+        uRadioConfigApply.MIGRATED_COMMANDS. *)
+      'ROW COUNT'
       );
 
 function RetiredCommandCount: integer;

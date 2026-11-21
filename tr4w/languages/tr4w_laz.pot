@@ -1335,6 +1335,10 @@ msgctxt "tprefsform.btncancel.caption"
 msgid "Cancel"
 msgstr ""
 
+#: tprefsform.btnchoosefont.caption
+msgid "Choose..."
+msgstr ""
+
 #: tprefsform.btndeleteprofile.caption
 msgctxt "tprefsform.btndeleteprofile.caption"
 msgid "Delete"
@@ -1498,10 +1502,6 @@ msgstr ""
 
 #: tprefsform.chkbandmapso2r.caption
 msgid "SO2R display"
-msgstr ""
-
-#: tprefsform.chkboldfont.caption
-msgid "Bold"
 msgstr ""
 
 #: tprefsform.chkcallwindowshowallspots.caption
@@ -1853,21 +1853,13 @@ msgstr ""
 msgid "Connecting to: (none chosen)"
 msgstr ""
 
-#: tprefsform.lblappearcolorshint.caption
-msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
-msgstr ""
-
 #: tprefsform.lblappearheading.caption
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
 msgstr ""
 
 #: tprefsform.lblappearhint.caption
-msgid "The font applies to the main contest window.  All four take effect when TR4W next starts."
-msgstr ""
-
-#: tprefsform.lblappearmenunote.caption
-msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
+msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblaudioheading.caption
@@ -2076,7 +2068,7 @@ msgid "WPM"
 msgstr ""
 
 #: tprefsform.lblfontsize.caption
-msgid "Size:"
+msgid "Font size step:"
 msgstr ""
 
 #: tprefsform.lblhamlibrestart.caption
@@ -2165,7 +2157,7 @@ msgstr ""
 
 #: tprefsform.lblmainwindowheading.caption
 msgctxt "tprefsform.lblmainwindowheading.caption"
-msgid "Main window"
+msgid "Windows and log"
 msgstr ""
 
 #: tprefsform.lblmmttyengine.caption
@@ -3149,12 +3141,8 @@ msgstr ""
 msgid "User Info Shown"
 msgstr ""
 
-#: usettingscaptions.rs_appearance_layout_rowcount
-msgid "Row Count"
-msgstr ""
-
 #: usettingscaptions.rs_appearance_layout_windowsize
-msgid "Window Size"
+msgid "Main window text size"
 msgstr ""
 
 #: usettingscaptions.rs_appearance_noborder

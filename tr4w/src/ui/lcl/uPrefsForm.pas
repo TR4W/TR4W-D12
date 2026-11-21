@@ -79,6 +79,7 @@ uses
    Controls,
    Forms,
    StdCtrls,
+   Spin,           // TSpinEdit -- the Appearance page's two size boxes
    uInputCaption,  // TInputCaption -- the Station page's captions (issue 278)
    Grids,          // TStringGrid -- the colors page is one grid, not 100 combos
    // TComboBox -- the cluster server picker is editable
@@ -519,8 +520,8 @@ type
       lblAppearHeading: TLabel;
       lblMainFont: TLabel;
       lblFontSize: TLabel;
+      lblWindowSize: TLabel;
       lblAppearHint: TLabel;
-      lblAppearColorsHint: TLabel;
       lblBackupHeading: TLabel;
       lblBackupEvery: TLabel;
       lblBackupEveryUnits: TLabel;
@@ -533,13 +534,18 @@ type
       edtNetPassword: TEdit;
       edtNetTailcat: TEdit;
       edtNetComputerID: TEdit;
-      edtMainFont: TEdit;
-      edtFontSize: TEdit;
+      (* THE APPEARANCE PAGE'S FONT (2026-11-21): a read-only summary whose
+        own Font holds the chosen face and weight, a button that opens the
+        LCL's TFontDialog, and two up/down boxes for FONT SIZE (a 0..2 step)
+        and WINDOW SIZE (Main window text size, 1..15). *)
+      edtFontFace: TEdit;
+      btnChooseFont: TButton;
+      spnFontSize: TSpinEdit;
+      spnWindowSize: TSpinEdit;
       edtBackupEvery: TEdit;
       edtBackupFile: TEdit;
       chkNetAutoSync: TCheckBox;
       chkNetUseTailcat: TCheckBox;
-      chkBoldFont: TCheckBox;
       btnBrowseBackup: TButton;
 
       // --- Operating leaves, CW sending, and the DX cluster additions ---------
@@ -658,7 +664,6 @@ type
       lblLanguage: TLabel;
       cbxLanguage: TComboBox;
       lblLanguageHint: TLabel;
-      lblAppearMenuNote: TLabel;
       layAudio: TPanel;
       lblAudioHeading: TLabel;
       lblAudioInfo: TLabel;
@@ -792,6 +797,7 @@ type
       function  BrowseForFile(const aTitle, aFilter, aInitialDir,
                               aStartFile: string; out aPicked: string): boolean;
       procedure btnBrowseBackupClick(Sender: TObject);
+      procedure btnChooseFontClick(Sender: TObject);
       // OnSelectionChange, NOT OnChange -- and hence the extra parameter.  An
       // LCL TListBox has no OnChange at all (TComboBox does, which is why only
       // the two list boxes differ), so this is TSelectionChangeEvent; `User` is
@@ -1097,6 +1103,9 @@ type
       // Station.  Save returns False when CFGCA refused any value, having told
       // the operator which -- a refused entry must not close silently.
       procedure FillFromAllowedValues(const aCombo: TComboBox; const aCommand: string);
+      (* The Appearance page's font summary and its two up/down boxes. *)
+      procedure ShowChosenFont(const aFace: string; const aBold: boolean);
+      procedure LoadSpinFromCommand(const aSpin: TSpinEdit; const aCommand: string);
       procedure BuildBindings;
       procedure ShowHamScorePlainHttpNote;
       procedure ShowScoreVerifyNote;
@@ -1284,9 +1293,6 @@ type
       function  FileBrowseHandlerFor(const aKey: string): TNotifyEvent;
       procedure GeneratedCallHistoryBrowseClick(Sender: TObject);
       procedure GeneratedInitialExchangeBrowseClick(Sender: TObject);
-      procedure BuildGeneratedBlock(const aParent: TWinControl; const aTop: integer;
-                                    const aHeading: string;
-                                    const aPrefixes: array of string);
       procedure TrackGeneratedRoot(const aControl: TControl);
       { A control backed by the STORE rather than by a CFGCA command. It has no
         legacy command name, so it is registered under its own caption and is
@@ -1660,7 +1666,8 @@ uses
    uExternalLoggerFactory, // ApplyExternalLoggerConfiguration (issue 233)
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
-   uHTTPDownload,       (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
+   uSettingsCaptions,   (* RS_APPEARANCE_LAYOUT_WINDOWSIZE -- the text size label *)
+   uHTTPDownload,      (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
    uUrlTestButton,      (* TUrlTester -- the Test buttons beside the scoring URLs *)
    uCallHistory,        (* CallHistoryNameToStore -- the call history file's Browse *)
    LogDupe,             (* ContestCallHistoryFileName -- that box's hint *)
@@ -2319,6 +2326,13 @@ begin
    lblCWKeyersPointer.Caption := SPrefsCWKeyersPointer;
    lblKeyersCWPointer.Caption := SPrefsKeyersCWPointer;
    ApplyMainCallsignCaptions;
+   (* THE APPEARANCE PAGE (2026-11-21). WINDOW SIZE's label is the setting's
+     own caption, so Preferences and its search say "Main window text size"
+     from one string; the .lfm holds a placeholder. NumbersOnly is not
+     published by TSpinEdit, so it is set here (see uAutoCQForm). *)
+   lblWindowSize.Caption     := RS_APPEARANCE_LAYOUT_WINDOWSIZE;
+   spnFontSize.NumbersOnly   := True;
+   spnWindowSize.NumbersOnly := True;
 
    // In code as well as in the resource: losing these is invisible -- the form
    // still opens and still looks right, having silently stopped registering its
@@ -3911,9 +3925,10 @@ begin
    total := total + BuildPlacedBlock(layBands,    lblBandsHint,            NAV_BANDS,    host);
    AddBandPlanRow(host);
 
-   // Onto the DESIGNED Appearance panel, below its controls (they end at
-   // y=452 of 572, so there is room for a small block and no more).
-   BuildGeneratedBlock(layAppearance, 462, 'Layout', ['appearance.layout.']);
+   (* NO GENERATED BLOCK ON APPEARANCE ANY MORE (2026-11-21). It held ROW COUNT
+     and WINDOW SIZE under a 'Layout' heading; ROW COUNT is retired and WINDOW
+     SIZE is a designed up/down box (spnWindowSize), so the 'appearance.layout.'
+     prefix has no generated rows and BuildGeneratedBlock had no other caller. *)
 
    total := total + BuildColorsSection;
 
@@ -4448,44 +4463,6 @@ begin
    head.Font.Style := [fsBold];
 
    Result := box;
-end;
-
-// Append generated rows to an EXISTING DESIGNED PANEL, below whatever the
-// designer put there.
-//
-// The other overload builds a whole page; this one adds a block to a page that
-// already exists. It is how a setting reaches its real home without waiting for
-// its whole page to be regenerated -- ROW COUNT and WINDOW SIZE went onto the
-// designed Appearance panel this way (NY4I, 2026-08-16).
-//
-// The prefix is the placement rule here: `appearance.ctrlj.rowCount` became
-// `appearance.layout.rowCount` and that alone took it off the holding page.
-// A setting whose key must NOT change goes through BuildPlacedBlock instead.
-//
-// aTop must clear the designed controls. There is no layout manager on these
-// panels -- everything is absolutely positioned -- so a block placed too high
-// silently overlaps rather than pushing anything down. Lint-FormOverlap checks
-// the .lfm and cannot see runtime children, which is exactly why this takes an
-// explicit top rather than guessing one.
-procedure TPrefsForm.BuildGeneratedBlock(const aParent: TWinControl; const aTop: integer;
-                                         const aHeading: string;
-                                         const aPrefixes: array of string);
-var
-   host: TPanel;
-   p: string;
-   y, n: integer;
-begin
-   host := NewGeneratedBlock(aParent, nil, aHeading, y);
-   host.SetBounds(0, aTop, aParent.Width, aParent.Height - aTop);
-
-   n := 0;
-   for p in aPrefixes do
-      begin
-      n := n + AddGeneratedRows(host, p, y);
-      end;
-
-   host.Visible := n > 0;   // no heading, and no empty host, over nothing
-   logger.Debug('[Prefs] generated block on %s -> %d setting(s)', [aParent.Name, n]);
 end;
 
 (* A block on a DESIGNED panel holding the settings TPrefsPlacements puts on
@@ -5261,9 +5238,13 @@ begin
      be forgotten silently. }
 
    // --- layAppearance ---
-   AddHandWiredToSearchIndex(aN, 'BOLD FONT',                         chkBoldFont);
-   AddHandWiredToSearchIndex(aN, 'FONT SIZE',                         edtFontSize);
-   AddHandWiredToSearchIndex(aN, 'MAIN FONT',                         edtMainFont);
+   (* BOLD FONT FIRST: both land on the font summary, and the later call's
+     tooltip wins, so the box wears MAIN FONT's help. The Choose... button
+     gets the same help in ApplyUnboundFieldHelp. *)
+   AddHandWiredToSearchIndex(aN, 'BOLD FONT',                         edtFontFace);
+   AddHandWiredToSearchIndex(aN, 'MAIN FONT',                         edtFontFace);
+   AddHandWiredToSearchIndex(aN, 'FONT SIZE',                         spnFontSize);
+   AddHandWiredToSearchIndex(aN, 'WINDOW SIZE',                       spnWindowSize);
 
    // --- layBackup ---
    AddHandWiredToSearchIndex(aN, 'BACKUP LOG FREQUENCY',              edtBackupEvery);
@@ -7545,6 +7526,9 @@ begin
    // Station
    HintFromHelp(cbxMyContinent,     lblMyContinent,     'MY CONTINENT');
 
+   // Appearance: the font dialog's button sets MAIN FONT and BOLD FONT
+   HintFromHelp(btnChooseFont,      nil,                'MAIN FONT');
+
    // DX clusters
    HintFromHelp(edtClusterName,     lblClusterName,     'PREFERENCES CLUSTER NAME');
    HintFromHelp(cbxClusterServer,   lblClusterServer,   'TELNET SERVER');
@@ -8606,9 +8590,9 @@ begin
    chkNetAutoSync.Checked := CommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT');
    chkNetUseTailcat.Checked := CommandBool('SERVER USE TAILCAT');
 
-   edtMainFont.Text := CommandText('MAIN FONT');
-   edtFontSize.Text := CommandText('FONT SIZE');
-   chkBoldFont.Checked       := CommandBool('BOLD FONT');
+   ShowChosenFont(CommandText('MAIN FONT'), CommandBool('BOLD FONT'));
+   LoadSpinFromCommand(spnFontSize,   'FONT SIZE');
+   LoadSpinFromCommand(spnWindowSize, 'WINDOW SIZE');
 
    edtBackupEvery.Text := FStore.CommandValue('BACKUP LOG FREQUENCY',
                              CFGCommandValueAsString('BACKUP LOG FREQUENCY'));
@@ -8641,9 +8625,12 @@ begin
    SetCommandBool('SERVER AUTO SYNCHRONIZE LOG ON CONNECT', chkNetAutoSync.Checked);
    SetCommandBool('SERVER USE TAILCAT', chkNetUseTailcat.Checked);
 
-   ApplyIfChanged('MAIN FONT', Trim(edtMainFont.Text));
-   ApplyIfChanged('FONT SIZE', Trim(edtFontSize.Text));
-   SetCommandBool('BOLD FONT',              chkBoldFont.Checked);
+   (* THE FONT IS READ FROM THE SUMMARY BOX'S OWN FONT, where ShowChosenFont
+     put it -- the box's text is only its description. *)
+   ApplyIfChanged('MAIN FONT', edtFontFace.Font.Name);
+   SetCommandBool('BOLD FONT', fsBold in edtFontFace.Font.Style);
+   ApplyIfChanged('FONT SIZE',   IntToStr(spnFontSize.Value));
+   ApplyIfChanged('WINDOW SIZE', IntToStr(spnWindowSize.Value));
 
    ApplyIfChanged('BACKUP LOG FREQUENCY', Trim(edtBackupEvery.Text));
    (* A CHANGED FOLDER IS PROBED AT ONCE, off this thread: the property's
@@ -8668,6 +8655,82 @@ begin
       if dlg.Execute then
          begin
          edtBackupFile.Text := dlg.FileName;
+         end;
+   finally
+      dlg.Free;
+   end;
+end;
+
+(* THE MAIN WINDOW'S FONT, SHOWN AND HELD BY ONE CONTROL (2026-11-21).
+
+  MAIN FONT and BOLD FONT used to be a free-text box and a check box. They are
+  one read-only box now, and the choice lives IN THE BOX'S OWN Font -- its
+  Name and whether fsBold is in its Style -- which is what the save reads. So
+  the box previews the typeface it names, and there is no field beside it to
+  drift out of step. Its Text is only the description, 'Arial, Bold'.
+
+  FONT SIZE IS NOT PART OF IT, and cannot be: it is a STEP, 0..2, added to the
+  main window's text size (MainUnit: an element's height is ws - 2 + FONT
+  SIZE), not a point size, so a size from the font dialog has nowhere to go.
+  It keeps its own up/down box. *)
+procedure TPrefsForm.ShowChosenFont(const aFace: string; const aBold: boolean);
+begin
+   edtFontFace.Font.Name := LclText(aFace);
+   if aBold then
+      begin
+      edtFontFace.Font.Style := edtFontFace.Font.Style + [fsBold];
+      edtFontFace.Text := LclText(aFace) + ', ' + SPrefsFontBold;
+      end
+   else
+      begin
+      edtFontFace.Font.Style := edtFontFace.Font.Style - [fsBold];
+      edtFontFace.Text := LclText(aFace);
+      end;
+end;
+
+(* AN UP/DOWN BOX FROM ITS COMMAND, CLAMPED TO THE BOX'S OWN LIMITS. The
+  .lfm's MinValue and MaxValue are the setting's range (TMainFontSize 0..2,
+  TMainWindowSize 1..15), so a value outside it -- a hand-edited tr4w.json --
+  shows as the nearest legal one, and the save writes that. A value that is
+  not a number keeps the box's designed value and says so. *)
+procedure TPrefsForm.LoadSpinFromCommand(const aSpin: TSpinEdit; const aCommand: string);
+var
+   v: Longint;
+   code: integer;
+begin
+   v := 0;
+   code := 0;
+   ValChecked(Trim(CommandText(aCommand)), v, code);
+   if code <> 0 then
+      begin
+      logger.Warn('[Prefs] %s is not a number; showing %d',
+                  [aCommand, aSpin.Value]);
+      Exit;
+      end;
+   aSpin.Value := EnsureRange(v, aSpin.MinValue, aSpin.MaxValue);
+end;
+
+(* THE LCL'S FONT DIALOG, on every platform. It chooses the face and whether
+  it is bold; nothing else it offers is stored.
+
+  fdNoSizeSel hides the size list because FONT SIZE is a step set beside this
+  button, not a point size (see ShowChosenFont). Win32 honours it
+  (CF_NOSIZESEL); gtk2 and cocoa may still show a size, and it is ignored.
+  fdForceFontExist: only an installed face can be chosen. *)
+procedure TPrefsForm.btnChooseFontClick(Sender: TObject);
+var
+   dlg: TFontDialog;
+begin
+   dlg := TFontDialog.Create(nil);
+   try
+      dlg.Options    := [fdNoSizeSel, fdForceFontExist];
+      dlg.Font.Name  := edtFontFace.Font.Name;
+      dlg.Font.Style := edtFontFace.Font.Style * [fsBold];
+      if dlg.Execute then
+         begin
+         (* The box's Text changes with it, and its OnChange marks the page
+           dirty -- the same as typing in any other box. *)
+         ShowChosenFont(dlg.Font.Name, fsBold in dlg.Font.Style);
          end;
    finally
       dlg.Free;

@@ -787,7 +787,7 @@ begin
    RegisterModelSetting( 'cw.ctrlj.tuneAltDEnable',           'TUNE ALT-D ENABLE',
                           RS_CW_CTRLJ_TUNEALTDENABLE);
 
-   // --- Appearance (13) -------------------------------
+   // --- Appearance (12) -------------------------------
    // customCaret was here until 2026-08-18; the CFG row is csRem now and
    // retired rows are not registered (cf. AUTO ALT-D ENABLE, BACKCOPY ENABLE).
    RegisterModelSetting( 'appearance.ctrlj.beepEnable',       'BEEP ENABLE',
@@ -809,17 +809,18 @@ begin
      Its vocabulary is registered from uCFG against tr4wColorsSA. *)
    RegisterModelSetting( 'appearance.alertColor',              'ALERT COLOR',
                           RS_APPEARANCE_ALERTCOLOR);
-   (* True: needs a restart, which is what the row's crJ: 1 said. The
-     aBroadcast parameter that used to sit before it is gone -- nothing ever
-     read it; uCFG.SHARED_WITH_PEERS is the live answer. *)
-   RegisterModelSetting( 'appearance.layout.rowCount',         'ROW COUNT',
-                          RS_APPEARANCE_LAYOUT_ROWCOUNT, True);
+   (* ROW COUNT ('appearance.layout.rowCount') was removed 2026-11-21 (NY4I):
+     only the log pane's starting height was left of it, and the window's
+     height decides that. The name is in uCFG.RETIRED_COMMANDS. *)
    RegisterModelSetting( 'appearance.ctrlj.showFrequencyInLog','SHOW FREQUENCY IN LOG',
                           RS_APPEARANCE_CTRLJ_SHOWFREQUENCYINLOG);
    RegisterModelSetting( 'appearance.ctrlj.showTypedCallsign','SHOW TYPED CALLSIGN',
                           RS_APPEARANCE_CTRLJ_SHOWTYPEDCALLSIGN);
    RegisterModelSetting( 'appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
                           RS_APPEARANCE_CTRLJ_USERINFOSHOWN);
+   (* True: needs a restart -- the main window is laid out from it once, in
+     CreateMainWindow. Preferences edits it on the designed Appearance page
+     (spnWindowSize), hand-wired, not through a generated row. *)
    RegisterModelSetting( 'appearance.layout.windowSize',       'WINDOW SIZE',
                           RS_APPEARANCE_LAYOUT_WINDOWSIZE, True);
 

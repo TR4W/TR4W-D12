@@ -864,8 +864,10 @@ procedure SetElementFont(const aElement: TMainWindowElement;
 (* Decide which window edge every control on the main window holds to, so the
   window can be resized. Called once, after the layout is built. *)
 (* Put the main window back where -- and at what height -- it was left.
-  Reads the rect FindAndSaveRectOfAllWindows wrote. *)
-procedure RestoreMainWindowBounds(const aSaved: TRect);
+  Reads the rect FindAndSaveRectOfAllWindows wrote. A rect with no size (a
+  first run) keeps the laid-out height plus aUnsavedExtraHeight. *)
+procedure RestoreMainWindowBounds(const aSaved: TRect;
+                                  const aUnsavedExtraHeight: integer);
 
 (* Let the operator resize the main window vertically. Width is pinned:
   see the note at the call site.
@@ -1481,7 +1483,8 @@ begin
       end;
 end;
 
-procedure RestoreMainWindowBounds(const aSaved: TRect);
+procedure RestoreMainWindowBounds(const aSaved: TRect;
+                                  const aUnsavedExtraHeight: integer);
 var
    r: TRect;
 begin
@@ -1494,7 +1497,13 @@ begin
 
    (* A SAVED RECT WITH NO SIZE IS A FIRST RUN, or a file written before the
      window could be resized -- keep the laid-out height in that case rather
-     than collapsing the window to nothing. *)
+     than collapsing the window to nothing.
+
+     PLUS aUnsavedExtraHeight, since ROW COUNT was retired (2026-11-21): the
+     layout is built at the log's MINIMUM height, which is also the window's
+     MinHeight, and a first run opens taller than that (MainUnit's
+     MAIN_LOG_FIRST_RUN_ROWS). The log is anchored to all four edges, so the
+     extra goes to it. *)
    r.Left := aSaved.Left;
    r.Top := aSaved.Top;
 
@@ -1505,6 +1514,10 @@ begin
    else
       begin
       r.Bottom := r.Top + TR4WMainForm.Height;
+      if aUnsavedExtraHeight > 0 then
+         begin
+         r.Bottom := r.Bottom + aUnsavedExtraHeight;
+         end;
       end;
 
    (* WIDTH IS THE LAYOUT'S, NEVER THE FILE'S -- Constraints pin it, and
@@ -3602,7 +3615,7 @@ begin
      exactly what it was reported as, five times.
 
      THE HEIGHT IT WAS GIVEN CAME FROM WIN32 ARITHMETIC. The caller asks for
-     `30 + Settings.MainWindow.RowCount * (ws + 2)`, where 30 was an allowance for a
+     `30 + rows * (ws + 2)` (MainUnit.MainLogHeightForRows), where 30 was an allowance for a
      list view's header and border. This grid's header is a REAL ROW of
      DefaultRowHeight, so the allowance is 19 here and 30 leaves a remainder.
 

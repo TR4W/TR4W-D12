@@ -4162,7 +4162,7 @@ msgstr "Только множители"
 msgid "SO2R display"
 msgstr "SO2R дисплей"
 
-#: tprefsform.chkboldfont.caption
+#: uappstrings.sprefsfontbold
 #, fuzzy
 msgid "Bold"
 msgstr "Смелый"
@@ -4611,11 +4611,10 @@ msgstr "Подключение к: (не выбрано)"
 
 #: tprefsform.lblappearcolorshint.caption
 #, fuzzy
-msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
-msgstr "Цвета окон все еще находятся в меню настроек. Они принадлежат здесь и будут перемещаться после того, как основное окно будет увеличено, что является изменением, которое решает, какие параметры макета должны быть."
+#~ msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
+#~ msgstr "Цвета окон все еще находятся в меню настроек. Они принадлежат здесь и будут перемещаться после того, как основное окно будет увеличено, что является изменением, которое решает, какие параметры макета должны быть."
 
 #: tprefsform.lblappearheading.caption
-#: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
@@ -4630,8 +4629,8 @@ msgstr "Шрифт распространяется на главное окно
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
-msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Они были в разделе Внешний вид меню Настройки. Это окно исчезает, как только к ним присоединяются ROW COUNT и WINDOW SIZE."
+#~ msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
+#~ msgstr "Они были в разделе Внешний вид меню Настройки. Это окно исчезает, как только к ним присоединяются ROW COUNT и WINDOW SIZE."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -4896,8 +4895,9 @@ msgstr "Скорость персонажа:"
 
 #: tprefsform.lblfontsize.caption
 #, fuzzy
-msgid "Size:"
-msgstr "Размер:"
+#| msgid "Size:"
+msgid "Font size step:"
+msgstr ""
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -7994,12 +7994,13 @@ msgstr "Показ пользовательской информации"
 
 #: usettingscaptions.rs_appearance_layout_rowcount
 #, fuzzy
-msgid "Row Count"
-msgstr "Роу Граф"
+#~ msgid "Row Count"
+#~ msgstr "Роу Граф"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-msgid "Window Size"
+#| msgid "Window Size"
+msgid "Main window text size"
 msgstr "Размер окна"
 
 #: usettingscaptions.rs_audio_dvk_path
@@ -12423,4 +12424,14 @@ msgstr ""
 #: utr4wstrings.tc_trmasterdtadownloadednotloaded
 #, fuzzy
 msgid "TRMASTER.DTA downloaded but could not be loaded -- the data in use is unchanged (see tr4w.log)"
+msgstr ""
+
+#: tprefsform.btnchoosefont.caption
+#, fuzzy
+msgid "Choose..."
+msgstr ""
+
+#: tprefsform.lblmainwindowheading.caption
+#, fuzzy
+msgid "Windows and log"
 msgstr ""

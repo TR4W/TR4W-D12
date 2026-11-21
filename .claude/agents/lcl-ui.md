@@ -596,8 +596,9 @@ token -> width at 96 dpi. **A token is never an index or a caption** --
 three ways:
 
 - a designed control bound in `BuildBindings`;
-- its key prefix, on a page generated from that prefix (`contest.`, `advanced.`,
-  `appearance.layout.`);
+- its key prefix, on a page generated from that prefix (`contest.`, `advanced.`;
+  `appearance.layout.` no longer generates anything -- WINDOW SIZE is the
+  designed `spnWindowSize`, 2026-11-21);
 - a line in `uPrefsForm.PrefsPlacements`: `Place(key, NAV_tag, group)`, in display
   order.
 
@@ -772,6 +773,24 @@ the defect. **The bank rule is `BankForModifiers` (Ctrl wins)**, shared by the
 labels, the right-click editor row and `MainUnit.GetRealVirtualKey` (the send).
 On gtk2 a modifier's own press arrives without its `ss` flag, so the caller
 counts the key itself.
+
+## The main window's height owns the log; FONT SIZE is a step (2026-11-21)
+
+- **ROW COUNT is retired.** `CreateMainWindow` builds the log at
+  `MainUnit.MAIN_LOG_MINIMUM_ROWS` (5, through `MainLogHeightForRows`), so the
+  layout -- and `Constraints.MinHeight`, measured from it -- is the old five-row
+  default. A first run (saved rect with no size) opens
+  `MAIN_LOG_FIRST_RUN_ROWS` (12) tall: `RestoreMainWindowBounds`' second
+  argument. After that the saved window position decides. Nothing after
+  `CreateMainWindow` sets the log's height: `DispalayLogGridLines` (SHOW
+  GRIDLINES, live) used to call `CheckEditableWindowHeight` and snap a tall log
+  back. Do not put that call back.
+- **FONT SIZE is 0..2 added to the WINDOW SIZE scale** (`ws - 2 + Size`), not
+  a point size. Preferences > Appearance shows MAIN FONT and BOLD FONT as one
+  read-only box whose own `Font` holds the choice (the save reads
+  `edtFontFace.Font`), opened by Choose... (`TFontDialog`, `fdNoSizeSel`), and
+  FONT SIZE and WINDOW SIZE ("Main window text size") as designed
+  `TSpinEdit`s, hand-wired. A size from the font dialog has nowhere to go.
 
 ## Coordinate with
 

@@ -589,7 +589,7 @@ msgstr "가치: 정수 (WPM). Farnsworth 효과가 시작되는 CW 속도를 제
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "Adjust some font sizes down to '0' and upto '2'. This may affect other windows, like bandmap (See Band Map Size setting)"
+msgid "AGENT WRITTEN: A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "'0'과 '2'으로 글꼴 크기를 조절합니다. Bandmap (See Band Map Size)와 같은 다른 창에 영향을 줄 수 있습니다."
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -787,7 +787,7 @@ msgstr ""
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "The command specifies the name of the font to be used when displaying the information in the main program window."
+msgid "AGENT WRITTEN: The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
 msgstr "명령은 메인 프로그램 창에서 정보를 표시 할 때 글꼴의 이름을 지정합니다."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -1480,12 +1480,6 @@ msgctxt "TC_HELP_ROTATOR_TYPE"
 msgid "Values: DCU1, ORION, YAESU, ALFA SPID or PSTROTATOR. Sets the type of the rotator control."
 msgstr "가치: DCU1, ORION, YAESU, ALFA SPID 또는 PSTROTATOR. rotator 제어의 유형을 설정합니다."
 
-#. Config command: ROW COUNT   (default: 5)
-#, fuzzy
-msgctxt "TC_HELP_ROW_COUNT"
-msgid "Number of log lines displayed in the main window."
-msgstr "주요 창에 표시된 로그 라인의 수."
-
 #. Config command: SAY HI ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SAY_HI_ENABLE"
@@ -1975,7 +1969,7 @@ msgstr "가치: 10 - 90%의 범위에 있는 정수. 이 명령은 모든 dits�
 #. Config command: WINDOW SIZE   (default: 5)
 #, fuzzy
 msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "The relative ratio of 1 to 15, which determines the size of the main program window."
+msgid "AGENT WRITTEN: Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
 msgstr "주요 프로그램 창의 크기를 결정하는 1-15의 상대적인 비율."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)

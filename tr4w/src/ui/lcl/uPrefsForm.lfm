@@ -3221,47 +3221,70 @@ object PrefsForm: TPrefsForm
         Left = 12
         Height = 17
         Top = 42
-        Width = 140
+        Width = 160
         AutoSize = False
         Caption = 'Font:'
+        FocusControl = edtFontFace
       end
-      object edtMainFont: TEdit
-        Left = 160
+      object edtFontFace: TEdit
+        Left = 180
         Height = 22
         Top = 38
         Width = 240
         AutoSize = False
+        ReadOnly = True
         TabOrder = 0
+      end
+      object btnChooseFont: TButton
+        Left = 428
+        Height = 25
+        Top = 37
+        Width = 100
+        Caption = 'Choose...'
+        OnClick = btnChooseFontClick
+        TabOrder = 1
       end
       object lblFontSize: TLabel
         Left = 12
         Height = 17
         Top = 74
-        Width = 140
+        Width = 160
         AutoSize = False
-        Caption = 'Size:'
+        Caption = 'Font size step:'
+        FocusControl = spnFontSize
       end
-      object edtFontSize: TEdit
-        Left = 160
+      object spnFontSize: TSpinEdit
+        Left = 180
         Height = 22
         Top = 70
         Width = 60
-        AutoSize = False
-        TabOrder = 1
-      end
-      object chkBoldFont: TCheckBox
-        Left = 12
-        Height = 22
-        Top = 104
-        Width = 400
-        AutoSize = False
-        Caption = 'Bold'
+        MaxValue = 2
         TabOrder = 2
+        Value = 2
+      end
+      object lblWindowSize: TLabel
+        Left = 12
+        Height = 17
+        Top = 106
+        Width = 160
+        AutoSize = False
+        Caption = '(assigned at run time)'
+        FocusControl = spnWindowSize
+      end
+      object spnWindowSize: TSpinEdit
+        Left = 180
+        Height = 22
+        Top = 102
+        Width = 60
+        MaxValue = 15
+        MinValue = 1
+        TabOrder = 3
+        Value = 5
       end
       object lblAppearHint: TLabel
         Left = 12
         Height = 34
-        Top = 168
+        Top = 134
         Width = 620
         AutoSize = False
         Caption = 'The font applies to the main contest window.  All three take effect when TR4W next starts.'
@@ -3269,41 +3292,30 @@ object PrefsForm: TPrefsForm
         ParentFont = False
         WordWrap = True
       end
-      object lblAppearColorsHint: TLabel
-        Left = 12
-        Height = 51
-        Top = 204
-        Width = 620
-        AutoSize = False
-        Caption = 'Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be.'
-        Font.Color = clGrayText
-        ParentFont = False
-        WordWrap = True
-      end
       object lblLanguage: TLabel
         Left = 12
         Height = 17
-        Top = 264
-        Width = 140
+        Top = 184
+        Width = 160
         AutoSize = False
         Caption = 'Language:'
         FocusControl = cbxLanguage
       end
       object cbxLanguage: TComboBox
-        Left = 160
+        Left = 180
         Height = 22
-        Top = 260
+        Top = 180
         Width = 240
         AutoSize = False
         ItemHeight = 0
         Style = csDropDownList
-        TabOrder = 3
+        TabOrder = 4
       end
       object lblLanguageHint: TLabel
-        Left = 412
+        Left = 432
         Height = 30
-        Top = 258
-        Width = 220
+        Top = 178
+        Width = 200
         AutoSize = False
         Caption = 'Takes effect when TR4W next starts.'
         Font.Color = clGrayText
@@ -3313,55 +3325,44 @@ object PrefsForm: TPrefsForm
       object lblMainWindowHeading: TLabel
         Left = 12
         Height = 17
-        Top = 292
+        Top = 216
         Width = 400
         AutoSize = False
-        Caption = 'Main window'
+        Caption = 'Windows and log'
         Font.Style = [fsBold]
         ParentFont = False
       end
       object chkNoBorder: TCheckBox
         Left = 12
         Height = 22
-        Top = 320
+        Top = 242
         Width = 540
         Caption = 'Main window has no border'
-        TabOrder = 4
+        TabOrder = 5
       end
       object chkNoCaption: TCheckBox
         Left = 12
         Height = 22
-        Top = 346
+        Top = 268
         Width = 540
         Caption = 'Tool windows have no title bar'
-        TabOrder = 5
+        TabOrder = 6
       end
       object chkNoColumnHeader: TCheckBox
         Left = 12
         Height = 22
-        Top = 372
+        Top = 294
         Width = 540
         Caption = 'Hide the log column headings'
-        TabOrder = 6
+        TabOrder = 7
       end
       object chkShowGridlines: TCheckBox
         Left = 12
         Height = 22
-        Top = 398
+        Top = 320
         Width = 540
         Caption = 'Draw gridlines in the log'
-        TabOrder = 7
-      end
-      object lblAppearMenuNote: TLabel
-        Left = 12
-        Height = 51
-        Top = 428
-        Width = 620
-        AutoSize = False
-        Caption = 'These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here.'
-        Font.Color = clGrayText
-        ParentFont = False
-        WordWrap = True
+        TabOrder = 8
       end
     end
     object layBackup: TPanel

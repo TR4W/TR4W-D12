@@ -2953,9 +2953,11 @@ end;
 
 procedure DispalayLogGridLines;
 begin
+  (* GRIDLINES ONLY. This also re-sized the log (CheckEditableWindowHeight),
+    and SHOW GRIDLINES applies live, so a toggle snapped a log the operator
+    had made taller back to the layout height. CreateMainWindow sizes the log
+    once; the window's height owns it after that (2026-11-21). *)
   TR4WEditableLogSetGridLines(Settings.MainWindow.ShowGridlines);
-
-  CheckEditableWindowHeight;
 end;
 
 procedure DispalayNewMult(nCmndShow: integer);

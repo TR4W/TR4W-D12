@@ -521,7 +521,8 @@ begin
 
              end;
 
-        ControlW: AddStringToBuffer(VisibleLog.LastName(4), Config.CWTone);
+        // The newest QSO's name (1 back from the end; it was row 4 of ROW COUNT).
+        ControlW: AddStringToBuffer(VisibleLog.LastName(1), Config.CWTone);
 
         ControlR:
           begin

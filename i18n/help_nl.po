@@ -589,7 +589,7 @@ msgstr "Waarden: Integer (WPM). Controleert de CW snelheid waarmee het Farnswort
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "Adjust some font sizes down to '0' and upto '2'. This may affect other windows, like bandmap (See Band Map Size setting)"
+msgid "AGENT WRITTEN: A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "Pas sommige lettergroottes aan tot '0' en tot '2'. Dit kan invloed hebben op andere vensters, zoals bandmap (Zie Band Map Size instelling)"
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -787,7 +787,7 @@ msgstr ""
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "The command specifies the name of the font to be used when displaying the information in the main program window."
+msgid "AGENT WRITTEN: The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
 msgstr "Het commando specificeert de naam van het te gebruiken lettertype bij het weergeven van de informatie in het hoofdprogrammavenster."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -1481,12 +1481,6 @@ msgctxt "TC_HELP_ROTATOR_TYPE"
 msgid "Values: DCU1, ORION, YAESU, ALFA SPID or PSTROTATOR. Sets the type of the rotator control."
 msgstr "Waarden: DCU1, ORION, YAESU, ALFA SPID of PSTRATATOTOR. Stelt het type draairegelaar in."
 
-#. Config command: ROW COUNT   (default: 5)
-#, fuzzy
-msgctxt "TC_HELP_ROW_COUNT"
-msgid "Number of log lines displayed in the main window."
-msgstr "Aantal logregels in het hoofdvenster."
-
 #. Config command: SAY HI ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SAY_HI_ENABLE"
@@ -1976,7 +1970,7 @@ msgstr "Waarde: integer in het bereik van 10 - 90%. Dit commando staat toe dat e
 #. Config command: WINDOW SIZE   (default: 5)
 #, fuzzy
 msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "The relative ratio of 1 to 15, which determines the size of the main program window."
+msgid "AGENT WRITTEN: Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
 msgstr "De relatieve verhouding van 1 tot 15, die de grootte van het hoofdprogrammavenster bepaalt."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)

@@ -4493,7 +4493,7 @@ msgstr "Alleen multipliers"
 msgid "SO2R display"
 msgstr "SO2R-display"
 
-#: tprefsform.chkboldfont.caption
+#: uappstrings.sprefsfontbold
 #, fuzzy
 msgid "Bold"
 msgstr "Vet"
@@ -4931,11 +4931,10 @@ msgstr "Verbinden met: (geen gekozen)"
 
 #: tprefsform.lblappearcolorshint.caption
 #, fuzzy
-msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
-msgstr "Vensterkleuren staan nog steeds in het menu Instellingen. Ze horen hier en zullen bewegen zodra het hoofdvenster is van grootte, dat is de verandering die bepaalt wat de layout opties moeten zijn."
+#~ msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
+#~ msgstr "Vensterkleuren staan nog steeds in het menu Instellingen. Ze horen hier en zullen bewegen zodra het hoofdvenster is van grootte, dat is de verandering die bepaalt wat de layout opties moeten zijn."
 
 #: tprefsform.lblappearheading.caption
-#: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
@@ -4950,8 +4949,8 @@ msgstr "Het lettertype is van toepassing op het hoofdvenster. Alle drie worden v
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Deze stonden in het menu Instellingen. Dat raam gaat weg zodra ROW COUNT en WINDOW SITE zich hier bij hen voegen."
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
-msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Deze stonden onder het onderdeel Weergave van het menu Instellingen. Dat venster verdwijnt zodra ROW COUNT en WINDOW SIZE ook hierheen zijn verplaatst."
+#~ msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
+#~ msgstr "Deze stonden onder het onderdeel Weergave van het menu Instellingen. Dat venster verdwijnt zodra ROW COUNT en WINDOW SIZE ook hierheen zijn verplaatst."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -5206,8 +5205,9 @@ msgstr "Tekensnelheid:"
 
 #: tprefsform.lblfontsize.caption
 #, fuzzy
-msgid "Size:"
-msgstr "Grootte:"
+#| msgid "Size:"
+msgid "Font size step:"
+msgstr ""
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -8411,12 +8411,13 @@ msgstr "Gebruikersinformatie getoond"
 
 #: usettingscaptions.rs_appearance_layout_rowcount
 #, fuzzy
-msgid "Row Count"
-msgstr "Aantal rijen"
+#~ msgid "Row Count"
+#~ msgstr "Aantal rijen"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-msgid "Window Size"
+#| msgid "Window Size"
+msgid "Main window text size"
 msgstr "Venstergrootte"
 
 #: usettingscaptions.rs_audio_dvk_path
@@ -12812,4 +12813,14 @@ msgstr ""
 #: utr4wstrings.tc_trmasterdtadownloadednotloaded
 #, fuzzy
 msgid "TRMASTER.DTA downloaded but could not be loaded -- the data in use is unchanged (see tr4w.log)"
+msgstr ""
+
+#: tprefsform.btnchoosefont.caption
+#, fuzzy
+msgid "Choose..."
+msgstr ""
+
+#: tprefsform.lblmainwindowheading.caption
+#, fuzzy
+msgid "Windows and log"
 msgstr ""

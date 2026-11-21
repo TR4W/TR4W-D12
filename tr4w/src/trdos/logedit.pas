@@ -194,7 +194,8 @@ type
     //    function IsNotFoundInEditableWindow(ActiveGrid: Str10; Band: BandType; Mode: ModeType): boolean;
 
     function LastEntry(InMyLog: boolean; let: LastEntryType): CallString;
-    function LastName(Entry: integer): Str20;
+    // aBack: 1 is the newest QSO. See the implementation.
+    function LastName(aBack: integer): Str20;
 
     //    procedure GeneratePartialCallList(InputCall: CallString;      Band: BandType;      Mode: ModeType;      var PossCallList: PossibleCallRecord);
 
@@ -1952,30 +1953,26 @@ end;
   compiler would say a word. (The other such read, in LastEntry, was repointed
   at B4 and its old body is still commented out below it.)
 
-  WHAT `Entry` MEANS, and it is a ROW, not a record. The editable log shows the
-  last Settings.MainWindow.RowCount records with the NEWEST at the bottom, so row
-  Settings.MainWindow.RowCount-1 is the most recent QSO. The single caller is Ctrl-W in
-  LogSend, which passes 4 -- and Settings.MainWindow.RowCount is 5 (VC.pas:2856), so it
-  has always meant "the last name logged". The literal 4 is a row index that
-  happens to be the bottom row.
+  aBack IS AN OFFSET FROM THE NEWEST QSO, which is what LogSourceReadFromEnd
+  takes: 1 is the newest. The single caller is Ctrl-W in LogSend, which wants
+  "the last name logged" and passes 1.
 
-  SO THE CONVERSION IS row -> OFFSET-FROM-THE-END, which is what
-  LogSourceReadFromEnd already takes: offset 1 is the newest. Row r is
-  (Settings.MainWindow.RowCount - r) back from the end, so row 4 gives 1. Expressed this
-  way the routine no longer depends on how many rows the window happens to show
-  being the same as how many records exist -- it asks the log a question the log
-  can answer.
+  IT WAS A ROW until 2026-11-21. The old list view showed the last ROW COUNT
+  records with the newest at the bottom, Ctrl-W passed row 4, and this read
+  (ROW COUNT - 4) back from the end -- the newest QSO only while ROW COUNT was
+  5. At 12 rows it sent the EIGHTH-newest QSO's name (read from the code, not
+  observed). ROW COUNT is retired and the caller now says what it means.
 
-  ONE BEHAVIOUR CHANGE, AND IT IS A FIX. With FEWER than Settings.MainWindow.RowCount
-  QSOs in the log the widget filled from row 0 upward, so row 4 was EMPTY and
-  Ctrl-W sent nothing at all -- silently, on the first four QSOs of every
-  contest. Reading the log gives the newest QSO's name instead. Anyone who
-  wants the old behaviour back wants a bug back.
+  ONE EARLIER BEHAVIOUR CHANGE, AND IT WAS A FIX. With fewer QSOs than rows
+  the widget filled from row 0 upward, so row 4 was EMPTY and Ctrl-W sent
+  nothing at all -- silently, on the first four QSOs of every contest. Reading
+  the log gives the newest QSO's name instead. Anyone who wants the old
+  behaviour back wants a bug back.
 
   A LOG-BACKED READ CAN FAIL, and an empty Str20 is the right answer when it
   does -- the caller appends the result to a CW buffer, where '' sends nothing.
   That is exactly what the widget returned when the row was empty. *)
-function EditableLog.LastName(Entry: integer): Str20;
+function EditableLog.LastName(aBack: integer): Str20;
 var
   rec: ContestExchange;
 begin
@@ -1989,7 +1986,7 @@ begin
   try
      (* LogSourceReadFromEnd is independent of any sequential read in progress,
        so this cannot disturb a cursor another caller has open. *)
-     if LogSourceReadFromEnd(Settings.MainWindow.RowCount - Entry, rec) then
+     if LogSourceReadFromEnd(aBack, rec) then
         begin
         Result := rec.Name;
         end;

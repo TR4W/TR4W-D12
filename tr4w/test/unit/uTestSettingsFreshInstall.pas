@@ -53,6 +53,8 @@ type
       procedure Test_TheRadioTcpServerPortIsRetired;
       procedure Test_AFileWithTheOldCountryAndSerialPortsMembersStillLoads;
       procedure Test_TheCountryInformationAndSerialPortsCommandsAreRetired;
+      procedure Test_AFileWithTheOldRowCountMemberStillLoads;
+      procedure Test_TheRowCountCommandIsRetired;
       procedure Test_BuildingTheSettingsObjectDoesNotLeak;
    public
       procedure RunAllTests; override;
@@ -551,6 +553,60 @@ begin
 end;
 
 (* ---------------------------------------------------------------------
+  ROW COUNT IS RETIRED (2026-11-21, NY4I).
+
+  Settings.MainWindow.RowCount had become only the log pane's starting
+  height; the main window's height decides it now. MainWindow is a live
+  group, so an old file carries one member no property owns inside a group
+  that still loads -- and WindowSize, its neighbour, must still arrive.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsFreshInstallTests.Test_AFileWithTheOldRowCountMemberStillLoads;
+var
+   s: TR4WSettings;
+   obj: TJSONObject;
+   written: TJSONObject;
+begin
+   BeginTest('a tr4w.json that still carries MainWindow.RowCount loads');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      obj := ParseObject('{"MainWindow":{"RowCount":12,"WindowSize":9},'
+                         + '"Computer":{"Id":"H"}}');
+      CheckTrue(obj <> nil, 'the fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckTrue(s.Computer.Id = 'H', 'the rest of the file loaded');
+      CheckEquals(9, s.MainWindow.WindowSize,
+                  'the surviving member of the MainWindow group loaded');
+
+      written := s.ToJSON;
+      try
+         CheckTrue(written.FindPath('MainWindow') <> nil, 'the MainWindow group is still written');
+         CheckTrue(written.FindPath('MainWindow.RowCount') = nil,
+                   'but without the retired member');
+      finally
+         written.Free;
+      end;
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsFreshInstallTests.Test_TheRowCountCommandIsRetired;
+begin
+   BeginTest('ROW COUNT is withdrawn: accepted, owned by nothing');
+   CheckTrue(CommandIsRetired('ROW COUNT'), 'ROW COUNT');
+   CheckFalse(Settings.OwnsCommand('ROW COUNT'), 'no property answers to it');
+   (* ACCEPTED, so an old .cfg line does not raise LogCfg's modal "invalid
+     statement in config file". *)
+   CheckTrue(CheckCommand('ROW COUNT', '12', False), 'an old line is accepted');
+end;
+
+(* ---------------------------------------------------------------------
   THE SETTINGS OBJECT FREES WHAT IT BUILDS.
   --------------------------------------------------------------------- *)
 
@@ -599,6 +655,8 @@ begin
    Test_TheRadioTcpServerPortIsRetired;
    Test_AFileWithTheOldCountryAndSerialPortsMembersStillLoads;
    Test_TheCountryInformationAndSerialPortsCommandsAreRetired;
+   Test_AFileWithTheOldRowCountMemberStillLoads;
+   Test_TheRowCountCommandIsRetired;
    Test_BuildingTheSettingsObjectDoesNotLeak;
 end;
 

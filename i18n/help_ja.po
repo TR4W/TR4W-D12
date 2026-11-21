@@ -589,7 +589,7 @@ msgstr "値:整数(WPM)。 Farnsworthの効果が始まるCWの速度を制御�
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "Adjust some font sizes down to '0' and upto '2'. This may affect other windows, like bandmap (See Band Map Size setting)"
+msgid "AGENT WRITTEN: A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "フォントサイズを '0' と '2' まで調整します。 これは、バンドマップのような他のウィンドウに影響を与える可能性があります(バンドマップのサイズ設定を参照してください)"
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -787,7 +787,7 @@ msgstr ""
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "The command specifies the name of the font to be used when displaying the information in the main program window."
+msgid "AGENT WRITTEN: The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
 msgstr "コマンドは、メインプログラムウィンドウに情報を表示する際に使用するフォントの名前を指定します。"
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -1480,12 +1480,6 @@ msgctxt "TC_HELP_ROTATOR_TYPE"
 msgid "Values: DCU1, ORION, YAESU, ALFA SPID or PSTROTATOR. Sets the type of the rotator control."
 msgstr "値: DCU1、オリオン、YAESU、アルファSPIDまたはPSTROTATOR。 回転子制御の種類を設定します。"
 
-#. Config command: ROW COUNT   (default: 5)
-#, fuzzy
-msgctxt "TC_HELP_ROW_COUNT"
-msgid "Number of log lines displayed in the main window."
-msgstr "メインウィンドウに表示されるログ行の数。"
-
 #. Config command: SAY HI ENABLE   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SAY_HI_ENABLE"
@@ -1975,7 +1969,7 @@ msgstr "値: 10〜90%の範囲の整数。 このコマンドは、すべての�
 #. Config command: WINDOW SIZE   (default: 5)
 #, fuzzy
 msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "The relative ratio of 1 to 15, which determines the size of the main program window."
+msgid "AGENT WRITTEN: Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
 msgstr "メインプログラムウィンドウのサイズを決定する1〜15の相対比。"
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)

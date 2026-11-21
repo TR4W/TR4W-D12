@@ -373,12 +373,12 @@ type
    TCwDitDahRatio          = 3..6;    // was DITDAHRATIO_ARRAY
    TCwLeadingZeros         = 0..3;    // was LEADING_ZEROS_ARRAY
    TAutoSendCharacterCount = 0..6;    // was AUTO_SEND_CHARACTER_COUNT_ARRAY
-   (* THE MAIN WINDOW'S TWO SIZES, both ckArray rows whose allow-lists are
-     ranges: ROW_COUNT_ARRAY is (5..15) and WINDOW_SIZE_ARRAY is (1..15). *)
+   (* THE MAIN WINDOW'S TEXT SIZE, a ckArray row whose allow-list was the
+     range (1..15). Its twin, ROW COUNT (5..15), was retired 2026-11-21: the
+     log pane's height is the window's height now. *)
    TCwTone                 = 0..65535;          // was CW TONE's crMin/crMax
    TCwFarnsworthSpeed      = 0..99;            // was FARNSWORTH SPEED's
    TCwCodeSpeed            = 0..99;            // was CODE SPEED's
-   TLogRowCount            = 5..15;   // was ROW_COUNT_ARRAY
    TMainWindowSize         = 1..15;   // was WINDOW_SIZE_ARRAY
    TAutoQslInterval        = 0..6;    // was AUTO_QSL_INTERVAL
    (*
@@ -583,7 +583,6 @@ type
       FNoCaption: boolean;
       FNoColumnHeader: boolean;
       FShowGridlines: boolean;
-      FRowCount: TLogRowCount;
       FWindowSize: TMainWindowSize;
       FRateDisplay: RateDisplayType;
       FHourDisplay: HourDisplayType;
@@ -616,15 +615,14 @@ type
         issue 352 gave it a setter: the property wrote its field directly, and
         only a setter raises Changed. *)
       property ShowGridlines: boolean read FShowGridlines write SetShowGridlines;
-      (* Was the global LinesInEditableLog in VC.pas -- how many QSOs the log
-        pane shows. ROW COUNT, aliased: no property path produces a name that
-        says nothing about what is being counted.
-
-        IT IS A HEIGHT AND NOT A ROW LIMIT ANY MORE. The log pane used to be
-        a fixed window of exactly this many records; it is a TLogGrid now and
-        this survives as the height it is sized to. *)
-      property RowCount: TLogRowCount read FRowCount write FRowCount;
-      (* Was the global WindowSize in VC.pas.
+      (* ROW COUNT (RowCount, the global LinesInEditableLog in VC.pas) WAS
+        RETIRED 2026-11-21 (NY4I). It had become only the log pane's starting
+        height; the window's height decides that now, restored from the saved
+        window position (MainUnit.MAIN_LOG_FIRST_RUN_ROWS on a first run). An
+        old tr4w.json member is skipped by the de-streamer and dropped by the
+        next save; the command name is in uCFG.RETIRED_COMMANDS. *)
+      (* Was the global WindowSize in VC.pas. Preferences calls it "Main
+        window text size" (2026-11-21).
 
         IT IS A SCALE STEP, NOT A PIXEL SIZE. `ws := WindowSize + 12` is the
         font size every element on the main window is measured in, so this
@@ -5600,7 +5598,6 @@ begin
    inherited Create;
    (* The values VC.pas' declarations carried. The four booleans keep the
      False the field initialiser gives them, which is also what they had. *)
-   FRowCount   := 5;
    FWindowSize := 5;
    // logwind's declaration commented its default as QSOs, and zero is it.
    FRateDisplay := QSOs;
@@ -6728,8 +6725,8 @@ begin
    Alias('KEYPAD CW MEMORIES',             'Cw.KeypadMemories');
    Alias('LEADING ZEROS',                  'Cw.LeadingZeros');
 
-   (* The main window's two sizes. ROW COUNT says nothing about what is
-     counted and WINDOW SIZE would derive as MAIN WINDOW WINDOW SIZE. *)
+   (* The main window's text size: WINDOW SIZE would derive as MAIN WINDOW
+     WINDOW SIZE. *)
    (* The QSL message's own interval; the derived name would put MESSAGE in
      front of a command an operator has typed for years. *)
    (* THE TWO COUNTRY-LIST OVERLAYS. No property path produces either: the
@@ -6777,7 +6774,6 @@ begin
    Alias('TEN MINUTE RULE', 'Operating.TenMinuteRule');
    Alias('DISTANCE MODE', 'Log.DistanceMode');
    Alias('REMAINING MULT DISPLAY MODE', 'RemainingMults.DisplayMode');
-   Alias('ROW COUNT',   'MainWindow.RowCount');
    Alias('WINDOW SIZE', 'MainWindow.WindowSize');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
    Alias('TUNE WITH DITS',                 'Cw.TuneWithDits');

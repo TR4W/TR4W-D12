@@ -1352,6 +1352,10 @@ resourcestring
    (* A GENERATED FILE ROW'S BUTTON (CALL HISTORY FILENAME, INITIAL EXCHANGE
      FILENAME) -- the same words as the designed Browse buttons. *)
    SPrefsBrowse = 'Browse...';
+   (* THE APPEARANCE PAGE'S FONT SUMMARY, 'Arial, Bold': the word that follows
+     the face when BOLD FONT is on. The same English the Bold check box it
+     replaced carried, so its translations came with it. *)
+   SPrefsFontBold = 'Bold';
 
    (* ------------------------------------ Call history download (Help) - *)
 

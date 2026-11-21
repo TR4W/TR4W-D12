@@ -527,7 +527,7 @@ msgstr "Управляет скоростью CW, при которой начи
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "Adjust some font sizes down to '0' and upto '2'. This may affect other windows, like bandmap (See Band Map Size setting)"
+msgid "AGENT WRITTEN: A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "Отрегулируйте некоторые размеры шрифта до «0» и до «2». Это может повлиять на другие окна, такие как Bandmap (см. Настройка размера карты группы)"
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -695,8 +695,9 @@ msgid ""
 msgstr "Установить позывной по умолчанию."
 
 #. Config command: MAIN FONT   (default: Arial)
+#, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "The command specifies the name of the font to be used when displaying the information in the main program window."
+msgid "AGENT WRITTEN: The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
 msgstr "Команда определяет имя шрифта, который будет использоваться при отображении информации в основном окне программы."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -1293,11 +1294,6 @@ msgctxt "TC_HELP_ROTATOR_TYPE"
 msgid "Values: DCU1, ORION, YAESU, ALFA SPID or PSTROTATOR. Sets the type of the rotator control."
 msgstr "Команда устанавливает тип поворотного устройства."
 
-#. Config command: ROW COUNT   (default: 5)
-msgctxt "TC_HELP_ROW_COUNT"
-msgid "Number of log lines displayed in the main window."
-msgstr "Количество строк лога, отображаемых в основном окне."
-
 #. Config command: SAY HI ENABLE   (default: FALSE)
 msgctxt "TC_HELP_SAY_HI_ENABLE"
 msgid "If you have programmed CW messages that include names from the TRMASTER database, SAY HI ENABLE will determine whether the names are actually used. This allows you to program the messages with the names included, but to disable them all without having to edit each message."
@@ -1718,8 +1714,9 @@ msgid "Value: integer in the range of 10 - 90%. This command allows a proportion
 msgstr "Значение: целое число от 10 до 90%. Эта команда позволяет добавить или вычесть пропорциональную величину из длины всех отправленных точек и точек. Значение 50 означает отсутствие корректировки веса. Значения меньше 50 уменьшают вес, а значения больше 50 увеличивают вес. скоростях."
 
 #. Config command: WINDOW SIZE   (default: 5)
+#, fuzzy
 msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "The relative ratio of 1 to 15, which determines the size of the main program window."
+msgid "AGENT WRITTEN: Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
 msgstr "Относительный коэффициент от 1 до 15, определяющий размер основного окна программы."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)

@@ -188,6 +188,17 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-21 -- APPEARANCE: A FONT PICKER, "MAIN WINDOW TEXT SIZE", ROW COUNT RETIRED (lcl-ui, settings-config, i18n)
+
+Nothing here has been seen on screen.
+
+- [ ] **Preferences > Appearance reads top to bottom**: Main window (Font, Font size step, Main window text size, the restart note, Language), then Windows and log (four check boxes). No "Layout" heading, no note about the Settings menu. Tab moves in that order.
+- [ ] **Font summary and Choose...**: the box shows e.g. `Arial, Bold` IN that typeface; Choose... opens the system font dialog at the current face and weight. On Windows it has no size list (`fdNoSizeSel`); on gtk2/cocoa a size list may show and is ignored -- say whether that confuses. Pick another face and Regular: the box changes, Save un-greys, Save, restart: the main window uses the new face, not bold. Cancel in the dialog changes nothing.
+- [ ] **Font size step 0..2 and Main window text size 1..15** are up/down boxes; typing a letter does nothing, typing 9 in the step box clamps to 2. Change the text size, restart: the whole main window is larger/smaller.
+- [ ] **Window height** (ROW COUNT retired): a station with a saved main window position restores its height exactly as before, and can now drag it SHORTER than a 12-row layout, down to five log rows. A first run (delete the main window's saved position) opens with about twelve log rows. Toggle Draw gridlines in the log in a window dragged tall: the log stays filling the window (it used to snap back to the ROW COUNT height -- read from the code, never observed).
+- [ ] **Ctrl-W** sends the newest QSO's name, whatever the window height (it used to send the 8th-newest at ROW COUNT 12 -- read from the code).
+- [ ] **An old config line `ROW COUNT = 12`** loads without the invalid-statement dialog, and `tr4w.log` says it is withdrawn.
+
 ## Added 2026-11-21 -- EVERY RADIO EDITOR FIELD HAS A TOOLTIP (lcl-ui, i18n)
 
 Wired in `uRadioEditForm.ApplyFieldHelp` from `i18n/help_en.po` (`TC_HELP_RADIO_EDITOR_...`, agent-written, each starting "AGENT WRITTEN: " until reviewed). Nothing here has been seen on screen.

@@ -3799,7 +3799,7 @@ msgstr "Kun multiplikatorer"
 msgid "SO2R display"
 msgstr "SO2R-visning"
 
-#: tprefsform.chkboldfont.caption
+#: uappstrings.sprefsfontbold
 #, fuzzy
 msgid "Bold"
 msgstr "Fed"
@@ -4237,11 +4237,10 @@ msgstr "Forbindelse til: (ingen valgte)"
 
 #: tprefsform.lblappearcolorshint.caption
 #, fuzzy
-msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
-msgstr "Vinduesfarver er stadig i menuen Indstillinger. De hører til her og vil flytte, når hovedvinduet er resizable, som er den ændring, der beslutter, hvad layout muligheder skal være."
+#~ msgid "Window colors are still on the Settings menu.  They belong here and will move once the main window is resizable, which is the change that decides what the layout options need to be."
+#~ msgstr "Vinduesfarver er stadig i menuen Indstillinger. De hører til her og vil flytte, når hovedvinduet er resizable, som er den ændring, der beslutter, hvad layout muligheder skal være."
 
 #: tprefsform.lblappearheading.caption
-#: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgctxt "tprefsform.lblappearheading.caption"
 msgid "Main window"
@@ -4255,8 +4254,8 @@ msgstr "Skrifttypen gælder for hovedkonkurrencens vindue. Alle tre får virknin
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
-msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
-msgstr "Disse var på punktet Udseende i menuen Indstillinger. Vinduet forsvinder når ROW COUNT og WINDOW SIZE slutter sig til dem her."
+#~ msgid "These were on the Appearance item of the Settings menu. That window goes away once ROW COUNT and WINDOW SIZE join them here."
+#~ msgstr "Disse var på punktet Udseende i menuen Indstillinger. Vinduet forsvinder når ROW COUNT og WINDOW SIZE slutter sig til dem her."
 
 #: tprefsform.lblaudioheading.caption
 #, fuzzy
@@ -4511,8 +4510,9 @@ msgstr "Tegn hastighed:"
 
 #: tprefsform.lblfontsize.caption
 #, fuzzy
-msgid "Size:"
-msgstr "Størrelse:"
+#| msgid "Size:"
+msgid "Font size step:"
+msgstr ""
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -7695,12 +7695,13 @@ msgstr "Brugerinfo vist"
 
 #: usettingscaptions.rs_appearance_layout_rowcount
 #, fuzzy
-msgid "Row Count"
-msgstr "Rækketælling"
+#~ msgid "Row Count"
+#~ msgstr "Rækketælling"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-msgid "Window Size"
+#| msgid "Window Size"
+msgid "Main window text size"
 msgstr "Vinduesstørrelse"
 
 #: usettingscaptions.rs_audio_dvk_path
@@ -12082,4 +12083,14 @@ msgstr ""
 #: utr4wstrings.tc_trmasterdtadownloadednotloaded
 #, fuzzy
 msgid "TRMASTER.DTA downloaded but could not be loaded -- the data in use is unchanged (see tr4w.log)"
+msgstr ""
+
+#: tprefsform.btnchoosefont.caption
+#, fuzzy
+msgid "Choose..."
+msgstr ""
+
+#: tprefsform.lblmainwindowheading.caption
+#, fuzzy
+msgid "Windows and log"
 msgstr ""

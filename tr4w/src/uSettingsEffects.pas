@@ -606,8 +606,9 @@ begin
 
    if UnicodeSameText(aPath, SHOW_GRIDLINES) then
       begin
-      (* DispalayLogGridLines reads the property itself and then checks
-        the window height, which is why the call takes no argument. It is
+      (* DispalayLogGridLines reads the property itself, which is why the
+        call takes no argument; it no longer touches the log's height
+        (2026-11-21). It is
         safe before any window exists: the grid accessor it reaches is a
         no-op while the form is nil. *)
       DispalayLogGridLines;

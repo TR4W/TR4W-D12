@@ -491,7 +491,7 @@ begin
    BorderStyle   := bsSingle;
    (* THE SAME HEIGHT THE REST OF THE WINDOW IS LAID OUT WITH.
      CheckEditableWindowHeight sizes this control as
-     30 + Settings.MainWindow.RowCount * (ws + 2), so a row is ws + 2 and the arithmetic
+     30 + rows * (ws + 2) (MainUnit.MainLogHeightForRows), so a row is ws + 2 and the arithmetic
      on both sides of the layout agrees. *)
    DefaultRowHeight := ws + 2;
 

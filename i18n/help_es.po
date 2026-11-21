@@ -511,8 +511,9 @@ msgid "Values: Integer (WPM). Controls the CW speed at which the Farnsworth effe
 msgstr "Valores: entero (WPM). Controla la velocidad de CW a la que comienza el efecto Farnsworth. A medida que disminuye la velocidad por debajo de este valor, se añadirá exponencialmente más espacio entre caracteres. Para un mayor efecto Farnsworth a velocidades muy lentas, aumente el valor de FARNSWORTH SPEED. También puede controlar este parámetro dinámicamente dentro de los mensajes CW."
 
 #. Config command: FONT SIZE   (default: 2)
+#, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "Adjust some font sizes down to '0' and upto '2'. This may affect other windows, like bandmap (See Band Map Size setting)"
+msgid "AGENT WRITTEN: A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "Ajusta algunos tamaños de fuente entre '0' y '2'. Esto puede afectar a otras ventanas, como el bandmap (véase el ajuste Band Map Size)."
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -683,8 +684,9 @@ msgid ""
 msgstr ""
 
 #. Config command: MAIN FONT   (default: Arial)
+#, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "The command specifies the name of the font to be used when displaying the information in the main program window."
+msgid "AGENT WRITTEN: The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
 msgstr "El comando especifica el nombre de la fuente que se utilizará al mostrar la información en la ventana principal del programa."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -1281,11 +1283,6 @@ msgctxt "TC_HELP_ROTATOR_TYPE"
 msgid "Values: DCU1, ORION, YAESU, ALFA SPID or PSTROTATOR. Sets the type of the rotator control."
 msgstr "Valores: DCU1, ORION o YAESU. Establece el tipo del control de rotor."
 
-#. Config command: ROW COUNT   (default: 5)
-msgctxt "TC_HELP_ROW_COUNT"
-msgid "Number of log lines displayed in the main window."
-msgstr "Número de líneas del log mostradas en la ventana principal."
-
 #. Config command: SAY HI ENABLE   (default: FALSE)
 msgctxt "TC_HELP_SAY_HI_ENABLE"
 msgid "If you have programmed CW messages that include names from the TRMASTER database, SAY HI ENABLE will determine whether the names are actually used. This allows you to program the messages with the names included, but to disable them all without having to edit each message."
@@ -1699,8 +1696,9 @@ msgid "Value: integer in the range of 10 - 90%. This command allows a proportion
 msgstr "Valor: entero en el rango 10-90 %. Este comando permite añadir o restar una cantidad proporcional a la longitud de todos los dits y dahs enviados. Un valor de 50 selecciona ningún ajuste de weighting. Valores menores que 50 reducen el weighting y valores mayores que 50 lo aumentan. Tenga en cuenta que el weighting no afecta a la velocidad de envío porque cualquier aumento del tiempo manipulado se resta del tiempo de espaciado. Una reducción del weighting da como resultado una manipulación de sonido más fino, mientras que un aumento del weighting da un sonido más pesado. Como el weighting se ajusta con la velocidad, un weighting dado sonará igual a todas las velocidades."
 
 #. Config command: WINDOW SIZE   (default: 5)
+#, fuzzy
 msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "The relative ratio of 1 to 15, which determines the size of the main program window."
+msgid "AGENT WRITTEN: Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
 msgstr "La proporción relativa de 1 a 15 que determina el tamaño de la ventana principal del programa."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)
