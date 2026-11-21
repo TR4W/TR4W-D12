@@ -95,6 +95,7 @@ type
       function  TypedPort: integer;
       procedure LoadFromDestination;
       function  SaveToDestination(out aError: string): boolean;
+      procedure ApplyFieldHelp;
    public
       constructor Create(AOwner: TComponent); override;
       procedure EditDestination(const aDestination: TUDPDestination;
@@ -109,6 +110,10 @@ uses
    Dialogs,
    uLCLFormHelpers,
    uLCLTranslate,
+   uAppPaths,             // HelpDir -- where the help catalogues are
+   uEmbeddedTranslations, // ActiveUILanguage -- which help catalogue to load
+   uCommandHelp,          // TCommandHelp -- every field's tooltip
+   uSettingsBinding,      // ApplyCommandHelpHint -- the one tooltip rule
    uUDPBroadcaster;
 
 resourcestring
@@ -147,6 +152,40 @@ begin
    // missing one and a live one that quietly does nothing.
    chkStreamAppInfo.Caption := chkStreamAppInfo.Caption + TC_UDPEDIT_NOTIMPLEMENTED;
    chkStreamAppInfo.Enabled := False;
+
+   ApplyFieldHelp;
+end;
+
+(* EVERY FIELD'S TOOLTIP, the radio editor's pattern (uRadioEditForm).  The
+  address and the six streams are the UDP BROADCAST commands this editor's
+  destinations replaced (uUDPBroadcastConfig seeds them from those names);
+  the port is per destination and has no such command. *)
+procedure TfrmUDPDestinationEdit.ApplyFieldHelp;
+var
+   help: TCommandHelp;
+
+   (* ONE ROW OF THE TABLE: the field, its caption (nil for a check box, whose
+     caption is its own) and the help name.  Both get the same tooltip. *)
+   procedure HintFromHelp(const aControl, aCaption: TControl; const aCommand: string);
+   begin
+      ApplyCommandHelpHint(aControl, help, aCommand);
+      ApplyCommandHelpHint(aCaption, help, aCommand);
+   end;
+
+begin
+   help := TCommandHelp.Create(HelpDir, ActiveUILanguage);
+   try
+      HintFromHelp(edtAddress,       lblAddress, 'UDP BROADCAST ADDRESS');
+      HintFromHelp(edtPort,          lblPort,    'UDP DESTINATION PORT');
+      HintFromHelp(chkStreamContact, nil,        'UDP BROADCAST CONTACT INFO');
+      HintFromHelp(chkStreamRadio,   nil,        'UDP BROADCAST RADIO INFO');
+      HintFromHelp(chkStreamScore,   nil,        'UDP BROADCAST SCORE');
+      HintFromHelp(chkStreamRotor,   nil,        'UDP BROADCAST ROTOR');
+      HintFromHelp(chkStreamLookup,  nil,        'UDP BROADCAST LOOKUP INFO');
+      HintFromHelp(chkStreamAppInfo, nil,        'UDP BROADCAST APP INFO');
+   finally
+      help.Free;
+   end;
 end;
 
 // The control for one stream.  A case rather than a lookup table because a

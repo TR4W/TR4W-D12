@@ -120,6 +120,7 @@ type
       procedure StartAutoLoad;
       procedure SetBusy;
       procedure ShowDefinition;
+      procedure ApplyFieldHelp;
    public
       constructor Create(aOwner: TComponent); override;
       destructor Destroy; override;
@@ -187,7 +188,11 @@ function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): b
 
 implementation
 uses Graphics, Math, uLCLFormHelpers, uLCLTranslate, uPasswordReveal, uAppStrings,
-   uExternalDelivery, uLogStore, uHTTPDownload;
+   uExternalDelivery, uLogStore, uHTTPDownload,
+   uAppPaths,             (* HelpDir -- where the help catalogues are *)
+   uEmbeddedTranslations, (* ActiveUILanguage -- which help catalogue to load *)
+   uCommandHelp,          (* TCommandHelp -- the fixed fields' tooltips *)
+   uSettingsBinding;      (* ApplyCommandHelpHint -- the one tooltip rule *)
 {$R *.lfm}
 const
    (* THE DESIGNED GEOMETRY, AT 96 DPI, AND ONLY AS FLOORS (issue 232). These
@@ -289,6 +294,35 @@ begin
       is the one route; the .lfm text is a placeholder (uServerLogForm's
       pattern). Before the first layout, which measures it. *)
    lblNote.Caption := UTF8Encode(SLoggerEditorNote);
+   (* IN THE CONSTRUCTOR: EditLoggerIn hosts pnlContent in the setup wizard
+      and this form is never shown. *)
+   ApplyFieldHelp;
+end;
+
+(* THE TOOLTIPS OF THE THREE DESIGNED FIELDS, the radio editor's pattern
+   (uRadioEditForm). A provider's own rows are built at run time and are not
+   covered here. *)
+procedure TExternalLoggersForm.ApplyFieldHelp;
+var
+   help: TCommandHelp;
+
+   (* ONE ROW OF THE TABLE: the field, its caption (nil for a check box, whose
+      caption is its own) and the help name. Both get the same tooltip. *)
+   procedure HintFromHelp(const aControl, aCaption: TControl; const aCommand: string);
+   begin
+      ApplyCommandHelpHint(aControl, help, aCommand);
+      ApplyCommandHelpHint(aCaption, help, aCommand);
+   end;
+
+begin
+   help := TCommandHelp.Create(HelpDir, ActiveUILanguage);
+   try
+      HintFromHelp(edtName,    lblName,     'EXTERNAL LOGGER EDITOR NAME');
+      HintFromHelp(cbProvider, lblProvider, 'EXTERNAL LOGGER EDITOR PROVIDER');
+      HintFromHelp(chkActive,  nil,         'EXTERNAL LOGGER EDITOR ACTIVE');
+   finally
+      help.Free;
+   end;
 end;
 
 destructor TExternalLoggersForm.Destroy;

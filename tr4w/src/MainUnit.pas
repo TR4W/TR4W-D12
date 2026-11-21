@@ -846,6 +846,7 @@ uses
   uTR4WConfigFile,   // TR4WConfigFileName / Save- LoadWindowLayout
   uLCLFormHelpers,   (* ColumnWidthsPending / FlushColumnWidths -- the grid
                         column widths ride the layout autosave (issue 234) *)
+  uAltDragMove,      // EnableAltDragMove -- NO CAPTION's way to move a window
   uWSJTXState,       // the state the WSJT-X indicator paints from
   uRadioState,       // TXInhibitAlert -- the PTT indicator's alert (issue #97)
   uTXInhibitAlert,   // PTTIndicatorRole -- what the PTT indicator means
@@ -7497,12 +7498,22 @@ begin
 
      BEFORE the saved BoundsRect is applied, and the handle re-read: changing
      BorderStyle recreates the window, and `h` would otherwise name a destroyed
-     one.  NO CAPTION defaults to False and nobody has bench-tested it either
-     way -- see docs/BENCH_QUEUE.md. *)
+     one.
+
+     A WINDOW WITH NO FRAME HAS NOTHING TO GRAB, so it is moved by holding Alt
+     and dragging anywhere inside it: uAltDragMove hooks the form and its
+     controls. The main window never takes this path. The position the drag
+     leaves is saved by the layout autosave like any other move. NO CAPTION
+     defaults to False, and neither it nor the Alt+drag has been bench-tested
+     -- see docs/BENCH_QUEUE.md. *)
 
   if Settings.MainWindow.NoCaption and (lclForm <> nil) then
      begin
      lclForm.BorderStyle := bsNone;
+     if ID <> tw_MAINWINDOW_INDEX then
+        begin
+        EnableAltDragMove(lclForm);
+        end;
      end;
 
   tr4w_WindowsArray[ID].WndForm := lclForm;

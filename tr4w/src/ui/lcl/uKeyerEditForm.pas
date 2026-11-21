@@ -114,6 +114,7 @@ type
       procedure LoadFromKeyer;
       function SaveToKeyer(out aError: string): boolean;
       procedure UpdateEnabledState;
+      procedure ApplyFieldHelp;
       procedure LoadKeyer(const aKeyer: TKeyerDefinition;
                           const aOnDone: TKeyerEditDone);
    public
@@ -140,6 +141,10 @@ uses
    uLCLTranslate,
    uKeyerConfigApply,   // KeyerModeSpellings / SidetoneSpellings -- one vocabulary
    uPortAddress,        // DeviceNameFromStoredPort -- reads a pre-ruling SERIAL n
+   uAppPaths,           // HelpDir -- where the help catalogues are
+   uEmbeddedTranslations, // ActiveUILanguage -- which help catalogue to load
+   uCommandHelp,        // TCommandHelp -- every field's tooltip
+   uSettingsBinding,    // ApplyCommandHelpHint -- the one tooltip rule
    ComPortEnumerator;
 
 constructor TfrmKeyerEdit.Create(AOwner: TComponent);
@@ -161,6 +166,54 @@ begin
    PopulateKindCombo;
    PopulatePortCombo;
    PopulateWinKeyCombos;
+   (* IN THE CONSTRUCTOR, not on show: EditKeyerIn moves pnlContent into the
+     setup wizard and never shows this form, and the hints travel with the
+     controls. *)
+   ApplyFieldHelp;
+end;
+
+(* EVERY FIELD'S TOOLTIP, the radio editor's pattern (uRadioEditForm).  The
+  WinKeyer settings are the WK commands' own help: the definition's fields are
+  what uKeyerConfigApply writes into WinKeySettings, the settings those
+  commands set.  The name, type and port are the editor's own. *)
+procedure TfrmKeyerEdit.ApplyFieldHelp;
+var
+   help: TCommandHelp;
+
+   (* ONE ROW OF THE TABLE: the field, its caption (nil for a check box, whose
+     caption is its own) and the help name.  Both get the same tooltip. *)
+   procedure HintFromHelp(const aControl, aCaption: TControl; const aCommand: string);
+   begin
+      ApplyCommandHelpHint(aControl, help, aCommand);
+      ApplyCommandHelpHint(aCaption, help, aCommand);
+   end;
+
+begin
+   help := TCommandHelp.Create(HelpDir, ActiveUILanguage);
+   try
+      HintFromHelp(edtName,                 lblName,          'KEYER EDITOR NAME');
+      HintFromHelp(cbxKind,                 lblKind,          'KEYER EDITOR TYPE');
+      HintFromHelp(cbxPort,                 lblPort,          'KEYER EDITOR PORT');
+
+      // WinKeyer settings
+      HintFromHelp(cbxWKKeyerMode,          lblWKKeyerMode,   'WK KEYER MODE');
+      HintFromHelp(cbxWKSidetone,           lblWKSidetone,    'WK SIDETONE FREQUENCY');
+      HintFromHelp(edtWKWeight,             lblWKWeight,      'WK WEIGHT');
+      HintFromHelp(edtWKRatio,              lblWKRatio,       'WK DIT DAH RATIO');
+      HintFromHelp(edtWKSwitchpoint,        lblWKSwitchpoint, 'WK PADDLE SWITCHPOINT');
+      HintFromHelp(edtWKLeadIn,             lblWKLeadIn,      'WK LEADIN TIME');
+      HintFromHelp(edtWKTail,               lblWKTail,        'WK TAIL TIME');
+      HintFromHelp(edtWKComp,               lblWKComp,        'WK KEYER COMPENSATION');
+      HintFromHelp(edtWKFirstExt,           lblWKFirstExt,    'WK FIRST EXTENSION');
+      HintFromHelp(chkWKAutospace,          nil,              'WK AUTOSPACE');
+      HintFromHelp(chkWKCTSpacing,          nil,              'WK CT SPACING');
+      HintFromHelp(chkWKIgnoreSpeedPot,     nil,              'WK IGNORE SPEED POT');
+      HintFromHelp(chkWKSidetoneEnable,     nil,              'WK SIDETONE ENABLE');
+      HintFromHelp(chkWKPaddleOnlySidetone, nil,              'WK PADDLE ONLY SIDETONE');
+      HintFromHelp(chkWKPaddleSwap,         nil,              'WK PADDLE SWAP');
+   finally
+      help.Free;
+   end;
 end;
 
 procedure TfrmKeyerEdit.PopulateKindCombo;

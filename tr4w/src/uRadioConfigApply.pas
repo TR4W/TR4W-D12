@@ -451,8 +451,12 @@ const
    (* SEVEN LEFT AT M10 S2 (2026-10-14) -- QSO POINT METHOD, EXCHANGE
      RECEIVED, INITIAL EXCHANGE and the four multipliers, now in
      uCFG.RETIRED_COMMANDS. Seeding a retired name would put a value into the
-     bucket that nothing applies. *)
-   MIGRATED_COMMANDS: array[0..240] of string =
+     bucket that nothing applies. COUNTRY INFORMATION FILE and SHOW ALL
+     SERIAL PORTS left on 2026-11-21 for the same reason, and so did the six
+     parallel-port names NY4I confirmed retired that day: LPT1/2/3 BASE
+     ADDRESS, RELAY CONTROL PORT, STEREO CONTROL PORT and USE CONTROL
+     PORT. *)
+   MIGRATED_COMMANDS: array[0..232] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
@@ -534,7 +538,6 @@ const
       'TELNET SERVER',
       'WSJT-X BROADCAST PORT',
       'WSJT-X MULTICAST GROUP',
-      'RELAY CONTROL PORT',
 
       // The rest of the parallel-port wiring, 2026-08-14. These were the
       // last radio-scoped strays; NY4I placed them on Hardware rather than
@@ -542,7 +545,6 @@ const
       // radio -- see the note in uRadioConfigLegacyMap.
       'RADIO ONE BAND OUTPUT PORT',
       'RADIO TWO BAND OUTPUT PORT',
-      'STEREO CONTROL PORT',
 
       // CW keying, paddle and PTT, 2026-08-14.
       'ALL CW MESSAGES CHAINABLE',
@@ -655,7 +657,6 @@ const
       'RANDOM CQ MODE',
       'REVERSE INITIAL EX',
       'RFOBL MODE',
-      'SHOW ALL SERIAL PORTS',
       'SHOW DOMESTIC MULTIPLIER NAME',
       'SPRINT QSY RULE',
       // Migrated 2026-08-21.
@@ -704,14 +705,9 @@ const
       'INSERT MODE',
       'SHOW FREQUENCY IN LOG',
       'SHOW TYPED CALLSIGN',
-      'LPT1 BASE ADDRESS',
-      'LPT2 BASE ADDRESS',
-      'LPT3 BASE ADDRESS',
       'STEREO PIN HIGH',
-      'USE CONTROL PORT',
       'ALLOW AUTO UPDATE',
       'CALLSIGN UPDATE ENABLE',
-      'COUNTRY INFORMATION FILE',
       'CTY UPDATE CHECK ON STARTUP',
       'DOMESTIC FILENAME',
       'MISSINGCALLSIGNS FILE ENABLE',

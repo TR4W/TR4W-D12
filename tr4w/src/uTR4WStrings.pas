@@ -508,7 +508,6 @@ resourcestring
    TC_DISCOVER_NONE_FOUND                = 'No radio of type %s found on the network';
    TC_DISCOVER_MULTI_FOUND               = 'More than one %s found; filled in the first.  All found:';
    TC_PORT_NOT_CONNECTED                 = '(not connected)';
-   TC_SHOW_ALL_SERIAL_PORTS              = 'Show all serial ports';
    TC_DOWNLOADINGCTYDAT                  = 'Downloading CTY.DAT...';
    TC_DOWNLOADINGTRMASTERDTA             = 'Downloading TRMASTER.DTA...';
    TC_DOWNLOADINGPOTAPARKS               = 'Downloading POTA parks...';
@@ -562,7 +561,6 @@ resourcestring
    TC_CONTINUEENTERINGCHARACTERSAUTOTERM = 'Continue entering characters.  Auto terminate active!!';
    TC_CONTINUEENTERINGCHARACTERSPRESSRET = 'Continue entering characters and press RETURN when done.';
    TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB = 'Enter exchange.  Press ENTER to log, ESCAPE to abort QSO.';
-   TC_RELAYCONTROLPORTPADDLEPORT         = 'RELAY CONTROL PORT = PADDLE PORT';
    TC_LOCATIONFIELDEMPTY                 = 'LOCATION field is empty.';
    TC_PTTLOCKOUTTRUE                     = 'PTT LOCKOUT=TRUE';
    TC_PREFERENCESCOULDOPENEDS            = 'Preferences could not be opened (%s).';

@@ -589,6 +589,8 @@ type
       FHourDisplay: HourDisplayType;
       FUserInfoShown: UserInfoType;
       FAlertColor: string;
+      procedure SetNoColumnHeader(aValue: boolean);
+      procedure SetShowGridlines(aValue: boolean);
    public
       constructor Create;
    published
@@ -598,18 +600,22 @@ type
       (* Was Config.NoCaption -- the form's title bar. Defaults False and has
         never been bench-tested either way; see docs/BENCH_QUEUE.md. *)
       property NoCaption: boolean read FNoCaption write FNoCaption;
-      (* Was Config.NoColumnHeader.
-
-        NO LIVE READER IN THIS BUILD, and it is carried rather than dropped,
-        following the ruling that produced MY IOTA and SHOW ALL SERIAL PORTS:
-        an operator can see it in Preferences, so deleting it is NY4I's call
-        and not a migration's side effect. *)
+      (* Was Config.NoColumnHeader -- hides the heading row of every log grid
+        (the main window's log and B4 list, View/Edit Log, Log Search, the
+        server log) and of the Network and Stations lists: the windows D7
+        built through CreateEditableLog and CreateListView. Read by
+        uColumnHeaders when each is built, and re-applied to the open ones by
+        uSettingsEffects when it changes (issue 352). THE SETTER IS WHAT MAKES
+        IT LIVE: a plain field write raises no Changed, so the effect arm
+        would never hear of it. *)
       property NoColumnHeader: boolean
-         read FNoColumnHeader write FNoColumnHeader;
+         read FNoColumnHeader write SetNoColumnHeader;
       (* Was Config.ShowGridlines. This one had crP: 3 -- the grid redraw --
         and is an arm in uSettingsEffects now, so it takes effect when it is
-        changed rather than at the next start. *)
-      property ShowGridlines: boolean read FShowGridlines write FShowGridlines;
+        changed rather than at the next start. That arm was unreachable until
+        issue 352 gave it a setter: the property wrote its field directly, and
+        only a setter raises Changed. *)
+      property ShowGridlines: boolean read FShowGridlines write SetShowGridlines;
       (* Was the global LinesInEditableLog in VC.pas -- how many QSOs the log
         pane shows. ROW COUNT, aliased: no property path produces a name that
         says nothing about what is being counted.
@@ -741,10 +747,9 @@ type
          read FAllowAutoUpdate write FAllowAutoUpdate;
       (* Was Config.MultiMultsOnly.
 
-        NO LIVE READER IN THIS BUILD, and carried rather than dropped for the
-        reason NO COLUMN HEADER was: an operator can see it in Preferences,
-        so removing a setting is a decision and not a migration's side
-        effect. *)
+        NO LIVE READER IN THIS BUILD, and carried rather than dropped: an
+        operator can see it in Preferences, so removing a setting is a
+        decision and not a migration's side effect. *)
       property MultiMultsOnly: boolean
          read FMultiMultsOnly write FMultiMultsOnly;
       (* Was tShowTypedCallsign in uNet -- whether each keystroke of a partly
@@ -922,9 +927,9 @@ type
       (* Was Config.NameFlagEnable -- show the operator's name from the
         database beside a matched callsign.
 
-        NO LIVE READER IN THIS BUILD, and carried rather than dropped on the
-        same ruling as NO COLUMN HEADER: an operator can see it in
-        Preferences, so withdrawing it is a decision. *)
+        NO LIVE READER IN THIS BUILD, and carried rather than dropped: an
+        operator can see it in Preferences, so withdrawing it is a
+        decision. *)
       property NameFlagEnable: boolean
          read FNameFlagEnable write FNameFlagEnable;
       (* Was the global SCPMinimumLetters in logstuff -- how many characters
@@ -3102,29 +3107,22 @@ type
    end;
 
    (*
-     THE COUNTRY DATABASE. One setting, the name of the CTY.DAT file, and
-     Country.InformationFile derives COUNTRY INFORMATION FILE exactly --
-     the same reason TSpotCollectorSettings is a group of one.
+     THE COUNTRY DATABASE. Country.UpdateCheckOnStartup derives CTY UPDATE
+     CHECK ON STARTUP exactly.
 
-     IT HAS NO READER. The global is declared and nothing looks at it; the
-     country file is opened by name elsewhere. Migrated rather than
-     withdrawn, following the ruling on MY IOTA and on the unknown country
-     file: the command keeps parsing and an existing .cfg keeps being
-     understood.
-
-     NOT ctFileName. The row is ctString, so nothing here inherits the open
-     question about what a path setting validates.
+     COUNTRY INFORMATION FILE (Country.InformationFile) WAS REMOVED
+     2026-11-21 (NY4I). Nothing read it, here or in D7. The name is in
+     uCFG.RETIRED_COMMANDS, so an old .cfg line is accepted and ignored, and
+     a tr4w.json that still carries "InformationFile" in this group loads:
+     the de-streamer skips a member no property carries, and the next save
+     drops it.
    *)
    TCountrySettings = class(TSettingsGroup)
    private
-      FInformationFile: string;
       FUpdateCheckOnStartup: boolean;
    public
       constructor Create;
    published
-      // Was the global CountryInformationFile in logstuff.pas.
-      property InformationFile: string
-         read FInformationFile write FInformationFile;
       (* Was CTYUpdateCheckOnStartup in uCFG -- ask tr4w.net whether a
         newer CTY.DAT exists, once, at startup. *)
       property UpdateCheckOnStartup: boolean
@@ -3137,8 +3135,9 @@ type
 
      ITS ONE READER IS UNREACHABLE. MoveGridMap in logedit walks the centre
      square with the arrow keys and nothing calls it, and
-     EditableLog.DisplayGridMap has an empty body. Migrated for the same
-     reason as the country file above.
+     EditableLog.DisplayGridMap has an empty body. Migrated rather than
+     withdrawn: the command keeps parsing and an existing .cfg keeps being
+     understood.
    *)
    TGridMapSettings = class(TSettingsGroup)
    private
@@ -3737,36 +3736,12 @@ type
    end;
 
    (*
-     SERIAL PORT ENUMERATION.
-
-     NOTHING IN THIS BUILD READS THE ONE SETTING IN HERE, and that is
-     recorded rather than fixed: it has no reader in the D7 tree either
-     (checked 2026-09-12), so it is not a port regression. It is carried
-     across faithfully because deleting a setting an operator can see in
-     Preferences is a decision for NY4I, not a side effect of a migration.
+     THE SERIALPORTS GROUP WAS REMOVED 2026-11-21 (NY4I). Its one setting,
+     SHOW ALL SERIAL PORTS (SerialPorts.ShowAll), had no reader here or in
+     D7. The name is in uCFG.RETIRED_COMMANDS, and a tr4w.json that still
+     carries a "SerialPorts" object loads: the de-streamer skips a member no
+     property carries, and the next save drops it.
    *)
-   TSerialPortsSettings = class(TSettingsGroup)
-   private
-      FShowAll: boolean;
-   public
-      constructor Create;
-   published
-      (* Was the global tShowAllSerialPorts in VC.pas. SHOW ALL SERIAL
-        PORTS.
-
-        WHAT IT WAS MEANT TO DO, in the words of the comment that stood
-        beside the global: the radio dialog's port list normally shows
-        only the ports Windows is reporting, plus the one already
-        configured even if absent; True was to list SERIAL 1..
-        MAX_SERIAL_PORT instead, for ports that exist but do not
-        enumerate -- com0com pairs, Bluetooth SPP that appears only when
-        the device connects, or configuring a station before the hardware
-        is plugged in. Default False: the filtered list is what an
-        operator wants day to day.
-
-        NOTHING IMPLEMENTS THAT. See the class comment above. *)
-      property ShowAll: boolean read FShowAll write FShowAll;
-   end;
 
    (*
      THE MESSAGE TEMPLATES -- what TR4W sends when it answers a call, confirms
@@ -3958,7 +3933,6 @@ type
       FRemainingMults: TRemainingMultsSettings;
       FInitialExchange: TInitialExchangeSettings;
       FQzb: TQzbSettings;
-      FSerialPorts: TSerialPortsSettings;
       FComputer: TComputerSettings;
       FRotator: TRotatorSettings;
       FDupeSheet: TDupeSheetSettings;
@@ -4391,7 +4365,6 @@ type
       property RemainingMults: TRemainingMultsSettings read FRemainingMults;
       property InitialExchange: TInitialExchangeSettings read FInitialExchange;
       property Qzb: TQzbSettings read FQzb;
-      property SerialPorts: TSerialPortsSettings read FSerialPorts;
       property Computer: TComputerSettings read FComputer;
       property Rotator: TRotatorSettings read FRotator;
       property DupeSheet: TDupeSheetSettings read FDupeSheet;
@@ -5392,13 +5365,6 @@ begin
    FRandomOffsetEnable := False;
 end;
 
-constructor TSerialPortsSettings.Create;
-begin
-   inherited Create;
-   // tShowAllSerialPorts was declared = False in VC.pas.
-   FShowAll := False;
-end;
-
 constructor TServerSettings.Create;
 begin
    inherited Create;
@@ -5649,6 +5615,16 @@ begin
      adding the edge invites a cycle. The cost is that the literal could drift
      from the table, so a unit test pins it. *)
    FAlertColor := 'ALERT';
+end;
+
+procedure TMainWindowSettings.SetNoColumnHeader(aValue: boolean);
+begin
+   SetBool(FNoColumnHeader, aValue, 'NoColumnHeader');
+end;
+
+procedure TMainWindowSettings.SetShowGridlines(aValue: boolean);
+begin
+   SetBool(FShowGridlines, aValue, 'ShowGridlines');
 end;
 
 procedure TMessageSettings.SetAutoQslInterval(aValue: TAutoQslInterval);
@@ -6113,7 +6089,6 @@ end;
 constructor TCountrySettings.Create;
 begin
    inherited Create;
-   FInformationFile      := '';
    (* CTYUpdateCheckOnStartup was declared TRUE in uCFG. *)
    FUpdateCheckOnStartup := True;
 end;
@@ -6267,7 +6242,6 @@ begin
    FRemainingMults  := TRemainingMultsSettings.Create;
    FInitialExchange := TInitialExchangeSettings.Create;
    FQzb             := TQzbSettings.Create;
-   FSerialPorts     := TSerialPortsSettings.Create;
    FComputer       := TComputerSettings.Create;
    FRotator        := TRotatorSettings.Create;
    FDupeSheet      := TDupeSheetSettings.Create;
@@ -6321,7 +6295,6 @@ begin
    FQtc.Free;
    FMult.Free;
    FQso.Free;
-   FSerialPorts.Free;
    FQzb.Free;
    FInitialExchange.Free;
    FRemainingMults.Free;
@@ -6838,7 +6811,6 @@ begin
    Alias('MAIN CALLSIGN',                 'My.MainCallsign');
    Alias('SHOW DOMESTIC MULTIPLIER NAME', 'RemainingMults.ShowDomesticName');
    Alias('REVERSE INITIAL EX',            'InitialExchange.Reverse');
-   Alias('SHOW ALL SERIAL PORTS',         'SerialPorts.ShowAll');
 
    Alias('ALWAYS CALL BLIND CQ',           'Cq.AlwaysCallBlind');
    Alias('AUTO CALL TERMINATE',            'Cq.AutoCallTerminate');

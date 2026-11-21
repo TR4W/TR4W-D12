@@ -677,8 +677,6 @@ begin
                           RS_CONTEST_REVERSEINITIALEX);
    RegisterModelSetting( 'contest.rfoblMode',           'RFOBL MODE',
                           RS_CONTEST_RFOBLMODE);
-   RegisterModelSetting( 'contest.showAllSerialPorts',  'SHOW ALL SERIAL PORTS',
-                          RS_CONTEST_SHOWALLSERIALPORTS);
    RegisterModelSetting( 'contest.showDomesticMultiplierName','SHOW DOMESTIC MULTIPLIER NAME',
                           RS_CONTEST_SHOWDOMESTICMULTIPLIERNAME);
    RegisterModelSetting( 'contest.singleBandScore',     'SINGLE BAND SCORE',
@@ -839,13 +837,14 @@ begin
    RegisterStoredSetting('hardware.ctrlj.stereoPinHigh',      'STEREO PIN HIGH',
                           RS_HARDWARE_CTRLJ_STEREOPINHIGH);
 
-   // --- Files/Updates (7) ----------------------------
+   (* --- Files/Updates (6) ----------------------------
+     COUNTRY INFORMATION FILE and SHOW ALL SERIAL PORTS (the Contest group
+     above) were removed 2026-11-21 (NY4I): nothing read either, here or in
+     D7. Both names are in uCFG.RETIRED_COMMANDS. *)
    RegisterModelSetting( 'files.ctrlj.allowAutoUpdate',       'ALLOW AUTO UPDATE',
                           RS_FILES_CTRLJ_ALLOWAUTOUPDATE);
    RegisterModelSetting( 'files.ctrlj.callsignUpdateEnable',  'CALLSIGN UPDATE ENABLE',
                           RS_FILES_CTRLJ_CALLSIGNUPDATEENABLE);
-   RegisterModelSetting('files.ctrlj.countryInformationFile','COUNTRY INFORMATION FILE',
-                          RS_FILES_CTRLJ_COUNTRYINFORMATIONFILE);
    RegisterModelSetting( 'files.ctrlj.ctyUpdateCheckOnStartup','CTY UPDATE CHECK ON STARTUP',
                           RS_FILES_CTRLJ_CTYUPDATECHECKONSTARTUP);
    RegisterModelSetting( 'files.ctrlj.domesticFilename',      'DOMESTIC FILENAME',

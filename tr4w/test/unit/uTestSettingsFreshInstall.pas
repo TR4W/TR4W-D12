@@ -51,6 +51,8 @@ type
       procedure Test_TheMp3CommandsAreRetired;
       procedure Test_AFileWithTheOldRadioSectionStillLoads;
       procedure Test_TheRadioTcpServerPortIsRetired;
+      procedure Test_AFileWithTheOldCountryAndSerialPortsMembersStillLoads;
+      procedure Test_TheCountryInformationAndSerialPortsCommandsAreRetired;
       procedure Test_BuildingTheSettingsObjectDoesNotLeak;
    public
       procedure RunAllTests; override;
@@ -486,6 +488,69 @@ begin
 end;
 
 (* ---------------------------------------------------------------------
+  COUNTRY INFORMATION FILE AND SHOW ALL SERIAL PORTS ARE RETIRED
+  (2026-11-21, NY4I).
+
+  Neither had a reader, here or in D7. Settings.SerialPorts was a group of
+  one, so it went whole; Settings.Country keeps UpdateCheckOnStartup and lost
+  only InformationFile. So a file written before today carries a whole
+  object no property owns AND one member inside a live group -- both shapes,
+  in one fixture.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsFreshInstallTests.Test_AFileWithTheOldCountryAndSerialPortsMembersStillLoads;
+var
+   s: TR4WSettings;
+   obj: TJSONObject;
+   written: TJSONObject;
+begin
+   BeginTest('a tr4w.json that still carries SerialPorts and Country.InformationFile loads');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      obj := ParseObject('{"SerialPorts":{"ShowAll":true},'
+                         + '"Country":{"InformationFile":"x.txt","UpdateCheckOnStartup":false},'
+                         + '"Computer":{"Id":"H"}}');
+      CheckTrue(obj <> nil, 'the fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckTrue(s.Computer.Id = 'H', 'the rest of the section loaded');
+      CheckFalse(s.Country.UpdateCheckOnStartup,
+                 'the surviving member of the Country group loaded');
+
+      written := s.ToJSON;
+      try
+         CheckTrue(written.FindPath('SerialPorts') = nil, 'the retired group is not written');
+         CheckTrue(written.FindPath('Country') <> nil, 'the Country group still is');
+         CheckTrue(written.FindPath('Country.InformationFile') = nil,
+                   'but without the retired member');
+      finally
+         written.Free;
+      end;
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TSettingsFreshInstallTests.Test_TheCountryInformationAndSerialPortsCommandsAreRetired;
+begin
+   BeginTest('COUNTRY INFORMATION FILE and SHOW ALL SERIAL PORTS are withdrawn: accepted, owned by nothing');
+   CheckTrue(CommandIsRetired('COUNTRY INFORMATION FILE'), 'COUNTRY INFORMATION FILE');
+   CheckTrue(CommandIsRetired('SHOW ALL SERIAL PORTS'),    'SHOW ALL SERIAL PORTS');
+   CheckFalse(Settings.OwnsCommand('COUNTRY INFORMATION FILE'), 'no property answers to it');
+   CheckFalse(Settings.OwnsCommand('SHOW ALL SERIAL PORTS'),    'nor to this');
+   (* ACCEPTED, so an old .cfg line does not raise LogCfg's modal "invalid
+     statement in config file". *)
+   CheckTrue(CheckCommand('COUNTRY INFORMATION FILE', 'CTYINFO.TXT', False),
+             'an old line is accepted');
+   CheckTrue(CheckCommand('SHOW ALL SERIAL PORTS', 'TRUE', False),
+             'and so is this one');
+end;
+
+(* ---------------------------------------------------------------------
   THE SETTINGS OBJECT FREES WHAT IT BUILDS.
   --------------------------------------------------------------------- *)
 
@@ -532,6 +597,8 @@ begin
    Test_TheMp3CommandsAreRetired;
    Test_AFileWithTheOldRadioSectionStillLoads;
    Test_TheRadioTcpServerPortIsRetired;
+   Test_AFileWithTheOldCountryAndSerialPortsMembersStillLoads;
+   Test_TheCountryInformationAndSerialPortsCommandsAreRetired;
    Test_BuildingTheSettingsObjectDoesNotLeak;
 end;
 

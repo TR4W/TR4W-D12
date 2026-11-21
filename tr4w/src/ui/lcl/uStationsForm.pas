@@ -90,6 +90,7 @@ implementation
 uses
    VC,                { tw_STATIONS_INDEX }
    MainUnit,          { CloseTR4WWindow }
+   uColumnHeaders,    (* ApplyColumnHeaders -- NO COLUMN HEADER, issue 352 *)
    uLCLFormHelpers;   // LeaveFormUnowned -- a tool window has no owner form
 
 { One guard for every routine below, and it has to be BOTH tests.  The form is
@@ -419,6 +420,9 @@ begin
    if TR4WStationsForm = nil then
       begin
       TR4WStationsForm := TfrmStations.Create(nil);
+      (* NO COLUMN HEADER -- D7 built this list through CreateListView,
+        which read it (issue 352). *)
+      ApplyColumnHeaders(TR4WStationsForm.lvStations);
       end;
 
    // A TOOL WINDOW HAS NO OWNER FORM (issue #1).  The same call the band map

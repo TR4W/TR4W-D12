@@ -312,6 +312,7 @@ type
                          const aDerivable: boolean);
       function FieldForEdit(const aEdit: TObject): TWizStationField;
       procedure AssignCaptions;
+      procedure ApplyFieldHelp;
       procedure LoadStation;
       procedure RunLookup;
       function DerivedValue(const aCommand, aCall: string): string;
@@ -379,7 +380,10 @@ uses
    uPrefsForm,          // PreferencesIsShowing, LoadClusterDirectory ...
    uLCLFormHelpers,     // OwnFormByMainWindow
    uAppStrings,
-   uAppPaths,           // DownloadedDataFilePath
+   uAppPaths,           // DownloadedDataFilePath, HelpDir
+   uEmbeddedTranslations, // ActiveUILanguage -- which help catalogue to load
+   uCommandHelp,        // TCommandHelp -- every field's tooltip
+   uSettingsBinding,    // ApplyCommandHelpHint -- the one tooltip rule
    uCTYUpdate,          // DownloadCTYAsync, LoadCountryFileFrom
    uCallbookFactory,    // LookupCallsignAsync
    LCLIntf,             // GetWindowRect -- the LCL's own, not the Windows unit's
@@ -499,6 +503,7 @@ begin
    FBaseClientHeight := ClientHeight;
    FBaseClientWidth := ClientWidth;
    AssignCaptions;
+   ApplyFieldHelp;
    LoadStation;
    LoadWSJTX;
    ShowCountryFileState;
@@ -1531,6 +1536,82 @@ const
    WSJTX_CMD_HIGHLIGHTS    = 'WSJT-X SEND HIGHLIGHTS';
    WSJTX_CMD_PORT          = 'WSJT-X BROADCAST PORT';
    WSJTX_CMD_MULTICAST     = 'WSJT-X MULTICAST GROUP';
+
+(* EVERY FIELD'S TOOLTIP, the radio editor's pattern (uRadioEditForm).  HERE,
+  below the WSJT-X command names, so the table can use them.
+
+  A FIELD THAT EDITS WHAT ANOTHER WINDOW EDITS WEARS THAT WINDOW'S HELP, so
+  the text is written once: the station boxes are the Station page's commands
+  (the same names AddField gives them), the CW choices are slot one's (the
+  wizard's radio goes into Radio 1 -- StageSetupItems), the cluster, rotator
+  and WSJT-X fields are Preferences'.  Only the checklist, the result page's
+  details box and the split cluster port are the wizard's own.  The hosted
+  radio, keyer and logger editors bring their own tooltips. *)
+procedure TfrmSetupWizard.ApplyFieldHelp;
+var
+   help: TCommandHelp;
+
+   (* ONE ROW OF THE TABLE: the field, its caption (nil for a check box, whose
+     caption is its own) and the help name.  Both get the same tooltip. *)
+   procedure HintFromHelp(const aControl, aCaption: TControl; const aCommand: string);
+   begin
+      ApplyCommandHelpHint(aControl, help, aCommand);
+      ApplyCommandHelpHint(aCaption, help, aCommand);
+   end;
+
+begin
+   help := TCommandHelp.Create(HelpDir, ActiveUILanguage);
+   try
+      // Station
+      HintFromHelp(edtCall,              lblCall,           'MY CALL');
+      HintFromHelp(edtName,              lblName,           'MY NAME');
+      HintFromHelp(edtGrid,              lblGrid,           'MY GRID');
+      HintFromHelp(edtState,             lblState,          'MY STATE');
+      HintFromHelp(edtSection,           lblSection,        'MY SECTION');
+      HintFromHelp(edtPostal,            lblPostal,         'MY POSTAL CODE');
+      HintFromHelp(edtZone,              lblZone,           'MY ZONE');
+      HintFromHelp(edtITUZone,           lblITUZone,        'MY ITU ZONE');
+      HintFromHelp(edtCountry,           lblCountry,        'MY COUNTRY');
+      HintFromHelp(cbxContinent,         lblContinent,      'MY CONTINENT');
+
+      // What to set up
+      HintFromHelp(chkRadio,             nil,               'SETUP WIZARD RADIO');
+      HintFromHelp(chkKeyer,             nil,               'SETUP WIZARD KEYER');
+      HintFromHelp(chkCluster,           nil,               'SETUP WIZARD CLUSTER');
+      HintFromHelp(chkLogger,            nil,               'SETUP WIZARD LOGGER');
+      HintFromHelp(chkRotator,           nil,               'SETUP WIZARD ROTATOR');
+      HintFromHelp(chkWSJTX,             nil,               'SETUP WIZARD WSJT-X');
+
+      // Radio page, under the hosted editor
+      HintFromHelp(chkCWByCAT,           nil,               'RADIO ONE CW BY CAT');
+      HintFromHelp(chkSpeedSync,         nil,               'RADIO ONE CW SPEED SYNC');
+
+      // DX cluster
+      HintFromHelp(cbxServer,            lblServer,         'TELNET SERVER');
+      HintFromHelp(edtPort,              lblPort,           'SETUP WIZARD CLUSTER PORT');
+      HintFromHelp(edtLogin,             lblLogin,          'PREFERENCES CLUSTER LOGIN');
+      HintFromHelp(edtPassword,          lblPassword,       'PREFERENCES CLUSTER PASSWORD');
+      HintFromHelp(edtCommand,           lblCommand,        'CONNECTION COMMAND');
+
+      // Rotator
+      HintFromHelp(cbxRotatorType,       lblRotatorType,    'PREFERENCES ROTATOR TYPE');
+      HintFromHelp(cbxRotatorPort,       lblRotatorPort,    'PREFERENCES ROTATOR PORT');
+      HintFromHelp(edtRotatorIP,         lblRotatorIP,      'PREFERENCES ROTATOR IP ADDRESS');
+      HintFromHelp(edtRotatorUDP,        lblRotatorUDP,     'PREFERENCES ROTATOR UDP PORT');
+
+      // WSJT-X
+      HintFromHelp(chkWSJTXEnable,       nil,               WSJTX_CMD_ENABLED);
+      HintFromHelp(edtWSJTXPort,         lblWSJTXPort,      WSJTX_CMD_PORT);
+      HintFromHelp(chkWSJTXHighlights,   nil,               WSJTX_CMD_HIGHLIGHTS);
+      HintFromHelp(chkWSJTXRadioControl, nil,               WSJTX_CMD_RADIO_CONTROL);
+      HintFromHelp(edtWSJTXMulticast,    lblWSJTXMulticast, WSJTX_CMD_MULTICAST);
+
+      // Result page
+      HintFromHelp(chkDetails,           nil,               'SETUP WIZARD SHOW DETAILS');
+   finally
+      help.Free;
+   end;
+end;
 
 (* A boolean command's stored value as a boolean: BA's spelling, the one
   Preferences' CommandBool compares with. *)

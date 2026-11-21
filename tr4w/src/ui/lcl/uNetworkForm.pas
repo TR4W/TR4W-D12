@@ -82,6 +82,7 @@ uses
    uNet,         { the columns, NetWindowCaption, DisplayAllClients }
    uNetLink,     { NetLinkObservers -- how this window follows the link }
    uSettingsModel, { Settings.Computer.Id -- whose row is highlighted yellow }
+   uColumnHeaders, (* ApplyColumnHeaders -- NO COLUMN HEADER, issue 352 *)
    uLCLFormHelpers;
 
 procedure TfrmNetwork.HandleCreate(Sender: TObject);
@@ -118,6 +119,10 @@ begin
    finally
       lvClients.Columns.EndUpdate;
    end;
+
+   (* NO COLUMN HEADER -- D7 built this list through CreateListView, which
+     read it (issue 352). *)
+   ApplyColumnHeaders(lvClients);
 end;
 
 destructor TfrmNetwork.Destroy;

@@ -6,8 +6,8 @@ unit uTestCommandHelp;
   the parts of the .po format the help catalogues use or will use once
   Weblate rewraps a long msgstr into continuation lines. And a pin: every
   setting Preferences can bind resolves to English help in the real
-  i18n/help_en.po, or is named in KNOWN_HELP_GAPS -- which must match EXACTLY,
-  so a gap that gets help (or a new setting that has none) fails here. *)
+  i18n/help_en.po. There are no exemptions, so a new setting with no help
+  fails here. *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -43,51 +43,6 @@ uses
    uCommandHelp,
    uSettingsRegistry,
    uSettingsDeclarations;
-
-const
-   (* REGISTERED SETTINGS WITH NO ENGLISH HELP in i18n/help_en.po, by config
-     command. This is a measurement, not a decision: writing the text is
-     NY4I's (docs/HELP_TEXT_GAPS.md is the work-list). Exact in both
-     directions -- remove a name the day its help lands. *)
-   KNOWN_HELP_GAPS: array[0..32] of string = (
-      (* No section in help_en.po. *)
-      'ALERT COLOR',
-      'BAND MAP WORKED MULT COLOR',
-      'BAND MAP WORKED MULT LIMIT',
-      'CALL HISTORY FILENAME',
-      'CALL WINDOW SHOW ALL SPOTS',
-      'COUNTRY INFORMATION FILE',
-      'DISPLAY LANGUAGE',
-      (* 2026-11-09, issue 256: the two per-destination certificate choices.
-        Their text is the check box caption and the warning beside it. *)
-      'HAMSCORE VERIFY SERVER',
-      'NETWORK AUTO CONNECT',
-      'NETWORK SHARE SPOTS',
-      'OPERATING STANDARD EDIT KEYS',
-      'PTT TX INHIBIT BEEP',
-      'SCORE VERIFY SERVER',
-      'SHOW ALL SERIAL PORTS',
-      'TELNET CONSOLE LINES',
-      'TUNE WITH DITS',
-      'USE CALL HISTORY FILE',
-      (* A section whose DESCRIPTION= is empty, in the ini and the .po. *)
-      'AUTO-CQ DELAY TIME',
-      'CW SPEED INCREMENT',
-      'DVK PATH',
-      'DVK RECORDER',
-      'HAND LOG MODE',
-      'INCLUDE F-KEY NUMBER',
-      'MAIN CALLSIGN',
-      'MISSINGCALLSIGNS FILE ENABLE',
-      'NET STATUS UPDATE INTERVAL',
-      'NO BORDER',
-      'NO COLUMN HEADER',
-      'QZB RANDOM OFFSET ENABLE',
-      'SHOW DOMESTIC MULTIPLIER NAME',
-      'SHOW GRIDLINES',
-      'STATIONS CALLSIGNS MASK',
-      'USE RECORDED SIGNS'
-   );
 
 function EnglishHeader: string;
 begin
@@ -424,12 +379,15 @@ var
    help: TCommandHelp;
    s: TSettingBase;
    missing: TStringList;
-   expected: TStringList;
    seen: TDictionary<string, boolean>;
    name: string;
-   i: integer;
 begin
    BeginTest('TestEveryRegisteredSettingHasHelp');
+   (* THE PIN IS ZERO (2026-11-21): every registered setting has English help
+     in i18n/help_en.po, so there is no list of exemptions any more. A new
+     setting registered without help fails here, with its name in the
+     message; write its entry in help_en.po. An "AGENT WRITTEN: " text counts
+     -- Describe answers it -- until NY4I reviews it. *)
    (* The catalogue the installer ships as help\help_en.po. *)
    path := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..' + PathDelim +
            '..' + PathDelim + '..' + PathDelim + 'i18n');
@@ -439,7 +397,6 @@ begin
    DeclareAllSettings;
    help     := TCommandHelp.Create(path, 'en');
    missing  := TStringList.Create;
-   expected := TStringList.Create;
    seen     := TDictionary<string, boolean>.Create;
    try
       CheckTrue(help.EnglishFile <> '', 'the English catalogue loaded');
@@ -460,18 +417,11 @@ begin
       CheckTrue(seen.Count > 100, Format('the registry was populated (%d commands)',
                                           [seen.Count]));
 
-      for i := Low(KNOWN_HELP_GAPS) to High(KNOWN_HELP_GAPS) do
-         begin
-         expected.Add(KNOWN_HELP_GAPS[i]);
-         end;
-      expected.Sort;
-
-      CheckEquals(expected.CommaText, missing.CommaText,
-                  'registered settings with no English help -- update ' +
-                  'KNOWN_HELP_GAPS (both directions) or write the help');
+      CheckEquals('', missing.CommaText,
+                  'registered settings with no English help -- write the ' +
+                  'help in i18n/help_en.po');
    finally
       seen.Free;
-      expected.Free;
       missing.Free;
       help.Free;
    end;

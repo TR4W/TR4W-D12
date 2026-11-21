@@ -467,6 +467,7 @@ type
       lblClusterLoginHint: TLabel;
       lblClusterPassword: TLabel;
       edtClusterPassword: TEdit;
+      lblClusterCommand: TLabel;
       lblClusterCommandHint: TLabel;
       lblClusterGlobalHeading: TLabel;
       chkSpotCollector: TCheckBox;
@@ -1184,6 +1185,9 @@ type
       { The Preferences search box -- see the SEARCH block in the implementation. }
       procedure BuildSearchIndex;
       procedure AddStationFieldsToSearchIndex(var aN: integer);
+      (* The tooltips of the designed controls no binding and no hand-wired
+        command reaches -- see the routine. *)
+      procedure ApplyUnboundFieldHelp;
       procedure RunSearch(const aNeedle: string);
       procedure ActivateSearchHit(const aIndex: integer);
       procedure HideSearchResults;
@@ -1939,8 +1943,8 @@ begin
    (* ---------------------------------------------------- Files and updates *)
 
    (* Files and updates (proposal's new page) -- the country file and what is
-     done with calls it cannot place. *)
-   aTable.Place('files.ctrlj.countryInformationFile',     NAV_FILES);
+     done with calls it cannot place. COUNTRY INFORMATION FILE stood here
+     until 2026-11-21, when it was removed (nothing read it). *)
    aTable.Place('files.ctrlj.ctyUpdateCheckOnStartup',    NAV_FILES);
    aTable.Place('files.ctrlj.unknownCountryFileName',     NAV_FILES);
 
@@ -7498,6 +7502,82 @@ begin
    // The cost is a pass over ~230 bindings; the expensive part of opening this
    // window was never this, it was populating combos.
    BuildSearchIndex;
+
+   (* AFTER FCommandHelp exists, which is the top of this routine. *)
+   ApplyUnboundFieldHelp;
+end;
+
+(* THE CONTROLS THAT REACH NO TOOLTIP ANY OTHER WAY: not bound (Bind), not a
+  hand-wired command (AddHandWiredToSearchIndex), not a Station field.  Most
+  edit a library or a store (profiles, clusters, rotators, the TCI and logging
+  stores) rather than a setting, so they have no registration to carry help.
+
+  A control that edits what a real config command sets wears that command's
+  help, so the text is shared rather than written twice: the log level, the
+  continent, the HamLib flags, speed sync, the cluster's server and
+  after-connect command (ApplyActiveCluster writes both into the program's
+  cluster settings), and the UDP flags.  The rest are PREFERENCES pseudo
+  commands, help_en.po entries the setup wizard shares where it edits the same
+  thing.  edtSearch has none: its TextHint is its help. *)
+procedure TPrefsForm.ApplyUnboundFieldHelp;
+
+   (* ONE ROW OF THE TABLE: the field, its caption (nil when there is none, or
+     for a check box, whose caption is its own) and the help name.  Both get
+     the same tooltip. *)
+   procedure HintFromHelp(const aControl, aCaption: TControl; const aCommand: string);
+   begin
+      ApplyCommandHelpHint(aControl, FCommandHelp, aCommand);
+      ApplyCommandHelpHint(aCaption, FCommandHelp, aCommand);
+   end;
+
+begin
+   // Station profile
+   HintFromHelp(cbxProfile,         nil,                'PREFERENCES PROFILE');
+   HintFromHelp(cbxRadio1,          lblRadio1,          'PREFERENCES RADIO 1');
+   HintFromHelp(cbxRadio2,          lblRadio2,          'PREFERENCES RADIO 2');
+   HintFromHelp(cbxCW1,             lblCWOutput1,       'PREFERENCES CW OUTPUT 1');
+   HintFromHelp(cbxCW2,             lblCWOutput2,       'PREFERENCES CW OUTPUT 2');
+   HintFromHelp(chkSpeedSync1,      nil,                'RADIO ONE CW SPEED SYNC');
+   HintFromHelp(chkSpeedSync2,      nil,                'RADIO TWO CW SPEED SYNC');
+   HintFromHelp(chkSO2R,            nil,                'PREFERENCES SO2R ENABLED');
+   HintFromHelp(chkAutoConnect,     nil,                'PREFERENCES CONNECT RADIOS AT STARTUP');
+
+   // Station
+   HintFromHelp(cbxMyContinent,     lblMyContinent,     'MY CONTINENT');
+
+   // DX clusters
+   HintFromHelp(edtClusterName,     lblClusterName,     'PREFERENCES CLUSTER NAME');
+   HintFromHelp(cbxClusterServer,   lblClusterServer,   'TELNET SERVER');
+   HintFromHelp(edtClusterLogin,    lblClusterLogin,    'PREFERENCES CLUSTER LOGIN');
+   HintFromHelp(edtClusterPassword, lblClusterPassword, 'PREFERENCES CLUSTER PASSWORD');
+   HintFromHelp(edtClusterCommand,  lblClusterCommand,  'CONNECTION COMMAND');
+
+   // Rotators
+   HintFromHelp(edtRotatorName,     lblRotatorName,     'PREFERENCES ROTATOR NAME');
+   HintFromHelp(cbxRotatorType,     lblRotatorType,     'PREFERENCES ROTATOR TYPE');
+   HintFromHelp(cbxRotatorPort,     lblRotatorPort,     'PREFERENCES ROTATOR PORT');
+   HintFromHelp(edtRotatorBaud,     lblRotatorBaud,     'PREFERENCES ROTATOR BAUD RATE');
+   HintFromHelp(edtRotatorIP,       lblRotatorIP,       'PREFERENCES ROTATOR IP ADDRESS');
+   HintFromHelp(edtRotatorUDP,      lblRotatorUDP,      'PREFERENCES ROTATOR UDP PORT');
+   HintFromHelp(edtRotatorBands,    lblRotatorBands,    'PREFERENCES ROTATOR BANDS');
+
+   // TCI server (TCI DEBUG and TCI MAX TX SECONDS are the store's own names)
+   HintFromHelp(chkTCIServer,       nil,                'PREFERENCES TCI SERVER');
+   HintFromHelp(edtTCIPort,         lblTCIPort,         'PREFERENCES TCI PORT');
+   HintFromHelp(chkTCIBindAll,      nil,                'PREFERENCES TCI LISTEN ON NETWORK');
+   HintFromHelp(edtTCIMaxTx,        lblTCIMaxTx,        'TCI MAX TX SECONDS');
+
+   // Logging
+   HintFromHelp(cbxLogLevel,        lblLogLevel,        'DEBUG LOG LEVEL');
+   HintFromHelp(chkTelnetDebug,     nil,                'TELNET DEBUG');
+   HintFromHelp(chkTCIDebug,        nil,                'TCI DEBUG');
+   HintFromHelp(chkHamLibDebug,     nil,                'HAMLIB DEBUG');
+   HintFromHelp(chkHamLibTrace,     nil,                'HAMLIB TRACE');
+   HintFromHelp(chkHamLibAsyncOnly, nil,                'HAMLIB ASYNC ONLY');
+
+   // UDP broadcast
+   HintFromHelp(chkUDPEnabled,      nil,                'PREFERENCES UDP BROADCAST ENABLED');
+   HintFromHelp(chkUDPAllQSOs,      nil,                'UDP BROADCAST ALL QSOS');
 end;
 
 

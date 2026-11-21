@@ -185,6 +185,10 @@ $lints = @(
    @{ Name = 'Lint-DesignedForms';   Arg = $src;      NeedsFpc = $false }
    @{ Name = 'Lint-BindKeys'; Arg = $src;      NeedsFpc = $false }
    @{ Name = 'Lint-SearchIndex'; Arg = $src;      NeedsFpc = $false }
+   # TOOLTIPS ON THE EDITOR FORMS, RATCHETED (2026-11-21). Per form, the input
+   # controls with no hint source; a form may not get worse. The printed counts
+   # are the answer to "how many tooltips are we missing".
+   @{ Name = 'Lint-ControlHints'; Arg = $src;     NeedsFpc = $false }
    @{ Name = 'Lint-OneConfigWriter'; Arg = $src;      NeedsFpc = $false }
    @{ Name = 'Lint-PathEscapes';     Arg = $repoRoot; NeedsFpc = $false }
    @{ Name = 'Lint-MarkdownTables'; Arg = $repoRoot; NeedsFpc = $false }

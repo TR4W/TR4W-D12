@@ -65,7 +65,7 @@ resourcestring
    RS_CW_SENDFOURLETTERCALL                   = 'Always send all four letters of a four-letter call';
    RS_CW_INCLUDEFKEYNUMBER                    = 'Show the key number on the function-key buttons';
    RS_APPEARANCE_NOBORDER                     = 'Main window has no border';
-   RS_APPEARANCE_NOCAPTION                    = 'Main window has no title bar';
+   RS_APPEARANCE_NOCAPTION                    = 'Tool windows have no title bar';
    RS_APPEARANCE_NOCOLUMNHEADER               = 'Hide the log column headings';
    RS_APPEARANCE_SHOWGRIDLINES                = 'Draw gridlines in the log';
    RS_APPEARANCE_LANGUAGE                     = 'Language';
@@ -201,7 +201,6 @@ resourcestring
    RS_CONTEST_REMAININGMULTDISPLAYMODE        = 'Remaining Mult Display Mode';
    RS_CONTEST_REVERSEINITIALEX                = 'Reverse Initial Ex';
    RS_CONTEST_RFOBLMODE                       = 'Rfobl Mode';
-   RS_CONTEST_SHOWALLSERIALPORTS              = 'Show All Serial Ports';
    RS_CONTEST_SHOWDOMESTICMULTIPLIERNAME      = 'Show Domestic Multiplier Name';
    RS_CONTEST_SPRINTQSYRULE                   = 'Sprint Qsy Rule';
    RS_CONTEST_TENMINUTERULE                   = 'Ten Minute Rule';
@@ -265,14 +264,9 @@ resourcestring
    RS_APPEARANCE_CTRLJ_SHOWTYPEDCALLSIGN      = 'Show Typed Callsign';
    RS_APPEARANCE_CTRLJ_USERINFOSHOWN          = 'User Info Shown';
    RS_APPEARANCE_LAYOUT_WINDOWSIZE            = 'Window Size';
-   RS_HARDWARE_CTRLJ_LPT1BASEADDRESS          = 'LPT1 Base Address';
-   RS_HARDWARE_CTRLJ_LPT2BASEADDRESS          = 'LPT2 Base Address';
-   RS_HARDWARE_CTRLJ_LPT3BASEADDRESS          = 'LPT3 Base Address';
    RS_HARDWARE_CTRLJ_STEREOPINHIGH            = 'Stereo Pin High';
-   RS_HARDWARE_CTRLJ_USECONTROLPORT           = 'Use Control Port';
    RS_FILES_CTRLJ_ALLOWAUTOUPDATE             = 'Allow Auto Update';
    RS_FILES_CTRLJ_CALLSIGNUPDATEENABLE        = 'Callsign Update Enable';
-   RS_FILES_CTRLJ_COUNTRYINFORMATIONFILE      = 'Country Information File';
    RS_FILES_CTRLJ_CTYUPDATECHECKONSTARTUP     = 'Cty Update Check On Startup';
    RS_FILES_CTRLJ_DOMESTICFILENAME            = 'Domestic Filename';
    RS_FILES_CTRLJ_MISSINGCALLSIGNSFILEENABLE  = 'Missingcallsigns File Enable';

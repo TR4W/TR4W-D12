@@ -263,9 +263,13 @@ type
       function SaveTo(const aTarget: TRadioDefinition; out aError: string): boolean;
       function IsModified: boolean;
       procedure UpdateEnabledState;
-      (* The poll-rate box's tooltip: FREQUENCY POLL RATE's help, in the UI
-        language, through the one rule Preferences uses. *)
-      procedure ApplyPollRateHelp;
+      (* EVERY FIELD'S TOOLTIP, from the help catalogue in the UI language,
+        through the one rule Preferences uses (ApplyCommandHelpHint). The
+        poll rate keeps its real command, FREQUENCY POLL RATE; the other
+        fields are not config commands, so each has a stable help name
+        beginning "RADIO EDITOR " (help key TC_HELP_RADIO_EDITOR_...).
+        Lint-ControlHints holds this form at no unhinted control. *)
+      procedure ApplyFieldHelp;
       (* The "Drive through HamLib" box's tooltip, written as the LCL is
         about to show it (TControl.OnShowHint, public, not published for a
         TCheckBox -- so assigned in the constructor, not in the .lfm). It is
@@ -330,7 +334,7 @@ uses
    MainUnit,
    uAppPaths,              // HelpDir -- where the help catalogues are
    uEmbeddedTranslations,  // ActiveUILanguage -- which help catalogue to load
-   uCommandHelp,           // TCommandHelp -- the poll rate's tooltip
+   uCommandHelp,           // TCommandHelp -- every field's tooltip
    uSettingsBinding,       // ApplyCommandHelpHint -- the one tooltip rule
    uSettingsCaptions,      // RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE -- its label
    uAppStrings,            // SRadioEditBadPollRate, SRadioEditUseHamLibHint
@@ -598,9 +602,10 @@ begin
    (* THE POLL RATE'S WORDS COME FROM THE CATALOGUES THAT ALREADY HAVE THEM.
      The caption is the resourcestring the Preferences row used, so its
      translations still reach the screen; the tooltip is the command's own
-     help, the same text Preferences showed. *)
+     help, the same text Preferences showed. Every other field's tooltip is
+     set in the same pass -- see ApplyFieldHelp. *)
    lblPollRate.Caption := RS_OPERATING_CTRLJ_FREQUENCYPOLLRATE;
-   ApplyPollRateHelp;
+   ApplyFieldHelp;
 
    (* THE HAMLIB BOX'S TOOLTIP CARRIES THE LIBRARY'S VERSION, read when the
      tooltip is about to show (HandleUseHamLibShowHint) -- never here, because
@@ -1315,14 +1320,71 @@ begin
    HintInfo^.HintStr := chkUseHamLib.Hint;
 end;
 
-procedure TRadioEditForm.ApplyPollRateHelp;
+procedure TRadioEditForm.ApplyFieldHelp;
 var
    help: TCommandHelp;
+
+   (* ONE ROW OF THE TABLE: the field, its caption (nil when a row shares the
+     caption of the row above, as the radio buttons of one group do) and the
+     help name. Both get the same tooltip, so hovering the words beside a box
+     explains it as well as hovering the box. A name with no text in any
+     catalogue leaves the control as it was (ApplyCommandHelpHint). *)
+   procedure HintFromHelp(const aControl, aCaption: TControl; const aCommand: string);
+   begin
+      ApplyCommandHelpHint(aControl, help, aCommand);
+      ApplyCommandHelpHint(aCaption, help, aCommand);
+   end;
+
 begin
+   (* ONE CATALOGUE LOAD for the whole form: help_en.po is a few hundred KB. *)
    help := TCommandHelp.Create(HelpDir,ActiveUILanguage);
    try
       ApplyCommandHelpHint(edtPollRate, help, FREQUENCY_POLL_RATE_COMMAND);
       ApplyCommandHelpHint(lblPollRate, help, FREQUENCY_POLL_RATE_COMMAND);
+
+      (* chkUseHamLib is not here: its tooltip carries the HamLib version and
+        is written as it shows (HandleUseHamLibShowHint). *)
+      HintFromHelp(edtName,            lblName,          'RADIO EDITOR NAME');
+      HintFromHelp(cbxType,            lblType,          'RADIO EDITOR TYPE');
+
+      // Serial tab
+      HintFromHelp(cbxPort,            lblPort,          'RADIO EDITOR PORT');
+      HintFromHelp(edtBaud,            lblBaud,          'RADIO EDITOR BAUD RATE');
+      HintFromHelp(optData7,           lblDataBits,      'RADIO EDITOR DATA BITS');
+      HintFromHelp(optData8,           nil,              'RADIO EDITOR DATA BITS');
+      HintFromHelp(optParityNone,      lblParity,        'RADIO EDITOR PARITY');
+      HintFromHelp(optParityOdd,       nil,              'RADIO EDITOR PARITY');
+      HintFromHelp(optParityEven,      nil,              'RADIO EDITOR PARITY');
+      HintFromHelp(optStop1,           lblStopBits,      'RADIO EDITOR STOP BITS');
+      HintFromHelp(optStop2,           nil,              'RADIO EDITOR STOP BITS');
+      HintFromHelp(cbxCatRTS,          lblCatRTS,        'RADIO EDITOR CAT RTS');
+      HintFromHelp(cbxCatDTR,          lblCatDTR,        'RADIO EDITOR CAT DTR');
+
+      // Network tab
+      HintFromHelp(edtIP,              lblIP,            'RADIO EDITOR IP ADDRESS');
+      HintFromHelp(btnDiscover,        nil,              'RADIO EDITOR DISCOVER');
+      HintFromHelp(cbxFound,           lblFound,         'RADIO EDITOR FOUND');
+      HintFromHelp(edtTCPPort,         lblTCPPort,       'RADIO EDITOR IP PORT');
+      HintFromHelp(edtUser,            lblUser,          'RADIO EDITOR USER NAME');
+      HintFromHelp(edtPassword,        lblPassword,      'RADIO EDITOR PASSWORD');
+
+      // Advanced tab
+      HintFromHelp(edtStartup,         lblStartup,       'RADIO EDITOR STARTUP COMMAND');
+      HintFromHelp(edtFilterByte,      lblFilterByte,    'RADIO EDITOR ICOM FILTER BYTE');
+      HintFromHelp(edtDataMode,        lblDataMode,      'RADIO EDITOR ICOM DATA MODE ID');
+      HintFromHelp(edtAutoInfo,        lblAutoInfo,      'RADIO EDITOR AUTO INFO LEVEL');
+      HintFromHelp(edtHamLibID,        lblHamLibID,      'RADIO EDITOR HAMLIB MODEL ID');
+      HintFromHelp(chkWideCW,          nil,              'RADIO EDITOR WIDE CW FILTER');
+      HintFromHelp(chkFT1000MPReverse, nil,              'RADIO EDITOR FT1000MP CW REVERSE');
+      HintFromHelp(edtFreqOffset,      lblFreqOffset,    'RADIO EDITOR FREQUENCY OFFSET');
+      HintFromHelp(chkPolling,         nil,              'RADIO EDITOR POLL THIS RADIO');
+
+      // Below the tabs: keying and CI-V
+      HintFromHelp(cbxKeyerPort,       lblKeyerPort,     'RADIO EDITOR KEYER OUTPUT PORT');
+      HintFromHelp(edtCIV,             lblCIV,           'RADIO EDITOR CIV ADDRESS');
+      HintFromHelp(cbxKeyerRTS,        lblKeyerRTS,      'RADIO EDITOR KEYER RTS');
+      HintFromHelp(cbxKeyerDTR,        lblKeyerDTR,      'RADIO EDITOR KEYER DTR');
+      HintFromHelp(cbxKeyerStopBits,   lblKeyerStopBits, 'RADIO EDITOR KEYER STOP BITS');
    finally
       help.Free;
    end;

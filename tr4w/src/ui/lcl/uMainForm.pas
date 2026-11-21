@@ -225,9 +225,10 @@ type
       TOOL windows -- band map, function keys, and the rest. The main form's
       BorderStyle is bsSizeable in the .lfm and nothing overrides it at run
       time, so the main window keeps its caption whatever that setting says.
-      (Preferences labels it "Main window has no title bar", which is wrong
-      too; docs/BENCH_QUEUE.md has it right, and records that the setting has
-      almost certainly never worked at all.)
+      (Preferences labelled it "Main window has no title bar" until
+      2026-11-21, which was wrong too; it reads "Tool windows have no title
+      bar" now. docs/BENCH_QUEUE.md records that the setting has almost
+      certainly never worked at all.)
 
       WHAT THIS IS, THEN: pre-existing behaviour with no surviving rationale.
       The main window's own Win32 procedure carried `WM_LBUTTONDOWN:

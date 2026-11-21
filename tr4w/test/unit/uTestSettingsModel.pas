@@ -470,7 +470,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(321, names.Count,
+         CheckEquals(319, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -538,7 +538,10 @@ begin
                      + ' CLUSTER AUTO SELF SPOT and CLUSTER SELF SPOT'
                      + ' INTERVAL (new, no CFGCA row, issue 188), 2026-11-19; 321 with'
                      + ' CATEGORY-STATION, the Cabrillo station category (new,'
-                     + ' no CFGCA row, contest-scoped), 2026-11-20');
+                     + ' no CFGCA row, contest-scoped), 2026-11-20; 319 since'
+                     + ' COUNTRY INFORMATION FILE and SHOW ALL SERIAL PORTS'
+                     + ' were retired -- nothing read either, here or in D7'
+                     + ' (NY4I), 2026-11-21');
       finally
          names.Free;
       end;
@@ -910,6 +913,20 @@ begin
      crAddress-nil test below does not describe it: it is retired because
      nothing read the value, there or here. *)
    CheckTrue(CommandIsRetired('RADIO TCP SERVER PORT'), 'RADIO TCP SERVER PORT');
+   (* Withdrawn 2026-11-21 (NY4I): registered settings that nothing read,
+     here or in D7. *)
+   CheckTrue(CommandIsRetired('COUNTRY INFORMATION FILE'), 'COUNTRY INFORMATION FILE');
+   CheckTrue(CommandIsRetired('SHOW ALL SERIAL PORTS'), 'SHOW ALL SERIAL PORTS');
+   (* Withdrawn 2026-11-21, confirmed by NY4I ("all retired"): the
+     parallel-port names, whose wiring went on 2026-09-13. Before this no arm
+     of CheckCommand accepted them, so an old config naming one raised the
+     invalid-statement dialog. *)
+   CheckTrue(CommandIsRetired('LPT1 BASE ADDRESS'), 'LPT1 BASE ADDRESS');
+   CheckTrue(CommandIsRetired('LPT2 BASE ADDRESS'), 'LPT2 BASE ADDRESS');
+   CheckTrue(CommandIsRetired('LPT3 BASE ADDRESS'), 'LPT3 BASE ADDRESS');
+   CheckTrue(CommandIsRetired('RELAY CONTROL PORT'), 'RELAY CONTROL PORT');
+   CheckTrue(CommandIsRetired('STEREO CONTROL PORT'), 'STEREO CONTROL PORT');
+   CheckTrue(CommandIsRetired('USE CONTROL PORT'), 'USE CONTROL PORT');
 
    (* NOT K1EA NETWORK ENABLE, and the first draft of this test asserted that
      it was -- which is the distinction worth keeping.
@@ -963,8 +980,11 @@ begin
      nil, 41 had a real target, and 3 had no row at all. *)
    (* 95 SINCE M10 S2 (2026-10-14): the seven contest-rule settings joined
      the list. 97 since 2026-11-01: COLUMN DUPESHEET COLOR and RADIO TCP
-     SERVER PORT. *)
-   CheckTrue(RetiredCommandCount >= 97, 'the retired list has not shrunk');
+     SERVER PORT. 99 since 2026-11-21: COUNTRY INFORMATION FILE and SHOW ALL
+     SERIAL PORTS. 105 since the same day, when NY4I confirmed the six
+     parallel-port names retired: LPT1/2/3 BASE ADDRESS, RELAY CONTROL PORT,
+     STEREO CONTROL PORT and USE CONTROL PORT. *)
+   CheckTrue(RetiredCommandCount >= 105, 'the retired list has not shrunk');
 end;
 
 (* ---------------------------------------------------------------------
@@ -1845,7 +1865,6 @@ const
       + '"CONTEST NAME",'
       + '"CONTEST TITLE",'
       + '"COUNT DOMESTIC COUNTRIES",'
-      + '"COUNTRY INFORMATION FILE",'
       + '"CQ CW EXCHANGE",'
       + '"CQ CW EXCHANGE NAME KNOWN",'
       + '"CQ EXCHANGE",'
@@ -2041,7 +2060,6 @@ const
       + '"SHORT 2",'
       + '"SHORT 9",'
       + '"SHORT INTEGERS",'
-      + '"SHOW ALL SERIAL PORTS",'
       + '"SHOW DOMESTIC MULTIPLIER NAME",'
       + '"SHOW FREQUENCY IN LOG",'
       + '"SHOW GRIDLINES",'

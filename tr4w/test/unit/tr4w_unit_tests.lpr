@@ -669,6 +669,8 @@ uses
    uTestShowOffScreen in 'uTestShowOffScreen.pas',
    uTestExternalLoggerGrid in 'uTestExternalLoggerGrid.pas',
    uTestColumnWidthStore in 'uTestColumnWidthStore.pas',
+   uTestColumnHeaders in 'uTestColumnHeaders.pas',
+   uTestAltDragMove in 'uTestAltDragMove.pas',
    uTestExternalLoggerFields in 'uTestExternalLoggerFields.pas',
    uTestPasswordRevealLayout in 'uTestPasswordRevealLayout.pas',
    uTestRadioEditHamLib in 'uTestRadioEditHamLib.pas',
@@ -1407,6 +1409,8 @@ begin
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
    RegisterSuite(TExternalLoggerGridTests.Create('ExternalLoggerGrid'));
    RegisterSuite(TColumnWidthStoreTests.Create('ColumnWidthStore'));
+   RegisterSuite(TColumnHeaderTests.Create('ColumnHeaders'));
+   RegisterSuite(TAltDragMoveTests.Create('AltDragMove'));
    RegisterSuite(TExternalLoggerFieldsTests.Create('ExternalLoggerFields'));
    RegisterSuite(TPasswordRevealLayoutTests.Create('PasswordRevealLayout'));
    RegisterSuite(TRadioEditHamLibTests.Create('RadioEditHamLib'));

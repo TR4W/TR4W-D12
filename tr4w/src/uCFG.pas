@@ -1089,7 +1089,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..96] of string = (
+   RETIRED_COMMANDS: array[0..104] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -1215,7 +1215,29 @@ const
       'INITIAL EXCHANGE',
       'PREFIX MULTIPLIER',
       'QSO POINT METHOD',
-      'ZONE MULTIPLIER'
+      'ZONE MULTIPLIER',
+      (* RETIRED 2026-11-21 (NY4I). Each was a registered setting that nothing
+        read, here or in D7: Settings.Country.InformationFile and
+        Settings.SerialPorts.ShowAll. The properties, their Preferences rows,
+        captions and help went with them. *)
+      'COUNTRY INFORMATION FILE',
+      'SHOW ALL SERIAL PORTS',
+      (* RETIRED 2026-11-21, CONFIRMED BY NY4I ("all retired"). The
+        parallel-port wiring went on 2026-09-13 and these six went with it:
+        no setting and no store owns them (they are in neither the settings
+        object nor OWNED_BY_A_STORE), the LPT base addresses had no reader
+        left, and USE CONTROL PORT's one reader,
+        logk1ea.ReportControlPortUnavailable, has no caller. Before this,
+        CheckCommand had no arm that accepted them, so an old config naming
+        one raised the invalid-statement dialog (read from the code, not
+        observed). They left uRadioConfigApply.MIGRATED_COMMANDS the same
+        day, with their captions and help. *)
+      'LPT1 BASE ADDRESS',
+      'LPT2 BASE ADDRESS',
+      'LPT3 BASE ADDRESS',
+      'RELAY CONTROL PORT',
+      'STEREO CONTROL PORT',
+      'USE CONTROL PORT'
       );
 
 function RetiredCommandCount: integer;

@@ -821,7 +821,6 @@ TC_DISCOVER_NOT_AVAILABLE = 'Network discovery is not available for radio %s';
 TC_DISCOVER_NONE_FOUND = 'No radio of type %s found on the network';
 TC_DISCOVER_MULTI_FOUND = 'More than one %s found; filled in the first.  All found:';
 TC_PORT_NOT_CONNECTED = '(not connected)';
-TC_SHOW_ALL_SERIAL_PORTS = 'Show all serial ports';
 
   { Lifted from hardcoded call sites 2026-08-27. These were passed
     straight to a message call as literals, so no harvest could see them
@@ -879,7 +878,6 @@ TC_SHOW_ALL_SERIAL_PORTS = 'Show all serial ports';
   TC_CONTINUEENTERINGCHARACTERSAUTOTERM = 'Continue entering characters.  Auto terminate active!!';
   TC_CONTINUEENTERINGCHARACTERSPRESSRET = 'Continue entering characters and press RETURN when done.';
   TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB = 'Enter exchange.  Press ENTER to log, ESCAPE to abort QSO.';
-  TC_RELAYCONTROLPORTPADDLEPORT         = 'RELAY CONTROL PORT = PADDLE PORT';
   TC_LOCATIONFIELDEMPTY                 = 'LOCATION field is empty.';
   TC_PTTLOCKOUTTRUE                     = 'PTT LOCKOUT=TRUE';
   TC_PREFERENCESCOULDOPENEDS            = 'Preferences could not be opened (%s).';

@@ -149,6 +149,8 @@ type
                             aTextLeft: integer);
       function  GetSelectedRecord: Int64;
       procedure SetSelectedRecord(const aValue: Int64);
+      function  GetShowHeader: boolean;
+      procedure SetShowHeader(const aValue: boolean);
       procedure SetLayoutName(const aValue: string);
       procedure ReadSavedWidths;
       function  UserWidth(const aColumn: LogColumnsType): integer;
@@ -210,6 +212,14 @@ type
       (* How many log records exist. Setting it is what makes the log appear. *)
       property RecordCount: Int64 read FRecordCount write SetRecordCount;
 
+      (* THE HEADING ROW, ON OR OFF -- NO COLUMN HEADER (issue 352). It is the
+        one fixed row, and every row->record sum here is taken against
+        FixedRows, so hiding it shifts no record. The setter keeps RowCount
+        equal to FixedRows plus the records in the order the LCL accepts, and
+        keeps the selection (or the newest QSO in view). Applied from
+        uColumnHeaders, at creation and when the setting changes. *)
+      property ShowHeader: boolean read GetShowHeader write SetShowHeader;
+
       property OnFetchRows: TLogRowsFetchEvent read FOnFetchRows write FOnFetchRows;
 
       (* Declared widths, or fitted to the contents and stretched to the
@@ -255,6 +265,7 @@ implementation
 
 uses
    uSettingsModel,   (* Settings.Log.ColumnAutoSize -- was the global ColumnAutoSize *)
+   uColumnHeaders,   (* ApplyColumnHeaders -- NO COLUMN HEADER, issue 352 *)
    uColumnWidthStore, (* TColumnWidthStore, ClampRestoredWidth -- issue 234 *)
    uLCLFormHelpers,  (* LoadSavedColumnWidths, NoteColumnWidth, the 96-dpi scaling *)
    utils_text,       (* LclText -- a header's text, converted for the LCL once *)
@@ -449,6 +460,8 @@ begin
    FixedRows     := 1;
    ColCount      := 1;
    RowCount      := 1;
+   (* NO COLUMN HEADER from birth, so no host has to remember it. *)
+   ApplyColumnHeaders(Self);
    (* ssVertical, NOT ssAutoVertical.
 
      THE BAND UNDER THE LAST ROW IS A REAL HORIZONTAL SCROLL BAR WITH A THUMB.
@@ -1352,9 +1365,56 @@ begin
    FNeedsFit    := True;
    Reload;
 
-   (* One header row plus the records. RowCount is an integer, and a log that
-     exceeded it would be a log of two billion QSOs. *)
-   RowCount := 1 + integer(n);
+   (* The header row, if shown, plus the records. RowCount is an integer, and
+     a log that exceeded it would be a log of two billion QSOs. *)
+   RowCount := FixedRows + integer(n);
+end;
+
+function TLogGrid.GetShowHeader: boolean;
+begin
+   Result := FixedRows > 0;
+end;
+
+(* THE ORDER OF THE TWO WRITES IS THE WHOLE ROUTINE. The LCL refuses
+  FixedRows > RowCount (CheckFixedCount, EGridException), and an empty log
+  with no header has no rows at all -- so turning the header on adds its row
+  first, and turning it off drops the fixed row first. *)
+procedure TLogGrid.SetShowHeader(const aValue: boolean);
+var
+   selected:  Int64;
+   followEnd: boolean;
+begin
+   if aValue = ShowHeader then
+      begin
+      Exit;
+      end;
+
+   selected  := SelectedRecord;
+   followEnd := AtEnd;
+
+   if aValue then
+      begin
+      RowCount  := 1 + integer(FRecordCount);
+      FixedRows := 1;
+      end
+   else
+      begin
+      FixedRows := 0;
+      RowCount  := integer(FRecordCount);
+      end;
+
+   (* The operator's selection stays on its QSO, and a log that was showing
+     its newest QSO still does -- the viewport only, as ScrollToEnd does it,
+     so a row chosen in View/Edit Log is not moved to the end. *)
+   if selected >= 0 then
+      begin
+      SelectedRecord := selected;
+      end;
+
+   if followEnd and (FRecordCount > 0) then
+      begin
+      TopRow := RowCount - 1;
+      end;
 end;
 
 function TLogGrid.GetSelectedRecord: Int64;

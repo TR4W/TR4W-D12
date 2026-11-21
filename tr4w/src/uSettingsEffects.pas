@@ -133,6 +133,7 @@ uses
    uRemMults,      // UpdateRemainingMultsWindows -- was CommandsProcArray[9]
    uNet,           // SetComputerName -- announce the name to the other position
    uBandMapView,   // BandMapRefresh -- the band map's own view seam
+   uColumnHeaders, // ApplyColumnHeadersToOpenWindows -- NO COLUMN HEADER
    MainUnit,       // wsjtx -- the server object these three act on
    uStateBridge,   // RefreshWSJTXIndicator -- the main window's box
    uBackupCopyService; (* BackupCopyDestinationChanged -- the new folder is
@@ -227,11 +228,15 @@ const
    WSJTX_SEND_HIGHLIGHTS = 'Wsjtx.SendHighlights';
    WSJTX_MULTICAST_GROUP = 'Wsjtx.MulticastGroup';
 
-   (* THE LOG GRID'S LINES, crP: 3. An exact path: the other three
-     main-window appearance flags are read when a window is BUILT, so
-     matching the group would call a redraw for three settings that have
-     no run-time effect at all. *)
+   (* THE LOG GRID'S LINES, crP: 3. An exact path: NO BORDER and NO CAPTION
+     are read when a window is BUILT, so matching the group would call a
+     redraw for settings that have no run-time effect at all. *)
    SHOW_GRIDLINES = 'MainWindow.ShowGridlines';
+
+   (* THE HEADING ROW OF THE LOG GRIDS AND OF THE NETWORK AND STATIONS
+     LISTS (issue 352). Read when each is built, and re-applied here to
+     whatever is open, so the change shows without a restart. *)
+   NO_COLUMN_HEADER = 'MainWindow.NoColumnHeader';
 
    (* THE NEXT SERIAL NUMBER ON SCREEN, crP: 5. The panel shows what will
      be sent, and whether an abandoned QSO gives its number back changes
@@ -606,6 +611,13 @@ begin
         safe before any window exists: the grid accessor it reaches is a
         no-op while the form is nil. *)
       DispalayLogGridLines;
+      end;
+
+   if UnicodeSameText(aPath, NO_COLUMN_HEADER) then
+      begin
+      (* Every TLogGrid on an open form and the two list views; a window not
+        built yet reads the setting when it is. *)
+      ApplyColumnHeadersToOpenWindows;
       end;
 
    if InGroup(aPath, BAND_MAP) or InGroup(aPath, BANDS)

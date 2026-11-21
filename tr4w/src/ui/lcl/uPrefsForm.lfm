@@ -3333,7 +3333,7 @@ object PrefsForm: TPrefsForm
         Height = 22
         Top = 346
         Width = 540
-        Caption = 'Main window has no title bar'
+        Caption = 'Tool windows have no title bar'
         TabOrder = 5
       end
       object chkNoColumnHeader: TCheckBox
