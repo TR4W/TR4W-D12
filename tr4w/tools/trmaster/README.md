@@ -48,6 +48,28 @@ changes).
   Run with `python` (not `-I`). Tests: `python -I test_lookup_build.py`,
   `python -I test_ca_divisions.py`.
 
+## Patching one call (`trmaster_patch.py`) -- for testing the in-place reload
+
+A test utility, not part of the monthly build: it writes a copy of a `.dta` with
+one call's record changed, so the program's in-place TRMASTER reload can be
+watched picking up the change.
+
+```
+python trmaster_patch.py in.dta --list-call N4AF
+python trmaster_patch.py in.dta out.dta --call N4AF --name Howie
+python trmaster_patch.py in.dta out.dta --call N4AF --section GA --check 99
+python trmaster_patch.py in.dta out.dta --call N4AF --name ""      (removes the field)
+```
+
+Fields: `--name --section --check --grid --qth --cqzone --ituzone --foc --oldcall
+--tenten --user1`..`--user5` (text) and `--hits --speed` (0..255). The input is
+never modified and `out.dta` must be a different file; an unknown call exits 1.
+Only that call's record copies are re-encoded; every other byte is copied through
+and the bucket offsets and end offset are recomputed, so a longer or shorter value
+is fine. The result is re-read with `trmaster_codec.read_dta` before it reports
+success. Tests: `python -I test_trmaster_patch.py` (patches a copy of
+`test/contest-matrix/MATRIX-TRMASTER.DTA`).
+
 ## Quick start (monthly)
 
 ```
