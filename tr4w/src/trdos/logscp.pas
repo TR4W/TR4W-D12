@@ -315,6 +315,7 @@ uses LogWind,
   uSettingsModel,   (* Settings.Scp.PossibleCallMode, and the enum members --
                       the type moved there with the setting *)
   uAppStrings,      (* SExportNotWritten *)
+  uAppPaths,        (* DataFileTierOf -- the load lines name the location tier *)
   SysUtils;
 
 var
@@ -1792,6 +1793,13 @@ begin
        begin
        InstallTRMasterSnapshot(Loaded);
        LoadInIndexArray := True;
+       (* THE FIRST LOOKUP LOADS THE FILE, so this is the line that says which
+         TRMASTER.DTA is serving names, QTH and section for the session; a
+         live reload logs its own (ReplaceTRMasterFile). Once: later lookups
+         find TRMasterFileOpen and never reach here. *)
+       logger.Info('[SCP] TRMASTER.DTA loaded: %s (%s, %d bytes)',
+                   [CharBufferText(ActiveFilename),
+                    DataFileTierOf(CharBufferText(ActiveFilename)), DTAFileSize]);
        end
     else
        begin
@@ -2875,7 +2883,8 @@ begin
   OldNames.Free;
 
   SetCharBuffer(ActiveFilename, aFileName);
-  logger.Info('TRMASTER.DTA reloaded from %s (%d bytes)', [aFileName, DTAFileSize]);
+  logger.Info('TRMASTER.DTA reloaded from %s (%s, %d bytes)',
+              [aFileName, DataFileTierOf(aFileName), DTAFileSize]);
   Result := True;
 end;
 

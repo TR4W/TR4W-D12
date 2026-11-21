@@ -346,7 +346,21 @@ begin
 
   if logger <> nil then
      begin
-     logger.Info('[FCONTEST] Call history file: %s (%s)', [candidate, source]);
+     (* THIS IS THE SUPER CHECK PARTIAL FILE (names, QTH, section for the
+       lookup), NOT the contest's call history file -- that one is read by
+       LogDupe.LoadCallHistoryFile and logs its own path and tier. It used to
+       be labelled "Call history file" here, which named the wrong thing. *)
+     if SysUtils.FileExists(candidate) then
+        begin
+        logger.Info('[FCONTEST] TRMASTER.DTA (Super Check Partial): %s (%s)',
+                    [candidate, source]);
+        end
+     else
+        begin
+        logger.Warn('[FCONTEST] TRMASTER.DTA (Super Check Partial): NOT FOUND -- looked for %s (%s); '
+                    + 'no names, QTH or section will be offered from it',
+                    [candidate, source]);
+        end;
      end;
 
 {$IF MAKE_DEFAULT_VALUES = false}
