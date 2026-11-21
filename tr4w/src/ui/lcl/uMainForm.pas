@@ -120,7 +120,7 @@ type
     sbStatus: TStatusBar;
     { PUBLISHED so the streaming loader finds it in uMainForm.lfm, and so
       Lint-FormFields can check the two agree.  Declared in the designer,
-      REPOSITIONED at run time -- see CreateTR4WPossibleCallList. }
+      REPOSITIONED at run time -- see SetPossibleCallBounds. }
     lstPossibleCall: TStringGrid;
 
     { BEGIN GENERATED MAIN-WINDOW ELEMENT FIELDS -- tools/gen_main_elements.py }
@@ -393,13 +393,21 @@ type
   window. Phase 3c then moves the keyboard onto this control's own events and
   DELETES the Msg.HWND comparisons -- which it can only do once the control is
   an LCL control able to raise them. }
-procedure CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
-                               const aId: integer;
+procedure CreateTR4WEntryField(const aId: integer;
                                const aBorder: boolean;
                                const aField: TTR4WEntryField;
                                const aFontName: string = '';
                                const aFontHeight: integer = 0;
                                const aFontBold: boolean = False);
+
+(* WHERE AN ENTRY FIELD SITS, AND ITS FONT HEIGHT. MainUnit.LayOutMainWindow
+  owns both; CreateTR4WEntryField only creates (2026-11-21). The font is
+  assigned only when the height differs, because assigning a TEdit's font
+  recreates its window -- see CreateTR4WEntryField -- and the dialog id is
+  given back when it does. *)
+procedure SetEntryFieldBounds(const aField: TTR4WEntryField;
+                              const aLeft, aTop, aWidth, aHeight: integer;
+                              const aFontHeight: integer);
 
 { Creates the main form and returns its handle, which becomes tr4whandle.
   aMenu is TR4W's own menu, built by CreateTR4WMenu -- CreateWindowExW used to
@@ -586,28 +594,22 @@ const
 function RaisedWithTheMainWindow(const aIsMain, aShowing, aMinimized,
                                  aHasParent, aIsHint: boolean): boolean;
 
-{ THE POSSIBLE-CALL LIST.  Phase 3b.
+(* THE POSSIBLE-CALL STRIP: its colours, once.
 
-  DESIGNED IN uMainForm.lfm and merely configured here.  It replaces a raw
-  CreateWindowExW(LISTBOX, LBS_OWNERDRAWFIXED or LBS_MULTICOLUMN or ...), and the
-  two Win32 messages that made that work become properties: WM_MEASUREITEM is
-  ItemHeight, WM_DRAWITEM is OnDrawItem -- the mapping docs/ROADMAP.md section 2
-  states for exactly this case.
+  DESIGNED IN uMainForm.lfm (a TStringGrid that holds its callsigns) and
+  configured here. It replaced an owner-drawn Win32 LISTBOX.
 
-  THE GEOMETRY IS APPLIED HERE, not in the designer, because this control is one
-  of the fifty in the TWindows table: its position is a runtime scale factor
-  times a table entry, and freezing it would break the operator's font-size
-  setting.  Designed identity, runtime placement -- the two are not in conflict
-  (NY4I, 2026-08-22).
+  ITS GEOMETRY IS NOT APPLIED HERE: its place is the runtime scale times a
+  table entry, so it is MainUnit.LayOutMainWindow's, through
+  SetPossibleCallBounds. Designed identity, runtime placement -- the two are
+  not in conflict (NY4I, 2026-08-22). Each cell's own colours come from the
+  strip's OnPrepareCanvas. *)
+procedure CreateTR4WPossibleCallList;
 
-  RETURNS THE HANDLE, like CreateTR4WEntryField, so wh[mwePossibleCall] keeps
-  working and the five LB_* messages the rest of the program sends still land.
-
-  The DRAWING is attached by the caller through TR4WMainForm.lstPossibleCall: it
-  reads PossibleCallList and the colour table, which this unit has no business
-  knowing about. }
-procedure CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
-                                     aId, aItemHeight, aColumnWidth: integer);
+(* THE STRIP'S PLACE, ROW HEIGHT AND COLUMN WIDTH -- MainUnit.LayOutMainWindow's
+  to decide; CreateTR4WPossibleCallList gives it only its colours. *)
+procedure SetPossibleCallBounds(const aLeft, aTop, aWidth, aHeight,
+                                aItemHeight, aColumnWidth: integer);
 
 
 (* THE EDITABLE LOG -- the contest log on the main window.
@@ -646,9 +648,8 @@ procedure TR4WEditableLogRefresh;
 procedure TR4WEditableLogApplyColors;
 procedure TR4WEditableLogSetGridLines(const aOn: boolean);
 
-(* Where the grid sits, and how tall it ended up. *)
+(* Where the grid sits. *)
 procedure TR4WEditableLogSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
-function  TR4WEditableLogBoundsHeight: integer;
 
 (* Put the newest QSO in view, which is where an operator looks. *)
 procedure TR4WEditableLogScrollToEnd;
@@ -682,6 +683,10 @@ function  TR4WEditableLogCallsignAt(const aIndex: Int64): string;
 procedure TR4WPreviousDupesSet(const aQsos: array of ContestExchange);
 procedure TR4WPreviousDupesShow(const aVisible: boolean);
 procedure TR4WPreviousDupesSetBounds(const aLeft, aTop, aWidth, aHeight: integer);
+
+(* THE MAIN WINDOW FONT AND aRowHeight ON BOTH LOG GRIDS -- the editable log
+  and, once it exists, the B4 list. Both follow the main window's scale. *)
+procedure ScaleMainLogGrids(const aRowHeight: integer);
 
 (* Builds the main window. It RETURNED ITS HWND until 2026-09-07, for the one
   caller that assigned tr4whandle -- and that global is gone, so the result had
@@ -741,9 +746,11 @@ procedure SetEntryColors(const aEdit: TEdit; const aBack, aText: TColor);
   CreateTR4WMainForm. *)
 procedure BindMainElements;
 
+(* Gives an element's panel its style -- bevel, alignment, enabled, visible --
+  and an empty caption. WHERE it sits and its font are
+  MainUnit.LayOutMainWindow's (the panel's SetBounds, SetElementFont). *)
 procedure CreateMainElement(const aElement: TMainWindowElement;
-                            const aStyle: cardinal;
-                            const aLeft, aTop, aWidth, aHeight: integer);
+                            const aStyle: cardinal);
 function  MainElement(const aElement: TMainWindowElement): TPanel;
 procedure SetElementText(const aElement: TMainWindowElement; const aText: string);
 procedure SetElementColors(const aElement: TMainWindowElement;
@@ -852,8 +859,6 @@ procedure ShowQuickCommandNotice(const aText: string);
 function  QuickCommandNoticeArmed: boolean;
 
 procedure SetElementLeft(const aElement: TMainWindowElement; const aLeft: integer);
-procedure SetElementBounds(const aElement: TMainWindowElement;
-                           const aLeft, aTop, aWidth, aHeight: integer);
 { The fonts are built with tCreateFont and handed round as HFONTs; an LCL
   control paints its caption from its own TFont, so the SHAPE is passed rather
   than the handle. }
@@ -988,6 +993,7 @@ uses
    uSettingsModel,     // Settings.Font.Face -- the strip's face, ApplyStatusStripFont
    uTR4WStrings,       // TC_CONNECTINGTO and siblings -- what the strip must hold
    uPanelUpdate,       // StatusSubsystemName -- the name each status ends with
+   uMainLayout,        // LogRowHeight -- the log grids' row height at a scale
    MainUnit;           // LogRowTextFor, Config -- see CreateTR4WEditableLog
 
 const
@@ -1165,8 +1171,7 @@ end;
   array nobody consults, is work the operator pays for on every launch. The LCL
   creates each handle when the form is shown, which is when it is needed. *)
 procedure CreateMainElement(const aElement: TMainWindowElement;
-                           const aStyle: cardinal;
-                           const aLeft, aTop, aWidth, aHeight: integer);
+                           const aStyle: cardinal);
 var
    (* TElementPanel, not TPanel: SetSunken is this class's own, and the array
      it comes out of has always held the narrower type. *)
@@ -1219,11 +1224,11 @@ begin
    p.ParentColor := False;
    p.ParentFont := False;
 
-   (* AutoSize BEFORE SetBounds. LCL controls autosize by default and a
+   (* AutoSize OFF BEFORE ANY SetBounds. LCL controls autosize by default and a
      streamed or assigned size is silently overridden; this tree has paid for
-     that once already (see CreateTR4WEntryField). *)
+     that once already (see CreateTR4WEntryField). The bounds themselves are
+     MainUnit.LayOutMainWindow's, which runs after this. *)
    p.AutoSize := False;
-   p.SetBounds(aLeft, aTop, aWidth, aHeight);
 
    p.Enabled := (aStyle and WS_DISABLED) = 0;
    p.Visible := (aStyle and WS_VISIBLE) <> 0;
@@ -1599,8 +1604,8 @@ end;
   possible calls are under the exchange window. That is the second time you
   have made that assumption in so many days."
 
-  He is right, and the arithmetic says so: CreateTR4WPossibleCallList is
-  placed at EditableLogHeight + ws * 13, which is six rows BELOW the bottom of
+  He is right, and the arithmetic says so: the possible-call strip is
+  placed at EditableLogHeight + ws * 13 (uMainLayout.PossibleCallRect), which is six rows BELOW the bottom of
   the log, down among the status panels. Nothing about it is under the log.
 
   SO STOP READING GEOMETRY OUT OF THE SOURCE AND ASK THE RUNNING PROGRAM. One
@@ -2484,16 +2489,6 @@ begin
    GElements[aElement].Left := aLeft;
 end;
 
-procedure SetElementBounds(const aElement: TMainWindowElement;
-                           const aLeft, aTop, aWidth, aHeight: integer);
-begin
-   if not ElementUsable(aElement) then
-      begin
-      Exit;
-      end;
-   GElements[aElement].SetBounds(aLeft, aTop, aWidth, aHeight);
-end;
-
 procedure SetElementFont(const aElement: TMainWindowElement;
                          const aName: string; const aHeight: integer;
                          const aBold: boolean);
@@ -2503,16 +2498,7 @@ begin
       Exit;
       end;
 
-   // NEGATIVE HEIGHT is the same convention tCreateFont passes to CreateFont:
-   // the CHARACTER height, not the cell height.  Passing it positive here would
-   // give visibly larger text than the Win32 original.
    GElements[aElement].Font.Name := aName;
-   GElements[aElement].Font.Height := -aHeight;
-
-   (* THE HEIGHT THIS ELEMENT WAS ASKED FOR, WITH THE SIGN IT WAS APPLIED
-     WITH. The panel keeps it so it has something to shrink FROM and something
-     to return to -- see TElementPanel.BaseFontHeight, which is signed. *)
-   GElements[aElement].BaseFontHeight := -aHeight;
    if aBold then
       begin
       GElements[aElement].Font.Style := [fsBold];
@@ -2521,6 +2507,17 @@ begin
       begin
       GElements[aElement].Font.Style := [];
       end;
+
+   (* NEGATIVE HEIGHT is the same convention tCreateFont passes to CreateFont:
+     the CHARACTER height, not the cell height. Passing it positive here would
+     give visibly larger text than the Win32 original.
+
+     THROUGH SetFittedFontHeight, AND LAST, so the caption is fitted in the
+     face and weight just set (2026-11-21, LayOutMainWindow). This set
+     Font.Height and BaseFontHeight and fitted nothing; that was right only
+     while the caption was always written AFTER the font, which a layout run
+     a second time, at another scale, does not do. *)
+   GElements[aElement].SetFittedFontHeight(-aHeight);
 end;
 
 { ---------------------------------------------------------------------------
@@ -3324,7 +3321,7 @@ begin
    TR4WPreviousDupes.LayoutName := PREVIOUS_DUPES_COLUMNS_NAME;
 
    ApplyMainFontTo(TR4WPreviousDupes.Font);
-   TR4WPreviousDupes.DefaultRowHeight := ws + 2;
+   TR4WPreviousDupes.DefaultRowHeight := LogRowHeight(ws);
    TR4WPreviousDupes.Color      := tr4wColorsArray[TWindows[mweEditableLog].mweBackG];
    TR4WPreviousDupes.Font.Color := tr4wColorsArray[TWindows[mweEditableLog].mweColor];
    TR4WPreviousDupes.BuildColumns;
@@ -3416,9 +3413,12 @@ begin
 
    (* THE OPERATOR'S OWN FONT, and the row height that goes with it. Without
      this the grid drew in the LCL default and looked like a different program
-     from the window around it (NY4I, 2026-09-04). *)
+     from the window around it (NY4I, 2026-09-04). MainUnit.LayOutMainWindow
+     applies them again, through ScaleMainLogGrids, whenever the scale is laid
+     out; they are set here as well so the columns below are built in the font
+     they will be shown in. *)
    ApplyMainFontTo(TR4WEditableLog.Font);
-   TR4WEditableLog.DefaultRowHeight := ws + 2;
+   TR4WEditableLog.DefaultRowHeight := LogRowHeight(ws);
 
    TR4WEditableLogApplyColors;
    TR4WEditableLog.BuildColumns;
@@ -3471,6 +3471,23 @@ begin
    if TR4WPreviousDupes <> nil then
       begin
       TR4WPreviousDupes.SetBounds(aLeft, aTop, aWidth, aHeight);
+      end;
+end;
+
+procedure ScaleMainLogGrids(const aRowHeight: integer);
+begin
+   (* ApplyMainFontTo writes the same name, height and style when nothing has
+     changed, and TFont ignores a write of its own value, so a second call at
+     the same scale repaints nothing. *)
+   if TR4WEditableLog <> nil then
+      begin
+      ApplyMainFontTo(TR4WEditableLog.Font);
+      TR4WEditableLog.DefaultRowHeight := aRowHeight;
+      end;
+   if TR4WPreviousDupes <> nil then
+      begin
+      ApplyMainFontTo(TR4WPreviousDupes.Font);
+      TR4WPreviousDupes.DefaultRowHeight := aRowHeight;
       end;
 end;
 
@@ -3603,8 +3620,13 @@ begin
      handle for anything to reposition behind its back. *)
    TR4WEditableLog.SetBounds(aLeft, aTop, aWidth, aHeight);
 
-   (* AND THEN SNAPPED TO A WHOLE NUMBER OF ROWS, WHICH IS THE BAND NY4I HAS
-     BEEN POINTING AT SINCE 2026-09-09.
+   (* NOT SNAPPED, WHATEVER THE HISTORY BELOW SAYS (corrected 2026-11-21). The
+     snap to whole rows was deleted -- see SnapEditableLogToWholeRows above --
+     and TLogGrid.Paint fills the remainder instead, so the grid takes exactly
+     the height it is given. MainUnit.LayOutMainWindow relies on that: it
+     places the band below the log from the height it asked for.
+
+     THE HISTORY: the band NY4I had been pointing at since 2026-09-09.
 
      A grid draws whole rows and leaves whatever is over. Measured on his Mint
      box: the grid was 125 pixels of client with a row height of 19, so six
@@ -3622,14 +3644,7 @@ begin
      FIXED HERE RATHER THAN AT THE CALLER, and that is deliberate: the caller
      would have to know the row height, the fixed-row count and the border
      inset, and the border inset is a widget-set answer -- 0 on gtk2, non-zero
-     on Win32. The control knows all three. Asking it to round DOWN to a whole
-     number of rows is correct on every platform without anyone having to know
-     which one they are on.
-
-     NOTHING BELOW MOVES OUT OF PLACE. MainUnit reads EditableLogHeight back
-     from this control immediately afterwards and positions every row of status
-     panels relative to it, so the window closes up by the leftover instead of
-     opening a gap. *)
+     on Win32. The control knows all three. *)
 end;
 
 procedure TR4WEditableLogScrollToEnd;
@@ -3690,15 +3705,6 @@ begin
       end;
 end;
 
-function TR4WEditableLogBoundsHeight: integer;
-begin
-   Result := 0;
-   if TR4WEditableLog <> nil then
-      begin
-      Result := TR4WEditableLog.Height;
-      end;
-end;
-
 (* THE CALLSIGN IN ONE ROW, read from the log rather than from the display.
 
   LOGEDIT asked the list view for the text it had already painted
@@ -3722,8 +3728,7 @@ begin
       end;
 end;
 
-procedure CreateTR4WPossibleCallList(const aLeft, aTop, aWidth, aHeight,
-                                     aId, aItemHeight, aColumnWidth: integer);
+procedure CreateTR4WPossibleCallList;
 begin
    if TR4WMainForm = nil then
       begin
@@ -3740,6 +3745,25 @@ begin
       Color      := tr4wColorsArray[TWindows[mwePossibleCall].mweBackG];
       Font.Color := tr4wColorsArray[TWindows[mwePossibleCall].mweColor];
 
+      // NO ITEM TEXT is set anywhere, and that is faithful rather than lazy.
+      // The Win32 control was created WITHOUT LBS_HASSTRINGS: LB_ADDSTRING's
+      // lParam was item DATA, not a string, and the owner-draw never read it
+      // either -- it indexes PossibleCallList by the item's ORDINAL.  This
+      // list's whole job is to have the right NUMBER of items.  Giving them
+      // captions would invent a second source of truth for what each row says.
+      end;
+end;
+
+procedure SetPossibleCallBounds(const aLeft, aTop, aWidth, aHeight,
+                                aItemHeight, aColumnWidth: integer);
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+
+   with TR4WMainForm.lstPossibleCall do
+      begin
       // WM_MEASUREITEM, which the main window proc used to answer with
       // `itemHeight := ws` for this one control id.  A property, and that arm is
       // deleted.
@@ -3785,21 +3809,31 @@ begin
 
         UpdateBaseBounds(True, True, False) stores the bounds AND the parent
         client size as they are now, which is what makes the anchor mean what
-        the arithmetic above just said. *)
-      UpdateBaseBounds(True, True, False);
+        the arithmetic above just said.
 
-      // NO ITEM TEXT is set anywhere, and that is faithful rather than lazy.
-      // The Win32 control was created WITHOUT LBS_HASSTRINGS: LB_ADDSTRING's
-      // lParam was item DATA, not a string, and the owner-draw never read it
-      // either -- it indexes PossibleCallList by the item's ORDINAL.  This
-      // list's whole job is to have the right NUMBER of items.  Giving them
-      // captions would invent a second source of truth for what each row says.
+        PROBABLY REDUNDANT NOW, read from the LCL rather than measured
+        (2026-11-21): ChangeBounds re-captures the base whenever SetBounds
+        moves a control (control.inc, UpdateAnchorRules), and so does a change
+        of Anchors, which AnchorMainWindowControls makes after this. Kept, so
+        the layout's extraction changed nothing; uTestMainLayout's anchor test
+        is what can retire it. *)
+      UpdateBaseBounds(True, True, False);
       end;
 end;
 
 
-procedure CreateTR4WEntryField(const aLeft, aTop, aWidth, aHeight: integer;
-                               const aId: integer;
+(* THE DIALOG ID THE UI HARNESSES FIND AN ENTRY FIELD BY -- see the long note
+  at the end of CreateTR4WEntryField for why this raw call stays and what
+  retires it. Reading Handle forces the window, which CreateTR4WEntryField
+  relies on. *)
+procedure TagEntryFieldForHarness(const aEdit: TEdit; const aId: integer);
+begin
+   {$IFDEF WINDOWS}
+   Windows.SetWindowLong(aEdit.Handle, GWL_ID, aId);
+   {$ENDIF}
+end;
+
+procedure CreateTR4WEntryField(const aId: integer;
                                const aBorder: boolean;
                                const aField: TTR4WEntryField;
                                const aFontName: string = '';
@@ -3852,10 +3886,11 @@ begin
       edit.BorderStyle := bsNone;
       end;
 
-   // AutoSize False BEFORE SetBounds. LCL controls autosize by default and FMX
-   // ones do not, so a streamed or assigned Height is silently overridden --
-   // this tree has paid for that once already.
-   edit.SetBounds(aLeft, aTop, aWidth, aHeight);
+   (* AutoSize False BEFORE ANY SetBounds. LCL controls autosize by default and
+     FMX ones do not, so a streamed or assigned Height is silently overridden --
+     this tree has paid for that once already. The bounds are
+     SetEntryFieldBounds', called by MainUnit.LayOutMainWindow after both
+     fields exist. *)
 
    // The control id is what test/ui/Test-Typing.ps1 and every other instrument
    // finds these fields by, and what the dialog-item helpers use. A TEdit does
@@ -3981,10 +4016,51 @@ begin
      line could have one -- and the only place any of them went was wh[], which
      nothing read. Reading it here still forces handle creation at the same
      point in the sequence, so the font-before-handle ordering above is
-     unaffected. *)
-   {$IFDEF WINDOWS}
-   Windows.SetWindowLong(edit.Handle, GWL_ID, aId);
-   {$ENDIF}
+     unaffected.
+
+     IN ONE HELPER since 2026-11-21, because SetEntryFieldBounds gives the id
+     back after a font change recreates the window. *)
+   TagEntryFieldForHarness(edit, aId);
+end;
+
+procedure SetEntryFieldBounds(const aField: TTR4WEntryField;
+                              const aLeft, aTop, aWidth, aHeight: integer;
+                              const aFontHeight: integer);
+var
+   edit: TEdit;
+   id: integer;
+begin
+   if aField = efCall then
+      begin
+      edit := TR4WCallEdit;
+      id := CALLSIGNWINDOWID;
+      end
+   else
+      begin
+      edit := TR4WExchangeEdit;
+      id := EXCHANGEWINDOWID;
+      end;
+
+   (* NIL-GUARDED ONLY, like CreateMainElement: a position needs no window,
+     and the headless /EXPORT path builds this form without showing it. *)
+   if edit = nil then
+      begin
+      Exit;
+      end;
+
+   edit.SetBounds(aLeft, aTop, aWidth, aHeight);
+
+   (* THE FONT ONLY WHEN IT CHANGES. CreateTR4WEntryField set it before the
+     window existed; assigning it again recreates the window, which drops the
+     dialog id the UI harnesses look for, so the id goes back on with it. *)
+   if (aFontHeight > 0) and (edit.Font.Height <> -aFontHeight) then
+      begin
+      edit.Font.Height := -aFontHeight;
+      if edit.HandleAllocated then
+         begin
+         TagEntryFieldForHarness(edit, id);
+         end;
+      end;
 end;
 
 procedure ShowTR4WMainForm;

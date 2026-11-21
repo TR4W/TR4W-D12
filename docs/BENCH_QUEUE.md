@@ -188,6 +188,18 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-21 -- THE MAIN WINDOW IS PLACED BY ONE ROUTINE (width plan stage e2; lcl-ui)
+
+`CreateMainWindow` now creates the controls, and `LayOutMainWindow` places them and sets their fonts. The result should be identical, pixel for pixel. `uTestMainLayout` pins it on a streamed form against the `.lfm` at ws 17 and against hand-worked literals at ws 13. Nothing here has been seen on a running program.
+
+- [ ] **The same window, measured.** Set DEBUG LOG LEVEL = DEBUG and start the build from before this change (d689fef9) and the new one, each at WINDOW SIZE 1, 5 and 15, on Windows and on Mint. Diff the `[Layout]   <class> <name> L= T= W= H=` lines (DumpMainWindowChildren) between the two builds. They must match line for line. The `[Layout] main window: client WxH, outer ...` line must match too.
+- [ ] **Captions fitted as before.** MASTER, MULT, QSOB4, `CQ` in OP MODE, `OFF` in PTT and `WK` look as they did, and none is smaller. The WSJT-X indicator's `WSJTX` is in its smaller font, and the QSO number is in Lucida Console bold. The need-strip labels (`CW:`/`SSB:`/`Both:`) share one font size.
+- [ ] **The test that decides plan risk d2** is `MainLayout`'s "bottom band still follows the window's bottom edge" in the unit tests. If it fails on any platform, say so: it means a re-layout needs the band containers (plan stage e5), not anchors.
+- [ ] **Two overlaps the new test found, both in the arithmetic BEFORE this change** (pinned as known in `uTestMainLayout.KnownOverlap`):
+  - **Roving:** the ROVER panel (row 10, columns 15-25) covers the lower part of the exchange field at every WINDOW SIZE. Start roving (`ROVER`) and look at the exchange field.
+  - **WINDOW SIZE 3, 7, 11 or 15:** the totals grid's "All" column runs 3 px under TOTAL SCORE and DUPE INFO CALL.
+- [ ] **Minitour row (MINITOUR DURATION set, e.g. 30):** do the tour progress bar and its readout appear at all? From reading the code, probably not, and this was true before the change too. Their setters require a window handle, and both controls are hidden in the `.lfm`, so they have none when the setters run.
+
 ## Added 2026-11-21 -- APPEARANCE: A FONT PICKER, "MAIN WINDOW TEXT SIZE", ROW COUNT RETIRED (lcl-ui, settings-config, i18n)
 
 Nothing here has been seen on screen.

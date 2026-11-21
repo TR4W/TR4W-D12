@@ -270,6 +270,7 @@ uses
    uLCLFormHelpers,  (* LoadSavedColumnWidths, NoteColumnWidth, the 96-dpi scaling *)
    utils_text,       (* LclText -- a header's text, converted for the LCL once *)
    PostUnit,         (* Contest -- the open contest's handle *)
+   uMainLayout,      (* LogRowHeight -- the row height the layout assumes *)
    uContestRegistry; (* ContestIdentity -- the zone column's heading *)
 
 const
@@ -490,10 +491,11 @@ begin
    ScrollBars    := ssVertical;
    BorderStyle   := bsSingle;
    (* THE SAME HEIGHT THE REST OF THE WINDOW IS LAID OUT WITH.
-     CheckEditableWindowHeight sizes this control as
-     30 + rows * (ws + 2) (MainUnit.MainLogHeightForRows), so a row is ws + 2 and the arithmetic
-     on both sides of the layout agrees. *)
-   DefaultRowHeight := ws + 2;
+     MainUnit.LayOutMainWindow sizes the main log as
+     30 + rows * (ws + 2) (uMainLayout.LogHeightForRows), so a row is ws + 2
+     (uMainLayout.LogRowHeight) and the arithmetic on both sides of the layout
+     agrees. *)
+   DefaultRowHeight := LogRowHeight(ws);
 
    Color      := tr4wColorsArray[trWhite];
    Font.Color := tr4wColorsArray[trBlack];

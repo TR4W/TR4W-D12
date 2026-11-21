@@ -1,8 +1,62 @@
 # Main window: resizable in width (plan)
 
-Status: PLAN ONLY, 2026-11-21. No code has been written. Owner: `lcl-ui`. Also
+Status, 2026-11-21: **e0, e1 and e2 are implemented** (`uMainLayout`,
+`MainUnit.LayOutMainWindow`, `uTestMainLayout`). Owner: `lcl-ui`. Also
 touches `settings-config` (WINDOW SIZE), `i18n` (a retired setting's caption),
 `gui-test` (one heuristic) and `build-release` (corpus gate wording).
+
+**NY4I's answers to the open questions (2026-11-21), which settle them:**
+
+1. **Yes**, the band map and Log Search text follow the main window's scale,
+   **live** (option (i) WITH the notification, c1).
+2. The minimum log when the scale grows is **3 rows** (b3). Today's minimum,
+   `MAIN_LOG_MINIMUM_ROWS`, is still 5; e4 introduces the 3.
+3. ws stays **13..27** (`uMainLayout.WS_MIN` / `WS_MAX`).
+4. **Container bands (e5) come BEFORE scaling (e4).**
+
+**So the order is: e0, e1, e2, then e5 (with e3 folded into it), e4, e6.**
+
+**What e0-e2 did:**
+
+- **e0:** `MainWindowWidth` and `FKButtonWidth` are deleted. e2 made three
+  more dead, and they are deleted too:
+  - `RightTopWidth`: its one reader asks `uMainLayout.NeedLeft` now;
+  - `MainWindowEditHeight`: its readers ask `uMainLayout.EntryFieldRect`;
+  - `MainWindowPCLID`: its one use was an argument nothing read.
+
+  The table in a1 below describes the code before these stages.
+- **e1:** the gridline arm had already stopped resizing the log (d689fef9).
+  `CheckEditableWindowHeight` repeated `CreateTR4WEditableLog`'s bounds and
+  is deleted. The only writers of the log's bounds are now
+  `CreateTR4WEditableLog` (once, at creation, so the columns are built at
+  their real width) and `LayOutMainWindow`. The e1 test is
+  `uTestMainLayout.Test_GridlinesLeaveATallLogAlone`. It grows the shown form,
+  toggles gridlines through `DispalayLogGridLines`, and asserts that neither
+  the log nor the call field moved. The log grid there has no rows, so it reads
+  no contest log.
+- **e2:** `MainUnit.LayOutMainWindow(aWS, aLogHeight)`; the arithmetic is in
+  the leaf `uMainLayout`; tests are in `uTestMainLayout`.
+  - **The log height is a parameter, not a policy.** `CreateMainWindow` passes
+    the five-row minimum. e4 passes `ClientHeight - status -
+    FixedBandsHeight(ws)`.
+  - **`LayOutMainWindow` does not size the window or anchor.**
+    `CreateMainWindow` still calls `MakeMainWindowResizeable` and
+    `AnchorMainWindowControls` once, after it, so the startup log line is
+    unchanged. Constraints per ws are e4's.
+  - **`SetElementFont` now re-fits the caption**
+    (`TElementPanel.SetFittedFontHeight`). Without that, a second layout left
+    a caption at its unfitted full size.
+  - **Risk d2:** read from `control.inc`, a `SetBounds` that moves a control
+    re-captures its anchor base against the parent's current client size, so
+    a re-layout at the current height should leave the anchors right.
+    `uTestMainLayout.Test_BottomAnchorsHoldAfterARelayout` decides it on a
+    shown form. NY4I has ordered e5 first anyway, which removes the question
+    rather than answering it.
+  - **Found by the new overlap test**, present in the arithmetic before e2,
+    and pinned by name (BENCH_QUEUE):
+    - the Rover panel covers the exchange field;
+    - the totals "All" column runs 3 px under Total Score at ws 15, 19, 23
+      and 27.
 
 Line numbers are from `main` at `9938189d`. They drift, so search for the
 identifier rather than trusting the number. **Facts** come from reading the

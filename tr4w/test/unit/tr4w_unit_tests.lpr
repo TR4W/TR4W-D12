@@ -852,6 +852,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uCategoryPowerChange in '..\..\src\uCategoryPowerChange.pas',
    (* Issue 201: the band map or the dupe sheet, by CATEGORY-ASSISTED. *)
    uCategoryWindow      in '..\..\src\uCategoryWindow.pas',
+   (* Plan stage e2: the main window's arithmetic, and its layout pinned. *)
+   uMainLayout          in '..\..\src\uMainLayout.pas',
+   uTestMainLayout      in 'uTestMainLayout.pas',
    uTestContestUI       in 'uTestContestUI.pas',
    (* M10 S8: every contest's identity values, frozen as literals when the
       tables were deleted. *)
@@ -1415,6 +1418,7 @@ begin
    RegisterSuite(TPasswordRevealLayoutTests.Create('PasswordRevealLayout'));
    RegisterSuite(TRadioEditHamLibTests.Create('RadioEditHamLib'));
    RegisterSuite(TEditQSOLayoutTests.Create('EditQSOLayout'));
+   RegisterSuite(TMainLayoutTests.Create('MainLayout'));
    RegisterSuite(TExternalLoggerEditorLayoutTests.Create('ExternalLoggerEditorLayout'));
    RegisterSuite(TWRLDeliveryTests.Create('WRLDelivery'));
    RegisterSuite(TConfigDefaultsTests.Create('ConfigDefaults'));

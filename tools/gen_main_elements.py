@@ -196,7 +196,7 @@ TOT_HEAD_FIRST = 1           # TotWinheadHandles: array[1..7]
 # BandStringsArray, Band160..Band10 -- the six HF contest bands the strips show.
 NEED_BANDS = ['160', '80', '40', '20', '15', '10']
 
-# MainUnit: MainWindowChildsWidth := 46 * ws;  RightTopWidth := 14 * ws.
+# uMainLayout: LayoutWidth = 46 * ws;  NeedLeft = LayoutWidth - 14 * ws.
 NEED_LEFT = (46 - 14) * WS
 
 # How much wider than a band cell the row LABEL is.  ZERO, and it was tried
@@ -225,7 +225,7 @@ def totals_blocks(taborder):
         # it.  Column 0 is WS * 5 to line up with the clock panels above it
         # (TWindows[] gives those 5 units), while the pitch is round(WS * 2.5)
         # = 42 -- so the old (c + 1) * colw put column 1 at 84 against a label
-        # column ending at 85.  uMainGrids.TotalsColumnGeometry is the runtime
+        # column ending at 85.  uMainLayout.TotalsColumnGeometry is the runtime
         # twin of this and carries the full note.
         if c == 0:
             return 0, label_w

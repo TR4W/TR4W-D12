@@ -40,7 +40,8 @@ unit uMainGrids;
 interface
 
 uses
-   Classes, Controls, VC;   { Controls: TCaption }
+   Classes, Controls, VC,   (* Controls: TCaption *)
+   uMainLayout;             (* the totals grid's shape, below *)
 
 const
    (* THE TOTALS GRID'S SHAPE, AND THE SINGLE SOURCE OF TRUTH FOR IT. These
@@ -66,10 +67,13 @@ const
      category rather than corrupting anything.
 
      (The note this replaces said the fix belonged with a move to FMX. FMX was
-     abandoned in August; the LCL conversion is what actually arrived.) *)
-   TOTALS_COLUMNS      = 8;
-   TOTALS_ROWS         = 4;
-   TOTALS_FIRST_HEADER = 1;
+     abandoned in August; the LCL conversion is what actually arrived.)
+
+     DEFINED IN uMainLayout since 2026-11-21, with the column geometry that
+     needs them; named here as well so uTotal's loops did not change. *)
+   TOTALS_COLUMNS      = uMainLayout.TOTALS_COLUMNS;
+   TOTALS_ROWS         = uMainLayout.TOTALS_ROWS;
+   TOTALS_FIRST_HEADER = uMainLayout.TOTALS_FIRST_HEADER;
 
 (* Find the designed panels. Call once, after the main form exists and before
   anything writes to a grid. A name that is not in the .lfm is REPORTED --
@@ -82,7 +86,12 @@ procedure BindMainGrids;
   `ws` follows the operator's Settings.MainWindow.WindowSize setting, so every other element on the
   main window is positioned in code from TWindows[] * ws -- and these must be
   too, or the grids stay at the default scale while the rest of the window
-  moves. Call after the main window's ws is known, once per layout. *)
+  moves. Call after the main window's ws is known, once per layout.
+
+  POSITIONS AND FONTS, and idempotent (2026-11-21): MainUnit.LayOutMainWindow
+  calls it, so a second call at the same scale changes nothing and a call at
+  another scale re-places and re-fits every panel. Nothing before
+  BindMainGrids: the first call at startup is uProgramMain's, after it. *)
 procedure PositionMainGrids;
 
 (* Caption and reveal the need-strip row labels for the contest at hand.
@@ -450,71 +459,28 @@ begin
    GBound := True;
 end;
 
-(* THE COLUMN GEOMETRY, AND THE ONE PLACE THAT KNOWS IT.
-
-  CreateTotalWindow spelled this as `const w = 2.5` and round(ws * w) in four
-  separate expressions. Column 0 is the label column, column 7 ("All") is three
-  units wide, and the band columns between them are one pitch each.
-
-  THE BAND COLUMNS USED TO START ONE PIXEL INSIDE THE LABEL COLUMN. Column 0 is
-  ws * 5 wide -- 85 at the default scale, which is deliberate: it has to line up
-  with the clock panels stacked directly above it, and TWindows[] gives those a
-  width of 5 units. But the band columns were placed at (column + 1) * pitch,
-  and pitch is round(ws * 2.5) = 42, so column 1 began at 84. Every row of the
-  grid, and the header above it, overlapped the label column's sunken border by
-  a pixel, at every font size.
-
-  Nobody was ever going to see it. Lint-FormOverlap did, the moment these
-  became designed controls whose geometry something could read -- eight pairs,
-  then two more against the clock panels. The band columns start AFTER the
-  label column now.
-
-  gen_main_elements.py computes the same thing for the design-time picture.
-  Two languages, so two copies; keep them in step. *)
-function TotalsColumnPitch(const aWS: integer): integer;
-begin
-   Result := Round(aWS * 2.5);
-end;
-
-function TotalsLabelWidth(const aWS: integer): integer;
-begin
-   Result := aWS * 5;
-end;
-
-procedure TotalsColumnGeometry(const aWS, aColumn: integer;
-                              out aLeft, aWidth: integer);
-begin
-   if aColumn = 0 then
-      begin
-      aLeft := 0;
-      aWidth := TotalsLabelWidth(aWS);
-      end
-   else
-      begin
-      aLeft := TotalsLabelWidth(aWS) + (aColumn - 1) * TotalsColumnPitch(aWS);
-      if aColumn = TOTALS_COLUMNS - 1 then
-         begin
-         aWidth := aWS * 3;
-         end
-      else
-         begin
-         aWidth := TotalsColumnPitch(aWS);
-         end;
-      end;
-end;
+(* THE COLUMN GEOMETRY lives in uMainLayout.TotalsColumnGeometry (2026-11-21),
+  with the note on why the band columns start AFTER the label column, so the
+  arithmetic can be tested at every scale. *)
 
 procedure PositionMainGrids;
 var
-   c, r, left, width, needLeft, cellWidth: integer;
+   c, r, left, width, stripLeft, cellWidth: integer;
    row: TNeedRow;
    band: BandType;
 
+   (* PLACED, THEN FITTED. The height is the main window font at this scale
+     (ApplyMainFontTo's, which BindMainGrids and ConfigureNeedRows used);
+     SetFittedFontHeight re-fits the caption to it, and at an unchanged scale
+     leaves the font as it was. After SetBounds, so the fit is measured at the
+     panel's new width. *)
    procedure Place(const aPanel: TElementPanel;
                    const aLeft, aTop, aWidth, aHeight: integer);
    begin
       if aPanel <> nil then
          begin
          aPanel.SetBounds(aLeft, aTop, aWidth, aHeight);
+         aPanel.SetFittedFontHeight(MainFontCellHeight);
          end;
    end;
 
@@ -542,8 +508,8 @@ begin
 
    (* The need strips hang off the RIGHT of the window, so their origin moves
      with the window width rather than being a fixed column. *)
-   needLeft := MainWindowChildsWidth - RightTopWidth;
-   cellWidth := ws * 2;
+   stripLeft := NeedLeft(MainWindowChildsWidth, ws);
+   cellWidth := NeedCellPitch(ws);
 
    for row := Low(TNeedRow) to High(TNeedRow) do
       begin
@@ -562,12 +528,12 @@ begin
 
         The labels take a smaller UNIFORM font instead -- see
         MatchNeedLabelFonts, and read it before trying the widening again. *)
-      Place(GQSONeedLabel[row], needLeft, ws * row, cellWidth, ws);
-      Place(GMultNeedLabel[row], needLeft, ws * (row + 3), cellWidth, ws);
+      Place(GQSONeedLabel[row], stripLeft, ws * row, cellWidth, ws);
+      Place(GMultNeedLabel[row], stripLeft, ws * (row + 3), cellWidth, ws);
 
       for band := Band160 to Band10 do
          begin
-         left := needLeft + (Ord(band) - Ord(Band160) + 1) * cellWidth;
+         left := stripLeft + (Ord(band) - Ord(Band160) + 1) * cellWidth;
 
          (* Two pixels narrower than the pitch, which is what separates one
            band's cell from the next -- the strips have no borders. *)
@@ -575,6 +541,12 @@ begin
          Place(GMultNeed[row, band], left, ws * (row + 3), cellWidth - 2, ws);
          end;
       end;
+
+   (* THE ROW LABELS LEVELLED AGAIN, because Place fitted each one on its own.
+     Before ConfigureNeedRows has captioned them every label has the same
+     height, so this changes nothing. *)
+   MatchNeedLabelFonts([GQSONeedLabel[1], GQSONeedLabel[2]]);
+   MatchNeedLabelFonts([GMultNeedLabel[1], GMultNeedLabel[2]]);
 end;
 
 procedure ConfigureNeedRows(const aQSOByMode, aMultByMode: boolean);

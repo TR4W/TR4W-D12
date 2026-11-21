@@ -31,6 +31,7 @@ uses
   (* TQsoMyFacts -- an imported record's own station, ParseADIFRecord (log
     schema 3). FIRST, so every unit below still wins any name it shares. *)
   uQsoMyFacts,
+  uMainLayout,     // the main window's arithmetic -- LayOutMainWindow
   uMainWindowProc, // TTR4WEntryField -- CreateCallOrExchangeWin names the field
   Graphics,        // TFont -- ApplyMainFontTo, for controls the LCL draws
   uConfigValues,   // Settings.Cw.SpeedIncrement
@@ -439,7 +440,7 @@ procedure tExchangeWindowSetFocus;
 procedure tRuntPaddleAndFootSwitchThread;
 //procedure TryToLoadRICHED32DLL;
 procedure InitializeQSO;
-procedure CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField);
+procedure CreateCallOrExchangeWin(ID: integer; const aField: TTR4WEntryField);
 procedure TimeApplet(i: Cardinal);
 
 { ASK THE OPERATOR, WITHOUT AN HWND.
@@ -498,6 +499,9 @@ procedure RevalidateOpenWindowsOnScreen;
 procedure FrmSetFocus;
 procedure tAltE;
 procedure SetWindowSize;
+(* The scale globals -- ws, ws2, MainWindowChildsWidth -- for aWS.
+  SetWindowSize is this at the setting's scale. *)
+procedure ApplyMainWindowScale(const aWS: integer);
 function OpenLogFile: boolean;
 function tSetFilePointer(lDistanceToMove: LONGINT; aOrigin: Longint): Int64;
 
@@ -544,12 +548,33 @@ const
     MinHeight allows: five rows, the old ROW COUNT default, so no window
     shrinks below what a fresh install had. FIRST_RUN is how tall a window
     with no saved size opens: twelve rows. After that the saved window
-    position decides. *)
-  MAIN_LOG_MINIMUM_ROWS   = 5;
-  MAIN_LOG_FIRST_RUN_ROWS = 12;
+    position decides. DEFINED in uMainLayout, with the arithmetic that uses
+    them (2026-11-21). *)
+  MAIN_LOG_MINIMUM_ROWS   = uMainLayout.MAIN_LOG_MINIMUM_ROWS;
+  MAIN_LOG_FIRST_RUN_ROWS = uMainLayout.MAIN_LOG_FIRST_RUN_ROWS;
 
 function MainLogHeightForRows(const aRows: integer): integer;
-procedure CheckEditableWindowHeight;
+
+(* PUT EVERY CONTROL ON THE MAIN WINDOW WHERE SCALE aWS PUTS IT, WITH ITS FONT.
+
+  CreateMainWindow CREATES the controls; this PLACES them: the log, the
+  TWindows[] panels, the entry fields, the progress bars, the minitour row,
+  the possible-call strip, the totals grid and the need strips, and every
+  font that follows ws. aLogHeight is the log pane's height; the band below
+  it starts there. The arithmetic is uMainLayout's.
+
+  IDEMPOTENT: a second call with the same two numbers changes nothing, and a
+  call with another aWS re-places and re-fonts every control that depends on
+  it. It sets the scale globals (ws, MainWindowChildsWidth ...) first.
+
+  IT DOES NOT SIZE THE WINDOW OR ANCHOR ANYTHING. CreateMainWindow does both,
+  once, after the first call (MakeMainWindowResizeable,
+  AnchorMainWindowControls), and those two decide what a resize does. A
+  re-layout at another scale on a window already anchored is e4's, in
+  docs/MAIN_WINDOW_WIDTH_PLAN.md. Safe on a form that is never shown (the
+  headless /EXPORT path builds one). *)
+procedure LayOutMainWindow(const aWS, aLogHeight: integer);
+
 function CheckCommandInCallsignWindow(const aCommand: string): boolean;
 procedure ClearMultSheet_CtrlC;
 procedure tClearMultSheet;
@@ -813,6 +838,7 @@ uses
   uUDPBroadcaster,  // Enabled() -- the broadcaster owns the enable rule
   Dialogs,             // QuestionDlg -- the HWND-free YesOrNo, see below
   uMainForm,
+  uMainGrids,          // PositionMainGrids -- LayOutMainWindow places the grids
   uAboutForm,   // ShowAboutBox -- the designed About box        // the main window IS
   uBandMapForm,        // CreateTR4WBandMapWindow -- the band map tool window
   uCrashLog,           // LogCaughtException, OnMainThread
@@ -4661,17 +4687,151 @@ end;
   10 the region would have stopped matching the frame the first time an operator
   dragged it. *)
 
-{ See the WSJT-X note inside CreateMainWindow. }
-const
-  WSJTX_CELLS = 3;               // mweWSJTX's mweiWidth
-  WSJTX_CHARS = 5;               // Length('WSJTX'), written by uStateBridge
-  WSJTX_MIN_FONT_HEIGHT = 8;     // below this it stops being readable
+procedure LayOutMainWindow(const aWS, aLogHeight: integer);
+var
+  e: TMainWindowElement;
+  r: Types.TRect;
+
+  (* Bounds from a rectangle, through the setter that names the control. *)
+  procedure PlaceBar(const aBar: TMainProgressBar; const aRect: Types.TRect);
+  begin
+     SetProgressBounds(aBar, aRect.Left, aRect.Top,
+                       aRect.Right - aRect.Left, aRect.Bottom - aRect.Top);
+  end;
+
+  procedure PlaceEntry(const aField: TTR4WEntryField; const aRect: Types.TRect);
+  begin
+     SetEntryFieldBounds(aField, aRect.Left, aRect.Top,
+                         aRect.Right - aRect.Left, aRect.Bottom - aRect.Top,
+                         EntryFontHeight(aWS));
+  end;
+
+begin
+  (* THE SCALE GLOBALS FIRST: everything below, and PositionMainGrids, reads
+    them. At startup they already hold aWS (SetWindowSize ran), so this
+    changes nothing there. *)
+  ApplyMainWindowScale(aWS);
+
+  (* THE LOG. ITS HEIGHT IS THE CALLER'S, and EditableLogHeight is that height,
+    not a read-back: the grid takes exactly the height it is given (the snap
+    that once made a read-back necessary is deleted -- see
+    uMainForm.TR4WEditableLogSetBounds). *)
+  r := LogRect(aWS, aLogHeight);
+  TR4WEditableLogSetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+  TR4WPreviousDupesSetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+  ScaleMainLogGrids(LogRowHeight(aWS));
+  EditableLogHeight := aLogHeight;
+
+  (* THE TWindows[] PANELS: bounds and font. What each one IS -- bevel,
+    alignment, visibility, colours, a fixed caption -- CreateMainWindow set
+    once.
+
+    THE PANEL'S OWN SetBounds, NOT A GUARDED SETTER: ElementUsable asks for a
+    window as well, and CreateMainElement, which placed these before, checked
+    only for nil. The font setter below does ask for a window, as it always
+    did. *)
+  for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+     begin
+     if not ElementHasPanel(e) then
+        begin
+        Continue;
+        end;
+
+     (* THE MINITOUR ROW narrows the quick-command panel to make room for the
+       tour's bar and readout (below). Chosen here rather than corrected
+       afterwards, so a second layout does not move the panel twice. *)
+     if (e = mweQuickCommand) and (Settings.Contest.MinitourDuration <> 0) then
+        begin
+        r := MinitourQuickCommandRect(aWS, aLogHeight);
+        end
+     else
+        begin
+        r := ElementRect(e, aWS, aLogHeight);
+        end;
+     if MainElement(e) <> nil then
+        begin
+        MainElement(e).SetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+        end;
+
+     // tWM_SETFONT handed the control an HFONT; an LCL control paints from its
+     // own TFont, so the SHAPE goes across instead.  These are the same three
+     // numbers tCreateFont was given for MainFont.  The WSJT-X indicator and
+     // the QSO number have their own, set below.
+     if (e <> mweWSJTX) and (e <> mweQSONumber) then
+        begin
+        SetElementFont(e, Settings.Font.Face,
+                       ElementFontHeight(aWS, Settings.Font.Size), Settings.Font.Bold);
+        end;
+     end;
+
+  (* THE WSJT-X INDICATOR IS THREE CELLS WIDE AND ITS TEXT IS FIVE
+    CHARACTERS.  It has never fitted -- mweWSJTX is mweiWidth 3 and
+    uStateBridge writes the literal 'WSJTX' (NY4I, 2026-08-26: "the WSJTX
+    letters are too big for the field").
+
+    A SMALLER FONT, NOT A WIDER CELL, and that is NY4I's call: widening it
+    would push QSO B4 along and move a row of the main window that is
+    otherwise exactly where it has always been.
+
+    The size is DERIVED from the mismatch rather than picked -- see
+    uMainLayout.WSJTXFontHeight -- so it tracks the operator's FONT SIZE
+    setting and the window scale. *)
+  SetElementFont(mweWSJTX, Settings.Font.Face,
+                 WSJTXFontHeight(aWS, Settings.Font.Size), Settings.Font.Bold);
+
+  // The QSO number is the one element with its own font -- tCreateFont(ws + 3,
+  // FW_EXTRABOLD, lcfn).  FW_EXTRABOLD has no LCL counterpart; fsBold is the
+  // closest a TFont offers, and the two render identically on every face TR4W
+  // ships with.
+  if LuconSZLoadded then
+     begin
+     SetElementFont(mweQSONumber, 'Lucida Console SZ', EntryFontHeight(aWS), True);
+     end
+  else
+     begin
+     SetElementFont(mweQSONumber, 'Lucida Console', EntryFontHeight(aWS), True);
+     end;
+
+  (* THE AUTO-SEND ARROW'S LEFT EDGE moves with the character count, so it is
+    DisplayAutoSendCharacterCount's to set -- after the loop above, which put
+    the arrow at its TWindows[] column. *)
+  DisplayAutoSendCharacterCount;
+
+  (* DESIGNED IN uMainForm.lfm; positioned here, like every other element.
+    The two colour arguments these calls used to carry are gone -- see the
+    note on the progress bars in uMainForm, they had not reached the screen
+    since the comctl32 v6 manifest was added. *)
+  PlaceBar(mpbLastHour, LastHourBarRect(aWS, aLogHeight));
+  PlaceBar(mpbRate, RateBarRect(aWS, aLogHeight));
+
+  PlaceEntry(efCall, EntryFieldRect(efrCall, aWS, aLogHeight));
+  PlaceEntry(efExchange, EntryFieldRect(efrExchange, aWS, aLogHeight));
+
+  (* THE MINITOUR ROW: the tour's bar and readout, beside the quick-command
+    panel the loop above narrowed. *)
+  if Settings.Contest.MinitourDuration <> 0 then
+     begin
+     r := TourDurationTextRect(aWS, aLogHeight);
+     SetTourDurationBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+     PlaceBar(mpbTourDuration, TourDurationBarRect(aWS, aLogHeight));
+     end;
+
+  r := PossibleCallRect(aWS, aLogHeight);
+  SetPossibleCallBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top,
+                        aWS, PossibleCallColumnWidth(aWS));
+  SetPossibleCallFont(Settings.Font.Face,
+                      ElementFontHeight(aWS, Settings.Font.Size), Settings.Font.Bold);
+
+  (* THE TOTALS GRID AND THE NEED STRIPS. Nothing until BindMainGrids has run,
+    which at startup is after CreateMainWindow -- uProgramMain calls
+    PositionMainGrids itself then. *)
+  PositionMainGrids;
+end;
 
 procedure CreateMainWindow;
 //var PanelWidth : array[0..1] of Integer;
 var
   e: TMainWindowElement;
-  temprect: TRect;
   (* The operating aids the contest allows -- M9a. *)
   aids: TOperatingAids;
   // OffsetY : integer;
@@ -4713,13 +4873,15 @@ begin
     it, so the window's MinHeight is the five-row layout a fresh install had
     before ROW COUNT was retired. A taller log is the window's height: the
     saved window position restores it, or OpenOtherWindows grows a first-run
-    window to MAIN_LOG_FIRST_RUN_ROWS. *)
+    window to MAIN_LOG_FIRST_RUN_ROWS.
+
+    CREATED AT ITS LAYOUT BOUNDS so its columns are built against the width
+    they will have; LayOutMainWindow, at the end of this routine, owns the
+    bounds from then on and sets the same ones. CheckEditableWindowHeight,
+    which set them a second time here, is deleted (2026-11-21). *)
   CreateTR4WEditableLog(0, ws * 7,
     MainWindowChildsWidth, MainLogHeightForRows(MAIN_LOG_MINIMUM_ROWS));
   DispalayLogGridLines;
-  CheckEditableWindowHeight;
-
-  EditableLogHeight := TR4WEditableLogBoundsHeight;
 
   (* THE WINDOW IS SIZED AT THE END OF THIS ROUTINE, by
     MakeMainWindowResizeable, and no longer here.
@@ -4729,16 +4891,15 @@ begin
     and it sets the CLIENT height -- which is the measurement this layout
     actually cares about and the one that does not change when the border
     does. *)
-   { Round the four corners of the main window - radius 12px, adjust as needed }
   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
      begin
-     if TWindows[e].mweiStyle <= 2 then
+     if not ElementHasPanel(e) then
         begin
         Continue;
         end;
-     // AN LCL TPanel, not a Win32 STATIC.  Same metadata, same arithmetic --
-     // TWindows[] is still the layout -- and the style bits become properties.
-     // See CreateMainElement.
+     // AN LCL TPanel, not a Win32 STATIC.  Same metadata -- TWindows[] is
+     // still the layout -- and the style bits become properties.  See
+     // CreateMainElement.  WHERE it sits and its font are LayOutMainWindow's.
      (* wh[e] WAS WRITTEN HERE AND READ BY NOTHING. Measured 2026-09-05: the
        only live readers of wh[] are the server log's list view. Storing a
        handle for each element meant CreateMainElement had to CREATE one --
@@ -4746,18 +4907,7 @@ begin
        forced into existence at startup to fill an array nobody consults. *)
      CreateMainElement(
        e,
-       TWindows[e].mweiStyle and (not (Cardinal(Settings.MainWindow.NoBorder) * SS_SUNKEN)),
-       TWindows[e].mweiX * ws,
-       TWindows[e].mweiY * ws + TWindows[e].mweB * EditableLogHeight,
-       round(TWindows[e].mweiWidth * ws),
-       TWindows[e].mweiHeight * ws
-       );
-
-     // tWM_SETFONT handed the control an HFONT; an LCL control paints from its
-     // own TFont, so the SHAPE goes across instead.  These are the same three
-     // numbers tCreateFont was given for MainFont.
-     SetElementFont(e, Settings.Font.Face,
-                    ws - 2 + Settings.Font.Size, Settings.Font.Bold);
+       TWindows[e].mweiStyle and (not (Cardinal(Settings.MainWindow.NoBorder) * SS_SUNKEN)));
 
      SetElementColors(e,
                       tr4wColorsArray[TWindows[e].mweBackG],
@@ -4771,26 +4921,6 @@ begin
         SetElementText(e, TWindows[e].mweText)
         end
      end;
-
-  { THE WSJT-X INDICATOR IS THREE CELLS WIDE AND ITS TEXT IS FIVE
-    CHARACTERS.  It has never fitted -- mweWSJTX is mweiWidth 3 and
-    uStateBridge writes the literal 'WSJTX' (NY4I, 2026-08-26: "the WSJTX
-    letters are too big for the field").
-
-    A SMALLER FONT, NOT A WIDER CELL, and that is NY4I's call: widening it
-    would push QSO B4 along and move a row of the main window that is
-    otherwise exactly where it has always been.
-
-    The size is DERIVED from the mismatch rather than picked -- the same
-    base every other element gets, scaled by cells-over-characters -- so it
-    tracks the operator's FONT SIZE setting and the window scale instead of
-    being right at one size and wrong at the others.  The floor keeps it
-    legible if that arithmetic ever lands somewhere silly. }
-  SetElementFont(mweWSJTX, Settings.Font.Face,
-                 Max(WSJTX_MIN_FONT_HEIGHT,
-                     Round((ws - 2 + Settings.Font.Size) * WSJTX_CELLS / WSJTX_CHARS)),
-                 Settings.Font.Bold);
-
 
   // THE AUTO-SEND ARROW: a real code point in the main font, not byte 175 in
   // the Symbol font.
@@ -4809,24 +4939,11 @@ begin
   //
   // U+2193 in the ordinary font also drops a Windows-only font dependency:
   // Symbol does not exist on GTK or Cocoa. See ROADMAP.md section 2.
+  //
+  // Where the arrow sits (DisplayAutoSendCharacterCount) is LayOutMainWindow's.
   SetElementText(mweAutoSendCount, #$2193);
-  DisplayAutoSendCharacterCount;
 
-  // The QSO number is the one element with its own font -- tCreateFont(ws + 3,
-  // FW_EXTRABOLD, lcfn).  FW_EXTRABOLD has no LCL counterpart; fsBold is the
-  // closest a TFont offers, and the two render identically on every face TR4W
-  // ships with.
-  if LuconSZLoadded then
-     begin
-     SetElementFont(mweQSONumber, 'Lucida Console SZ', ws + 3, True);
-     end
-  else
-     begin
-     SetElementFont(mweQSONumber, 'Lucida Console', ws + 3, True);
-     end;
-
-  CreateCallOrExchangeWin(EditableLogHeight + ws * 8 {Line2},
-    CALLSIGNWINDOWID, efCall);
+  CreateCallOrExchangeWin(CALLSIGNWINDOWID, efCall);
 
 {$IF OZCR2008}
   // QuickMemoryWindowHandle := nfCreateTR4WStaticWindow('Quick M.', col9, Line5, 4 * ws, DefStyleDis);
@@ -4839,17 +4956,7 @@ begin
   Radio2.FreqElement := mweRadioTwoFreq;
   Radio2.NameElement := mweRadioTwo;
 
-  (* DESIGNED IN uMainForm.lfm; positioned here, like every other element.
-    The two colour arguments these calls used to carry are gone -- see the
-    note on the progress bars in uMainForm, they had not reached the screen
-    since the comctl32 v6 manifest was added. *)
-  SetProgressBounds(mpbLastHour, ws * 28 {col6},
-    EditableLogHeight + 10 * ws {Line4}, 5 * ws, ws);
-  SetProgressBounds(mpbRate, ws * 33 {col8},
-    EditableLogHeight + 10 * ws {Line4}, 5 * ws, ws);
-
-  CreateCallOrExchangeWin(EditableLogHeight + ws * 8
-    {+ round(ws * 1.5)} + MainWindowEditHeight + 1, EXCHANGEWINDOWID, efExchange);
+  CreateCallOrExchangeWin(EXCHANGEWINDOWID, efExchange);
 
   TR4WExchangeEdit.MaxLength := 35;   // created immediately above
 
@@ -4857,18 +4964,13 @@ begin
   // them any more.
   RefreshEntryFieldColors;
 
+  (* THE MINITOUR ROW. Shown here; placed by LayOutMainWindow, which narrows
+    the quick-command panel to make room for it. *)
   if Settings.Contest.MinitourDuration <> 0 then
      begin
-     // Windows.GetWindowRect(wh[mweQuickCommand], temprect);
-     SetElementBounds(mweQuickCommand, 0, EditableLogHeight + ws * 12,
-                      ws * 33, ws);
      ShowElement(mweQuickCommand, True);
-     SetTourDurationBounds(38 * ws {col9},
-       EditableLogHeight + ws * 12 {Line7}, 8 * ws, ws);
      ShowTourDurationText(True);
 
-     SetProgressBounds(mpbTourDuration, 33 * ws {col8},
-       EditableLogHeight + ws * 12 {Line7}, 5 * ws, ws);
      SetProgressMax(mpbTourDuration, Settings.Contest.MinitourDuration);
      ShowProgressBar(mpbTourDuration, True);
 
@@ -4881,11 +4983,8 @@ begin
   //
   // What moved: WM_MEASUREITEM and WM_DRAWITEM were answered by the main window
   // proc for this one control id, and are now ItemHeight and OnDrawItem.
-  CreateTR4WPossibleCallList(
-    0, EditableLogHeight + ws * 13 {line6}, MainWindowChildsWidth, ws,
-    MainWindowPCLID, ws, 5 * ws {the old LB_SETCOLUMNWIDTH});
-  SetPossibleCallFont(Settings.Font.Face,
-                      ws - 2 + Settings.Font.Size, Settings.Font.Bold);
+  // Its place, row height, column width and font are LayOutMainWindow's.
+  CreateTR4WPossibleCallList;
 
   (* THE DRAWING USED TO BE ATTACHED HERE, through a procedure variable, with
     a comment arguing that uMainForm "has no business knowing about" the
@@ -5063,9 +5162,14 @@ begin
     AN OPERATOR'S SAVED WINDOW HEIGHT FROM AN EARLIER VERSION IS 23 px SHORT,
     and the LCL fixes that for us: MakeMainWindowResizeable sets
     Constraints.MinHeight from the height it just took, so the restore clamps
-    up rather than opening a window whose strip sits on the bottom panel row. *)
+    up rather than opening a window whose strip sits on the bottom panel row.
+
+    PLACED FIRST, BY LayOutMainWindow (2026-11-21): every control above was
+    only created. The order -- place, size the window, then anchor -- is the
+    order this note requires. *)
+  LayOutMainWindow(ws, MainLogHeightForRows(MAIN_LOG_MINIMUM_ROWS));
   MakeMainWindowResizeable(MainWindowChildsWidth,
-                           6 + EditableLogHeight + ws * 14 + MainStatusBarHeight);
+                           FixedBandsHeight(ws) + EditableLogHeight + MainStatusBarHeight);
   AnchorMainWindowControls;
 
 end;
@@ -8620,7 +8724,7 @@ begin
      end;
 end;
 
-procedure CreateCallOrExchangeWin(Top, ID: integer; const aField: TTR4WEntryField);
+procedure CreateCallOrExchangeWin(ID: integer; const aField: TTR4WEntryField);
 begin
   // PHASE 3b: an LCL TEdit, addressed by its Handle exactly as before.  The
   // message loop still routes keystrokes by comparing Msg.HWND against
@@ -8632,19 +8736,19 @@ begin
   // fields kept the FORM's default while every element got MainFont, and the
   // call window read smaller than the band, date and time beside it (NY4I,
   // 2026-08-28). Same three numbers MainWindowEditFont is built from.
+  //
+  // WHERE THE FIELD SITS is LayOutMainWindow's (SetEntryFieldBounds), and so
+  // is the font height from then on; it is set here as well because it has to
+  // be on the field before its window exists.
   if LuconSZLoadded then
      begin
-     CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
-                          MainWindowEditHeight, ID,
-                          not Settings.MainWindow.NoBorder, aField,
-                          'Lucida Console SZ', ws + 3, True);
+     CreateTR4WEntryField(ID, not Settings.MainWindow.NoBorder, aField,
+                          'Lucida Console SZ', EntryFontHeight(ws), True);
      end
   else
      begin
-     CreateTR4WEntryField(ws * 15 {col4}, Top, 13 * ws,
-                          MainWindowEditHeight, ID,
-                          not Settings.MainWindow.NoBorder, aField,
-                          'Lucida Console', ws + 3, True);
+     CreateTR4WEntryField(ID, not Settings.MainWindow.NoBorder, aField,
+                          'Lucida Console', EntryFontHeight(ws), True);
      end;
   // THE SHAPE, NOT AN HFONT.  tWM_SETFONT(Result, MainWindowEditFont) sent a
   // WM_SETFONT to an LCL TEdit, which paints from its own TFont and ignores it,
@@ -9542,15 +9646,23 @@ end;
 
 function MainWindowLayoutWidth: integer;
 begin
-   Result := 46 * MainWindowScale;
+   Result := LayoutWidth(MainWindowScale);
 end;
 
 procedure SetWindowSize;
 //const
 // ewh : array[1 + 12..15 + 12] of REAL = (12.6, 13.7, 13.7, 15.7, 16.8, 18, 18, 20, 20.6, 20.6, 22.8, 23.8, 23.8, 25.8, 25.75);
 begin
+  ApplyMainWindowScale(MainWindowScale);
+end;
 
-  ws := MainWindowScale;
+(* THE SCALE GLOBALS FOR aWS. SetWindowSize's body until 2026-11-21, when
+  LayOutMainWindow became the second caller: a layout at another scale has to
+  move them with it. *)
+procedure ApplyMainWindowScale(const aWS: integer);
+begin
+
+  ws := aWS;
 
   ws2 := ws div 4;
 
@@ -9570,8 +9682,6 @@ begin
     on that window manager rather than a system average. *)
 
   //MainWindowHeight := EditableLogWindowHeight + 14 * ws + 7 + MainWindowCaptionAndHeader;
-
-  RightTopWidth := 14 * ws;
 
   //line1 := ws * 7 + EditableLogWindowHeight + 0;
   //Line2 := line1 + ws;
@@ -9594,11 +9704,15 @@ begin
   //col10 := col9 + 4 * ws;
   //col11 := col10 + 2 * ws {50};
 
-  MainWindowChildsWidth := MainWindowLayoutWidth; //col11 + ws * 2; //MainWindowWidth - 8+8;
-  MainWindowWidth := MainWindowChildsWidth + 7;
+  (* FROM aWS, NOT FROM THE SETTING: this was MainWindowLayoutWidth, which
+    reads Settings.MainWindow.WindowSize, and a layout at another scale must
+    not be given the setting's width. The same number at startup. *)
+  MainWindowChildsWidth := LayoutWidth(ws);
 
-  MainWindowEditHeight := ((ws * 3) div 2) - 1 {ws + 4};
-  FKButtonWidth := ws * 4 - 3;
+  (* MainWindowWidth (ChildsWidth + 7) and FKButtonWidth (4 * ws - 3) were
+    assigned here and read by nothing -- deleted 2026-11-21 (plan stage e0),
+    with RightTopWidth, whose one reader now asks uMainLayout.NeedLeft, and
+    MainWindowEditHeight, whose readers ask uMainLayout.EntryFieldRect. *)
 end;
 
 (* ONE QSO'S SCORING, RECOMPUTED FROM WHAT IS STORED ON IT.
@@ -10718,53 +10832,18 @@ end;
 // System.GetMemoryManager/SetMemoryManagerEx with ReturnAddress, not hand
 // arithmetic on ESP.
 
-(* THE LOG PANE'S HEIGHT FOR aRows ROWS: the arithmetic ROW COUNT used, kept
-  so the five-row layout -- and with it the window's MinHeight -- is the
-  pixel height it always was. 30 was the Win32 list view's header and border
-  allowance; TR4WEditableLogSetBounds then snaps the grid down to whole rows
-  of ws + 2, its DefaultRowHeight. *)
+(* THE LOG PANE'S HEIGHT FOR aRows ROWS at the current scale -- see
+  uMainLayout.LogHeightForRows, which is the arithmetic. *)
 function MainLogHeightForRows(const aRows: integer): integer;
 begin
-  Result := 30 + aRows * (ws + 2);
+  Result := LogHeightForRows(aRows, ws);
 end;
 
-(* SIZES THE LOG FOR THE LAYOUT, ONCE, FROM CreateMainWindow.
-
-  NOT FROM DispalayLogGridLines ANY MORE (2026-11-21). SHOW GRIDLINES applies
-  live, and its arm reached here through that routine, so turning gridlines on
-  in a window the operator had dragged taller set the log -- anchored to all
-  four edges -- back to the layout height, leaving the space below it empty
-  (read from the code, not observed). The window's height owns the log's
-  height once the layout is built; nothing after CreateMainWindow should set
-  it. *)
-procedure CheckEditableWindowHeight;
-begin
-  (* THE TWO SHRINK/GROW LOOPS THAT STOOD HERE ARE GONE, AND THEY ARE WHAT LEFT
-    THE LOG BLANK.
-
-    They set the height and then nudged it a pixel at a time -- up to 200 times
-    each, under a guard -- until ListView_GetCountPerPage reported exactly
-    ROW COUNT rows. That was the fixed-five window made exact: size the
-    control so five whole rows fit and no sixth is half-shown.
-
-    IT CANNOT WORK AGAINST A VIRTUAL LIST, and it fails in the worst direction.
-    GetCountPerPage on an OwnerData list that has not been given a count yet
-    does not answer the question the loop is asking, the condition never became
-    false, and the guard ran all 200 iterations -- subtracting 200 from a height
-    of 150. Measured on NY4I's machine: created at bounds=(0,154,1012,150),
-    and by the time the row count was set, bounds=(0,154,1012,0). A control of
-    zero height draws nothing, which is exactly what he saw twice.
-
-    THE QUESTION ITSELF IS RETIRED. The list scrolls now, so there is no reason
-    to make a whole number of rows fit: a partly visible row at the bottom edge
-    is what the scrollbar is for. The height is the log area's height and
-    nothing measures rows to get it.
-
-    ROW COUNT WAS RETIRED 2026-11-21, and this is the window layout it always
-    was: the log at its minimum height, MAIN_LOG_MINIMUM_ROWS. *)
-  TR4WEditableLogSetBounds(0, ws * 7, MainWindowChildsWidth,
-                           MainLogHeightForRows(MAIN_LOG_MINIMUM_ROWS));
-end;
+(* CheckEditableWindowHeight IS DELETED (2026-11-21). It set the log to the
+  bounds CreateTR4WEditableLog had just given it, and until that morning
+  SHOW GRIDLINES reached it at run time and snapped a log the operator had
+  dragged taller back to the layout height. LayOutMainWindow owns the log's
+  bounds now; after the first layout the window's height does. *)
 
 (* ONE CALL-WINDOW COMMAND, FROM THE CALL WINDOW OR FROM TOOLS -> COMMANDS
   (issue 87 step 0). aCommand is the whole text: the call window passes what

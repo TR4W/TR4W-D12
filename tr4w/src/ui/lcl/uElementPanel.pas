@@ -138,6 +138,14 @@ type
         was given and simply gains the shrink. Zero still means "no font has
         been chosen yet" and nothing is fitted. *)
       property BaseFontHeight: integer read FBaseFontHeight write FBaseFontHeight;
+      (* THE FONT HEIGHT A LAYOUT ASKS FOR, AND THE CAPTION RE-FITTED TO IT.
+
+        Setting BaseFontHeight alone does not re-measure, so a caption fitted
+        at one scale kept its font when the layout chose another. This is the
+        call a layout makes: it records aHeight (signed, as BaseFontHeight is)
+        and fits the caption from it. With the same aHeight the font comes out
+        as it was, so a layout run twice changes nothing. *)
+      procedure SetFittedFontHeight(const aHeight: integer);
    end;
 
 type
@@ -408,6 +416,19 @@ procedure TElementPanel.Loaded;
 begin
    inherited Loaded;
    ApplyBevel(BevelOuter);
+end;
+
+procedure TElementPanel.SetFittedFontHeight(const aHeight: integer);
+begin
+   (* THE FULL HEIGHT FIRST, ONLY WHEN IT CHANGES. FitCaption returns without
+     touching the font when there is no caption or no room to measure, and the
+     panel must not keep a height chosen for the previous scale then. *)
+   if FBaseFontHeight <> aHeight then
+      begin
+      FBaseFontHeight := aHeight;
+      Font.Height := aHeight;
+      end;
+   FitCaption;
 end;
 
 procedure TElementPanel.FitCaption;

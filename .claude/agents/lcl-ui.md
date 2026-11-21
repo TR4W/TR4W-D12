@@ -783,8 +783,21 @@ counts the key itself.
   `MAIN_LOG_FIRST_RUN_ROWS` (12) tall: `RestoreMainWindowBounds`' second
   argument. After that the saved window position decides. Nothing after
   `CreateMainWindow` sets the log's height: `DispalayLogGridLines` (SHOW
-  GRIDLINES, live) used to call `CheckEditableWindowHeight` and snap a tall log
-  back. Do not put that call back.
+  GRIDLINES, live) used to call `CheckEditableWindowHeight` (deleted) and snap
+  a tall log back. Do not put that back.
+- **CREATION AND PLACEMENT ARE TWO ROUTINES** (plan stage e2,
+  `docs/MAIN_WINDOW_WIDTH_PLAN.md`). `CreateMainWindow` creates and styles;
+  `MainUnit.LayOutMainWindow(aWS, aLogHeight)` sets every position and every
+  ws-dependent font, idempotently, and the arithmetic is the leaf
+  `uMainLayout` (no widget set; `uTestMainLayout` checks it at ws 13..27 and
+  pins the streamed form against the `.lfm` at ws 17). A new main-window
+  control gets its rectangle in `uMainLayout` and its placement in
+  `LayOutMainWindow`, never in the creation code. `LayOutMainWindow` does not
+  size the window or anchor: `CreateMainWindow` calls
+  `MakeMainWindowResizeable` and `AnchorMainWindowControls` once, after it.
+  An element's font goes through `SetElementFont`, which re-fits the caption
+  (`TElementPanel.SetFittedFontHeight`); setting `Font.Height` directly
+  leaves a caption fitted for the old scale.
 - **FONT SIZE is 0..2 added to the WINDOW SIZE scale** (`ws - 2 + Size`), not
   a point size. Preferences > Appearance shows MAIN FONT and BOLD FONT as one
   read-only box whose own `Font` holds the choice (the save reads

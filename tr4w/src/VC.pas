@@ -2893,7 +2893,6 @@ const
   tr4w_TR4W_WINDOWS_TOTAL               = 10;
 
   {Main Window ListBoxes}
-  MainWindowPCLID                       = 77;
   //   MainWindowELLID                 = 2;
 
      { Units of time }
@@ -3241,7 +3240,6 @@ var
   ImportFromADIFThreadID                : TThreadID;
   tMutex                                : Cardinal;
 
-  MainWindowEditHeight                  : integer;
 
   ws                                    : integer = 5;
   ws2                                   : integer;
@@ -3252,12 +3250,10 @@ var
 
 //  StaticWindowHeight                    : integer;
   //EditableLogWindowHeight               : integer;
-  MainWindowWidth                       : integer;
 //  MainWindowHeight                      : integer;
   MainWindowChildsWidth                 : integer;
   EditableLogHeight                     : integer;
 
-  RightTopWidth                         : integer;
 
 //  line1                                 : integer;
 //  Line2                                 : integer;
@@ -3267,7 +3263,6 @@ var
 //  line6                                 : integer;
 //  Line7                                 : integer;
 //  line8                                 : integer;
-  FKButtonWidth                         : integer;
 
   tCRC32                                : longword = 0;
   VideoGameLength                       : integer;
