@@ -804,6 +804,21 @@ counts the key itself.
   the status strip, and the needs block follows the right edge; the rest of
   both bands stays left. `RestoreMainWindowBounds` restores the saved width,
   never below MinWidth.
+- **ws FOLLOWS THE WIDTH** (e4): `uMainLayout.ScaleForClient` (pure; down
+  at once below `46 * ws`, up `WS_STEP_UP_SLACK` past the next step, capped
+  so the bands plus three log rows fit the height -- the window never grows
+  for a step). `TTR4WMainForm.Resize` -> `RescaleToClient` does nothing until
+  `ArmScaling` (called last in `MainUnit.RestoreToolWindows`; gtk2 reports
+  transient sizes during the show), then runs `LayOutMainWindow` inside
+  `DisableAutoSizing`, `SetMainWindowFloors` (the ONE place a client floor
+  becomes a Constraint) and `ApplyStatusStripFont`. A tool window that uses
+  the main scale subscribes with `AddMainScaleObserver` in its create and
+  removes itself in its destructor (Log Search does; the band map's text is
+  BAND MAP SIZE, not ws). The scale is saved as `"scale"` in the `Main`
+  layout entry (`MainUnit.SavedMainWindowScale`, read by `MainWindowScale`);
+  WINDOW SIZE only seeds a window with none, and a drag never writes it. A
+  test that resizes a shown main form and expects ws to stay put simply
+  does not arm.
 - **TWO alBottom SIBLINGS ARE ORDERED BY WHERE THEY ARE NOW** (LCL
   `CreateControlAlignList`), and **a form that is not shown does not align**.
   So `uMainForm.PlaceMainBands` gives `sbStatus`, the bottom band, the top

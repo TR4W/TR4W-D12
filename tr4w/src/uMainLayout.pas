@@ -3,7 +3,8 @@ unit uMainLayout;
 (* THE MAIN WINDOW'S GEOMETRY, AS ARITHMETIC AND NOTHING ELSE.
 
   Every rectangle the main window's controls take is a function of the scale
-  step ws (Settings.MainWindow.WindowSize + 12, 13..27). Those functions lived
+  step ws, 13..27, which since plan stage e4 follows the window's width
+  (ScaleForClient; WINDOW SIZE + 12 only seeds it). Those functions lived
   inline in MainUnit.CreateMainWindow and uMainGrids.PositionMainGrids, where
   no test could reach them and only the default scale was ever checked (Lint-
   FormOverlap reads the .lfm, which shows ws 17).
@@ -185,6 +186,42 @@ procedure TotalsColumnGeometry(const aWS, aColumn: integer;
 (* THE NEED STRIPS, in the needs block: each row's label starts at the
   block's left edge and the band cells follow, one 2 * ws pitch each. *)
 function NeedCellPitch(const aWS: integer): integer;
+
+const
+   (* HOW FAR PAST A STEP BOUNDARY THE CLIENT MUST GROW BEFORE ws STEPS UP
+     (plan b1). It stops the scale flickering while a dragged edge sits on
+     a boundary. Stepping DOWN has no slack, because it must not overflow. *)
+   WS_STEP_UP_SLACK = 8;
+
+(* THE SCALE A CLIENT AREA HOLDS (plan stage e4): ws follows the window's
+  width, in whole steps.
+
+  - aClientWidth: the form's client width.
+  - aLayoutHeight: the client height LESS THE STATUS STRIP (whose height is
+    the widget set's, so the caller measures it).
+  - aCurrentWs: the scale in force now; clamped to WS_MIN..WS_MAX first.
+
+  THE RULES, in order:
+  1. A width of zero or less, or a height of zero or less, is a transient
+     and keeps the current scale.
+  2. STEP DOWN AT ONCE when the width is below LayoutWidth(current): to
+     aClientWidth div 46. Nothing is ever wider than the window, which is
+     what keeps the 2026-09-09 gtk2 clipping defect fixed.
+  3. STEP UP only once the width reaches LayoutWidth(current + 1) +
+     WS_STEP_UP_SLACK: then to aClientWidth div 46, which may be several
+     steps. The slack decides WHEN to step up, not how far, so a window set
+     to exactly 46 * n from a smaller scale lands on n (for n at least two
+     steps up), and one dragged a pixel at a time steps up WS_STEP_UP_SLACK
+     px past the boundary and back down only below it.
+  4. Clamp to WS_MIN..WS_MAX.
+  5. THE HEIGHT CAP: lower the result while MinClientHeight(ws) is more than
+     aLayoutHeight, never below WS_MIN. The log keeps its three rows, and the
+     window never has to grow to make room for a larger scale.
+
+  Whenever aClientWidth >= LayoutWidth(WS_MIN), LayoutWidth(Result) is at
+  most aClientWidth. *)
+function ScaleForClient(const aClientWidth, aLayoutHeight,
+                        aCurrentWs: integer): integer;
 
 implementation
 
@@ -426,6 +463,49 @@ end;
 function NeedCellPitch(const aWS: integer): integer;
 begin
    Result := aWS * 2;
+end;
+
+function ClampScale(const aWS: integer): integer;
+begin
+   Result := aWS;
+   if Result < WS_MIN then
+      begin
+      Result := WS_MIN;
+      end;
+   if Result > WS_MAX then
+      begin
+      Result := WS_MAX;
+      end;
+end;
+
+function ScaleForClient(const aClientWidth, aLayoutHeight,
+                        aCurrentWs: integer): integer;
+var
+   current: integer;
+begin
+   current := ClampScale(aCurrentWs);
+   Result := current;
+
+   if (aClientWidth <= 0) or (aLayoutHeight <= 0) then
+      begin
+      Exit;
+      end;
+
+   if aClientWidth < LayoutWidth(current) then
+      begin
+      Result := aClientWidth div LAYOUT_COLUMNS;
+      end
+   else if aClientWidth >= LayoutWidth(current + 1) + WS_STEP_UP_SLACK then
+      begin
+      Result := aClientWidth div LAYOUT_COLUMNS;
+      end;
+
+   Result := ClampScale(Result);
+
+   while (Result > WS_MIN) and (MinClientHeight(Result) > aLayoutHeight) do
+      begin
+      Dec(Result);
+      end;
 end;
 
 end.

@@ -188,6 +188,20 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-21 -- THE MAIN WINDOW'S TEXT SIZE FOLLOWS ITS WIDTH (width plan stage e4; lcl-ui)
+
+Drag the main window wider and everything on it grows a step at a time (ws 13..27); narrower and it shrinks. The rule is `uMainLayout.ScaleForClient`: down at once below `46 * ws`, up only `WS_STEP_UP_SLACK` (8 px) past `46 * (ws + 1)`, and never a step whose bands plus three log rows would not fit the window's height. It starts after the window is shown (`ArmMainWindowScaling`, last in `RestoreToolWindows`). Set DEBUG LOG LEVEL = DEBUG for the `[Layout] scale a -> b in n ms` lines.
+
+- [ ] **Drag across several steps, on Windows and on Mint**, both wider and narrower: each step lays the whole window out at once; nothing is cut off at the right edge at any width (the 2026-09-09 gtk2 clipping must not come back).
+- [ ] **Flicker** while dragging across a step, and while sitting right on a step boundary (the 8 px slack should stop it toggling).
+- [ ] **Time per step** in the DEBUG log (`[Layout] scale 17 -> 18 in N ms`). Under about 30 ms is the guess; say if a step is visibly slow.
+- [ ] **A short window**: make the window as short as it goes, then drag it wider. The text must not grow past what three log rows allow; make it taller and it should catch up.
+- [ ] **Log Search follows live**: open Search, then drag the main window across a step. Its rows and text change size with the main window's.
+- [ ] **The band map does NOT change**: its text size is BAND MAP SIZE (`grdSpots.Font.Height := 10 + Settings.BandMap.Size`); it takes only the face and weight from the main window. NY4I asked for it to follow the scale too -- that needs his decision on what BAND MAP SIZE then means (not changed in e4).
+- [ ] **The scale is restored**: drag to a new size, exit, restart. It opens at the same text size and width (`"scale"` in the `Main` entry of the `windows` section of `settings\tr4w.json`). A `tr4w.json` from before this build (no `"scale"`) opens at WINDOW SIZE and then takes the scale its saved width holds.
+- [ ] **WINDOW SIZE in Preferences** now only seeds a first start or a file with no saved scale; changing it does nothing to a window that has one (e6 retires it).
+- [ ] **Maximize and restore** on a wide screen: maximized takes the largest scale the screen allows (at most 27), with any width left over in the log; restore returns to the previous scale.
+
 ## Added 2026-11-21 -- THE MAIN WINDOW IS THREE BANDS AND THE LOG, AND IT WIDENS (width plan stages e5 + e3; lcl-ui)
 
 Every main-window control is now a child of one of three panels:

@@ -318,11 +318,42 @@ type
     FDragging:       boolean;
     FDragMouseOrigin: TPoint;   // screen position of the pointer when it went down
     FDragFormOrigin:  TPoint;   // Left/Top of the form at that same moment
+
+    (* THE SCALE FOLLOWS THE WIDTH (plan stage e4) only once this is True.
+      ArmScaling sets it after the window is shown and settled: gtk2 reports
+      transient client sizes during the show, and the client is exactly
+      46 * ws at startup, so one transient would step the scale down. A form
+      field, so it dies with the form and a test that never arms is never
+      rescaled. *)
+    FScaleArmed: boolean;
+    (* SET WHILE A RESCALE RUNS. LayOutMainWindow and the constraints raise
+      Resize again partway through; "ws did not change" is not a guard in
+      that state. *)
+    FRescaling:  boolean;
   protected
     (* After streaming: the status strip gets its fitted font here, so a
       form that is only streamed -- as the unit tests do -- carries it too.
       See ApplyStatusStripFont. *)
     procedure Loaded; override;
+
+    (* THE WINDOW CHANGED SIZE: if the client now holds another scale, lay
+      the window out at it. See RescaleToClient. *)
+    procedure Resize; override;
+  public
+    (* START FOLLOWING THE WIDTH (plan stage e4): MinWidth drops to the
+      layout at WS_MIN, and the client is judged once at once -- which is
+      also what gives a layout saved without a scale the one its restored
+      width holds. MainUnit.RestoreToolWindows calls it, last. *)
+    procedure ArmScaling;
+
+    (* THE SCALE THE CLIENT HOLDS, APPLIED: uMainLayout.ScaleForClient on
+      the current client, and when it differs from ws, LayOutMainWindow at
+      it, the floors, the status strip's font and the scale observers. True
+      when the scale changed. Does nothing until ArmScaling, or while a
+      rescale runs. *)
+    function RescaleToClient: boolean;
+
+    property ScaleArmed: boolean read FScaleArmed;
   public
     (* The editable log's row supply and its double-click. See uLogGrid. *)
     procedure MainLogFetchRows(Sender: TObject; const aFirstIndex: Int64;
@@ -886,7 +917,8 @@ procedure RestoreMainWindowBounds(const aSaved: TRect;
                                   const aUnsavedExtraHeight: integer);
 
 (* Size the main window and set what the operator may resize it to: never
-  narrower than aClientWidth (the layout width), never shorter than
+  narrower than aClientWidth (the layout width) until ArmScaling lowers that
+  to the layout at WS_MIN (plan stage e4), never shorter than
   aMinClientHeight, and otherwise free in both axes (plan stage e3). The
   constraints are released before the client is sized, so a call at a
   smaller scale can shrink the window.
@@ -895,6 +927,25 @@ procedure RestoreMainWindowBounds(const aSaved: TRect;
   2026-09-09; see the body for what that cost. *)
 procedure MakeMainWindowResizeable(const aClientWidth, aClientHeight,
                                    aMinClientHeight: integer);
+
+(* THE FLOORS, GIVEN AS CLIENT SIZES: Constraints.MinWidth and MinHeight are
+  OUTER sizes, so each gets what this form measures between its outer and
+  client size. One place for that arithmetic: MakeMainWindowResizeable and
+  the rescale both call it. No MaxWidth or MaxHeight. *)
+procedure SetMainWindowFloors(const aMinClientWidth, aMinClientHeight: integer);
+
+(* WHO IS TOLD THAT THE MAIN WINDOW'S SCALE CHANGED (plan stage e4, NY4I:
+  the tool windows that use the main window's scale follow it live). A
+  window adds its handler when it is created and removes it in its
+  destructor, as the Network window does with uNetLink.NetLinkObservers. The
+  handler runs on the main thread, after the main window is laid out at the
+  new ws; Sender is the main form. *)
+procedure AddMainScaleObserver(const aObserver: TNotifyEvent);
+procedure RemoveMainScaleObserver(const aObserver: TNotifyEvent);
+
+(* After the main window is shown and settled: the scale follows the width
+  from here on. See TTR4WMainForm.ArmScaling. *)
+procedure ArmMainWindowScaling;
 
 (* THE THREE BANDS' SIZES AT THE CURRENT CLIENT SIZE: the top band
   aTopHeight tall, its needs block aNeedsWidth wide at the right edge, the
@@ -1020,6 +1071,7 @@ uses
    uTR4WStrings,       // TC_CONNECTINGTO and siblings -- what the strip must hold
    uPanelUpdate,       // StatusSubsystemName -- the name each status ends with
    uMainLayout,        // LogRowHeight -- the log grids' row height at a scale
+   LazMethodList,      // TMethodList -- the main scale's observers
    MainUnit;           // LogRowTextFor, Config -- see CreateTR4WEditableLog
 
 const
@@ -1954,10 +2006,9 @@ begin
      at absolute positions across a fixed 46 * ws; in their bands, extra width
      goes to the log, the possible-call strip and the status strip, and the
      needs block follows the right edge. MinWidth stays the layout width, so
-     nothing is ever clipped. *)
-   TR4WMainForm.Constraints.MinWidth := TR4WMainForm.Width;
-   TR4WMainForm.Constraints.MinHeight :=
-      aMinClientHeight + (TR4WMainForm.Height - TR4WMainForm.ClientHeight);
+     nothing is ever clipped, until ArmScaling lets the scale follow the
+     width (plan stage e4) and lowers it to the layout at WS_MIN. *)
+   SetMainWindowFloors(TR4WMainForm.ClientWidth, aMinClientHeight);
 
    (* EXPLICITLY, NOT ONLY OFF OnResize.  Assigning ClientWidth above does raise
      the status bar's OnResize when it changes the width -- but if the layout's
@@ -1967,6 +2018,125 @@ begin
      on one machine in four. *)
    ApplyStatusStripFont(TR4WMainForm.sbStatus, aClientWidth);
    LayOutStatusPanels;
+end;
+
+procedure SetMainWindowFloors(const aMinClientWidth, aMinClientHeight: integer);
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+   TR4WMainForm.Constraints.MinWidth :=
+      aMinClientWidth + (TR4WMainForm.Width - TR4WMainForm.ClientWidth);
+   TR4WMainForm.Constraints.MinHeight :=
+      aMinClientHeight + (TR4WMainForm.Height - TR4WMainForm.ClientHeight);
+end;
+
+(* THE OBSERVERS. Created on first use and freed in finalization; a
+  TMethodList holds methods, not objects, so a window that forgets to
+  remove itself leaves a dangling method -- which is why each one removes
+  itself in its destructor. Main thread only, like everything that lays the
+  window out. *)
+var
+   GMainScaleObservers: TMethodList = nil;
+
+procedure AddMainScaleObserver(const aObserver: TNotifyEvent);
+begin
+   if GMainScaleObservers = nil then
+      begin
+      GMainScaleObservers := TMethodList.Create;
+      end;
+   GMainScaleObservers.Add(TMethod(aObserver));
+end;
+
+procedure RemoveMainScaleObserver(const aObserver: TNotifyEvent);
+begin
+   if GMainScaleObservers <> nil then
+      begin
+      GMainScaleObservers.Remove(TMethod(aObserver));
+      end;
+end;
+
+procedure ArmMainWindowScaling;
+begin
+   if TR4WMainForm <> nil then
+      begin
+      TR4WMainForm.ArmScaling;
+      end;
+end;
+
+procedure TTR4WMainForm.ArmScaling;
+begin
+   FScaleArmed := True;
+   (* THE OPERATOR MAY SHRINK THE WINDOW TO THE SMALLEST SCALE; the height
+     floor stays the current scale's, so the log keeps its rows. *)
+   SetMainWindowFloors(LayoutWidth(WS_MIN), MinClientHeight(ws) + MainStatusBarHeight);
+   if logger <> nil then
+      begin
+      logger.Info('[Layout] the scale follows the width from here; ws %d, client %dx%d',
+                  [ws, ClientWidth, ClientHeight]);
+      end;
+   RescaleToClient;
+end;
+
+procedure TTR4WMainForm.Resize;
+begin
+   inherited Resize;
+   RescaleToClient;
+end;
+
+function TTR4WMainForm.RescaleToClient: boolean;
+var
+   statusHeight: integer;
+   oldWs:        integer;
+   newWs:        integer;
+   started:      QWord;
+begin
+   Result := False;
+   if (not FScaleArmed) or FRescaling then
+      begin
+      Exit;
+      end;
+
+   statusHeight := MainStatusBarHeight;
+   oldWs := ws;
+   newWs := ScaleForClient(ClientWidth, ClientHeight - statusHeight, oldWs);
+   if newWs = oldWs then
+      begin
+      Exit;
+      end;
+
+   FRescaling := True;
+   started := SysUtils.GetTickCount64;
+   try
+      (* ONE ALIGNMENT PASS for the hundred-odd bounds and font changes. *)
+      DisableAutoSizing;
+      try
+         LayOutMainWindow(newWs);
+         SetMainWindowFloors(LayoutWidth(WS_MIN), MinClientHeight(newWs) + statusHeight);
+      finally
+         EnableAutoSizing;
+      end;
+      (* THE NARROWEST STRIP THIS SCALE ALLOWS, not the client: the font is
+        fitted to the narrowest panel, and the client can narrow to
+        LayoutWidth(newWs) without another step -- fitted to a wider client,
+        the longest status would clip there (issue #142). *)
+      ApplyStatusStripFont(sbStatus, LayoutWidth(newWs));
+      LayOutStatusPanels;
+      if GMainScaleObservers <> nil then
+         begin
+         GMainScaleObservers.CallNotifyEvents(Self);
+         end;
+   finally
+      FRescaling := False;
+   end;
+   Result := True;
+
+   if logger <> nil then
+      begin
+      logger.Debug('[Layout] scale %d -> %d in %d ms',
+                   [oldWs, newWs, integer(SysUtils.GetTickCount64 - started)]);
+      end;
 end;
 
 (* THE BANDS ARE GIVEN THEIR WHOLE RECTANGLES, NOT ONLY THE DIMENSION THAT
@@ -2152,6 +2322,10 @@ begin
    bar.Panels[bar.Panels.Count - 1].Width := bar.Width - used;
 end;
 
+var
+   (* The pixel size ApplyStatusStripFont last chose; 0 before the first. *)
+   GLastStatusStripPx: integer = 0;
+
 procedure ApplyStatusStripFont(const aBar: TStatusBar; const aStripWidth: integer);
 const
    (* Today's Windows strip: Segoe UI 9 pt, 12 px at 96 DPI. Set in POINTS
@@ -2254,13 +2428,25 @@ begin
       probe.Free;
    end;
 
+   (* AT INFO ONLY WHEN THE SIZE CHANGES: since the scale follows the width
+     (plan stage e4) this runs on every scale step of a drag, and a line per
+     step would fill tr4w.log with the same answer. *)
    if logger <> nil then
       begin
-      logger.Info('[Layout] status strip font: %s %d px for a %d px strip; ' +
-                  'widest status "%s" is %d px, panel room %d px',
-                  [string(aBar.Font.Name), px, aStripWidth, widest, widestPx,
-                   room]);
+      if px <> GLastStatusStripPx then
+         begin
+         logger.Info('[Layout] status strip font: %s %d px for a %d px strip; ' +
+                     'widest status "%s" is %d px, panel room %d px',
+                     [string(aBar.Font.Name), px, aStripWidth, widest, widestPx,
+                      room]);
+         end
+      else
+         begin
+         logger.Debug('[Layout] status strip font unchanged: %d px for a %d px strip',
+                      [px, aStripWidth]);
+         end;
       end;
+   GLastStatusStripPx := px;
 end;
 
 procedure TTR4WMainForm.Loaded;
@@ -5118,5 +5304,7 @@ finalization
    FreeDeferralTarget(TObject(GDeferrer));
    // The activation raiser -- its handler goes before the object does.
    DisarmActivationRaiser;
+   // The main scale's observers -- created on the first Add, main thread only.
+   FreeAndNil(GMainScaleObservers);
 
 end.

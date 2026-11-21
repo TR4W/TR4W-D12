@@ -62,6 +62,7 @@ type
       procedure Test_AnUnknownWindowNameSurvivesASave;
       procedure Test_SaveAndLoadThroughTheSharedFile;
       procedure Test_WindowNamesAreUniqueAndPresent;
+      procedure Test_TheMainWindowScaleSurvivesASave;
    public
       constructor Create(const AName: string);
       destructor Destroy; override;
@@ -414,8 +415,56 @@ begin
       end;
 end;
 
+(* THE MAIN WINDOW'S SCALE (plan stage e4): kept through the file, through
+  the save's merge with what the file already holds, and through a later save
+  that states none; absent from a file that never had one. *)
+procedure TWindowLayoutStoreTests.Test_TheMainWindowScaleSurvivesASave;
+var
+   store: TWindowLayoutStore;
+   fn: string;
+begin
+   BeginTest('Test_TheMainWindowScaleSurvivesASave');
+   fn := TempFileName;
+   store := TWindowLayoutStore.Create;
+   try
+      (* A settings file with no windows yet, as Test_SaveAndLoadThroughTheSharedFile
+        starts from. *)
+      WriteAllTextUTF8(fn, '{"version": 1}');
+
+      store.SetScale('Main', 21);
+      CheckEquals(0, store.ScaleOf('Main'), 'a scale for a window with no entry is ignored');
+
+      store.SetLayout('Main', Rect(10, 20, 1000, 700), True);
+      CheckEquals(0, store.ScaleOf('Main'), 'a new entry states no scale');
+      store.SetScale('Main', 21);
+      store.SetLayout('Main', Rect(11, 21, 1001, 701), True);
+      CheckEquals(21, store.ScaleOf('Main'), 'SetLayout leaves the scale alone');
+
+      store.SetLayout('BandMap', Rect(1, 2, 3, 4), True);
+      SaveWindowLayout(fn, store);
+      CheckTrue(Pos('"scale"', ReadAllTextUTF8(fn)) > 0, 'the scale is in the file');
+
+      store.Clear;
+      CheckTrue(LoadWindowLayout(fn, store), 'the file loads');
+      CheckEquals(21, store.ScaleOf('Main'), 'the scale came back');
+      CheckEquals(0, store.ScaleOf('BandMap'), 'a window saved without one has none');
+
+      (* A SAVE THAT STATES NO SCALE keeps the file's: the merge copies it only
+        when the caller states one. *)
+      store.Clear;
+      store.SetLayout('Main', Rect(12, 22, 1002, 702), True);
+      SaveWindowLayout(fn, store);
+      store.Clear;
+      CheckTrue(LoadWindowLayout(fn, store), 'the file loads again');
+      CheckEquals(21, store.ScaleOf('Main'), 'a save with no scale kept the file''s');
+   finally
+      store.Free;
+   end;
+end;
+
 procedure TWindowLayoutStoreTests.RunAllTests;
 begin
+   Test_TheMainWindowScaleSurvivesASave;
    Test_LayoutSurvivesARoundTrip;
    Test_AZeroRectIsAValueNotAnAbsence;
    Test_LookupIsByNameNotByOrder;

@@ -1,9 +1,10 @@
 # Main window: resizable in width (plan)
 
-Status, 2026-11-21: **e0, e1, e2, and e5 with e3 folded in, are implemented**
-(`uMainLayout`, `MainUnit.LayOutMainWindow`, `uMainForm.PlaceMainBands`,
-`tools/gen_main_elements.py`, `uTestMainLayout`). e5+e3 is not yet built or
-run; it waits for NY4I's build. **Next: e4, then e6.** Owner: `lcl-ui`. Also
+Status, 2026-11-21: **e0, e1, e2, e5 with e3 folded in, and e4 are
+implemented** (`uMainLayout`, `MainUnit.LayOutMainWindow`,
+`uMainForm.PlaceMainBands`, `tools/gen_main_elements.py`, `uTestMainLayout`).
+e5+e3 is committed (41fe73a4); e4 is written and waits for NY4I's build.
+**Next: e6.** Owner: `lcl-ui`. Also
 touches `settings-config` (WINDOW SIZE), `i18n` (a retired setting's caption),
 `gui-test` (one heuristic) and `build-release` (corpus gate wording).
 
@@ -18,6 +19,56 @@ touches `settings-config` (WINDOW SIZE), `i18n` (a retired setting's caption),
 4. **Container bands (e5) come BEFORE scaling (e4).**
 
 **So the order is: e0, e1, e2, then e5 (with e3 folded into it), e4, e6.**
+
+**What e4 did (2026-11-21):**
+
+- **The rule is `uMainLayout.ScaleForClient(clientWidth, layoutHeight,
+  currentWs)`**, pure. `layoutHeight` is the client height less the status
+  strip. It steps down at once to `width div 46` below `46 * ws`, steps up
+  to `width div 46` once the width reaches `46 * (ws + 1) + WS_STEP_UP_SLACK`
+  (8 px), clamps to 13..27, then lowers the result while
+  `MinClientHeight(ws)` does not fit `layoutHeight`.
+  - The slack decides when to step up, not how far. So `46 * n` set from a
+    smaller scale lands on n, which b1's `(width - SLACK) div 46` would not.
+- **The height cap replaces "grow the window" (b3).** MinHeight keeps the
+  current scale's floor, so the cap only ever refuses a step up. The window
+  never grows, and there is no work-area code.
+- **The handler is `TTR4WMainForm.Resize` (override) -> `RescaleToClient`.**
+  - It is inert until `ArmScaling`, which `MainUnit.RestoreToolWindows` calls
+    last, after `ArmActivationRaiser`.
+  - Arming lowers MinWidth to the layout at WS_MIN and judges the client
+    once. That one judgement is the c2 fallback for a layout saved without a
+    scale: the restored width decides.
+  - A step runs `LayOutMainWindow(newWs)` inside
+    `DisableAutoSizing`/`EnableAutoSizing`, then `SetMainWindowFloors` (the
+    one place for the client-to-outer constraint arithmetic, shared with
+    `MakeMainWindowResizeable`), then `ApplyStatusStripFont`. That routine
+    now logs at Info only when its size changes. The step ends with the
+    observers.
+  - `FRescaling` guards re-entry. The Debug line is
+    `[Layout] scale a -> b in n ms`.
+- **Live followers: `uMainForm.AddMainScaleObserver` /
+  `RemoveMainScaleObserver`** (a LazUtils `TMethodList`). Log Search
+  subscribes in `FormCreate` and unsubscribes in `Destroy`. It re-applies
+  the main font and `LogRowHeight(ws)`.
+  - **The band map is not a follower.** Its text height is BAND MAP SIZE
+    (`10 + Settings.BandMap.Size`), and only the face and weight come from
+    the main window. Making it follow ws needs NY4I to say what BAND MAP
+    SIZE then means.
+- **The saved scale is `"scale"` in the `Main` entry** of the `windows`
+  section (`TWindowLayoutEntry.Scale`, `SetScale`/`ScaleOf`, carried through
+  `SaveWindowLayout`'s merge). `SaveTR4WPOSFILE` writes `ws`, and
+  `LoadWindowLayoutFromJSON` sets `MainUnit.SavedMainWindowScale`.
+  `MainWindowScale` prefers it, within 13..27, and falls back to WINDOW
+  SIZE + 12. A drag never writes WINDOW SIZE.
+- **Tests:**
+  - `uTestMainLayout`:
+    - `ScaleForClientAtItsBoundaries` (every scale's boundaries, the
+      no-overflow invariant over every width, the cap);
+    - `TheScaleFollowsTheWidth` (the shown form: unarmed resize, 17 -> 20,
+      the slack, the step down, back to 17 exactly);
+    - `AShortWindowCapsTheScale`.
+  - `uTestWindowLayoutStore.Test_TheMainWindowScaleSurvivesASave`.
 
 **What e5 + e3 did (2026-11-21):**
 

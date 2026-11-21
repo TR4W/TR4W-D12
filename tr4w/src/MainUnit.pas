@@ -619,6 +619,13 @@ procedure ApplyMainFontTo(aFont: TFont);
   run (uMainForm.ApplyStatusStripFont, called when the form streams). *)
 function MainWindowScale: integer;
 function MainWindowLayoutWidth: integer;
+
+var
+  (* THE MAIN WINDOW'S SCALE AS THE WINDOW LAYOUT SAVED IT (plan stage e4):
+    LoadWindowLayoutFromJSON sets it, MainWindowScale reads it. 0 when the
+    file states none. *)
+  SavedMainWindowScale: integer = 0;
+
 //function DrawEdit(lParam: lParam; wParam: wParam): Cardinal;
 procedure ProcessMenu(menuID: integer);
 procedure ProcessTAB(lowparam: Word);
@@ -2544,6 +2551,11 @@ begin
                         tr4w_WindowsArray[i].WndVisible);
         end;
 
+     (* THE MAIN WINDOW'S TEXT SCALE, saved with its rect (plan stage e4,
+       section c2): the scale follows the width, and restoring it from the
+       saved width would depend on how each platform reports its frame. *)
+     store.SetScale(WindowNames[tw_MAINWINDOW_INDEX], ws);
+
      SaveWindowLayout(TR4WConfigFileName, store);
   finally
      store.Free;
@@ -3158,6 +3170,9 @@ begin
             tr4w_WindowsArray[i].WndVisible := visible;
             end;
          end;
+
+      (* 0 when the file states none: MainWindowScale then falls back. *)
+      SavedMainWindowScale := store.ScaleOf(WindowNames[tw_MAINWINDOW_INDEX]);
    finally
       store.Free;
    end;
@@ -5116,8 +5131,9 @@ begin
     and no anchor captured from an absolute position.
 
     THE WIDTH IS FREE ABOVE THE LAYOUT WIDTH (plan stage e3). MinWidth is the
-    layout's 46 * ws, so nothing is ever clipped; the text size is still
-    WINDOW SIZE until ws follows the width (e4).
+    layout's 46 * ws, so nothing is ever clipped. Once the window is shown,
+    uMainForm.ArmScaling lets ws follow the width (plan stage e4) and lowers
+    MinWidth to the layout at WS_MIN.
 
     MinHeight keeps MAIN_LOG_MINIMUM_ROWS log rows (NY4I: three; it was the
     five-row start layout until e5), so the
@@ -5241,6 +5257,13 @@ begin
        IN A finally: a window that raises while it opens must not leave the
        raise unarmed for the whole session. *)
      ArmActivationRaiser;
+
+     (* AND THE SCALE FOLLOWS THE WIDTH FROM HERE (plan stage e4): the main
+       window has been shown and the queue has run, so a gtk2 transient size
+       from the show cannot step it down. Arming judges the restored client
+       once, which is also what gives a layout saved without a scale the one
+       its restored width holds. *)
+     ArmMainWindowScaling;
   end;
 end;
 
@@ -9624,9 +9647,23 @@ begin
         // LogEnsureVisible;
 end;
 
+(* THE SCALE THE MAIN WINDOW STARTS AT (plan stage e4, section c2): the one it
+  was saved at, when the window layout states one inside WS_MIN..WS_MAX;
+  otherwise WINDOW SIZE + 12, which until e4 was the only scale there was --
+  so a layout saved by an older TR4W, whose width was pinned to that scale,
+  starts where it was. ArmScaling then judges the restored client once.
+  WINDOW SIZE is retired later (e6); until then it only seeds this. *)
 function MainWindowScale: integer;
 begin
-   Result := Settings.MainWindow.WindowSize + 12;
+   if (SavedMainWindowScale >= uMainLayout.WS_MIN) and
+      (SavedMainWindowScale <= uMainLayout.WS_MAX) then
+      begin
+      Result := SavedMainWindowScale;
+      end
+   else
+      begin
+      Result := Settings.MainWindow.WindowSize + 12;
+      end;
 end;
 
 function MainWindowLayoutWidth: integer;

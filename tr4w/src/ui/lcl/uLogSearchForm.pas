@@ -184,6 +184,12 @@ type
       procedure GridDblClick(Sender: TObject);
       procedure ApplyMinimumWidth;
 
+      (* THE MAIN WINDOW'S SCALE (plan stage e4): applied at creation, and
+        again whenever the main window's scale changes, through
+        uMainForm.AddMainScaleObserver. *)
+      procedure ApplyMainScale;
+      procedure MainScaleChanged(Sender: TObject);
+
       procedure FillCombo(const aCombo: TComboBox; const aItems: TStrings;
                           const aAnyCaption: string; const aKeepText: string);
    public
@@ -276,7 +282,8 @@ uses
    uCallSignRoutines, (* ValidCallCharacter *)
    uContestRegistry,  (* StoredQSOIsXQSO -- a row greys an X-QSO, Q98 S1 *)
    uLCLFormHelpers,   (* SaveFormBounds / TryRestoreFormBounds *)
-   uMainForm;   (* was TR4WMainForm, the owner -- unused since issue #1; drop it after a build proves name resolution does not depend on it *)
+   uMainLayout,       (* LogRowHeight -- the main log's row height at a scale *)
+   uMainForm;   (* AddMainScaleObserver / RemoveMainScaleObserver -- the main window's scale, live *)
 
 var
    frmLogSearch: TfrmLogSearch = nil;
@@ -379,14 +386,17 @@ begin
    FGrid.Sizing := lgsFitAndFill;
    FGrid.OnFetchRows := @GridFetchRows;
    FGrid.OnDblClick  := @GridDblClick;
-   ApplyMainFontTo(FGrid.Font);
-   FGrid.DefaultRowHeight := ws + 2;
+   ApplyMainScale;
    (* Its column widths, kept per user under the window's name in the
      'columns' section (issue 234). *)
    FGrid.LayoutName := LAYOUT_NAME;
    FGrid.BuildColumns;
 
    FLogFacets := TLogSearchFacets.Create;
+
+   (* THE MAIN WINDOW'S SCALE, LIVE (plan stage e4, NY4I): it changes as the
+     main window is dragged wider or narrower. Removed in Destroy. *)
+   AddMainScaleObserver(@MainScaleChanged);
 
    (* A PLACEHOLDER, NOT TEXT (issue 230). The LCL shows TextHint only while
      the box is empty, and it is never part of Text, so it cannot be searched
@@ -608,8 +618,26 @@ begin
    FLogFacetsRead := False;
 end;
 
+(* THE GRID'S FONT AND ROW HEIGHT FROM THE MAIN WINDOW'S SCALE: the main
+  window's font at its cell height, and the main log's row height. *)
+procedure TfrmLogSearch.ApplyMainScale;
+begin
+   if FGrid = nil then
+      begin
+      Exit;
+      end;
+   ApplyMainFontTo(FGrid.Font);
+   FGrid.DefaultRowHeight := LogRowHeight(ws);
+end;
+
+procedure TfrmLogSearch.MainScaleChanged(Sender: TObject);
+begin
+   ApplyMainScale;
+end;
+
 destructor TfrmLogSearch.Destroy;
 begin
+   RemoveMainScaleObserver(@MainScaleChanged);
    FLogFacets.Free;
    FLogFacets := nil;
    inherited Destroy;

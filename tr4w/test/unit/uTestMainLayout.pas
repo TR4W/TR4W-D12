@@ -43,6 +43,12 @@ unit uTestMainLayout;
   5. THE MINIMUM HEIGHT shows three whole log rows (NY4I, 2026-11-21) at ws
      13, 17 and 27, measured on the grid.
 
+  6. THE SCALE FOLLOWS THE WIDTH (stage e4): uMainLayout.ScaleForClient at
+     every boundary; then the shown form, armed, dragged up to ws 20, held by
+     the slack, stepped down at once with nothing clipped, and back to ws 17
+     exactly; a resize before arming changes nothing; a window too short for
+     a larger scale is capped.
+
   Tests 2 to 5 follow the program's start-up order as far as it runs without
   a contest: the form streamed, its window made, the grids bound, then
   MakeMainWindowResizeable and LayOutMainWindow, as CreateMainWindow calls
@@ -66,12 +72,16 @@ type
                             const aWhere: string);
       procedure CheckStatusStripAtTheBottom(const aWhere: string);
       procedure CheckEveryControlInsideItsParent(const aWhere: string);
+      procedure CheckLaidOutAt(const aWS: integer; const aWhere: string);
    protected
       procedure Test_EveryRectInsideItsBandAndWhereItWasAtEveryScale;
       procedure Test_LayOutReproducesTheDesignedFormAndMovesWithTheScale;
       procedure Test_TheBandsFollowTheWindow;
       procedure Test_GridlinesLeaveATallLogAlone;
       procedure Test_TheMinimumHeightShowsThreeLogRows;
+      procedure Test_ScaleForClientAtItsBoundaries;
+      procedure Test_TheScaleFollowsTheWidth;
+      procedure Test_AShortWindowCapsTheScale;
    public
       procedure RunAllTests; override;
    end;
@@ -1281,6 +1291,315 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------------
+  PLAN STAGE e4: THE SCALE FOLLOWS THE WIDTH.
+  --------------------------------------------------------------------------- *)
+
+(* THE PURE RULE, at every boundary of every scale. A height of 10000 never
+  caps; the cap has its own checks at the end. *)
+procedure TMainLayoutTests.Test_ScaleForClientAtItsBoundaries;
+const
+   TALL = 10000;
+var
+   current, width, got, upper: integer;
+begin
+   BeginTest('MainLayout: ScaleForClient steps down at once, up past the slack, ' +
+             'within WS_MIN..WS_MAX and under the height cap (plan stage e4)');
+
+   for current := WS_MIN to WS_MAX do
+      begin
+      upper := current + 1;
+      if upper > WS_MAX then
+         begin
+         upper := WS_MAX;
+         end;
+
+      CheckEquals(current, ScaleForClient(LayoutWidth(current), TALL, current),
+                  Format('ws %d: exactly the layout width keeps it', [current]));
+
+      if current > WS_MIN then
+         begin
+         CheckEquals(current - 1, ScaleForClient(LayoutWidth(current) - 1, TALL, current),
+                     Format('ws %d: one pixel narrower steps down at once', [current]));
+         end
+      else
+         begin
+         CheckEquals(WS_MIN, ScaleForClient(LayoutWidth(current) - 1, TALL, current),
+                     'WS_MIN: narrower than the smallest layout stays at WS_MIN');
+         end;
+
+      CheckEquals(current,
+                  ScaleForClient(LayoutWidth(current + 1) + WS_STEP_UP_SLACK - 1, TALL, current),
+                  Format('ws %d: one pixel short of the step-up threshold keeps it', [current]));
+      CheckEquals(upper,
+                  ScaleForClient(LayoutWidth(current + 1) + WS_STEP_UP_SLACK, TALL, current),
+                  Format('ws %d: the step-up threshold steps up', [current]));
+
+      (* THE INVARIANT: never wider than the client, always in range. *)
+      for width := LayoutWidth(WS_MIN) to LayoutWidth(WS_MAX + 1) + 50 do
+         begin
+         got := ScaleForClient(width, TALL, current);
+         if (got < WS_MIN) or (got > WS_MAX) or (LayoutWidth(got) > width) then
+            begin
+            CheckTrue(False, Format('ws %d at width %d gave %d: out of range or ' +
+                                    'wider than the client', [current, width, got]));
+            Break;
+            end;
+         end;
+      end;
+
+   (* Several steps at once, and exactly 46 * n from below lands on n. *)
+   CheckEquals(20, ScaleForClient(LayoutWidth(20), TALL, 17), '17 to exactly 46 * 20 is 20');
+   CheckEquals(13, ScaleForClient(LayoutWidth(13), TALL, 20), '20 to exactly 46 * 13 is 13');
+   CheckEquals(WS_MAX, ScaleForClient(5000, TALL, 17), 'a very wide window is WS_MAX');
+
+   (* Transients and a current scale out of range. *)
+   CheckEquals(17, ScaleForClient(0, TALL, 17), 'a zero width keeps the scale');
+   CheckEquals(17, ScaleForClient(-5, TALL, 17), 'a negative width keeps the scale');
+   CheckEquals(17, ScaleForClient(LayoutWidth(20), 0, 17), 'a zero height keeps the scale');
+   CheckEquals(WS_MIN, ScaleForClient(0, TALL, 5), 'VC''s initial ws of 5 reads as WS_MIN');
+   CheckEquals(WS_MAX, ScaleForClient(LayoutWidth(WS_MAX), TALL, 40), 'a current above WS_MAX reads as WS_MAX');
+
+   (* THE HEIGHT CAP. *)
+   CheckEquals(20, ScaleForClient(LayoutWidth(27), MinClientHeight(20), 17),
+               'a wide window exactly tall enough for ws 20 is capped there');
+   CheckEquals(19, ScaleForClient(LayoutWidth(27), MinClientHeight(20) - 1, 17),
+               'one pixel shorter is capped one step lower');
+   CheckEquals(WS_MIN, ScaleForClient(LayoutWidth(27), 1, 17),
+               'a window too short for any scale is WS_MIN');
+   CheckEquals(17, ScaleForClient(LayoutWidth(17), MinClientHeight(17), 17),
+               'the floor height holds the current scale');
+end;
+
+(* EVERY CONTROL THE LAYOUT PLACES, IN ITS BAND, and the bands -- the snapshot
+  a rescale has to return to. *)
+procedure CollectPlacedControls(const aList: TList<TControl>);
+
+   procedure Walk(const aParent: TWinControl);
+   var
+      i: integer;
+      c: TControl;
+   begin
+      for i := 0 to aParent.ControlCount - 1 do
+         begin
+         c := aParent.Controls[i];
+         if IsDesignedLayoutControl(c) then
+            begin
+            aList.Add(c);
+            end;
+         if (c is TPanel) and not (c is TElementPanel) then
+            begin
+            Walk(TPanel(c));
+            end;
+         end;
+   end;
+
+begin
+   aList.Clear;
+   aList.Add(TR4WMainForm.pnlTopBand);
+   aList.Add(TR4WMainForm.pnlNeedsBlock);
+   aList.Add(TR4WMainForm.pnlBottomBand);
+   Walk(TR4WMainForm);
+end;
+
+(* THE WINDOW LAID OUT AT aWS: the bands' sizes, every TWindows[] panel where
+  uMainLayout puts it in its band, the fonts that follow ws, the entry fields,
+  and the log between the bands. *)
+procedure TMainLayoutTests.CheckLaidOutAt(const aWS: integer; const aWhere: string);
+var
+   e: TMainWindowElement;
+   r, want: TRect;
+begin
+   CheckEquals(aWS, ws, aWhere + ': ws');
+   CheckEquals(TopBandHeight(aWS), TR4WMainForm.pnlTopBand.Height, aWhere + ': the top band');
+   CheckEquals(NeedsBlockWidth(aWS), TR4WMainForm.pnlNeedsBlock.Width, aWhere + ': the needs block');
+   CheckEquals(BottomBandHeight(aWS), TR4WMainForm.pnlBottomBand.Height, aWhere + ': the bottom band');
+
+   for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+      begin
+      if (not ElementHasPanel(e)) or (e = mweAutoSendCount) or (MainElement(e) = nil) then
+         begin
+         Continue;
+         end;
+      r := MainElement(e).BoundsRect;
+      want := ElementRect(e, aWS);
+      CheckTrue(SameBounds(r, want),
+                      Format('%s: %s is %s, expected %s',
+                             [aWhere, MainElement(e).Name, BoundsText(r), BoundsText(want)]));
+      end;
+
+   CheckEquals(-ElementFontHeight(aWS, Settings.Font.Size),
+                     TElementPanel(ControlNamed('pnlBandMode')).BaseFontHeight,
+                     aWhere + ': an element''s font');
+   CheckEquals(-WSJTXFontHeight(aWS, Settings.Font.Size),
+                     TElementPanel(ControlNamed('pnlWSJTX')).BaseFontHeight,
+                     aWhere + ': the WSJT-X indicator''s font');
+   CheckEquals(-EntryFontHeight(aWS),
+                     TElementPanel(ControlNamed('pnlQSONumber')).BaseFontHeight,
+                     aWhere + ': the QSO number''s font');
+   CheckEquals(-EntryFontHeight(aWS), TR4WCallEdit.Font.Height,
+                     aWhere + ': the call field''s font');
+   CheckTrue(SameBounds(TR4WCallEdit.BoundsRect, EntryFieldRect(efrCall, aWS)),
+                   aWhere + ': the call field is at ' + BoundsText(TR4WCallEdit.BoundsRect));
+   CheckEquals(-ElementFontHeight(aWS, Settings.Font.Size),
+                     TR4WMainForm.lstPossibleCall.Font.Height,
+                     aWhere + ': the possible-call strip''s font');
+   CheckEquals(LogRowHeight(aWS), TR4WEditableLog.DefaultRowHeight,
+                     aWhere + ': the log''s row height');
+
+   (* THE LOG FILLS WHAT THE BANDS LEAVE. *)
+   CheckEquals(TopBandHeight(aWS), TR4WEditableLog.Top, aWhere + ': the log starts under the top band');
+   CheckEquals(TR4WMainForm.pnlBottomBand.Top, TR4WEditableLog.Top + TR4WEditableLog.Height,
+                     aWhere + ': the log ends on the bottom band');
+end;
+
+(* THE SHOWN WINDOW, ARMED, DRAGGED ACROSS STEPS: stepping up, the slack,
+  stepping down at once with nothing clipped, a resize before arming, and the
+  layout returning exactly to ws 17's. *)
+procedure TMainLayoutTests.Test_TheScaleFollowsTheWidth;
+var
+   saved: TSavedLayoutState;
+   placed: TList<TControl>;
+   at17: TList<TRect>;
+   i: integer;
+begin
+   BeginTest('MainLayout: the scale follows the window''s width once armed (plan stage e4)');
+   saved := TSavedLayoutState.Create;
+   placed := TList<TControl>.Create;
+   at17 := TList<TRect>.Create;
+   BuildTestMainWindow;
+   try
+      Settings.Contest.MinitourDuration := 0;
+      ApplyMainWindowScale(17);
+      CreateTR4WEditableLog(0, TopBandHeight(17), LayoutWidth(17),
+                            LogHeightForRows(MAIN_LOG_START_ROWS, 17));
+      SizeAndLayOut(17);
+      ShowTestMainWindow;
+
+      if not DesktopFits(21) then
+         begin
+         Exit;
+         end;
+
+      (* TALL ENOUGH THAT THE HEIGHT CAP NEVER DECIDES here: it has its own
+        test. *)
+      TR4WMainForm.ClientHeight := MinClientHeight(22) + MainStatusBarHeight + 20;
+      Settle;
+
+      (* NOT ARMED: a resize does not touch the scale. *)
+      CheckFalse(TR4WMainForm.ScaleArmed, 'a streamed form starts unarmed');
+      TR4WMainForm.ClientWidth := LayoutWidth(20) + WS_STEP_UP_SLACK;
+      Settle;
+      CheckEquals(17, ws, 'a resize before the form is armed leaves ws alone');
+      TR4WMainForm.ClientWidth := LayoutWidth(17);
+      Settle;
+
+      (* ARMED at exactly the layout width: still 17. *)
+      TR4WMainForm.ArmScaling;
+      Settle;
+      CheckEquals(17, ws, 'arming at 46 * 17 keeps 17');
+      CollectPlacedControls(placed);
+      for i := 0 to placed.Count - 1 do
+         begin
+         at17.Add(placed[i].BoundsRect);
+         end;
+
+      (* UP TO 20 in one drag. *)
+      TR4WMainForm.ClientWidth := LayoutWidth(20);
+      Settle;
+      WriteLn('  [MainLayout] e4: client ', TR4WMainForm.ClientWidth, 'x',
+              TR4WMainForm.ClientHeight, ' -> ws ', ws);
+      CheckLaidOutAt(20, 'grown to 46 * 20');
+      CheckStatusStripAtTheBottom('grown to 46 * 20');
+      CheckEveryControlInsideItsParent('grown to 46 * 20');
+
+      (* THE SLACK: one pixel short of the next step changes nothing. *)
+      TR4WMainForm.ClientWidth := LayoutWidth(21) + WS_STEP_UP_SLACK - 1;
+      Settle;
+      CheckEquals(20, ws, 'one pixel below the step-up threshold keeps ws 20');
+
+      (* DOWN AT ONCE: one pixel narrower than the layout, and nothing clipped. *)
+      TR4WMainForm.ClientWidth := LayoutWidth(20) - 1;
+      Settle;
+      CheckEquals(19, ws, 'one pixel below 46 * 20 steps down at once');
+      CheckLaidOutAt(19, 'shrunk to 46 * 20 - 1');
+      CheckEveryControlInsideItsParent('shrunk to 46 * 20 - 1');
+      CheckTrue(LayoutWidth(ws) <= TR4WMainForm.ClientWidth,
+                'the layout is never wider than the client');
+
+      (* AND BACK: the layout at 17 is exactly what it was. *)
+      TR4WMainForm.ClientWidth := LayoutWidth(17);
+      Settle;
+      CheckLaidOutAt(17, 'back to 46 * 17');
+      for i := 0 to placed.Count - 1 do
+         begin
+         CheckTrue(SameBounds(placed[i].BoundsRect, at17[i]),
+                   Format('back at 17, %s is %s, was %s',
+                          [placed[i].Name, BoundsText(placed[i].BoundsRect),
+                           BoundsText(at17[i])]));
+         end;
+   finally
+      ReleaseTestMainWindow;
+      saved.Restore;
+      saved.Free;
+      at17.Free;
+      placed.Free;
+   end;
+end;
+
+(* THE HEIGHT CAP ON A SHOWN WINDOW: wide enough for ws 20 and only as tall as
+  ws 17's floor stays at 17; made tall enough for 19, it steps to 19 and no
+  further. *)
+procedure TMainLayoutTests.Test_AShortWindowCapsTheScale;
+var
+   saved: TSavedLayoutState;
+   layoutHeight: integer;
+begin
+   BeginTest('MainLayout: a wide window too short for a larger scale keeps the log''s ' +
+             'three rows (plan stage e4)');
+   saved := TSavedLayoutState.Create;
+   BuildTestMainWindow;
+   try
+      Settings.Contest.MinitourDuration := 0;
+      ApplyMainWindowScale(17);
+      CreateTR4WEditableLog(0, TopBandHeight(17), LayoutWidth(17),
+                            LogHeightForRows(MAIN_LOG_START_ROWS, 17));
+      SizeAndLayOut(17);
+      ShowTestMainWindow;
+      if not DesktopFits(20) then
+         begin
+         Exit;
+         end;
+      TR4WMainForm.ArmScaling;
+      Settle;
+
+      TR4WMainForm.ClientHeight := MinClientHeight(17) + MainStatusBarHeight;
+      Settle;
+      TR4WMainForm.ClientWidth := LayoutWidth(20);
+      Settle;
+      layoutHeight := TR4WMainForm.ClientHeight - MainStatusBarHeight;
+      WriteLn('  [MainLayout] e4 cap: client ', TR4WMainForm.ClientWidth, 'x',
+              TR4WMainForm.ClientHeight, ' -> ws ', ws);
+      CheckTrue(MinClientHeight(ws) <= layoutHeight,
+                Format('ws %d needs %d px above the status strip; the window has %d',
+                       [ws, MinClientHeight(ws), layoutHeight]));
+      if layoutHeight = MinClientHeight(17) then
+         begin
+         CheckEquals(17, ws, 'a window only as tall as ws 17''s floor stays at 17');
+         end;
+      CheckStatusStripAtTheBottom('capped');
+
+      TR4WMainForm.ClientHeight := MinClientHeight(19) + MainStatusBarHeight;
+      Settle;
+      CheckEquals(19, ws, 'made tall enough for 19, the capped window steps to 19, not 20');
+      CheckLaidOutAt(19, 'capped at 19');
+   finally
+      ReleaseTestMainWindow;
+      saved.Restore;
+      saved.Free;
+   end;
+end;
+
 procedure TMainLayoutTests.RunAllTests;
 begin
    Test_EveryRectInsideItsBandAndWhereItWasAtEveryScale;
@@ -1288,6 +1607,9 @@ begin
    Test_TheBandsFollowTheWindow;
    Test_GridlinesLeaveATallLogAlone;
    Test_TheMinimumHeightShowsThreeLogRows;
+   Test_ScaleForClientAtItsBoundaries;
+   Test_TheScaleFollowsTheWidth;
+   Test_AShortWindowCapsTheScale;
 end;
 
 end.

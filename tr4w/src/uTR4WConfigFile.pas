@@ -1008,6 +1008,12 @@ begin
          begin
          entry := aWindows.Entry(i);
          onDisk.SetLayout(entry.Name, entry.Rect, entry.Visible);
+         (* THE SCALE TOO, or every save drops it: SetLayout copies the rect
+           and the flag only. A caller that states none keeps the file's. *)
+         if entry.Scale > 0 then
+            begin
+            onDisk.SetScale(entry.Name, entry.Scale);
+            end;
          end;
 
       SaveConfig(aFileName, nil, nil, nil, onDisk);

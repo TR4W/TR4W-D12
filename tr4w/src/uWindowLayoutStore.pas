@@ -73,6 +73,11 @@ type
       Name: string;
       Rect: TRect;
       Visible: boolean;
+      (* THE MAIN WINDOW'S TEXT SCALE (ws) when it was saved, since the scale
+        follows the width (plan stage e4, section c2). 0 means "not stated":
+        every other window, and a main window saved by an older TR4W. Written
+        to the file only when above 0. SetLayout leaves it alone. *)
+      Scale: integer;
    end;
 
    TWindowLayoutStore = class(TObject)
@@ -105,6 +110,13 @@ type
       function TryGetLayout(const aName: string; var aRect: TRect;
                             var aVisible: boolean): boolean;
 
+      // The window's saved scale (see TWindowLayoutEntry.Scale). SetScale on
+      // a name with no entry does nothing -- a scale without a rect would
+      // make an entry that reads as a window at (0,0,0,0). ScaleOf answers 0
+      // for an absent name or an unstated scale.
+      procedure SetScale(const aName: string; const aScale: integer);
+      function ScaleOf(const aName: string): integer;
+
       function ToJSON: TJSONObject;
       procedure FromJSON(const aObj: TJSONObject);
    end;
@@ -120,6 +132,7 @@ const
    KEY_RIGHT   = 'right';
    KEY_BOTTOM  = 'bottom';
    KEY_VISIBLE = 'visible';
+   KEY_SCALE   = 'scale';
 
 constructor TWindowLayoutStore.Create;
 begin
@@ -214,6 +227,30 @@ begin
    aVisible := FEntries[idx].Visible;
 end;
 
+procedure TWindowLayoutStore.SetScale(const aName: string; const aScale: integer);
+var
+   idx: integer;
+begin
+   idx := IndexOfWindow(aName);
+   if idx < 0 then
+      begin
+      Exit;
+      end;
+   FEntries[idx].Scale := aScale;
+end;
+
+function TWindowLayoutStore.ScaleOf(const aName: string): integer;
+var
+   idx: integer;
+begin
+   Result := 0;
+   idx := IndexOfWindow(aName);
+   if idx >= 0 then
+      begin
+      Result := FEntries[idx].Scale;
+      end;
+end;
+
 function TWindowLayoutStore.ToJSON: TJSONObject;
 var
    i: integer;
@@ -231,6 +268,10 @@ begin
       win.AddPair(KEY_RIGHT,   TJSONNumber.Create(FEntries[i].Rect.Right));
       win.AddPair(KEY_BOTTOM,  TJSONNumber.Create(FEntries[i].Rect.Bottom));
       win.AddPair(KEY_VISIBLE, TJSONBool.Create(FEntries[i].Visible));
+      if FEntries[i].Scale > 0 then
+         begin
+         win.AddPair(KEY_SCALE, TJSONNumber.Create(FEntries[i].Scale));
+         end;
       JSONSetSection(Result, FEntries[i].Name, win);
       end;
 end;
@@ -278,6 +319,9 @@ begin
       visible := SameText(JSONGetStr(win, KEY_VISIBLE, 'false'), 'true');
 
       SetLayout(JSONPairName(aObj, i), r, visible);
+      (* Absent is 0, "not stated" -- what every file before plan stage e4
+        holds. *)
+      SetScale(JSONPairName(aObj, i), JSONGetInt(win, KEY_SCALE, 0));
       end;
 end;
 

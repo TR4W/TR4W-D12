@@ -619,13 +619,13 @@ begin
      helper assigns. Only the last `#:` used to survive, so the FORM key
      was lost. The text is not pinned (it is a translator's to change),
      only that the key resolves to a translation. *)
-   CheckTrue(EmbeddedCatalogueEntry('de', 'tradioeditform.lbltcpport.caption',
+   CheckTrue(EmbeddedCatalogueEntry('de', 'tradioeditform.tabnetwork.caption',
                                     english, got),
              'de: the form key of a two-key entry is in the embedded catalogue');
    CheckTrue((got <> '') and (got <> english),
-             'de tradioeditform.lbltcpport.caption carries a translation, not "' +
+             'de tradioeditform.tabnetwork.caption carries a translation, not "' +
              got + '"');
-   CheckTrue(EmbeddedCatalogueEntry('de', 'ulclformhelpers.tc_radioedit_tcpport',
+   CheckTrue(EmbeddedCatalogueEntry('de', 'utr4wstrings.rc_network',
                                     english, got),
              'de: and the resourcestring key of the same entry');
 end;
