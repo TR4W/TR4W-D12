@@ -146,10 +146,21 @@ of the step-1 copy; the step-2 listener port has not been tested.
      Making them the client's SQLite COLUMN names (`rcvd_year`, `year_sent`, ...)
      would make the server's mapping the identity and make drift visible; the
      checksum's field order and set would be defined once, against the schema.
-   - The client's `qso` table also carries the station's own facts (`my_*`
-     columns, `TQsoMyFacts`), which `ContestExchange` does not. Whether the QSO
-     message carries them, so the server's table matches the client's, is a
-     decision for that plan.
+   - **Parity, not widening (NY4I).** The station facts (`my_*` columns,
+     `TQsoMyFacts`) are NOT in the 376-byte record (`uQsoMyFacts.pas`: the record
+     "cannot carry these"), so they are not on the wire today; a receiver stamps
+     a peer's QSO with its OWN facts, marked assumed (ruling D). The replacement
+     carries what the record carries now and nothing more. The few station
+     facts squeezed into the record's spare bytes (`YearSent`, `ceRoverQTH`)
+     travel as they do today; the exact list is to be confirmed against the
+     schema. Carrying a peer's station facts would be a separate feature.
+   - So the wire is NOT "the qso row": it is the row's columns that
+     `ContestExchange` fills today, by column name, without the local-state
+     columns (`id`, `session_*`, `sent_to_server`, `server_dirty`, `sent_udp`,
+     `udp_dirty`). The record's representations (a 6-byte time, enum
+     ordinals, one `Frequency`) differ from the columns' (`qso_at` unix
+     seconds, text tokens, `freq_tx_hz`/`freq_rx_hz`), so the sender builds the
+     row's values the way `uLogRepository.BindRecord` already does.
    - How a station catches up from the server's log now that there is no
      whole-log CRC32 to compare. The per-record identity is `(ceQSOID1, ceQSOID2)`
      and the row's `guid`; `uNetCatchUp` is where the current design lives.
