@@ -86,6 +86,11 @@ type
          the windows are cleared only after it, and a refusal rebuilds the
          score from the log (read from the source). *)
       procedure Test_AnEntryOfSeveralLegsIsOneWrite;
+      (* Issue 347 (plan commits 6 and 7): a peer's QSO the log refuses is
+         refused and reported, and a note or QTC record is sent only after its
+         commit (read from the source). *)
+      procedure Test_APeersRefusedQSOIsReportedNotAssumedSaved;
+      procedure Test_ANoteOrQTCRecordIsSentOnlyAfterItsCommit;
       (* Issue 349 (2026-11-22): Edit QSO's save and Alt-Y announce a change
          only after the log has committed it (read from the source). *)
       procedure Test_AChangeIsAnnouncedOnlyAfterItsCommit;
@@ -1303,8 +1308,78 @@ begin
              'a record from the server''s log is stamped as it arrives');
 end;
 
+(* ISSUE 347, PLAN COMMIT 6 (NY4I ruling 3, 2026-11-21): THE PEER ARM ACTS ON
+   LogContact'S ANSWER. It used to call LogContact, drop the Boolean and redraw
+   the windows as for a saved QSO. Now True redraws; False is reported through
+   ReportPeerQsoRefused (an Error line each time, one notice per link) and
+   queued nowhere -- catch-up and Synchronize are the retry. Read from the
+   source: LogContact cannot be driven headless. *)
+procedure TAutomaticXQSOTests.Test_APeersRefusedQSOIsReportedNotAssumedSaved;
+var
+   text, arm, report: string;
+   p, e, w: integer;
+begin
+   BeginTest('Test_APeersRefusedQSOIsReportedNotAssumedSaved');
+   text := SourceText('uNet.pas');
+   p := Pos('NET_QSOINFO_ID:' + sLineBreak, text);
+   e := PosEx('NET_EDITEDQSO_ID:', text, p);
+   CheckTrue((p > 0) and (e > p), 'the NET_QSOINFO arm is found');
+   arm := Copy(text, p, e - p);
+   w := Pos('if LogContact(NetQSOInfoPtr^.qiInformation, False) then', arm);
+   CheckTrue(w > 0, 'the arm asks LogContact''s answer');
+   CheckTrue(PosEx('UpdateWindows;', arm, w) > w, 'the windows are redrawn on True');
+   CheckTrue(PosEx('ReportPeerQsoRefused(NetQSOInfoPtr^.qiInformation);', arm, w) >
+             PosEx('UpdateWindows;', arm, w), 'and a False is reported, after that');
+   CheckEquals(0, Pos(sLineBreak + '                       LogContact(', arm),
+               'a bare LogContact whose result is dropped is gone');
+
+   p := Pos('procedure ReportPeerQsoRefused(', text);
+   e := PosEx('procedure ReportPeerVersion(', text, p);
+   CheckTrue((p > 0) and (e > p), 'the report is found');
+   report := Copy(text, p, e - p);
+   CheckTrue(Pos('logger.Error(', report) > 0, 'it logs an Error line');
+   CheckTrue(Pos('ceQSOID1', report) > 0, 'naming the network key');
+   CheckTrue(Pos('GPeerQsosRefused > 1', report) > 0, 'and tells the operator only once');
+   CheckEquals(0, Pos('LogContact(', report), 'a refused QSO is never retried here');
+   CheckTrue(Pos('GPeerQsosRefused := 0;', text) >
+             Pos('procedure NetBeginLinkSession;' + sLineBreak + 'begin', text),
+             'the once is per link');
+end;
+
+(* ISSUE 347, PLAN COMMIT 7 (NY4I ruling 4, 2026-11-21): A NOTE OR QTC RECORD
+   IS SENT ONLY AFTER ITS COMMIT. AddRecordToLogAndSendToNetwork sent first and
+   appended after, with a comment leaving the order alone for NY4I. The write is
+   now the condition of the send, a refused record sends nothing and counts no
+   tUSQ, and Result stays the network's answer (the QTC callers pace on it). *)
+procedure TAutomaticXQSOTests.Test_ANoteOrQTCRecordIsSentOnlyAfterItsCommit;
+var
+   text, body: string;
+   p, e, w: integer;
+begin
+   BeginTest('Test_ANoteOrQTCRecordIsSentOnlyAfterItsCommit');
+   text := SourceText('MainUnit.pas');
+   p := Pos('function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;' +
+            sLineBreak + 'begin', text);
+   e := PosEx('THE CALL-FIELD FLASH.', text, p);
+   CheckTrue((p > 0) and (e > p), 'the routine is found');
+   body := Copy(text, p, e - p);
+   w := Pos('if tAddQSOToLog(CE) then', body);
+   CheckTrue(w > 0, 'the log is written first and its answer is the condition');
+   CheckTrue(PosEx('SendRecordToServer(NET_QSOINFO_ID, CE)', body, w) > w,
+             'the packet is sent after it, inside that branch');
+   CheckEquals(0, PosEx('SendRecordToServer(', body,
+                        PosEx('SendRecordToServer(', body, w) + 1),
+               'and there is no other send');
+   CheckTrue(Pos('did NOT commit', body) >
+             PosEx('SendRecordToServer(NET_QSOINFO_ID, CE)', body, w),
+             'a refusal is reported at Error, after the send branch');
+   CheckTrue(Pos('Result := False;', body) > 0, 'a refused record answers False (no pacing)');
+end;
+
 procedure TAutomaticXQSOTests.RunAllTests;
 begin
+   Test_APeersRefusedQSOIsReportedNotAssumedSaved;
+   Test_ANoteOrQTCRecordIsSentOnlyAfterItsCommit;
    Test_ARefusedSaveKeepsTheEntryAndItsReason;
    Test_AQSOIsPublishedOnlyAfterItsCommit;
    Test_AnEntryOfSeveralLegsIsOneWrite;

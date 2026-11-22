@@ -23,9 +23,17 @@ notice (`LogStoreHoldFailureNotices` / `LogStoreShowHeldFailureNotices`,
 uLogStore) until after the rebuild. `LogContact` is `LogEntry` with no further
 leg, so one QSO, WSJT-X and the peer path are commit 4's path. The `LoadinLog`
 check and its residuals are in `.claude/agents/contest-scoring.md`, "COMMIT
-BEFORE PUBLISH". The bench items are in `docs/BENCH_QUEUE.md`. Commits 6-8
-open (commit 8's row reversal in `SQLITE_LOG_SCHEMA_PLAN.md` is done with
-commit 5, the same ruling). Commit 4's decisions are in
+BEFORE PUBLISH". The bench items are in `docs/BENCH_QUEUE.md`. **Commits 6 and 7 BUILT 2026-11-22, unbenched:** the peer
+arm in `uNet` (`NET_QSOINFO_ID`) acts on `LogContact`'s answer (True redraws;
+False -> `ReportPeerQsoRefused`: an Error line each time with call, band, mode
+and network key, ONE operator notice per link, `SPeerQsoNotSaved`; no retry
+queue; `PeerQsosRefusedOnThisLink`), and
+`MainUnit.AddRecordToLogAndSendToNetwork` appends FIRST and sends only a
+committed record (a refused one sends nothing, counts no `tUSQ`, answers
+False so the QTC pacing Sleep is skipped). Pins:
+`uTestAutomaticXQSO.Test_APeersRefusedQSOIsReportedNotAssumedSaved` and
+`Test_ANoteOrQTCRecordIsSentOnlyAfterItsCommit` (source reads). Commit 8's row
+reversal in `SQLITE_LOG_SCHEMA_PLAN.md` is done with commit 5, the same ruling. Commit 4's decisions are in
 `.claude/agents/contest-scoring.md`, "COMMIT BEFORE PUBLISH". Detail and the decisions taken while building
 them: `.claude/agents/log-database.md`, "ONE ENTRY, ONE TRANSACTION". Written
 2026-11-21 against `main` at `6924737c`.

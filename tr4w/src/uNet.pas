@@ -357,6 +357,8 @@ var
   (* The same for the catch-up notice ("Resent to the server ..."), said once per
     link by ResendOfflineWork. *)
   ResendNoticeSink: TPeerNoticeProc = nil;
+  (* The same for the refused-peer-QSO notice (PeerQsosRefusedOnThisLink). *)
+  PeerQsoRefusedNoticeSink: TPeerNoticeProc = nil;
 
 (* The walk over NetBuffer, one arm per message id. In the interface so the
   unit tests can put a packet in NetBuffer and hand it to the real arms. *)
@@ -451,6 +453,14 @@ function ReceivedQsoIsKnown(const aRec: ContestExchange): boolean;
 
 (* How many received QSOs ReceivedQsoIsKnown has turned away since start. *)
 function NetDuplicateQsosIgnored: integer;
+
+(* A PEER'S QSO THIS STATION COULD NOT STORE (issue 347, plan commit 6, NY4I
+  ruling 3, 2026-11-21): the NET_QSOINFO arm honours LogContact's answer. A
+  False is REFUSED and REPORTED -- an Error line every time, and ONE operator
+  notice per link (SPeerQsoNotSaved) -- and nothing is retried: the server holds
+  the QSO and the next catch-up, or Net > Synchronize, adds it. How many have
+  been refused on this link; reset by NetBeginLinkSession. *)
+function PeerQsosRefusedOnThisLink: integer;
 
 (* A NEW LINK IS A NEW SESSION (Q110, protocol 2, and C5): nobody has announced
   anything yet, the server has not answered, and nothing has been caught up.
@@ -654,6 +664,9 @@ var
     is written once per link. Main thread (the drain); reset when a link comes
     up. *)
   GTimeSyncNoted:    boolean = False;
+  (* Peer QSOs LogContact refused on this link. Main thread (the drain); reset
+    when a link comes up. The notice is given when it goes from 0 to 1. *)
+  GPeerQsosRefused:  integer = 0;
 
 const
   (* An older server drops the link within a read or two of the HELLO; an
@@ -705,6 +718,44 @@ begin
       begin
       RefuseServer(SysUtils.Format(SNetServerProtocolOlder,
                                    [aServerProtocol, NET_PROTOCOL_VERSION]));
+      end;
+end;
+
+function PeerQsosRefusedOnThisLink: integer;
+begin
+   Result := GPeerQsosRefused;
+end;
+
+(* A PEER'S QSO THAT THIS STATION'S LOG REFUSED (issue 347, ruling 3). The Error
+  line names the call, band, mode and network key every time, so tr4w.log has
+  the full list. The OPERATOR is told ONCE per link: a full disk refuses every
+  QSO the other stations make, and a notice each would bury the screen. The
+  text says only what is true: the QSO is not in this log, the server was not
+  told otherwise (no packet acknowledges a QSO), so it holds the QSO and a
+  catch-up or Net > Synchronize adds it once this log can be written. Nothing
+  is queued here. *)
+procedure ReportPeerQsoRefused(const aRec: ContestExchange);
+var
+   notice: string;
+begin
+   inc(GPeerQsosRefused);
+   logger.Error('[Net] a QSO from the network did NOT commit to the contest '
+                + 'log and was refused: %s on %s %s (network key %d/%d); it is '
+                + 'left to catch-up / Synchronize',
+                [string(aRec.Callsign), string(BandStringsArray[aRec.Band]),
+                 string(ADIFModeString[aRec.Mode]), aRec.ceQSOID1, aRec.ceQSOID2]);
+   if GPeerQsosRefused > 1 then
+      begin
+      Exit;
+      end;
+   notice := SPeerQsoNotSaved;
+   if Assigned(PeerQsoRefusedNoticeSink) then
+      begin
+      PeerQsoRefusedNoticeSink(notice);
+      end
+   else
+      begin
+      QuickDisplay(notice);
       end;
 end;
 
@@ -1029,8 +1080,20 @@ var
                     begin
                     if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
                        begin
-                       LogContact(NetQSOInfoPtr^.qiInformation, False);
-                       UpdateWindows;
+                       (* LogContact's ANSWER IS HONOURED (issue 347, plan
+                         commit 6). True means COMMITTED and only then are
+                         the windows redrawn as for a saved QSO. False was
+                         refused by the log; commit 4 posted nothing for it
+                         (no UDP, no HamScore), and it is reported, not
+                         retried. *)
+                       if LogContact(NetQSOInfoPtr^.qiInformation, False) then
+                          begin
+                          UpdateWindows;
+                          end
+                       else
+                          begin
+                          ReportPeerQsoRefused(NetQSOInfoPtr^.qiInformation);
+                          end;
                        end;
                     end;
 
@@ -1547,6 +1610,7 @@ begin
    GSendRefusals.Forget;
    GSpotShareNoted := False;
    GTimeSyncNoted := False;
+   GPeerQsosRefused := 0;
    FServerHelloSeen := False;
    (* AND NOTHING HAS BEEN CAUGHT UP YET: the QSOs logged while the last link
      was down go once the server's HELLO has come on THIS one. These are the

@@ -12266,3 +12266,8 @@ msgstr ""
 #, fuzzy
 msgid "NOT SAVED -- the contest log did not take this change. See tr4w.log."
 msgstr ""
+
+#: uappstrings.speerqsonotsaved
+#, fuzzy
+msgid "A QSO from another station could NOT be saved to this log. It is not lost if the server has it: the next catch-up from the server, or Net > Synchronize, adds it once this log can be written. Further refusals are in tr4w.log."
+msgstr ""

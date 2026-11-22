@@ -41,9 +41,36 @@ refused QSO sends nothing; its `ceQSOID2` is simply never used (a retry takes
 a fresh one, plan 2d). `sent_to_server` keeps its meaning: the row now exists
 before any `SettleServerProgress` can mark it, and a crash between the commit
 and the post leaves it 0 for `ResendOfflineWork`. `tUSQ` still counts a post
-that found no link. Not changed yet: the receive arm ignores `LogContact`'s
-answer (commit 6) and notes/QTCs still send before the append (commit 7,
-`AddRecordToLogAndSendToNetwork`).
+that found no link.
+
+**Commits 6 and 7 (2026-11-22, NY4I rulings 3 and 4 of 2026-11-21):**
+
+- **The receive arm honours `LogContact`'s answer** (`uNet`, `NET_QSOINFO_ID`).
+  True: `UpdateWindows`. False (the log refused; commit 4 already posted no UDP
+  or HamScore for it): `ReportPeerQsoRefused` -- an Error line EVERY time (call,
+  band, mode, network key), ONE operator notice per link (`SPeerQsoNotSaved`,
+  `QuickDisplay`, or `PeerQsoRefusedNoticeSink` in a test), counted by
+  `PeerQsosRefusedOnThisLink` (reset by `NetBeginLinkSession`). Once per link,
+  not once per packet, because a full disk refuses every peer QSO and the store
+  already raises its own modal on the first refusal. **No retry queue.** The
+  report text is true because: the server stores a QSOINFO (when its own write
+  works, `tr4wserverUnit` 759-780) and relays it; nothing on the wire
+  acknowledges a QSO, so the server cannot think this station stored it; the
+  refused pair is not "known" (`ReceivedQsoIsKnown` reads the log), so the next
+  catch-up or Net > Synchronize (insert-only by `(ceQSOID1, ceQSOID2)`) adds it.
+  The one case the text hedges ("if the server has it") is a server whose log
+  write failed too. A QSO this station DID store is untouched (the False branch
+  is the only new code).
+- **`MainUnit.AddRecordToLogAndSendToNetwork` appends first** and sends the
+  record only when `tAddQSOToLog` returned True. A refused record sends nothing,
+  counts no `tUSQ` (no row owes the server) and returns False, so the QTC
+  callers (`uQTCR`, `uQTCS`) skip their pacing `Sleep`; the success path is
+  unchanged (same record, same bytes, later). Note: a committed record posted
+  with no link still returns False and counts `tUSQ`, as before.
+- Pins: `uTestAutomaticXQSO.Test_APeersRefusedQSOIsReportedNotAssumedSaved` and
+  `Test_ANoteOrQTCRecordIsSentOnlyAfterItsCommit` (source reads). Bench:
+  BENCH_QUEUE "Peer refused" and "QTC and note". An incoming NOTE or QTC record
+  (`rkNote`, `rkQTCR/S` arms) already checked `tAddQSOToLog` and logs at Error.
 
 ## Log comparison is GONE, and a late catch-up replaced it (Phase 1, C6, 2026-10-27)
 

@@ -1349,7 +1349,11 @@ over `TSubmitSequence`; its write is `logsubs2.tAddQSOsToLog` ->
 `LogStoreAppendLiveQSOs` (`tAddQSOToLog`, notes and QTCs, is its one-record
 call), and Release's `AddLoggedQSO` takes the facts that call returned, not
 `LogStoreLastAppendedMyFacts`. The packet and the dispatcher message are
-posted only after the commit. **Commit 5 (2026-11-22, issue 348) WIRES
+posted only after the commit. **Commits 6-7 (2026-11-22)** are uNet's and
+MainUnit's, no store change: a peer QSO `LogContact` refuses is reported
+(`uNet.ReportPeerQsoRefused`), and `AddRecordToLogAndSendToNetwork` sends a
+note or QTC record only after `tAddQSOToLog` returned True (detail:
+`multi-op-network.md`). **Commit 5 (2026-11-22, issue 348) WIRES
 SEVERAL LEGS**: `TryLogContact` makes ONE `logsubs2.LogEntry` of the whole
 Enter (county line, parks, rover boundary -- `MainUnit.TEntryLegs` builds each
 further leg; `DrainPendingMultiQSORefs` is deleted), so every leg is in ONE

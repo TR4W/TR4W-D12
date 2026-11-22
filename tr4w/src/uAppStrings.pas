@@ -570,6 +570,16 @@ resourcestring
       'Resent to the server what was logged while disconnected: %d QSO(s), ' +
       '%d edit(s).';
 
+   (* A QSO FROM ANOTHER STATION THIS LOG COULD NOT STORE (issue 347, 2026-11-22).
+     Said ONCE per link, the first time; every one is in tr4w.log. The server
+     holds the QSO, so a catch-up or Net > Synchronize adds it once this log
+     can be written. *)
+   SPeerQsoNotSaved =
+      'A QSO from another station could NOT be saved to this log. It is not ' +
+      'lost if the server has it: the next catch-up from the server, or Net > ' +
+      'Synchronize, adds it once this log can be written. Further refusals ' +
+      'are in tr4w.log.';
+
    (* CATCHING UP FROM THE SERVER'S LOG (Phase 1, C6, 2026-10-27) -- the other
      half of the above: a station that comes up in the middle of a contest asks
      the server for what the others logged meanwhile. Nothing in this log is

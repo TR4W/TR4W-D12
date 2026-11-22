@@ -10747,31 +10747,37 @@ begin
   CE.ceSendToServer := False;
   CE.ceNeedSendToServerAE := False;
 
-  Result := SendRecordToServer(NET_QSOINFO_ID, CE);
-  if not Result then
+  (* COMMIT FIRST, THEN SEND (issue 347, NY4I 2026-11-21: "Notes and QTC
+    records commit first, then send"). The record reaches the network only
+    after tAddQSOToLog has returned True, and True means COMMITTED, so a
+    multi-op peer can no longer hold a note or QTC record this station failed
+    to keep. A refused record sends nothing: its ceQSOID2 is simply never
+    used, and no row exists to owe the server (so tUSQ is not counted).
+
+    THE RESULT IS THE NETWORK'S ANSWER, not the log's, which is what the name
+    of this routine says, and it is False for a refused record (nothing was
+    posted). Both matter and they fail independently: a station off the
+    network still logs (committed, posted nowhere: Result False and tUSQ
+    counted, as before), and a station that cannot log must not be told it
+    did. The log failure is reported HERE rather than folded into Result; the
+    two callers use Result only to pace their sends (a Sleep after a packet
+    was posted), so a refused record rightly skips the pause.
+
+    The packet is the same record, the same bytes, later; tAddQSOToLog takes
+    the record by value and changes nothing in CE. *)
+  Result := False;
+  if tAddQSOToLog(CE) then
      begin
-     inc(tUSQ);
-     end;
-
-  (* THE RESULT ABOVE IS THE NETWORK'S ANSWER, not the log's, which is what
-    the name of this routine says. Both matter and they fail independently:
-    a station off the network still logs, and a station that cannot log must
-    not be told it did.
-
-    So the log failure is reported HERE rather than folded into Result --
-    folding it would tell the caller the QSO was not sent to the server, which
-    is a different and possibly untrue statement, and the two callers use
-    Result only to pace their sends.
-
-    THE ORDER IS WRONG AND IS LEFT ALONE ON PURPOSE. The contact reaches the
-    network BEFORE it reaches the disk, so a multi-op peer can hold a QSO this
-    station failed to keep. Putting the commit first is the right shape and it
-    is a multi-op protocol decision, not a tidy-up -- raised for NY4I rather
-    than made here. *)
-  if not tAddQSOToLog(CE) then
+     Result := SendRecordToServer(NET_QSOINFO_ID, CE);
+     if not Result then
+        begin
+        inc(tUSQ);
+        end;
+     end
+  else
      begin
-     logger.Error('[Log] %s was sent to the network but did NOT commit to the '
-                  + 'contest log', [CE.Callsign]);
+     logger.Error('[Log] %s did NOT commit to the contest log; it was not '
+                  + 'sent to the network', [CE.Callsign]);
      end;
 end;
 
