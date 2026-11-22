@@ -1137,6 +1137,20 @@ object TR4WMainForm: TTR4WMainForm
       ParentFont = False
       TabOrder = 4
     end
+    object pnlSentExchange: TElementPanel
+      Left = 289
+      Height = 17
+      Top = 0
+      Width = 102
+      Alignment = taLeftJustify
+      AutoSize = False
+      BevelOuter = bvNone
+      Caption = ''
+      ParentFont = False
+      ShowHint = True
+      Visible = False
+      TabOrder = 5
+    end
     object pnlQSOsWithThisStation: TElementPanel
       Left = 391
       Height = 17
@@ -1148,7 +1162,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 5
+      TabOrder = 6
     end
     object pnlName: TElementPanel
       Left = 425
@@ -1161,7 +1175,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 6
+      TabOrder = 7
     end
     object pnlCountryName: TElementPanel
       Left = 476
@@ -1174,7 +1188,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 7
+      TabOrder = 8
     end
     object pnlLocalTime: TElementPanel
       Left = 646
@@ -1187,7 +1201,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 8
+      TabOrder = 9
     end
     object pnlInsert: TElementPanel
       Left = 714
@@ -1200,7 +1214,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 9
+      TabOrder = 10
     end
     object pnlRadioOneFreq: TElementPanel
       Left = 0
@@ -1213,7 +1227,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 10
+      TabOrder = 11
     end
     object pnlRadioTwoFreq: TElementPanel
       Left = 68
@@ -1227,7 +1241,7 @@ object TR4WMainForm: TTR4WMainForm
       Enabled = False
       ParentColor = False
       ParentFont = False
-      TabOrder = 11
+      TabOrder = 12
     end
     object pnlComputerID: TElementPanel
       Left = 136
@@ -1240,7 +1254,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 12
+      TabOrder = 13
     end
     object pnlOnAirTimeCounter: TElementPanel
       Left = 476
@@ -1253,7 +1267,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 13
+      TabOrder = 14
     end
     object pnlLastQSOTime: TElementPanel
       Left = 561
@@ -1266,7 +1280,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 14
+      TabOrder = 15
     end
     object pnlCQQSOCounter: TElementPanel
       Left = 646
@@ -1279,7 +1293,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 15
+      TabOrder = 16
     end
     object pnlSPQSOCounter: TElementPanel
       Left = 714
@@ -1292,7 +1306,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 16
+      TabOrder = 17
     end
     object pnlRadioOne: TElementPanel
       Left = 0
@@ -1305,7 +1319,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 17
+      TabOrder = 18
     end
     object pnlRadioTwo: TElementPanel
       Left = 68
@@ -1319,7 +1333,7 @@ object TR4WMainForm: TTR4WMainForm
       Enabled = False
       ParentColor = False
       ParentFont = False
-      TabOrder = 18
+      TabOrder = 19
     end
     object pnlWSJTX: TElementPanel
       Left = 136
@@ -1332,7 +1346,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 19
+      TabOrder = 20
     end
     object pnlQSOB4Status: TElementPanel
       Left = 187
@@ -1345,7 +1359,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = 'QSOB4'
       ParentColor = False
       ParentFont = False
-      TabOrder = 20
+      TabOrder = 21
     end
     object pnlHourRate: TElementPanel
       Left = 476
@@ -1358,7 +1372,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 21
+      TabOrder = 22
     end
     object pnlRate: TElementPanel
       Left = 561
@@ -1371,7 +1385,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 22
+      TabOrder = 23
     end
     object pnlCQTotal: TElementPanel
       Left = 646
@@ -1384,7 +1398,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 23
+      TabOrder = 24
     end
     object pnlCodeSpeed: TElementPanel
       Left = 0
@@ -1397,7 +1411,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 24
+      TabOrder = 25
     end
     object pnlEntryStatus: TPanel
       Left = 68
@@ -1413,7 +1427,7 @@ object TR4WMainForm: TTR4WMainForm
       VerticalAlignment = taAlignTop
       Visible = False
       Wordwrap = True
-      TabOrder = 25
+      TabOrder = 26
     end
     object pnlMasterStatus: TElementPanel
       Left = 187
@@ -1426,7 +1440,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = 'MASTER'
       ParentColor = False
       ParentFont = False
-      TabOrder = 26
+      TabOrder = 27
     end
     object pnlRover: TElementPanel
       Left = 255
@@ -1439,7 +1453,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 27
+      TabOrder = 28
     end
     object pbLastHour: TProgressBar
       Left = 476
@@ -1449,7 +1463,7 @@ object TR4WMainForm: TTR4WMainForm
       Max = 200
       Smooth = True
       Step = 1
-      TabOrder = 28
+      TabOrder = 29
     end
     object pbRate: TProgressBar
       Left = 561
@@ -1459,7 +1473,7 @@ object TR4WMainForm: TTR4WMainForm
       Max = 200
       Smooth = True
       Step = 1
-      TabOrder = 29
+      TabOrder = 30
     end
     object pnlPaddle: TElementPanel
       Left = 646
@@ -1473,7 +1487,7 @@ object TR4WMainForm: TTR4WMainForm
       Enabled = False
       ParentColor = False
       ParentFont = False
-      TabOrder = 30
+      TabOrder = 31
     end
     object pnlFootSwitch: TElementPanel
       Left = 714
@@ -1487,7 +1501,7 @@ object TR4WMainForm: TTR4WMainForm
       Enabled = False
       ParentColor = False
       ParentFont = False
-      TabOrder = 31
+      TabOrder = 32
     end
     object pnlNewMultStatus: TElementPanel
       Left = 187
@@ -1500,7 +1514,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = 'MULT'
       ParentColor = False
       ParentFont = False
-      TabOrder = 32
+      TabOrder = 33
     end
     object pnlUserInfo: TElementPanel
       Left = 255
@@ -1513,7 +1527,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 33
+      TabOrder = 34
     end
     object pnlPTTStatus: TElementPanel
       Left = 425
@@ -1526,7 +1540,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = 'OFF'
       ParentColor = False
       ParentFont = False
-      TabOrder = 34
+      TabOrder = 35
     end
     object pnlOpMode: TElementPanel
       Left = 476
@@ -1539,7 +1553,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = 'CQ'
       ParentColor = False
       ParentFont = False
-      TabOrder = 35
+      TabOrder = 36
     end
     object pnlLocator: TElementPanel
       Left = 561
@@ -1552,7 +1566,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 36
+      TabOrder = 37
     end
     object pnlWinKey: TElementPanel
       Left = 646
@@ -1566,7 +1580,7 @@ object TR4WMainForm: TTR4WMainForm
       Enabled = False
       ParentColor = False
       ParentFont = False
-      TabOrder = 37
+      TabOrder = 38
     end
     object pnlCurrentOperator: TElementPanel
       Left = 714
@@ -1579,7 +1593,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 38
+      TabOrder = 39
     end
     object pnlQuickCommand: TElementPanel
       Left = 0
@@ -1592,7 +1606,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 39
+      TabOrder = 40
     end
     object pbTourDuration: TProgressBar
       Left = 561
@@ -1602,7 +1616,7 @@ object TR4WMainForm: TTR4WMainForm
       Max = 200
       Smooth = True
       Step = 1
-      TabOrder = 40
+      TabOrder = 41
       Visible = False
     end
     object pnlTourDuration: TElementPanel
@@ -1616,7 +1630,7 @@ object TR4WMainForm: TTR4WMainForm
       Caption = ''
       ParentColor = False
       ParentFont = False
-      TabOrder = 41
+      TabOrder = 42
       Visible = False
     end
     object lstPossibleCall: TStringGrid
@@ -1634,7 +1648,7 @@ object TR4WMainForm: TTR4WMainForm
       Options = []
       RowCount = 1
       ScrollBars = ssNone
-      TabOrder = 42
+      TabOrder = 43
       Visible = False
       OnPrepareCanvas = lstPossibleCallPrepareCanvas
     end

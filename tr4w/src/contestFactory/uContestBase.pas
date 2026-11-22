@@ -3791,6 +3791,34 @@ type
       function CanonicalSentExchange(const aQso: ContestExchange;
                                      const aCtx: TCanonicalExchangeContext): string; virtual;
 
+      (* THE EXCHANGE THE OPERATOR IS ABOUT TO SEND, AS ONE LINE FOR THE MAIN
+         WINDOW -- issue 355 (NY4I, 2026-11-21: "That would have to come from
+         the contest class"). DISPLAY ONLY: nothing exported, scored or stored
+         reads it, so the corpus and the matrix cannot move.
+
+         aQso is a PROBE the caller builds for the next contact: NumberSent the
+         next serial (LOGEDIT.NextSerialToSend), RSTSent the report the
+         program will send on the active mode, Band and Mode the active ones.
+         aMy is the session's station half (PostUnit.CurrentMyStationExchange,
+         what every exporter hands in); aMyCall is MY CALL as it stands now
+         (Station.MyCall is a copy taken when the contest opened).
+
+         THE BASE ASKS THE CONTEST'S OWN ADIF STX_STRING GETTER
+         (GetADIFSentExchange) and squeezes its column padding, so what the
+         window shows and what the log exports are one statement. It calls
+         the getter directly, NOT TryFormatADIFSentExchange: a contest with no
+         layout raises there (ADIFSentNotImplemented), and that reporting
+         form would log an Error on every refresh. Any exception answers '',
+         and '' hides the label.
+
+         A CONTEST WHOSE ON-AIR EXCHANGE CARRIES WHAT ITS EXPORTED STRING DOES
+         NOT overrides -- Sweepstakes (TContestARRLSSBase) puts the call
+         between the precedence and the check. Override in a FAMILY base, not
+         per contest. *)
+      function SentExchangeDisplayText(const aMyCall: string;
+                                       const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange): string; virtual;
+
       (* THE type= LABEL OF ONE MULTIPLIER KIND IN THE SCORE-POSTING XML
          (LOGSUBS2's dynamic results), or '' to post no element for it.
          aAllModes says the row is the all-modes one. The base labels every
@@ -5253,6 +5281,9 @@ uses
    (* ExchangeFieldsNone -- the base's received-exchange field list (M11
       S9a). A leaf: VC and SysUtils only. *)
    uExchangeFields,
+   (* SqueezedExchangeText -- SentExchangeDisplayText's one line (issue
+      355). A leaf: SysUtils and uCanonicalExchange only. *)
+   uSentExchangeDisplay,
    (* ResolveSRXString -- the received-exchange half of the ADIF SRX_STRING
       the base's FormatADIFReceivedExchange writes (M5b). The Field Day
       classes already reach uADIF the same way, from their implementation.
@@ -8075,6 +8106,21 @@ function TContestBase.GetADIFSentExchange(const aMy: TMyStationExchange;
 begin
    (* The base states no layout -- see the declaration. *)
    Result := ADIFSentNotImplemented(aMy, aQso);
+end;
+
+function TContestBase.SentExchangeDisplayText(const aMyCall: string;
+                                              const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange): string;
+begin
+   (* aMyCall is for an override; the exported string carries no call. *)
+   try
+      Result := uSentExchangeDisplay.SqueezedExchangeText(GetADIFSentExchange(aMy, aQso));
+   except
+      (* No layout (ADIFSentNotImplemented), or a getter that cannot build its
+         string from the probe: nothing to show, and nothing to report -- the
+         export reports it, once, where it matters. *)
+      Result := '';
+   end;
 end;
 
 function TContestBase.GetReceivesGridSquareExchange: boolean;

@@ -233,6 +233,10 @@ procedure BandChangeReport;
 procedure MakeReportFileName( const ShortFileName: string );
 procedure MakeNotesList;
 function GoodLookingQSO: boolean;
+
+(* THE EXCHANGE THE OPERATOR IS ABOUT TO SEND on aMode and aBand, stated by
+  the active contest (issue 355); '' where it cannot be stated simply. *)
+function SessionSentExchangeDisplayText(aMode: ModeType; aBand: BandType): string;
 // function CorrectContestExchange: boolean;
 
 var
@@ -2579,6 +2583,47 @@ begin
    Result.MyFOCNumber  := Settings.My.ResolvedFocNumber;
    Result.MyPostalCode := Settings.My.ResolvedPostalCode;
    Result.MyPark       := Settings.My.ResolvedPark;
+end;
+
+(* THE EXCHANGE THE OPERATOR IS ABOUT TO SEND, as the main window shows it
+  (issue 355). The contest states it (TContestBase.SentExchangeDisplayText),
+  from the SAME station half every exporter hands it -- the builder above --
+  and a probe for the next contact:
+
+    NumberSent  LOGEDIT.NextSerialToSend, the serial the next QSO is given
+                (MainUnit.ParametersOkay);
+    RSTSent     the report the next QSO is given on aMode. A COPY of
+                ParametersOkay's rule (RS SENT on phone and FM, else RST
+                SENT); if that rule changes, change this with it;
+    Mode, Band  the active ones, handed in.
+
+  DISPLAY ONLY: it reads the session and writes nothing. *)
+function SessionSentExchangeDisplayText(aMode: ModeType; aBand: BandType): string;
+var
+   sessionContest: TContestBase;   (* NOT 'contest': Pascal is case-blind and that is the global Contest *)
+   probe: ContestExchange;
+begin
+   Result := '';
+   sessionContest := ActiveContest(Contest);
+   if sessionContest = nil then
+      begin
+      Exit;
+      end;
+   probe := Default(ContestExchange);
+   probe.Mode := aMode;
+   probe.Band := aBand;
+   probe.NumberSent := NextSerialToSend;
+   if aMode in [Phone, FM] then
+      begin
+      probe.RSTSent := Settings.Log.RsSent;
+      end
+   else
+      begin
+      probe.RSTSent := Settings.Log.RstSent;
+      end;
+   Result := sessionContest.SentExchangeDisplayText(string(Settings.My.Call),
+                                                    CurrentMyStationExchange(sessionContest),
+                                                    probe);
 end;
 
 (* THE SAME, FOR ONE LOGGED QSO -- FROM ITS RECORD (log schema 3, stage 4).

@@ -846,6 +846,12 @@ procedure GetBandMapBandModeFromFrequency(Frequency: LONGINT;
   var Band: BandType;
   var Mode: ModeType);
 
+(* THE ONE WAY BandMapBand AND BandMapMode CHANGE, so the log says who moved
+  them and from what. aWho names the caller. Debug, and only on a change: the
+  polling caller runs several times a second. *)
+procedure SetBandMapBandMode(aBand: BandType; aMode: ModeType;
+                             const aWho: string);
+
 procedure IncrementTime(Count: integer);
 procedure tCalculateRate();
 procedure LoadBandMap;
@@ -1257,6 +1263,10 @@ begin
     Keyer' otherwise, because that is what LogCW.ToggleCW flips. *)
   RefreshToggleKeyerMenuCaption(Mode);
 
+  (* THE EXCHANGE ABOUT TO BE SENT follows the mode: its RST does (issue
+    355). Mode, not ActiveMode: the globals may not have moved yet. *)
+  RefreshSentExchangeFor(Band, Mode);
+
   if Settings.Mult.ByBand then MultBand := ActiveBand else MultBand := AllBands;
   (* The multiplier sheet's mode key -- LOGDUPE's one statement of it, which
      applies the contest's multiplier mode (issue 122) as SetMultFlags does,
@@ -1485,6 +1495,9 @@ begin
        capt := capt + 'L';
        end;
   TR4WMainForm.pnlQSONumber.Caption := capt;
+
+  (* THE EXCHANGE ABOUT TO BE SENT carries this serial (issue 355). *)
+  RefreshSentExchange;
 end;
 
 
@@ -2308,6 +2321,19 @@ begin
        Mode := CW;
        end;
   end;
+end;
+
+procedure SetBandMapBandMode(aBand: BandType; aMode: ModeType;
+                             const aWho: string);
+begin
+  if (BandMapBand <> aBand) or (BandMapMode <> aMode) then
+     begin
+     logger.Debug('[BandMap] band/mode %d/%d -> %d/%d by %s (ActiveBand=%d ActiveMode=%d)',
+       [Ord(BandMapBand), Ord(BandMapMode), Ord(aBand), Ord(aMode), aWho,
+        Ord(ActiveBand), Ord(ActiveMode)]);
+     end;
+  BandMapBand := aBand;
+  BandMapMode := aMode;
 end;
 
 procedure AddBandMapModeCutoffFrequency(Freq: LONGINT);

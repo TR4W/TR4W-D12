@@ -384,8 +384,7 @@ begin
   WindowDupeCheck := False;
   if length(CallWindowString) < 2 then Exit;
   WindowDupeCheckCall := CallWindowString;
-  BandMapBand := ActiveBand;
-  BandMapMode := ActiveMode; {KK1L: 6.69 should be here too for no radio connected.}
+  SetBandMapBandMode(ActiveBand, ActiveMode, 'call window dupe check'); {KK1L: 6.69 should be here too for no radio connected.}
   Dupe := VisibleLog.CallIsADupe(CallWindowString, ActiveBand, ActiveMode);
   {if not Dupe then }tCreateAndAddNewSpot(CallWindowString, Dupe, ActiveRadioPtr);
   if Dupe then
@@ -565,8 +564,7 @@ begin
         VisibleLog.ShowRemainingMultipliers;
         VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
         end;
-     BandMapBand := ActiveBand;
-     BandMapMode := ActiveMode; {KK1L: 6.68 BM now tracks mode with no radio connected on mode change}
+     SetBandMapBandMode(ActiveBand, ActiveMode, 'band/mode change'); {KK1L: 6.68 BM now tracks mode with no radio connected on mode change}
      DisplayBandMap;
      end;
 end;
@@ -585,8 +583,8 @@ begin
    RITEnable := False;
   { VER6.73 - Make up a string of the inactive CW Speed for display }
   Str(InActiveRadioPtr.SpeedMemory, SpeedString);
-  BandMapBand := InActiveRadioPtr.BandMemory {BandMemory[InactiveRadio]};
-  BandMapMode := InActiveRadioPtr.ModeMemory {ModeMemory[InactiveRadio]};
+  SetBandMapBandMode(InActiveRadioPtr.BandMemory, InActiveRadioPtr.ModeMemory,
+                     'inactive radio memory');
  // DisplayBandMap; { Do we always want to do this?  What if already up? }    // 4.102.5
   
   if K5KA.AltDString <> '' then

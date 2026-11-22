@@ -66,6 +66,16 @@ type
                                            const aCtx: TCabrilloQSOContext): string; override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+
+      (* THE SWEEPSTAKES EXCHANGE AS IT GOES ON THE AIR -- issue 355:
+         number, precedence, call, check, section ('#123 U K1ABC 99 CT').
+         The exported string above has no call (Cabrillo carries it in its
+         own column), so the display states the on-air order itself, from
+         the SAME inputs the export reads: aQso.NumberSent and aMy's
+         precedence, check and section. *)
+      function SentExchangeDisplayText(const aMyCall: string;
+                                       const aMy: TMyStationExchange;
+                                       const aQso: ContestExchange): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
@@ -144,7 +154,9 @@ uses
    (* ScanSweepstakesExchange -- the engine's own reading of the words. *)
    uExchangeTokens,
    uAppStrings,
-   uTR4WStrings;
+   uTR4WStrings,
+   (* SweepstakesSentDisplayText -- the on-air line (issue 355). A leaf. *)
+   uSentExchangeDisplay;
 
 (* THE ENGINE'S PARSE FIRST, then the refusal's reason.
 
@@ -336,6 +348,14 @@ function TContestARRLSSBase.GetADIFSentExchange(const aMy: TMyStationExchange;
 begin
    Result := Format('%-4d %s %s %-3s ',
                     [aQso.NumberSent, aMy.MyPrec, aMy.MyCheck, aMy.MySection]);
+end;
+
+function TContestARRLSSBase.SentExchangeDisplayText(const aMyCall: string;
+                                                    const aMy: TMyStationExchange;
+                                                    const aQso: ContestExchange): string;
+begin
+   Result := SweepstakesSentDisplayText(aQso.NumberSent, aMy.MyPrec, aMyCall,
+                                        aMy.MyCheck, aMy.MySection);
 end;
 
 (* THE WORKED STATION'S SECTION GOES TO ADIF ARRL_SECT -- M4, 2026-10-01,

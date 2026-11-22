@@ -905,6 +905,19 @@ background and focus outline were NOT built: no cell beside either field is
 free, and an outline inside a field takes text height. Both fields were already
 bold. Their `AccessibleName` is set (reaches nothing on win32 today).
 
+## The exchange about to be sent (issue 355, 2026-11-22)
+
+`pnlSentExchange` (designed `TElementPanel`, bottom band, `uMainLayout.SentExchangeRect`:
+columns 17..23 of band row 0, above the call field; a `HAND_BLOCKS` row in
+`gen_main_elements.py`) shows `PostUnit.SessionSentExchangeDisplayText`, which asks the
+active contest's `SentExchangeDisplayText` (default: its own ADIF STX_STRING getter
+over a probe, squeezed; Sweepstakes' family base states `#serial prec call check
+section`). NOT below the spot comment: that is `pnlUserInfo`, and the quick-command
+row is under it. The auto-send arrow travels over these cells, so the panel is sent to
+the back. Refreshed by `MainUnit.RefreshSentExchange(For)` from
+`DisplayNextQSONumber`, `DisplayBandMode` and the end of `RestoreToolWindows`; a
+Preferences change of a MY fact is not wired yet.
+
 ## The radio panel: the active RADIO is a label, the rig's VFO is weight (2026-11-22)
 
 Two facts the panel keeps apart (UI refresh proposal, "Radio display"):

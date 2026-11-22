@@ -578,6 +578,18 @@ function MainLogHeightForRows(const aRows: integer): integer;
   Safe on a form that is never shown (the headless /EXPORT path builds one). *)
 procedure LayOutMainWindow(const aWS: integer);
 
+(* THE EXCHANGE ABOUT TO BE SENT, above the call field (issue 355): asks
+  PostUnit.SessionSentExchangeDisplayText (the active contest's statement)
+  and shows it, or hides the panel for ''. MAIN THREAD ONLY: from any other
+  thread it returns. Its callers are the changes it follows: the serial
+  (LOGWIND.DisplayNextQSONumber, which every serial change already calls),
+  the band and mode (LOGWIND.DisplayBandMode), and a contest opening (the
+  end of RestoreToolWindows). A station fact changed in Preferences shows at
+  the next of those -- not yet at the save itself. RefreshSentExchangeFor is the same for a band and
+  mode being displayed before the active globals move. *)
+procedure RefreshSentExchange;
+procedure RefreshSentExchangeFor(const aBand: BandType; const aMode: ModeType);
+
 (* THE BOTTOM BAND'S CONTROLS, STRETCHED ACROSS aBandWidth (uMainLayout.StretchX):
   the TWindows[] panels of that band, the entry fields, the progress bars, the
   minitour row and the auto-send arrow. BOUNDS ONLY -- no font is changed, so it
@@ -1066,6 +1078,20 @@ begin
       reason := LogStoreNotSavedText;
       end;
    ShowEntryStatus(kind, EntryStatusText(kind, reason));
+end;
+
+procedure RefreshSentExchangeFor(const aBand: BandType; const aMode: ModeType);
+begin
+   if not OnMainThread then
+      begin
+      Exit;
+      end;
+   ShowSentExchange(SessionSentExchangeDisplayText(aMode, aBand));
+end;
+
+procedure RefreshSentExchange;
+begin
+   RefreshSentExchangeFor(ActiveBand, ActiveMode);
 end;
 
 (* THE FURTHER LEGS OF ONE ENTER -- every queued park, every queued county,
@@ -4944,6 +4970,11 @@ begin
   SetEntryStatusBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top,
                        EntryStatusFontHeight(aWS));
 
+  (* THE EXCHANGE ABOUT TO BE SENT, above the call field (issue 355). *)
+  r := StretchRect(SentExchangeRect(aWS), aBandWidth, aWS);
+  SetSentExchangeBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top,
+                        SentExchangeFontHeight(aWS));
+
   (* THE MINITOUR ROW: the tour's bar and readout, beside the quick-command
     panel the loop above narrowed. *)
   if Settings.Contest.MinitourDuration <> 0 then
@@ -5475,6 +5506,9 @@ begin
        beside the entry fields from the first moment, not only at the first
        refused Enter. *)
      RefreshEntryStatus;
+
+     (* THE EXCHANGE ABOUT TO BE SENT, once the contest is open (issue 355). *)
+     RefreshSentExchange;
   end;
 end;
 

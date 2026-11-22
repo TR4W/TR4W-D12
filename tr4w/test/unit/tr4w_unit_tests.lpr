@@ -97,6 +97,8 @@ uses
    uTestTotalsModeText  in 'uTestTotalsModeText.pas',
    uEntryStatus        in '..\..\src\uEntryStatus.pas',
    uTestEntryStatus     in 'uTestEntryStatus.pas',
+   uSentExchangeDisplay in '..\..\src\uSentExchangeDisplay.pas',
+   uTestSentExchangeDisplay in 'uTestSentExchangeDisplay.pas',
    uRadioPanelState     in '..\..\src\uRadioPanelState.pas',
    uTestRadioPanelState in 'uTestRadioPanelState.pas',
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
@@ -1519,6 +1521,7 @@ begin
    RegisterSuite(TScoreCellStyleTests.Create('ScoreCellStyle'));
    RegisterSuite(TTotalsModeTextTests.Create('TotalsModeText'));
    RegisterSuite(TEntryStatusTests.Create('EntryStatus'));
+   RegisterSuite(TSentExchangeDisplayTests.Create('SentExchangeDisplay'));
    RegisterSuite(TRadioPanelStateTests.Create('RadioPanelState'));
    RegisterSuite(TSelfSpotTests.Create('SelfSpot'));
    RegisterSuite(TBandMapOrderTests.Create('BandMapOrder'));

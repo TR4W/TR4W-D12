@@ -240,6 +240,7 @@ uses
   uScoreCellStyle,
   uTotalsModeText,
   uEntryStatus,
+  uSentExchangeDisplay,
   uRadioPanelState,
   uContestDates,
   uContestSchedule,

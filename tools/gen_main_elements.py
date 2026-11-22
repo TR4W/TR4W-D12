@@ -142,6 +142,8 @@ HAND_BLOCKS = {
    'pnlTourDuration': (38 * WS, 5 * WS, 8 * WS, WS, []),
    # uMainLayout.EntryStatusRect: the entry area's log status (uEntryStatus).
    'pnlEntryStatus': (4 * WS, 3 * WS, 7 * WS, 2 * WS, []),
+   # uMainLayout.SentExchangeRect: the exchange about to be sent (issue 355).
+   'pnlSentExchange': (17 * WS, 0, 6 * WS, WS, []),
    'lstPossibleCall': (0, BOTTOM_BAND_HEIGHT - BOTTOM_BAND_MARGIN - WS, LAYOUT_WIDTH, WS,
                        [('Align', 'alBottom'),
                         ('BorderSpacing.Bottom', str(BOTTOM_BAND_MARGIN))]),

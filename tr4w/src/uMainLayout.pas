@@ -203,6 +203,26 @@ function PossibleCallColumnWidth(const aWS: integer): integer;
 function EntryStatusRect(const aWS: integer): TRect;
 function EntryStatusFontHeight(const aWS: integer): integer;
 
+(* THE EXCHANGE THE OPERATOR IS ABOUT TO SEND (issue 355, uSentExchangeDisplay).
+
+  NOT BELOW THE SPOT COMMENT, because there is no room there. The spot
+  comment is in the user-info panel (TWindows[] row 11, columns 15..25, one
+  row), and its row is full; below it is the quick-command line (row 12, all
+  46 columns), then the possible-call strip. Sharing either panel would let
+  one text overwrite the other, which is what NY4I asked to avoid.
+
+  So it takes the free cells NEAREST THE ENTRY FIELDS: columns 17..23 of
+  bottom-band row 0 (TWindows[] row 7), directly above the call field,
+  between the auto-send count (column 16) and the QSOs-with-this-station
+  cell (columns 23..25). Nothing else is there at any scale. Six columns is
+  narrow for a Sweepstakes line, so the panel shrinks its font to fit
+  (TElementPanel) and carries the whole text in its Hint.
+
+  The font is EntryStatusFontHeight's: three pixels under ws, never below
+  its minimum -- quieter than the elements around it. *)
+function SentExchangeRect(const aWS: integer): TRect;
+function SentExchangeFontHeight(const aWS: integer): integer;
+
 (* THE BOTTOM BAND STRETCHED TO THE CLIENT WIDTH (NY4I, 2026-11-21).
 
   ws follows the width in whole steps of LAYOUT_COLUMNS px, so a window up to
@@ -488,6 +508,16 @@ begin
       begin
       Result := ENTRY_STATUS_MIN_FONT_HEIGHT;
       end;
+end;
+
+function SentExchangeRect(const aWS: integer): TRect;
+begin
+   Result := Bounds(aWS * 17, 0, aWS * 6, aWS);
+end;
+
+function SentExchangeFontHeight(const aWS: integer): integer;
+begin
+   Result := EntryStatusFontHeight(aWS);
 end;
 
 function StretchX(const aX, aBandWidth, aWS: integer): integer;

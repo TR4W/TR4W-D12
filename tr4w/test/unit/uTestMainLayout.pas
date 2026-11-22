@@ -223,6 +223,9 @@ begin
      else uses, so it joins the no-overlap check at every scale with no new
      KnownOverlap pin. *)
    Result.Add(TNamedRect.Create('entry status', mbBottom, EntryStatusRect(aWS), aWS));
+   (* THE EXCHANGE ABOUT TO BE SENT (issue 355): free cells above the call
+     field, so it too joins the check with no KnownOverlap pin. *)
+   Result.Add(TNamedRect.Create('sent exchange', mbBottom, SentExchangeRect(aWS), aWS));
    if aMinitour then
       begin
       Result.Add(TNamedRect.Create('tour bar', mbBottom, TourDurationBarRect(aWS), aWS));

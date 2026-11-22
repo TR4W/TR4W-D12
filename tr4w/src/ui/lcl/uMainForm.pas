@@ -150,6 +150,12 @@ type
       writer. *)
     pnlEntryStatus: TPanel;
 
+    (* THE EXCHANGE THE OPERATOR IS ABOUT TO SEND (issue 355). Designed in
+      pnlBottomBand at uMainLayout.SentExchangeRect, above the call field,
+      hidden until there is a text; ShowSentExchange is its only writer. A
+      TElementPanel for its caption fitting: six columns is narrow. *)
+    pnlSentExchange: TElementPanel;
+
     { BEGIN GENERATED MAIN-WINDOW ELEMENT FIELDS -- tools/gen_main_elements.py }
     { DESIGNED, in uMainForm.lfm, so pressing F12 in Lazarus shows them.
       REPOSITIONED at run time from TWindows[] -- see CreateMainElement.
@@ -488,6 +494,14 @@ procedure SetEntryFieldBounds(const aField: TTR4WEntryField;
 procedure SetEntryStatusBounds(const aLeft, aTop, aWidth, aHeight: integer;
                                const aFontHeight: integer);
 procedure ShowEntryStatus(const aKind: TEntryStatusKind; const aText: string);
+
+(* THE EXCHANGE ABOUT TO BE SENT (issue 355). SetSentExchangeBounds is
+  LayOutMainWindow's; ShowSentExchange is MainUnit.RefreshSentExchange's, on
+  the main thread only. An empty aText hides the panel; any other shows it,
+  with the whole text as the Hint for when the fitted font still clips. *)
+procedure SetSentExchangeBounds(const aLeft, aTop, aWidth, aHeight: integer;
+                                const aFontHeight: integer);
+procedure ShowSentExchange(const aText: string);
 
 { Creates the main form and returns its handle, which becomes tr4whandle.
   aMenu is TR4W's own menu, built by CreateTR4WMenu -- CreateWindowExW used to
@@ -1088,6 +1102,7 @@ uses
      anything the units below already answered. Used QUALIFIED. *)
    uRemMultWorkState,  // ReadableTextOn -- the entry status panel's text colour
    uAppStrings,        // SEntryFieldCallName -- the entry fields' accessible names
+   uSentExchangeDisplay, // SentExchangeShown -- the sent-exchange panel (issue 355), QUALIFIED
    LOGSUBS2,           // ExitProgram -- the close path, see MainFormCloseQuery
    uLCLCoexist,        // ApplyStartupTaskBarBehavior -- the button, at the show
    uWindowSnap,       // SnapWindowToEdges -- shared by both drag paths
@@ -4444,6 +4459,59 @@ begin
    panel.Color := back;
    panel.Font.Color := TColor(uRemMultWorkState.ReadableTextOn(ColorToRGB(back)));
    panel.Font.Style := [fsBold];
+   panel.Caption := LclText(aText);
+   panel.Hint := LclText(aText);
+   panel.Visible := True;
+end;
+
+procedure SetSentExchangeBounds(const aLeft, aTop, aWidth, aHeight: integer;
+                                const aFontHeight: integer);
+var
+   panel: TElementPanel;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+   panel := TR4WMainForm.pnlSentExchange;
+   if panel = nil then
+      begin
+      Exit;
+      end;
+   panel.SetBounds(aLeft, aTop, aWidth, aHeight);
+   (* BEHIND ITS SIBLINGS: the auto-send arrow (pnlAutoSendCount) travels
+     along this row with AUTO-SEND CHARACTER COUNT, and a live keying marker
+     must not be hidden by a reminder. Nothing else shares these cells. *)
+   panel.SendToBack;
+   if aFontHeight > 0 then
+      begin
+      (* The fitted font: the panel shrinks it until the caption fits. *)
+      panel.SetFittedFontHeight(-aFontHeight);
+      end;
+end;
+
+procedure ShowSentExchange(const aText: string);
+var
+   panel: TElementPanel;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+   panel := TR4WMainForm.pnlSentExchange;
+   if panel = nil then
+      begin
+      Exit;
+      end;
+
+   if not uSentExchangeDisplay.SentExchangeShown(aText) then
+      begin
+      panel.Visible := False;
+      panel.Caption := '';
+      panel.Hint := '';
+      Exit;
+      end;
+
    panel.Caption := LclText(aText);
    panel.Hint := LclText(aText);
    panel.Visible := True;

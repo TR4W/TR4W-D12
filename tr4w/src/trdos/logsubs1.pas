@@ -675,8 +675,7 @@ begin
      VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
      end;
 
-  BandMapBand := ActiveBand;
-  BandMapMode := ActiveMode;
+  SetBandMapBandMode(ActiveBand, ActiveMode, 'logsubs1');
   VisibleDupeSheetChanged := True;
   ShowInformation; // n4af 4.40.2
   ActiveRadioPtr.active := true;
