@@ -38,6 +38,9 @@ type
       procedure Test_DisplayLimit_IsACeiling;
       procedure Test_DisplayLimit_UnknownWindowUsesTheSetting;
       procedure Test_DisplayLimit_EvenAndFloored;
+      procedure Test_Scale_ReferenceIsToday;
+      procedure Test_Scale_FollowsTheMainScale;
+      procedure Test_Scale_OffsetAndFloor;
    public
       procedure RunAllTests; override;
    end;
@@ -340,6 +343,38 @@ begin
    CheckEquals(30, EffectiveDisplayLimit(31, 40, 40), 'an odd setting is evened too');
 end;
 
+(* THE BAND MAP FOLLOWS THE MAIN WINDOW'S SCALE: at the old default (ws 17,
+  BAND MAP SIZE 3) every answer is the one the band map always gave. *)
+procedure TBandMapOrderTests.Test_Scale_ReferenceIsToday;
+begin
+   BeginTest('Test_Scale_ReferenceIsToday');
+   CheckEquals(13,  BandMapTextHeight(17, 3), 'text: 10 + BAND MAP SIZE at ws 17');
+   CheckEquals(10,  BandMapTextHeight(17, 0), 'size 0 is 10');
+   CheckEquals(18,  BandMapTextHeight(17, 8), 'size 8 is 18');
+   CheckEquals(14,  BandMapScaledCell(14, 17), 'item height unchanged');
+   CheckEquals(135, BandMapScaledCell(135, 17), 'item width unchanged');
+end;
+
+procedure TBandMapOrderTests.Test_Scale_FollowsTheMainScale;
+begin
+   BeginTest('Test_Scale_FollowsTheMainScale');
+   CheckEquals(8,   BandMapTextHeight(13, 0), 'the narrowest scale: 10*13/17 = 7.6 rounds to 8');
+   CheckEquals(25,  BandMapTextHeight(43, 0), 'the widest scale: 10*43/17 = 25.3 rounds to 25');
+   CheckEquals(35,  BandMapScaledCell(14, 43), 'rows grow with the text');
+   CheckEquals(341, BandMapScaledCell(135, 43), 'columns grow with the text');
+   CheckTrue(BandMapTextHeight(30, 3) > BandMapTextHeight(20, 3), 'monotonic');
+   CheckEquals(13,  BandMapTextHeight(0, 3), 'an unknown scale is the reference scale');
+end;
+
+procedure TBandMapOrderTests.Test_Scale_OffsetAndFloor;
+begin
+   BeginTest('Test_Scale_OffsetAndFloor');
+   CheckEquals(8,  BandMapTextHeight(13, 0) + 0, 'offset 0 adds nothing');
+   CheckEquals(11, BandMapTextHeight(13, 3), 'the offset is added to the scaled base, not scaled');
+   CheckEquals(6,  BandMapTextHeight(13, -8), 'a negative offset is floored at MIN_BANDMAP_TEXT');
+   CheckEquals(1,  BandMapScaledCell(1, 1), 'a cell is never below one pixel');
+end;
+
 procedure TBandMapOrderTests.RunAllTests;
 begin
    Test_AngularDistance_WrapsAtNorth;
@@ -365,6 +400,9 @@ begin
    Test_DisplayLimit_IsACeiling;
    Test_DisplayLimit_UnknownWindowUsesTheSetting;
    Test_DisplayLimit_EvenAndFloored;
+   Test_Scale_ReferenceIsToday;
+   Test_Scale_FollowsTheMainScale;
+   Test_Scale_OffsetAndFloor;
 end;
 
 end.

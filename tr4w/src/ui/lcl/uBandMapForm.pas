@@ -149,6 +149,10 @@ type
     procedure SelectTopSpot;
   private
     procedure LayOutGrid;
+    (* The main window's scale stepped: measure the text, rows and columns again. *)
+    procedure MainScaleChanged(Sender: TObject);
+    function  CellHeight: integer;
+    function  CellWidth: integer;
     procedure CenterOnRadio;
     procedure RebuildSnapshot;
     procedure RestoreSelection;
@@ -234,6 +238,7 @@ uses
   uDXSpotParse,      (* SpotNotesText, SpotCommentForDisplay -- Copy spot *)
   uAppStrings,       (* SBandMapCopySpot, SBandMapCountryHeading *)
   uBandMapOrder,     (* the pure arithmetic: centring, the radio's marks, the limit *)
+  uMainForm,         (* AddMainScaleObserver / RemoveMainScaleObserver -- the main scale, live *)
   uRadioConfigApply; (* ToggleAndStoreCommand -- a toggle here is SAVED *)
 
 (* A SPOT HAS A COUNTRY UNLESS ITS ROW IS A CQ OR NEW MARKER (issue 183). The
@@ -304,6 +309,38 @@ begin
    FRadioFreq  := 0;
    FAppliedLimit := 0;
    RebuildSnapshot;
+   (* THE MAIN WINDOW'S SCALE, LIVE: removed in HandleDestroy. *)
+   AddMainScaleObserver(MainScaleChanged);
+end;
+
+(* THE SCALE STEPPED. The window keeps its size; the grid re-measures, and the
+  spots chosen again if a different number now fits. DisableAutoSizing keeps it
+  to one alignment pass. *)
+procedure TfrmBandMap.MainScaleChanged(Sender: TObject);
+begin
+   DisableAutoSizing;
+   try
+      LayOutGrid;
+   finally
+      EnableAutoSizing;
+   end;
+   if Assigned(SpotsList) and (FittingLimit <> FAppliedLimit) then
+      begin
+      SpotsList.RequestRepaint;
+      end;
+   grdSpots.Invalidate;
+end;
+
+(* BAND MAP ITEM HEIGHT / WIDTH ARE STATED AT THE REFERENCE SCALE (ws 17) and
+  follow ws from there. *)
+function TfrmBandMap.CellHeight: integer;
+begin
+   Result := BandMapScaledCell(Settings.BandMap.ItemHeight, ws);
+end;
+
+function TfrmBandMap.CellWidth: integer;
+begin
+   Result := BandMapScaledCell(Settings.BandMap.ItemWidth, ws);
 end;
 
 (* A RESIZE CAN CHANGE HOW MANY SPOTS SHOW (issue 65): the display limit is a
@@ -323,6 +360,7 @@ end;
 
 procedure TfrmBandMap.HandleDestroy(Sender: TObject);
 begin
+   RemoveMainScaleObserver(MainScaleChanged);
    BandMapRefresh    := nil;
    BandMapSelected   := nil;
    BandMapSelectTop  := nil;
@@ -366,8 +404,8 @@ begin
    visibleCols := 0;
    if grdSpots.HandleAllocated then
       begin
-      rowsDown    := grdSpots.ClientHeight div Settings.BandMap.ItemHeight;
-      visibleCols := grdSpots.ClientWidth div Settings.BandMap.ItemWidth;
+      rowsDown    := grdSpots.ClientHeight div CellHeight;
+      visibleCols := grdSpots.ClientWidth div CellWidth;
       end;
    Result := EffectiveDisplayLimit(Settings.BandMap.DisplayLimit, rowsDown,
                                    visibleCols);
@@ -407,20 +445,19 @@ begin
      arrive -- TR4WSettings.FromJSON clamps every bounded property to its own
      range, once, for all of them. *)
 
-   (* BAND MAP SIZE is the spot text size. The Win32 list box drew in a font
-     built at 12 + BAND MAP SIZE - 2; that font was deleted in the LCL
-     conversion and the setting stopped doing anything. The main window's
-     face and weight, at the old height, restore it. *)
+   (* THE SPOT TEXT FOLLOWS THE MAIN WINDOW'S SCALE (ws); BAND MAP SIZE is a
+     signed adjustment to it, not an absolute height. At ws 17 the height is
+     10 + BAND MAP SIZE, as it was. The main window's face and weight. *)
    ApplyMainFontTo(grdSpots.Font);
-   grdSpots.Font.Height := 10 + Settings.BandMap.Size;
+   grdSpots.Font.Height := BandMapTextHeight(ws, Settings.BandMap.Size);
 
-   grdSpots.DefaultRowHeight := Settings.BandMap.ItemHeight;
-   grdSpots.DefaultColWidth  := Settings.BandMap.ItemWidth;
+   grdSpots.DefaultRowHeight := CellHeight;
+   grdSpots.DefaultColWidth  := CellWidth;
 
    // HOW MANY FIT DOWN, then how many columns those need.  The Win32 list box
    // was told only the column WIDTH and worked the rest out itself; the LCL
    // wants the counts, which is the same arithmetic made explicit.
-   rowsDown := grdSpots.ClientHeight div Settings.BandMap.ItemHeight;
+   rowsDown := grdSpots.ClientHeight div CellHeight;
    if rowsDown < 1 then
       begin
       rowsDown := 1;
@@ -491,7 +528,7 @@ begin
 
    target := FirstSpotAbove(RowFrequencies, FRadioFreq);
 
-   visibleCols := grdSpots.ClientWidth div Settings.BandMap.ItemWidth;
+   visibleCols := grdSpots.ClientWidth div CellWidth;
    if visibleCols < 1 then
       begin
       visibleCols := 1;

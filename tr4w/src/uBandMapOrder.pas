@@ -111,6 +111,27 @@ const
 function EffectiveDisplayLimit(const aSetting, aRowsDown,
                                aVisibleCols: integer): integer;
 
+(* THE BAND MAP FOLLOWS THE MAIN WINDOW'S TEXT SCALE (owner, 2026-11-21).
+
+  ws is the main window's scale unit; its old default was 5 + 12 = 17, and the
+  band map's sizes were stated at that scale: text 10 + BAND MAP SIZE (default
+  3, so 13) and a 14 x 135 cell. At any other ws they scale in proportion,
+  rounded to the nearest pixel, so at ws 17 every answer is EXACTLY today's.
+
+  BAND MAP SIZE is now a signed adjustment added to the scaled base 10, not an
+  absolute height. A text height is never below MIN_BANDMAP_TEXT. An unknown
+  scale (ws below 1) is taken as the reference scale. *)
+const
+   BANDMAP_REFERENCE_WS = 17;
+   BANDMAP_BASE_TEXT    = 10;
+   MIN_BANDMAP_TEXT     = 6;
+
+function BandMapTextHeight(const aWS, aOffset: integer): integer;
+
+(* A CELL DIMENSION (BAND MAP ITEM HEIGHT or ITEM WIDTH, stated at the
+  reference scale) at aWS. *)
+function BandMapScaledCell(const aSetting, aWS: integer): integer;
+
 implementation
 
 uses
@@ -288,6 +309,32 @@ begin
    if Result < MIN_DISPLAY_LIMIT then
       begin
       Result := MIN_DISPLAY_LIMIT;
+      end;
+end;
+
+function BandMapScaledCell(const aSetting, aWS: integer): integer;
+var
+   scale: integer;
+begin
+   scale := aWS;
+   if scale < 1 then
+      begin
+      scale := BANDMAP_REFERENCE_WS;
+      end;
+   Result := ((aSetting * scale) + (BANDMAP_REFERENCE_WS div 2)) div
+             BANDMAP_REFERENCE_WS;
+   if Result < 1 then
+      begin
+      Result := 1;
+      end;
+end;
+
+function BandMapTextHeight(const aWS, aOffset: integer): integer;
+begin
+   Result := BandMapScaledCell(BANDMAP_BASE_TEXT, aWS) + aOffset;
+   if Result < MIN_BANDMAP_TEXT then
+      begin
+      Result := MIN_BANDMAP_TEXT;
       end;
 end;
 
