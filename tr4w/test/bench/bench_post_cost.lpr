@@ -55,8 +55,8 @@ type
 
 var
    gFreq: Int64 = 0;
-   gSource: array[0..PACKET_SIZE - 1] of byte;   (* the record being logged *)
-   gPacket: array[0..PACKET_SIZE - 1] of byte;   (* uNet.NetQSOInfoToSend *)
+   gSource: TBytes;   (* the record being logged *)
+   gPacket: TBytes;   (* uNet.NetQSOInfoToSend *)
 
 function TFakeLink.Write(const aBytes: TBytes): boolean;
 begin
@@ -90,9 +90,8 @@ function PostOne(aQueue: TNetSendQueue; aTag: Int64): boolean;
 var
    bytes: TBytes;
 begin
-   Move(gSource[0], gPacket[0], PACKET_SIZE);
-   SetLength(bytes, PACKET_SIZE);
-   Move(gPacket[0], bytes[0], PACKET_SIZE);
+   gPacket := Copy(gSource, 0, PACKET_SIZE);
+   bytes := Copy(gPacket, 0, PACKET_SIZE);
    Result := aQueue.Post('QSOINFO', bytes, aTag);
 end;
 
@@ -188,6 +187,7 @@ begin
       begin
       iterations := StrToIntDef(ParamStr(1), 3000);
       end;
+   SetLength(gSource, PACKET_SIZE);
    for i := 0 to PACKET_SIZE - 1 do
       begin
       gSource[i] := i and $FF;

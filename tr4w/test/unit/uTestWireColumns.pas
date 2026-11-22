@@ -365,7 +365,7 @@ begin
    Scrub(fn);
    wire := QsoWireColumns;
 
-   FillChar(rec, SizeOf(ContestExchange), 0);
+   rec := Default(ContestExchange);
    rec.ceRecordKind := rkQSO;
    rec.ceContest := NoContest;
    rec.id := 'exchange1';

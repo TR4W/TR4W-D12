@@ -348,7 +348,7 @@ var
    tls: TBytesArray;
    fJF, fJ, fT: TFileStream;
 begin
-   FillChar(aRes, SizeOf(aRes), 0);
+   aRes := Default(TSetResult);
    db := TLogDatabase.Create;
    n := 0;
    try
@@ -420,7 +420,10 @@ begin
          jfs[i] := EncodeJson(rows[i], crcFull, False);
          tl := EncodeTlv(rows[i], crcFull, buf2);
          SetLength(tls[i], tl);
-         Move(buf2[0], tls[i][0], tl);
+         for f := 0 to tl - 1 do
+            begin
+            tls[i][f] := buf2[f];
+            end;
          inc(aRes.SumJ, Length(UTF8Encode(jss[i])));
          inc(aRes.SumJF, Length(UTF8Encode(jfs[i])));
          inc(aRes.SumT, tl);
@@ -520,7 +523,10 @@ begin
          begin
          for i := 0 to n - 1 do
             begin
-            Move(tls[i][0], buf2[0], Length(tls[i]));
+            for f := 0 to Length(tls[i]) - 1 do
+               begin
+               buf2[f] := tls[i][f];
+               end;
             DecodeTlv(buf2, Length(tls[i]), vals, sent);
             crcFull := RecordCrc(vals, -1, buf);
             end;
