@@ -111,10 +111,37 @@ other.
   `LogContact` calls `logstuff.CountQsoTowardPeriodicBackup` once per record
   written (X-QSOs, dupes and peer QSOs included; notes go elsewhere and do
   not count); the rule is `uLogBackup.PeriodicBackupDue` (`>=`, 0 = never),
-  pinned by `uTestLogBackup.TPeriodicBackupDueTests`. **Only `BackupLogNow`
-  resets the count**, menu or periodic, success or FAILURE (a failure retries
-  N QSOs later, not every QSO). Rescore/reload never touch it; it starts at 0
+  pinned by `uTestLogBackup.TPeriodicBackupDueTests`. **Only a SUCCESSFUL
+  `BackupLogNow` resets the count** (issue 351 (b), 2026-11-21; it reset on
+  failure too until then). Rescore/reload never touch it; it starts at 0
   each session.
+- **ISSUE 351 (b): THE RULE ALSO ASKS THE CLOCK.** Due when the count
+  reaches N, OR the last SUCCESSFUL backup is `PERIODIC_BACKUP_MAX_AGE_SEC`
+  (30 min) old or absent -- so a short session backs up on its first QSO.
+  "Last success" is the published `<log> periodic.db`'s MODIFICATION TIME
+  (`LogStoreSecondsSincePeriodicBackup`): it exists only after a verified
+  publish, survives a restart, and needs no row, no write path and no write
+  to a possibly full disk. A failure resets nothing; the retry is throttled
+  by `PERIODIC_BACKUP_RETRY_SEC` (5 min, `LogStoreNotePeriodicBackup` keeps
+  the failure tick, in memory), and `LogStoreShowRecoveryNotice` re-says
+  `SLogBackupStillFailing` after every QSO until a success. Frequency 0 asks
+  nothing (no `BackupDir`, no stat).
+- **ISSUE 351 (a): every open reads back `synchronous` and
+  `sqlite_version()`** (plain SQL; `TLogDatabase.Synchronous`,
+  `.SQLiteVersion`), and the store logs one Info line after `log database:`
+  plus a Warn per shortfall from the pure `uLogDatabase.LogDurabilityWarnings`
+  (synchronous < FULL on a write connection, journal not WAL, SQLite older
+  than 3.27.0 or unreadable). Pinned in `uTestLogLocking`.
+- **ISSUE 351 (c): A STARTUP WRITE CHECK THE DISK REFUSES OPENS THE LOG
+  READ-ONLY** when `TLogDatabase.WritableFailure <> lwfNone` (set by
+  `CheckWritable` by code: folder, attribute, or `SQLiteWriteFailure` of the
+  write), integrity just passed, the schema is current, and the open neither
+  created nor migrated it (`ReopenReadOnlyAfterAStartupWriteFailure`, shares
+  `ReopenReadOnlyAtThisSchema` with the locked-log choice). Same modal and
+  causes as a mid-contest full disk. `LogStoreTryRecoverWrites` sees a
+  read-only CONNECTION and opens a fresh write connection beside it, swaps
+  only after `CheckWritable` passes (`ReopenForWritingAfterAStartupWriteFailure`).
+  NOT unit-tested yet; the WRL worker is not started after such a recovery.
 - **Copy**: `BACKUP DESTINATION` (`Settings.Log.BackupDestination`, a
   FOLDER, '' = local only) replaced `BACKUP LOG FILE NAME`, which is now its
   second name; a value under the old name is converted by NAME

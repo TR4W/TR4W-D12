@@ -55,6 +55,10 @@ type
         the classifier that decides read-only versus stand down. *)
       procedure TestAFailedCommitCarriesItsCode;
       procedure TestTheWriteFailureClassifier;
+      (* ISSUE 351 (a), 2026-11-21: what a connection READ BACK is judged by
+        one pure rule, and a real open reads back what it asked for. *)
+      procedure TestTheDurabilityRule;
+      procedure TestAnOpenReadsBackFullAndWal;
    public
       procedure RunAllTests; override;
    end;
@@ -601,6 +605,73 @@ begin
    end;
 end;
 
+procedure TLogLockingTests.TestTheDurabilityRule;
+var
+   w: TLogDurabilityWarnings;
+begin
+   BeginTest('synchronous below FULL, a journal that is not WAL and an old or unreadable SQLite are each warned about');
+
+   CheckEquals(3053000, SQLiteVersionNumber('3.53.0'), 'a version reads as SQLITE_VERSION_NUMBER does');
+   CheckEquals(3027000, SQLiteVersionNumber('3.27.0'), 'the minimum');
+   CheckEquals(0, SQLiteVersionNumber(''), 'empty is not a version');
+   CheckEquals(0, SQLiteVersionNumber('3.53'), 'two parts are not a version');
+   CheckEquals(0, SQLiteVersionNumber('3.53.0.1'), 'four parts are not a version');
+   CheckEquals(0, SQLiteVersionNumber('3.x.0'), 'a letter is not a version');
+   CheckEquals(0, SQLiteVersionNumber('3.1000.0'), 'a part above 999 is refused');
+
+   w := LogDurabilityWarnings('wal', LOG_SYNCHRONOUS_FULL, '3.45.1', False);
+   CheckEquals(0, Length(w), 'FULL, WAL and 3.45.1: nothing to say');
+
+   w := LogDurabilityWarnings('WAL', 3, '3.27.0', False);
+   CheckEquals(0, Length(w), 'EXTRA is not weaker than FULL; the case of WAL does not matter');
+
+   w := LogDurabilityWarnings('wal', 1, '3.45.1', False);
+   CheckEquals(1, Length(w), 'NORMAL on a write connection is warned about');
+   CheckTrue(Pos('synchronous', w[0]) > 0, 'and the warning names synchronous');
+
+   w := LogDurabilityWarnings('wal', -1, '3.45.1', True);
+   CheckEquals(0, Length(w), 'a read-only connection never sets synchronous, so it is not judged');
+
+   w := LogDurabilityWarnings('delete', LOG_SYNCHRONOUS_FULL, '3.45.1', False);
+   CheckEquals(1, Length(w), 'the rollback journal is said');
+   CheckTrue(Pos('journal_mode', w[0]) > 0, 'and named');
+
+   w := LogDurabilityWarnings('wal', LOG_SYNCHRONOUS_FULL, '3.26.0', False);
+   CheckEquals(1, Length(w), 'an SQLite without VACUUM INTO is warned about');
+
+   w := LogDurabilityWarnings('wal', LOG_SYNCHRONOUS_FULL, '', False);
+   CheckEquals(1, Length(w), 'an unreadable version is warned about');
+
+   w := LogDurabilityWarnings('delete', 0, 'nonsense', False);
+   CheckEquals(3, Length(w), 'three shortfalls, three sentences');
+end;
+
+procedure TLogLockingTests.TestAnOpenReadsBackFullAndWal;
+var
+   db: TLogDatabase;
+begin
+   BeginTest('an open reads back synchronous FULL, WAL and the loaded SQLite version');
+   NewLog;
+   db := TLogDatabase.Create;
+   try
+      db.Open(FFileName);
+      CheckEquals(LOG_SYNCHRONOUS_FULL, db.Synchronous, 'synchronous is read back as FULL');
+      CheckTrue(SameText(db.JournalMode, 'wal'), 'journal_mode is WAL on a local file');
+      CheckTrue(SQLiteVersionNumber(db.SQLiteVersion) >= LOG_MIN_SQLITE_VERSION,
+                'the loaded SQLite (' + db.SQLiteVersion + ') reads and is new enough');
+      CheckEquals(0, Length(LogDurabilityWarnings(db.JournalMode, db.Synchronous,
+                                                  db.SQLiteVersion, db.IsReadOnly)),
+                  'so the store has nothing to warn about');
+      db.Close;
+      db.OpenReadOnly(FFileName);
+      CheckEquals(-1, db.Synchronous, 'a read-only connection does not read synchronous');
+      CheckTrue(db.SQLiteVersion <> '', 'but it does read the version');
+   finally
+      db.Free;
+      DropLog;
+   end;
+end;
+
 procedure TLogLockingTests.RunAllTests;
 begin
    TestBusyIsRecognisedOnEveryPath;
@@ -610,6 +681,8 @@ begin
    TestTheWatchdogFreesAStalledTransaction;
    TestAFailedCommitCarriesItsCode;
    TestTheWriteFailureClassifier;
+   TestTheDurabilityRule;
+   TestAnOpenReadsBackFullAndWal;
 end;
 
 end.

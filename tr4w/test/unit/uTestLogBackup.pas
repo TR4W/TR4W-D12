@@ -79,6 +79,10 @@ type
       procedure TestAMenuBackupRestartsTheCount;
       procedure TestATotalThatGoesDownDoesNotFireEarly;
       procedure TestLoweringTheFrequencyBelowTheCountFiresNext;
+      (* Issue 351 (b), 2026-11-21: the clock, and a failure. *)
+      procedure TestAnOldBackupBacksUpOnTheFirstQso;
+      procedure TestAFailureDoesNotResetAndRetriesLater;
+      procedure TestFrequencyZeroIgnoresTheClock;
    public
       procedure RunAllTests; override;
    end;
@@ -1056,9 +1060,11 @@ begin
    Result := '';
    for i := 1 to aCount do
       begin
-      if PeriodicBackupDue(FSinceBackup, aFrequency) then
+      (* A backup that just succeeded (0 s ago) and no failure: the count
+        alone decides, as it did before issue 351. *)
+      if PeriodicBackupDue(FSinceBackup, aFrequency, 0, -1) then
          begin
-         (* What BackupLogNow does to the count. *)
+         (* What a SUCCESSFUL BackupLogNow does to the count. *)
          FSinceBackup := 0;
          if Result <> '' then
             begin
@@ -1118,8 +1124,60 @@ begin
    CheckEquals('1', LogQsos(1, 5), 'the next QSO at 5 backs up');
 end;
 
+procedure TPeriodicBackupDueTests.TestAnOldBackupBacksUpOnTheFirstQso;
+var
+   since: integer;
+begin
+   BeginTest('a short session backs up on its first QSO when the last success is old, or there is none');
+   since := 0;
+   CheckTrue(PeriodicBackupDue(since, 50, PERIODIC_BACKUP_MAX_AGE_SEC, -1),
+             'the last success is exactly the maximum age: due on QSO 1 of 50');
+   since := 0;
+   CheckTrue(PeriodicBackupDue(since, 50, -1, -1),
+             'no successful backup at all: due on QSO 1');
+   since := 0;
+   CheckFalse(PeriodicBackupDue(since, 50, PERIODIC_BACKUP_MAX_AGE_SEC - 1, -1),
+              'a second younger: not due on the count alone');
+end;
+
+procedure TPeriodicBackupDueTests.TestAFailureDoesNotResetAndRetriesLater;
+var
+   since: integer;
+begin
+   BeginTest('a failed backup resets nothing, is not retried on the next QSO, and is retried after the interval');
+   since := 4;
+   CheckTrue(PeriodicBackupDue(since, 5, 0, -1), 'the 5th QSO is due');
+   (* The backup FAILED: BackupLogNow leaves the count at 5. *)
+   CheckEquals(5, since, 'the count is not reset by the rule');
+   CheckFalse(PeriodicBackupDue(since, 5, 0, 1),
+              'the next QSO, a second after the failure: not retried');
+   CheckEquals(6, since, 'but it is still counted');
+   CheckFalse(PeriodicBackupDue(since, 5, 0, PERIODIC_BACKUP_RETRY_SEC - 1),
+              'nor just before the retry interval');
+   CheckTrue(PeriodicBackupDue(since, 5, 0, PERIODIC_BACKUP_RETRY_SEC),
+             'at the interval, the QSOs since the last SUCCESS make it due at once');
+   since := 0;
+   CheckFalse(PeriodicBackupDue(since, 50, PERIODIC_BACKUP_MAX_AGE_SEC * 10, 10),
+              'an old backup does not override the retry throttle');
+end;
+
+procedure TPeriodicBackupDueTests.TestFrequencyZeroIgnoresTheClock;
+var
+   since: integer;
+begin
+   BeginTest('BACKUP LOG FREQUENCY 0 never backs up, however old the last backup');
+   since := 0;
+   CheckFalse(PeriodicBackupDue(since, 0, -1, -1), 'no backup ever: still never');
+   CheckFalse(PeriodicBackupDue(since, 0, PERIODIC_BACKUP_MAX_AGE_SEC * 100, -1),
+              'a very old one: still never');
+   CheckEquals(0, since, 'and the count did not move');
+end;
+
 procedure TPeriodicBackupDueTests.RunAllTests;
 begin
+   TestAnOldBackupBacksUpOnTheFirstQso;
+   TestAFailureDoesNotResetAndRetriesLater;
+   TestFrequencyZeroIgnoresTheClock;
    TestFrequencyZeroNeverBacksUp;
    TestFiveBacksUpOnTheFifthAndTenth;
    TestAMenuBackupRestartsTheCount;

@@ -12335,3 +12335,8 @@ msgstr ""
 #, fuzzy
 msgid "the log could not be updated (see tr4w.log). Nothing was changed."
 msgstr ""
+
+#: uappstrings.slogbackupstillfailing
+#, fuzzy
+msgid "Last log backup FAILED: retried every %d min. See tr4w.log."
+msgstr ""

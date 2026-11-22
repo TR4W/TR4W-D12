@@ -6381,19 +6381,21 @@ end;
   THE LOCAL SNAPSHOT IS STILL SYNCHRONOUS ON THE MAIN THREAD -- local disk, a
   VACUUM INTO and a verification. Moving it off is a later step of #98.
 
-  EVERY CALL RESTARTS THE PERIODIC COUNT (QsosLoggedSinceBackup := 0), from
-  the periodic trigger and the Backup Log menu alike, and whether the backup
-  succeeded or FAILED. Resetting on a failure is deliberate: a missing backup
-  folder or a full disk would otherwise retry this synchronous snapshot, with
-  its beep and error line, on every QSO that follows. It retries N QSOs
-  later instead, as the old trigger did. *)
+  ONLY A SUCCESS RESTARTS THE PERIODIC COUNT (issue 351 (b), 2026-11-21;
+  until then every call reset it, failure included). A failure leaves the
+  count alone and tells the store (LogStoreNotePeriodicBackup), which
+  throttles the retry by TIME (uLogBackup.PERIODIC_BACKUP_RETRY_SEC) -- so a
+  missing folder or a full disk still does not run this synchronous
+  snapshot, its beep and its error line on every QSO -- and says "Last log
+  backup FAILED" on the status line after every QSO until one succeeds. *)
 
-(* THE QSOs LOGGED SINCE THE LAST PERIODIC BACKUP WAS TAKEN (2026-10-31).
-  Only CountQsoTowardPeriodicBackup adds to it and only BackupLogNow resets
-  it. A rescore, a reload or a delete does not touch it: it counts records
-  WRITTEN, which none of those changes. It starts at 0 each session, so on a
-  resumed log the first periodic backup comes N QSOs into the session, not at
-  the next multiple of N in the log's total. *)
+(* THE QSOs LOGGED SINCE THE LAST SUCCESSFUL BACKUP (2026-10-31; since the
+  last SUCCESS from issue 351). Only CountQsoTowardPeriodicBackup adds to it
+  and only a successful BackupLogNow resets it. A rescore, a reload or a
+  delete does not touch it: it counts records WRITTEN, which none of those
+  changes. It starts at 0 each session -- which is why the rule also asks how
+  old the last successful backup FILE is (LogStoreSecondsSincePeriodicBackup):
+  a short session after a long gap still backs up on its first QSO. *)
 var
   QsosLoggedSinceBackup: integer = 0;
 
@@ -6402,7 +6404,6 @@ var
   path, report, destination, why: string;
   queued: boolean;
 begin
-  QsosLoggedSinceBackup := 0;
   (* THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
     file either way -- a periodic backup runs unattended and the only place an
     operator will ever see it is this line. The "Saving to" line that stood
@@ -6413,11 +6414,14 @@ begin
     arrives. *)
   if LogStoreBackupPeriodic(BackupDir, path, report) then
      begin
+     QsosLoggedSinceBackup := 0;
+     LogStoreNotePeriodicBackup(True);
      queued := BackupCopySubmit(path, destination, why);
      QuickDisplay(AnsiString(BackupDoneText(report, queued, destination, why)));
      end
   else
      begin
+     LogStoreNotePeriodicBackup(False);
      QuickDisplay(AnsiString(report));
      logger.Error('[Backup] %s', [report]);
      DoABeep(Warning);
@@ -6430,7 +6434,15 @@ end;
   reset is BackupLogNow's. *)
 procedure CountQsoTowardPeriodicBackup;
 begin
-  if PeriodicBackupDue(QsosLoggedSinceBackup, Settings.Log.BackupFrequency) then
+  (* OFF: ask nothing. BackupDir creates its folder, and the file time below
+    is a stat per QSO; neither is wanted when there will be no backup. *)
+  if Settings.Log.BackupFrequency <= 0 then
+     begin
+     Exit;
+     end;
+  if PeriodicBackupDue(QsosLoggedSinceBackup, Settings.Log.BackupFrequency,
+                       LogStoreSecondsSincePeriodicBackup(BackupDir),
+                       LogStoreSecondsSincePeriodicBackupFailure) then
      begin
      BackupLogNow;
      end;

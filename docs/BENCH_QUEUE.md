@@ -7719,3 +7719,21 @@ log); nothing sees the preview window or the message.
   owner supplies the real ones); DXKeeper and ACLog grey it. A `siteUrl` of `file:///...` in the settings file is refused
   with the address shown. The QuestionDlg buttons and Resend all's second question look right on Windows and GTK.
 - [ ] **WRL Create logbook** is not built (issue 358): needs the owner to confirm `POST /logbooks`.
+
+## Added 2026-11-21 -- log durability readiness (issue 351; NOT BUILT when written)
+
+- [ ] **The SQLite line at startup, on all three platforms.** tr4w.log shows `[LogStore] SQLite <version>; journal_mode
+  wal; synchronous 2` right after `log database:`, and no `[LogStore]` Warn line after it. Record the version each
+  platform loads: Windows the shipped `sqlite3.dll`, the AppImage its bundled `libsqlite3.so.0`, the Linux tarball and
+  macOS the system library. A log on a network share should say `journal_mode delete` and one Warn line saying so.
+- [ ] **Periodic backup by age.** BACKUP LOG FREQUENCY 50, a log whose `<log> periodic.db` in the backup folder is over
+  30 minutes old (or absent): the FIRST QSO of the session backs up. Then make the backup fail (a file named `backup`
+  in the settings folder's place, or a full D:): the failure line and beep come once, every later QSO's status line
+  says "Last log backup FAILED: retried every 5 min", the next try is 5 minutes later (not every QSO), and the line
+  stops after a backup succeeds.
+- [ ] **A full volume at STARTUP.** Fill D: so the log on it cannot take the startup write check, then start TR4W on
+  it. Expected: the "not being saved (disk full)" dialog once, the log loads and can be viewed and edited-for-viewing,
+  Enter on a QSO is refused with the read-only status line. Free the space, press Enter again: the QSO is logged with no
+  restart and "The log is writable again." shows. Watch whether a read-only connection to the WAL log can open at all on
+  the full volume (it may need to create `-shm`); if not, the store stands down as before -- record which. Also watch
+  for the integrity check's checkpoint failing on the full disk and being reported as damage.

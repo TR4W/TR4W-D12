@@ -158,9 +158,37 @@ function LogBackupBaseName(const aLogFile: string): string;
   SCORE total: it leaves out an X-QSO and a deleted QSO and is rebuilt by
   every rescore, so it can go down, and the modulo then fired again one QSO
   after the last backup (seen live: frequency 5, W4UB marked X-QSO, a second
-  backup on the 6th record). A count of QSOs logged cannot go down. *)
+  backup on the 6th record). A count of QSOs logged cannot go down.
+
+  AND IT ASKS THE CLOCK TOO (issue 351 (b), 2026-11-21). The count starts
+  at 0 each session, so a session shorter than BACKUP LOG FREQUENCY QSOs
+  never backed up, however old the last backup was. So it is ALSO due when
+  the last SUCCESSFUL backup is PERIODIC_BACKUP_MAX_AGE_SEC old or more, or
+  there is none (aSecondsSinceSuccess < 0): the first QSO of such a session
+  backs up. The count is now QSOs logged since the last SUCCESS --
+  logstuff.BackupLogNow resets it only on success.
+
+  A FAILURE DOES NOT RESET ANYTHING, and a retry is throttled by TIME
+  instead: while aSecondsSinceFailure (seconds since the last FAILED
+  attempt this session; < 0 when none since the last success) is below
+  PERIODIC_BACKUP_RETRY_SEC, the answer is False. That keeps what the old
+  reset-on-failure was for -- a broken backup folder must not run a
+  synchronous snapshot, its beep and its error line on every QSO -- without
+  pushing the next try N QSOs away.
+
+  Frequency 0 is still "never", whatever the clock says. *)
 function PeriodicBackupDue(var aLoggedSinceBackup: integer;
-   aFrequency: integer): boolean;
+   aFrequency: integer; aSecondsSinceSuccess, aSecondsSinceFailure: Int64): boolean;
+
+const
+   (* A log whose last successful periodic backup is this old backs up on the
+     next QSO, whatever the count: 30 minutes. A named constant, not a
+     setting -- BACKUP LOG FREQUENCY stays the one knob. *)
+   PERIODIC_BACKUP_MAX_AGE_SEC = 30 * 60;
+
+   (* After a FAILED periodic backup, the next try waits this long: 5
+     minutes. *)
+   PERIODIC_BACKUP_RETRY_SEC = 5 * 60;
 
 implementation
 
@@ -420,7 +448,7 @@ begin
 end;
 
 function PeriodicBackupDue(var aLoggedSinceBackup: integer;
-   aFrequency: integer): boolean;
+   aFrequency: integer; aSecondsSinceSuccess, aSecondsSinceFailure: Int64): boolean;
 begin
    Result := False;
    if aFrequency <= 0 then
@@ -428,7 +456,17 @@ begin
       Exit;
       end;
    inc(aLoggedSinceBackup);
-   Result := aLoggedSinceBackup >= aFrequency;
+
+   (* A failed attempt a moment ago: wait, whatever else is due. *)
+   if (aSecondsSinceFailure >= 0) and
+      (aSecondsSinceFailure < PERIODIC_BACKUP_RETRY_SEC) then
+      begin
+      Exit;
+      end;
+
+   Result := (aLoggedSinceBackup >= aFrequency)    or
+             (aSecondsSinceSuccess < 0)              or
+             (aSecondsSinceSuccess >= PERIODIC_BACKUP_MAX_AGE_SEC);
 end;
 
 function StagedBackupIsSound(const aPath: string; out aWhy: string): boolean;

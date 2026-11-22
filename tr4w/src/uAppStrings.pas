@@ -1514,6 +1514,11 @@ resourcestring
       'Check the drive the log is on, then press Enter again. Details are in tr4w.log.';
    (* The status line, once, when a save finds the disk takes writes again. *)
    SLogWritableAgain = 'The log is writable again.';
+   (* THE STATUS LINE AFTER EVERY QSO WHILE THE LAST PERIODIC BACKUP FAILED
+     (issue 351 (b)): said again until a backup succeeds, not once. %d is the
+     minutes between retries (uLogBackup.PERIODIC_BACKUP_RETRY_SEC). ONE
+     LINE: keep it short. *)
+   SLogBackupStillFailing = 'Last log backup FAILED: retried every %d min. See tr4w.log.';
    (* WHY THE LOG IS READ-ONLY, in a few words: the %s of SLogNotSavedReadOnly
      and of SLogReadOnlyNotSaved. *)
    SLogReadOnlyReasonDiskFull = 'disk full';

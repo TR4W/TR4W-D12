@@ -136,6 +136,42 @@ type
   carries no code cannot be told apart, so it is not called a write failure. *)
 function SQLiteWriteFailure(E: Exception): TLogWriteFailure;
 
+const
+   (* PRAGMA synchronous answers a number: 0 OFF, 1 NORMAL, 2 FULL, 3 EXTRA.
+     ApplyWritePragmas asks for FULL; anything weaker is warned about. *)
+   LOG_SYNCHRONOUS_FULL = 2;
+
+   (* The oldest SQLite this log works with, as SQLiteVersionNumber gives it:
+     3.27.0, the first with VACUUM INTO, which every backup runs
+     (TLogDatabase.SnapshotTo). *)
+   LOG_MIN_SQLITE_VERSION = 3027000;
+
+type
+   (* One human-readable sentence per warning; empty when all is as intended. *)
+   TLogDurabilityWarnings = array of string;
+
+(* 'X.Y.Z' (what sqlite_version() answers) as X*1000000 + Y*1000 + Z, the
+  shape of SQLITE_VERSION_NUMBER; 0 when the text is not that shape. A digit
+  loop, not Val: nothing here needs a range-checked conversion beyond three
+  small numbers, and a part above 999 is refused as "not that shape". *)
+function SQLiteVersionNumber(const aVersion: string): integer;
+
+(* IS THIS CONNECTION AS DURABLE AS TR4W ASKED FOR? (issue 351 (a),
+  2026-11-21.) Pure: takes what the connection READ BACK and answers one
+  sentence per shortfall, so the rule is pinned by uTestLogDatabase and the
+  store only logs it.
+
+    - synchronous below FULL on a WRITE connection (a read-only one never
+      sets it, so it is not judged there);
+    - journal_mode not 'wal' -- legal (SQLite refuses WAL on a network
+      share and the log falls back to the rollback journal), but it changes
+      locking and speed, so it is said;
+    - an SQLite older than LOG_MIN_SQLITE_VERSION, or a version that cannot
+      be read: the backup's VACUUM INTO would fail. *)
+function LogDurabilityWarnings(const aJournalMode: string; aSynchronous: integer;
+                               const aSQLiteVersion: string;
+                               aReadOnly: boolean): TLogDurabilityWarnings;
+
 (* CAN A WRITER TAKE THIS LOG NOW? A throwaway connection, no pragmas but the
   busy wait, BEGIN IMMEDIATE and an immediate ROLLBACK: it holds the write
   lock for no measurable time and writes nothing. llpHeld means another
@@ -340,6 +376,14 @@ type
       FTransaction: TSQLTransaction;
       FFileName: string;
       FJournalMode: string;
+      (* PRAGMA synchronous read back on a write connection; -1 when not
+        read (a read-only connection never sets it). *)
+      FSynchronous: integer;
+      (* sqlite_version() of the library this process loaded. *)
+      FSQLiteVersion: string;
+      (* What the last CheckWritable failure was, by code (lwfNone when it
+        passed, or failed in a way that is not the disk's). *)
+      FWritableFailure: TLogWriteFailure;
       FForeignKeysEnforced: boolean;
       FReadOnly: boolean;
       (* Opened by OpenToPeek's immutable branch: the connection names a
@@ -603,6 +647,22 @@ type
         SQLite refused WAL (a network share). Worth reading before concluding
         anything about locking or speed. *)
       property JournalMode: string read FJournalMode;
+
+      (* PRAGMA synchronous as READ BACK after ApplyWritePragmas set FULL
+        (2 = FULL); -1 on a read-only connection, which does not set it.
+        Judged by LogDurabilityWarnings (issue 351). *)
+      property Synchronous: integer read FSynchronous;
+
+      (* sqlite_version() of the loaded library, read at open through plain
+        SQL -- no new binding. Logged by the store at startup. *)
+      property SQLiteVersion: string read FSQLiteVersion;
+
+      (* WHY THE LAST CheckWritable FAILED, BY CODE: lwfDiskFull or
+        lwfWriteError when its write was refused by the disk, lwfWriteError
+        for a read-only folder or file attribute, lwfNone when it passed or
+        failed some other way (busy, no code). Set by every CheckWritable;
+        read by the store to decide a read-only reopen (issue 351 (c)). *)
+      property WritableFailure: TLogWriteFailure read FWritableFailure;
 
       (* True when this connection was opened by OpenReadOnly or OpenToPeek. Read by
         CheckIntegrity, which cannot checkpoint a file it may not write. *)
@@ -892,6 +952,93 @@ begin
            (code <> SQLITE_IOERR_CORRUPTFS) then
       begin
       Result := lwfWriteError;
+      end;
+end;
+
+function SQLiteVersionNumber(const aVersion: string): integer;
+var
+   parts: array[0..2] of integer;
+   part, digits, i: integer;
+   c: Char;
+begin
+   Result := 0;
+   parts[0] := 0;
+   parts[1] := 0;
+   parts[2] := 0;
+   part := 0;
+   digits := 0;
+   for i := 1 to Length(aVersion) do
+      begin
+      c := aVersion[i];
+      if (c >= '0') and (c <= '9') then
+         begin
+         parts[part] := parts[part] * 10 + (Ord(c) - Ord('0'));
+         inc(digits);
+         if parts[part] > 999 then
+            begin
+            Exit;
+            end;
+         end
+      else if c = '.' then
+         begin
+         if (digits = 0) or (part = 2) then
+            begin
+            Exit;
+            end;
+         inc(part);
+         digits := 0;
+         end
+      else
+         begin
+         Exit;
+         end;
+      end;
+   (* Three parts, each with a digit. *)
+   if (part <> 2) or (digits = 0) then
+      begin
+      Exit;
+      end;
+   Result := parts[0] * 1000000 + parts[1] * 1000 + parts[2];
+end;
+
+function LogDurabilityWarnings(const aJournalMode: string; aSynchronous: integer;
+                               const aSQLiteVersion: string;
+                               aReadOnly: boolean): TLogDurabilityWarnings;
+
+   procedure Add(const aText: string);
+   begin
+      SetLength(Result, Length(Result) + 1);
+      Result[High(Result)] := aText;
+   end;
+
+var
+   version: integer;
+begin
+   SetLength(Result, 0);
+
+   if (not aReadOnly) and (aSynchronous < LOG_SYNCHRONOUS_FULL) then
+      begin
+      Add(Format('synchronous reads back as %d, weaker than FULL (%d): the ' +
+                 'most recent QSOs can be lost on a power failure',
+                 [aSynchronous, LOG_SYNCHRONOUS_FULL]));
+      end;
+
+   if LowerCase(aJournalMode) <> 'wal' then
+      begin
+      Add(Format('journal_mode is "%s", not WAL -- expected when the log is ' +
+                 'on a network share, which refuses WAL; locking and speed ' +
+                 'differ from a local log', [aJournalMode]));
+      end;
+
+   version := SQLiteVersionNumber(aSQLiteVersion);
+   if version = 0 then
+      begin
+      Add(Format('the SQLite version "%s" could not be read', [aSQLiteVersion]));
+      end
+   else if version < LOG_MIN_SQLITE_VERSION then
+      begin
+      Add(Format('SQLite %s is older than 3.27.0: the log backup (VACUUM ' +
+                 'INTO) will fail', [aSQLiteVersion]));
       end;
 end;
 
@@ -1420,6 +1567,12 @@ begin
      been broken by an edit, and that guard is worth having on both paths. *)
    ExecPragmaRaw('PRAGMA foreign_keys = ON');
 
+   (* WHICH SQLITE IS THIS (issue 351)? Plain SQL, not sqlite3_libversion:
+     the rule is no new raw DLL call, and the answer is the same library.
+     Read on every kind of connection; the store logs the main one's. *)
+   FSQLiteVersion := PragmaAsString('SELECT sqlite_version()');
+   FSynchronous := -1;
+
    if FReadOnly then
       begin
       (* THE TWO BELOW ARE THE WRITE-SIDE PRAGMAS AND THEY STOP HERE.
@@ -1468,6 +1621,11 @@ begin
      mistake this whole routine is a correction for. *)
    FJournalMode := PragmaAsString('PRAGMA journal_mode');
    FForeignKeysEnforced := PragmaAsInteger('PRAGMA foreign_keys') = 1;
+   (* synchronous too, since issue 351: it was set and never read back, so a
+     library or an edit that left it weaker would have gone unnoticed.
+     PragmaAsInteger answers 0 for an unreadable value, which is OFF and so
+     is warned about -- the safe side. *)
+   FSynchronous := PragmaAsInteger('PRAGMA synchronous');
 end;
 
 procedure TLogDatabase.StampIdentity;
@@ -1649,6 +1807,9 @@ var
 begin
    Result.Ok := True;
    Result.Report := '';
+   (* Every exit below that fails because the disk, the folder or the file
+     will not take a write sets this; any other failure leaves lwfNone. *)
+   FWritableFailure := lwfNone;
 
    if not IsOpen then
       begin
@@ -1666,6 +1827,7 @@ begin
    if (dir <> '') and (not DirectoryIsWritable(dir)) then
       begin
       Result.Ok := False;
+      FWritableFailure := lwfWriteError;
       Result.Report := Format(
          'The folder "%s" cannot be written to, so the log cannot keep its '
          + 'write-ahead files (-wal and -shm) beside it.', [dir]);
@@ -1686,6 +1848,7 @@ begin
    if (attrs >= 0) and ((attrs and SysUtils.faReadOnly) <> 0) then
       begin
       Result.Ok := False;
+      FWritableFailure := lwfWriteError;
       Result.Report := Format(
          'The log "%s" is marked read-only.', [FFileName]);
       Exit;
@@ -1721,6 +1884,7 @@ begin
       on E: Exception do
          begin
          Result.Ok := False;
+         FWritableFailure := SQLiteWriteFailure(E);
          Result.Report := Format(
             'The log "%s" will not accept writes: %s', [FFileName, E.Message]);
          end;
@@ -1792,6 +1956,8 @@ begin
    FTransaction := TSQLTransaction.Create(nil);
    FConnection.Transaction := FTransaction;
    FBusyTimeoutMs := LOG_BUSY_TIMEOUT_MS;
+   FSynchronous := -1;
+   FWritableFailure := lwfNone;
 end;
 
 destructor TLogDatabase.Destroy;
@@ -2703,6 +2869,9 @@ begin
       end;
    FFileName := '';
    FJournalMode := '';
+   FSynchronous := -1;
+   FSQLiteVersion := '';
+   FWritableFailure := lwfNone;
    FForeignKeysEnforced := False;
    FReadOnly := False;
    FImmutable := False;

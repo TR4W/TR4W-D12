@@ -455,6 +455,23 @@ procedure LogStoreShowRecoveryNotice;
   pure half of LogStoreShowRecoveryNotice, for the tests. *)
 function LogStoreTakeRecoveryNotice: string;
 
+(* THE LAST PERIODIC BACKUP'S OUTCOME, AND HOW LONG AGO A FAILURE WAS
+  (issue 351 (b)). logstuff.BackupLogNow tells the store every result; a
+  failure is then said on the status line after every QSO
+  (LogStoreShowRecoveryNotice, when it has no recovery to announce) until a
+  backup succeeds -- a one-off line was wiped by the next QSO and never seen
+  again. In memory, per session: the success side is persistent already
+  (LogStoreSecondsSincePeriodicBackup). *)
+procedure LogStoreNotePeriodicBackup(aSucceeded: boolean);
+
+(* Seconds since the last FAILED periodic backup of this session; -1 when
+  none since the last success. uLogBackup.PeriodicBackupDue's throttle. *)
+function LogStoreSecondsSincePeriodicBackupFailure: Int64;
+
+(* The status-line reminder while the last periodic backup failed; '' when it
+  did not (or none was tried). Pure half of the show, for the tests. *)
+function LogStorePeriodicBackupFailureText: string;
+
 (* FOR A TEST: the space comes back -- the store's connection may grow the log
   again (see LogStoreFillTheDiskForTests). The program never calls it. *)
 procedure LogStoreFreeTheDiskForTests;
@@ -674,6 +691,18 @@ function LogStorePeriodicBackupFileName(const aLogFile, aBackupDir: string): str
 (* The periodic backup's name for THE LIVE LOG, in aBackupDir. Whether the
   file exists is the caller's question. *)
 function LogStorePeriodicBackupPath(const aBackupDir: string): string;
+
+(* HOW LONG AGO THE LAST PERIODIC BACKUP OF THE LIVE LOG SUCCEEDED, in
+  seconds; -1 when there is none in aBackupDir (issue 351 (b)).
+
+  THE PUBLISHED FILE'S OWN TIME IS THE RECORD, on purpose. TLogBackup
+  publishes LogStorePeriodicBackupPath only after the snapshot was verified,
+  so the file exists only for a success and its modification time is when
+  that snapshot was written -- it survives a restart, needs no new row, no
+  new write path and no write to a log whose disk may be the full one this
+  guards against. A time in the future (a clock set back) reads as 0, never
+  as "none", so it cannot make every QSO back up. *)
+function LogStoreSecondsSincePeriodicBackup(const aBackupDir: string): Int64;
 
 (* THE PERIODIC BACKUP, every BACKUP LOG FREQUENCY QSOs logged since the last
   one (uLogBackup.PeriodicBackupDue) and from the Backup Log menu:
@@ -1220,6 +1249,19 @@ end;
 (* OPEN AN EXISTING LOG, ASKING FIRST IF IT IS LOCKED. GDatabase exists and is
   closed. Leaves GReadOnly saying how it was opened. Raises what Open raises;
   in a headless run a locked log raises (busy-coded) rather than asking. *)
+(* GDatabase, (re)opened READ-ONLY on aDbName: True when the file is at THIS
+  schema, the only kind a read-only connection can serve (an older one needs
+  its upgrade, which is a write, and the repository's column checks would
+  refuse every read). Closes whatever GDatabase had open first. Shared by the
+  locked-log choice (OpenExistingLog) and a disk that refused the startup
+  write check (issue 351 (c)). Raises what OpenReadOnly raises. *)
+function ReopenReadOnlyAtThisSchema(const aDbName: string): boolean;
+begin
+   GDatabase.Close;
+   GDatabase.OpenReadOnly(aDbName);
+   Result := GDatabase.SchemaVersion = LOG_SCHEMA_VERSION;
+end;
+
 procedure OpenExistingLog(const aDbName: string);
 var
    probe: TLogLockProbe;
@@ -1324,10 +1366,9 @@ begin
       end;
    until GReadOnly;
 
-   GDatabase.OpenReadOnly(aDbName);
    (* AN OLDER LOG CANNOT BE READ THIS WAY: bringing it to this schema is a
      write, and the repository's column checks would refuse every read. *)
-   if GDatabase.SchemaVersion < LOG_SCHEMA_VERSION then
+   if not ReopenReadOnlyAtThisSchema(aDbName) then
       begin
       GReadOnly := False;
       raise ELogDatabaseError.CreateFmt(
@@ -1577,7 +1618,12 @@ begin
    end;
 end;
 
+(* Defined beside EnsureOpen, whose read-only fallback it undoes. *)
+function ReopenForWritingAfterAStartupWriteFailure: boolean; forward;
+
 function LogStoreTryRecoverWrites: boolean;
+var
+   recovered: boolean;
 begin
    Result := not LogStoreIsReadOnly;
    if Result then
@@ -1591,7 +1637,20 @@ begin
       Exit;
       end;
 
-   if not ProbeAWriteCommits then
+   (* A READ-ONLY CONNECTION (the disk refused the STARTUP write check,
+     issue 351 (c)) cannot carry the probe: a write connection is opened
+     beside it and checked instead. A connection that was writable and met
+     a failed write (Disable) is probed as before. *)
+   if (GDatabase <> nil) and GDatabase.IsReadOnly then
+      begin
+      recovered := ReopenForWritingAfterAStartupWriteFailure;
+      end
+   else
+      begin
+      recovered := ProbeAWriteCommits;
+      end;
+
+   if not recovered then
       begin
       if logger <> nil then
          begin
@@ -1622,11 +1681,58 @@ begin
       end;
 end;
 
+var
+   (* GetTickCount64 of the last failed periodic backup; 0 = none since the
+     last success. *)
+   GPeriodicBackupFailedAt: UInt64 = 0;
+
+procedure LogStoreNotePeriodicBackup(aSucceeded: boolean);
+begin
+   if aSucceeded then
+      begin
+      GPeriodicBackupFailedAt := 0;
+      end
+   else
+      begin
+      GPeriodicBackupFailedAt := GetTickCount64;
+      (* 0 is "none"; a tick count of 0 is the first millisecond of boot. *)
+      if GPeriodicBackupFailedAt = 0 then
+         begin
+         GPeriodicBackupFailedAt := 1;
+         end;
+      end;
+end;
+
+function LogStoreSecondsSincePeriodicBackupFailure: Int64;
+begin
+   Result := -1;
+   if GPeriodicBackupFailedAt <> 0 then
+      begin
+      Result := Int64((GetTickCount64 - GPeriodicBackupFailedAt) div 1000);
+      end;
+end;
+
+function LogStorePeriodicBackupFailureText: string;
+begin
+   Result := '';
+   if GPeriodicBackupFailedAt <> 0 then
+      begin
+      Result := UnicodeFormat(SLogBackupStillFailing,
+                              [PERIODIC_BACKUP_RETRY_SEC div 60]);
+      end;
+end;
+
 procedure LogStoreShowRecoveryNotice;
 var
    notice: string;
 begin
    notice := LogStoreTakeRecoveryNotice;
+   (* NOTHING TO ANNOUNCE ABOUT THE LOG: then a failed periodic backup is
+     said again, after every QSO, until one succeeds (issue 351 (b)). *)
+   if notice = '' then
+      begin
+      notice := LogStorePeriodicBackupFailureText;
+      end;
    if (notice <> '') and (not tSilentExport) then
       begin
       QuickDisplay(notice);
@@ -2148,6 +2254,155 @@ end;
   .TRW was one record ahead during an append -- because tAddQSOToLog wrote
   the .TRW first -- and both that write and the drift check were gone; the
   parameter was read by nothing. *)
+(* WHAT THE MAIN CONNECTION ACTUALLY GOT (issue 351 (a), 2026-11-21): the
+  journal mode, synchronous and the SQLite library, as READ BACK -- one Info
+  line per open, and a Warn line per shortfall (uLogDatabase.
+  LogDurabilityWarnings decides; this only logs). The main connection only:
+  a secondary one (the WRL worker, a backup verifier, a peek) would repeat
+  it. Also how the loaded library's version reaches a CI log or an
+  operator's tr4w.log on Linux and macOS, where it is the system's. *)
+procedure ReportLogDurability;
+var
+   warnings: TLogDurabilityWarnings;
+   i: integer;
+begin
+   if (logger = nil) or (GDatabase = nil) then
+      begin
+      Exit;
+      end;
+   logger.Info('[LogStore] SQLite %s; journal_mode %s; synchronous %d%s',
+               [GDatabase.SQLiteVersion, GDatabase.JournalMode,
+                GDatabase.Synchronous,
+                BoolToStr(GDatabase.IsReadOnly, ' (read-only connection)', '')]);
+   warnings := LogDurabilityWarnings(GDatabase.JournalMode, GDatabase.Synchronous,
+                                     GDatabase.SQLiteVersion,
+                                     GDatabase.IsReadOnly);
+   for i := 0 to High(warnings) do
+      begin
+      logger.Warn('[LogStore] %s', [warnings[i]]);
+      end;
+end;
+
+(* THE STARTUP WRITE CHECK FAILED ON THE DISK'S ACCOUNT (issue 351 (c)): open
+  the log READ-ONLY instead of standing the store down -- see the call in
+  EnsureOpen. Its integrity check has just passed on this same file; this
+  adds the schema check (ReopenReadOnlyAtThisSchema). True when the log is
+  now open read-only, with the cause recorded so LogStoreTryRecoverWrites
+  can reopen it for writing and the status line says why. False (a raise
+  caught, or an older schema) leaves the caller's refusal to stand the store
+  down as before; GDatabase is then closed. *)
+function ReopenReadOnlyAfterAStartupWriteFailure(const aDbName, aReport: string): boolean;
+var
+   failure: TLogWriteFailure;
+   remedy: string;
+begin
+   Result := False;
+   failure := GDatabase.WritableFailure;
+   try
+      if not ReopenReadOnlyAtThisSchema(aDbName) then
+         begin
+         GDatabase.Close;
+         Exit;
+         end;
+   except
+      on E: Exception do
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] %s could not be opened read-only either: %s',
+                         [aDbName, E.Message]);
+            end;
+         GDatabase.Close;
+         Exit;
+         end;
+   end;
+
+   GReadOnly := True;
+   GReadOnlyRefusalShown := True;
+   if failure = lwfDiskFull then
+      begin
+      GReadOnlyCause := lrcDiskFull;
+      remedy := UnicodeFormat(SLogReadOnlyFixDiskFull,
+                              [LOG_DISK_FULL_FREE_MB, DiskFullPlace]);
+      end
+   else
+      begin
+      GReadOnlyCause := lrcWriteError;
+      remedy := SLogReadOnlyFixWriteError;
+      end;
+   if logger <> nil then
+      begin
+      logger.Error('[LogStore] %s CANNOT BE WRITTEN AT STARTUP (%s): %s. Its ' +
+                   'integrity check passed and it is at this schema, so it is ' +
+                   'open READ-ONLY -- it can be viewed; NO QSO OR EDIT IS SAVED ' +
+                   'until a save finds the disk takes writes again.',
+                   [aDbName, ReadOnlyReasonText, aReport]);
+      end;
+   (* The same modal a write failure mid-contest shows, and the same once. *)
+   if (not tSilentExport) and (not GWriteFailureNoticeShown) then
+      begin
+      GWriteFailureNoticeShown := True;
+      ShowFailureNotice(LclText(UnicodeFormat(SLogNotSavedReadOnly,
+         [ReadOnlyReasonText, remedy, aDbName])));
+      end;
+   Result := True;
+end;
+
+(* A LOG OPENED READ-ONLY BECAUSE THE DISK REFUSED THE STARTUP WRITE CHECK
+  (issue 351 (c)) has a read-only CONNECTION, so the probe of
+  LogStoreTryRecoverWrites cannot write through it. This opens a NEW write
+  connection beside it -- directly, not through OpenExistingLog, so no
+  locked-log dialog appears mid-contest -- and asks CheckWritable. Only when
+  that passes are the old repository and connection freed and a new
+  repository made on the new one; on any failure the new connection is
+  freed and the log stays read-only as it was. True when it swapped.
+
+  Nothing outside this unit keeps the repository or its statements:
+  uLogSource asks LogStoreRepository on every call. *)
+function ReopenForWritingAfterAStartupWriteFailure: boolean;
+var
+   fresh: TLogDatabase;
+   writable: TIntegrityResult;
+   dbName: string;
+begin
+   Result := False;
+   dbName := GDatabase.FileName;
+   fresh := TLogDatabase.Create;
+   try
+      fresh.BusyTimeoutMs := GDatabase.BusyTimeoutMs;
+      fresh.Open(dbName);
+      writable := fresh.CheckWritable;
+      if not writable.Ok then
+         begin
+         if logger <> nil then
+            begin
+            logger.Warn('[LogStore] the log still cannot be written: %s',
+                        [writable.Report]);
+            end;
+         FreeAndNil(fresh);
+         Exit;
+         end;
+   except
+      on E: Exception do
+         begin
+         if logger <> nil then
+            begin
+            logger.Warn('[LogStore] reopening the log for writing failed: %s',
+                        [E.Message]);
+            end;
+         FreeAndNil(fresh);
+         Exit;
+         end;
+   end;
+
+   FreeAndNil(GRepository);
+   FreeAndNil(GDatabase);
+   GDatabase := fresh;
+   GRepository := TLogRepository.Create(GDatabase);
+   ReportLogDurability;
+   Result := True;
+end;
+
 function EnsureOpen(out aRebuilt: boolean): boolean;
 var
    dbName: string;
@@ -2280,6 +2535,7 @@ begin
          begin
          logger.Info('[LogStore] log database: %s', [dbName]);
          end;
+      ReportLogDurability;
 
       (* LOOK AT IT BEFORE WRITING TO IT.
 
@@ -2347,6 +2603,21 @@ begin
       if not GReadOnly then
          begin
          writable := GDatabase.CheckWritable;
+         end;
+      (* A DISK THAT WILL NOT TAKE A WRITE AT STARTUP (issue 351 (c),
+        2026-11-21): the refusal stands -- nothing is written -- but a log
+        that just PASSED its integrity check and is AT THIS SCHEMA is opened
+        READ-ONLY instead of standing the store down, exactly as a disk that
+        fills mid-contest leaves it. So the log loads and can be viewed, and
+        the next save tries the disk again (LogStoreTryRecoverWrites reopens
+        it for writing). Not for a log this open created or migrated: that
+        one has writes still to make below. *)
+      if (not writable.Ok)                          and
+         (GDatabase.WritableFailure <> lwfNone)     and
+         (not isNewLog) and (not aRebuilt)          and
+         ReopenReadOnlyAfterAStartupWriteFailure(dbName, writable.Report) then
+         begin
+         writable.Ok := True;
          end;
       if not writable.Ok then
          begin
@@ -2732,6 +3003,23 @@ end;
 function LogStorePeriodicBackupPath(const aBackupDir: string): string;
 begin
    Result := LogStorePeriodicBackupFileName(LogStoreFileName, aBackupDir);
+end;
+
+function LogStoreSecondsSincePeriodicBackup(const aBackupDir: string): Int64;
+var
+   stamp: TDateTime;
+begin
+   Result := -1;
+   if not FileAge(LogStorePeriodicBackupPath(aBackupDir), stamp) then
+      begin
+      Exit;
+      end;
+   (* FileAge answers local time, and so does Now. *)
+   Result := Trunc((Now - stamp) * SecsPerDay);
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
 end;
 
 (* LogStoreBackup to aPath in aBackupDir, refusing a folder that is not there
