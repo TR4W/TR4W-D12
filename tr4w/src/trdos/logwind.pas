@@ -934,6 +934,7 @@ uses
    uSettingsModel,     // Settings.BandMap -- the eight display filters
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   uMainForm,   { the call field, named -- wh[] round 3 }
+   uMainLayout,        // StretchX -- the auto-send arrow follows the stretched call field
   //  OZCHR,
 //  uStack,
   uNet,
@@ -2263,8 +2264,12 @@ begin
   if (Settings.Cw.AutoSendCharacterCount > 0) and AutoSendEnable and (ActiveMode = CW) and not SearchAndPounceMode then
      begin
      nCmdShow := SW_SHOW;
+     (* THE CALL FIELD'S LEFT EDGE IS STRETCHED with the bottom band
+       (uMainLayout.StretchX); the character offset inside it is not, because
+       the field's font is not. *)
      SetElementLeft(mweAutoSendCount,
-                    (Settings.Cw.AutoSendCharacterCount - 1) * ws2 * 3 + ws * 15 {col4});
+                    (Settings.Cw.AutoSendCharacterCount - 1) * ws2 * 3 +
+                    StretchX(ws * 15, MainClientWidth, ws));
      end
   else
      begin

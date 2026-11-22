@@ -330,6 +330,13 @@ type
       Resize again partway through; "ws did not change" is not a guard in
       that state. *)
     FRescaling:  boolean;
+    (* THE CLIENT WIDTH AND ws THE BOTTOM BAND WAS LAST STRETCHED TO, so a
+      height-only resize does not re-place it. 0 until the first stretch. *)
+    FStretchedWidth: integer;
+    FStretchedWs:    integer;
+    (* A resize that kept ws: stretch the bottom band to the new width, bounds
+      only. See RescaleToClient. *)
+    procedure RestretchBottomBand;
   protected
     (* After streaming: the status strip gets its fitted font here, so a
       form that is only streamed -- as the unit tests do -- carries it too.
@@ -953,6 +960,15 @@ procedure ArmMainWindowScaling;
   LayOutMainWindow's, from uMainLayout. See the body for why each band is
   given its whole rectangle and not only the dimension that follows ws. *)
 procedure PlaceMainBands(const aTopHeight, aNeedsWidth, aBottomHeight: integer);
+
+(* THE WIDTH THE BOTTOM BAND SPANS: the form's client width, 0 before the form
+  exists (which uMainLayout.StretchX treats as "do not stretch").
+
+  THE FORM'S, NOT pnlBottomBand.Width: PlaceMainBands gives the band exactly
+  this, and inside the form's Resize the band may not have been realigned yet,
+  so its own Width can still be the old one. ScaleForClient reads the same
+  number, so the scale and the stretch agree. *)
+function MainClientWidth: integer;
 
 (* ONE REPORT OF WHERE THE LAYOUT LANDED: every control past its parent's
   client area at Warn, and every control's bounds at Debug. CreateMainWindow
@@ -2103,6 +2119,9 @@ begin
    newWs := ScaleForClient(ClientWidth, ClientHeight - statusHeight, oldWs);
    if newWs = oldWs then
       begin
+      (* THE SCALE HOLDS, BUT THE WIDTH MAY NOT: ws moves in whole steps of
+        46 px, so the bottom band is stretched to what is between them. *)
+      RestretchBottomBand;
       Exit;
       end;
 
@@ -2117,6 +2136,9 @@ begin
       finally
          EnableAutoSizing;
       end;
+      (* LayOutMainWindow stretched the bottom band to this width. *)
+      FStretchedWidth := ClientWidth;
+      FStretchedWs := newWs;
       (* THE NARROWEST STRIP THIS SCALE ALLOWS, not the client: the font is
         fitted to the narrowest panel, and the client can narrow to
         LayoutWidth(newWs) without another step -- fitted to a wider client,
@@ -2137,6 +2159,32 @@ begin
       logger.Debug('[Layout] scale %d -> %d in %d ms',
                    [oldWs, newWs, integer(SysUtils.GetTickCount64 - started)]);
       end;
+end;
+
+(* BOUNDS ONLY, NO FONT: MainUnit.PlaceBottomBand, the same routine
+  LayOutMainWindow ends with, so the two cannot place the band differently.
+  Skipped when neither the width nor ws moved (a height-only drag). FRescaling
+  is held so the Resize the new bounds may raise does not come back in. *)
+procedure TTR4WMainForm.RestretchBottomBand;
+begin
+   if (ClientWidth = FStretchedWidth) and (ws = FStretchedWs) then
+      begin
+      Exit;
+      end;
+
+   FRescaling := True;
+   try
+      DisableAutoSizing;
+      try
+         PlaceBottomBand(ws, ClientWidth);
+      finally
+         EnableAutoSizing;
+      end;
+      FStretchedWidth := ClientWidth;
+      FStretchedWs := ws;
+   finally
+      FRescaling := False;
+   end;
 end;
 
 (* THE BANDS ARE GIVEN THEIR WHOLE RECTANGLES, NOT ONLY THE DIMENSION THAT
@@ -2192,6 +2240,16 @@ begin
    finally
       TR4WMainForm.EnableAlign;
    end;
+end;
+
+function MainClientWidth: integer;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Result := 0;
+      Exit;
+      end;
+   Result := TR4WMainForm.ClientWidth;
 end;
 
 procedure ReportMainWindowLayout;
@@ -3747,15 +3805,22 @@ begin
    (* ApplyMainFontTo writes the same name, height and style when nothing has
      changed, and TFont ignores a write of its own value, so a second call at
      the same scale repaints nothing. *)
+   (* AND THE COLUMNS ARE RE-MEASURED IN THE NEW FONT. The grid sizes its
+     columns on a resize and when it gets a window, never on a font change, so
+     a scale step that did not also resize the grid (the height cap lowering
+     ws, or an alignment pass that ran before this) left the columns measured
+     in the old font. SizeColumns declines without a window. *)
    if TR4WEditableLog <> nil then
       begin
       ApplyMainFontTo(TR4WEditableLog.Font);
       TR4WEditableLog.DefaultRowHeight := aRowHeight;
+      TR4WEditableLog.SizeColumns;
       end;
    if TR4WPreviousDupes <> nil then
       begin
       ApplyMainFontTo(TR4WPreviousDupes.Font);
       TR4WPreviousDupes.DefaultRowHeight := aRowHeight;
+      TR4WPreviousDupes.SizeColumns;
       end;
 end;
 

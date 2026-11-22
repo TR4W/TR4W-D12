@@ -82,6 +82,9 @@ type
       procedure Test_ScaleForClientAtItsBoundaries;
       procedure Test_TheScaleFollowsTheWidth;
       procedure Test_AShortWindowCapsTheScale;
+      procedure Test_StretchXKeepsEveryEdge;
+      procedure Test_TheBottomBandStretchesToTheWidth;
+      procedure Test_TheLogCellPadGrowsWithTheFont;
    public
       procedure RunAllTests; override;
    end;
@@ -94,6 +97,7 @@ uses
    VC, uSettingsModel, uMainLayout, uElementPanel, uMainForm, uMainGrids,
    MainUnit,
    LogWind,          (* DispalayLogGridLines -- the SHOW GRIDLINES arm *)
+   uLogGrid,         (* LogCellPad -- the log's cell padding *)
    uTestMainFormHarness, uTestShowOffScreen;
 
 function SameBounds(const a, b: TRect): boolean;
@@ -1423,6 +1427,12 @@ begin
          end;
       r := MainElement(e).BoundsRect;
       want := ElementRect(e, aWS);
+      (* THE BOTTOM BAND IS STRETCHED to the client width; at the layout width
+        that is the identity. *)
+      if ElementBand(e) = mbBottom then
+         begin
+         want := StretchRect(want, TR4WMainForm.ClientWidth, aWS);
+         end;
       CheckTrue(SameBounds(r, want),
                       Format('%s: %s is %s, expected %s',
                              [aWhere, MainElement(e).Name, BoundsText(r), BoundsText(want)]));
@@ -1439,7 +1449,8 @@ begin
                      aWhere + ': the QSO number''s font');
    CheckEquals(-EntryFontHeight(aWS), TR4WCallEdit.Font.Height,
                      aWhere + ': the call field''s font');
-   CheckTrue(SameBounds(TR4WCallEdit.BoundsRect, EntryFieldRect(efrCall, aWS)),
+   CheckTrue(SameBounds(TR4WCallEdit.BoundsRect,
+                        StretchRect(EntryFieldRect(efrCall, aWS), TR4WMainForm.ClientWidth, aWS)),
                    aWhere + ': the call field is at ' + BoundsText(TR4WCallEdit.BoundsRect));
    CheckEquals(-ElementFontHeight(aWS, Settings.Font.Size),
                      TR4WMainForm.lstPossibleCall.Font.Height,
@@ -1600,6 +1611,249 @@ begin
    end;
 end;
 
+function RectsOverlap(const a, b: TRect): boolean;
+begin
+   Result := (a.Left < b.Right) and (b.Left < a.Right) and
+             (a.Top < b.Bottom) and (b.Top < a.Bottom);
+end;
+
+(* THE PURE STRETCH, AT EVERY SCALE: the identity at the layout width and for
+  a narrower band, column 46 on the band's edge, monotone, and the bottom
+  band's TWindows[] rows keeping every shared edge and never overlapping a
+  neighbour they did not overlap unstretched. *)
+procedure TMainLayoutTests.Test_StretchXKeepsEveryEdge;
+const
+   EXTRA: array[0..5] of integer = (1, 7, 23, 45, 99, 640);
+var
+   w, x, k, band: integer;
+   a, b: TMainWindowElement;
+   ra, rb, sa, sb: TRect;
+begin
+   BeginTest('MainLayout: StretchX is the identity at the layout width, ends on the ' +
+             'band''s edge, is monotone and keeps every shared edge');
+   for w := WS_MIN to WS_MAX do
+      begin
+      for x := 0 to LayoutWidth(w) do
+         begin
+         CheckEquals(x, StretchX(x, LayoutWidth(w), w),
+                     Format('ws %d: x %d at the layout width', [w, x]));
+         end;
+      CheckEquals(100, StretchX(100, LayoutWidth(w) - 10, w),
+                  Format('ws %d: a band narrower than the layout is not squeezed', [w]));
+      CheckEquals(100, StretchX(100, 0, w), Format('ws %d: no band width, no stretch', [w]));
+
+      for k := Low(EXTRA) to High(EXTRA) do
+         begin
+         band := LayoutWidth(w) + EXTRA[k];
+         CheckEquals(band, StretchX(LayoutWidth(w), band, w),
+                     Format('ws %d, band %d: column 46 is the band''s edge', [w, band]));
+         CheckEquals(0, StretchX(0, band, w), Format('ws %d, band %d: column 0 stays', [w, band]));
+         for x := 0 to LayoutWidth(w) - 1 do
+            begin
+            if StretchX(x, band, w) > StretchX(x + 1, band, w) then
+               begin
+               CheckTrue(False, Format('ws %d, band %d: StretchX falls between %d and %d',
+                                       [w, band, x, x + 1]));
+               Break;
+               end;
+            end;
+
+         for a := Low(TMainWindowElement) to High(TMainWindowElement) do
+            begin
+            if (not ElementHasPanel(a)) or (ElementBand(a) <> mbBottom) then
+               begin
+               Continue;
+               end;
+            ra := ElementRect(a, w);
+            sa := StretchRect(ra, band, w);
+            CheckEquals(ra.Top, sa.Top, 'the stretch moves no top edge');
+            CheckEquals(ra.Bottom, sa.Bottom, 'the stretch moves no bottom edge');
+            CheckTrue(sa.Right <= band, Format('ws %d: %d ends inside the band', [w, Ord(a)]));
+            for b := Low(TMainWindowElement) to High(TMainWindowElement) do
+               begin
+               if (a = b) or (not ElementHasPanel(b)) or (ElementBand(b) <> mbBottom) then
+                  begin
+                  Continue;
+                  end;
+               rb := ElementRect(b, w);
+               sb := StretchRect(rb, band, w);
+               if ra.Right = rb.Left then
+                  begin
+                  CheckEquals(sa.Right, sb.Left,
+                              Format('ws %d, band %d: elements %d and %d share an edge',
+                                     [w, band, Ord(a), Ord(b)]));
+                  end;
+               if (not RectsOverlap(ra, rb)) and RectsOverlap(sa, sb) then
+                  begin
+                  CheckTrue(False, Format('ws %d, band %d: elements %d and %d overlap stretched',
+                                          [w, band, Ord(a), Ord(b)]));
+                  end;
+               end;
+            end;
+         end;
+      end;
+end;
+
+(* THE SHOWN WINDOW, ARMED, A LITTLE WIDER THAN ITS SCALE: ws holds, the bottom
+  band reaches the right edge with nothing clipped or overlapping, a height-only
+  resize moves no x, and the layout width brings back the exact bounds. *)
+procedure TMainLayoutTests.Test_TheBottomBandStretchesToTheWidth;
+const
+   (* Below the step-up threshold, LayoutWidth(18) + WS_STEP_UP_SLACK. *)
+   WIDENING = 30;
+var
+   saved: TSavedLayoutState;
+   bottom: TList<TControl>;
+   at17: TList<TRect>;
+   e, f: TMainWindowElement;
+   i, widest, reach: integer;
+   endsAt46: boolean;
+   r: TRect;
+begin
+   BeginTest('MainLayout: the bottom band stretches to the window''s width between ' +
+             'scale steps');
+   saved := TSavedLayoutState.Create;
+   bottom := TList<TControl>.Create;
+   at17 := TList<TRect>.Create;
+   BuildTestMainWindow;
+   try
+      Settings.Contest.MinitourDuration := 0;
+      ApplyMainWindowScale(17);
+      CreateTR4WEditableLog(0, TopBandHeight(17), LayoutWidth(17),
+                            LogHeightForRows(MAIN_LOG_START_ROWS, 17));
+      SizeAndLayOut(17);
+      ShowTestMainWindow;
+      if not DesktopFits(18) then
+         begin
+         Exit;
+         end;
+      TR4WMainForm.ClientHeight := MinClientHeight(17) + MainStatusBarHeight + 40;
+      Settle;
+      TR4WMainForm.ClientWidth := LayoutWidth(17);
+      Settle;
+      TR4WMainForm.ArmScaling;
+      Settle;
+      CheckEquals(17, ws, 'armed at 46 * 17');
+
+      endsAt46 := False;
+      for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+         begin
+         if (not ElementHasPanel(e)) or (ElementBand(e) <> mbBottom) or
+            (e = mweAutoSendCount) or (MainElement(e) = nil) then
+            begin
+            Continue;
+            end;
+         bottom.Add(MainElement(e));
+         at17.Add(MainElement(e).BoundsRect);
+         if TWindows[e].mweiX + TWindows[e].mweiWidth = LAYOUT_COLUMNS then
+            begin
+            endsAt46 := True;
+            end;
+         end;
+      bottom.Add(TR4WCallEdit);
+      at17.Add(TR4WCallEdit.BoundsRect);
+      bottom.Add(TR4WExchangeEdit);
+      at17.Add(TR4WExchangeEdit.BoundsRect);
+
+      (* WIDER, BUT NOT BY A STEP. *)
+      TR4WMainForm.ClientWidth := LayoutWidth(17) + WIDENING;
+      Settle;
+      CheckEquals(17, ws, 'a window 30 px wider keeps ws 17');
+      CheckLaidOutAt(17, 'stretched by 30');
+      CheckEveryControlInsideItsParent('stretched by 30');
+
+      widest := 0;
+      for i := 0 to bottom.Count - 1 do
+         begin
+         reach := bottom[i].Left + bottom[i].Width;
+         if reach > widest then
+            begin
+            widest := reach;
+            end;
+         end;
+      WriteLn('  [MainLayout] stretched: client ', TR4WMainForm.ClientWidth,
+              ', the bottom band reaches ', widest);
+      if endsAt46 then
+         begin
+         CheckEquals(TR4WMainForm.ClientWidth, widest,
+                     'the rightmost bottom-band element ends on the window''s right edge');
+         end
+      else
+         begin
+         CheckTrue(widest <= TR4WMainForm.ClientWidth, 'nothing passes the right edge');
+         end;
+
+      (* NO OVERLAP THAT WAS NOT THERE AT THE LAYOUT WIDTH. *)
+      for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+         begin
+         if (e = High(TMainWindowElement)) or
+            (not ElementHasPanel(e)) or (ElementBand(e) <> mbBottom) or
+            (e = mweAutoSendCount) or (MainElement(e) = nil) then
+            begin
+            Continue;
+            end;
+         for f := Succ(e) to High(TMainWindowElement) do
+            begin
+            if (not ElementHasPanel(f)) or (ElementBand(f) <> mbBottom) or
+               (f = mweAutoSendCount) or (MainElement(f) = nil) then
+               begin
+               Continue;
+               end;
+            if (not RectsOverlap(ElementRect(e, 17), ElementRect(f, 17))) and
+               RectsOverlap(MainElement(e).BoundsRect, MainElement(f).BoundsRect) then
+               begin
+               CheckTrue(False, Format('stretched: %s overlaps %s',
+                                       [MainElement(e).Name, MainElement(f).Name]));
+               end;
+            end;
+         end;
+
+      (* TALLER ONLY: no x moves. *)
+      r := TR4WCallEdit.BoundsRect;
+      TR4WMainForm.ClientHeight := TR4WMainForm.ClientHeight + 20;
+      Settle;
+      CheckEquals(r.Left, TR4WCallEdit.Left, 'taller: the call field''s left edge holds');
+      CheckEquals(r.Right - r.Left, TR4WCallEdit.Width, 'taller: the call field''s width holds');
+
+      (* BACK TO THE LAYOUT WIDTH: exactly what it was. *)
+      TR4WMainForm.ClientWidth := LayoutWidth(17);
+      Settle;
+      for i := 0 to bottom.Count - 1 do
+         begin
+         CheckTrue(SameBounds(bottom[i].BoundsRect, at17[i]),
+                   Format('back at 46 * 17, %s is %s, was %s',
+                          [bottom[i].Name, BoundsText(bottom[i].BoundsRect),
+                           BoundsText(at17[i])]));
+         end;
+   finally
+      ReleaseTestMainWindow;
+      saved.Restore;
+      saved.Free;
+      at17.Free;
+      bottom.Free;
+   end;
+end;
+
+(* THE LOG'S CELL PADDING: 3 px at every ordinary font, growing with a large
+  one, never falling. *)
+procedure TMainLayoutTests.Test_TheLogCellPadGrowsWithTheFont;
+var
+   h: integer;
+begin
+   BeginTest('MainLayout: the log''s cell padding is 3 px at ordinary fonts and grows ' +
+             'with the font (the QsS / Callsign headings at ws 43)');
+   CheckEquals(3, LogCellPad(0), 'no height: the floor');
+   CheckEquals(3, LogCellPad(17), 'the ws 17 font: 3 px, as before');
+   CheckEquals(3, LogCellPad(23), 'up to a 23 px text height: 3 px, as before');
+   CheckTrue(LogCellPad(ElementFontHeight(WS_MAX, 2)) >= 7,
+             Format('at ws %d the pad is %d', [WS_MAX, LogCellPad(ElementFontHeight(WS_MAX, 2))]));
+   for h := 0 to 120 do
+      begin
+      CheckTrue(LogCellPad(h) <= LogCellPad(h + 1),
+                Format('the pad never falls as the font grows (%d)', [h]));
+      end;
+end;
+
 procedure TMainLayoutTests.RunAllTests;
 begin
    Test_EveryRectInsideItsBandAndWhereItWasAtEveryScale;
@@ -1610,6 +1864,9 @@ begin
    Test_ScaleForClientAtItsBoundaries;
    Test_TheScaleFollowsTheWidth;
    Test_AShortWindowCapsTheScale;
+   Test_StretchXKeepsEveryEdge;
+   Test_TheBottomBandStretchesToTheWidth;
+   Test_TheLogCellPadGrowsWithTheFont;
 end;
 
 end.

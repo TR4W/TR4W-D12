@@ -578,6 +578,14 @@ function MainLogHeightForRows(const aRows: integer): integer;
   Safe on a form that is never shown (the headless /EXPORT path builds one). *)
 procedure LayOutMainWindow(const aWS: integer);
 
+(* THE BOTTOM BAND'S CONTROLS, STRETCHED ACROSS aBandWidth (uMainLayout.StretchX):
+  the TWindows[] panels of that band, the entry fields, the progress bars, the
+  minitour row and the auto-send arrow. BOUNDS ONLY -- no font is changed, so it
+  is cheap enough for a resize that does not change ws (uMainForm.
+  RescaleToClient). LayOutMainWindow calls it after its fonts. At aBandWidth =
+  LayoutWidth(aWS) every bound is the unstretched one. *)
+procedure PlaceBottomBand(const aWS, aBandWidth: integer);
+
 function CheckCommandInCallsignWindow(const aCommand: string): boolean;
 procedure ClearMultSheet_CtrlC;
 procedure tClearMultSheet;
@@ -4705,25 +4713,87 @@ end;
   10 the region would have stopped matching the frame the first time an operator
   dragged it. *)
 
-procedure LayOutMainWindow(const aWS: integer);
+procedure PlaceBottomBand(const aWS, aBandWidth: integer);
 var
   e: TMainWindowElement;
   r: Types.TRect;
 
-  (* Bounds from a rectangle, through the setter that names the control. *)
+  (* Bounds from a rectangle, stretched across the band, through the setter
+    that names the control. *)
   procedure PlaceBar(const aBar: TMainProgressBar; const aRect: Types.TRect);
+  var
+     s: Types.TRect;
   begin
-     SetProgressBounds(aBar, aRect.Left, aRect.Top,
-                       aRect.Right - aRect.Left, aRect.Bottom - aRect.Top);
+     s := StretchRect(aRect, aBandWidth, aWS);
+     SetProgressBounds(aBar, s.Left, s.Top, s.Right - s.Left, s.Bottom - s.Top);
   end;
 
+  (* THE FONT HEIGHT GOES ACROSS UNCHANGED: SetEntryFieldBounds re-fonts only
+    when it differs, so a re-stretch at the same ws recreates no window. *)
   procedure PlaceEntry(const aField: TTR4WEntryField; const aRect: Types.TRect);
+  var
+     s: Types.TRect;
   begin
-     SetEntryFieldBounds(aField, aRect.Left, aRect.Top,
-                         aRect.Right - aRect.Left, aRect.Bottom - aRect.Top,
+     s := StretchRect(aRect, aBandWidth, aWS);
+     SetEntryFieldBounds(aField, s.Left, s.Top, s.Right - s.Left, s.Bottom - s.Top,
                          EntryFontHeight(aWS));
   end;
 
+begin
+  for e := Low(TMainWindowElement) to High(TMainWindowElement) do
+     begin
+     if (not ElementHasPanel(e)) or (ElementBand(e) <> mbBottom) then
+        begin
+        Continue;
+        end;
+
+     (* THE MINITOUR ROW narrows the quick-command panel to make room for the
+       tour's bar and readout (below). Chosen here rather than corrected
+       afterwards, so a second layout does not move the panel twice. *)
+     if (e = mweQuickCommand) and (Settings.Contest.MinitourDuration <> 0) then
+        begin
+        r := MinitourQuickCommandRect(aWS);
+        end
+     else
+        begin
+        r := ElementRect(e, aWS);
+        end;
+     r := StretchRect(r, aBandWidth, aWS);
+     if MainElement(e) <> nil then
+        begin
+        MainElement(e).SetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+        end;
+     end;
+
+  (* THE AUTO-SEND ARROW'S LEFT EDGE moves with the character count, so it is
+    DisplayAutoSendCharacterCount's to set -- after the loop above, which put
+    the arrow at its TWindows[] column. It stretches its origin the same way. *)
+  DisplayAutoSendCharacterCount;
+
+  (* DESIGNED IN uMainForm.lfm; positioned here, like every other element.
+    The two colour arguments these calls used to carry are gone -- see the
+    note on the progress bars in uMainForm, they had not reached the screen
+    since the comctl32 v6 manifest was added. *)
+  PlaceBar(mpbLastHour, LastHourBarRect(aWS));
+  PlaceBar(mpbRate, RateBarRect(aWS));
+
+  PlaceEntry(efCall, EntryFieldRect(efrCall, aWS));
+  PlaceEntry(efExchange, EntryFieldRect(efrExchange, aWS));
+
+  (* THE MINITOUR ROW: the tour's bar and readout, beside the quick-command
+    panel the loop above narrowed. *)
+  if Settings.Contest.MinitourDuration <> 0 then
+     begin
+     r := StretchRect(TourDurationTextRect(aWS), aBandWidth, aWS);
+     SetTourDurationBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
+     PlaceBar(mpbTourDuration, TourDurationBarRect(aWS));
+     end;
+end;
+
+procedure LayOutMainWindow(const aWS: integer);
+var
+  e: TMainWindowElement;
+  r: Types.TRect;
 begin
   (* THE SCALE GLOBALS FIRST: everything below, and PositionMainGrids, reads
     them. At startup they already hold aWS (SetWindowSize ran), so this
@@ -4750,19 +4820,10 @@ begin
         Continue;
         end;
 
-     (* THE MINITOUR ROW narrows the quick-command panel to make room for the
-       tour's bar and readout (below). Chosen here rather than corrected
-       afterwards, so a second layout does not move the panel twice. *)
-     if (e = mweQuickCommand) and (Settings.Contest.MinitourDuration <> 0) then
-        begin
-        r := MinitourQuickCommandRect(aWS);
-        end
-     else
+     (* THE BOTTOM BAND'S PANELS ARE PlaceBottomBand's, below: stretched. *)
+     if (ElementBand(e) <> mbBottom) and (MainElement(e) <> nil) then
         begin
         r := ElementRect(e, aWS);
-        end;
-     if MainElement(e) <> nil then
-        begin
         MainElement(e).SetBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
         end;
 
@@ -4805,29 +4866,9 @@ begin
      SetElementFont(mweQSONumber, 'Lucida Console', EntryFontHeight(aWS), True);
      end;
 
-  (* THE AUTO-SEND ARROW'S LEFT EDGE moves with the character count, so it is
-    DisplayAutoSendCharacterCount's to set -- after the loop above, which put
-    the arrow at its TWindows[] column. *)
-  DisplayAutoSendCharacterCount;
-
-  (* DESIGNED IN uMainForm.lfm; positioned here, like every other element.
-    The two colour arguments these calls used to carry are gone -- see the
-    note on the progress bars in uMainForm, they had not reached the screen
-    since the comctl32 v6 manifest was added. *)
-  PlaceBar(mpbLastHour, LastHourBarRect(aWS));
-  PlaceBar(mpbRate, RateBarRect(aWS));
-
-  PlaceEntry(efCall, EntryFieldRect(efrCall, aWS));
-  PlaceEntry(efExchange, EntryFieldRect(efrExchange, aWS));
-
-  (* THE MINITOUR ROW: the tour's bar and readout, beside the quick-command
-    panel the loop above narrowed. *)
-  if Settings.Contest.MinitourDuration <> 0 then
-     begin
-     r := TourDurationTextRect(aWS);
-     SetTourDurationBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top);
-     PlaceBar(mpbTourDuration, TourDurationBarRect(aWS));
-     end;
+  (* THE BOTTOM BAND: every control in it, stretched across the client width
+    the bands were just given. *)
+  PlaceBottomBand(aWS, MainClientWidth);
 
   (* THE STRIP IS alBottom IN ITS BAND, so only its height is the layout's;
     the band gives it its width and its place. *)

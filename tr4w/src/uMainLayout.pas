@@ -174,6 +174,26 @@ function TourDurationTextRect(const aWS: integer): TRect;
 function PossibleCallRect(const aWS: integer): TRect;
 function PossibleCallColumnWidth(const aWS: integer): integer;
 
+(* THE BOTTOM BAND STRETCHED TO THE CLIENT WIDTH (NY4I, 2026-11-21).
+
+  ws follows the width in whole steps of LAYOUT_COLUMNS px, so a window up to
+  a step wider than LayoutWidth(ws) -- and more while the height cap holds ws
+  down -- left a blank strip at the right of the bottom band. Its controls are
+  stretched across the band instead: every LEFT and RIGHT edge is mapped
+  through StretchX, never a width, so two controls that share an edge at the
+  layout width share it stretched (the same input gives the same output), and
+  the order of edges is kept (StretchX is monotone), so nothing overlaps.
+
+  - At aBandWidth = LayoutWidth(aWS) StretchX returns aX exactly, so the
+    window at its layout width is pixel for pixel what it was.
+  - Column LAYOUT_COLUMNS lands on aBandWidth exactly.
+  - A band NARROWER than the layout is not squeezed: aX is returned. That is a
+    transient (ScaleForClient steps ws down at once below the layout width).
+
+  Vertical edges and fonts do not change; only the x axis stretches. *)
+function StretchX(const aX, aBandWidth, aWS: integer): integer;
+function StretchRect(const aRect: TRect; const aBandWidth, aWS: integer): TRect;
+
 (* THE TOTALS GRID'S COLUMNS, in the top band. Column 0 is the label column,
   ws * 5 wide to line up with the clocks above it; column 7 ("All") is three
   units wide; the band columns between them are one pitch, Round(ws * 2.5),
@@ -422,6 +442,27 @@ end;
 function PossibleCallColumnWidth(const aWS: integer): integer;
 begin
    Result := aWS * 5;
+end;
+
+function StretchX(const aX, aBandWidth, aWS: integer): integer;
+var
+   layout: integer;
+begin
+   layout := LayoutWidth(aWS);
+   if (layout <= 0) or (aBandWidth <= layout) then
+      begin
+      Result := aX;
+      Exit;
+      end;
+   (* Int64: a very wide window at ws 43 must not overflow the product. *)
+   Result := integer((Int64(aX) * aBandWidth) div layout);
+end;
+
+function StretchRect(const aRect: TRect; const aBandWidth, aWS: integer): TRect;
+begin
+   Result := aRect;
+   Result.Left := StretchX(aRect.Left, aBandWidth, aWS);
+   Result.Right := StretchX(aRect.Right, aBandWidth, aWS);
 end;
 
 (* THE BAND COLUMNS USED TO START ONE PIXEL INSIDE THE LABEL COLUMN: they were

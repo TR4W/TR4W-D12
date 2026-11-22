@@ -156,6 +156,8 @@ type
       function  UserWidth(const aColumn: LogColumnsType): integer;
       function  HeaderTextWidth(const aColumn: LogColumnsType): integer;
       function  HeaderText(const aColumn: LogColumnsType): RawByteString;
+      (* LogCellPad for the canvas's current font. The caller has assigned it. *)
+      function  CellPad: integer;
    protected
       (* A divider was dragged or double-clicked: the width is this grid's,
         and is marked for the settings file -- see the body. *)
@@ -261,6 +263,19 @@ type
       property WidthsPerContest: boolean read FWidthsPerContest write FWidthsPerContest;
    end;
 
+(* THE SPACE EITHER SIDE OF A CELL'S TEXT, FOR A FONT aTextHeight px TALL.
+
+  It was a fixed 3 px. The main log's text follows the window scale, up to
+  ws 43, and QsS (right-aligned) sits beside Callsign (left-aligned): the two
+  headings were 3 + 3 px and a grid line apart at every size, which at a 40 px
+  font reads as one word ("QsS Callsign" touching, NY4I 2026-11-21). The pad
+  now grows with the font: a sixth of its height, never less than 3 -- so it
+  is still exactly 3 px up to a 23 px text height, which covers every window
+  below about ws 21 and the other log windows at the system font. Sizing and
+  painting both ask it, so the text never clips against the width it was
+  measured for. *)
+function LogCellPad(const aTextHeight: integer): integer;
+
 implementation
 
 uses
@@ -301,8 +316,9 @@ const
      against the divider. The Win32 original used 12 for the same reason. *)
    DIVIDER_DBLCLICK_PAD = 12;
 
-   (* Breathing room either side of a cell's text. *)
+   (* Breathing room either side of a cell's text: the floor. See LogCellPad. *)
    CELL_PAD = 3;
+   CELL_PAD_DIVISOR = 6;
 
    (* No column narrower than this, whatever the table says -- a zero-width
      column is invisible and cannot be dragged back. *)
@@ -671,7 +687,7 @@ begin
          begin
          (* Never narrower than its own header -- see UserWidth. *)
          w := ClampRestoredWidth(UserWidth(c),
-                                 HeaderTextWidth(c) + CELL_PAD * 2,
+                                 HeaderTextWidth(c) + CellPad * 2,
                                  MIN_COLUMN_WIDTH);
          end
       else
@@ -680,7 +696,7 @@ begin
 
          if (c >= logColNumberReceive) and Settings.Log.ColumnAutoSize then
             begin
-            header := HeaderTextWidth(c) + CELL_PAD * 2;
+            header := HeaderTextWidth(c) + CellPad * 2;
             if header > w then
                begin
                w := header;
@@ -754,7 +770,7 @@ begin
       if UserWidth(c) > 0 then
          begin
          want[i]  := ClampRestoredWidth(UserWidth(c),
-                                        HeaderTextWidth(c) + CELL_PAD * 2,
+                                        HeaderTextWidth(c) + CellPad * 2,
                                         MIN_COLUMN_WIDTH);
          fixed[i] := True;
          Inc(total, want[i]);
@@ -777,7 +793,7 @@ begin
             end;
          end;
 
-      Inc(w, CELL_PAD * 2);
+      Inc(w, CellPad * 2);
       if w < MIN_COLUMN_WIDTH then
          begin
          w := MIN_COLUMN_WIDTH;
@@ -947,7 +963,7 @@ begin
                w := Canvas.TextWidth(FCache[k].Row.Text[c]);
                end;
             end;
-         Inc(w, CELL_PAD * 2);
+         Inc(w, CellPad * 2);
          end;
 
       if w < MIN_COLUMN_WIDTH then
@@ -1090,6 +1106,20 @@ end;
 function TLogGrid.HeaderTextWidth(const aColumn: LogColumnsType): integer;
 begin
    Result := Canvas.TextWidth(HeaderText(aColumn));
+end;
+
+function LogCellPad(const aTextHeight: integer): integer;
+begin
+   Result := aTextHeight div CELL_PAD_DIVISOR;
+   if Result < CELL_PAD then
+      begin
+      Result := CELL_PAD;
+      end;
+end;
+
+function TLogGrid.CellPad: integer;
+begin
+   Result := LogCellPad(Canvas.TextHeight('Ag'));
 end;
 
 (* A COLUMN'S HEADING, AS THE OPERATOR READS IT, for the LCL. ColumnsArray's
@@ -1253,7 +1283,7 @@ begin
          end;
       end;
 
-   widest := widest + CELL_PAD * 2 + DIVIDER_DBLCLICK_PAD;
+   widest := widest + CellPad * 2 + DIVIDER_DBLCLICK_PAD;
    if widest < MIN_COLUMN_WIDTH then
       begin
       widest := MIN_COLUMN_WIDTH;
@@ -1557,8 +1587,8 @@ begin
       Canvas.Font.Color  := Font.Color;
       (* Plain arithmetic, not InflateRect -- that is a Win32 API and this
         unit names no platform. *)
-      Inc(aRect.Left, CELL_PAD);
-      Dec(aRect.Right, CELL_PAD);
+      Inc(aRect.Left, CellPad);
+      Dec(aRect.Right, CellPad);
       Canvas.TextRect(aRect, aRect.Left, aRect.Top, HeaderText(c), style);
       Canvas.Brush.Style := bsSolid;
       Exit;
@@ -1643,8 +1673,8 @@ begin
    Canvas.FillRect(aRect);
 
    Canvas.Brush.Style := bsClear;
-   Inc(aRect.Left, CELL_PAD);
-   Dec(aRect.Right, CELL_PAD);
+   Inc(aRect.Left, CellPad);
+   Dec(aRect.Right, CellPad);
    Canvas.TextRect(aRect, aRect.Left, aRect.Top, s, style);
 
    if (c = FMatchColumn) and (ColumnsArray[c].Align = LVCFMT_LEFT) then
