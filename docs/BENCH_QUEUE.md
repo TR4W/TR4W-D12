@@ -188,6 +188,17 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-21 -- THE MULTIPLIER WINDOWS SHOW HOW MANY TIMES (issue 357; lcl-ui, contest-scoring)
+
+The remaining-multiplier windows (Stations > multipliers, DX / domestic / zone / prefix) in HIGHLIGHT mode. A worked multiplier now shows its count after its name from the SECOND working on the window's band and mode (`Oh 2`, `05 3`); once looks as it always did. With BAND MAP WORKED MULT LIMIT above 1 (Preferences > Band Map > Window and tuning), a multiplier worked at least once but fewer than that many times fades from BAND MAP WORKED MULT COLOR (orange by default) with black text, the same "backup wanted" the band map shows as an orange M. The rule is `uRemMultWorkState` (unit tested); the count is the sheet's `mo.WorkedCount`, the band map's.
+
+- [ ] **Limit 1 (default):** no orange anywhere; a multiplier worked twice on the current band reads `Name 2`; change band and the count follows that band (a contest counting mults per band).
+- [ ] **Limit 2:** a multiplier worked once is orange; work it again and it goes to the usual worked fade with `Name 2`.
+- [ ] **Change the limit or the colour in Preferences** with a window open: the window redraws at once (no QSO needed).
+- [ ] **Does the count fit the cell?** The base column is 49 px, the prefix / domestic-name column 104 px. Look at long names with two-digit counts (`VP2E 12`, a domestic name with SHOW DOMESTIC MULTIPLIER NAME on). Unmeasured.
+- [ ] **ERASE mode is unchanged:** a worked multiplier still leaves the list, so a backup-wanted one is not shown there. Say whether that is what you want.
+- [ ] **Domestic grid-field contests** (the count is keyed on the two-character field): a field worked twice shows `FN 2`.
+
 ## Added 2026-11-21 -- THE MAIN WINDOW'S TEXT SIZE FOLLOWS ITS WIDTH (width plan stage e4; lcl-ui)
 
 Drag the main window wider and everything on it grows a step at a time (ws 13..27); narrower and it shrinks. The rule is `uMainLayout.ScaleForClient`: down at once below `46 * ws`, up only `WS_STEP_UP_SLACK` (8 px) past `46 * (ws + 1)`, and never a step whose bands plus three log rows would not fit the window's height. It starts after the window is shown (`ArmMainWindowScaling`, last in `RestoreToolWindows`). Set DEBUG LOG LEVEL = DEBUG for the `[Layout] scale a -> b in n ms` lines.
@@ -7693,3 +7704,18 @@ log); nothing sees the preview window or the message.
 - [ ] **Continent List report.** Columns are only the contest's own bands (ARRL 10: just 10), the header and every
   row line up, and the Total row ends in the ALL total. A QSO logged on a band the contest does not use is not
   in this report. Try a multi-band contest and check 160 to 10 plus the WARC bands it allows.
+
+## Added 2026-11-21 -- external logger Resend QSOs and Open web site (issue 356; NOT BUILT when written)
+
+- [ ] **Resend QSOs... against a real Club Log, WRL and QRZ test account.** Log two QSOs with Send new QSOs OFF, switch it on,
+  Save, restart. Right-click the logger > Resend QSOs... > Not yet delivered: the box says 2 queued (2 new), the two
+  contacts arrive once, and the same action again says 0 queued (2 delivered). Then Resend all: Club Log and QRZ replace
+  (no second copy at the site), WRL reports nothing changed. A contact whose create was refused queues again.
+- [ ] **Resend on Cloudlog / Wavelog and AC Log.** Resend all must NOT create a delivered contact a second time (it says
+  delivered, 0 sent again). A contact logged while off IS created.
+- [ ] **Refusals read right.** On a logger that is switched off, one added since start, DXKeeper, and with no contest
+  log open, the box names the reason (not a code) and nothing is queued.
+- [ ] **Open web site.** The popup item opens WRL and Club Log in the default browser (placeholder addresses until the
+  owner supplies the real ones); DXKeeper and ACLog grey it. A `siteUrl` of `file:///...` in the settings file is refused
+  with the address shown. The QuestionDlg buttons and Resend all's second question look right on Windows and GTK.
+- [ ] **WRL Create logbook** is not built (issue 358): needs the owner to confirm `POST /logbooks`.

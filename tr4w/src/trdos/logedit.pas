@@ -355,6 +355,7 @@ uses
   LOGSUBS2,
   uRemMults,
   uRemMultsForm,   { the five multiplier windows are forms -- wh[] conversion }
+  uRemMultWorkState,   (* a cell's count and backup state -- issue 357 *)
   uBandmap,
   uSpots,           (* SpotsList.FindSpotByCall -- the strip reads a spot's comment *)
   (* THE FINAL SCORE -- M6: the totals and the contest that combines them
@@ -1791,7 +1792,9 @@ end;
     * a band or mode change -- RefreshAfterBandChange, logsubs2.ToggleModes,
       uRadioPolling.RunBandModeDisplay, logsubs1.SwapRadios;
     * the display mode, the domestic-name setting and the window's type --
-      the settings' setters (uSettingsEffects) and logsubs2.SwapMultDisplay.
+      the settings' setters (uSettingsEffects) and logsubs2.SwapMultDisplay;
+    * BAND MAP WORKED MULT LIMIT and COLOR, which decide and colour a cell's
+      backup state (issue 357) -- their setters (uSettingsEffects).
   A cell that is stale is a missing call on that list, never a repaint.
 
   FOUR LABELS AND FOUR GOTOs ARE GONE, and the substitution is exact rather than
@@ -1812,17 +1815,30 @@ var
   TempMultBand: BandType;
   HiLighting: boolean;
   zonesFromZero: boolean;
+  (* The active contest, asked once per rebuild for the domestic count key
+     (issue 357), never once per cell. *)
+  contestRules: TContestBase;
 
   procedure Add(const aIndex: integer);
   var
     cellText: string;
     worked: boolean;
+    workedCount: integer;
   begin
     (* The pair, as the pair: the window's cell is (kind, index) -- see
       TfrmRemMults.AddMult. It used to be packed into two 16-bit halves of
-      one PtrInt here (pointer audit P9, item 5.1). *)
-    ResolveRemainingMult(rmt, aIndex, cellText, worked);
-    frm.AddMult(rmt, aIndex, cellText, worked);
+      one PtrInt here (pointer audit P9, item 5.1).
+
+      HOW MANY TIMES, AND WHETHER A BACKUP IS WANTED (issue 357): the count
+      goes after the name from the second working ('Oh 2'), and a multiplier
+      worked fewer than BAND MAP WORKED MULT LIMIT times is the band map's
+      orange -- uRemMultWorkState's rule, read from the same sheet cell. *)
+    ResolveRemainingMult(rmt, aIndex, contestRules, cellText, worked, workedCount);
+    frm.AddMult(rmt, aIndex,
+                RemainingMultCellText(cellText, worked, workedCount),
+                worked,
+                RemainingMultWorkState(worked, workedCount,
+                                       Settings.BandMap.WorkedMultLimit) = rwsBackupWanted);
   end;
 
 begin
@@ -1854,6 +1870,7 @@ begin
      end;
 
   HiLighting := Settings.RemainingMults.DisplayMode = HiLight;
+  contestRules := ActiveContest(Contest);
 
   case rmt of
 

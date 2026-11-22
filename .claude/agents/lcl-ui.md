@@ -243,7 +243,15 @@ grid repaints itself -- there is no forced `Invalidate`. Colours come from
 flag are resolved at the REBUILD** (NY4I's decision A): `LOGEDIT.ShowRemMultsInWindow`
 asks `uRemMults.ResolveRemainingMult` per cell and lists, above itself, every
 change point that calls `VisibleLog.ShowRemainingMultipliers`. A stale cell is a
-missing call there, never a repaint. The remaining-mults windows still have a
+missing call there, never a repaint. **A cell also carries its COUNT and a
+backup state** (issue 357): `ResolveRemainingMult` returns the sheet's
+`mo.WorkedCount` on the window's band/mode, and `uRemMultWorkState` (a leaf,
+unit tested) words the text (`Oh 2` from the second working) and decides
+"backup wanted" -- worked, count 1..BAND MAP WORKED MULT LIMIT-1, the band
+map's orange M -- which the draw handler fades from `uSpots.WorkedMultColor`.
+Orange means that and nothing else; do not reuse it for "worked on some bands".
+The limit's and colour's setters rebuild the windows (`uSettingsEffects`).
+The remaining-mults windows still have a
 draw handler for ONE thing, the highlight-mode fade to white, which
 `OnPrepareCanvas` cannot express; it goes when NY4I accepts a flat fill.
 

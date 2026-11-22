@@ -63,6 +63,14 @@ type
       constructor Create(aDatabase: TLogDatabase);
       procedure Enqueue(const aKey: TDeliveryKey; const aPayload: string;
                         aDeleted: boolean);
+      (* RESEND (issue 356): put a FAILED or SYNCED contact back in the queue
+         with a new revision and the payload it already has, so a worker sends
+         it again (a failed create is created again; a synced one is UPDATED
+         through its remote id, never created twice). Pending, inflight and
+         uncertain rows are not touched: the WHERE names the two states, and
+         an uncertain contact is never replayed blindly. Like Enqueue, belongs
+         in the caller's transaction. *)
+      procedure Requeue(const aKey: TDeliveryKey);
       function Claim(const aLogger, aAccount: string; aNow: Int64;
                      out aJob: TDeliveryJob): boolean;
       procedure Complete(const aJob: TDeliveryJob; aOutcome: TDeliveryOutcome;
@@ -239,6 +247,20 @@ begin
    try
       q.ParamByName('payload').AsUTF8String := UTF8Encode(aPayload);
       q.ParamByName('deleted').AsInteger := Ord(aDeleted);
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TExternalDelivery.Requeue(const aKey: TDeliveryKey);
+var
+   q: TSQLQuery;
+begin
+   q := KeyedQuery('UPDATE external_delivery SET revision = revision + 1, ' +
+      'state = ''pending'', error_code = '''', next_attempt = 0 WHERE ' + KEY_WHERE +
+      ' AND state IN (''failed'', ''synced'')', aKey);
+   try
       q.ExecSQL;
    finally
       q.Free;

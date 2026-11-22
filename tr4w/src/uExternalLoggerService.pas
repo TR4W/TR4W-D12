@@ -5,7 +5,7 @@ interface
 
 uses
    VC, uQsoDispatcher, uLogDatabase, uLogRepository, uExternalDelivery,
-   uExternalLoggerConfig;
+   uExternalLoggerConfig, uExternalLoggerActions;
 
 type
    (* WHAT A LOGGER IS DOING NOW (issue 226), as the Preferences grid shows it.
@@ -92,6 +92,18 @@ type
       procedure CaptureSavedQso(aDatabase: TLogDatabase; aRepository: TLogRepository;
                                 aRowId: Int64; aNew: boolean); virtual;
       procedure AfterLogCommit(aDatabase: TLogDatabase); virtual;
+      (* RESEND QSOs (issue 356), main thread, inside the caller's transaction
+         (it commits, and calls AfterLogCommit to wake the worker). Queues to
+         the destination aDeliveryId names, and to no other, the QSOs of the
+         open log that the rules in uExternalLoggerActions say to send; aTally
+         receives what was decided for every QSO. False, with a fixed code in
+         aRefusal, when nothing was queued because the destination cannot take
+         it (not running, switched off, paused, no durable outbox). The base
+         refuses: DXKeeper's in-memory command queue has no delivery state to
+         reason from. *)
+      function ResendQsos(aDatabase: TLogDatabase; aRepository: TLogRepository;
+         const aDeliveryId: string; aMode: TResendMode; const aTally: TResendTally;
+         out aRefusal: string): boolean; virtual;
       procedure LogClosed; virtual;
       procedure RequestStop; virtual;
       function StopFinished: boolean; virtual;
@@ -257,6 +269,14 @@ end;
 
 procedure TExternalLoggerService.AfterLogCommit(aDatabase: TLogDatabase);
 begin
+end;
+
+function TExternalLoggerService.ResendQsos(aDatabase: TLogDatabase;
+   aRepository: TLogRepository; const aDeliveryId: string; aMode: TResendMode;
+   const aTally: TResendTally; out aRefusal: string): boolean;
+begin
+   aRefusal := 'RESEND_NOT_SUPPORTED';
+   Result := False;
 end;
 
 procedure TExternalLoggerService.LogClosed;

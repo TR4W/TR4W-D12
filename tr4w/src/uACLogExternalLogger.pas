@@ -33,6 +33,8 @@ type
       function BuildPayload(const aRecord: ContestExchange; const aFacts: TQsoMyFacts;
          const aSent: AnsiString): string; override;
       function CreateWorker: TExternalDeliveryWorker; override;
+      (* No edit call exists: 'resend all' must not hand a delivered contact over a second time. *)
+      function CanUpdateDelivered: boolean; override;
    public
       constructor Create(const aDefinition: TExternalLoggerDefinition; aComputerId: AnsiChar);
    end;
@@ -53,6 +55,10 @@ end;
 function TACLogWorker.NewClient: TExternalDeliveryClient;
 begin
    Result := TACLogClient.Create(FHost, FPort);
+end;
+function TACLogExternalLogger.CanUpdateDelivered: boolean;
+begin
+   Result := False;
 end;
 constructor TACLogExternalLogger.Create(const aDefinition: TExternalLoggerDefinition;
    aComputerId: AnsiChar);

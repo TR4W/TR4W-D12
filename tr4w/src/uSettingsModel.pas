@@ -1404,6 +1404,8 @@ type
       FOtherBandColor: string;
       FVfoMarkerColor: string;
       procedure SetSplitMode(aValue: BandMapSplitModeType);
+      procedure SetWorkedMultColor(const aValue: string);
+      procedure SetWorkedMultLimit(aValue: TBandMapWorkedMultLimit);
       procedure SetAllBands(aValue: boolean);
       procedure SetAllModes(aValue: boolean);
       procedure SetCallWindowEnable(aValue: boolean);
@@ -1476,13 +1478,13 @@ type
         A TOKEN, on ALERT COLOR's pattern: the spellings are VC's
         tr4wColorsSA, registered from uCFG as the allowed values, so the
         default is written out as 'ORANGE' rather than reaching VC from here. *)
-      property WorkedMultColor: string read FWorkedMultColor write FWorkedMultColor;
+      property WorkedMultColor: string read FWorkedMultColor write SetWorkedMultColor;
       (* BAND MAP WORKED MULT LIMIT (issue 12, NY4I 2026-11-07): the number of
         credited, non-dupe workings of a multiplier after which a spot shows no
         M. Counted the way the contest counts its multipliers -- per band and
         mode where it does. Default 1: the M goes at the first working, as it
         always has; 2 shows an orange M after the first. *)
-      property WorkedMultLimit: TBandMapWorkedMultLimit read FWorkedMultLimit write FWorkedMultLimit;
+      property WorkedMultLimit: TBandMapWorkedMultLimit read FWorkedMultLimit write SetWorkedMultLimit;
 
       (* THE BAND MAP'S COLOUR ROLES -- issue 59 (NY4I, 2026-11-15: "This list
         is correct"). Each names what it colours, not a colour, and defaults
@@ -5229,6 +5231,30 @@ begin
       end;
    FSplitMode := aValue;
    Changed('SplitMode');
+end;
+
+(* THE TWO WORKED-MULT SETTINGS RAISE (issue 357): the remaining-multiplier
+  windows store each cell's backup state at their rebuild and draw it in
+  this colour, so a change is followed by a rebuild there
+  (uSettingsEffects), as the band map's group arm already redraws. *)
+procedure TBandMapSettings.SetWorkedMultColor(const aValue: string);
+begin
+   if FWorkedMultColor = aValue then
+      begin
+      Exit;
+      end;
+   FWorkedMultColor := aValue;
+   Changed('WorkedMultColor');
+end;
+
+procedure TBandMapSettings.SetWorkedMultLimit(aValue: TBandMapWorkedMultLimit);
+begin
+   if FWorkedMultLimit = aValue then
+      begin
+      Exit;
+      end;
+   FWorkedMultLimit := aValue;
+   Changed('WorkedMultLimit');
 end;
 
 procedure TRemainingMultsSettings.SetDisplayMode(

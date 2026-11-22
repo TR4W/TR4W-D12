@@ -196,6 +196,11 @@ const
    ALERT_COLOR             = 'MainWindow.AlertColor';
    SHOW_DOMESTIC_NAME      = 'RemainingMults.ShowDomesticName';
    REMAINING_MULT_DISPLAY  = 'RemainingMults.DisplayMode';
+   (* BAND MAP WORKED MULT LIMIT and COLOR reach the remaining-multiplier
+     windows too (issue 357): a cell's backup state is stored at the rebuild
+     and drawn in that colour. *)
+   BAND_MAP_WORKED_MULT_LIMIT = 'BandMap.WorkedMultLimit';
+   BAND_MAP_WORKED_MULT_COLOR = 'BandMap.WorkedMultColor';
    (* INSERT OR OVERWRITE, shown on a panel of the main window. crP: 8,
      DisplayInsertMode.
 
@@ -510,6 +515,16 @@ begin
         `@EditableLog.ShowRemainingMultipliers` -- the address of a method on
         an old-style object TYPE, with no instance -- and every other caller
         in the tree says VisibleLog, which is the one instance there is. *)
+      VisibleLog.ShowRemainingMultipliers;
+      end;
+
+   if UnicodeSameText(aPath, BAND_MAP_WORKED_MULT_LIMIT) or
+      UnicodeSameText(aPath, BAND_MAP_WORKED_MULT_COLOR) then
+      begin
+      (* WHICH CELLS WANT A BACKUP, AND THEIR COLOUR (issue 357). The state
+        is decided at the rebuild, and the rebuild's EndUpdate repaints the
+        grid, so one rebuild answers both. The band map's own redraw is the
+        BAND_MAP group arm below. *)
       VisibleLog.ShowRemainingMultipliers;
       end;
 

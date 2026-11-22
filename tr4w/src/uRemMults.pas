@@ -56,7 +56,8 @@ uses
   LogWind,
   LogDom,
   LogDupe,
-  LOGSUBS2
+  LOGSUBS2,
+  uContestBase   (* TContestBase -- ResolveRemainingMult's aContest, issue 357 *)
   ;
 
 procedure UpdateRemainingMultsWindows;
@@ -65,9 +66,19 @@ procedure UpdateRemainingMultsWindows;
   multiplier sheets say NOW. LOGEDIT.ShowRemMultsInWindow asks it for each
   cell as it rebuilds the window, and the text goes into the grid's Cells
   (issue 216, decision A). It was asked at paint time, through the
-  RemMultsResolve procedure variable, until then. *)
+  RemMultsResolve procedure variable, until then.
+
+  aCount IS HOW MANY TIMES IT IS WORKED on the window's band and mode
+  (issue 357): the sheet's count, mo.WorkedCount, asked with the keys the
+  sheet writes it under (LOGDUPE.MultiplierSheetBand on MultBand, and
+  MultMode, which is already LOGDUPE.MultiplierSheetMode of the active mode)
+  -- the band map's DetermineMultStatus asks the same cell. aText is the bare
+  name; uRemMultWorkState decides what the count adds to it. aContest is the
+  active contest (nil for the classless one), asked once by the caller per
+  rebuild rather than once per cell: it shapes the domestic count key. *)
 procedure ResolveRemainingMult(const aKind: RemainingMultiplierType; const aIndex: integer;
-                               out aText: string; out aWorked: boolean);
+                               aContest: TContestBase;
+                               out aText: string; out aWorked: boolean; out aCount: integer);
 
 implementation
 
@@ -88,7 +99,8 @@ var
   the Win32 list box's one lParam per item forced, and was unpacked here with
   LoWord/HiWord (pointer audit P9, item 5.1). *)
 procedure ResolveRemainingMult(const aKind: RemainingMultiplierType; const aIndex: integer;
-                               out aText: string; out aWorked: boolean);
+                               aContest: TContestBase;
+                               out aText: string; out aWorked: boolean; out aCount: integer);
 var
   rmt      : RemainingMultiplierType;
   Index    : integer;
@@ -96,6 +108,7 @@ var
 begin
   aText := '';
   aWorked := False;
+  aCount := 0;
 
   rmt := aKind;
   Index := aIndex;
@@ -107,6 +120,8 @@ begin
         TempCall := mo.PrfList.Get(Index);
         aText := string(TempCall);
         aWorked := mo.PrfList.StringIsDupeByIndex(Index, MultBand, MultMode);
+        aCount := mo.WorkedCount(rmPrefix, string(TempCall),
+                                 MultiplierSheetBand(rmPrefix, MultBand), MultMode);
       end;
 
     rmDomestic:
@@ -123,17 +138,31 @@ begin
         aText := string(TempCall);
         aWorked := mo.DomList.StringIsDupeByIndex(Index,
                      GetAddMultBand(DomesticMultByBand, MultBand), MultMode);
+        (* The KEY, never the AltName shown in its place: the count is keyed
+          as LOGDUPE.CountWorkedMultipliers writes it. *)
+        aCount := mo.WorkedCount(rmDomestic,
+                                 DomesticMultiplierCountKey(aContest,
+                                                            string(mo.DomList.Get(Index))),
+                                 MultiplierSheetBand(rmDomestic, MultBand), MultMode);
       end;
 
     rmDX:
       begin
         aText := string(CTY.ctyTable[Index].ID);
         aWorked := not mo.IsDXMult(Index, MultBand, MultMode);
+        (* Index is the CTY country number, the one SetDXMult and
+          CountWorkedMultipliers take from the QSO's QTH.Country. *)
+        aCount := mo.WorkedCount(rmDX, IntToStr(Index),
+                                 MultiplierSheetBand(rmDX, MultBand), MultMode);
       end;
 
     rmZone:
       begin
         aWorked := not mo.IsZnMult(Index, MultBand, MultMode);
+        (* Index is the zone number itself (mo.RemainingZoneIndices), the
+          one SetZnMult and CountWorkedMultipliers take from the QSO. *)
+        aCount := mo.WorkedCount(rmZone, IntToStr(Index),
+                                 MultiplierSheetBand(rmZone, MultBand), MultMode);
         { '%.2u', not '%02u' -- Delphi's Format has no zero-pad flag and would
           space-pad. The buffer goes with the call: aText is already a string. }
 

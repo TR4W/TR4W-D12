@@ -88,6 +88,8 @@ uses
    uTestListViewSelection in 'uTestListViewSelection.pas',
    uTestLogSearchFilters in 'uTestLogSearchFilters.pas',
    uTestFlowGridCells   in 'uTestFlowGridCells.pas',
+   uRemMultWorkState    in '..\..\src\uRemMultWorkState.pas',
+   uTestRemMultWorkState in 'uTestRemMultWorkState.pas',
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
@@ -668,6 +670,7 @@ uses
    uTestExternalLoggers in 'uTestExternalLoggers.pas',
    uTestShowOffScreen in 'uTestShowOffScreen.pas',
    uTestExternalLoggerGrid in 'uTestExternalLoggerGrid.pas',
+   uTestExternalLoggerActions in 'uTestExternalLoggerActions.pas',
    uTestColumnWidthStore in 'uTestColumnWidthStore.pas',
    uTestColumnHeaders in 'uTestColumnHeaders.pas',
    uTestAltDragMove in 'uTestAltDragMove.pas',
@@ -1407,6 +1410,7 @@ begin
    RegisterSuite(TQRZLogbookTests.Create('QRZLogbook'));
    RegisterSuite(TACLogTests.Create('ACLog'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
+   RegisterSuite(TExternalLoggerActionsTests.Create('ExternalLoggerActions'));
    RegisterSuite(TUrlTestTests.Create('UrlTest'));
    RegisterSuite(TVerifyServerTests.Create('VerifyServer'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));
@@ -1467,6 +1471,7 @@ begin
    RegisterSuite(TDXClusterClientTests.Create('DXClusterClient'));
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
+   RegisterSuite(TRemMultWorkStateTests.Create('RemMultWorkState'));
    RegisterSuite(TSelfSpotTests.Create('SelfSpot'));
    RegisterSuite(TBandMapOrderTests.Create('BandMapOrder'));
    RegisterSuite(TFunctionKeyBankTests.Create('FunctionKeyBank'));

@@ -980,7 +980,11 @@ state, ALRS), with an operator's stated MULT BY BAND / MULT BY MODE winning over
 the trait. Do not key a count on `ContestIdentity(...).MultByBand` directly: it
 misses the DescribeSession and operator layers the bit sheet obeys. Cost: one
 `ActiveContest` per non-dupe QSO in `AddQSOToSheets` (loader and rescore
-included). Pinned by `uTestSpotCommentMultiplier.Test_Count_*`.
+included). Pinned by `uTestSpotCommentMultiplier.Test_Count_*`. **The
+remaining-multiplier windows read it too** (issue 357,
+`uRemMults.ResolveRemainingMult`, same keys: `MultiplierSheetBand(kind,
+MultBand)`, `MultMode`, the domestic key through `DomesticMultiplierCountKey`,
+never the AltName) -- a change to the keying is a change to both readers.
 
 ## The needs strips are recomputed after a QSO is logged (issue #100, 2026-10-26)
 

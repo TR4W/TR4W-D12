@@ -68,6 +68,7 @@ type
       FConfig: TExternalLoggerConfig;
       FPopup: TPopupMenu;
       FEditItem, FSendItem, FUpItem, FDownItem, FRemoveItem: TMenuItem;
+      FOpenSiteItem, FResendItem: TMenuItem;
       FOnChanged: TNotifyEvent;
       FOnQueryState: TLoggerStateQuery;
       FTimer: TTimer;
@@ -75,6 +76,7 @@ type
       FDownCol, FDownRow: integer;
       FSwallowUp: boolean;
       function AddItem(const aCaption: string; aHandler: TNotifyEvent): TMenuItem;
+      function SiteUrlOf(const aDefinition: TExternalLoggerDefinition): string;
       function IdAt(aRow: integer): string;
       function NeighbourInSameGroup(aDelta: integer): boolean;
       procedure Changed;
@@ -98,6 +100,8 @@ type
       procedure UpClick(aSender: TObject);
       procedure DownClick(aSender: TObject);
       procedure RemoveClick(aSender: TObject);
+      procedure OpenSiteClick(aSender: TObject);
+      procedure ResendClick(aSender: TObject);
    public
       constructor Create(aOwner: TComponent; const aGrid: TStringGrid); reintroduce;
       destructor Destroy; override;
@@ -126,7 +130,8 @@ type
 function ExternalLoggerStateColour(aState: TExternalLoggerState): TColor;
 
 implementation
-uses Dialogs, LCLType, uAppStrings, uExternalLoggersForm,
+uses Dialogs, LCLType, LCLIntf, uAppStrings, uExternalLoggersForm,
+   uExternalLoggerActions, uLogStore, utils_text,  (* issue 356: resend, open site *)
    uLCLFormHelpers;   (* Restore/SaveGridColumnWidth(s) -- issue 234; FillGridFromColumn *)
 
 const
@@ -303,6 +308,8 @@ begin
    FUpItem := AddItem(SLoggerGridMoveUp, UpClick);
    FDownItem := AddItem(SLoggerGridMoveDown, DownClick);
    FRemoveItem := AddItem(SLoggerGridRemove, RemoveClick);
+   FOpenSiteItem := AddItem(SLoggerGridOpenSite, OpenSiteClick);
+   FResendItem := AddItem(SLoggerGridResend, ResendClick);
    FGrid.PopupMenu := FPopup;
 end;
 
@@ -748,6 +755,134 @@ begin
    FUpItem.Enabled := NeighbourInSameGroup(-1);
    FDownItem.Enabled := NeighbourInSameGroup(1);
    FRemoveItem.Enabled := known;
+   (* Open web site: only a logger that has one (DXKeeper and AC Log are TCP
+      programs); an address that is not http(s) is refused when clicked, with
+      the reason, rather than greyed without one. *)
+   FOpenSiteItem.Enabled := known and (SiteUrlOf(FConfig.Find(id)) <> '');
+   FResendItem.Enabled := known;
+end;
+
+function TExternalLoggerGrid.SiteUrlOf(const aDefinition: TExternalLoggerDefinition): string;
+begin
+   Result := EffectiveSiteUrl(aDefinition.ProviderId, aDefinition.SiteURL, aDefinition.URL);
+end;
+
+procedure TExternalLoggerGrid.OpenSiteClick(aSender: TObject);
+var
+   definition: TExternalLoggerDefinition;
+   url: string;
+begin
+   definition := FConfig.Find(SelectedId);
+   if definition = nil then
+      begin
+      Exit;
+      end;
+   url := SiteUrlOf(definition);
+   (* ONLY http AND https ARE HANDED TO THE BROWSER: the address is a setting,
+      and anything else (file:, javascript:, a custom scheme) would start some
+      other program. *)
+   if CheckSiteUrl(url) <> supNone then
+      begin
+      MessageDlg(UTF8Encode(UnicodeFormat(SLoggerSiteRefused, [url])), mtWarning, [mbOK], 0);
+      Exit;
+      end;
+   if not OpenURL(UTF8Encode(url)) then
+      begin
+      MessageDlg(UTF8Encode(UnicodeFormat(SLoggerSiteOpenFailed, [url])), mtWarning, [mbOK], 0);
+      end;
+end;
+
+function ResendRefusalText(const aCode: string): string;
+begin
+   if aCode = 'RESEND_NOT_RUNNING' then
+      begin
+      Result := SLoggerResendWhyNotRunning;
+      end
+   else if aCode = 'RESEND_NOT_ACTIVE' then
+      begin
+      Result := SLoggerResendWhyNotActive;
+      end
+   else if aCode = 'SYNCHRONIZATION_GAP' then
+      begin
+      Result := SLoggerResendWhyPaused;
+      end
+   else if aCode = 'LOGGER_SETUP_REQUIRED' then
+      begin
+      Result := SLoggerResendWhySetup;
+      end
+   else if aCode = 'RESEND_NOT_SUPPORTED' then
+      begin
+      Result := SLoggerResendWhyUnsupported;
+      end
+   else if aCode = 'RESEND_NO_LOG' then
+      begin
+      Result := SLoggerResendWhyNoLog;
+      end
+   else
+      begin
+      Result := SLoggerResendWhyFailed;
+      end;
+end;
+
+(* RESEND QSOs (issue 356). Two choices and a confirmation: 'Resend all' asks
+   again, because it can put a contact at the destination twice. Cancel is
+   both the default and Escape. The decisions are uExternalLoggerActions's;
+   the queueing is LogStoreResendToExternalLogger's, in one transaction. The
+   QuestionDlg captions are LclText (ansi) and the answer is read by RESULT,
+   never by button position (GTK draws them the other way round). *)
+procedure TExternalLoggerGrid.ResendClick(aSender: TObject);
+var
+   definition: TExternalLoggerDefinition;
+   answer: TModalResult;
+   mode: TResendMode;
+   tally: TResendTally;
+   refusal: string;
+begin
+   definition := FConfig.Find(SelectedId);
+   if definition = nil then
+      begin
+      Exit;
+      end;
+   answer := QuestionDlg('TR4W',
+                         LclText(UnicodeFormat(SLoggerResendBody, [definition.Name])),
+                         mtConfirmation,
+                         [mrOk,     LclText(SLoggerResendUndelivered),
+                          mrYes,    LclText(SLoggerResendAll),
+                          mrCancel, 'IsDefault', 'IsCancel'], 0);
+   if answer = mrOk then
+      begin
+      mode := rmUndelivered;
+      end
+   else if answer = mrYes then
+      begin
+      mode := rmAll;
+      if MessageDlg(UTF8Encode(UnicodeFormat(SLoggerResendAllAsk, [definition.Name])),
+         mtWarning, [mbYes, mbNo], 0) <> mrYes then
+         begin
+         Exit;
+         end;
+      end
+   else
+      begin
+      Exit;
+      end;
+   tally := TResendTally.Create;
+   try
+      if LogStoreResendToExternalLogger(definition.DeliveryId, mode, tally, refusal) then
+         begin
+         MessageDlg(UTF8Encode(UnicodeFormat(SLoggerResendDone,
+            [definition.Name, tally.Queued, tally.Created, tally.Requeued,
+             tally.Delivered, tally.AlreadyQueued, tally.Uncertain, tally.NotOurs])),
+            mtInformation, [mbOK], 0);
+         end
+      else
+         begin
+         MessageDlg(UTF8Encode(UnicodeFormat(SLoggerResendRefused,
+            [definition.Name, ResendRefusalText(refusal)])), mtWarning, [mbOK], 0);
+         end;
+   finally
+      tally.Free;
+   end;
 end;
 
 procedure TExternalLoggerGrid.EditClick(aSender: TObject);

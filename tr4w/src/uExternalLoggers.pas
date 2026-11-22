@@ -2,7 +2,7 @@ unit uExternalLoggers;
 {$I tr4w.inc}
 interface
 uses SysUtils, Generics.Collections, VC, uQsoDispatcher, uExternalLoggerService,
-   uExternalLoggerConfig, uLogDatabase, uLogRepository;
+   uExternalLoggerConfig, uLogDatabase, uLogRepository, uExternalLoggerActions;
 type
    (* THE SET OF SERVICES IS FIXED once started; THEIR SWITCHES ARE NOT (issue
       233). Every saved definition gets a service at start-up (an inactive one
@@ -56,6 +56,11 @@ type
       procedure CaptureSavedQso(aDatabase: TLogDatabase; aRepository: TLogRepository;
          aRowId: Int64; aNew: boolean); override;
       procedure AfterLogCommit(aDatabase: TLogDatabase); override;
+      (* Issue 356: hands the resend to the ONE service aDeliveryId names; an
+         id this composite does not run is refused (RESEND_NOT_RUNNING). *)
+      function ResendQsos(aDatabase: TLogDatabase; aRepository: TLogRepository;
+         const aDeliveryId: string; aMode: TResendMode; const aTally: TResendTally;
+         out aRefusal: string): boolean; override;
       procedure LogClosed; override;
    end;
 implementation
@@ -414,6 +419,22 @@ begin
             end;
       end;
       end;
+end;
+function TExternalLoggers.ResendQsos(aDatabase: TLogDatabase;
+   aRepository: TLogRepository; const aDeliveryId: string; aMode: TResendMode;
+   const aTally: TResendTally; out aRefusal: string): boolean;
+var
+   at: integer;
+begin
+   at := IndexOfId(aDeliveryId);
+   if at < 0 then
+      begin
+      aRefusal := 'RESEND_NOT_RUNNING';
+      Result := False;
+      Exit;
+      end;
+   Result := FServices[at].ResendQsos(aDatabase, aRepository, aDeliveryId, aMode,
+      aTally, aRefusal);
 end;
 procedure TExternalLoggers.LogClosed;
 var

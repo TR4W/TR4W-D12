@@ -29,6 +29,8 @@ type
       function BuildPayload(const aRecord: ContestExchange; const aFacts: TQsoMyFacts;
          const aSent: AnsiString): string; override;
       function CreateWorker: TExternalDeliveryWorker; override;
+      (* No edit call exists: 'resend all' must not create a delivered contact a second time. *)
+      function CanUpdateDelivered: boolean; override;
    public
       constructor Create(const aDefinition: TExternalLoggerDefinition; aComputerId: AnsiChar);
    end;
@@ -50,6 +52,10 @@ end;
 function TCloudlogWorker.NewClient: TExternalDeliveryClient;
 begin
    Result := TCloudlogClient.Create(FBaseUrl, FProfileId, FApiKey);
+end;
+function TCloudlogExternalLogger.CanUpdateDelivered: boolean;
+begin
+   Result := False;
 end;
 constructor TCloudlogExternalLogger.Create(const aDefinition: TExternalLoggerDefinition;
    aComputerId: AnsiChar);

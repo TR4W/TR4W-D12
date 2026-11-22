@@ -67,14 +67,19 @@ type
       FKind: RemainingMultiplierType;
       FIndex: integer;
       FWorked: boolean;
+      FBackupWanted: boolean;
    public
       constructor Create(const aKind: RemainingMultiplierType; const aIndex: integer;
-                         const aWorked: boolean);
+                         const aWorked, aBackupWanted: boolean);
       property Kind: RemainingMultiplierType read FKind;
       property Index: integer read FIndex;
       (* Whether it had been worked WHEN THE WINDOW WAS REBUILT -- the text
         beside it is the grid's Cells, written then too (issue 216). *)
       property Worked: boolean read FWorked;
+      (* Whether, at the rebuild, it was worked fewer times than BAND MAP
+        WORKED MULT LIMIT -- a backup wanted, drawn in BAND MAP WORKED MULT
+        COLOR (issue 357; the rule is uRemMultWorkState's). *)
+      property BackupWanted: boolean read FBackupWanted;
    end;
 
    TfrmRemMults = class(TForm)
@@ -95,9 +100,11 @@ type
       (* ONE CELL: a multiplier, which IS the pair (kind, index into that
         kind's table), with its text and whether it has been worked, as
         they stand at this rebuild (the builder resolves them). Between
-        Mults.BeginRebuild and Mults.EndRebuild. *)
+        Mults.BeginRebuild and Mults.EndRebuild. aBackupWanted: worked, but
+        fewer times than BAND MAP WORKED MULT LIMIT (issue 357). *)
       procedure AddMult(const aKind: RemainingMultiplierType; const aIndex: integer;
-                        const aText: string; const aWorked: boolean);
+                        const aText: string; const aWorked: boolean;
+                        const aBackupWanted: boolean = False);
 
       (* The multiplier in cell aCellIndex; False for a cell past the end --
         the paint handler asks for every cell and the last column is rarely
@@ -108,6 +115,10 @@ type
       (* Whether the multiplier in cell aCellIndex had been worked at the
         rebuild; False for a cell past the end. *)
       function  WorkedAt(const aCellIndex: integer): boolean;
+
+      (* Whether the multiplier in cell aCellIndex wanted a backup at the
+        rebuild; False for a cell past the end. *)
+      function  BackupWantedAt(const aCellIndex: integer): boolean;
    end;
 
 var
@@ -135,6 +146,7 @@ uses
    MainUnit,          { CloseTR4WWindow }
    uSettingsModel,    (* Settings.RemainingMults.DisplayMode, and HiLight --
                         the type moved here with the setting *)
+   uSpots,            (* WorkedMultColor -- BAND MAP WORKED MULT COLOR, issue 357 *)
    uLCLFormHelpers;   // LeaveFormUnowned
 
 const
@@ -197,20 +209,31 @@ begin
 end;
 
 constructor TRemainingMult.Create(const aKind: RemainingMultiplierType;
-                                  const aIndex: integer; const aWorked: boolean);
+                                  const aIndex: integer;
+                                  const aWorked, aBackupWanted: boolean);
 begin
    inherited Create;
    FKind := aKind;
    FIndex := aIndex;
    FWorked := aWorked;
+   FBackupWanted := aBackupWanted;
 end;
 
 (* The text goes into the grid's Cells at EndRebuild (TFlowGrid.LayOut). *)
 procedure TfrmRemMults.AddMult(const aKind: RemainingMultiplierType;
                                const aIndex: integer; const aText: string;
-                               const aWorked: boolean);
+                               const aWorked: boolean;
+                               const aBackupWanted: boolean);
 begin
-   Mults.AddCell(aText, TRemainingMult.Create(aKind, aIndex, aWorked));
+   Mults.AddCell(aText, TRemainingMult.Create(aKind, aIndex, aWorked, aBackupWanted));
+end;
+
+function TfrmRemMults.BackupWantedAt(const aCellIndex: integer): boolean;
+var
+   cell: TObject;
+begin
+   cell := Mults.CellAt(aCellIndex);
+   Result := (cell is TRemainingMult) and TRemainingMult(cell).BackupWanted;
 end;
 
 function TfrmRemMults.WorkedAt(const aCellIndex: integer): boolean;
@@ -333,7 +356,19 @@ begin
       Exit;
       end;
 
-   if (Settings.RemainingMults.DisplayMode = HiLight) and WorkedAt(idx) then
+   if (Settings.RemainingMults.DisplayMode = HiLight) and BackupWantedAt(idx) then
+      begin
+      (* A BACKUP WANTED (issue 357): the same fade, from BAND MAP WORKED
+        MULT COLOR -- the orange the band map and the telnet console give a
+        multiplier worked fewer times than BAND MAP WORKED MULT LIMIT, read
+        through the one lookup they share (uSpots.WorkedMultColor). Black
+        text: white would not read on orange fading to white. *)
+      grdMults.Canvas.GradientFill(aRect,
+                                   tr4wColorsArray[WorkedMultColor],
+                                   tr4wColorsArray[trWhite], gdHorizontal);
+      grdMults.Canvas.Font.Color := tr4wColorsArray[trBlack];
+      end
+   else if (Settings.RemainingMults.DisplayMode = HiLight) and WorkedAt(idx) then
       begin
       // THE LCL'S OWN GRADIENT, as the band map's mult flag uses: the same
       // two stops and the same left-to-right direction the WM_DRAWITEM arm

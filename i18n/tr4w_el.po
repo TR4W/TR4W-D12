@@ -12222,3 +12222,93 @@ msgstr ""
 #, fuzzy
 msgid "Reset"
 msgstr ""
+
+#: uappstrings.sloggergridopensite
+#, fuzzy
+msgid "Open web site"
+msgstr ""
+
+#: uappstrings.sloggergridresend
+#, fuzzy
+msgid "Resend QSOs..."
+msgstr ""
+
+#: uappstrings.sloggersiterefused
+#, fuzzy
+msgid "Not opened: \"%s\" is not an http or https web address."
+msgstr ""
+
+#: uappstrings.sloggersiteopenfailed
+#, fuzzy
+msgid "The browser could not be started for %s."
+msgstr ""
+
+#: uappstrings.sloggerresendbody
+#, fuzzy
+msgid ""
+"Resend QSOs of this contest to %s only.\n"
+"\n"
+"Not yet delivered: queues the QSOs this logger was never sent (for example those logged while Send new QSOs was off) and any it refused. QSOs already delivered, waiting, or of unknown outcome are left alone.\n"
+"\n"
+"Resend all: also sends delivered QSOs again as updates of the same remote contact (not for Cloudlog / Wavelog or AC Log, which have no update call). A QSO of unknown outcome is never resent."
+msgstr ""
+
+#: uappstrings.sloggerresendundelivered
+#, fuzzy
+msgid "Not yet delivered"
+msgstr ""
+
+#: uappstrings.sloggerresendall
+#, fuzzy
+msgid "Resend all"
+msgstr ""
+
+#: uappstrings.sloggerresendallask
+#, fuzzy
+msgid "Resend all QSOs to %s? A contact that is already at the destination by another route (another definition of this logger, a manual import) cannot be recognised and may appear twice. Delivered contacts are sent again as updates, which uses the service's quota."
+msgstr ""
+
+#: uappstrings.sloggerresenddone
+#, fuzzy
+msgid "%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations."
+msgstr ""
+
+#: uappstrings.sloggerresendrefused
+#, fuzzy
+msgid "Nothing was queued for %s: %s"
+msgstr ""
+
+#: uappstrings.sloggerresendwhynotrunning
+#, fuzzy
+msgid "it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start."
+msgstr ""
+
+#: uappstrings.sloggerresendwhynotactive
+#, fuzzy
+msgid "Send new QSOs is off for it. Switch it on and save Preferences first."
+msgstr ""
+
+#: uappstrings.sloggerresendwhypaused
+#, fuzzy
+msgid "its delivery is paused after a capture failure (see tr4w.log)."
+msgstr ""
+
+#: uappstrings.sloggerresendwhysetup
+#, fuzzy
+msgid "its account or logbook is not set up."
+msgstr ""
+
+#: uappstrings.sloggerresendwhyunsupported
+#, fuzzy
+msgid "it has no delivery queue to resend into."
+msgstr ""
+
+#: uappstrings.sloggerresendwhynolog
+#, fuzzy
+msgid "no writable contest log is open."
+msgstr ""
+
+#: uappstrings.sloggerresendwhyfailed
+#, fuzzy
+msgid "the log could not be updated (see tr4w.log). Nothing was changed."
+msgstr ""

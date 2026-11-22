@@ -59,7 +59,8 @@ uses
      schema 9): LogStoreCurrentMyFacts captures by it, and
      TStationFactCorrections is the station-value correction's argument. *)
    uStationFactRecord,
-   uExternalDelivery; (* TDeliveryStatus -- LogStoreReadDeliveryAtIndex *)
+   uExternalDelivery, (* TDeliveryStatus -- LogStoreReadDeliveryAtIndex *)
+   uExternalLoggerActions; (* TResendMode, TResendTally -- LogStoreResendToExternalLogger *)
 
 (* PUT A QSO IN THE LOG, AND SAY WHETHER IT IS ACTUALLY THERE.
 
@@ -315,6 +316,16 @@ function LogStoreRepository: TLogRepository;
 function LogStoreIsUsable: boolean;
 
 procedure LogStoreStartExternalDelivery;
+
+(* RESEND QSOs TO ONE EXTERNAL LOGGER (issue 356). Main thread. Queues, to the
+  destination aDeliveryId names, the QSOs of the open log that
+  uExternalLoggerActions.ResendVerdict says to send, in ONE transaction that
+  is committed here, then wakes the worker. aTally receives the decision for
+  every QSO. False, with a fixed code in aRefusal, when nothing was queued:
+  no log or a read-only one (RESEND_NO_LOG), or the destination refused
+  (TExternalLoggerService.ResendQsos). *)
+function LogStoreResendToExternalLogger(const aDeliveryId: string; aMode: TResendMode;
+   const aTally: TResendTally; out aRefusal: string): boolean;
 
 (* TWO SEAMS FOR THE TEST PROGRAM, AND ONLY FOR IT (2026-10-23). The program
   never assigns or calls either.
@@ -1094,6 +1105,30 @@ end;
 procedure LogStoreAbandonWrite;
 begin
    RollBackAfterBusy;
+end;
+
+function LogStoreResendToExternalLogger(const aDeliveryId: string; aMode: TResendMode;
+   const aTally: TResendTally; out aRefusal: string): boolean;
+begin
+   Result := False;
+   aRefusal := 'RESEND_NO_LOG';
+   if (externalLogger = nil) or (not LogStoreReadyToWrite) then
+      begin
+      Exit;
+      end;
+   Result := externalLogger.ResendQsos(GDatabase, GRepository, aDeliveryId, aMode,
+      aTally, aRefusal);
+   if Result then
+      begin
+      GRepository.Commit;
+      LogStoreStartExternalDelivery;
+      end
+   else
+      begin
+      (* The service rolled its own savepoint back; end the transaction the
+         reads began. *)
+      RollBackAfterBusy;
+      end;
 end;
 
 (* THE LOCKED-LOG QUESTION, natively. The answer is read by MODAL RESULT,

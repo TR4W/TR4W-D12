@@ -49,6 +49,28 @@ resourcestring
    SLoggerGridMoveDown    = 'Move down';
    SLoggerGridRemove      = 'Remove...';
    SLoggerGridRemoveAsk   = 'Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition.';
+   // Resend QSOs and Open web site (issue 356), the grid's popup items.
+   SLoggerGridOpenSite    = 'Open web site';
+   SLoggerGridResend      = 'Resend QSOs...';
+   SLoggerSiteRefused     = 'Not opened: "%s" is not an http or https web address.';
+   SLoggerSiteOpenFailed  = 'The browser could not be started for %s.';
+   (* %s is the logger's name. The two captions are the dialog's buttons. *)
+   SLoggerResendBody      = 'Resend QSOs of this contest to %s only.' + #10#10 +
+      'Not yet delivered: queues the QSOs this logger was never sent (for example those logged while Send new QSOs was off) and any it refused. QSOs already delivered, waiting, or of unknown outcome are left alone.' + #10#10 +
+      'Resend all: also sends delivered QSOs again as updates of the same remote contact (not for Cloudlog / Wavelog or AC Log, which have no update call). A QSO of unknown outcome is never resent.';
+   SLoggerResendUndelivered = 'Not yet delivered';
+   SLoggerResendAll       = 'Resend all';
+   SLoggerResendAllAsk    = 'Resend all QSOs to %s? A contact that is already at the destination by another route (another definition of this logger, a manual import) cannot be recognised and may appear twice. Delivered contacts are sent again as updates, which uses the service''s quota.';
+   (* %s name; then queued, new, sent again, delivered, waiting, unknown outcome, other stations. *)
+   SLoggerResendDone      = '%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations.';
+   SLoggerResendRefused   = 'Nothing was queued for %s: %s';
+   SLoggerResendWhyNotRunning = 'it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start.';
+   SLoggerResendWhyNotActive = 'Send new QSOs is off for it. Switch it on and save Preferences first.';
+   SLoggerResendWhyPaused = 'its delivery is paused after a capture failure (see tr4w.log).';
+   SLoggerResendWhySetup  = 'its account or logbook is not set up.';
+   SLoggerResendWhyUnsupported = 'it has no delivery queue to resend into.';
+   SLoggerResendWhyNoLog  = 'no writable contest log is open.';
+   SLoggerResendWhyFailed = 'the log could not be updated (see tr4w.log). Nothing was changed.';
    SLoggerGridHint        = 'Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences to apply Enabled and Order now; a new logger, or changed connection settings, applies after a restart.';
    SLoggerGridChanged     = 'Logger definitions changed. Save Preferences to apply Enabled and Order now; connection changes apply after a restart.';
    (* After a save (issue 233). %d is how many loggers still wait for a restart. *)

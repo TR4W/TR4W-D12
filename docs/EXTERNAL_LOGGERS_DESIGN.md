@@ -130,6 +130,25 @@ The shared `ApplyNothingSent` table is HTTP-only (it reads a `THttpRequest`) and
 
 **Unverified.** No reply to `ADDADIFRECORD` is documented (the n3fjp-mcp spec has none either), so success cannot be known; whether AC Log accepts raw `<`, `>`, `&` and non-ASCII (UTF-8) inside `<VALUE>`; how it treats a duplicate; the ADIF band spelling and mode it reads. No live AC Log has been run.
 
+## Resend QSOs, Open web site, WRL logbook name (issues 356, 358; built 2026-11-21, UNBUILT AND UNTESTED when written)
+
+**Resend QSOs...** is a popup item of the Preferences grid (row = the one logger). It queues, to that logger ONLY, QSOs of the OPEN log, in one transaction (`uLogStore.LogStoreResendToExternalLogger` -> `TExternalLoggers.ResendQsos` -> the durable service's `ResendQsos`, savepoint `external_resend`), then wakes the worker. The decisions are one pure function, `uExternalLoggerActions.ResendVerdict(mode, hasRow, state, hasRemoteId, canUpdate)`; the table is pinned in `uTestExternalLoggerActions`.
+
+| delivery row | Not yet delivered (default) | Resend all |
+| --- | --- | --- |
+| none (never captured, e.g. logged while Send new QSOs was off) | create | create |
+| pending / inflight | left alone | left alone |
+| uncertain, or an unknown state | NEVER replayed | NEVER replayed |
+| failed, no remote id (the create was refused) | queued again | queued again |
+| failed, remote id (an edit or delete failed) | left alone | queued again, if the provider can update |
+| synced | left alone | queued again as an UPDATE through the remote id, if the provider can update (`CanUpdateDelivered`; False for Cloudlog / Wavelog and AC Log, which have no edit call: a second create there is a second row) |
+
+Rules that follow: a resend never creates a contact that has a delivery row, so it cannot duplicate by itself. The one duplicate it cannot see is a contact that reached the destination by another route (another definition of the same logger; a hand import): TR4W cannot know, and the Resend all confirmation says so. A requeue first re-runs `Enqueue` with a freshly built payload (an edit made while the logger was off), then `TExternalDelivery.Requeue` (failed or synced rows only). WRL then PATCHes only changed fields (an unchanged contact is confirmed with no request); Club Log and QRZ replace by remote id. A QSO logged by another station (`QsoWasLoggedHere`) is not created, as capture does. A logger that is not running, switched off, paused or has no durable queue refuses with a fixed code (`RESEND_NOT_RUNNING`, `RESEND_NOT_ACTIVE`, `SYNCHRONIZATION_GAP`, `LOGGER_SETUP_REQUIRED`, `RESEND_NOT_SUPPORTED` = DXKeeper, `RESEND_NO_LOG`, `RESEND_FAILED`). A selected-range resend (issue 356's other wording) is NOT built.
+
+**Open web site** opens `EffectiveSiteUrl` in the external browser (`LCLIntf.OpenURL`): the definition's `SiteURL` (JSON `siteUrl`, written only when set, a missing value reads empty, in neither `DestinationFingerprint` nor `SettingsStamp`), else `DefaultSiteUrl(provider)`, else a Cloudlog definition's own address. Only http and https with a host, no credentials and no whitespace are opened (`CheckSiteUrl`); anything else is refused with the address shown. The defaults are PLACEHOLDERS the owner replaces: WRL `https://www.worldradioleague.com`, Club Log `https://clublog.org`; DXKeeper and ACLog have none, so the item is disabled. There is no editor row for `SiteURL` yet (a settings-file value only).
+
+**Create WRL logbook (issue 358): the ACTION IS NOT BUILT.** The repository holds no WRL API specification. Commit `2ece8772^` still has `TWRLClient.CreateLogbook` (`POST /logbooks`, body `{"name": ...}`, the id read from `data.id` like a contact's), written by the WRL work and never recorded as run live, and issue 231 removed it by decision. Restoring it needs the owner to confirm the call. What exists now is only the default name, `uExternalLoggerActions.WRLDefaultLogbookName(year, ADIF CONTEST_ID, modes)` = `YYYY <ADIFContestId> <MODE>`, where one distinct mode names itself and none or several give `MIXED` (Cabrillo's CATEGORY-MODE word). The caller would pass `ContestIdentity(contest).ADIFContestId` and the contest's year.
+
 ## Changes, deletes and uncertainty
 
 A worker claims a revision, commits the claim, sends it, then settles that revision. A newer local revision remains pending after the older request completes. A delete before an unsent create is cancelled locally. An edit/delete arriving while a create is in flight is subsequently applied using the confirmed remote version.

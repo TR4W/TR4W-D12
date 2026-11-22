@@ -235,6 +235,7 @@ uses
   uCallsigns,
   uSpots,
   uSpotAge,
+  uRemMultWorkState,
   uContestDates,
   uContestSchedule,
   uClusterTokens,

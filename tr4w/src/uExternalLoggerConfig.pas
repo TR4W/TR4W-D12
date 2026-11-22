@@ -31,6 +31,11 @@ type
          It is NOT part of DestinationFingerprint: renaming a logbook on the
          provider's side must not park the backlog. *)
       LogbookName: string;
+      (* THE ADDRESS THE 'Open site' BUTTON OPENS (issue 356). Empty means the
+         provider's default (uExternalLoggerActions.EffectiveSiteUrl). Display
+         only, like LogbookName: it is in neither DestinationFingerprint nor
+         SettingsStamp, so changing it parks nothing and needs no restart. *)
+      SiteURL: string;
       ApiKey, Password: string;
       Port: integer;
       LegacyWRL: boolean;
@@ -245,6 +250,7 @@ begin
    Account := aOther.Account;
    Logbook := aOther.Logbook;
    LogbookName := aOther.LogbookName;
+   SiteURL := aOther.SiteURL;
    ApiKey := aOther.ApiKey;
    Password := aOther.Password;
    LegacyWRL := aOther.LegacyWRL;
@@ -270,6 +276,12 @@ begin
       (* Written only when known, so a definition that never had a name
          round-trips to the JSON it was loaded from. *)
       Result.AddPair('logbookName', LogbookName);
+      end;
+   if SiteURL <> '' then
+      begin
+      (* Written only when the operator set one, so a definition that never
+         did round-trips to the JSON it was loaded from. *)
+      Result.AddPair('siteUrl', SiteURL);
       end;
    Result.AddPair('legacyWRL', TJSONBool.Create(LegacyWRL));
    if not VerifyServer then
@@ -310,6 +322,9 @@ begin
    Account := JSONGetStr(aObject, 'account', '');
    Logbook := JSONGetStr(aObject, 'logbook', '');
    LogbookName := JSONGetStr(aObject, 'logbookName', '');
+   (* A MISSING VALUE IS '' (a definition saved before issue 356): the provider's
+      default applies. *)
+   SiteURL := JSONGetStr(aObject, 'siteUrl', '');
    LegacyWRL := (aObject.GetValue('legacyWRL') <> nil) and
       aObject.GetValue('legacyWRL').AsBoolean;
    (* A MISSING VALUE IS TRUE (a definition saved before issue 256), unlike

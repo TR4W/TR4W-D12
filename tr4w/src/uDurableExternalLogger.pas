@@ -5,7 +5,7 @@ interface
 
 uses
    VC, uQsoDispatcher, uExternalLoggerService, uLogDatabase, uLogRepository, uQsoMyFacts,
-   uExternalDeliveryWorker, uLogConnectionWatch, ExtCtrls;
+   uExternalDeliveryWorker, uLogConnectionWatch, uExternalLoggerActions, ExtCtrls;
 
 type
    TDurableExternalLogger = class(TExternalLoggerService)
@@ -31,10 +31,19 @@ type
       procedure StartWorker;
       procedure WatchdogTick(Sender: TObject);
       procedure WorkerStalled(aWatch: TLogConnectionWatch);
+      (* The payload a delivery of this QSO carries: '{}' for a deleted one.
+         The one place a capture and a resend build it. *)
+      function PayloadFor(aRepository: TLogRepository; aRowId: Int64;
+         const aRec: ContestExchange): string;
    public
       function BuildPayload(const aRecord: ContestExchange; const aFacts: TQsoMyFacts;
                             const aSent: AnsiString): string; virtual; abstract;
       function CreateWorker: TExternalDeliveryWorker; virtual; abstract;
+      (* Whether a contact already delivered can be REPLACED at the
+         destination (an edit call exists). True by default; Cloudlog and ACLog
+         say False, so 'resend all' leaves a delivered contact there alone
+         rather than creating a second row. *)
+      function CanUpdateDelivered: boolean; virtual;
    public
       constructor Create(const aLoggerId, aAccount, aLogbook, aApiKey: string;
                          aComputerId: AnsiChar; aEnabled: boolean);
@@ -47,6 +56,9 @@ type
       procedure CaptureSavedQso(aDatabase: TLogDatabase; aRepository: TLogRepository;
                                 aRowId: Int64; aNew: boolean); override;
       procedure AfterLogCommit(aDatabase: TLogDatabase); override;
+      function ResendQsos(aDatabase: TLogDatabase; aRepository: TLogRepository;
+         const aDeliveryId: string; aMode: TResendMode; const aTally: TResendTally;
+         out aRefusal: string): boolean; override;
       procedure LogClosed; override;
       procedure RequestStop; override;
       procedure SetActive(aActive: boolean); override;
@@ -59,7 +71,7 @@ type
 implementation
 
 uses
-   SysUtils, sqldb, uExternalDelivery,  PostUnit, Log4D,
+   SysUtils, sqldb, Generics.Collections, uExternalDelivery,  PostUnit, Log4D,
    uAppStrings, TF, Forms, logwind;
 
 constructor TDurableExternalLogger.Create(const aLoggerId, aAccount, aLogbook, aApiKey: string;
@@ -98,12 +110,202 @@ begin
    Result := -1;
 end;
 
+function TDurableExternalLogger.CanUpdateDelivered: boolean;
+begin
+   Result := True;
+end;
+
+function TDurableExternalLogger.PayloadFor(aRepository: TLogRepository; aRowId: Int64;
+   const aRec: ContestExchange): string;
+var
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+begin
+   Result := '{}';
+   if not aRec.ceQSO_Deleted then
+      begin
+      aRepository.LoadQSOMyFacts(aRowId, facts, sent);
+      Result := BuildPayload(aRec, facts, sent);
+      end;
+end;
+
+type
+   (* One QSO of the open log and what this destination remembers of it. *)
+   TResendRow = class
+   public
+      RowId: Int64;
+      Guid, State, RemoteId, Account, Logbook: string;
+      HasRow: boolean;
+   end;
+
+(* RESEND (issue 356). The decisions are uExternalLoggerActions.ResendVerdict's;
+   this reads the rows, applies them and counts. One savepoint around it all,
+   so a failure part-way leaves nothing queued, and the capture's own rule is
+   kept: a failure here does NOT pause the logger (nothing was lost; the
+   operator can try again). The caller commits and wakes the worker. *)
+function TDurableExternalLogger.ResendQsos(aDatabase: TLogDatabase;
+   aRepository: TLogRepository; const aDeliveryId: string; aMode: TResendMode;
+   const aTally: TResendTally; out aRefusal: string): boolean;
+var
+   rows: TObjectList<TResendRow>;
+   row: TResendRow;
+   q: TSQLQuery;
+   delivery: TExternalDelivery;
+   rec: ContestExchange;
+   key: TDeliveryKey;
+   verdict: TResendVerdict;
+   lastId: Int64;
+   canUpdate, savepointOpen: boolean;
+begin
+   Result := False;
+   aRefusal := '';
+   if aDeliveryId <> FLoggerId then
+      begin
+      aRefusal := 'RESEND_NOT_RUNNING';
+      Exit;
+      end;
+   if not FEnabled then
+      begin
+      aRefusal := 'RESEND_NOT_ACTIVE';
+      Exit;
+      end;
+   if FPaused then
+      begin
+      aRefusal := 'SYNCHRONIZATION_GAP';
+      Exit;
+      end;
+   if (FAccount = '') or (FLogbook = '') then
+      begin
+      aRefusal := 'LOGGER_SETUP_REQUIRED';
+      Exit;
+      end;
+   canUpdate := CanUpdateDelivered;
+   rows := TObjectList<TResendRow>.Create(True);
+   savepointOpen := False;
+   try
+      try
+         (* Read every QSO and its row first and close the cursor: the capture
+            below runs its own statements on this connection. A contact with
+            two rows for this logger (a hand edit; capture keeps edits on the
+            first) is judged by its first. *)
+         q := TSQLQuery.Create(nil);
+         try
+            q.Database := aDatabase.Connection;
+            q.Transaction := aDatabase.Transaction;
+            q.UsePrimaryKeyAsKey := False;
+            q.SQL.Text := 'SELECT q.id, q.guid, d.state, d.remote_id, d.account, d.logbook ' +
+               'FROM qso q LEFT JOIN external_delivery d ON d.contact = q.guid ' +
+               'AND d.logger = :logger WHERE q.record_kind = ''QSO'' AND q.deleted = 0 ' +
+               'ORDER BY q.id';
+            q.ParamByName('logger').AsUTF8String := UTF8Encode(FLoggerId);
+            q.Open;
+            lastId := -1;
+            while not q.EOF do
+               begin
+               if q.Fields[0].AsLargeInt <> lastId then
+                  begin
+                  lastId := q.Fields[0].AsLargeInt;
+                  row := TResendRow.Create;
+                  rows.Add(row);
+                  row.RowId := lastId;
+                  row.Guid := UTF8Decode(q.Fields[1].AsUTF8String);
+                  row.HasRow := not q.Fields[2].IsNull;
+                  row.State := UTF8Decode(q.Fields[2].AsUTF8String);
+                  row.RemoteId := UTF8Decode(q.Fields[3].AsUTF8String);
+                  row.Account := UTF8Decode(q.Fields[4].AsUTF8String);
+                  row.Logbook := UTF8Decode(q.Fields[5].AsUTF8String);
+                  end;
+               q.Next;
+               end;
+            q.Close;
+         finally
+            q.Free;
+         end;
+         aDatabase.Connection.ExecuteDirect('SAVEPOINT external_resend');
+         savepointOpen := True;
+         delivery := TExternalDelivery.Create(aDatabase);
+         try
+            for row in rows do
+               begin
+               verdict := ResendVerdict(aMode, row.HasRow, row.State,
+                  row.RemoteId <> '', canUpdate);
+               if verdict in [rvCreate, rvRequeue] then
+                  begin
+                  if not aRepository.LoadQSO(row.RowId, rec) or (rec.ceRecordKind <> rkQSO) then
+                     begin
+                     Continue;
+                     end;
+                  if (verdict = rvCreate) and
+                     not QsoWasLoggedHere(rec.ceComputerID, FComputerId) then
+                     begin
+                     (* A peer's QSO: that station uploads it (the capture's rule). *)
+                     verdict := rvNotOurs;
+                     end;
+                  end;
+               case verdict of
+                  rvCreate:
+                     begin
+                     key.Logger := FLoggerId;
+                     key.Account := FAccount;
+                     key.Logbook := FLogbook;
+                     key.Contact := row.Guid;
+                     delivery.Enqueue(key, PayloadFor(aRepository, row.RowId, rec), False);
+                     end;
+                  rvRequeue:
+                     begin
+                     (* The row's own destination (the original uploader's
+                        ownership), a fresh payload in case the QSO was edited
+                        while this logger was off, then the requeue. Enqueue
+                        alone moves the row when the payload changed, and
+                        Requeue then matches nothing. *)
+                     key.Logger := FLoggerId;
+                     key.Account := row.Account;
+                     key.Logbook := row.Logbook;
+                     key.Contact := row.Guid;
+                     delivery.Enqueue(key, PayloadFor(aRepository, row.RowId, rec), False);
+                     delivery.Requeue(key);
+                     end;
+               end;
+               aTally.Add(verdict);
+               end;
+         finally
+            delivery.Free;
+         end;
+         aDatabase.Connection.ExecuteDirect('RELEASE SAVEPOINT external_resend');
+         savepointOpen := False;
+         Result := True;
+      except
+         on E: Exception do
+            begin
+            aRefusal := 'RESEND_FAILED';
+            TLogLogger.GetLogger(FLoggerId).Error('[ExternalDelivery] Resend failed (%s); ' +
+               'nothing was queued.', [E.ClassName]);
+            if savepointOpen then
+               begin
+               try
+                  aDatabase.Connection.ExecuteDirect('ROLLBACK TO SAVEPOINT external_resend');
+                  aDatabase.Connection.ExecuteDirect('RELEASE SAVEPOINT external_resend');
+                  aRepository.ReprepareAfterSavepointRollback;
+               except
+                  on rollbackError: Exception do
+                     begin
+                     TLogLogger.GetLogger(FLoggerId).Error(
+                        '[ExternalDelivery] Resend rollback failed too (%s)',
+                        [rollbackError.ClassName]);
+                     end;
+               end;
+               end;
+            end;
+      end;
+   finally
+      rows.Free;
+   end;
+end;
+
 procedure TDurableExternalLogger.CaptureSavedQso(aDatabase: TLogDatabase;
    aRepository: TLogRepository; aRowId: Int64; aNew: boolean);
 var
    rec: ContestExchange;
-   facts: TQsoMyFacts;
-   sent: AnsiString;
    key: TDeliveryKey;
    destinations: array of TDeliveryKey;
    i: integer;
@@ -169,12 +371,7 @@ begin
       finally
          q.Free;
       end;
-      payload := '{}';
-      if not rec.ceQSO_Deleted then
-         begin
-         aRepository.LoadQSOMyFacts(aRowId, facts, sent);
-         payload := BuildPayload(rec, facts, sent);
-         end;
+      payload := PayloadFor(aRepository, aRowId, rec);
       delivery := TExternalDelivery.Create(aDatabase);
       try
          for i := 0 to High(destinations) do
