@@ -38,6 +38,10 @@ type
       procedure Test_DisplayLimit_IsACeiling;
       procedure Test_DisplayLimit_UnknownWindowUsesTheSetting;
       procedure Test_DisplayLimit_EvenAndFloored;
+      procedure Test_TextSize_DefaultsAreUnchanged;
+      procedure Test_TextSize_RowAndColumnNeverShrinkBelowTheSettings;
+      procedure Test_TextSize_GrowsWithTheText;
+      procedure Test_TextSize_Step;
    public
       procedure RunAllTests; override;
    end;
@@ -340,6 +344,68 @@ begin
    CheckEquals(30, EffectiveDisplayLimit(31, 40, 40), 'an odd setting is evened too');
 end;
 
+(* THE TEXT SIZE MENU. The pin that matters is the first: at the default size
+  and the default row height and column width the cell is EXACTLY what it was
+  before the menu existed (row 14, column 135, text 13). *)
+procedure TBandMapOrderTests.Test_TextSize_DefaultsAreUnchanged;
+begin
+   BeginTest('Test_TextSize_DefaultsAreUnchanged');
+   CheckEquals(13, BandMapTextHeight(3), 'size 3 is a 13-pixel text, as before');
+   CheckEquals(14, BandMapRowHeight(14, 3), 'the default row height is unchanged');
+   CheckEquals(135, BandMapColumnWidth(135, 3), 'the default column width is unchanged');
+   CheckEquals(3, BANDMAP_REFERENCE_SIZE, 'the reference is the setting default');
+   CheckEquals(6, BandMapTextHeight(-4), 'the floor of the range is 6 pixels');
+end;
+
+procedure TBandMapOrderTests.Test_TextSize_RowAndColumnNeverShrinkBelowTheSettings;
+var
+   size: integer;
+begin
+   BeginTest('Test_TextSize_RowAndColumnNeverShrinkBelowTheSettings');
+   for size := -4 to 3 do
+      begin
+      CheckEquals(14, BandMapRowHeight(14, size),
+                  'smaller text keeps the operator''s row height');
+      CheckEquals(135, BandMapColumnWidth(135, size),
+                  'smaller text keeps the operator''s column width');
+      end;
+   CheckEquals(50, BandMapRowHeight(50, 12), 'a tall row setting is kept at any size');
+   CheckEquals(200, BandMapColumnWidth(200, -4), 'a wide column setting is kept');
+   CheckEquals(100, BandMapColumnWidth(100, -4), 'the minimum width setting is kept');
+end;
+
+procedure TBandMapOrderTests.Test_TextSize_GrowsWithTheText;
+var
+   size, rowPrev, colPrev: integer;
+begin
+   BeginTest('Test_TextSize_GrowsWithTheText');
+   rowPrev := 0;
+   colPrev := 0;
+   for size := -4 to 12 do
+      begin
+      CheckTrue(BandMapRowHeight(14, size) >= rowPrev, 'the row never shrinks as the text grows');
+      CheckTrue(BandMapColumnWidth(135, size) >= colPrev, 'the column never shrinks as the text grows');
+      CheckTrue(BandMapRowHeight(14, size) > BandMapTextHeight(size),
+                'a row is always taller than its text');
+      rowPrev := BandMapRowHeight(14, size);
+      colPrev := BandMapColumnWidth(135, size);
+      end;
+   CheckEquals(23, BandMapRowHeight(14, 12), 'the largest text: 22 pixels plus one');
+   CheckEquals(228, BandMapColumnWidth(135, 12), 'the largest text: 135 * 22 div 13');
+   CheckEquals(14, BandMapRowHeight(12, 3),
+               'a 12-pixel row setting is raised to fit the 13-pixel text');
+end;
+
+procedure TBandMapOrderTests.Test_TextSize_Step;
+begin
+   BeginTest('Test_TextSize_Step');
+   CheckEquals(4, SteppedBandMapSize(3, 1, -4, 12), 'larger');
+   CheckEquals(2, SteppedBandMapSize(3, -1, -4, 12), 'smaller');
+   CheckEquals(12, SteppedBandMapSize(12, 1, -4, 12), 'larger is held at the maximum');
+   CheckEquals(-4, SteppedBandMapSize(-4, -1, -4, 12), 'smaller is held at the minimum');
+   CheckEquals(0, SteppedBandMapSize(0, 0, -4, 12), 'no step is no change');
+end;
+
 procedure TBandMapOrderTests.RunAllTests;
 begin
    Test_AngularDistance_WrapsAtNorth;
@@ -365,6 +431,10 @@ begin
    Test_DisplayLimit_IsACeiling;
    Test_DisplayLimit_UnknownWindowUsesTheSetting;
    Test_DisplayLimit_EvenAndFloored;
+   Test_TextSize_DefaultsAreUnchanged;
+   Test_TextSize_RowAndColumnNeverShrinkBelowTheSettings;
+   Test_TextSize_GrowsWithTheText;
+   Test_TextSize_Step;
 end;
 
 end.

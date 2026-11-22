@@ -210,7 +210,7 @@ msgstr "Колір вибраного місця на карті гурта. З�
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SIZE"
-msgid "Values range between smallest (0) and largest (8). You need to adjust BAND MAP ITEM HEIGHT accordingly."
+msgid "The size of the spot text in the band map. Values range from -4 (smallest) to 12 (largest); the default is 3. It can also be changed from the band map's right-click menu: Text size, then Larger, Smaller or Reset. The spot rows and columns grow with the text; BAND MAP ITEM HEIGHT and BAND MAP ITEM WIDTH set the smallest they will be."
 msgstr "Діапазон значень між найменшими (0) і найбільшим (8). Вам необхідно налаштувати BAND MAP ITEM HEIGHT відповідно."
 
 #. Config command: BAND MAP SPLIT MODE   (default: BY CUTOFF FREQ)

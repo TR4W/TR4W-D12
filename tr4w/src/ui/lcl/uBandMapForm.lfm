@@ -111,6 +111,21 @@ object frmBandMap: TfrmBandMap
       Caption = 'Sort by beam heading'
       OnClick = MenuSortByBeamClick
     end
+    object miTextSize: TMenuItem
+      Caption = 'Text size'
+      object miTextLarger: TMenuItem
+        Caption = 'Larger'
+        OnClick = MenuTextLargerClick
+      end
+      object miTextSmaller: TMenuItem
+        Caption = 'Smaller'
+        OnClick = MenuTextSmallerClick
+      end
+      object miTextReset: TMenuItem
+        Caption = 'Reset'
+        OnClick = MenuTextResetClick
+      end
+    end
     object miSep1: TMenuItem
       Caption = '-'
     end

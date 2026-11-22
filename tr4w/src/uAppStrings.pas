@@ -1960,6 +1960,12 @@ resourcestring
       spots by the beam heading (issue 82). *)
    SBandMapCenterOnRadio  = 'Center on radio frequency';
    SBandMapSortByBeam     = 'Sort by beam heading';
+   (* THE TEXT SIZE SUBMENU on the same menu: BAND MAP SIZE stepped up or
+      down, or put back to its default. *)
+   SBandMapTextSize       = 'Text size';
+   SBandMapTextLarger     = 'Larger';
+   SBandMapTextSmaller    = 'Smaller';
+   SBandMapTextReset      = 'Reset';
    (* SEND SPOT: the tick that puts the station's section, state or county
       (its domestic multiplier) the program knows for the call into the
       comment -- never a serial number, RST or the rest of the exchange

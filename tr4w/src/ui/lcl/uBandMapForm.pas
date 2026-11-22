@@ -75,6 +75,10 @@ type
     miMultsOnly: TMenuItem;
     miCenterOnRadio: TMenuItem;
     miSortByBeam: TMenuItem;
+    miTextSize: TMenuItem;
+    miTextLarger: TMenuItem;
+    miTextSmaller: TMenuItem;
+    miTextReset: TMenuItem;
     miSep1: TMenuItem;
     miCopySpot: TMenuItem;
     miDeleteSpot: TMenuItem;
@@ -102,6 +106,9 @@ type
     procedure MenuMultsOnlyClick(Sender: TObject);
     procedure MenuCenterOnRadioClick(Sender: TObject);
     procedure MenuSortByBeamClick(Sender: TObject);
+    procedure MenuTextLargerClick(Sender: TObject);
+    procedure MenuTextSmallerClick(Sender: TObject);
+    procedure MenuTextResetClick(Sender: TObject);
     procedure MenuCopySpotClick(Sender: TObject);
     procedure MenuDeleteSpotClick(Sender: TObject);
     procedure MenuRemoveAllClick(Sender: TObject);
@@ -149,6 +156,7 @@ type
     procedure SelectTopSpot;
   private
     procedure LayOutGrid;
+    procedure ChangeTextSize(const aNewSize: integer);
     procedure CenterOnRadio;
     procedure RebuildSnapshot;
     procedure RestoreSelection;
@@ -174,6 +182,9 @@ const
    BANDMAP_QSY_INACTIVE = 'QSY INACTIVE RADIO';
    BANDMAP_CENTER_ON_RADIO = 'BAND MAP CENTER ON RADIO';
    BANDMAP_SORT_BY_BEAM    = 'BAND MAP SORT BY BEAM HEADING';
+   (* The one NUMBER the menu changes (Text size), so it is not in the toggle
+     list below: that list is proven to be owned station booleans. *)
+   BANDMAP_SIZE            = 'BAND MAP SIZE';
 
    BANDMAP_TOGGLED_SETTINGS: array[0..8] of string = (
       BANDMAP_ALL_BANDS, BANDMAP_ALL_MODES, BANDMAP_DISPLAY_CQ,
@@ -289,6 +300,10 @@ begin
    miQSYInactive.Caption := RC_SENDINRIG;
    miCenterOnRadio.Caption := SBandMapCenterOnRadio;
    miSortByBeam.Caption    := SBandMapSortByBeam;
+   miTextSize.Caption      := SBandMapTextSize;
+   miTextLarger.Caption    := SBandMapTextLarger;
+   miTextSmaller.Caption   := SBandMapTextSmaller;
+   miTextReset.Caption     := SBandMapTextReset;
 
    if sbSpot.Panels.Count <> SB_PANELS then
       begin
@@ -366,8 +381,12 @@ begin
    visibleCols := 0;
    if grdSpots.HandleAllocated then
       begin
-      rowsDown    := grdSpots.ClientHeight div Settings.BandMap.ItemHeight;
-      visibleCols := grdSpots.ClientWidth div Settings.BandMap.ItemWidth;
+      rowsDown    := grdSpots.ClientHeight div
+                     BandMapRowHeight(Settings.BandMap.ItemHeight,
+                                      Settings.BandMap.Size);
+      visibleCols := grdSpots.ClientWidth div
+                     BandMapColumnWidth(Settings.BandMap.ItemWidth,
+                                        Settings.BandMap.Size);
       end;
    Result := EffectiveDisplayLimit(Settings.BandMap.DisplayLimit, rowsDown,
                                    visibleCols);
@@ -388,6 +407,7 @@ end;
 procedure TfrmBandMap.LayOutGrid;
 var
    rowsDown, colsAcross: integer;
+   rowHeight, colWidth: integer;
 begin
    (* THE FLOORS THAT USED TO BE HERE ARE GONE, and the compiler is what
      removed them.
@@ -412,15 +432,22 @@ begin
      conversion and the setting stopped doing anything. The main window's
      face and weight, at the old height, restore it. *)
    ApplyMainFontTo(grdSpots.Font);
-   grdSpots.Font.Height := 10 + Settings.BandMap.Size;
+   grdSpots.Font.Height := BandMapTextHeight(Settings.BandMap.Size);
 
-   grdSpots.DefaultRowHeight := Settings.BandMap.ItemHeight;
-   grdSpots.DefaultColWidth  := Settings.BandMap.ItemWidth;
+   (* THE CELL FOLLOWS THE TEXT (uBandMapOrder): the settings' row height and
+     column width are what fit the default size, so a larger size asks for more
+     room and the default asks for exactly what it always did. *)
+   rowHeight := BandMapRowHeight(Settings.BandMap.ItemHeight,
+                                 Settings.BandMap.Size);
+   colWidth  := BandMapColumnWidth(Settings.BandMap.ItemWidth,
+                                   Settings.BandMap.Size);
+   grdSpots.DefaultRowHeight := rowHeight;
+   grdSpots.DefaultColWidth  := colWidth;
 
    // HOW MANY FIT DOWN, then how many columns those need.  The Win32 list box
    // was told only the column WIDTH and worked the rest out itself; the LCL
    // wants the counts, which is the same arithmetic made explicit.
-   rowsDown := grdSpots.ClientHeight div Settings.BandMap.ItemHeight;
+   rowsDown := grdSpots.ClientHeight div rowHeight;
    if rowsDown < 1 then
       begin
       rowsDown := 1;
@@ -450,8 +477,8 @@ begin
      before that its size means nothing. *)
    if grdSpots.HandleAllocated then
       begin
-      Constraints.MinWidth  := Settings.BandMap.ItemWidth + (Width - grdSpots.ClientWidth);
-      Constraints.MinHeight := 3 * Settings.BandMap.ItemHeight + (Height - grdSpots.ClientHeight);
+      Constraints.MinWidth  := colWidth + (Width - grdSpots.ClientWidth);
+      Constraints.MinHeight := 3 * rowHeight + (Height - grdSpots.ClientHeight);
       end;
 end;
 
@@ -501,7 +528,9 @@ begin
 
    target := FirstSpotAbove(RowFrequencies, FRadioFreq);
 
-   visibleCols := grdSpots.ClientWidth div Settings.BandMap.ItemWidth;
+   visibleCols := grdSpots.ClientWidth div
+                  BandMapColumnWidth(Settings.BandMap.ItemWidth,
+                                     Settings.BandMap.Size);
    if visibleCols < 1 then
       begin
       visibleCols := 1;
@@ -1076,6 +1105,10 @@ begin
    miSortByBeam.Checked    := Settings.BandMap.SortByBeamHeading;
    // In beam order there is no frequency to centre on.
    miCenterOnRadio.Enabled := not Settings.BandMap.SortByBeamHeading;
+   // The ends of BAND MAP SIZE's range, and the default (nothing to reset).
+   miTextLarger.Enabled  := Settings.BandMap.Size < High(TBandMapSize);
+   miTextSmaller.Enabled := Settings.BandMap.Size > Low(TBandMapSize);
+   miTextReset.Enabled   := Settings.BandMap.Size <> BANDMAP_REFERENCE_SIZE;
 
    // Both SO2R items were only ever meaningful with two radios; the old window
    // expressed that by not ticking them, which is not the same as saying why.
@@ -1123,6 +1156,53 @@ end;
 procedure TfrmBandMap.MenuSortByBeamClick(Sender: TObject);
 begin
    ToggleAndStoreCommand(BANDMAP_SORT_BY_BEAM);
+end;
+
+(* THE TEXT SIZE MENU. BAND MAP SIZE goes through the same door a toggle does
+  (ApplyAndStoreCommand: the range check, the setter, the save), then the grid
+  is measured again at once -- the row height and column width follow the text
+  (uBandMapOrder), so how many spots fit changes, and when the fitting limit
+  moves the spots are chosen again, as a resize does. A value the setting
+  refuses leaves everything as it was. *)
+procedure TfrmBandMap.ChangeTextSize(const aNewSize: integer);
+begin
+   if aNewSize = Settings.BandMap.Size then
+      begin
+      Exit;
+      end;
+   if not ApplyAndStoreCommand(nil, BANDMAP_SIZE, IntToStr(aNewSize)) then
+      begin
+      Exit;
+      end;
+
+   grdSpots.DisableAutoSizing;
+   try
+      LayOutGrid;
+   finally
+      grdSpots.EnableAutoSizing;
+   end;
+   if Assigned(SpotsList) and (FittingLimit <> FAppliedLimit) then
+      begin
+      SpotsList.RequestRepaint;
+      end;
+   grdSpots.Invalidate;
+end;
+
+procedure TfrmBandMap.MenuTextLargerClick(Sender: TObject);
+begin
+   ChangeTextSize(SteppedBandMapSize(Settings.BandMap.Size, 1,
+                                     Low(TBandMapSize), High(TBandMapSize)));
+end;
+
+procedure TfrmBandMap.MenuTextSmallerClick(Sender: TObject);
+begin
+   ChangeTextSize(SteppedBandMapSize(Settings.BandMap.Size, -1,
+                                     Low(TBandMapSize), High(TBandMapSize)));
+end;
+
+procedure TfrmBandMap.MenuTextResetClick(Sender: TObject);
+begin
+   ChangeTextSize(BANDMAP_REFERENCE_SIZE);
 end;
 
 (* COPY THE SELECTED SPOT AS TEXT (issue 183). The entity is CTY.DAT's name for

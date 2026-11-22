@@ -12888,3 +12888,27 @@ msgstr ""
 #, fuzzy
 msgid "IP port"
 msgstr ""
+
+#: uappstrings.sbandmaptextsize
+#: tfrmbandmap.mitextsize.caption
+#, fuzzy
+msgid "Text size"
+msgstr ""
+
+#: uappstrings.sbandmaptextlarger
+#: tfrmbandmap.mitextlarger.caption
+#, fuzzy
+msgid "Larger"
+msgstr ""
+
+#: uappstrings.sbandmaptextsmaller
+#: tfrmbandmap.mitextsmaller.caption
+#, fuzzy
+msgid "Smaller"
+msgstr ""
+
+#: uappstrings.sbandmaptextreset
+#: tfrmbandmap.mitextreset.caption
+#, fuzzy
+msgid "Reset"
+msgstr ""

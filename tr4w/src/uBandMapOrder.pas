@@ -111,6 +111,35 @@ const
 function EffectiveDisplayLimit(const aSetting, aRowsDown,
                                aVisibleCols: integer): integer;
 
+(* THE TEXT SIZE AND WHAT FOLLOWS FROM IT (the right-click Text size menu).
+
+  BAND MAP SIZE is added to BANDMAP_TEXT_BASE to give the spot text's height in
+  pixels. The row height and the column width the operator set (BAND MAP ITEM
+  HEIGHT / WIDTH) are what fit the REFERENCE size, BANDMAP_REFERENCE_SIZE (3,
+  the setting's default, so 13 pixels): at the reference the two functions below
+  return the settings exactly as they were, and only a LARGER text asks for
+  more room. Smaller text never takes room away -- the operator who wants
+  tighter rows has BAND MAP ITEM HEIGHT for that. *)
+const
+   BANDMAP_TEXT_BASE      = 10;
+   BANDMAP_REFERENCE_SIZE = 3;
+
+(* The spot text's height in pixels for a BAND MAP SIZE. *)
+function BandMapTextHeight(const aSize: integer): integer;
+
+(* The row height to use: the operator's BAND MAP ITEM HEIGHT, or one pixel
+  more than the text, whichever is larger. 14 at the defaults (size 3, height
+  14). *)
+function BandMapRowHeight(const aItemHeight, aSize: integer): integer;
+
+(* The column width to use: the operator's BAND MAP ITEM WIDTH, scaled up in
+  proportion to the text once it is taller than the reference, never below it.
+  135 at the defaults. *)
+function BandMapColumnWidth(const aItemWidth, aSize: integer): integer;
+
+(* One step of the Text size menu: aSize + aDelta held inside aMin..aMax. *)
+function SteppedBandMapSize(const aSize, aDelta, aMin, aMax: integer): integer;
+
 implementation
 
 uses
@@ -288,6 +317,46 @@ begin
    if Result < MIN_DISPLAY_LIMIT then
       begin
       Result := MIN_DISPLAY_LIMIT;
+      end;
+end;
+
+function BandMapTextHeight(const aSize: integer): integer;
+begin
+   Result := BANDMAP_TEXT_BASE + aSize;
+end;
+
+function BandMapRowHeight(const aItemHeight, aSize: integer): integer;
+begin
+   Result := aItemHeight;
+   if BandMapTextHeight(aSize) + 1 > Result then
+      begin
+      Result := BandMapTextHeight(aSize) + 1;
+      end;
+end;
+
+function BandMapColumnWidth(const aItemWidth, aSize: integer): integer;
+var
+   scaled: integer;
+begin
+   Result := aItemWidth;
+   scaled := (aItemWidth * BandMapTextHeight(aSize)) div
+             BandMapTextHeight(BANDMAP_REFERENCE_SIZE);
+   if scaled > Result then
+      begin
+      Result := scaled;
+      end;
+end;
+
+function SteppedBandMapSize(const aSize, aDelta, aMin, aMax: integer): integer;
+begin
+   Result := aSize + aDelta;
+   if Result > aMax then
+      begin
+      Result := aMax;
+      end;
+   if Result < aMin then
+      begin
+      Result := aMin;
       end;
 end;
 

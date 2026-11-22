@@ -187,8 +187,8 @@ msgstr "The colour of the selected spot in the band map. The default, HIGHLIGHT,
 
 #. Config command: BAND MAP SIZE   (default: 2)
 msgctxt "TC_HELP_BAND_MAP_SIZE"
-msgid "Values range between smallest (0) and largest (8). You need to adjust BAND MAP ITEM HEIGHT accordingly."
-msgstr "Values range between smallest (0) and largest (8). You need to adjust BAND MAP ITEM HEIGHT accordingly."
+msgid "The size of the spot text in the band map. Values range from -4 (smallest) to 12 (largest); the default is 3. It can also be changed from the band map's right-click menu: Text size, then Larger, Smaller or Reset. The spot rows and columns grow with the text; BAND MAP ITEM HEIGHT and BAND MAP ITEM WIDTH set the smallest they will be."
+msgstr "The size of the spot text in the band map. Values range from -4 (smallest) to 12 (largest); the default is 3. It can also be changed from the band map's right-click menu: Text size, then Larger, Smaller or Reset. The spot rows and columns grow with the text; BAND MAP ITEM HEIGHT and BAND MAP ITEM WIDTH set the smallest they will be."
 
 #. Config command: BAND MAP SPLIT MODE   (default: BY CUTOFF FREQ)
 msgctxt "TC_HELP_BAND_MAP_SPLIT_MODE"

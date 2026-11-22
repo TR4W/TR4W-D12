@@ -223,7 +223,7 @@ msgstr "밴드 맵에서 선택한 자리의 색상. 기본적으로 HighLIGHT�
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SIZE"
-msgid "Values range between smallest (0) and largest (8). You need to adjust BAND MAP ITEM HEIGHT accordingly."
+msgid "The size of the spot text in the band map. Values range from -4 (smallest) to 12 (largest); the default is 3. It can also be changed from the band map's right-click menu: Text size, then Larger, Smaller or Reset. The spot rows and columns grow with the text; BAND MAP ITEM HEIGHT and BAND MAP ITEM WIDTH set the smallest they will be."
 msgstr "가장 작은 (0)과 최대 (8) 사이의 값 범위. 당신은 조정해야 BAND MAP ITEM HEIGHT 견적 요청"
 
 #. Config command: BAND MAP SPLIT MODE   (default: BY CUTOFF FREQ)

@@ -142,7 +142,9 @@ type
    TBandMapDisplayLimit = 30..1000;
    TBandMapItemHeight   = 12..50;
    TBandMapItemWidth    = 100..200;
-   TBandMapSize         = 0..8;
+   (* The spot text is 10 + this pixels tall, so -4 is the 6-pixel floor. It
+     was 0..8; the band map's Text size menu steps it. *)
+   TBandMapSize         = -4..12;
    (* BAND MAP WORKED MULT LIMIT (issue 12): how many credited workings of a
      multiplier a spot shows an M for. 0 worked is the red M, 1 up to one less
      than this the orange M (a backup wanted), this many or more no M. *)

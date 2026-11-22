@@ -1265,8 +1265,11 @@ begin
       // And the other three carry their own, different, ranges.
       CheckFalse(s.TrySetByCommand('BAND MAP ITEM WIDTH', '99'),  'width min 100');
       CheckTrue (s.TrySetByCommand('BAND MAP ITEM WIDTH', '200'), 'width max 200');
-      CheckFalse(s.TrySetByCommand('BAND MAP SIZE', '9'),         'size max 8');
-      CheckTrue (s.TrySetByCommand('BAND MAP SIZE', '0'),         'size min 0');
+      CheckFalse(s.TrySetByCommand('BAND MAP SIZE', '13'),        'size max 12');
+      CheckTrue (s.TrySetByCommand('BAND MAP SIZE', '12'),        'size max is legal');
+      CheckFalse(s.TrySetByCommand('BAND MAP SIZE', '-5'),        'size min -4');
+      CheckTrue (s.TrySetByCommand('BAND MAP SIZE', '-4'),        'size min is legal');
+      CheckEquals(-4, s.BandMap.Size, 'a negative size is stored as a negative');
       CheckFalse(s.TrySetByCommand('BAND MAP DISPLAY LIMIT', '29'),   'limit min 30');
       CheckTrue (s.TrySetByCommand('BAND MAP DISPLAY LIMIT', '1000'), 'limit max 1000');
 
@@ -1361,6 +1364,17 @@ begin
       CheckEquals(12, s.BandMap.ItemHeight, 'zero clamped up to the minimum');
       CheckEquals(200, s.BandMap.ItemWidth, 'above the maximum clamped down');
       CheckEquals(3, s.BandMap.Size, 'a legal value is left exactly alone');
+
+      (* BAND MAP SIZE IS -4..12: a NEGATIVE stored value must stream back
+        as itself, not as an unsigned byte that clamps to the maximum. *)
+      obj := TJSONObject(TJSONObject.ParseJSONValue('{"BandMap":{"Size":-4}}'));
+      CheckTrue(obj <> nil, 'the negative-size fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckEquals(-4, s.BandMap.Size, 'the new minimum survives a load');
 
       (* AND AN ABSURD ONE STILL LANDS SOMEWHERE LEGAL, whichever way the
         storage wrapped it -- that is the property the band map's grid

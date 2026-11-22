@@ -223,7 +223,7 @@ msgstr "乐队地图中选定位置的颜色。 默认,HHLIGHT,是系统突出�
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SIZE"
-msgid "Values range between smallest (0) and largest (8). You need to adjust BAND MAP ITEM HEIGHT accordingly."
+msgid "The size of the spot text in the band map. Values range from -4 (smallest) to 12 (largest); the default is 3. It can also be changed from the band map's right-click menu: Text size, then Larger, Smaller or Reset. The spot rows and columns grow with the text; BAND MAP ITEM HEIGHT and BAND MAP ITEM WIDTH set the smallest they will be."
 msgstr "数值在最小(0)和最大(8)之间。 你需要调整 BAND MAP ITEM HEIGHT 相应."
 
 #. Config command: BAND MAP SPLIT MODE   (default: BY CUTOFF FREQ)
