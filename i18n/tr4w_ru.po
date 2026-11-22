@@ -9200,6 +9200,7 @@ msgstr "%0:s %1:d"
 
 #: uappstrings.snewcontestfilescall
 #: tfrmeditqso.lblmycall.caption
+#: uappstrings.sentryfieldcallname
 #, fuzzy
 msgid "Call"
 msgstr "Позывной"
@@ -12599,4 +12600,19 @@ msgstr ""
 #: uappstrings.speerqsonotsaved
 #, fuzzy
 msgid "A QSO from another station could NOT be saved to this log. It is not lost if the server has it: the next catch-up from the server, or Net > Synchronize, adds it once this log can be written. Further refusals are in tr4w.log."
+msgstr ""
+
+#: uappstrings.sentrystatusqsonotsaved
+#, fuzzy
+msgid "QSO not saved"
+msgstr ""
+
+#: uappstrings.sentrystatuslogreadonly
+#, fuzzy
+msgid "Log read-only"
+msgstr ""
+
+#: uappstrings.sentryfieldexchangename
+#, fuzzy
+msgid "Exchange"
 msgstr ""

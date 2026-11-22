@@ -219,6 +219,10 @@ begin
    Result.Add(TNamedRect.Create('last-hour bar', mbBottom, LastHourBarRect(aWS), aWS));
    Result.Add(TNamedRect.Create('rate bar', mbBottom, RateBarRect(aWS), aWS));
    Result.Add(TNamedRect.Create('possible-call strip', mbBottom, PossibleCallRect(aWS), aWS));
+   (* THE ENTRY AREA'S LOG STATUS (uEntryStatus, 2026-11-22): in cells nothing
+     else uses, so it joins the no-overlap check at every scale with no new
+     KnownOverlap pin. *)
+   Result.Add(TNamedRect.Create('entry status', mbBottom, EntryStatusRect(aWS), aWS));
    if aMinitour then
       begin
       Result.Add(TNamedRect.Create('tour bar', mbBottom, TourDurationBarRect(aWS), aWS));

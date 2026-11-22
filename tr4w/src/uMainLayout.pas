@@ -187,6 +187,22 @@ function TourDurationTextRect(const aWS: integer): TRect;
 function PossibleCallRect(const aWS: integer): TRect;
 function PossibleCallColumnWidth(const aWS: integer): integer;
 
+(* THE ENTRY AREA'S LOG STATUS PANEL (uEntryStatus, 2026-11-22): "QSO not
+  saved" or "Log read-only", and the store's reason under it.
+
+  IT TAKES NO SPACE FROM ANYTHING. Columns 4..11 of bottom-band rows 3 and 4
+  (TWindows[] rows 10 and 11) hold no control: below the second radio's name,
+  left of MASTER and MULT, so it sits two grid units left of the exchange
+  field. No cell touching the fields is free -- the QSO number, QSO B4,
+  MASTER and MULT are left of them, the rate column right, the auto-send
+  arrow above -- which is also why the proposal's "Call" and "Exchange"
+  captions were not placed (they would overlap a cell or narrow a field).
+
+  The font is three pixels under ws, so its two lines fit the panel's 2 * ws
+  at every scale; never below ENTRY_STATUS_MIN_FONT_HEIGHT. *)
+function EntryStatusRect(const aWS: integer): TRect;
+function EntryStatusFontHeight(const aWS: integer): integer;
+
 (* THE BOTTOM BAND STRETCHED TO THE CLIENT WIDTH (NY4I, 2026-11-21).
 
   ws follows the width in whole steps of LAYOUT_COLUMNS px, so a window up to
@@ -455,6 +471,23 @@ end;
 function PossibleCallColumnWidth(const aWS: integer): integer;
 begin
    Result := aWS * 5;
+end;
+
+const
+   ENTRY_STATUS_MIN_FONT_HEIGHT = 8;
+
+function EntryStatusRect(const aWS: integer): TRect;
+begin
+   Result := Bounds(aWS * 4, aWS * 3, aWS * 7, aWS * 2);
+end;
+
+function EntryStatusFontHeight(const aWS: integer): integer;
+begin
+   Result := aWS - 3;
+   if Result < ENTRY_STATUS_MIN_FONT_HEIGHT then
+      begin
+      Result := ENTRY_STATUS_MIN_FONT_HEIGHT;
+      end;
 end;
 
 function StretchX(const aX, aBandWidth, aWS: integer): integer;

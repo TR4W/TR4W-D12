@@ -237,6 +237,7 @@ uses
   uSpots,
   uSpotAge,
   uRemMultWorkState,
+  uEntryStatus,
   uContestDates,
   uContestSchedule,
   uClusterTokens,

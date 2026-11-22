@@ -29,9 +29,10 @@ http://www.gnu.org/licenses/gpl-3.0.txt
                      window shows, and RemMultsWindowShown for the fill.  Its
                      per-window tLB_SETCOLUMNWIDTH calls are the grid's cell
                      width; SetRemMultsColumnWidth still decides it.
-    WM_DRAWITEM   -> TfrmRemMults.MultsDrawCell, which paints the text and
-                     worked flag the REBUILD stored: LOGEDIT.ShowRemMultsInWindow
-                     asks ResolveRemainingMult below for each cell (issue 216).
+    WM_DRAWITEM   -> the grid's own drawing; TfrmRemMults.MultsPrepareCanvas
+                     colours each cell from the worked flag the REBUILD stored:
+                     LOGEDIT.ShowRemMultsInWindow asks ResolveRemainingMult
+                     below for each cell (issue 216).
     WM_SIZE       -> Align = alClient plus TFlowGrid.LayOut.
     WM_WINDOWPOSCHANGING, WM_EXITSIZEMOVE -> DefTR4WProc.  Not reproduced, as
                      with every converted window before it.

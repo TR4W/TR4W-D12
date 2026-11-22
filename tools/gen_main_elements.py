@@ -133,13 +133,15 @@ BANDS = (TOP_BAND, NEEDS_BLOCK, BOTTOM_BAND)
 # THE HAND-WRITTEN CONTROLS OF THE BOTTOM BAND, and where each goes in it, in
 # band coordinates: (left, top, width, height, extra properties). The rects
 # are uMainLayout's LastHourBarRect, RateBarRect, TourDurationBarRect,
-# TourDurationTextRect and PossibleCallRect. The strip is alBottom in the
+# TourDurationTextRect, EntryStatusRect and PossibleCallRect. The strip is alBottom in the
 # band, BOTTOM_BAND_MARGIN above the band's bottom edge.
 HAND_BLOCKS = {
    'pbLastHour': (28 * WS, 3 * WS, 5 * WS, WS, []),
    'pbRate': (33 * WS, 3 * WS, 5 * WS, WS, []),
    'pbTourDuration': (33 * WS, 5 * WS, 5 * WS, WS, []),
    'pnlTourDuration': (38 * WS, 5 * WS, 8 * WS, WS, []),
+   # uMainLayout.EntryStatusRect: the entry area's log status (uEntryStatus).
+   'pnlEntryStatus': (4 * WS, 3 * WS, 7 * WS, 2 * WS, []),
    'lstPossibleCall': (0, BOTTOM_BAND_HEIGHT - BOTTOM_BAND_MARGIN - WS, LAYOUT_WIDTH, WS,
                        [('Align', 'alBottom'),
                         ('BorderSpacing.Bottom', str(BOTTOM_BAND_MARGIN))]),

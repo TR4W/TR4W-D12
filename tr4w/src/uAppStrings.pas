@@ -1548,6 +1548,18 @@ resourcestring
      there. Nothing was sent anywhere. ONE LINE: keep it short. *)
    SLogChangeNotSaved = 'NOT SAVED -- the contest log did not take this change. See tr4w.log.';
 
+   (* THE ENTRY AREA'S LOG STATUS (uEntryStatus, 2026-11-22): the first line
+     of the panel beside the call and exchange. The reason follows on the
+     next line (SQsoNotLogged or SLogReadOnlyNotSaved...). The panel is
+     narrow -- seven grid units, 91 px at the smallest scale -- so KEEP THESE
+     SHORT; a longer translation wraps onto the reason's line. *)
+   SEntryStatusQsoNotSaved = 'QSO not saved';
+   SEntryStatusLogReadOnly = 'Log read-only';
+   (* The names the call and exchange fields give assistive technology
+     (AccessibleName). *)
+   SEntryFieldCallName = 'Call';
+   SEntryFieldExchangeName = 'Exchange';
+
    (* WHY A DOUBLE CLICK ON THE LOG OPENED NO EDIT QSO WINDOW -- on the status
      line, because it said nothing at all (2026-11-18). *)
    SEditQSONoQSOSelected = 'No QSO selected.';

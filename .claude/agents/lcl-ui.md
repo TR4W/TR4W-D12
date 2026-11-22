@@ -239,7 +239,7 @@ the UI; measure the screen, not the source.
 remaining-multiplier windows: `TFlowGrid.LayOut` writes each entry into the
 grid's own `Cells` (one `BeginUpdate`/`EndUpdate`, `''` past the end), and the
 grid repaints itself -- there is no forced `Invalidate`. Colours come from
-`OnPrepareCanvas` (dupe sheet, SCP). **A remaining multiplier's text and worked
+`OnPrepareCanvas` (dupe sheet, SCP, remaining multipliers). **A remaining multiplier's text and worked
 flag are resolved at the REBUILD** (NY4I's decision A): `LOGEDIT.ShowRemMultsInWindow`
 asks `uRemMults.ResolveRemainingMult` per cell and lists, above itself, every
 change point that calls `VisibleLog.ShowRemainingMultipliers`. A stale cell is a
@@ -248,12 +248,20 @@ backup state** (issue 357): `ResolveRemainingMult` returns the sheet's
 `mo.WorkedCount` on the window's band/mode, and `uRemMultWorkState` (a leaf,
 unit tested) words the text (`Oh 2` from the second working) and decides
 "backup wanted" -- worked, count 1..BAND MAP WORKED MULT LIMIT-1, the band
-map's orange M -- which the draw handler fades from `uSpots.WorkedMultColor`.
+map's orange M -- drawn as a FLAT fill of `uSpots.WorkedMultColor`.
 Orange means that and nothing else; do not reuse it for "worked on some bands".
 The limit's and colour's setters rebuild the windows (`uSettingsEffects`).
-The remaining-mults windows still have a
-draw handler for ONE thing, the highlight-mode fade to white, which
-`OnPrepareCanvas` cannot express; it goes when NY4I accepts a flat fill.
+**The remaining-mults windows have no draw handler** (2026-11-22, the UI refresh
+proposal's "Multiplier and related grids"): the gradient (and its colour indexed
+by the multiplier type's ORDINAL) is gone; `MultsPrepareCanvas` asks
+`uRemMultWorkState.RemainingMultCellStyle` (pure, unit tested with a WCAG
+contrast pin): needed = `clWindowText`, worked = `clGrayText` with no fill
+(the window's text if the grey would not reach 3:1), backup = flat
+WORKED MULT COLOR under black or white, whichever reads. Every colour is
+`ColorToRGB`-resolved before the leaf sees it -- a system colour is an index,
+not RGB. Weight is an output but normal everywhere (bold may clip a 49-px
+cell; on the bench queue). The band map's mult-flag gradient is a different
+thing and was left alone.
 
 **The needs strips (`uMainGrids`) are written, never polled** (issue #100,
 2026-10-26). Their cells hold the answer in `Caption` and colour; what decides
@@ -864,6 +872,22 @@ counts the key itself.
   `edtFontFace.Font`), opened by Choose... (`TFontDialog`, `fdNoSizeSel`), and
   FONT SIZE and WINDOW SIZE ("Main window text size") as designed
   `TSpinEdit`s, hand-wired. A size from the font dialog has nowhere to go.
+
+## The entry area's log status panel (UI refresh proposal, 2026-11-22)
+
+`pnlEntryStatus` (designed, bottom band, `uMainLayout.EntryStatusRect`: columns
+4..11 of band rows 3-4, the only free cells near the fields) shows "QSO not
+saved" + `LogStoreNotSavedText` after a refused Enter, and "Log read-only" +
+the same reason while `LogStoreIsReadOnly`. The rule is `uEntryStatus` (a leaf,
+unit tested); the state is `MainUnit.GEntryRefusalShown`, NOT `QSOSaveRefused`
+(that one resets every Enter). `RefreshEntryStatus` is main-thread only and is
+called from TryLogContact's two outcomes, the two field clears (a discard) and
+the end of `RestoreToolWindows`; it never shows success. A discard made by any
+OTHER path than `tCleareCallWindow`/`tCleareExchangeWindow` leaves the panel up
+until the next refresh. The proposal's "Call"/"Exchange" captions, shared
+background and focus outline were NOT built: no cell beside either field is
+free, and an outline inside a field takes text height. Both fields were already
+bold. Their `AccessibleName` is set (reaches nothing on win32 today).
 
 ## Coordinate with
 

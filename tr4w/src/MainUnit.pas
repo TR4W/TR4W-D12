@@ -844,6 +844,7 @@ uses
      columns ask the field list now (M11 S9e part 1). *)
   (* ExchangeFieldsShowPrecedenceColumn / ...ShowCheckColumn. *)
   uExchangeFields,
+  uEntryStatus,       (* EntryStatusKind -- the entry area's log status, RefreshEntryStatus *)
 {$IF tDebugMode}
   // uDocumentation,
 {$IFEND}
@@ -1017,6 +1018,53 @@ end;
   this -- it leaves the flag False and keeps its old path. *)
 var
   QSOSaveRefused: boolean = False;
+
+(* THE ENTRY AREA'S LOG STATUS -- the UI refresh proposal's save feedback
+  (uEntryStatus, 2026-11-22). GEntryRefusalShown is NOT QSOSaveRefused: that
+  one is reset at every Enter and read by the Enter paths; this one says the
+  refusal is still on screen, and only a saved contact or a discarded entry
+  (both fields blank) ends it -- an unrelated notice never does.
+
+  RefreshEntryStatus asks the store whether the log is read-only and puts the
+  answer in pnlEntryStatus. MAIN THREAD ONLY: a call from any other thread
+  returns, because the store's own failure (Disable) can run off it and must
+  not write a control. Its callers: TryLogContact (both outcomes), the two
+  field clears (a discard), and the end of RestoreToolWindows (a log opened
+  read-only). It never reports success: a save hides the panel, and the grid's
+  new row is the confirmation. *)
+var
+  GEntryRefusalShown: boolean = False;
+
+procedure RefreshEntryStatus;
+var
+   callText, exchangeText, reason: string;
+   kind: TEntryStatusKind;
+begin
+   if not OnMainThread then
+      begin
+      Exit;
+      end;
+
+   callText := '';
+   exchangeText := '';
+   if TR4WCallEdit <> nil then
+      begin
+      callText := string(TR4WCallEdit.Text);
+      end;
+   if TR4WExchangeEdit <> nil then
+      begin
+      exchangeText := string(TR4WExchangeEdit.Text);
+      end;
+   GEntryRefusalShown := RefusalStillShown(GEntryRefusalShown, callText, exchangeText);
+
+   kind := EntryStatusKind(GEntryRefusalShown, LogStoreIsReadOnly);
+   reason := '';
+   if kind <> eskNone then
+      begin
+      reason := LogStoreNotSavedText;
+      end;
+   ShowEntryStatus(kind, EntryStatusText(kind, reason));
+end;
 
 (* THE FURTHER LEGS OF ONE ENTER -- every queued park, every queued county,
   and a rover's copies from each further place -- logged with the first leg
@@ -1438,8 +1486,18 @@ begin
          QSOSaveRefused := True;
          ClearPendingParks;
          ClearPendingCounties;
+         (* Beside the entry, and kept there through unrelated notices until
+           this contact is saved or discarded (uEntryStatus). The status line
+           above is untouched. *)
+         GEntryRefusalShown := True;
+         RefreshEntryStatus;
          Exit;
          end;
+
+      (* SAVED -- committed, so the refusal (if one was showing) is over; a
+        read-only log that just recovered stops showing too. *)
+      GEntryRefusalShown := False;
+      RefreshEntryStatus;
 
     // Capture before ClearContestExchange zeroes out ReceivedData.
     // Needed for 2fer refill below.
@@ -4876,6 +4934,11 @@ begin
   PlaceEntry(efCall, EntryFieldRect(efrCall, aWS));
   PlaceEntry(efExchange, EntryFieldRect(efrExchange, aWS));
 
+  (* THE ENTRY AREA'S LOG STATUS, in cells nothing else uses (uEntryStatus). *)
+  r := StretchRect(EntryStatusRect(aWS), aBandWidth, aWS);
+  SetEntryStatusBounds(r.Left, r.Top, r.Right - r.Left, r.Bottom - r.Top,
+                       EntryStatusFontHeight(aWS));
+
   (* THE MINITOUR ROW: the tour's bar and readout, beside the quick-command
     panel the loop above narrowed. *)
   if Settings.Contest.MinitourDuration <> 0 then
@@ -5401,6 +5464,11 @@ begin
        once, which is also what gives a layout saved without a scale the one
        its restored width holds. *)
      ArmMainWindowScaling;
+
+     (* A LOG OPENED READ-ONLY (the operator's answer to a locked log) says so
+       beside the entry fields from the first moment, not only at the first
+       refused Enter. *)
+     RefreshEntryStatus;
   end;
 end;
 
@@ -8656,6 +8724,8 @@ procedure tCleareCallWindow;
 begin
   logger.debug('Clearing main call window');
   SetEntryText(TR4WCallEdit, '');
+  (* A DISCARD ends a refusal that is still showing (uEntryStatus). *)
+  RefreshEntryStatus;
 
 end;
 
@@ -8672,6 +8742,8 @@ begin
      Exit;
      end;
   SetEntryText(TR4WExchangeEdit, '');
+  (* A DISCARD ends a refusal that is still showing (uEntryStatus). *)
+  RefreshEntryStatus;
 
 end;
 

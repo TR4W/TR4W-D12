@@ -25,7 +25,6 @@ object frmRemMults: TfrmRemMults
     BorderStyle = bsNone
     ColCount = 1
     DefaultColWidth = 49
-    DefaultDrawing = False
     DefaultRowHeight = 16
     FixedCols = 0
     FixedRows = 0
@@ -33,6 +32,6 @@ object frmRemMults: TfrmRemMults
     RowCount = 1
     ScrollBars = ssAutoHorizontal
     TabOrder = 0
-    OnDrawCell = MultsDrawCell
+    OnPrepareCanvas = MultsPrepareCanvas
   end
 end

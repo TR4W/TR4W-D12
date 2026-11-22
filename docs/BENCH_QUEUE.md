@@ -188,6 +188,22 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-22 -- THE MULTIPLIER WINDOWS ARE FLAT (UI refresh proposal, "Multiplier and related grids"; lcl-ui)
+
+The remaining-multiplier windows (the generic one and DX / domestic / zone / prefix) no longer gradient a worked cell. In HIGHLIGHT mode: a NEEDED multiplier is the window's own text (black on white by default); a WORKED one is the system's grey text with no fill; a BACKUP WANTED one (worked fewer than BAND MAP WORKED MULT LIMIT times, issue 357) is a FLAT fill of BAND MAP WORKED MULT COLOR (orange by default) under black or white text, whichever reads on that colour. The `Oh 2` count is unchanged. The worked cell's old colour (indexed by the multiplier type's ordinal, item 36) is gone. The grid now draws its own text (`OnPrepareCanvas`; the draw handler is deleted), so the text sits where the LCL puts it rather than 2 px in. The rule is `uRemMultWorkState.RemainingMultCellStyle`, unit tested with a contrast check.
+
+- [ ] **Empty:** a new contest, nothing worked. Every cell is plain black on white in all five windows; no grey, no orange.
+- [ ] **Partly worked:** work a few. Worked cells turn grey on white and are clearly weaker than the needed ones, but still readable at arm's length. Needed ones stand out.
+- [ ] **Fully worked** (a small domestic list, or a band where everything is worked): the whole window grey; still readable, and nothing looks broken or disabled-and-empty.
+- [ ] **Limit 3:** a multiplier worked once or twice is a flat orange cell with black text (`Oh 2` on the second); the third working turns it grey.
+- [ ] **A dark custom colour:** set BAND MAP WORKED MULT COLOR to BLUE or BROWN. The backup cells are flat blue/brown with WHITE text. Try BTNFACE and HIGHLIGHT too (system colours).
+- [ ] **ERASE mode:** only needed multipliers, all black; nothing grey or orange.
+- [ ] **Clipping:** the grid clips text to its cell now (the old draw code wrote past it). Look for cut-off text in the 49-px column: `VP2E 12`, a long domestic name with SHOW DOMESTIC MULTIPLIER NAME on.
+- [ ] **A focus mark:** with the grid drawing itself, click into a window. Is there a focus rectangle or a highlighted cell at the top left that was not there before? Say whether it bothers you.
+- [ ] **A dark Windows / gtk2 theme:** the grey follows the system's grey text colour; say whether worked still reads (the code falls back to the window's text below 3:1).
+- [ ] **Bold for needed?** Weight is wired but off (a bold name may not fit 49 px). Say if you want to try it.
+- [ ] **Related grids checked together:** dupe sheet, SCP and the band map's orange M beside these windows. They were NOT changed (the band map's mult flag still has its own gradient). Say whether they now look out of step.
+
 ## Added 2026-11-22 -- THE PERIODIC BACKUP RUNS OFF THE ENTER PATH (issue 350; log-database)
 
 The periodic backup (VACUUM INTO snapshot, verification, publish, the outbox copy for BACKUP DESTINATION) used to run inside Enter on the QSO that made it due. It now runs on one backup worker thread with its own read-only connections (`uLogBackupWorker`, glue `uPeriodicBackupService`), when the log is in WAL; a rollback-journal log (a share that refused WAL) still backs up on Enter as before. The Backup Log menu takes the same path. Clear Log, catch-up and schema-upgrade backups are unchanged and still finish before their step.
@@ -201,10 +217,10 @@ The periodic backup (VACUUM INTO snapshot, verification, publish, the outbox cop
 
 ## Added 2026-11-21 -- THE MULTIPLIER WINDOWS SHOW HOW MANY TIMES (issue 357; lcl-ui, contest-scoring)
 
-The remaining-multiplier windows (Stations > multipliers, DX / domestic / zone / prefix) in HIGHLIGHT mode. A worked multiplier now shows its count after its name from the SECOND working on the window's band and mode (`Oh 2`, `05 3`); once looks as it always did. With BAND MAP WORKED MULT LIMIT above 1 (Preferences > Band Map > Window and tuning), a multiplier worked at least once but fewer than that many times fades from BAND MAP WORKED MULT COLOR (orange by default) with black text, the same "backup wanted" the band map shows as an orange M. The rule is `uRemMultWorkState` (unit tested); the count is the sheet's `mo.WorkedCount`, the band map's.
+The remaining-multiplier windows (Stations > multipliers, DX / domestic / zone / prefix) in HIGHLIGHT mode. A worked multiplier now shows its count after its name from the SECOND working on the window's band and mode (`Oh 2`, `05 3`); once looks as it always did. With BAND MAP WORKED MULT LIMIT above 1 (Preferences > Band Map > Window and tuning), a multiplier worked at least once but fewer than that many times fades from BAND MAP WORKED MULT COLOR (orange by default) with black text (since 2026-11-22 a FLAT fill of that colour, black or white text by contrast -- see "THE MULTIPLIER WINDOWS ARE FLAT"), the same "backup wanted" the band map shows as an orange M. The rule is `uRemMultWorkState` (unit tested); the count is the sheet's `mo.WorkedCount`, the band map's.
 
 - [ ] **Limit 1 (default):** no orange anywhere; a multiplier worked twice on the current band reads `Name 2`; change band and the count follows that band (a contest counting mults per band).
-- [ ] **Limit 2:** a multiplier worked once is orange; work it again and it goes to the usual worked fade with `Name 2`.
+- [ ] **Limit 2:** a multiplier worked once is orange; work it again and it goes to the usual worked look with `Name 2` (since 2026-11-22: flat, grey text, no fade).
 - [ ] **Change the limit or the colour in Preferences** with a window open: the window redraws at once (no QSO needed).
 - [ ] **Does the count fit the cell?** The base column is 49 px, the prefix / domestic-name column 104 px. Look at long names with two-digit counts (`VP2E 12`, a domestic name with SHOW DOMESTIC MULTIPLIER NAME on). Unmeasured.
 - [ ] **ERASE mode is unchanged:** a worked multiplier still leaves the list, so a backup-wanted one is not shown there. Say whether that is what you want.
@@ -5483,11 +5499,16 @@ windows; there are five instances of one form class now. **None seen.**
 - [x] **Open all five.** Remaining mults, and the DX / zone / domestic / prefix
   windows. Each must show ITS OWN multiplier type, and the generic one must
   follow `RemainingMultDisplay` when you swap it (Alt-M or the menu).
-- [ ] **Worked multipliers fade, needed ones are plain.** In `HILIGHT` mode all
+- [ ] *(2026-11-22: worked cells no longer fade -- flat grey text, no fill;
+  see "THE MULTIPLIER WINDOWS ARE FLAT". The ERASE and NONE halves stand.)*
+  **Worked multipliers fade, needed ones are plain.** In `HILIGHT` mode all
   multipliers are listed and worked ones are gradiented to white with white
   text. In `ERASE` mode only NEEDED ones are listed at all. `NONE` empties
   the window.
-- [ ] **THE FADE COLOUR IS A QUESTION FOR YOU.** The original picks it with
+- [ ] *(2026-11-22: the fade and this question are SUPERSEDED -- the worked
+  cells are flat now, muted text with no fill; see "THE MULTIPLIER WINDOWS
+  ARE FLAT" near the top. Left for you to remove.)*
+  **THE FADE COLOUR IS A QUESTION FOR YOU.** The original picks it with
   `tr4wColorsArray[tr4wColors(Ord(rmt))]` -- the MULTIPLIER TYPE's ordinal
   used as a colour index, so a faded prefix and a faded zone differ for no
   stated reason. It is reproduced exactly rather than "fixed" unseen. Say
@@ -7774,3 +7795,26 @@ log); nothing sees the preview window or the message.
   restart and "The log is writable again." shows. Watch whether a read-only connection to the WAL log can open at all on
   the full volume (it may need to create `-shm`); if not, the store stands down as before -- record which. Also watch
   for the integrity check's checkpoint failing on the full disk and being reported as damage.
+
+## Added 2026-11-22 -- THE ENTRY AREA'S LOG STATUS PANEL (UI refresh proposal, first pass; lcl-ui; NOT BUILT when written)
+
+`pnlEntryStatus` (uEntryStatus) sits in bottom-band rows 3-4, columns 4..11 -- below the second radio's name, left of
+MASTER and MULT. It shows "QSO not saved" plus the store's reason after a refused Enter, and "Log read-only" plus the
+reason while the log is read-only. Fill: ALERT COLOR, black or white text.
+
+- [ ] **A refused save, then background noise.** Fill D: (as above) and press Enter on a QSO. The panel shows
+  "QSO not saved" and the reason, and the call and exchange stay typed. Let a cluster disconnect or a backup message
+  reach the quick-command line: the panel must NOT go. Free the space and press Enter: the QSO is logged and the
+  panel goes. Repeat the refusal, then press Escape until both fields are empty: the panel goes (read-only remains if
+  the log still is).
+- [ ] **A log opened read-only** (answer "Open read-only" to a locked log): "Log read-only" shows from the first moment
+  and stays between entries.
+- [ ] **100% and 150% Windows scaling**, and the **smallest window** (ws 13, 91 x 26 px): the headline must be readable
+  in full; the reason wraps or clips (the Hint carries all of it). Record whether two lines fit at ws 13.
+- [ ] **A longer translation** of `SEntryStatusQsoNotSaved` (German, Polish): does the headline wrap onto the
+  reason's line, and is it still read at a glance?
+- [ ] **Custom colours**: set ALERT COLOR to a light colour (YELLOW, WHITE) and a dark one: the text flips between
+  black and white and stays readable; set a monochrome-ish scheme and confirm the WORDS carry the state.
+- [ ] **Not built in this pass, for NY4I's judgement on screen**: the "Call" / "Exchange" captions, the shared
+  background and the focus outline. No cell beside the fields is free (see uMainLayout.EntryStatusRect), and an
+  outline inside a field takes text height (18 px field, 16 px font at ws 13).

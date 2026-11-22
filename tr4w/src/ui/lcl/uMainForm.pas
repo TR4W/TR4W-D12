@@ -60,6 +60,7 @@ uses
   utils_text,          // LclText -- a grid cell holds UTF-8
   uLogGrid,          // TLogGrid -- the editable log is one
   VC,                // TMainWindowElement -- the main window's own elements
+  uEntryStatus,      // TEntryStatusKind -- ShowEntryStatus's state
   uMainWindowProc;   // TTR4WEntryField, EntryEvents -- the fields' key handlers
 
 type
@@ -142,6 +143,12 @@ type
       pnlBottomBand, alBottom; its height and cell size are set at run time --
       see SetPossibleCallSize. }
     lstPossibleCall: TStringGrid;
+
+    (* THE ENTRY AREA'S LOG STATUS -- "QSO not saved" / "Log read-only" and the
+      store's reason (uEntryStatus, 2026-11-22). Designed in pnlBottomBand at
+      uMainLayout.EntryStatusRect, hidden; ShowEntryStatus is its only
+      writer. *)
+    pnlEntryStatus: TPanel;
 
     { BEGIN GENERATED MAIN-WINDOW ELEMENT FIELDS -- tools/gen_main_elements.py }
     { DESIGNED, in uMainForm.lfm, so pressing F12 in Lazarus shows them.
@@ -466,6 +473,21 @@ procedure CreateTR4WEntryField(const aId: integer;
 procedure SetEntryFieldBounds(const aField: TTR4WEntryField;
                               const aLeft, aTop, aWidth, aHeight: integer;
                               const aFontHeight: integer);
+
+(* THE ENTRY AREA'S LOG STATUS PANEL (uEntryStatus). SetEntryStatusBounds is
+  LayOutMainWindow's, as for every control of the band; ShowEntryStatus is
+  MainUnit.RefreshEntryStatus's, on the main thread only.
+
+  ShowEntryStatus: eskNone hides the panel. Any other state shows aText --
+  the headline, then the store's reason -- also as the Hint, because the
+  panel is narrow and the reason wraps out of sight at a small scale. The
+  fill is the operator's ALERT COLOR (COLOR_ROLES_DESIGN's RoleAlert) with
+  black or white text, whichever reads; the TEXT carries the meaning, so
+  it reads in monochrome and when ALERT COLOR is the same red as radio
+  one's TX. *)
+procedure SetEntryStatusBounds(const aLeft, aTop, aWidth, aHeight: integer;
+                               const aFontHeight: integer);
+procedure ShowEntryStatus(const aKind: TEntryStatusKind; const aText: string);
 
 { Creates the main form and returns its handle, which becomes tr4whandle.
   aMenu is TR4W's own menu, built by CreateTR4WMenu -- CreateWindowExW used to
@@ -1061,6 +1083,11 @@ uses
    // IMPLEMENTATION-section, so these are not imposed on anything that uses
    // this unit and a cycle back to here is legal.
    //
+   (* FIRST, so every unit after them still wins a name they share: these two
+     were added for three identifiers (2026-11-22) and must not shadow
+     anything the units below already answered. Used QUALIFIED. *)
+   uRemMultWorkState,  // ReadableTextOn -- the entry status panel's text colour
+   uAppStrings,        // SEntryFieldCallName -- the entry fields' accessible names
    LOGSUBS2,           // ExitProgram -- the close path, see MainFormCloseQuery
    uLCLCoexist,        // ApplyStartupTaskBarBehavior -- the button, at the show
    uWindowSnap,       // SnapWindowToEdges -- shared by both drag paths
@@ -4309,6 +4336,21 @@ begin
      IN ONE HELPER since 2026-11-21, because SetEntryFieldBounds gives the id
      back after a font change recreates the window. *)
    TagEntryFieldForHarness(edit, aId);
+
+   (* THE NAMES ASSISTIVE TECHNOLOGY READS (UI refresh proposal, 2026-11-22).
+     On win32, gtk2 and cocoa today RegisterLazAccessibleObject is a stub, so
+     these reach nothing yet (lcl-ui.md, issue 278); they are the LCL's own
+     place for the name and cost nothing. The visible "Call" / "Exchange"
+     captions were NOT added: no cell beside either field is free -- see
+     uMainLayout.EntryStatusRect. *)
+   if aField = efCall then
+      begin
+      edit.AccessibleName := uAppStrings.SEntryFieldCallName;
+      end
+   else
+      begin
+      edit.AccessibleName := uAppStrings.SEntryFieldExchangeName;
+      end;
 end;
 
 procedure SetEntryFieldBounds(const aField: TTR4WEntryField;
@@ -4349,6 +4391,62 @@ begin
          TagEntryFieldForHarness(edit, id);
          end;
       end;
+end;
+
+procedure SetEntryStatusBounds(const aLeft, aTop, aWidth, aHeight: integer;
+                               const aFontHeight: integer);
+var
+   panel: TPanel;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+   panel := TR4WMainForm.pnlEntryStatus;
+   if panel = nil then
+      begin
+      Exit;
+      end;
+   panel.SetBounds(aLeft, aTop, aWidth, aHeight);
+   if aFontHeight > 0 then
+      begin
+      panel.Font.Height := -aFontHeight;
+      end;
+end;
+
+procedure ShowEntryStatus(const aKind: TEntryStatusKind; const aText: string);
+var
+   panel: TPanel;
+   back: TColor;
+begin
+   if TR4WMainForm = nil then
+      begin
+      Exit;
+      end;
+   panel := TR4WMainForm.pnlEntryStatus;
+   if panel = nil then
+      begin
+      Exit;
+      end;
+
+   if aKind = eskNone then
+      begin
+      panel.Visible := False;
+      panel.Caption := '';
+      panel.Hint := '';
+      Exit;
+      end;
+
+   (* THE OPERATOR'S ALERT COLOR, read at every show so a change in
+     Preferences reaches the next one. ColorToRGB first: ReadableTextOn
+     takes a resolved colour, and a system colour is an index. *)
+   back := tr4wColorsArray[AlertColor];
+   panel.Color := back;
+   panel.Font.Color := TColor(uRemMultWorkState.ReadableTextOn(ColorToRGB(back)));
+   panel.Font.Style := [fsBold];
+   panel.Caption := LclText(aText);
+   panel.Hint := LclText(aText);
+   panel.Visible := True;
 end;
 
 procedure ShowTR4WMainForm;

@@ -90,6 +90,8 @@ uses
    uTestFlowGridCells   in 'uTestFlowGridCells.pas',
    uRemMultWorkState    in '..\..\src\uRemMultWorkState.pas',
    uTestRemMultWorkState in 'uTestRemMultWorkState.pas',
+   uEntryStatus         in '..\..\src\uEntryStatus.pas',
+   uTestEntryStatus     in 'uTestEntryStatus.pas',
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
@@ -1476,6 +1478,7 @@ begin
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
    RegisterSuite(TRemMultWorkStateTests.Create('RemMultWorkState'));
+   RegisterSuite(TEntryStatusTests.Create('EntryStatus'));
    RegisterSuite(TSelfSpotTests.Create('SelfSpot'));
    RegisterSuite(TBandMapOrderTests.Create('BandMapOrder'));
    RegisterSuite(TFunctionKeyBankTests.Create('FunctionKeyBank'));

@@ -21,9 +21,14 @@ owner-draw, and in at least one case it is provably nobody's decision:
 `tr4wColorsArray[tr4wColors(Ord(rmt))]`** — the MULTIPLIER TYPE's ordinal used
 as an index into the COLOUR table. A faded prefix and a faded zone therefore
 differ in colour because of the order of two unrelated enumerations. Nothing
-states a relationship and there is no reason for one. It is reproduced exactly
-in the LCL version (bench queue 36 asks NY4I whether operators have learned
-those colours before anything changes).
+states a relationship and there is no reason for one. It was reproduced exactly
+in the LCL version, and **REMOVED 2026-11-22** under the UI refresh proposal's
+"Multiplier and related grids": the remaining-multiplier windows are now flat
+(needed = window text, worked = muted grey text with no fill, backup wanted =
+a flat BAND MAP WORKED MULT COLOR fill), decided by
+`uRemMultWorkState.RemainingMultCellStyle` and painted through
+`OnPrepareCanvas` -- the first row of the table below, done for that one window
+family. The other grids are still as described here.
 
 **`uDupeSheetForm`'s "gradient" was a gradient between a colour and itself** —
 `GradientRect` received the same stop twice, so it drew a flat fill. Its

@@ -90,8 +90,8 @@ type
       procedure HandleShow(Sender: TObject);
       procedure HandleResize(Sender: TObject);
       procedure HandleKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-      procedure MultsDrawCell(Sender: TObject; aCol, aRow: integer;
-                              aRect: TRect; aState: TGridDrawState);
+      procedure MultsPrepareCanvas(Sender: TObject; aCol, aRow: integer;
+                                   aState: TGridDrawState);
    private
       FIndex: WindowsType;
    public
@@ -147,6 +147,7 @@ uses
    uSettingsModel,    (* Settings.RemainingMults.DisplayMode, and HiLight --
                         the type moved here with the setting *)
    uSpots,            (* WorkedMultColor -- BAND MAP WORKED MULT COLOR, issue 357 *)
+   uRemMultWorkState, (* TRemMultWorkState, RemainingMultCellStyle *)
    uLCLFormHelpers;   // LeaveFormUnowned
 
 const
@@ -300,88 +301,72 @@ begin
       end;
 end;
 
-(* THE PAINTING IS REPRODUCED AS IT WAS, INCLUDING A COLOUR THAT LOOKS LIKE AN
-  ACCIDENT.
+(* THE GRID DRAWS ITS OWN CELLS; THIS ONLY SETS THEIR COLOURS (2026-11-22, the
+  UI refresh proposal's "Multiplier and related grids"). The text is the
+  grid's Cells, written at the rebuild (issue 216), so the grid knows when it
+  changed and no Invalidate is forced.
 
-  A worked entry is gradiented to white with white text on top, and the colour
-  it starts from is INDEXED BY THE MULTIPLIER TYPE'S ORDINAL -- the original
-  reads `tr4wColorsArray[tr4wColors(Ord(rmt) * 1)]`.  So which colour a faded
-  prefix gets, versus a faded zone, falls out of the order of two unrelated
-  enumerations.  Nothing states a relationship and there is no reason for one.
+  THE GRADIENT IS GONE, and with it the draw handler and DefaultDrawing =
+  False. A worked multiplier used to fade from a colour INDEXED BY THE
+  MULTIPLIER TYPE'S ORDINAL (tr4wColorsArray[tr4wColors(Ord(rmt))]) to white,
+  under white text -- a colour nobody chose, and the most visual weight on the
+  least useful cell. Now (uRemMultWorkState.RemainingMultCellStyle, unit
+  tested): a needed multiplier is the window's own text, a worked one is
+  muted text with no fill, and a backup wanted (issue 357) is a FLAT fill of
+  BAND MAP WORKED MULT COLOR -- the band map's orange M, the same meaning --
+  with black or white text, whichever reads on the operator's colour.
 
-  IT IS REPRODUCED ANYWAY.  This is a conversion; the rule here is prove
-  equivalence before a behaviour-preserving swap, and I cannot prove from the
-  code that operators have not learned these colours.  It goes to the bench
-  queue as a question for NY4I rather than being answered by me.
+  Every colour is resolved with ColorToRGB before the leaf sees it: clWindow,
+  clGrayText and a BTNFACE or HIGHLIGHT the operator may have picked are
+  system colours, not RGB values.
 
-  Settings.RemainingMults.DisplayMode <> HiLight LEFT THE TEXT COLOUR UNSET in the
-  original: neither arm of its `if` ran, so the DC kept whatever it held.  In
-  that mode the builder only adds multipliers still NEEDED, so black is what it
-  looked like -- black is what it is now, which is the same picture with the
-  undefined part defined.
-
-  STILL A DRAW HANDLER, FOR THE GRADIENT ALONE (issue 216). The text and the
-  worked state are the cell's, written at the rebuild: the text is the grid's
-  Cells, so the grid knows when it changed and no Invalidate is forced. What
-  OnPrepareCanvas cannot express is a gradient -- it sets a brush, and a flat
-  fill would be a visible change -- so this handler stays until NY4I rules on
-  the fade (issue 216). With a flat fill it becomes the
-  dupe sheet's OnPrepareCanvas and DefaultDrawing goes back on.
+  A cell past the end (idx < 0) is drawn as an empty needed cell: the window,
+  no text.
 
   CLEAN SWEEP IS GONE. Its message was drawn when LOGEDIT.CleanSweep was True,
   and nothing ever set it: the D7 routine that did (LOGWIND
   DisplayRemainingMults) sat inside a REMOVECANDIDATE comment there too. *)
-procedure TfrmRemMults.MultsDrawCell(Sender: TObject; aCol, aRow: integer;
-                                     aRect: TRect; aState: TGridDrawState);
+procedure TfrmRemMults.MultsPrepareCanvas(Sender: TObject; aCol, aRow: integer;
+                                          aState: TGridDrawState);
 var
    idx: integer;
-   multIndex: integer;
-   cellText: string;
-   rmt: RemainingMultiplierType;
+   state: TRemMultWorkState;
+   backRGB: longint;
+   foreRGB: longint;
+   bold: boolean;
 begin
-   grdMults.Canvas.Brush.Style := bsSolid;
-   grdMults.Canvas.Brush.Color := clWindow;
-   grdMults.Canvas.FillRect(aRect);
-   grdMults.Canvas.Font.Color := tr4wColorsArray[trBlack];
-
+   state := rwsNeeded;
    idx := Mults.IndexAt(aCol, aRow);
-   if (idx < 0) or (not MultAt(idx, rmt, multIndex)) then
+   if idx >= 0 then
       begin
-      Exit;
+      if BackupWantedAt(idx) then
+         begin
+         state := rwsBackupWanted;
+         end
+      else if WorkedAt(idx) then
+         begin
+         state := rwsWorked;
+         end;
       end;
 
-   cellText := grdMults.Cells[aCol, aRow];
-   if cellText = '' then
-      begin
-      Exit;
-      end;
+   RemainingMultCellStyle(state,
+                          Settings.RemainingMults.DisplayMode = HiLight,
+                          ColorToRGB(clWindow),
+                          ColorToRGB(clWindowText),
+                          ColorToRGB(clGrayText),
+                          ColorToRGB(tr4wColorsArray[WorkedMultColor]),
+                          backRGB, foreRGB, bold);
 
-   if (Settings.RemainingMults.DisplayMode = HiLight) and BackupWantedAt(idx) then
+   grdMults.Canvas.Brush.Color := TColor(backRGB);
+   grdMults.Canvas.Font.Color := TColor(foreRGB);
+   if bold then
       begin
-      (* A BACKUP WANTED (issue 357): the same fade, from BAND MAP WORKED
-        MULT COLOR -- the orange the band map and the telnet console give a
-        multiplier worked fewer times than BAND MAP WORKED MULT LIMIT, read
-        through the one lookup they share (uSpots.WorkedMultColor). Black
-        text: white would not read on orange fading to white. *)
-      grdMults.Canvas.GradientFill(aRect,
-                                   tr4wColorsArray[WorkedMultColor],
-                                   tr4wColorsArray[trWhite], gdHorizontal);
-      grdMults.Canvas.Font.Color := tr4wColorsArray[trBlack];
+      grdMults.Canvas.Font.Style := grdMults.Canvas.Font.Style + [fsBold];
       end
-   else if (Settings.RemainingMults.DisplayMode = HiLight) and WorkedAt(idx) then
+   else
       begin
-      // THE LCL'S OWN GRADIENT, as the band map's mult flag uses: the same
-      // two stops and the same left-to-right direction the WM_DRAWITEM arm
-      // asked uGradient.GradientRect for, without handing it the canvas's
-      // HDC (TCanvas.Handle) to do it.
-      grdMults.Canvas.GradientFill(aRect,
-                                   tr4wColorsArray[tr4wColors(Ord(rmt))],
-                                   tr4wColorsArray[trWhite], gdHorizontal);
-      grdMults.Canvas.Font.Color := tr4wColorsArray[trWhite];
+      grdMults.Canvas.Font.Style := grdMults.Canvas.Font.Style - [fsBold];
       end;
-
-   grdMults.Canvas.Brush.Style := bsClear;      // SetBkMode(TRANSPARENT)
-   grdMults.Canvas.TextOut(aRect.Left + 2, aRect.Top, cellText);
 end;
 
 procedure CreateTR4WRemMultsWindow(const aIndex: WindowsType);
