@@ -203,6 +203,40 @@ server-log row in `uGetServerLog.TryGetServerLogRow` -- so an older station's
 zero byte and a newer station's stamp are judged alike. Both servers store and
 relay the record whole and read none of it.
 
+## Network protocol 5: a QSO is a length-framed JSON row (W3+W5 part 1, 2026-11-22; design 13.7)
+
+`NET_PROTOCOL_VERSION` = **5**. Pascal framing, HELLO 5 and the in-tree `tr4wserver` are DONE; the CLIENT
+(send, receive, catch-up, push) and TR4WServerPy/netprobe are the next steps and are NOT converted.
+
+- **Framing (`uNetFraming`).** `NET_WIRE_QSO_ID` 1041, `NET_WIRE_EDIT_ID` 1051, `NET_WIRE_OFFLINE_ID` 1057:
+  2-byte LE id, 4-byte LE payload length, payload = 1 sender byte + UTF-8 JSON (`uWireQso`). Cap
+  `NET_WIRE_MAX_PAYLOAD` 60000; an over-cap declaration is `nwOversize` decided from the six header bytes
+  (never "partial"); `NET_RECEIVE_BUFFER_SIZE` 131072. `NetMessageSize` is 0 for the wire ids and for the retired
+  1040/1050/1055 (unknown ids; the constants stay in VC.pas marked `(* retired *)` until the client stops using
+  them). Helpers: `BuildWireMessage` (WireText, then checksum, then EncodeJson), `TakeWireMessage`
+  (`wtOk/wtNoSender/wtBadJson/wtBadChecksum/wtBadNumber`), `PutWordLE/PutCardinalLE/GetWordLE/GetCardinalLE`,
+  `BuildSyncHeaderFrame/BuildSyncRowFrame/TakeSyncHeader/TakeSyncRow`, `OutboundWireMessageIsWellFormed`.
+  No `Move`/`FillChar` in any of it.
+- **Server decisions are a leaf (`uServerWireFrames`)**: `ProcessWireFrame` over a `TServerWireStore`, and
+  `SendSyncStream`. `tr4wserverUnit.HandleWireFrame` only sends (relay with the sender byte RE-STAMPED from the
+  accepted HELLO; a connection with no accepted HELLO has its QSO frames refused). OFFLINE ACKs are counted
+  and sent by `FinishOfflineRun` only after `Release` returned True; a failed row voids the run's ACKs.
+  A refused row never drops the link; an oversize or unknown id disconnects with a logged reason.
+  The disk-failed NEW row is STILL relayed (issue 314) -- the contract's "relay only when stored" was not
+  applied there; NY4I to confirm.
+- **Store additions (`uServerWireStore`)**: `Release` returns Boolean; `Contest` / `RememberContest`
+  (first HELLO wins; `INSERT OR IGNORE` into meta) / `ForgetContest` (Clear-all forgets it);
+  `BackupTo` (VACUUM INTO via `TLogDatabase.SnapshotTo(dest, aStationLog=False)`, which skips the
+  station identity check); `ReadAll(rows, contest)` reads the contest in the same snapshot.
+  Clear-all-logs backs up first (`SERVERLOG before clear <stamp>.tr4wsrv`) and REFUSES to clear if the backup fails.
+- **Files**: `SERVERLOG.tr4wsrv`; an existing `SERVERLOG.TRW` is reported once and left. The log-info packet
+  (1010) carries the ROW COUNT in `liServerLogSize` (contest/CRC 0). Sync stream = header frame
+  `{"contest","rows","schema":5}` then one frame per row, from ONE `ReadAll`.
+- Retired: `uServerLogStore`, `uTestServerLogStore`. Kept because the client still uses them:
+  `uServerQsoIndex`, `uCRC32`.
+- Tests: `uTestNetFraming` (wire framing, split at every byte, oversize, retired ids, round trips),
+  `uTestServerWireFrames` (the server decisions over a scratch DB, sync stream, backup, contest).
+
 ## Network protocol 4: the QSO record carries the year its SENDER sent (issue 300, 2026-11-13)
 
 `NET_PROTOCOL_VERSION` = **4**. A QSO row stores the licence year it SENT

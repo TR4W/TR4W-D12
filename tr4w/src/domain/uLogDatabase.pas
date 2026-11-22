@@ -656,7 +656,7 @@ type
         and publishes afterwards.
 
         Raises ELogDatabaseError with SQLite's own message on failure. *)
-      procedure SnapshotTo(const aDestination: string);
+      procedure SnapshotTo(const aDestination: string; aStationLog: boolean = True);
 
       property FileName: string read FFileName;
       (* What journal_mode actually came back -- 'wal' normally, 'delete' when
@@ -1907,7 +1907,7 @@ begin
    end;
 end;
 
-procedure TLogDatabase.SnapshotTo(const aDestination: string);
+procedure TLogDatabase.SnapshotTo(const aDestination: string; aStationLog: boolean);
 var
    source: TLogDatabase;
 begin
@@ -1958,7 +1958,16 @@ begin
      is open when it runs. *)
    source := TLogDatabase.Create;
    try
-      source.OpenReadOnly(FFileName);
+      if aStationLog then
+         begin
+         source.OpenReadOnly(FFileName);
+         end
+      else
+         begin
+         (* A FILE THAT IS NOT A CONTEST LOG (the server's own database, which
+           carries another application id): no identity check, still read-only. *)
+         source.OpenWithoutIdentity(FFileName, True);
+         end;
       source.ExecPragmaRaw(VacuumIntoSQL(aDestination));
    finally
       source.Free;

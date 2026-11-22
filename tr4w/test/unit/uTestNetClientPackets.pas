@@ -231,7 +231,7 @@ begin
                     'id ' + IntToStr(id) + ' one byte long');
          end;
       end;
-   CheckTrue(passed >= 15, 'the table is not empty');
+   CheckTrue(passed >= 13, 'the table is not empty (13 fixed-size ids since protocol 5; the QSO ids are variable)');
 end;
 
 procedure TNetClientPacketTests.Test_TheRefusalLatchReportsEachPairOnce;
@@ -641,7 +641,7 @@ begin
             end;
          end;
 
-      CheckTrue(sent >= 15, 'the table is not empty');
+      CheckTrue(sent >= 13, 'the table is not empty (13 fixed-size ids since protocol 5; the QSO ids are variable)');
       CheckTrue(WaitPackets(link, sent), 'all were written');
       CheckEquals(0, NetSendRefusalsReported, 'none was refused');
    finally

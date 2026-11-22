@@ -716,8 +716,6 @@ uses
    uServerQsoIndex in '..\..\src\uServerQsoIndex.pas',
    uServerLogHealth in '..\..\src\uServerLogHealth.pas',
    uTestServerLogHealth in 'uTestServerLogHealth.pas',
-   uServerLogStore in '..\..\src\uServerLogStore.pas',
-   uTestServerLogStore in 'uTestServerLogStore.pas',
    uNetCatchUp in '..\..\src\uNetCatchUp.pas',
    uTestNetSupport in 'uTestNetSupport.pas',
    uTestMainFormHarness in 'uTestMainFormHarness.pas',
@@ -843,6 +841,9 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uQsoColumns in '..\..\src\uQsoColumns.pas',
    uServerWireStore in '..\..\src\uServerWireStore.pas',
    uTestServerWireStore in 'uTestServerWireStore.pas',
+   (* Protocol 5 (W3+W5): what the server decides about one wire QSO message. *)
+   uServerWireFrames in '..\..\src\uServerWireFrames.pas',
+   uTestServerWireFrames in 'uTestServerWireFrames.pas',
    (* An older log is backed up before it is upgraded (NY4I, 2026-11-19). *)
    uTestLogMigrationBackup in 'uTestLogMigrationBackup.pas',
    (* Schema 9 phase 2: a Station-page edit of ANY value the open contest
@@ -1250,7 +1251,6 @@ begin
    RegisterSuite(TN1MMLogEnvelopeTests.Create('N1MMLogEnvelope'));
    RegisterSuite(TN1MMLogListenerTests.Create('N1MMLogListener'));
    RegisterSuite(TServerLogHealthTests.Create('ServerLogHealth'));
-   RegisterSuite(TServerLogStoreTests.Create('ServerLogStore'));
    RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
    RegisterSuite(TGridLookupTests.Create('GridLookup'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
@@ -1591,6 +1591,7 @@ begin
    RegisterSuite(TWireColumnsTests.Create('WireColumns'));
    RegisterSuite(TWireQsoTests.Create('WireQso'));
    RegisterSuite(TServerWireStoreTests.Create('ServerWireStore'));
+   RegisterSuite(TServerWireFramesTests.Create('ServerWireFrames'));
    RegisterSuite(TLogMigrationBackupTests.Create('LogMigrationBackup'));
    RegisterSuite(TStationFactChangeTests.Create('StationFactChange'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));

@@ -26,7 +26,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   to a separate peer carrying line-oriented spot text.  The two are unrelated
   and the only place they touch is one spot-forwarding call in uNet.
 
-  THE PROTOCOL HAS NO FRAMING.  No length prefix, no sentinel, no checksum.  A
+  PROTOCOL 5 (2026-11-22, design 13.7): THREE IDS CARRY A LENGTH.  A QSO is
+  now the row's columns as JSON, so it has no fixed size: NET_WIRE_QSO_ID
+  (1041), NET_WIRE_EDIT_ID (1051) and NET_WIRE_OFFLINE_ID (1057) are
+  2-byte LE id, 4-byte LE payload length, payload (one sender byte, then the
+  UTF-8 JSON).  A declared length over NET_WIRE_MAX_PAYLOAD is a protocol error
+  reported as nwOversize from the six header bytes alone -- never as "partial",
+  or the buffer would wait for bytes that may never come.  The old 1040, 1050
+  and 1055 are UNKNOWN ids here.  Every other message keeps the rule below.
+
+  EVERY OTHER MESSAGE HAS NO FRAMING.  No length prefix, no sentinel, no checksum.  A
   message is a leading Word id followed by the record that id implies, and the
   boundary is therefore IMPLICIT IN A TYPE TABLE.  Both ends compile the same
   VC.pas, so they agree by construction -- until a hand-written advance in one
@@ -50,23 +59,88 @@ interface
 
 uses
    SyncObjs,    (* the refusal latch is touched from more than one thread *)
+   SysUtils,
    VC,
+   uWireQso,
    uNetHello;   (* THelloMessage -- the size of the first message *)
+
+const
+   (* id Word, then the payload length as a LE Cardinal. *)
+   NET_WIRE_HEADER_SIZE = 6;
+   (* THE LARGEST PAYLOAD (sender byte + JSON) a variable message may declare.
+     Measured: the widest real row is a few KB; a bigger declaration is a
+     protocol error, not a QSO. *)
+   NET_WIRE_MAX_PAYLOAD = 60000;
+   (* EVERY RECEIVE BUFFER ON THE LINK (client and both servers): room for a
+     whole maximum frame beside the incomplete tail of the previous read. *)
+   NET_RECEIVE_BUFFER_SIZE = 131072;
 
 type
    { Why a walk stopped. }
    TNetWalkResult = (
       nwComplete,     // the buffer ended exactly on a message boundary
       nwPartial,      // a known id, but not all of its bytes are here yet
-      nwUnknownId     // no table entry -- the walk cannot advance past it
+      nwUnknownId,    // no table entry -- the walk cannot advance past it
+      nwOversize      // a variable message declares more than NET_WIRE_MAX_PAYLOAD
    );
 
-{ How many bytes the message with this id occupies, INCLUDING its leading id
-  Word, or 0 if the id is not one we know.
+{ How many bytes the FIXED-size message with this id occupies, INCLUDING its
+  leading id Word, or 0 if the id is not one we know -- AND 0 FOR THE THREE
+  VARIABLE ids, whose size is in their own header (NetIsWireId).
 
   0 IS THE IMPORTANT ANSWER.  It is what tells the caller it cannot advance,
   which is the difference between reporting a desync and spinning on it. }
 function NetMessageSize(const aId: word): integer;
+
+(* The three protocol-5 QSO messages: id, 4-byte length, payload. *)
+function NetIsWireId(const aId: word): boolean;
+
+(* SMALL LITTLE-ENDIAN HELPERS -- the ONE place a header is read or written, so
+  no caller pokes bytes through a pointer cast. Put* grow nothing: the caller
+  sized the array. Get* read what is there (the caller checked the length). *)
+procedure PutWordLE(var aBytes: TBytes; const aAt: integer; const aValue: Word);
+procedure PutCardinalLE(var aBytes: TBytes; const aAt: integer; const aValue: Cardinal);
+function GetWordLE(const aBytes: array of Byte; const aAt: integer): Word;
+function GetCardinalLE(const aBytes: array of Byte; const aAt: integer): Cardinal;
+
+type
+   (* WHAT TAKING A WIRE ROW APART FOUND. Everything but wtOk is a REFUSED ROW:
+     logged, not stored, not relayed, and the link is NOT dropped. *)
+   TWireTake = (
+      wtOk,
+      wtNoSender,        // an empty payload: not even the sender byte
+      wtBadJson,         // not one JSON object
+      wtBadChecksum,     // the "k" member is missing, malformed or does not match
+      wtBadNumber);      // a numeric column does not hold canonical digits
+
+(* A COMPLETE WIRE MESSAGE for a row: header, sender byte, JSON. Applies
+  WireText to every value FIRST (so the checksum is over what the receiver will
+  decode), computes the record checksum, omits defaults. Raises EWireQsoError
+  when a numeric value is not canonical digits or the payload would exceed
+  NET_WIRE_MAX_PAYLOAD; aId must be one of the three wire ids. *)
+function BuildWireMessage(const aId: word; const aSender: Byte; aColumns: TWireColumns;
+                          const aValues: TWireValues): TBytes;
+
+(* TAKES ONE PAYLOAD APART: aPayload is the bytes after the six header bytes
+  (sender byte, then the UTF-8 JSON). aReason says what failed, for the log. *)
+function TakeWireMessage(aColumns: TWireColumns; const aPayload: TBytes;
+                         out aSender: Byte; out aValues: TWireValues;
+                         out aReason: string): TWireTake;
+
+(* THE SYNC STREAM'S FRAMES (design 13.7): 4-byte LE length + UTF-8 JSON, no id
+  and no sender byte. The header frame is {"contest":..,"rows":N,"schema":5}. *)
+function BuildSyncHeaderFrame(const aContest: string; const aRows: integer): TBytes;
+function BuildSyncRowFrame(aColumns: TWireColumns; const aValues: TWireValues): TBytes;
+(* aBody: the JSON bytes WITHOUT the 4-byte length. *)
+function TakeSyncHeader(const aBody: TBytes; out aContest: string; out aRows: integer;
+                        out aSchema: integer): boolean;
+function TakeSyncRow(aColumns: TWireColumns; const aBody: TBytes;
+                     out aValues: TWireValues; out aReason: string): TWireTake;
+
+(* THE WHOLE OF A WIRE MESSAGE the client is about to send, judged from its own
+  bytes: a wire id, a header whose declared length is exactly what follows, a
+  payload of at least the sender byte and at most NET_WIRE_MAX_PAYLOAD. *)
+function OutboundWireMessageIsWellFormed(const aPacket: TBytes): boolean;
 
 (* IS THIS A PACKET A STATION MAY PUT ON THE LINK?  (2026-10-27)
 
@@ -174,6 +248,9 @@ type
 
 implementation
 
+uses
+   fpjson, jsonparser;
+
 function NetMessageSize(const aId: word): integer;
 begin
    case aId of
@@ -182,11 +259,9 @@ begin
       NET_INTERCOMMESSAGE_ID:  Result := SizeOf(TIntercomMessage);
       NET_NETWORKDXSPOT_ID:    Result := SizeOf(TNetDXSpot);
 
-      // Three ids, one record: a new QSO, an edited QSO and an offline QSO
-      // differ in what the receiver DOES, not in what arrives.
-      NET_QSOINFO_ID,
-      NET_EDITEDQSO_ID,
-      NET_OFFLINEQSO_ID:       Result := SizeOf(TNetQSOInformation);
+      // 1040, 1050 and 1055 (a fixed 384-byte QSO) are RETIRED with protocol 5
+      // and fall to the else: unknown. A QSO is now NET_WIRE_*_ID, whose size
+      // is in its own header (NetIsWireId).
 
       NET_TAKESERVERQSO_ID:    Result := SizeOf(TNetSynQSOInformation);
       NET_TIMESYN_ID:          Result := NET_TIMESYN_SIZE;   // removed feature, frame kept (VC)
@@ -206,6 +281,12 @@ begin
    end;
 end;
 
+function NetIsWireId(const aId: word): boolean;
+begin
+   Result := (aId = NET_WIRE_QSO_ID) or (aId = NET_WIRE_EDIT_ID) or
+             (aId = NET_WIRE_OFFLINE_ID);
+end;
+
 function OutboundPacketIsWellFormed(const aId: word; const aLen: integer): boolean;
 var
    size: integer;
@@ -216,8 +297,61 @@ begin
       Exit;
       end;
 
+   (* A variable message: only its length can be judged here (the header, the
+     sender byte and a payload within the cap). OutboundWireMessageIsWellFormed
+     reads the declared length too. *)
+   if NetIsWireId(aId) then
+      begin
+      Result := (aLen >= NET_WIRE_HEADER_SIZE + 1) and
+                (aLen <= NET_WIRE_HEADER_SIZE + NET_WIRE_MAX_PAYLOAD);
+      Exit;
+      end;
+
    size := NetMessageSize(aId);
    Result := (size > 0) and (aLen = size);
+end;
+
+procedure PutWordLE(var aBytes: TBytes; const aAt: integer; const aValue: Word);
+begin
+   aBytes[aAt] := aValue and $FF;
+   aBytes[aAt + 1] := (aValue shr 8) and $FF;
+end;
+
+procedure PutCardinalLE(var aBytes: TBytes; const aAt: integer; const aValue: Cardinal);
+begin
+   aBytes[aAt] := aValue and $FF;
+   aBytes[aAt + 1] := (aValue shr 8) and $FF;
+   aBytes[aAt + 2] := (aValue shr 16) and $FF;
+   aBytes[aAt + 3] := (aValue shr 24) and $FF;
+end;
+
+function GetWordLE(const aBytes: array of Byte; const aAt: integer): Word;
+begin
+   Result := Word(aBytes[aAt]) or (Word(aBytes[aAt + 1]) shl 8);
+end;
+
+function GetCardinalLE(const aBytes: array of Byte; const aAt: integer): Cardinal;
+begin
+   Result := Cardinal(aBytes[aAt]) or (Cardinal(aBytes[aAt + 1]) shl 8) or
+             (Cardinal(aBytes[aAt + 2]) shl 16) or (Cardinal(aBytes[aAt + 3]) shl 24);
+end;
+
+function OutboundWireMessageIsWellFormed(const aPacket: TBytes): boolean;
+var
+   declared: Cardinal;
+begin
+   Result := False;
+   if Length(aPacket) < NET_WIRE_HEADER_SIZE + 1 then
+      begin
+      Exit;
+      end;
+   if not NetIsWireId(GetWordLE(aPacket, 0)) then
+      begin
+      Exit;
+      end;
+   declared := GetCardinalLE(aPacket, 2);
+   Result := (declared >= 1) and (declared <= NET_WIRE_MAX_PAYLOAD) and
+             (Int64(declared) = Int64(Length(aPacket)) - NET_WIRE_HEADER_SIZE);
 end;
 
 constructor TNetSendRefusals.Create;
@@ -290,6 +424,7 @@ var
    available: integer;
    remaining: integer;
    size: integer;
+   declared: Cardinal;
    at: integer;       (* aOffset as an index into aBuffer, which is 0-based *)
 begin
    Result := False;
@@ -327,11 +462,31 @@ begin
    at := aOffset - 1;            // 1-based position, 0-based array
    aId := word(aBuffer[at]) or (word(aBuffer[at + 1]) shl 8);
 
-   size := NetMessageSize(aId);
-   if size = 0 then
+   if NetIsWireId(aId) then
       begin
-      aResult := nwUnknownId;
-      Exit;
+      (* THE SIZE IS IN THE HEADER. Fewer than the six header bytes is a partial
+        message; an over-large declaration is refused from the header alone. *)
+      if remaining < NET_WIRE_HEADER_SIZE then
+         begin
+         aResult := nwPartial;
+         Exit;
+         end;
+      declared := GetCardinalLE(aBuffer, at + 2);
+      if declared > NET_WIRE_MAX_PAYLOAD then
+         begin
+         aResult := nwOversize;
+         Exit;
+         end;
+      size := NET_WIRE_HEADER_SIZE + Integer(declared);
+      end
+   else
+      begin
+      size := NetMessageSize(aId);
+      if size = 0 then
+         begin
+         aResult := nwUnknownId;
+         Exit;
+         end;
       end;
 
    { THE LENGTH CHECK THE ORIGINAL LOOP NEVER HAD.
@@ -408,7 +563,7 @@ begin
       if not NextNetMessage(aBuffer, available, offset, id, step) then
          begin
          aResult := step;
-         if step = nwUnknownId then
+         if (step = nwUnknownId) or (step = nwOversize) then
             begin
             aBadId := id;
             end;
@@ -417,6 +572,242 @@ begin
       end;
 
    Result := offset - 1;
+end;
+
+(* ---------------------------------------------------- wire messages (proto 5) *)
+
+const
+   CODE_PAGE_UTF8 = 65001;   (* a code page number, not the unit that names it *)
+
+(* The UTF-8 bytes of a string, by indexed copy. *)
+function Utf8BytesOf(const aText: string): TBytes;
+var
+   u: UTF8String;
+   i: integer;
+begin
+   u := UTF8Encode(aText);
+   SetLength(Result, Length(u));
+   for i := 1 to Length(u) do
+      begin
+      Result[i - 1] := Ord(u[i]);
+      end;
+end;
+
+(* The text of the UTF-8 bytes from aFrom to the end. RELABELLED, never
+  converted through the program's default code page. *)
+function TextOfUtf8(const aBytes: TBytes; const aFrom: integer): string;
+var
+   raw: RawByteString;
+   i, n: integer;
+begin
+   n := Length(aBytes) - aFrom;
+   if n <= 0 then
+      begin
+      Result := '';
+      Exit;
+      end;
+   SetLength(raw, n);
+   for i := 0 to n - 1 do
+      begin
+      raw[i + 1] := AnsiChar(aBytes[aFrom + i]);
+      end;
+   SetCodePage(raw, CODE_PAGE_UTF8, False);
+   Result := UnicodeString(raw);
+end;
+
+(* THE VALUES AS THE RECEIVER WILL DECODE THEM: a NUL never goes on the wire
+  (WireText), and the checksum is over that, not over the sender's raw text. *)
+function CleanValues(const aValues: TWireValues): TWireValues;
+var
+   i: integer;
+begin
+   SetLength(Result, Length(aValues));
+   for i := 0 to High(aValues) do
+      begin
+      Result[i] := WireText(aValues[i]);
+      end;
+end;
+
+function RowJsonBytes(aColumns: TWireColumns; const aValues: TWireValues): TBytes;
+var
+   clean: TWireValues;
+begin
+   clean := CleanValues(aValues);
+   Result := Utf8BytesOf(EncodeJson(aColumns, clean, RecordCrc32(aColumns, clean), True));
+end;
+
+function BuildWireMessage(const aId: word; const aSender: Byte; aColumns: TWireColumns;
+                          const aValues: TWireValues): TBytes;
+var
+   body: TBytes;
+   i: integer;
+begin
+   if not NetIsWireId(aId) then
+      begin
+      raise EWireQsoError.CreateFmt('Message id %d is not a wire message.', [aId]);
+      end;
+   body := RowJsonBytes(aColumns, aValues);
+   if 1 + Length(body) > NET_WIRE_MAX_PAYLOAD then
+      begin
+      raise EWireQsoError.CreateFmt('A wire row of %d bytes is over the %d-byte limit.',
+         [1 + Length(body), NET_WIRE_MAX_PAYLOAD]);
+      end;
+   SetLength(Result, NET_WIRE_HEADER_SIZE + 1 + Length(body));
+   PutWordLE(Result, 0, aId);
+   PutCardinalLE(Result, 2, 1 + Length(body));
+   Result[NET_WIRE_HEADER_SIZE] := aSender;
+   for i := 0 to High(body) do
+      begin
+      Result[NET_WIRE_HEADER_SIZE + 1 + i] := body[i];
+      end;
+end;
+
+(* The JSON from aFrom on, taken apart and judged: parses, states a checksum
+  that matches, and every numeric column holds canonical digits. *)
+function TakeJsonBody(aColumns: TWireColumns; const aBytes: TBytes; const aFrom: integer;
+                      out aValues: TWireValues; out aReason: string): TWireTake;
+var
+   stated: Cardinal;
+   stamped: boolean;
+   i: integer;
+   n: Int64;
+begin
+   aValues := nil;
+   aReason := '';
+   try
+      stamped := DecodeJson(aColumns, TextOfUtf8(aBytes, aFrom), aValues, stated);
+   except
+      on E: Exception do
+         begin
+         aValues := nil;
+         aReason := E.Message;
+         Result := wtBadJson;
+         Exit;
+         end;
+   end;
+   if (not stamped) or (RecordCrc32(aColumns, aValues) <> stated) then
+      begin
+      aReason := 'the record checksum is missing or does not match';
+      Result := wtBadChecksum;
+      Exit;
+      end;
+   for i := 0 to aColumns.Count - 1 do
+      begin
+      if aColumns.Numeric[i] and (aValues[i] <> '') and
+         (not TryCanonicalInt64(aValues[i], n)) then
+         begin
+         aReason := 'column ' + aColumns.Name[i] + ' is numeric and holds "' + aValues[i] + '"';
+         Result := wtBadNumber;
+         Exit;
+         end;
+      end;
+   Result := wtOk;
+end;
+
+function TakeWireMessage(aColumns: TWireColumns; const aPayload: TBytes;
+                         out aSender: Byte; out aValues: TWireValues;
+                         out aReason: string): TWireTake;
+begin
+   aSender := 0;
+   aValues := nil;
+   aReason := '';
+   if Length(aPayload) < 1 then
+      begin
+      aReason := 'an empty payload: no sender byte';
+      Result := wtNoSender;
+      Exit;
+      end;
+   aSender := aPayload[0];
+   Result := TakeJsonBody(aColumns, aPayload, 1, aValues, aReason);
+end;
+
+function BuildSyncHeaderFrame(const aContest: string; const aRows: integer): TBytes;
+var
+   o: TJSONObject;
+   body: TBytes;
+   i: integer;
+begin
+   o := TJSONObject.Create;
+   try
+      o.Add(UTF8Encode('contest'), UTF8Encode(aContest));
+      o.Add(UTF8Encode('rows'), aRows);
+      o.Add(UTF8Encode('schema'), NET_PROTOCOL_VERSION);
+      body := Utf8BytesOf(o.AsJSON);
+   finally
+      o.Free;
+   end;
+   SetLength(Result, 4 + Length(body));
+   PutCardinalLE(Result, 0, Length(body));
+   for i := 0 to High(body) do
+      begin
+      Result[4 + i] := body[i];
+      end;
+end;
+
+function BuildSyncRowFrame(aColumns: TWireColumns; const aValues: TWireValues): TBytes;
+var
+   body: TBytes;
+   i: integer;
+begin
+   body := RowJsonBytes(aColumns, aValues);
+   SetLength(Result, 4 + Length(body));
+   PutCardinalLE(Result, 0, Length(body));
+   for i := 0 to High(body) do
+      begin
+      Result[4 + i] := body[i];
+      end;
+end;
+
+function TakeSyncHeader(const aBody: TBytes; out aContest: string; out aRows: integer;
+                        out aSchema: integer): boolean;
+var
+   d: TJSONData;
+   o: TJSONObject;
+   item: TJSONData;
+begin
+   Result := False;
+   aContest := '';
+   aRows := -1;
+   aSchema := -1;
+   try
+      d := GetJSON(UTF8Encode(TextOfUtf8(aBody, 0)));
+   except
+      on Exception do
+         begin
+         Exit;
+         end;
+   end;
+   try
+      if not (d is TJSONObject) then
+         begin
+         Exit;
+         end;
+      o := TJSONObject(d);
+      item := o.Find('contest');
+      if (item <> nil) and (not item.IsNull) then
+         begin
+         aContest := item.AsString;
+         end;
+      item := o.Find('rows');
+      if item <> nil then
+         begin
+         aRows := item.AsInteger;
+         end;
+      item := o.Find('schema');
+      if item <> nil then
+         begin
+         aSchema := item.AsInteger;
+         end;
+      Result := aRows >= 0;
+   finally
+      d.Free;
+   end;
+end;
+
+function TakeSyncRow(aColumns: TWireColumns; const aBody: TBytes;
+                     out aValues: TWireValues; out aReason: string): TWireTake;
+begin
+   Result := TakeJsonBody(aColumns, aBody, 0, aValues, aReason);
 end;
 
 (* ------------------------------------------------------- TNetStreamBuffer *)

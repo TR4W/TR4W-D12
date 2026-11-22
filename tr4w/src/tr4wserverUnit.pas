@@ -56,7 +56,10 @@ uses
   VC,
   uNetFraming,  // NetMessageSize -- the one size table the client parses with
   uNetHello,    // THelloMessage, JudgeProtocol -- the first message on every link
-  uServerLogStore,  // the server log behind one seam; the flat file is the only implementation
+  uWireQso,         // TWireValues -- a QSO as the columns of its row
+  uQsoColumns,      // QsoWireColumns -- the wire's column list
+  uServerWireStore, // the server log: its own SQLite database (design 13)
+  uServerWireFrames,// what the server decides about one wire QSO message (a leaf, tested)
   uServerLogHealth, // what the operator and the stations are told when the log cannot be written
   Log4D,       // server logging: InitServerLogger / logger, restored from the fork
   Version,      // TR4WSERVER_CURRENTVERSION, used by FullServerVersion below
@@ -82,7 +85,7 @@ type
      socket in it. *)
    TClientHandle = Cardinal;
 
-   (* TServerLogOpenMode MOVED to uServerLogStore with the file code (P1, 2026-11-19). *)
+   (* The server log is uServerWireStore's (a SQLite database) since protocol 5. *)
 
 (* SIX DECLARATIONS FROM THE PRE-INDY SERVER, ALL UNUSED, DELETED 2026-09-08.
 
@@ -207,9 +210,7 @@ var
 //  AcceptEx                              : TAcceptEx;
 
 //  LogArrayPtr                           : ServerLogArray;
-  EditedQSOPtr                         : NetQSOInformationPtr;
-  ServerNewQSOPtr                       : NetQSOInformationPtr;
-  ServerLogFileInformation              : TLogFileInformation = (liID: NET_LOGCOMPARE_ID);
+  ServerLogFileInformation             : TLogFileInformation = (liID: NET_LOGCOMPARE_ID);
 
   SENDTR4W                              : array[0..3] of AnsiChar = 'TR4W';
   PASSTR4W                              : array[0..3] of AnsiChar = 'PASS';
@@ -228,7 +229,12 @@ var
 
   answer                                : array[1..2] of AnsiChar;
   ClientsSoocketsArray                  : array[1..MAXCLIENTS] of TClientEntry;
-  ServerBuffer                          : array[0..4096 - 1] of AnsiChar;
+  (* 131072: a whole maximum wire frame (6 + 60000) always fits beside the tail
+    of the previous read (protocol 5, design 13.7). *)
+  ServerBuffer                          : array[0..NET_RECEIVE_BUFFER_SIZE - 1] of AnsiChar;
+  (* OFFLINE QSOs stored in the run being held, whose ACK waits for the commit:
+    sent only after the store's Release returned True (13.6 rule 11). *)
+  PendingOfflineAcks                    : integer = 0;
   tr4wServerPassword                    : array[0..010] of AnsiChar;
   (* The message-only window that receives WM_SOCK_*. Owned by the program
     (tr4wserver.lpr); declared here because RunServer and RunSyncListener are
@@ -253,7 +259,7 @@ var
     now; this unit only asks. Created by tr4wserver.lpr (CreateServerLogStore)
     once the file name is known, and never freed while the program runs: the
     sync port's connection threads may still ask it for the image. *)
-  ServerLogStore                        : TServerLogStore = nil;
+  ServerLogStore                        : TServerWireStore = nil;
   (* ServerTempLogHandle went with them: a THandle initialised to
     INVALID_HANDLE_VALUE and referenced nowhere, which is the last thing in
     this unit that named the Windows unit. *)
@@ -369,10 +375,15 @@ procedure NoteServerLogWritten;
 procedure ShowServerProblems;
 (* SAY SO TO EVERY CONNECTED STATION, as the intercom's own line. *)
 procedure SendNoticeToStations(const aText: string);
-(* A LOG THAT ENDS IN PART OF A RECORD, at start-up, before it is opened. If its
-  header is the current one it asks the operator, then copies it whole and trims
-  the tail; any other file is left for the existing refusal. *)
-procedure OfferTornLogRepair;
+(* THE OLD FLAT FILE, SERVERLOG.TRW, beside the new database: said ONCE in the
+  server log and left where it is (never read, never deleted). *)
+procedure ReportUnusedFlatLog;
+(* A WIRE QSO MESSAGE AT ServerBuffer[aAt], handled; returns the bytes it
+  occupied (header + payload). *)
+function HandleWireFrame(aSocket: Cardinal; aAt: integer): integer;
+(* THE END OF A RUN OF OFFLINE QSOs: commit, and only then acknowledge the rows
+  the run stored (13.6 rule 11). Safe to call when no run is held. *)
+procedure FinishOfflineRun(aSocket: Cardinal);
 procedure SendLogFileInformation(s: TClientHandle);
 (* True when the log was cleared (the serial numbers are then scanned again). *)
 function ClearServerLog: boolean;
@@ -632,9 +643,9 @@ begin
           PACKETS (issue 149). Any other message, and the end of the read, sees
           the log exactly as it did before the hold existed. At the top of the
           first pass this also clears a hold an exception left behind. *)
-        if PWORD(@ServerBuffer[Bufindex])^ <> NET_OFFLINEQSO_ID then
+        if PWORD(@ServerBuffer[Bufindex])^ <> NET_WIRE_OFFLINE_ID then
            begin
-           ServerLogStore.Release;
+           FinishOfflineRun(aSocket);
            end;
 
         (* NETWORK PROTOCOL 2: UNTIL A CONNECTION HAS SENT ITS HELLO, ANYTHING
@@ -700,85 +711,15 @@ begin
               Bufindex := Bufindex + SizeOf(TIntercomMessage);
             end;
 
-          NET_EDITEDQSO_ID:
+          NET_WIRE_QSO_ID,
+          NET_WIRE_EDIT_ID,
+          NET_WIRE_OFFLINE_ID:
             begin
-              SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmEditQSO);
-              EditedQSOPtr := @ServerBuffer[Bufindex];
-              logger.Debug('NET_EDITEDQSO: call=' + string(EditedQSOPtr^.qiInformation.Callsign) +
-                ' band=' + IntToStr(Ord(EditedQSOPtr^.qiInformation.Band)) +
-                ' mode=' + IntToStr(Ord(EditedQSOPtr^.qiInformation.Mode)) +
-                ' exch=' + string(EditedQSOPtr^.qiInformation.ExchString));
-              (* RELAYED EITHER WAY, like a new QSO (see NET_QSOINFO_ID); the
-                confirmation only when the edit reached the log. *)
-              if ServerLogStore.UpdateNewest(EditedQSOPtr^.qiInformation) then
-                 begin
-                 SendConfirmMessage(aSocket);
-                 end;
-
-              Bufindex := Bufindex + SizeOf(TNetQSOInformation);
-            end;
-
-          NET_OFFLINEQSO_ID:
-            begin
-              ServerNewQSOPtr := @ServerBuffer[Bufindex];
-              ServerLogStore.Hold;
-              (* A QSO THE LOG ALREADY HOLDS IS NOT STORED AGAIN, but it is
-                acknowledged: the sender asked, and it is told the server has it. *)
-              if ServerLogStore.Holds(ServerNewQSOPtr^.qiInformation.ceQSOID1,
-                                      ServerNewQSOPtr^.qiInformation.ceQSOID2) then
-                begin
-                SendConfirmMessage(aSocket);
-                end
-              else if ServerLogStore.Append(ServerNewQSOPtr^.qiInformation, False) then
-              begin
-                (* NO FLUSH IN THERE: the log is held open (above) and flushed once,
-                  when the run of OFFLINEQSO packets ends (ReleaseServerLog).
-                  No ACK when the QSO was NOT stored (issue 314). Nothing on a
-                  station waits for the ACK; what puts a QSO the server missed
-                  back is the next link, which plans a push from the server's
-                  own log. *)
-                SendConfirmMessage(aSocket);
-              end;
-              Bufindex := Bufindex + SizeOf(TNetQSOInformation);
-            end;
-
-          NET_QSOINFO_ID:
-            begin
-              ServerNewQSOPtr := @ServerBuffer[Bufindex];
-              logger.Debug('NET_QSOINFO: call=' + string(ServerNewQSOPtr^.qiInformation.Callsign) +
-                ' band=' + IntToStr(Ord(ServerNewQSOPtr^.qiInformation.Band)) +
-                ' mode=' + IntToStr(Ord(ServerNewQSOPtr^.qiInformation.Mode)) +
-                ' exch=' + string(ServerNewQSOPtr^.qiInformation.ExchString));
-              (* A QSO THE LOG ALREADY HOLDS IS NEITHER STORED NOR RELAYED. It
-                reached the other stations when it first arrived, and each of
-                them ignores a second copy anyway (uNet.ReceivedQsoIsKnown), so
-                relaying it again would cost them a packet each and tell them
-                nothing; storing it would put two of one QSO in the server's
-                log. An edit is different and is always applied and relayed:
-                it is the same change however many times it is sent. *)
-              if ServerLogStore.Holds(ServerNewQSOPtr^.qiInformation.ceQSOID1,
-                                      ServerNewQSOPtr^.qiInformation.ceQSOID2) then
-                begin
-                logger.Info('[Net] QSO ' + string(ServerNewQSOPtr^.qiInformation.Callsign) +
-                  ' (' + IntToStr(ServerNewQSOPtr^.qiInformation.ceQSOID1) + '/' +
-                  IntToStr(ServerNewQSOPtr^.qiInformation.ceQSOID2) +
-                  ') is already in the server log -- not stored, not relayed');
-                end
-              else
-                begin
-                (* WRITTEN BEFORE IT IS RELAYED (issue 314), so a QSO the stations
-                  have is one the server's log has -- or the window and the
-                  stations have been told it does not (NoteServerLogFailure).
-                  A failed write does NOT stop the relay: no packet on the wire
-                  acknowledges a QSO, so the sender has already marked it sent
-                  and would never offer it again, and withholding it would take
-                  it from the other stations' dupe and multiplier checks. The
-                  copy the server lacks is pushed back by the next station to
-                  link (the restock). *)
-                ServerLogStore.Append(ServerNewQSOPtr^.qiInformation, True);
-                SendMessageToClients(aSocket, SizeOf(TNetQSOInformation), False, dmQSOInfo);
-                end;
-              Bufindex := Bufindex + SizeOf(TNetQSOInformation);
+              (* PROTOCOL 5: a QSO is id, 4-byte length, sender byte, JSON. What is
+                decided about it (store, relay, ACK) is uServerWireFrames; this
+                arm sends. It consumes the whole frame whatever the verdict: a
+                refused row does not drop the link. *)
+              Bufindex := Bufindex + HandleWireFrame(aSocket, Bufindex);
             end;
 
           NET_CLIENTSTATUS_ID:
@@ -830,12 +771,12 @@ begin
 
                 SM_CLEAR_DUPESHEET_MESSAGE:
                   begin
-                    if ServerLogStore.ClearFlags(actSetClearDupesheetBit) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
+                    if ServerLogStore.ClearFlags(wfaSetClearDupesheet) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
                   end;
 
                 SM_CLEAR_MULTSHEET_MESSAGE:
                   begin
-                    if ServerLogStore.ClearFlags(actClearMults) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
+                    if ServerLogStore.ClearFlags(wfaClearMults) then SendMessageToClients(aSocket, SizeOf(TServerMessage), True, dmClearLogs);
                   end;
 {
                 SM_SORTLOG_MESSAGE:
@@ -899,7 +840,7 @@ begin
 
         goto CheckBuffer;
         1:
-        ServerLogStore.Release;
+        FinishOfflineRun(aSocket);
         DisplayRCVDBytes;
 
 end;
@@ -972,7 +913,8 @@ begin
     unchanged -- so the read is their inverse. CharBufferText would decode
     them as UTF-8, which is not what was written, and a non-ASCII install
     path would name a file that does not exist. *)
-  ServerLogStore := TFileServerLogStore.Create(string(CharBufferBytes(ServerLogFileName)));
+  ServerLogStore := TServerWireStore.Create(QsoWireColumns,
+                       string(CharBufferBytes(ServerLogFileName)));
   ServerLogStore.Logger := logger;
   ServerLogStore.OnWriteFailed := NoteServerLogFailure;
   ServerLogStore.OnWritten := NoteServerLogWritten;
@@ -1114,61 +1056,164 @@ begin
      end;
 end;
 
-procedure OfferTornLogRepair;
+procedure ReportUnusedFlatLog;
 var
-  name, backup, error: string;
-  size, keep: Int64;
-  verdict: TTornTailVerdict;
+  trw: string;
 begin
-  name := string(CharBufferBytes(ServerLogFileName));
-  if not FileExists(name) then
+  trw := ChangeFileExt(string(CharBufferBytes(ServerLogFileName)), '.TRW');
+  if FileExists(trw) then
      begin
-     Exit;
-     end;
-  if (not PlanServerLogRepair(name, size, keep, verdict)) or (verdict <> ttTrim) then
-     begin
-     Exit;
-     end;
-  if ServerMessageBox(
-        'serverlog.trw ends in part of a QSO record (' + IntToStr(size - keep) +
-        ' bytes), usually from a write cut short by a full disk.' + #13#10 + #13#10 +
-        'Its header is the current one, so every whole record before the end is good.' + #13#10 +
-        'Press Yes to copy the whole file beside itself and then remove the partial record, ' +
-        'or No to leave it alone (the server will not start).',
-        MB_YESNO or MB_ICONWARNING) <> IDYES then
-     begin
-     Exit;
-     end;
-  if BackupAndTrimServerLog(name, FormatDateTime('yyyymmdd"T"hhnnss', Now), keep, backup, error) then
-     begin
-     logger.Warn('[Log] trimmed ' + IntToStr(size - keep) + ' bytes of a partial record from ' +
-                 name + '; the whole file is kept as ' + backup);
-     end
-  else
-     begin
-     logger.Error('[Log] could not repair ' + name + ': ' + error + ' -- the file is unchanged');
-     ServerMessageBox('serverlog.trw could not be repaired (' + error + '). It has not been changed.',
-                      MB_OK or MB_ICONWARNING);
+     logger.Warn('[Log] ' + trw + ' (the old flat server log) is not used by this server ' +
+                 '(protocol 5 keeps its log in a SQLite database) and is left where it is. ' +
+                 'It is never read or deleted; QSOs in it reach the new log only when a station ' +
+                 'that holds them links and pushes them.');
      end;
 end;
 
+(* A WIRE QSO MESSAGE: header (id, 4-byte length), sender byte, JSON. The frame
+  is whole (uNetFraming); its payload is copied out by index, judged and stored
+  by uServerWireFrames.ProcessWireFrame, and this routine does the SENDING.
+
+  A RELAYED FRAME IS RE-STAMPED: its sender byte is replaced by the ordinal
+  from the HELLO the server ACCEPTED for this connection, so the receivers'
+  contest judge and own-echo test never trust what a station wrote about
+  itself. A connection with no accepted HELLO (refused for its computer id, which
+  leaves it connected but unidentified) has its QSO frames refused: logged, not
+  stored, not relayed. *)
+function HandleWireFrame(aSocket: Cardinal; aAt: integer): integer;
+var
+  id: word;
+  declared: integer;
+  payload: TBytes;
+  i, slot: integer;
+  outcome: TWireFrameOutcome;
+  mt: DebugMessageType;
+begin
+  id := Word(Ord(ServerBuffer[aAt])) or (Word(Ord(ServerBuffer[aAt + 1])) shl 8);
+  declared := Ord(ServerBuffer[aAt + 2]) or (Ord(ServerBuffer[aAt + 3]) shl 8) or
+              (Ord(ServerBuffer[aAt + 4]) shl 16) or (Ord(ServerBuffer[aAt + 5]) shl 24);
+  Result := NET_WIRE_HEADER_SIZE + declared;
+
+  slot := ClientSlot(aSocket);
+  if (slot = 0) or (ClientsSoocketsArray[slot].clHello.hmID <> NET_HELLO_ID) then
+     begin
+     logger.Warn('[Net] a QSO message (id %d) from a connection with no accepted HELLO: ' +
+                 'refused, not stored, not relayed', [id]);
+     Exit;
+     end;
+
+  SetLength(payload, declared);
+  for i := 0 to declared - 1 do
+     begin
+     payload[i] := Ord(ServerBuffer[aAt + NET_WIRE_HEADER_SIZE + i]);
+     end;
+
+  outcome := ProcessWireFrame(ServerLogStore, QsoWireColumns, id, payload);
+  case outcome.Level of
+     wlInfo: logger.Info(outcome.Detail);
+     wlWarn: logger.Warn(outcome.Detail);
+     wlError: logger.Error(outcome.Detail);
+  else
+     logger.Debug(outcome.Detail);
+  end;
+
+  if outcome.RunFailed then
+     begin
+     (* The whole held run was rolled back: nothing in it may be acknowledged. *)
+     PendingOfflineAcks := 0;
+     end;
+  if outcome.AckAfterRelease then
+     begin
+     inc(PendingOfflineAcks);
+     end;
+  if outcome.AckNow then
+     begin
+     SendConfirmMessage(aSocket);
+     end;
+  if outcome.Relay then
+     begin
+     ServerBuffer[aAt + NET_WIRE_HEADER_SIZE] := AnsiChar(ClientsSoocketsArray[slot].clHello.hmComputerID);
+     if id = NET_WIRE_EDIT_ID then
+        begin
+        mt := dmEditQSO;
+        end
+     else
+        begin
+        mt := dmQSOInfo;
+        end;
+     SendMessageToClients(aSocket, Result, False, mt);
+     end;
+end;
+
+procedure FinishOfflineRun(aSocket: Cardinal);
+var
+  i, acks: integer;
+begin
+  acks := PendingOfflineAcks;
+  PendingOfflineAcks := 0;
+  if ServerLogStore = nil then
+     begin
+     Exit;
+     end;
+  if ServerLogStore.Release then
+     begin
+     for i := 1 to acks do
+        begin
+        SendConfirmMessage(aSocket);
+        end;
+     end
+  else if acks > 0 then
+     begin
+     logger.Error('[Net] the commit of a run of OFFLINE QSOs failed: ' + IntToStr(acks) +
+                  ' row(s) are NOT acknowledged');
+     end;
+end;
+
+(* THE LOG-INFO PACKET (sent on admit) now carries the ROW COUNT in
+  liServerLogSize; the contest and checksum fields are 0 (13.7: the whole-log
+  CRC32 is retired and the contest travels in the sync stream's header). *)
 procedure SendLogFileInformation(s: TClientHandle);
 var
-  size: Int64;
-  contest: TContestHandle;
-  crc: Cardinal;
+  rows: integer;
 begin
-  if not ServerLogStore.Describe(size, contest, crc) then Exit;
-  ServerLogFileInformation.liServerLogSize := size;
-  ServerLogFileInformation.liContest := contest;
-  ServerLogFileInformation.liSeverCRC32 := crc;
+  rows := ServerLogStore.Count;
+  if rows < 0 then
+     begin
+     Exit;
+     end;
+  ServerLogFileInformation.liServerLogSize := Cardinal(rows);
+  ServerLogFileInformation.liContest := NoContest;
+  ServerLogFileInformation.liSeverCRC32 := 0;
   sSend(s, ServerLogFileInformation, SizeOf(TLogFileInformation), dmLogInfo);
 end;
 
+(* CLEAR ALL LOGS: a DATED BACKUP COPY of the database FIRST (design D9);
+  after it, the delete. A backup that cannot be taken means the log is NOT cleared and the
+  stations are not told it was. The contest is forgotten with the rows: the next
+  station's HELLO names the contest the log now holds. *)
 function ClearServerLog: boolean;
+var
+  name, backup, why: string;
 begin
   Result := False;
-  if not ServerLogStore.Clear then Exit;
+  if ServerLogStore.Count > 0 then
+     begin
+     name := string(CharBufferBytes(ServerLogFileName));
+     backup := ChangeFileExt(name, '') + ' before clear ' +
+               FormatDateTime('yyyymmdd"T"hhnnss', Now) + WIRE_STORE_EXTENSION;
+     if not ServerLogStore.BackupTo(backup, why) then
+        begin
+        logger.Error('[Log] clear all logs REFUSED: could not back the log up first (' + why + ')');
+        SendNoticeToStations('Server log NOT cleared: it could not be backed up first.');
+        Exit;
+        end;
+     logger.Warn('[Log] clear all logs: the log was copied to ' + backup + ' first');
+     end;
+  if not ServerLogStore.Clear then
+     begin
+     Exit;
+     end;
+  ServerLogStore.ForgetContest;
   ScanLogForSerialsNumbers;
   Result := True;
 end;
@@ -1361,6 +1406,15 @@ begin
      end;
 
   ClientsSoocketsArray[slot].clHello := aHello;
+
+  (* THE SERVER HOLDS ONE CONTEST (13.7 ruling 4): the first accepted station's
+    announced id is recorded in the log's meta and never changed until the log is
+    cleared. The server still judges nothing; a station compares it at catch-up. *)
+  if (ServerLogStore <> nil) and ServerLogStore.RememberContest(HelloContestId(aHello)) then
+     begin
+     logger.Info('[Log] this server''s log is for contest "%s" (the first station''s HELLO)',
+                 [HelloContestId(aHello)]);
+     end;
 
   (* A STATION ON ANOTHER BUILD THAN THIS SERVER IS REPORTED, NOT REFUSED
     (issue 120 item 4; NY4I: "Clients should all be same version as server or

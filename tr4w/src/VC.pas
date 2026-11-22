@@ -565,9 +565,18 @@ const
   NET_INTERCOMMESSAGE_ID                = 1020;
   NET_NETWORKDXSPOT_ID                  = 1030;
 
-  NET_QSOINFO_ID                        = 1040;
-  NET_EDITEDQSO_ID                      = 1050;
-  NET_OFFLINEQSO_ID                     = 1055;
+  (* RETIRED with protocol 5 (2026-11-22): 1040, 1050 and 1055 are UNKNOWN ids
+    to uNetFraming now -- logged, dropped, never a frame. The constants stay
+    only so the client's old call sites still COMPILE until they are moved to
+    the three wire ids below; nothing may send or accept these. *)
+  NET_QSOINFO_ID                        = 1040;   (* retired *)
+  NET_EDITEDQSO_ID                      = 1050;   (* retired *)
+  NET_OFFLINEQSO_ID                     = 1055;   (* retired *)
+  (* PROTOCOL 5: a QSO as a variable-length message (uNetFraming). 1056 is
+    NET_THIS_QTC_WAS__SEND_ID. *)
+  NET_WIRE_QSO_ID                       = 1041;
+  NET_WIRE_EDIT_ID                      = 1051;
+  NET_WIRE_OFFLINE_ID                   = 1057;
   NET_THIS_QTC_WAS__SEND_ID             = 1056;
 
   NET_TAKESERVERQSO_ID                  = 1060;

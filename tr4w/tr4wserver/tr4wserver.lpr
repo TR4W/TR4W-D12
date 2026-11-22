@@ -73,15 +73,12 @@ uses
   LCLType,
   SysUtils,
   tr4wserverUnit in '..\src\tr4wserverUnit.pas',
-  uCRC32 in '..\src\uCRC32.pas',
-  uServerLogStore in '..\src\uServerLogStore.pas',
-  (* STAGE W2 (docs\TR4WSERVER_SQLITE_DESIGN.md 13): the server's log as its own
-    SQLite database. Nothing calls it yet -- W3 swaps it in behind the seam and
-    W5 retires uServerLogStore -- but it is listed here so the server build
-    COMPILES it, and so uQsoColumns and the connection layer are proven to
-    link into a program with no contest registry. *)
+  (* THE SERVER'S LOG IS ITS OWN SQLITE DATABASE (docs\TR4WSERVER_SQLITE_DESIGN.md
+    13, protocol 5). uServerLogStore, uServerQsoIndex and the whole-log CRC32
+    (uCRC32) are no longer part of this program. *)
   uQsoColumns in '..\src\uQsoColumns.pas',
   uServerWireStore in '..\src\uServerWireStore.pas',
+  uServerWireFrames in '..\src\uServerWireFrames.pas',
   Log4D,       // the dialog proc logs through tr4wserverUnit's logger
   VC in '..\src\vc.pas';
 
@@ -116,7 +113,7 @@ procedure ServerShutDown; forward;
 procedure ServerStartUp;
 var
   BytesReceived: integer;
-  LogFileSize: Int64;
+  LogWhy: UnicodeString;   (* the store's text is UnicodeString; this program's string is not *)
   ini: TIniFile;
 begin
 //        SendMessage(hwnddlg, WM_SETICON, ICON_SMALL, LoadIcon(0, IDI_APPLICATION));
@@ -199,43 +196,39 @@ begin
           'tr4wserver.exe' -- poked in as a NUL to chop the file name off.
           Rename the binary and the path was silently wrong. *)
         SetCharBufferBytes(ServerLogFileName,
-           AnsiString(LogFilePath('SERVERLOG.TRW')));
+           AnsiString(LogFilePath('SERVERLOG' + WIRE_STORE_EXTENSION)));
 {
         BytesReceived := Windows.GetModuleFileName(0, @MultsFrequenciesFileName, SizeOf(MultsFrequenciesFileName));
         MultsFrequenciesFileName[BytesReceived - 14] := #0;
         Windows.lstrcat(@MultsFrequenciesFileName, 'MULTS_FREQ.BIN');
         LoadinMultsFrequencies;
 }
-        (* A LOG THAT ENDS IN PART OF A RECORD is offered a repair first (issue
-          314); the refusal below stays for any other file whose size is wrong. *)
-        OfferTornLogRepair;
-        (* THE LOG IS THE STORE'S (uServerLogStore): Initialize opens or creates
-          the file, refuses a size that is not whole records, writes the header
-          into an empty one and tells the window the QSO count. *)
+        (* THE OLD FLAT FILE, if there is one, is reported once and left alone. *)
+        ReportUnusedFlatLog;
+        (* THE LOG IS THE STORE'S (uServerWireStore): Initialize opens or creates
+          SERVERLOG.tr4wsrv, REFUSES (untouched, with its reason) a file that is
+          not this server's, of another schema, of other columns or damaged, and
+          tells the window the QSO count. *)
         CreateServerLogStore;
-        case ServerLogStore.Initialize(LogFileSize) of
-          silBadSize:
+        case ServerLogStore.Initialize(LogWhy) of
+          wsiRefused:
             begin
-              logger.Error('serverlog.trw size mismatch: file size ' +
-                IntToStr(LogFileSize) +
-                ' is not a multiple of record size ' + IntToStr(SizeOf(ContestExchange)));
+              logger.Error('the server log was refused: ' + LogWhy);
               ServerMessageBox(
-                'serverlog.trw cannot be opened: the file size is not a multiple of the ' +
-                'current log record size.' + #13#10 + #13#10 +
-                'This typically occurs after a server upgrade that changed the log format.' + #13#10 +
-                'Please delete or rename serverlog.trw and restart the server.' + #13#10 +
-                'A new empty log will be created automatically.',
-                { MB_TOPMOST dropped from these three calls (2026-09-08): ServerMessageBox
-                  has been Dialogs.MessageDlg since the server became an LCL
-                  application, and MessageDlg has no topmost concept -- the flag
-                  had already stopped doing anything. }
+                'The server log cannot be used:' + #13#10 + #13#10 + LogWhy + #13#10 + #13#10 +
+                'The file has not been changed. Move or rename it and restart the server; ' +
+                'a new empty log will be created automatically.',
                 MB_OK or MB_ICONWARNING);
-              begin ServerShutDown; Exit; end;
+              ServerShutDown;
+              Exit;
             end;
-          silCannotOpen:
+          wsiCannotOpen:
             begin
-              ServerMessageBox('Failed to open/create serverlog.trw', MB_OK or MB_ICONWARNING);
-              begin ServerShutDown; Exit; end;
+              logger.Error('the server log could not be opened: ' + LogWhy);
+              ServerMessageBox('Failed to open/create the server log:' + #13#10 + #13#10 + LogWhy,
+                               MB_OK or MB_ICONWARNING);
+              ServerShutDown;
+              Exit;
             end;
         end;
         //        SortServerLog;

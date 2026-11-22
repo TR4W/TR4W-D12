@@ -60,12 +60,23 @@ type
       procedure Test_TrailingPartialIsKept;
       procedure Test_UnknownIdIsReportedNotReparsed;
       procedure Test_LogInfoRequestOnlyWhenAllowed;
+
+      (* PROTOCOL 5 (2026-11-22): id + 4-byte length + payload for a QSO. *)
+      procedure Test_TheRetiredQsoIdsAreUnknown;
+      procedure Test_AnOversizeDeclarationIsRefusedFromTheHeader;
+      procedure Test_AWireHeaderCutShortIsPartialAndZeroLengthIsWhole;
+      procedure Test_AFixedMessageFollowsAWireFrame;
+      procedure Test_LittleEndianHelpers;
+      procedure Test_AWireMessageRoundTrips;
+      procedure Test_ABadRowIsRefusedNotRelayed;
+      procedure Test_BuildRefusesAnOverlongRowAndAnOutboundCheckJudgesBytes;
+      procedure Test_TheSyncStreamFramesRoundTrip;
    end;
 
 implementation
 
 uses
-   SysUtils, VC, uNetFraming;
+   SysUtils, VC, uNetFraming, uNetHello, uWireQso;
 
 { A buffer the walker can be pointed at.  1-based like NetBuffer, which is what
   the real caller passes. }
@@ -98,8 +109,8 @@ procedure TTestNetFraming.Test_SizeIncludesTheIdWord;
 begin
    CheckEquals(SizeOf(TStationState), NetMessageSize(NET_STATIONSTATUS_ID),
                'station status');
-   CheckEquals(SizeOf(TNetQSOInformation), NetMessageSize(NET_QSOINFO_ID),
-               'QSO info');
+   CheckEquals(SizeOf(TParameterToNetwork), NetMessageSize(NET_PARAMETER_ID),
+               'parameter');
    CheckEquals(SizeOf(TServerMessage), NetMessageSize(NET_SERVERMESSAGE_ID),
                'server message');
 end;
@@ -113,9 +124,12 @@ begin
    Check(NetMessageSize(NET_LOGCOMPARE_ID) > 0, 'log compare');
    Check(NetMessageSize(NET_INTERCOMMESSAGE_ID) > 0, 'intercom');
    Check(NetMessageSize(NET_NETWORKDXSPOT_ID) > 0, 'dx spot');
-   Check(NetMessageSize(NET_QSOINFO_ID) > 0, 'qso info');
-   Check(NetMessageSize(NET_EDITEDQSO_ID) > 0, 'edited qso');
-   Check(NetMessageSize(NET_OFFLINEQSO_ID) > 0, 'offline qso');
+   (* PROTOCOL 5: a QSO is a VARIABLE message, so the fixed table has no size
+     for it, and the retired 1040/1050/1055 are unknown. *)
+   Check(NetIsWireId(NET_WIRE_QSO_ID), 'wire qso');
+   Check(NetIsWireId(NET_WIRE_EDIT_ID), 'wire edit');
+   Check(NetIsWireId(NET_WIRE_OFFLINE_ID), 'wire offline');
+   CheckEquals(0, NetMessageSize(NET_WIRE_QSO_ID), 'a wire id has no fixed size');
    Check(NetMessageSize(NET_TAKESERVERQSO_ID) > 0, 'take server qso');
    Check(NetMessageSize(NET_TIMESYN_ID) > 0, 'time sync');
    Check(NetMessageSize(NET_PARAMETER_ID) > 0, 'parameter');
@@ -133,7 +147,7 @@ end;
 procedure TTestNetFraming.Test_SpotIsNotAQSO;
 begin
    Check(NetMessageSize(NET_SPOTVIANETWORK_ID) <>
-         NetMessageSize(NET_QSOINFO_ID),
+         NetMessageSize(NET_PARAMETER_ID),
          'a spot and a QSO must not be the same size, or this test proves nothing');
    CheckEquals(SizeOf(TSendSpotViaNetwork),
                NetMessageSize(NET_SPOTVIANETWORK_ID),
@@ -192,14 +206,14 @@ var
    res: TNetWalkResult;
 begin
    ZeroBuffer(buf);
-   PutId(buf, 1, NET_QSOINFO_ID);
+   PutId(buf, 1, NET_PARAMETER_ID);
 
    offset := 1;
-   // 100 bytes of a 264-byte QSO -- the rest is still in the socket.
-   Check(not NextNetMessage(buf, 100, offset, id, res),
-         'a partial QSO must never be reported as complete');
+   // part of a parameter message -- the rest is still in the socket.
+   Check(not NextNetMessage(buf, NetMessageSize(NET_PARAMETER_ID) div 2, offset, id, res),
+         'a partial message must never be reported as complete');
    Check(res = nwPartial, 'and it is partial, not unknown');
-   CheckEquals(NET_QSOINFO_ID, id, 'the id is known even though the body is not');
+   CheckEquals(NET_PARAMETER_ID, id, 'the id is known even though the body is not');
    CheckEquals(1, offset, 'the cursor must not move past a message we did not take');
 end;
 
@@ -242,10 +256,9 @@ end;
   than by naming a record -- so this stays right if a size is ever corrected. }
 function LargestMessageId: word;
 const
-   IDS: array[0..14] of word = (
+   IDS: array[0..11] of word = (
       NET_MESSAGESTATE_ID, NET_LOGCOMPARE_ID, NET_INTERCOMMESSAGE_ID,
-      NET_NETWORKDXSPOT_ID, NET_QSOINFO_ID, NET_EDITEDQSO_ID,
-      NET_OFFLINEQSO_ID, NET_TAKESERVERQSO_ID, NET_TIMESYN_ID,
+      NET_NETWORKDXSPOT_ID, NET_TAKESERVERQSO_ID, NET_TIMESYN_ID,
       NET_PARAMETER_ID, NET_STATIONSTATUS_ID, NET_CLIENTSTATUS_ID,
       NET_SPOTVIANETWORK_ID, NET_COMPUTERID_ID, NET_SERVERMESSAGE_ID);
 var
@@ -400,12 +413,31 @@ end;
 type
    TWire = array of Byte;
 
-(* One message of this id: the id Word, then zeros, aCount of them end to end. *)
+const
+   (* The payload of every wire message these tests build: one sender byte and
+     some filler, so a frame is 6 + 100 = 106 bytes. *)
+   TEST_PAYLOAD = 100;
+
+(* The bytes one message of this id occupies in these tests. *)
+function OneFrame(const aId: word): integer;
+begin
+   if NetIsWireId(aId) then
+      begin
+      Result := NET_WIRE_HEADER_SIZE + TEST_PAYLOAD;
+      end
+   else
+      begin
+      Result := NetMessageSize(aId);
+      end;
+end;
+
+(* One message of this id: the id Word (and, for a wire id, the declared length),
+  then zeros, aCount of them end to end. *)
 function WireMessages(const aId: word; const aCount: integer): TWire;
 var
    one, n, i: integer;
 begin
-   one := NetMessageSize(aId);
+   one := OneFrame(aId);
    SetLength(Result, one * aCount);
    for i := 0 to High(Result) do
       begin
@@ -415,6 +447,10 @@ begin
       begin
       Result[n * one]     := Lo(aId);
       Result[n * one + 1] := Hi(aId);
+      if NetIsWireId(aId) then
+         begin
+         Result[n * one + 2] := TEST_PAYLOAD;    (* low byte of the length; the rest are 0 *)
+         end;
       end;
 end;
 
@@ -464,8 +500,8 @@ var
    res: TNetWalkResult;
    bad: word;
 begin
-   wire := WireMessages(NET_QSOINFO_ID, 30);
-   CheckEquals(30 * 384, NetWholeBytes(wire, Length(wire), False, res, bad),
+   wire := WireMessages(NET_WIRE_QSO_ID, 30);
+   CheckEquals(30 * OneFrame(NET_WIRE_QSO_ID), NetWholeBytes(wire, Length(wire), False, res, bad),
                'all thirty are whole');
    Check(res = nwComplete, 'and the buffer ends on a boundary');
 end;
@@ -480,7 +516,7 @@ var
    bad: word;
    at, n, total: integer;
 begin
-   wire := WireMessages(NET_QSOINFO_ID, 30);
+   wire := WireMessages(NET_WIRE_QSO_ID, 30);
    stream := TNetStreamBuffer.Create;
    try
       total := 0;
@@ -511,7 +547,7 @@ var
    bad: word;
    cut, total: integer;
 begin
-   wire := WireMessages(NET_QSOINFO_ID, 1);
+   wire := WireMessages(NET_WIRE_QSO_ID, 1);
    for cut := 1 to Length(wire) - 1 do
       begin
       stream := TNetStreamBuffer.Create;
@@ -531,19 +567,21 @@ end;
 
 procedure TTestNetFraming.Test_TrailingPartialIsKept;
 var
+   one: integer;
    wire: TWire;
    stream: TNetStreamBuffer;
    res: TNetWalkResult;
    bad: word;
 begin
-   wire := WireMessages(NET_QSOINFO_ID, 3);
+   one := OneFrame(NET_WIRE_QSO_ID);
+   wire := WireMessages(NET_WIRE_QSO_ID, 3);
    stream := TNetStreamBuffer.Create;
    try
-      CheckEquals(2, ServerPass(stream, WireSlice(wire, 0, 2 * 384 + 100), False, res, bad),
+      CheckEquals(2, ServerPass(stream, WireSlice(wire, 0, 2 * one + 50), False, res, bad),
                   'two whole messages');
       Check(res = nwPartial, 'then a partial third');
-      CheckEquals(100, stream.Count, 'its 100 bytes are kept');
-      CheckEquals(1, ServerPass(stream, WireSlice(wire, 2 * 384 + 100, 284), False, res, bad),
+      CheckEquals(50, stream.Count, 'its 50 bytes are kept');
+      CheckEquals(1, ServerPass(stream, WireSlice(wire, 2 * one + 50, one - 50), False, res, bad),
                   'the third completes');
       Check(res = nwComplete, 'and ends clean');
    finally
@@ -628,8 +666,393 @@ begin
       end;
 end;
 
+(* ---- protocol 5: variable-length QSO messages (design 13.7) ---- *)
+
+(* A small column list: text, text with a default, numeric. *)
+function TestColumns: TWireColumns;
+begin
+   Result := TWireColumns.Create;
+   Result.Add('guid', False, '');
+   Result.Add('callsign', False, '');
+   Result.Add('record_kind', False, 'QSO');
+   Result.Add('serial', True, '');
+   Result.Add('is_off', True, '0');
+end;
+
+function TestRow(aColumns: TWireColumns; const aGuid, aCall, aKind, aSerial, aOff: string): TWireValues;
+begin
+   SetLength(Result, aColumns.Count);
+   Result[0] := aGuid;
+   Result[1] := aCall;
+   Result[2] := aKind;
+   Result[3] := aSerial;
+   Result[4] := aOff;
+end;
+
+function AsciiOf(const aBytes: TBytes): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 0 to High(aBytes) do
+      begin
+      Result := Result + Chr(aBytes[i]);
+      end;
+end;
+
+(* The bytes after the six header bytes. *)
+function PayloadOf(const aMsg: TBytes): TBytes;
+var
+   i: integer;
+begin
+   SetLength(Result, Length(aMsg) - NET_WIRE_HEADER_SIZE);
+   for i := 0 to High(Result) do
+      begin
+      Result[i] := aMsg[NET_WIRE_HEADER_SIZE + i];
+      end;
+end;
+
+function HeaderOnly(const aId: word; const aDeclared: Cardinal; const aExtra: integer): TWire;
+begin
+   SetLength(Result, NET_WIRE_HEADER_SIZE + aExtra);
+   Result[0] := Lo(aId);
+   Result[1] := Hi(aId);
+   PutCardinalLE(TBytes(Result), 2, aDeclared);
+end;
+
+procedure TTestNetFraming.Test_TheRetiredQsoIdsAreUnknown;
+var
+   wire: TWire;
+   res: TNetWalkResult;
+   bad: word;
+   ids: array[0..2] of word;
+   i: integer;
+begin
+   ids[0] := 1040;
+   ids[1] := 1050;
+   ids[2] := 1055;
+   for i := 0 to 2 do
+      begin
+      CheckEquals(0, NetMessageSize(ids[i]), 'no size for ' + IntToStr(ids[i]));
+      Check(not NetIsWireId(ids[i]), 'not a wire id: ' + IntToStr(ids[i]));
+      SetLength(wire, 384);
+      wire[0] := Lo(ids[i]);
+      wire[1] := Hi(ids[i]);
+      CheckEquals(0, NetWholeBytes(wire, Length(wire), False, res, bad), 'nothing is whole');
+      Check(res = nwUnknownId, 'reported unknown: ' + IntToStr(ids[i]));
+      CheckEquals(ids[i], bad, 'by number');
+      end;
+   CheckEquals(1041, NET_WIRE_QSO_ID, 'the new ids');
+   CheckEquals(1051, NET_WIRE_EDIT_ID, 'edit');
+   CheckEquals(1057, NET_WIRE_OFFLINE_ID, 'offline');
+end;
+
+procedure TTestNetFraming.Test_AnOversizeDeclarationIsRefusedFromTheHeader;
+var
+   wire: TWire;
+   res: TNetWalkResult;
+   bad: word;
+begin
+   (* Over the cap with ONLY the six header bytes present: never "partial". *)
+   wire := HeaderOnly(NET_WIRE_QSO_ID, NET_WIRE_MAX_PAYLOAD + 1, 0);
+   CheckEquals(0, NetWholeBytes(wire, Length(wire), False, res, bad), 'nothing whole');
+   Check(res = nwOversize, 'refused as oversize, not left waiting');
+   CheckEquals(NET_WIRE_QSO_ID, bad, 'the id is reported');
+
+   (* A top bit set must not read as a negative length. *)
+   wire := HeaderOnly(NET_WIRE_EDIT_ID, $FFFFFFFF, 0);
+   NetWholeBytes(wire, Length(wire), False, res, bad);
+   Check(res = nwOversize, '$FFFFFFFF is oversize');
+   wire := HeaderOnly(NET_WIRE_OFFLINE_ID, $80000000, 0);
+   NetWholeBytes(wire, Length(wire), False, res, bad);
+   Check(res = nwOversize, '$80000000 is oversize');
+
+   (* Exactly the cap is allowed, and waits for its payload. *)
+   wire := HeaderOnly(NET_WIRE_QSO_ID, NET_WIRE_MAX_PAYLOAD, 10);
+   CheckEquals(0, NetWholeBytes(wire, Length(wire), False, res, bad), 'not yet whole');
+   Check(res = nwPartial, 'the cap itself is partial until it arrives');
+
+   (* Oversize with a payload "present": still refused. *)
+   wire := HeaderOnly(NET_WIRE_QSO_ID, NET_WIRE_MAX_PAYLOAD + 1, 70000);
+   NetWholeBytes(wire, Length(wire), False, res, bad);
+   Check(res = nwOversize, 'refused whatever follows');
+end;
+
+procedure TTestNetFraming.Test_AWireHeaderCutShortIsPartialAndZeroLengthIsWhole;
+var
+   wire: TWire;
+   res: TNetWalkResult;
+   bad: word;
+   cut: integer;
+begin
+   wire := HeaderOnly(NET_WIRE_QSO_ID, 0, 0);
+   for cut := 2 to NET_WIRE_HEADER_SIZE - 1 do
+      begin
+      CheckEquals(0, NetWholeBytes(wire, cut, False, res, bad), 'cut at ' + IntToStr(cut));
+      Check(res = nwPartial, 'a cut header is partial: ' + IntToStr(cut));
+      end;
+   CheckEquals(NET_WIRE_HEADER_SIZE, NetWholeBytes(wire, Length(wire), False, res, bad),
+               'a zero-length payload is a whole frame (a refused row, not a framing error)');
+   Check(res = nwComplete, 'and ends clean');
+end;
+
+procedure TTestNetFraming.Test_AFixedMessageFollowsAWireFrame;
+var
+   wire, fixed, all: TWire;
+   res: TNetWalkResult;
+   bad: word;
+   i: integer;
+begin
+   wire := WireMessages(NET_WIRE_EDIT_ID, 2);
+   fixed := WireMessages(NET_COMPUTERID_ID, 1);
+   SetLength(all, Length(wire) + Length(fixed));
+   for i := 0 to High(wire) do
+      begin
+      all[i] := wire[i];
+      end;
+   for i := 0 to High(fixed) do
+      begin
+      all[Length(wire) + i] := fixed[i];
+      end;
+   CheckEquals(Length(all), NetWholeBytes(all, Length(all), False, res, bad),
+               'two frames and a fixed message');
+   Check(res = nwComplete, 'clean');
+end;
+
+procedure TTestNetFraming.Test_LittleEndianHelpers;
+var
+   b: TBytes;
+begin
+   SetLength(b, 6);
+   PutWordLE(b, 0, $0412);
+   PutCardinalLE(b, 2, $A1B2C3D4);
+   CheckEquals($12, b[0], 'word low');
+   CheckEquals($04, b[1], 'word high');
+   CheckEquals($D4, b[2], 'cardinal byte 0');
+   CheckEquals($A1, b[5], 'cardinal byte 3');
+   CheckEquals($0412, GetWordLE(b, 0), 'word back');
+   CheckTrue(GetCardinalLE(b, 2) = $A1B2C3D4, 'cardinal back, top bit set');
+end;
+
+procedure TTestNetFraming.Test_AWireMessageRoundTrips;
+var
+   cols: TWireColumns;
+   msg, payload: TBytes;
+   row, got: TWireValues;
+   sender: Byte;
+   why: string;
+   offset: integer;
+   id: word;
+   res: TNetWalkResult;
+begin
+   cols := TestColumns;
+   try
+      row := TestRow(cols, 'g-1', 'K1' + #0 + 'ABC' + #$00E9 + #$4E2D, 'QSO', '42', '0');
+      msg := BuildWireMessage(NET_WIRE_EDIT_ID, 7, cols, row);
+      Check(OutboundWireMessageIsWellFormed(msg), 'what the client builds passes its own check');
+      offset := 1;
+      Check(NextNetMessage(msg, Length(msg), offset, id, res), 'frames as one message');
+      CheckEquals(NET_WIRE_EDIT_ID, id, 'with its id');
+      CheckEquals(Length(msg) + 1, offset, 'and nothing left over');
+
+      payload := PayloadOf(msg);
+      Check(TakeWireMessage(cols, payload, sender, got, why) = wtOk, 'taken apart: ' + why);
+      CheckEquals(7, sender, 'the sender byte');
+      CheckEquals('g-1', got[0], 'guid');
+      CheckEquals('K1ABC' + #$00E9 + #$4E2D, got[1], 'the NUL is gone, the UTF-8 survives');
+      CheckEquals('QSO', got[2], 'a default comes back');
+      CheckEquals('42', got[3], 'a number');
+      CheckEquals('0', got[4], 'a numeric default');
+
+      (* A default field is OMITTED: the JSON does not name it. *)
+      Check(Pos('record_kind', AsciiOf(payload)) = 0, 'a field equal to its default is omitted');
+
+      (* NULL and 0 stay distinct. *)
+      row := TestRow(cols, 'g-2', 'W1AW', 'QSO', '', '');
+      msg := BuildWireMessage(NET_WIRE_QSO_ID, 1, cols, row);
+      Check(TakeWireMessage(cols, PayloadOf(msg), sender, got, why) = wtOk, 'null row: ' + why);
+      CheckEquals('', got[3], 'a NULL number stays NULL');
+      CheckEquals('', got[4], 'and a NULL beside a default of 0 stays NULL');
+   finally
+      cols.Free;
+   end;
+end;
+
+procedure TTestNetFraming.Test_ABadRowIsRefusedNotRelayed;
+var
+   cols: TWireColumns;
+   msg, payload: TBytes;
+   row, got: TWireValues;
+   sender: Byte;
+   why, json: string;
+   i: integer;
+   u: UTF8String;
+begin
+   cols := TestColumns;
+   try
+      row := TestRow(cols, 'g-1', 'K1ABC', 'QSO', '42', '0');
+      msg := BuildWireMessage(NET_WIRE_QSO_ID, 3, cols, row);
+
+      (* one value changed after the checksum was made *)
+      payload := PayloadOf(msg);
+      for i := 1 to High(payload) do
+         begin
+         if payload[i] = Ord('K') then
+            begin
+            payload[i] := Ord('J');
+            Break;
+            end;
+         end;
+      Check(TakeWireMessage(cols, payload, sender, got, why) = wtBadChecksum,
+            'a changed byte fails the checksum');
+
+      (* no checksum member at all *)
+      u := UTF8Encode('{"guid":"g-1","callsign":"K1ABC"}');
+      SetLength(payload, 1 + Length(u));
+      payload[0] := 1;
+      for i := 1 to Length(u) do
+         begin
+         payload[i] := Ord(u[i]);
+         end;
+      Check(TakeWireMessage(cols, payload, sender, got, why) = wtBadChecksum, 'a missing "k" is a bad checksum');
+
+      (* not JSON *)
+      u := UTF8Encode('this is not json');
+      SetLength(payload, 1 + Length(u));
+      payload[0] := 1;
+      for i := 1 to Length(u) do
+         begin
+         payload[i] := Ord(u[i]);
+         end;
+      Check(TakeWireMessage(cols, payload, sender, got, why) = wtBadJson, 'unparsable JSON');
+
+      (* a JSON array is not an object *)
+      u := UTF8Encode('[1,2,3]');
+      SetLength(payload, 1 + Length(u));
+      payload[0] := 1;
+      for i := 1 to Length(u) do
+         begin
+         payload[i] := Ord(u[i]);
+         end;
+      Check(TakeWireMessage(cols, payload, sender, got, why) = wtBadJson, 'not one object');
+
+      (* an empty payload has no sender byte *)
+      SetLength(payload, 0);
+      Check(TakeWireMessage(cols, payload, sender, got, why) = wtNoSender, 'no sender byte');
+
+      (* a numeric column holding 1.5, with a MATCHING checksum, is a bad number *)
+      row := TestRow(cols, 'g-9', 'K1ABC', 'QSO', '1.5', '0');
+      json := '{"guid":"g-9","callsign":"K1ABC","serial":"1.5","k":"' +
+              WireCrcText(RecordCrc32(cols, row)) + '"}';
+      u := UTF8Encode(json);
+      SetLength(payload, 1 + Length(u));
+      payload[0] := 1;
+      for i := 1 to Length(u) do
+         begin
+         payload[i] := Ord(u[i]);
+         end;
+      Check(TakeWireMessage(cols, payload, sender, got, why) = wtBadNumber, 'a non-integer number');
+
+      (* a real JSON float is refused too (it will not match the checksum made from digits) *)
+      json := '{"guid":"g-9","callsign":"K1ABC","serial":1.5,"k":"' + WireCrcText(RecordCrc32(cols, row)) + '"}';
+      u := UTF8Encode(json);
+      SetLength(payload, 1 + Length(u));
+      payload[0] := 1;
+      for i := 1 to Length(u) do
+         begin
+         payload[i] := Ord(u[i]);
+         end;
+      Check(TakeWireMessage(cols, payload, sender, got, why) <> wtOk, 'a JSON float is refused');
+   finally
+      cols.Free;
+   end;
+end;
+
+procedure TTestNetFraming.Test_BuildRefusesAnOverlongRowAndAnOutboundCheckJudgesBytes;
+var
+   cols: TWireColumns;
+   row: TWireValues;
+   msg, damaged: TBytes;
+   raised: boolean;
+begin
+   cols := TestColumns;
+   try
+      row := TestRow(cols, 'g-1', StringOfChar('x', 60001), 'QSO', '1', '0');
+      raised := False;
+      try
+         BuildWireMessage(NET_WIRE_QSO_ID, 1, cols, row);
+      except
+         on EWireQsoError do
+            begin
+            raised := True;
+            end;
+      end;
+      Check(raised, 'a row over the cap is refused at the sender');
+
+      row := TestRow(cols, 'g-1', 'K1ABC', 'QSO', '1', '0');
+      msg := BuildWireMessage(NET_WIRE_QSO_ID, 1, cols, row);
+      Check(OutboundWireMessageIsWellFormed(msg), 'well formed');
+      damaged := Copy(msg, 0, Length(msg) - 1);
+      Check(not OutboundWireMessageIsWellFormed(damaged), 'a declared length that is not what follows');
+      damaged := Copy(msg, 0, Length(msg));
+      damaged[0] := Lo(1040);
+      damaged[1] := Hi(1040);
+      Check(not OutboundWireMessageIsWellFormed(damaged), 'a retired id');
+      Check(not OutboundWireMessageIsWellFormed(Copy(msg, 0, 6)), 'a header with no payload');
+      Check(OutboundPacketIsWellFormed(NET_WIRE_QSO_ID, Length(msg)), 'the id and length check passes a wire id');
+      Check(not OutboundPacketIsWellFormed(NET_QSOINFO_ID, 384), 'and refuses the retired fixed QSO');
+   finally
+      cols.Free;
+   end;
+end;
+
+procedure TTestNetFraming.Test_TheSyncStreamFramesRoundTrip;
+var
+   cols: TWireColumns;
+   row, got: TWireValues;
+   header, frame: TBytes;
+   body: TBytes;
+   contest, why: string;
+   rows, schema, n: integer;
+begin
+   cols := TestColumns;
+   try
+      header := BuildSyncHeaderFrame('ARRL-DX-CW', 3);
+      n := Integer(GetCardinalLE(header, 0));
+      CheckEquals(Length(header) - 4, n, 'the 4-byte length is the JSON length');
+      body := Copy(header, 4, n);
+      Check(TakeSyncHeader(body, contest, rows, schema), 'the header parses');
+      CheckEquals('ARRL-DX-CW', contest, 'contest');
+      CheckEquals(3, rows, 'rows');
+      CheckEquals(NET_PROTOCOL_VERSION, schema, 'schema is the protocol');
+
+      row := TestRow(cols, 'g-1', 'K1ABC', 'QSO', '42', '0');
+      frame := BuildSyncRowFrame(cols, row);
+      n := Integer(GetCardinalLE(frame, 0));
+      CheckEquals(Length(frame) - 4, n, 'row frame length');
+      Check(TakeSyncRow(cols, Copy(frame, 4, n), got, why) = wtOk, 'the row parses: ' + why);
+      CheckEquals('K1ABC', got[1], 'callsign');
+      CheckEquals('42', got[3], 'number');
+
+      body := Copy(frame, 4, n);
+      body[2] := body[2] xor 1;
+      Check(TakeSyncRow(cols, body, got, why) <> wtOk, 'a damaged row frame is refused');
+   finally
+      cols.Free;
+   end;
+end;
+
 procedure TTestNetFraming.RunAllTests;
 begin
+   Test_TheRetiredQsoIdsAreUnknown;
+   Test_AnOversizeDeclarationIsRefusedFromTheHeader;
+   Test_AWireHeaderCutShortIsPartialAndZeroLengthIsWhole;
+   Test_AFixedMessageFollowsAWireFrame;
+   Test_LittleEndianHelpers;
+   Test_AWireMessageRoundTrips;
+   Test_ABadRowIsRefusedNotRelayed;
+   Test_BuildRefusesAnOverlongRowAndAnOutboundCheckJudgesBytes;
+   Test_TheSyncStreamFramesRoundTrip;
    Test_ThirtyBackToBackQSOsAreThirty;
    Test_BurstInSegmentsLosesNothing;
    Test_SplitAtEveryByteIsOneMessage;

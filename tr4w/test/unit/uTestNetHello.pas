@@ -83,7 +83,7 @@ begin
    CheckEquals(48, HELLO_CONTEST_CHARS, 'the contest field is 48 characters');
    (* 3 since issue 298 stage 1: the QSO record's received year; 4 since
      issue 300: the year its sender sent. *)
-   CheckEquals(4,  NET_PROTOCOL_VERSION, 'this build speaks protocol 4');
+   CheckEquals(5,  NET_PROTOCOL_VERSION, 'this build speaks protocol 5 (2026-11-22: QSOs as length-framed JSON)');
    CheckEquals(1150, NET_HELLO_ID, 'the id is 1150');
 
    CheckTrue(BuildHello(NET_PROTOCOL_VERSION, 5, 'ab', 'XY', h), 'built');

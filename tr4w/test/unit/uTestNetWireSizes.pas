@@ -93,7 +93,12 @@ begin
    CheckWire('NetMessageSize(LOGCOMPARE)',     19,  NetMessageSize(NET_LOGCOMPARE_ID));
    CheckWire('NetMessageSize(INTERCOM)',       84,  NetMessageSize(NET_INTERCOMMESSAGE_ID));
    CheckWire('NetMessageSize(NETWORKDXSPOT)',  106, NetMessageSize(NET_NETWORKDXSPOT_ID));
-   CheckWire('NetMessageSize(QSOINFO)',        384, NetMessageSize(NET_QSOINFO_ID));
+   (* PROTOCOL 5: the three QSO ids are variable messages with no fixed size, and
+     the retired fixed 384-byte ids are unknown. *)
+   CheckWire('NetMessageSize(retired QSOINFO)',   0, NetMessageSize(NET_QSOINFO_ID));
+   CheckWire('NetMessageSize(retired EDITEDQSO)', 0, NetMessageSize(NET_EDITEDQSO_ID));
+   CheckWire('NetMessageSize(retired OFFLINEQSO)',0, NetMessageSize(NET_OFFLINEQSO_ID));
+   CheckWire('NetMessageSize(wire QSO)',          0, NetMessageSize(NET_WIRE_QSO_ID));
    CheckWire('NetMessageSize(TAKESERVERQSO)',  382, NetMessageSize(NET_TAKESERVERQSO_ID));
    CheckWire('NetMessageSize(TIMESYN)',        20,  NetMessageSize(NET_TIMESYN_ID));
    CheckWire('NetMessageSize(PARAMETER)',      514, NetMessageSize(NET_PARAMETER_ID));
@@ -107,13 +112,15 @@ begin
                'id 1056 has no record and must stay out of the framing table');
 end;
 
-(* A new QSO, an edit and an offline QSO are one record under three ids. *)
+(* A new QSO, an edit and an offline QSO are one MESSAGE SHAPE under three ids
+  (protocol 5): id, 4-byte length, payload. *)
 procedure TTestNetWireSizes.Test_TheThreeQSOIdsShareOneSize;
 begin
-   CheckEquals(NetMessageSize(NET_QSOINFO_ID), NetMessageSize(NET_EDITEDQSO_ID),
-               'QSOINFO and EDITEDQSO must be the same size');
-   CheckEquals(NetMessageSize(NET_QSOINFO_ID), NetMessageSize(NET_OFFLINEQSO_ID),
-               'QSOINFO and OFFLINEQSO must be the same size');
+   CheckEquals(6, NET_WIRE_HEADER_SIZE, 'the header is the id Word and a 4-byte length');
+   CheckEquals(60000, NET_WIRE_MAX_PAYLOAD, 'the payload cap');
+   CheckEquals(131072, NET_RECEIVE_BUFFER_SIZE, 'every receive buffer');
+   CheckTrue(NetIsWireId(NET_WIRE_QSO_ID) and NetIsWireId(NET_WIRE_EDIT_ID) and
+             NetIsWireId(NET_WIRE_OFFLINE_ID), 'all three are wire ids');
 end;
 
 (* The spot message is the id plus a TSpotRecord. The inner record is the part

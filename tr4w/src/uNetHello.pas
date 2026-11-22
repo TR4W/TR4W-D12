@@ -83,7 +83,12 @@ const
      zero, so its QSOs would arrive with no sent year. NY4I (2026-11-13):
      server wire formats are changed at will; TR4WServerPy moves to 4 with
      this build. *)
-   NET_PROTOCOL_VERSION = 4;
+   (* 5 SINCE 2026-11-22 (issues 300 and 341, design 13.7): a QSO travels as a
+     VARIABLE-LENGTH message (id, 4-byte length, sender byte, UTF-8 JSON of the
+     row's columns with a record checksum) under three NEW ids, and the server's
+     log is a SQLite database. The HELLO stays the same fixed 70 bytes, parsed
+     first, so a protocol-4 peer is still refused readably (8330). *)
+   NET_PROTOCOL_VERSION = 5;
 
    HELLO_VERSION_CHARS  = 16;
    HELLO_CONTEST_CHARS  = 48;

@@ -81,7 +81,8 @@ type
         anywhere; the incomplete tail waits here for the next read instead of
         being parsed (and lost) as if it were whole. *)
       FStream:    TNetStreamBuffer;
-      FBuf:       array[0..4095] of AnsiChar;
+      (* A whole maximum wire frame always fits (protocol 5). *)
+      FBuf:       array[0..NET_RECEIVE_BUFFER_SIZE - 1] of AnsiChar;
       FLen:       integer;
       FPeerIP:    string;
       FPeerName:  string;
@@ -184,6 +185,8 @@ uses
    IdSocketHandle, IdIOHandlerSocket,
    IdStack,       { TIdStack.IncUsage, GStack, TIdStackLocalAddressList }
    tr4wserverUnit,
+   uQsoColumns,       (* QsoWireColumns *)
+   uServerWireFrames, (* SendSyncStream *)
    utils_text,    (* CharBufferBytes -- the server log name *)
    Log4D;
 
@@ -199,6 +202,13 @@ type
       procedure MainExecute(AContext: TIdContext);
       procedure MainDisconnect(AContext: TIdContext);
       procedure SyncExecute(AContext: TIdContext);
+   end;
+
+   (* WHERE THE SYNC STREAM'S FRAMES GO: the connection's IOHandler. A frame is
+     whole bytes, so no string conversion sits between the store and the socket. *)
+   TSyncFrameSink = class
+      Target: TIdIOHandler;
+      procedure Write(const aFrame: TBytes);
    end;
 
 var
@@ -240,6 +250,11 @@ begin
       begin
       Result := Result + Format('... (%d more)', [Length(aBytes) - n]);
       end;
+end;
+
+procedure TSyncFrameSink.Write(const aFrame: TBytes);
+begin
+   Target.Write(TIdBytes(aFrame));
 end;
 
 { ------------------------------------------------------------ TServerConn }
@@ -487,7 +502,7 @@ begin
       Exit;
       end;
 
-   if walk = nwUnknownId then
+   if (walk = nwUnknownId) or (walk = nwOversize) then
       begin
       room := c.FStream.Count;
       if room > 16 then
@@ -499,9 +514,19 @@ begin
          begin
          raw[k] := c.FStream.ByteAt(k);
          end;
-      logger.Error('[Net] %s sent a message id the server does not know (%d); ' +
-                   'the connection is dropped. Bytes from there: %s',
-                   [c.FPeerIP, badId, HexOf(raw)]);
+      if walk = nwOversize then
+         begin
+         logger.Error('[Net] %s sent a QSO message (id %d) declaring a payload over %d bytes; ' +
+                      'the connection is dropped. Bytes from there: %s',
+                      [c.FPeerIP, badId, NET_WIRE_MAX_PAYLOAD, HexOf(raw)]);
+         end
+      else
+         begin
+         logger.Error('[Net] %s sent a message id the server does not know (%d; the old QSO ' +
+                      'ids 1040, 1050 and 1055 are retired with protocol 5); ' +
+                      'the connection is dropped. Bytes from there: %s',
+                      [c.FPeerIP, badId, HexOf(raw)]);
+         end;
       c.CloseConnection;
       end;
 
@@ -584,8 +609,8 @@ var
    c:   TServerConn;
    raw: TIdBytes;
    got: integer;
-   fs:  TStream;
-   size: LongInt;
+   sink: TSyncFrameSink;
+   rows: integer;
 begin
    c := TServerConn(AContext);
 
@@ -628,20 +653,26 @@ begin
       end;
 
    try
-      (* THE STORE'S IMAGE: header, then every record. For the flat file it is a
-        fresh read stream over the LIVE file, so the size below and the bytes
-        written are two separate reads of a file the main thread may be
-        appending to (design note 6.2). Deliberately NOT fixed in the store
-        seam (P1 changes no behaviour); a SQLite store returns a snapshot. *)
-      fs := ServerLogStore.OpenImage;
+      (* THE SYNC STREAM (protocol 5, design 13.7): ONE ReadAll snapshot of the
+        database -- committed rows only, taken in one read transaction on a
+        connection of its own, so the main thread appending meanwhile cannot tear
+        it (design 6.2's hazard is gone). A header frame
+        {"contest","rows","schema"}, then one frame per row, each a 4-byte LE
+        length and the row's JSON. *)
+      sink := TSyncFrameSink.Create;
       try
-         { The size FIRST, as a four-byte head -- that is the protocol: the old
-           code put it in TRANSMIT_FILE_BUFFERS.Head. }
-         size := fs.Size;
-         c.Connection.IOHandler.Write(RawToBytes(size, SizeOf(size)));
-         c.Connection.IOHandler.Write(fs, 0, False);
+         sink.Target := c.Connection.IOHandler;
+         if SendSyncStream(ServerLogStore, QsoWireColumns, sink.Write, rows) then
+            begin
+            logger.Info('[Net] sync: sent %d row(s) to %s', [rows, c.FPeerIP]);
+            end
+         else
+            begin
+            logger.Error('[Net] sync: the server log could not be read; nothing was sent to %s',
+                         [c.FPeerIP]);
+            end;
       finally
-         fs.Free;
+         sink.Free;
       end;
    except
       on E: Exception do

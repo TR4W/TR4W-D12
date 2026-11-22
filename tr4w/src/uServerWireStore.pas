@@ -32,10 +32,10 @@ unit uServerWireStore;
   serial, the count -- and, in place of the byte-exact image the sync port used
   to stream, ReadAll: every row in arrival order from one read transaction.
 
-  W2 BUILDS THE STORE AND NOTHING ELSE. Nothing in tr4wserverUnit calls it yet
-  (W3 swaps the seam and the message format) and SERVERLOG.TRW and
-  uServerLogStore are untouched (W5 deletes them). The server's program file
-  lists this unit so the server build compiles it.
+  SINCE W3+W5 (2026-11-22) THIS IS THE SERVER'S LOG: tr4wserverUnit stores,
+  relays and clears through it (uServerWireFrames decides what to do with a
+  message), and the sync port streams its ReadAll. SERVERLOG.TRW and the flat
+  file store (uServerLogStore) are gone.
 
   A LEAF in the server's sense: no window, no Indy, no server state. It uses the
   contest log's CONNECTION LAYER (uLogDatabase.TLogDatabase.OpenWithoutIdentity:
@@ -185,7 +185,26 @@ type
       (* Keep one transaction open across a run of OFFLINEQSO packets. Release
         commits it; it does nothing when no hold is in force. See DURABILITY. *)
       procedure Hold;
-      procedure Release;
+      (* True when no run was held or its commit worked. FALSE when the commit
+        failed: the whole run was rolled back, so a caller that was about to
+        ACK the run's rows must not (13.6 rule 11). *)
+      function Release: boolean;
+
+      (* THE CONTEST THIS SERVER'S LOG HOLDS (13.7 ruling 4): meta('contest'),
+        the contest id string the FIRST accepted station announced in its HELLO.
+        RememberContest stores aId only when none is stored and aId is not empty
+        (False when nothing was stored for any reason but "already set").
+        ForgetContest is for Clear-all-logs: a cleared log starts a new contest.
+        Both are main-thread calls, like every write. *)
+      function Contest: string;
+      function RememberContest(const aId: string): boolean;
+      procedure ForgetContest;
+
+      (* A DATED COPY OF THE DATABASE, taken BEFORE a clear (design D9): VACUUM
+        INTO from a connection of its own, so it holds every committed row
+        including the -wal's, which a plain file copy would miss. The
+        destination must not exist. aWhy names the failure. *)
+      function BackupTo(const aDestination: string; out aWhy: string): boolean;
 
       (* Store a row unless its identity is already held. *)
       function Insert(const aValues: TWireValues): TWireInsert;
@@ -212,7 +231,10 @@ type
       (* EVERY ROW IN ARRIVAL ORDER (seq), from one read transaction on a
         connection of its own. Callable from any thread. False when it could
         not be read. *)
-      function ReadAll(out aRows: TWireRows): boolean;
+      function ReadAll(out aRows: TWireRows): boolean; overload;
+      (* The same, and the stored contest read in the SAME snapshot, so the sync
+        stream's header cannot disagree with its rows. *)
+      function ReadAll(out aRows: TWireRows; out aContest: string): boolean; overload;
 
       property FileName: string read FFileName;
       property Columns: TWireColumns read FColumns;
@@ -247,6 +269,7 @@ const
    LEVEL_INFO = 0;
 
    (* The columns the store's own statements name. *)
+   META_CONTEST = 'contest';
    COL_GUID = 'guid';
    COL_KIND = 'record_kind';
    COL_SERIAL = 'serial_sent';
@@ -775,8 +798,9 @@ begin
    end;
 end;
 
-procedure TServerWireStore.Release;
+function TServerWireStore.Release: boolean;
 begin
+   Result := True;
    if (FDb = nil) or (not FHeld) then
       begin
       Exit;
@@ -787,7 +811,105 @@ begin
    except
       on E: Exception do
          begin
+         Result := False;
          FailWrite(E, 'commit a run of QSOs');
+         end;
+   end;
+end;
+
+function TServerWireStore.Contest: string;
+begin
+   Result := '';
+   if FDb = nil then
+      begin
+      Exit;
+      end;
+   try
+      Result := ScalarText(FDb, 'SELECT value FROM meta WHERE key = ''' + META_CONTEST + '''');
+   except
+      on E: Exception do
+         begin
+         Report('[WireStore] cannot read the contest: %s', LEVEL_ERROR, [E.Message]);
+         end;
+   end;
+   EndRead;
+end;
+
+function TServerWireStore.RememberContest(const aId: string): boolean;
+var
+   q: TSQLQuery;
+begin
+   Result := False;
+   if (FDb = nil) or (aId = '') or (Contest <> '') then
+      begin
+      Exit;
+      end;
+   try
+      BeginWrite;
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := FDb.Connection;
+         q.SQL.Text := AnsiString('INSERT OR IGNORE INTO meta (key, value) VALUES (''' +
+                                  META_CONTEST + ''', :v)');
+         SetParamText(q.Params.ParamByName('v'), aId);
+         q.ExecSQL;
+      finally
+         q.Free;
+      end;
+      if not FHeld then
+         begin
+         FDb.Transaction.Commit;
+         end;
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         FailWrite(E, 'record the contest');
+         end;
+   end;
+end;
+
+procedure TServerWireStore.ForgetContest;
+begin
+   if FDb = nil then
+      begin
+      Exit;
+      end;
+   try
+      BeginWrite;
+      FDb.Connection.ExecuteDirect('DELETE FROM meta WHERE key = ''' + META_CONTEST + '''');
+      if not FHeld then
+         begin
+         FDb.Transaction.Commit;
+         end;
+   except
+      on E: Exception do
+         begin
+         FailWrite(E, 'forget the contest');
+         end;
+   end;
+end;
+
+function TServerWireStore.BackupTo(const aDestination: string; out aWhy: string): boolean;
+begin
+   Result := False;
+   aWhy := '';
+   if FDb = nil then
+      begin
+      aWhy := 'the server log is not open';
+      Exit;
+      end;
+   try
+      FDb.SnapshotTo(aDestination, False);
+      Result := FileExists(aDestination);
+      if not Result then
+         begin
+         aWhy := 'the backup file was not written';
+         end;
+   except
+      on E: Exception do
+         begin
+         aWhy := E.Message;
          end;
    end;
 end;
@@ -1113,6 +1235,13 @@ end;
 
 function TServerWireStore.ReadAll(out aRows: TWireRows): boolean;
 var
+   ignored: string;
+begin
+   Result := ReadAll(aRows, ignored);
+end;
+
+function TServerWireStore.ReadAll(out aRows: TWireRows; out aContest: string): boolean;
+var
    reader: TLogDatabase;
    q: TSQLQuery;
    n, i: integer;
@@ -1120,6 +1249,7 @@ var
 begin
    Result := False;
    SetLength(aRows, 0);
+   aContest := '';
    reader := TLogDatabase.Create;
    try
       try
@@ -1127,6 +1257,15 @@ begin
          q := TSQLQuery.Create(nil);
          try
             q.DataBase := reader.Connection;
+            (* THE CONTEST FIRST, in the same read transaction as the rows (the
+              transaction is not ended between the two queries). *)
+            q.SQL.Text := AnsiString('SELECT value FROM meta WHERE key = ''' + META_CONTEST + '''');
+            q.Open;
+            if not q.EOF then
+               begin
+               aContest := FieldText(q.Fields[0]);
+               end;
+            q.Close;
             q.SQL.Text := AnsiString(FSelectAll);
             q.Open;
             n := 0;
