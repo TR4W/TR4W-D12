@@ -10,6 +10,58 @@ and it is not clear which zone it is."*
 
 ---
 
+## REVISED 2026-11-22: THE MINIMAL VERSION (this supersedes sections 2.2, 2.5 and 3)
+
+NY4I asked whether adding one database field and one Edit QSO field really
+needs this plan, and an independent review agreed it does not. The size below
+(sections 2.2, 2.5 and the seven stages) comes from ONE choice: carving two new
+received-zone fields into the 376-byte in-memory record and the wire. That
+drags in the census of every `Zone` writer, the reserved-byte measurement, the
+dual-write for mixed versions, protocol 5 and TR4WServerPy.
+
+**None of that is needed.** A QSO receives ONE zone. The contest decides whether
+it is a CQ zone, an ITU zone or the contest's own number, and every station
+knows the contest (the HELLO announces it). So the record and the wire stay
+EXACTLY as they are, and the split is done only where it is shown and stored.
+
+**Three small commits (about 1 to 2 days; to be confirmed against the code):**
+
+1. **Classifier.** A pure `ReceivedZoneKind(contest)` returning CQ, ITU, the
+   contest's own number, or none, with a registry-walk pin that PRINTS every
+   zone-receiving contest's kind so NY4I can read it. Croatian and CW Open are
+   pinned by name (their zone list and zone mode disagree). The six contests
+   whose kind is not yet verified (R9W, RF Championship, Jock White, EUDX, KCJ,
+   WRTC) are listed in the pin for NY4I to check.
+2. **Schema 14.** New columns `rcvd_cq_zone` and `rcvd_itu_zone`, written when a
+   row is bound from the one `Zone` byte through the classifier, plus a one-time
+   backfill of existing rows. `rcvd_zone` and every reader stay as they are, so
+   scoring, the exports, the corpus and the matrix do not move. Also add
+   `cty_itu_zone` back and make `cty_cq_zone` hold the real CQ zone (it holds
+   the ITU zone in ITU contests today, measured in section 1.5), after
+   confirming that CTY.DAT gives both zones for a call whatever the contest's
+   zone mode.
+3. **Edit QSO and the log grid.** The received zone is labelled 'CQ zone' or
+   'ITU zone' according to the classifier; if two boxes are wanted, the one the
+   contest does not receive is read-only or blank. Saving still writes the one
+   `Zone` value.
+
+**Check first (the first task of commit 1):** (a) grep the scoring and
+multiplier paths for any contest that needs BOTH received zones on the same QSO
+in memory at once; (b) work out exactly what 'zone list and zone mode disagree'
+means for Croatian and CW Open. If a CTY-derived zone covers every case, the
+record stays unchanged. If one contest genuinely needs two received values in
+memory, only that case justifies touching the record.
+
+**Dropped from this issue (file separately if wanted):** the licence-year Edit
+QSO box (Q3), writing both ADIF zone tags (Q2), stopping the legacy zone byte
+and protocol 5 (Q1; with the record unchanged there is nothing to stop), and
+OZCR-Z scoring on the ITU zone (Q6; a one-line change with its own question).
+
+The rest of this document is kept as the EVIDENCE (sections 1.x are still
+correct); sections 2.2, 2.5, 3 and the old size estimate are superseded.
+
+---
+
 ## 0. Executive summary
 
 1. The STATION side is already separate: `my_cq_zone` / `my_itu_zone` (schema
