@@ -378,9 +378,11 @@ too narrow, clipping the right column. That is exactly the gtk2 defect that
 - **The right-hand block of the top band** follows the right edge: the need
   headers, BeamHeading and the need strips (columns 32-46). That is what the
   `needLeft` comment always intended.
-- The rest of both bands stays left-aligned. A gap of up to 45 px at the right
-  of the bottom band is acceptable. It can only grow beyond 45 px when the
-  window is wider than `46*WS_MAX` (for example, maximized on a wide screen).
+- **The bottom band stretches** (NY4I, 2026-11-21): every element's left and
+  right edge is mapped by `StretchX(x, bandWidth, ws) = x * bandWidth div
+  LayoutWidth(ws)`, so the lower grid meets the window edge. Identity at the
+  layout width. The top band's left part stays left-aligned. WS_MAX is 43 now,
+  so the scale itself rises with a wide window.
 - **Rejected: snapping the window to `46*ws` on release.** It fights the
   window manager (tiling WMs, maximized windows, Cocoa's live resize), and the
   LCL has no portable "resize ended" event to hang it on. `WM_EXITSIZEMOVE` is

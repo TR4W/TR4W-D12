@@ -801,8 +801,11 @@ counts the key itself.
 - **THE WIDTH IS FREE** (e3): `MakeMainWindowResizeable(width, height,
   minHeight)` releases the old constraints, sizes the client, sets MinWidth to
   the layout width and NO MaxWidth. Extra width goes to the log, the strip and
-  the status strip, and the needs block follows the right edge; the rest of
-  both bands stays left. `RestoreMainWindowBounds` restores the saved width,
+  the status strip, and the needs block follows the right edge; the BOTTOM
+  band stretches to the client width (`uMainLayout.StretchX`, edges mapped
+  proportionally, identity at the layout width; `PlaceBottomBand`, re-run on a
+  width change by `RestretchBottomBand`); the top band's left part stays left.
+  Log cell padding is `LogCellPad` (grows with the font). `RestoreMainWindowBounds` restores the saved width,
   never below MinWidth.
 - **ws FOLLOWS THE WIDTH** (e4): `uMainLayout.ScaleForClient` (pure; down
   at once below `46 * ws`, up `WS_STEP_UP_SLACK` past the next step, capped
