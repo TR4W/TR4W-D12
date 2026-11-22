@@ -54,6 +54,11 @@ type
       procedure TestAnAppendBatchLandsInOneCommit;
       procedure TestAFailedAppendBatchLeavesTheLogAsItWas;
       procedure TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
+      (* PLAN COMMIT 1 (issues 347/348): the row ids out, and the per-row
+        hook the live append's delivery capture rides in. *)
+      procedure TestAnAppendBatchGivesEachRowsIdAndHooksInside;
+      procedure TestAHookThatRaisesRollsBackTheWholeBatch;
+      procedure TestAHookMayRollBackItsOwnSavepoint;
       procedure TestAnEditKeepsTheSentExchange;
       procedure TestQSOsWithoutAnExchangeIdAreReported;
       procedure TestTheContestStartTimeIsReadAtOpen;
@@ -2835,6 +2840,337 @@ begin
    Scrub(fn);
 end;
 
+(* ONE INTEGER FROM THE FILE aFileName, through a read-only connection of its
+  own -- so it sees only what has been COMMITTED, never the transaction the
+  batch holds open on the repository's connection. -1 when no row. *)
+function CommittedScalar(const aFileName, aSql: string): Int64;
+var
+   db: TLogDatabase;
+   q: TSQLQuery;
+begin
+   Result := -1;
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(aFileName);
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.Transaction := db.Transaction;
+         q.UsePrimaryKeyAsKey := False;
+         q.SQL.Text := aSql;
+         q.Open;
+         if not q.EOF then
+            begin
+            Result := q.Fields[0].AsLargeInt;
+            end;
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      db.Free;
+   end;
+end;
+
+type
+   (* THE PER-ROW HOOK, RECORDING: which ids it was handed, whether each call
+     came inside the batch, and whether another connection could already see
+     the row (it must not: the row is not committed). It can be told to raise
+     on one call, or to do what the durable delivery capture does on its
+     failure path -- roll back to a savepoint of its own and re-prepare the
+     repository's statements. *)
+   TRowHookProbe = class(TObject)
+   public
+      Repo: TLogRepository;
+      Database: TLogDatabase;
+      FileName: string;
+      Seen: TInt64Array;
+      InsideBatch: integer;
+      VisibleOutside: integer;
+      RaiseAtCall: integer;
+      SavepointAtCall: integer;
+      constructor Create(aRepo: TLogRepository; aDatabase: TLogDatabase;
+                         const aFileName: string);
+      procedure AfterRow(aRowId: Int64);
+   end;
+
+constructor TRowHookProbe.Create(aRepo: TLogRepository; aDatabase: TLogDatabase;
+                                 const aFileName: string);
+begin
+   inherited Create;
+   Repo := aRepo;
+   Database := aDatabase;
+   FileName := aFileName;
+   Seen := nil;
+   InsideBatch := 0;
+   VisibleOutside := 0;
+   RaiseAtCall := -1;
+   SavepointAtCall := -1;
+end;
+
+procedure TRowHookProbe.AfterRow(aRowId: Int64);
+var
+   call: integer;
+begin
+   call := Length(Seen);
+   SetLength(Seen, call + 1);
+   Seen[call] := aRowId;
+   if Repo.InBatch then
+      begin
+      Inc(InsideBatch);
+      end;
+   if CommittedScalar(FileName, 'SELECT COUNT(*) FROM qso WHERE id = ' +
+                      IntToStr(aRowId)) > 0 then
+      begin
+      Inc(VisibleOutside);
+      end;
+   if call = SavepointAtCall then
+      begin
+      (* uDurableExternalLogger.CaptureSavedQso's failure path, step for step. *)
+      Database.Connection.ExecuteDirect('SAVEPOINT external_capture');
+      Database.Connection.ExecuteDirect(
+         'INSERT OR REPLACE INTO session_state(key, value) VALUES (''hook.probe'', ''1'')');
+      Database.Connection.ExecuteDirect('ROLLBACK TO SAVEPOINT external_capture');
+      Database.Connection.ExecuteDirect('RELEASE SAVEPOINT external_capture');
+      Repo.ReprepareAfterSavepointRollback;
+      end;
+   if call = RaiseAtCall then
+      begin
+      raise Exception.Create('the hook refused row ' + IntToStr(aRowId));
+      end;
+end;
+
+(* EACH ROW'S ID COMES BACK, IN ORDER, AND THE HOOK RUNS INSIDE THE BATCH.
+  A committed seed first, so the batch's ids do not start at 1 and an id that
+  merely counts would be caught. The hook sees each row while the batch is
+  open, and a connection of its own cannot see it yet: the hook is inside the
+  transaction, not after it. *)
+procedure TLogRepositoryTests.TestAnAppendBatchGivesEachRowsIdAndHooksInside;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   appends: TLogQsoAppends;
+   probe: TRowHookProbe;
+   seed, qso: ContestExchange;
+   ids: TInt64Array;
+   failedAt, i: integer;
+   seedId: Int64;
+   fn: string;
+begin
+   BeginTest('an append batch gives each row''s id, in order, and hooks each row inside the transaction');
+   fn := TempLogName('appendids.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(seed, 0);
+         seedId := repo.SaveQSO(seed);
+         repo.Commit;
+
+         probe := TRowHookProbe.Create(repo, db, fn);
+         appends := TLogQsoAppends.Create;
+         try
+            for i := 1 to 3 do
+               begin
+               MakeDistinctQSO(qso, i);
+               appends.Add(qso);
+               end;
+            repo.AppendBatch(appends, failedAt, ids, probe.AfterRow);
+
+            CheckEquals(-1, failedAt, 'no row failed');
+            CheckEquals(3, integer(Length(ids)), 'one id per row');
+            CheckEquals(3, integer(Length(probe.Seen)), 'the hook ran once per row');
+            for i := 0 to High(ids) do
+               begin
+               CheckEquals(integer(seedId + 1 + i), integer(ids[i]),
+                           'row ' + IntToStr(i) + '''s id is the next after the one before');
+               if i < Length(probe.Seen) then
+                  begin
+                  CheckEquals(integer(ids[i]), integer(probe.Seen[i]),
+                              'and the hook was handed that same id');
+                  end;
+               end;
+            CheckEquals(3, probe.InsideBatch, 'every hook call came while the batch was open');
+            CheckEquals(0, probe.VisibleOutside,
+                        'and no other connection could see the row yet: the hook is inside the transaction');
+            CheckFalse(repo.InBatch, 'the batch is over');
+         finally
+            appends.Free;
+            probe.Free;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   CheckEquals(4, CommittedScalar(fn, 'SELECT COUNT(*) FROM qso'),
+               'committed: the seed and the three rows');
+   CheckEquals(integer(seedId + 3), integer(CommittedScalar(fn, 'SELECT MAX(id) FROM qso')),
+               'and the last id handed back is the last row''s');
+   Scrub(fn);
+end;
+
+(* A HOOK THAT RAISES FAILS ITS ROW, AND THE WHOLE BATCH GOES. The audit's
+  recipe (section 9c): a committed seed, the failure part-way, the batch's
+  own connection back at the seed, a close with no commit, and the FILE byte
+  for byte as it was. The ids come back empty, so no caller can hold the id
+  of a rolled-back row. *)
+procedure TLogRepositoryTests.TestAHookThatRaisesRollsBackTheWholeBatch;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   appends: TLogQsoAppends;
+   probe: TRowHookProbe;
+   seed, qso: ContestExchange;
+   ids: TInt64Array;
+   failedAt, i: integer;
+   seedPrint, beforeHash, reason: string;
+   raised: boolean;
+   fn: string;
+begin
+   BeginTest('a per-row hook that raises rolls the whole append batch back');
+   fn := TempLogName('appendhookfail.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         MakeDistinctQSO(seed, 0);
+         repo.SaveQSO(seed);
+         repo.Commit;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   beforeHash := MD5Print(MD5File(fn));
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      repo := TLogRepository.Create(db);
+      try
+         seedPrint := DatabaseFingerprint(db);
+         repo.Commit;
+
+         probe := TRowHookProbe.Create(repo, db, fn);
+         appends := TLogQsoAppends.Create;
+         try
+            for i := 1 to 3 do
+               begin
+               MakeDistinctQSO(qso, i);
+               appends.Add(qso);
+               end;
+            probe.RaiseAtCall := 1;
+            (* Something in the out variable, so "empty" is the batch's doing. *)
+            SetLength(ids, 5);
+            raised := False;
+            reason := '';
+            try
+               repo.AppendBatch(appends, failedAt, ids, probe.AfterRow);
+            except
+               on e: Exception do
+                  begin
+                  raised := True;
+                  reason := e.Message;
+                  end;
+            end;
+
+            CheckTrue(raised, 'the batch raises');
+            CheckTrue(Pos('the hook refused', reason) > 0, 'with the hook''s reason: ' + reason);
+            CheckEquals(1, failedAt, 'and names the row whose hook raised (index 1)');
+            CheckEquals(0, integer(Length(ids)), 'no ids come back');
+            CheckEquals(2, integer(Length(probe.Seen)), 'the hook ran for rows 0 and 1, not 2');
+            CheckFalse(repo.InBatch, 'the repository is not left in a batch');
+            CheckFalse(db.Transaction.Active, 'nor holding a transaction');
+            CheckEquals(seedPrint, DatabaseFingerprint(db),
+                        'the two rows written before the hook raised are gone, as this connection sees it');
+            repo.Commit;
+         finally
+            appends.Free;
+            probe.Free;
+         end;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   CheckEquals(beforeHash, MD5Print(MD5File(fn)),
+               'the FILE is byte for byte what it was before the batch');
+   Scrub(fn);
+end;
+
+(* THE DURABLE DELIVERY CAPTURE'S FAILURE PATH, INSIDE A BATCH. It rolls back
+  to its own savepoint and re-prepares the repository's statements, which
+  refused inside a batch until plan commit 1 -- so a delivery failure would
+  have failed the QSO. Now: what the hook did inside its savepoint is gone,
+  every row of the batch is committed, and the repository goes on writing. *)
+procedure TLogRepositoryTests.TestAHookMayRollBackItsOwnSavepoint;
+var
+   db: TLogDatabase;
+   repo: TLogRepository;
+   appends: TLogQsoAppends;
+   probe: TRowHookProbe;
+   qso: ContestExchange;
+   ids: TInt64Array;
+   failedAt, i: integer;
+   fn: string;
+begin
+   BeginTest('a hook that rolls back its own savepoint and re-prepares leaves the batch whole');
+   fn := TempLogName('appendhooksavepoint.db');
+   Scrub(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      repo := TLogRepository.Create(db);
+      try
+         probe := TRowHookProbe.Create(repo, db, fn);
+         appends := TLogQsoAppends.Create;
+         try
+            for i := 1 to 3 do
+               begin
+               MakeDistinctQSO(qso, i);
+               appends.Add(qso);
+               end;
+            probe.SavepointAtCall := 1;
+            repo.AppendBatch(appends, failedAt, ids, probe.AfterRow);
+            CheckEquals(3, integer(Length(ids)), 'every row went in');
+            CheckEquals(3, integer(Length(probe.Seen)), 'and the hook ran for each');
+         finally
+            appends.Free;
+            probe.Free;
+         end;
+
+         (* AND THE RE-PREPARED REPOSITORY WRITES. *)
+         MakeDistinctQSO(qso, 4);
+         repo.SaveQSO(qso);
+         repo.Commit;
+      finally
+         repo.Free;
+      end;
+   finally
+      db.Free;
+   end;
+
+   CheckEquals(4, CommittedScalar(fn, 'SELECT COUNT(*) FROM qso'),
+               'committed: the three rows of the batch, and the one after it');
+   CheckEquals(0, CommittedScalar(fn, 'SELECT COUNT(*) FROM session_state ' +
+                                      'WHERE key = ''hook.probe'''),
+               'and nothing the hook rolled back to its savepoint');
+   Scrub(fn);
+end;
+
 (* exchange_sent of one row, '' for NULL, through the connection handed in. *)
 function SentExchangeOfRow(aDatabase: TLogDatabase; aRowId: Int64): string;
 var
@@ -3367,6 +3703,9 @@ begin
    TestAnAppendBatchLandsInOneCommit;
    TestAFailedAppendBatchLeavesTheLogAsItWas;
    TestAnAppendBatchWritesRowsAsTheLiveAppendDoes;
+   TestAnAppendBatchGivesEachRowsIdAndHooksInside;
+   TestAHookThatRaisesRollsBackTheWholeBatch;
+   TestAHookMayRollBackItsOwnSavepoint;
    TestAnEditKeepsTheSentExchange;
    TestQSOsWithoutAnExchangeIdAreReported;
    TestTheContestStartTimeIsReadAtOpen;

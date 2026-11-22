@@ -1,7 +1,21 @@
 # Commit before publish: a QSO leaves the station only after it is in the log
 
-Status: **PLAN, for NY4I's approval. No code has changed.** Written 2026-11-21
-against `main` at `6924737c`.
+Status: **APPROVED (section 7). Commits 1-3 BUILT 2026-11-22, NOT WIRED** --
+`AppendBatch`'s row ids and per-row hook, `LogStoreAppendLiveQSOs` (with
+`LogStoreAppendQSO` as its one-leg call) and the sequencing leaf
+`src/domain/uSubmitSequence.pas`. Nothing in `LogContact`, `TryLogContact` or
+`DrainPendingMultiQSORefs` calls them yet: the program still publishes before
+the append (commits 4-8 open). Detail and the decisions taken while building
+them: `.claude/agents/log-database.md`, "ONE ENTRY, ONE TRANSACTION". Written
+2026-11-21 against `main` at `6924737c`.
+
+Two corrections found while building commits 1-2:
+- **5a's "store enabled" after a leg refused by a trigger, or a refused
+  commit, is not the live rule**: a constraint disables the store, as for one
+  QSO today. Enabled holds for busy and a full disk.
+- **`TLogRepository.ReprepareAfterSavepointRollback` refused inside a batch**,
+  which would have turned a durable-delivery capture failure into a failed
+  QSO. It now refuses only with the sequential cursor open.
 Issues: **#347** (a QSO goes to the multi-op server, UDP, HamScore and an external
 logger before it is saved) and **#348** (a county-line, multi-park or rover entry
 can save only some of its legs). Source: `docs/QSO_LOG_INTEGRITY_REVIEW.md`,

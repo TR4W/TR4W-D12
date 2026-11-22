@@ -124,6 +124,13 @@ type
          insert, edit, delete, restore and a peer's edit alike -- and the file
          keeps what it had. *)
       procedure TestAChangeWhoseCommitFailsIsNotReportedSaved;
+      (* ISSUES 347/348, PLAN COMMIT 2 (2026-11-22): one operator entry of
+         several legs is ONE transaction through LogStoreAppendLiveQSOs --
+         a leg refused, a commit refused, a full disk or a held lock leaves
+         NONE of its legs in the log; the retry writes one linked set. *)
+      procedure TestALiveEntryIsAllOrNothing;
+      procedure TestAFullDiskRefusesTheWholeEntryAndTheRetryWritesOneSet;
+      procedure TestALockedLogRefusesTheWholeEntry;
       (* A raw connection on FDb holding the write lock, and its release. *)
       function HoldWriteLock: TObject;
       procedure ReleaseWriteLock(var aHolder: TObject);
@@ -143,6 +150,7 @@ uses
    sqldb,      (* TSQLQuery -- ScalarFromFile and ReadContestRow *)
    uLogNote,   (* SetNoteText -- a NOTE record, as MainUnit's note command makes *)
    uSettingsModel,  (* Settings -- the two passwords the capture must not write *)
+   uQsoMyFacts,     (* mfsNotCaptured -- what a note's append records as our station *)
    sqlite3conn,     (* sofReadWrite -- the lock holder's connection *)
    LOGWIND,         (* LastCQFrequency -- a session-state value to change *)
    LogStuff,        (* Sheet -- DupeAndMultSheet.SaveRestartFile *)
@@ -2281,6 +2289,311 @@ begin
    end;
 end;
 
+type
+   (* ONE OPERATOR ENTRY OF THREE LEGS -- a county line, as it reaches the
+     store: one exchange id, one serial, three QSOs. *)
+   TEntryLegs = array[0..2] of ContestExchange;
+
+const
+   ENTRY_CALLS: array[0..2] of string = ('N0LEGA', 'N0LEGB', 'N0LEGC');
+
+procedure MakeEntryLegs(const aTemplate: ContestExchange; const aId: string;
+                        out aLegs: TEntryLegs);
+var
+   i: integer;
+begin
+   for i := Low(aLegs) to High(aLegs) do
+      begin
+      aLegs[i] := aTemplate;
+      aLegs[i].ceRecordKind := rkQSO;
+      aLegs[i].Callsign := ShortString(ENTRY_CALLS[i]);
+      aLegs[i].id := ShortString(aId);
+      end;
+end;
+
+(* A LEG REFUSED, AND A COMMIT REFUSED: NONE OF THE ENTRY IS IN THE LOG.
+
+  Leg 2 of 3 is refused by a RAISE(FAIL) trigger; then the entry is refused
+  by the R2 deferred-foreign-key trap, which fails the COMMIT itself (issue
+  349's pattern). Both are made after the migration (the schema-11 rebuild
+  refuses a trigger on qso) and before the store reopens, so its statements
+  are prepared with them. Either way: False, no facts and no ids, NOT ONE
+  ROW on disk -- not even leg 1, which WAS inserted before the failure -- and
+  LogStoreLastAppendedMyFacts still the last COMMITTED append's (a note's,
+  which records no station, so a leaked leg would show).
+
+  THE STORE STANDS DOWN after each, as for one QSO: a trigger's refusal and a
+  deferred key both arrive as a constraint, which is neither busy nor a write
+  the disk would not take, so Disable's live rule disables it. The plan's 5a
+  said "store enabled" for this case; that holds for the busy and full-disk
+  cases below, not for a constraint, and the one-row rule is not changed
+  here. The reset in between is the test's. *)
+procedure TLogStoreTests.TestALiveEntryIsAllOrNothing;
+var
+   binary: TStringList;
+   last, note: ContestExchange;
+   legs: TEntryLegs;
+   facts: TLiveQsoFacts;
+   ids: TLiveQsoRowIds;
+   db: TLogDatabase;
+   total: integer;
+begin
+   BeginTest('issues 347/348: a refused leg or a refused commit leaves none of the entry in the log');
+
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      note := last;
+      note.ceRecordKind := rkNote;
+      note.id := 'test-347-note';
+      SetNoteText(note, 'a note logged before the entry');
+      CheckTrue(LogStoreAppendQSO(note), 'seed: a note is logged');
+      CheckTrue(LogStoreLastAppendedMyFacts.Source = mfsNotCaptured,
+                'precondition: the last committed append recorded no station');
+      LogStoreClose;
+      total := integer(ScalarFromFile(FDb, SQL_ALL_ROWS));
+
+      (* LEG 2 REFUSED. *)
+      db := TLogDatabase.Create;
+      try
+         db.Open(FDb);
+         db.Connection.ExecuteDirect(
+            'CREATE TRIGGER refuse_leg_two AFTER INSERT ON qso ' +
+            'WHEN NEW.callsign = ''N0LEGB'' ' +
+            'BEGIN SELECT RAISE(FAIL, ''leg two refused''); END');
+         db.Transaction.Commit;
+      finally
+         db.Free;
+      end;
+
+      CheckTrue(LogStoreEnsureOpen, 'leg: the store reopens the trapped log');
+      MakeEntryLegs(last, 'test-347-entry-leg', legs);
+      SetLength(ids, 1);
+      CheckFalse(LogStoreAppendLiveQSOs(legs, facts, ids),
+                 'leg: an entry whose second leg is refused answers False');
+      CheckEquals(0, integer(Length(facts)), 'leg: no facts come back');
+      CheckEquals(0, integer(Length(ids)), 'leg: and no row ids');
+      CheckTrue(LogStoreLastAppendedMyFacts.Source = mfsNotCaptured,
+                'leg: the last appended station is still the note''s');
+      CheckFalse(LogStoreIsUsable, 'leg: a constraint stands the store down, as for one QSO');
+      LogStoreForgetFailureForTests;
+      CheckEquals(total, ScalarFromFile(FDb, SQL_ALL_ROWS),
+                  'leg: not one leg on disk, not even the first');
+
+      (* THE COMMIT REFUSED. *)
+      db := TLogDatabase.Create;
+      try
+         db.Open(FDb);
+         db.Connection.ExecuteDirect('DROP TRIGGER refuse_leg_two');
+         db.Connection.ExecuteDirect('CREATE TABLE commit_trap_parent (id INTEGER PRIMARY KEY)');
+         db.Connection.ExecuteDirect(
+            'CREATE TABLE commit_trap (parent_id INTEGER REFERENCES ' +
+            'commit_trap_parent(id) DEFERRABLE INITIALLY DEFERRED)');
+         db.Connection.ExecuteDirect(
+            'CREATE TRIGGER commit_trap_on_insert AFTER INSERT ON qso ' +
+            'BEGIN INSERT INTO commit_trap (parent_id) VALUES (-1); END');
+         db.Transaction.Commit;
+      finally
+         db.Free;
+      end;
+
+      CheckTrue(LogStoreEnsureOpen, 'commit: the store reopens the trapped log');
+      MakeEntryLegs(last, 'test-347-entry-commit', legs);
+      CheckFalse(LogStoreAppendLiveQSOs(legs, facts, ids),
+                 'commit: an entry whose COMMIT fails answers False, never True');
+      CheckEquals(0, integer(Length(ids)), 'commit: no row ids');
+      CheckTrue(LogStoreLastAppendedMyFacts.Source = mfsNotCaptured,
+                'commit: the last appended station is still the note''s');
+      LogStoreForgetFailureForTests;
+      CheckEquals(total, ScalarFromFile(FDb, SQL_ALL_ROWS),
+                  'commit: not one leg on disk');
+      CheckEquals(0, ScalarFromFile(FDb, 'SELECT COUNT(*) FROM qso WHERE callsign IN ' +
+                                         '(''N0LEGA'', ''N0LEGB'', ''N0LEGC'')'),
+                  'and no leg of either entry anywhere in the file');
+   finally
+      LogStoreForgetFailureForTests;
+      binary.Free;
+      Restore;
+   end;
+end;
+
+(* A FULL DISK REFUSES THE WHOLE ENTRY; SPACE FREED, THE RETRY WRITES ONE SET.
+
+  Three-leg entries, each with its own exchange id, until the full disk
+  refuses one. The log then holds EXACTLY three rows per entry acknowledged
+  -- the refused one added none, though its first legs may have fit in the
+  last page -- and is read-only and readable. Space freed, the next save
+  recovers it and the entry is written: three rows, ONE qso_set_id, and each
+  leg's exchange_sent, station and stored rule exactly what a one-row
+  LogStoreAppendQSO of the same record wrote (the reference row, N0REF). *)
+procedure TLogStoreTests.TestAFullDiskRefusesTheWholeEntryAndTheRetryWritesOneSet;
+const
+   SQL_RETRY_ROWS = 'SELECT COUNT(*) FROM qso WHERE exchange_id = ''test-348-retry''';
+var
+   binary: TStringList;
+   last, ref: ContestExchange;
+   legs: TEntryLegs;
+   facts: TLiveQsoFacts;
+   ids: TLiveQsoRowIds;
+   k, entries: integer;
+   refused: boolean;
+   baseline, count: Int64;
+begin
+   BeginTest('issues 347/348: a full disk refuses a whole entry; freed, the retry writes one linked set');
+
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      (* THE REFERENCE: one leg's record through the one-row append. *)
+      MakeEntryLegs(last, 'test-348-ref', legs);
+      ref := legs[0];
+      ref.Callsign := 'N0REF';
+      CheckTrue(LogStoreAppendQSO(ref), 'the reference QSO is logged through the one-row append');
+
+      CheckTrue(LogSourceOpen, 'the log opens for a read');
+      baseline := LogSourceRecordCount;
+      LogSourceClose;
+
+      tSilentExport := False;
+      LogStoreFailureNotice := @CountNotice;
+      GNotices := 0;
+      GLastNotice := '';
+
+      LogStoreFillTheDiskForTests;
+      entries := 0;
+      refused := False;
+      for k := 1 to 1000 do
+         begin
+         MakeEntryLegs(last, 'test-348-full-' + IntToStr(k), legs);
+         if not LogStoreAppendLiveQSOs(legs, facts, ids) then
+            begin
+            refused := True;
+            Break;
+            end;
+         CheckEquals(3, integer(Length(ids)), 'an entry that fits gives three row ids');
+         Inc(entries);
+         end;
+
+      CheckTrue(refused, 'an entry that needs a new page is refused, not acknowledged');
+      CheckTrue(LogStoreIsReadOnly, 'the log is now READ-ONLY');
+      CheckTrue(LogStoreIsUsable, 'and still open: NOT disabled');
+      CheckEquals(1, GNotices, 'the operator is told, once');
+      CheckTrue(LogSourceOpen, 'the log still opens for a read');
+      count := LogSourceRecordCount;
+      LogSourceClose;
+      CheckEquals(integer(baseline) + (3 * entries), integer(count),
+                  'three rows for every entry acknowledged, and NONE of the refused one');
+
+      LogStoreFreeTheDiskForTests;
+      CheckTrue(LogStoreTryRecoverWrites, 'space freed: the next save finds the log writable');
+      MakeEntryLegs(last, 'test-348-retry', legs);
+      CheckTrue(LogStoreAppendLiveQSOs(legs, facts, ids), 'and the retried entry is logged');
+      CheckEquals(3, integer(Length(ids)), 'three row ids');
+      CheckEquals(3, integer(Length(facts)), 'and three stations');
+      if Length(ids) = 3 then
+         begin
+         CheckTrue((ids[0] < ids[1]) and (ids[1] < ids[2]), 'the ids are in the legs'' order');
+         end;
+      if Length(facts) = 3 then
+         begin
+         CheckTrue(LogStoreLastAppendedMyFacts.Source = facts[2].Source,
+                   'the last appended station is the last leg''s');
+         end;
+
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      LogStoreClose;
+
+      CheckEquals(3, ScalarFromFile(FDb, SQL_RETRY_ROWS), 'on disk: the three legs');
+      CheckEquals(1, ScalarFromFile(FDb, 'SELECT COUNT(DISTINCT qso_set_id) FROM qso ' +
+                                         'WHERE exchange_id = ''test-348-retry'''),
+                  'in ONE linked set');
+      CheckEquals(3, ScalarFromFile(FDb,
+                     'SELECT COUNT(*) FROM qso r, qso x ' +
+                     'WHERE x.callsign = ''N0REF'' ' +
+                     'AND r.exchange_id = ''test-348-retry'' ' +
+                     'AND r.exchange_sent IS x.exchange_sent ' +
+                     'AND r.my_source IS x.my_source ' +
+                     'AND r.my_call IS x.my_call ' +
+                     'AND r.my_grid IS x.my_grid ' +
+                     'AND r.my_state IS x.my_state ' +
+                     'AND r.year_sent IS x.year_sent ' +
+                     'AND r.is_off_contest = x.is_off_contest'),
+                  'and each leg sent and recorded what a one-row append of the same record does');
+   finally
+      tSilentExport := True;
+      LogStoreFailureNotice := nil;
+      LogStoreForgetFailureForTests;
+      binary.Free;
+      Restore;
+   end;
+end;
+
+(* A HELD WRITE LOCK REFUSES THE WHOLE ENTRY, AND THE STORE STAYS OPEN.
+  Another connection holds the write lock past the busy wait: the entry is
+  refused -- no leg written -- the store is NOT disabled and NOT read-only;
+  released, the same entry is logged whole.
+
+  NOT EXERCISED HERE: the stale-snapshot RETRY loop (LOG_WRITE_ATTEMPTS). The
+  batch commits the read transaction before it begins, so the snapshot is
+  always current and a held lock is a plain busy, which is refused at once
+  -- as for one QSO. The loop is kept for parity with the one-row path. *)
+procedure TLogStoreTests.TestALockedLogRefusesTheWholeEntry;
+var
+   binary: TStringList;
+   last: ContestExchange;
+   legs: TEntryLegs;
+   facts: TLiveQsoFacts;
+   ids: TLiveQsoRowIds;
+   holder: TObject;
+   baseline, count: Int64;
+begin
+   BeginTest('issues 347/348: a held write lock refuses the whole entry; released, it logs whole');
+
+   LogStoreBusyTimeoutMs := 20;
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   holder := nil;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      CheckTrue(LogSourceOpen, 'the log opens for a read');
+      baseline := LogSourceRecordCount;
+      LogSourceClose;
+
+      holder := HoldWriteLock;
+      MakeEntryLegs(last, 'test-348-locked', legs);
+      CheckFalse(LogStoreAppendLiveQSOs(legs, facts, ids), 'the entry is refused, not acknowledged');
+      CheckEquals(0, integer(Length(ids)), 'no row ids');
+      CheckTrue(LogStoreIsUsable, 'the store is NOT disabled');
+      CheckFalse(LogStoreIsReadOnly, 'nor read-only');
+      ReleaseWriteLock(holder);
+
+      CheckTrue(LogSourceOpen, 'the log opens for a read');
+      count := LogSourceRecordCount;
+      LogSourceClose;
+      CheckEquals(integer(baseline), integer(count), 'no leg was written');
+
+      CheckTrue(LogStoreAppendLiveQSOs(legs, facts, ids), 'released: the same entry is logged');
+      CheckEquals(3, integer(Length(ids)), 'all three legs');
+      LogStoreClose;
+      CheckEquals(3, ScalarFromFile(FDb, 'SELECT COUNT(*) FROM qso WHERE exchange_id = ''test-348-locked'''),
+                  'on disk: exactly one copy of each leg');
+   finally
+      ReleaseWriteLock(holder);
+      LogStoreBusyTimeoutMs := 0;
+      LogStoreForgetFailureForTests;
+      binary.Free;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -2312,6 +2625,9 @@ begin
    TestAFreedDiskRecoversWithoutARestart;
    TestAnAppendStoresTheContestsRule;
    TestAChangeWhoseCommitFailsIsNotReportedSaved;
+   TestALiveEntryIsAllOrNothing;
+   TestAFullDiskRefusesTheWholeEntryAndTheRetryWritesOneSet;
+   TestALockedLogRefusesTheWholeEntry;
 end;
 
 end.

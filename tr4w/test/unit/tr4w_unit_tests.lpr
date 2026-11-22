@@ -828,6 +828,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
    uLogBackupWorker     in '..\..\src\domain\uLogBackupWorker.pas',
+   uSubmitSequence      in '..\..\src\domain\uSubmitSequence.pas',
+   uTestSubmitSequence  in 'uTestSubmitSequence.pas',
    uTestLogBackupWorker in 'uTestLogBackupWorker.pas',
    uBackupCopier        in '..\..\src\domain\uBackupCopier.pas',
    uTestBackupCopier    in 'uTestBackupCopier.pas',
@@ -1500,6 +1502,7 @@ begin
    RegisterSuite(TPeriodicBackupDueTests.Create('PeriodicBackupDue'));
    RegisterSuite(TBackupCoalescerTests.Create('BackupCoalescer'));
    RegisterSuite(TLogBackupWorkerTests.Create('LogBackupWorker'));
+   RegisterSuite(TSubmitSequenceTests.Create('SubmitSequence'));
    RegisterSuite(TBackupCopierTests.Create('BackupCopier'));
    RegisterSuite(TBackupDestinationSettingTests.Create('BackupDestinationSetting'));
    RegisterSuite(TBackupCopyNoticeTests.Create('BackupCopyNotice'));

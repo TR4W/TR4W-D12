@@ -218,6 +218,14 @@ type
      already have the QSO with this (session_id, session_seq)? *)
    TQsoKeyTest = function(aSessionId, aSessionSeq: Int64): boolean of object;
 
+   (* CALLED AFTER EACH ROW AN APPEND BATCH INSERTS, INSIDE ITS TRANSACTION
+     (issue 347/348, plan commit 1): the live append's durable external-logger
+     capture, which must ride in the QSO's own transaction exactly as it did
+     when each QSO was its own commit. aRowId is the row just inserted. A hook
+     that raises fails the whole batch: it is rolled back and nothing of it is
+     in the log. *)
+   TQsoRowHook = procedure(aRowId: Int64) of object;
+
    (* QSOS TO APPEND IN ONE TRANSACTION -- TLogRepository.AppendBatch.
 
       The ADIF import's batch (NY4I, 2026-10-14: all or nothing). Its rows
@@ -329,6 +337,8 @@ type
 
       function NewReadQuery: TSQLQuery;
       procedure ExecuteKeptWrite(aStatement: TSQLQuery);
+      (* BeginBatchUpdate's body; aCursorMayClose -- see AppendBatch. *)
+      procedure BeginBatch(aCursorMayClose: boolean);
       procedure OpenQsoReader(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
       procedure PrepareStatements;
       procedure ReleaseStatements;
@@ -917,9 +927,32 @@ type
 
          aFailedIndex is the 0-based index of the row that failed, or -1
          when the failure was not a row's -- the begin or the commit. Set
-         before the exception leaves, so a caller can name the record. *)
+         before the exception leaves, so a caller can name the record.
+
+         THE SECOND FORM (plan commit 1, issues 347/348) is the live
+         append's: aRowIds comes back with the row id of each row, in the
+         batch's order, and aAfterEachRow (nil for none) is called after
+         each insert, inside the transaction, before the next row. A hook
+         that raises fails that row: aFailedIndex names it and the batch is
+         rolled back. aRowIds is EMPTY whenever the batch raises, so no caller
+         can hold the id of a row that was rolled back. The first form is the
+         second with neither -- what the ADIF import and the catch-up call,
+         unchanged.
+
+         aCursorMayClose: True lets the batch begin while the sequential
+         cursor is open (the Search Log window holds it open between
+         searches), committing the read transaction it holds and so closing
+         its dataset -- exactly what the one-row live append's commit did to
+         it before plan commit 2. Only the live append passes True; every
+         other batch still refuses, because a whole-log pass that is
+         mid-walk must not lose its cursor. *)
       procedure AppendBatch(aQsos: TLogQsoAppends;
-                            out aFailedIndex: integer);
+                            out aFailedIndex: integer); overload;
+      procedure AppendBatch(aQsos: TLogQsoAppends;
+                            out aFailedIndex: integer;
+                            out aRowIds: TInt64Array;
+                            aAfterEachRow: TQsoRowHook;
+                            aCursorMayClose: boolean = False); overload;
       property InBatch: boolean read FInBatch;
 
       (* True while OpenSequentialRead's cursor is open. A commit then would
@@ -981,7 +1014,15 @@ type
       (* ROLLBACK TO can abort SQLite readers even after SQLDB closed their
          datasets. Recreate cached statements before the next local operation;
          preserves this repository's identity, row count and caller ownership.
-         Call only outside a sequential read/batch, after a savepoint rollback. *)
+         Call only outside a sequential read, after a savepoint rollback.
+
+         ALLOWED INSIDE A BATCH SINCE PLAN COMMIT 1 (issues 347/348): the live
+         append is a batch now, and its per-row hook is the durable delivery
+         capture, whose failure path rolls back to ITS savepoint and calls
+         this. Refusing there turned "delivery paused, the QSO is saved" into
+         a failed batch and a stood-down store. Between a batch's rows the
+         kept statements are idle, and re-preparing them neither commits nor
+         ends the batch's transaction (pinned in uTestLogRepository). *)
       procedure ReprepareAfterSavepointRollback;
 
       property Database: TLogDatabase read FDatabase;
@@ -1820,9 +1861,9 @@ end;
 
 procedure TLogRepository.ReprepareAfterSavepointRollback;
 begin
-   if FInBatch or (FCursor <> nil) then
+   if FCursor <> nil then
       begin
-      raise ELogRepositoryError.Create('Cannot reprepare during a sequential read or batch');
+      raise ELogRepositoryError.Create('Cannot reprepare during a sequential read');
       end;
    ReleaseStatements;
    PrepareStatements;
@@ -3946,13 +3987,18 @@ end;
 
 procedure TLogRepository.BeginBatchUpdate;
 begin
+   BeginBatch(False);
+end;
+
+procedure TLogRepository.BeginBatch(aCursorMayClose: boolean);
+begin
    if FInBatch then
       begin
       raise ELogRepositoryError.Create(
          'A batch update is already open on this log. One must be committed ' +
          'or rolled back before the next begins.');
       end;
-   if FCursor <> nil then
+   if (FCursor <> nil) and (not aCursorMayClose) then
       begin
       raise ELogRepositoryError.Create(
          'A batch update cannot begin while the sequential read is open: the ' +
@@ -4036,10 +4082,23 @@ end;
 procedure TLogRepository.AppendBatch(aQsos: TLogQsoAppends;
                                      out aFailedIndex: integer);
 var
+   ignoredIds: TInt64Array;
+begin
+   AppendBatch(aQsos, aFailedIndex, ignoredIds, nil, False);
+end;
+
+procedure TLogRepository.AppendBatch(aQsos: TLogQsoAppends;
+                                     out aFailedIndex: integer;
+                                     out aRowIds: TInt64Array;
+                                     aAfterEachRow: TQsoRowHook;
+                                     aCursorMayClose: boolean);
+var
    i: integer;
 begin
    aFailedIndex := -1;
-   BeginBatchUpdate;
+   aRowIds := nil;
+   SetLength(aRowIds, aQsos.Count);
+   BeginBatch(aCursorMayClose);
    try
       for i := 0 to aQsos.Count - 1 do
          begin
@@ -4049,10 +4108,17 @@ begin
             SetContest(aQsos.FRows[i].ceContest);
             end;
          (* The row's own -- from its file, or nothing. Never the session's:
-           an import is not a QSO logged here. *)
+           an import is not a QSO logged here. The live append hands in what
+           it captured for each row at the moment it was logged. *)
          SetNextSentExchange(aQsos.SentExchange(i));
          SetNextMyFacts(aQsos.MyFacts(i));
-         SaveQSOGroupingByExchangeId(aQsos.FRows[i]);
+         aRowIds[i] := SaveQSOGroupingByExchangeId(aQsos.FRows[i]);
+         (* INSIDE THE TRANSACTION, after this row and before the next: the
+           durable delivery capture reads the row it was given. *)
+         if Assigned(aAfterEachRow) then
+            begin
+            aAfterEachRow(aRowIds[i]);
+            end;
          end;
       (* Every row is in; a failure from here on is the transaction's. *)
       aFailedIndex := -1;
@@ -4060,7 +4126,9 @@ begin
    except
       (* As WriteBatch: ANY exception, and the log is left exactly as it was
         before the batch. A sent exchange set for a row that then failed is
-        cleared with it, so it cannot attach itself to a later save. *)
+        cleared with it, so it cannot attach itself to a later save. The ids
+        go too: they name rows that no longer exist. *)
+      aRowIds := nil;
       SetNextSentExchange('');
       SetNextMyFacts(NotCapturedMyFacts);
       RollbackBatch;

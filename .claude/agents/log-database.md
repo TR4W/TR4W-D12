@@ -1135,7 +1135,8 @@ ALREADY STOPPED.
   and not with the sequential cursor open (`TLogRepository.SequentialReadOpen`,
   new). It COMMITS what is pending, as `BeginBatchUpdate` already did.
 - **A BUSY WRITE IS RETRIED AND THEN REFUSED, NEVER A DISABLED STORE.** The
-  append is `LogStoreAppendQSO` -> `AppendQSOOnce` x `LOG_WRITE_ATTEMPTS` (3),
+  append is `LogStoreAppendQSO` -> `LogStoreAppendLiveQSOs` -> `AppendLiveQSOsOnce`
+  (was `AppendQSOOnce` until plan commit 2) x `LOG_WRITE_ATTEMPTS` (3),
   each rolled back (`RollBackAfterBusy`, which also invalidates the record
   count). `Disable` has a busy branch, FOR A WRITE TO AN OPEN LOG ONLY
   (`GRepository` assigned): roll back, log every time, a notice
@@ -1338,6 +1339,72 @@ UDP, HamScore and the multi-op server BEFORE the write.
   the row `LogSourceReadFromEnd(1)` returned (both on the main thread, so no
   interleaving is known). The rollback of an unchanged update, like any
   commit, closes the datasets on the transaction.
+
+## ONE ENTRY, ONE TRANSACTION: THE LIVE APPEND TAKES N LEGS (issues 347/348, plan commits 1-3, 2026-11-22)
+
+`docs/LOG_COMMIT_BEFORE_PUBLISH_PLAN.md` (approved; NY4I's rulings in its
+section 7). Commits 1-3 CHANGE NO BEHAVIOUR and are **NOT WIRED**: `LogContact`,
+`TryLogContact` and `DrainPendingMultiQSORefs` still log one leg per call and
+publish before the append (commits 4-5).
+
+- **`TLogRepository.AppendBatch` has a second overload** (commit 1):
+  `out aRowIds: TInt64Array` (each row's id, in order; EMPTY whenever the batch
+  raises) and `aAfterEachRow: TQsoRowHook` (`procedure(aRowId: Int64) of
+  object`, nil = none), called after each insert, INSIDE the transaction. A hook
+  that raises fails its row and the batch rolls back. The two-argument form
+  forwards with neither; the ADIF import and the catch-up are unchanged.
+- **`ReprepareAfterSavepointRollback` is allowed inside a batch now** (it
+  refused `InBatch`). The durable delivery capture's failure path rolls back
+  to its savepoint and calls it; refusing turned "delivery paused, QSO saved"
+  into a failed batch and a stood-down store. Still refused with the
+  sequential cursor open. Pinned: `TestAHookMayRollBackItsOwnSavepoint`.
+- **`uLogStore.LogStoreAppendLiveQSOs(const aLegs; out aFacts: TLiveQsoFacts;
+  out aRowIds: TLiveQsoRowIds): boolean`** (commit 2) is the ONE live append:
+  `StampOffContest` on copies, then per attempt `AppendLiveQSOsOnce` ->
+  `WriteLiveLegs` (per leg `CaptureMyFactsNow` + `BuildSentExchangeText`, QSO
+  only, sent exchange only for `mfsLogged`, into a `TLogQsoAppends`;
+  `AppendBatch` with `TLiveAppendDelivery.CaptureDelivery` ->
+  `externalLogger.CaptureSavedQso` as the hook when there is an external
+  logger). After the commit: `GLastAppendedMyFacts` = the LAST leg's, then
+  `LogStoreStartExternalDelivery` once. Failures take the LIVE rules (stale
+  snapshot retried whole; busy refused, store open; full disk read-only;
+  constraint/other disabled) -- NOT `LogStoreAppendQSOs`' import rules.
+  `aWhere` stays `'appending a QSO'` for any leg count (it is operator text).
+  `GPendingMyFacts` is gone. **`LogStoreAppendQSO` is its one-leg call.**
+- **AN OPEN SEQUENTIAL CURSOR IS ORDINARY -- THE SEARCH LOG WINDOW HOLDS IT
+  BETWEEN SEARCHES.** The first version refused the append then, and every QSO
+  logged with Search Log open was refused (caught by `LogSearchFilters`,
+  "logged K5EEE"). The one-row path wrote into the cursor's transaction and its
+  commit closed the cursor's dataset; the reader reopens on its next rewind.
+  So the live append passes `AppendBatch(..., aCursorMayClose = True)`
+  (`TLogRepository.BeginBatch`), which commits that read transaction as the
+  batch begins -- the same close, one statement earlier. Every other batch
+  (`BeginBatchUpdate`) still refuses an open cursor. Only an append INSIDE
+  another batch is refused (Error line, False, store open); none is known.
+- **`uTestAutomaticXQSO.Test_EverySettingPointStampsTheRule` reads
+  `uLogStore.pas` for the literal `StampOffContest(stamped);`** (append, then
+  the peer's edit). Keep that spelling in `LogStoreAppendLiveQSOs`.
+- **A trigger or deferred-key refusal of a leg DISABLES the store**, as one
+  QSO's always did (a constraint is neither busy nor a write failure). The
+  plan's 5a said "store enabled"; that holds for busy and full disk only.
+- **Not exercised by a test**: the stale-snapshot retry of a multi-leg batch
+  (the batch commits the read transaction first, so a held lock is a plain
+  busy); the delivery rows of a live entry (no durable logger is installed in
+  `uTestLogStore`; the hook mechanism is pinned in `uTestLogRepository`).
+- **The sequencing leaf, `src/domain/uSubmitSequence.pas`** (commit 3):
+  `TSubmitSequence.Run(n)` over six method-pointer seams (Prepare(i): boolean,
+  Score(i), Write(n): boolean, Release(i), Discard(i), Rebuild). Order:
+  P0, then S(i-1) P(i) per further leg, W; written: S(n-1) then R0..R(n-1);
+  refused: F of every prepared leg in order, then B ONLY if a leg was scored
+  (never for one leg). A raise before the write cleans up the same way and
+  re-raises; after the write nothing is rebuilt and only unreleased legs are
+  discarded (a leg whose Release raised is NOT discarded). All six seams
+  required. Pinned with a recorder by `uTestSubmitSequence`.
+- Tests: `uTestLogRepository` (`TestAnAppendBatchGivesEachRowsIdAndHooksInside`,
+  `TestAHookThatRaisesRollsBackTheWholeBatch`, `TestAHookMayRollBackItsOwnSavepoint`),
+  `uTestLogStore` (`TestALiveEntryIsAllOrNothing`,
+  `TestAFullDiskRefusesTheWholeEntryAndTheRetryWritesOneSet`,
+  `TestALockedLogRefusesTheWholeEntry`), `uTestSubmitSequence`.
 
 ## A TAKEN NEW-CONTEST LOG NAME GETS A NUMBER, NEVER AN OVERWRITE (issue 276, 2026-11-11)
 

@@ -90,6 +90,38 @@ function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
   right after an append answered True; NotCapturedMyFacts before any. *)
 function LogStoreLastAppendedMyFacts: TQsoMyFacts;
 
+type
+   (* One per leg of LogStoreAppendLiveQSOs, in the legs' order. *)
+   TLiveQsoFacts = array of TQsoMyFacts;
+   TLiveQsoRowIds = uLogRepository.TInt64Array;
+
+(* EVERY LEG OF ONE OPERATOR ENTRY IN ONE TRANSACTION -- ALL OR NONE (issues
+  347 and 348; docs/LOG_COMMIT_BEFORE_PUBLISH_PLAN.md section 2c, plan
+  commit 2). A county line, several parks or a rover boundary is ONE Enter,
+  and its rows are committed together or not at all.
+
+  THE LIVE APPEND, FOR N ROWS. Each leg is written exactly as a one-row
+  LogStoreAppendQSO writes its QSO: its contest's rule stamped
+  (StampOffContest), our station and the sent exchange captured NOW, for a
+  QSO only and the sent exchange only for one logged here, county-line
+  grouping by exchange id (the legs see each other inside the transaction),
+  and the durable external-logger capture inside the same transaction.
+  External delivery is started once, after the commit. It is NOT
+  LogStoreAppendQSOs, whose rows carry their FILE's station and which keeps
+  the import's failure rules.
+
+  True ONLY after the COMMIT, with aFacts[i] what leg i recorded as our
+  station and aRowIds[i] its row id; LogStoreLastAppendedMyFacts is then the
+  LAST leg's. On False both are empty, no row of the entry is in the log,
+  and LogStoreLastAppendedMyFacts is unchanged. A failure takes the live
+  rules, the same as one QSO's: a busy log is tried again WHOLE, and after
+  the last try refused with the store open; a disk that will not take it leaves the log
+  read-only; anything else disables the store. An entry of no legs is False
+  and writes nothing. Never raises. *)
+function LogStoreAppendLiveQSOs(const aLegs: array of ContestExchange;
+                                out aFacts: TLiveQsoFacts;
+                                out aRowIds: TLiveQsoRowIds): boolean;
+
 (* THIS STATION'S MY_ VALUES AS THEY ARE NOW -- exactly what a QSO logged at
   this moment records (Source mfsLogged). What an ADIF import stamps on a
   record that names none (NY4I, 2026-10-18). *)
@@ -906,9 +938,9 @@ const
 var
 
    (* OUR STATION AS THE LAST COMMITTED APPEND RECORDED IT -- see
-     LogStoreLastAppendedMyFacts -- and the one being written. *)
+     LogStoreLastAppendedMyFacts. (GPendingMyFacts, the one being written,
+     went with plan commit 2: each leg's capture is in its TLogQsoAppends.) *)
    GLastAppendedMyFacts: TQsoMyFacts;
-   GPendingMyFacts: TQsoMyFacts;
 
    (* THERE IS NO "written already" FLAG, ON PURPOSE -- see EnsureOpen. *)
 
@@ -3253,21 +3285,65 @@ begin
    end;
 end;
 
-(* ONE ATTEMPT AT LogStoreAppendQSO. aBusy comes back True when the log was
-  busy and this was not the last attempt: the attempt has been rolled back
-  and may be run again. Every other failure goes to Disable as it always has
-  (whose busy branch handles the last attempt's). *)
-function AppendQSOOnce(const aQso: ContestExchange; aLastAttempt: boolean;
-                       out aBusy: boolean): boolean;
+type
+   (* THE DURABLE EXTERNAL-LOGGER CAPTURE, AS AppendBatch's PER-ROW HOOK: called
+     after each leg's insert, inside the entry's transaction -- where the
+     one-row append always called it, between its insert and its commit. A
+     method because the hook is "of object"; one per attempt, freed by it. *)
+   TLiveAppendDelivery = class(TObject)
+   public
+      procedure CaptureDelivery(aRowId: Int64);
+   end;
+
+procedure TLiveAppendDelivery.CaptureDelivery(aRowId: Int64);
+begin
+   if externalLogger <> nil then
+      begin
+      externalLogger.CaptureSavedQso(GDatabase, GRepository, aRowId, True);
+      end;
+end;
+
+(* THE CALL OR CALLS AN APPEND IS ABOUT, for tr4w.log: one leg's call alone,
+  exactly as the one-row append always logged it. *)
+function LegsCallsText(const aLegs: array of ContestExchange): string;
+begin
+   Result := string(aLegs[0].Callsign);
+   if Length(aLegs) > 1 then
+      begin
+      Result := Result + ' and ' + IntToStr(Length(aLegs) - 1) +
+                ' more leg(s) of the same entry';
+      end;
+end;
+
+procedure WriteLiveLegs(const aLegs: array of ContestExchange;
+                        out aFacts: TLiveQsoFacts;
+                        out aRowIds: TLiveQsoRowIds); forward;
+
+(* ONE ATTEMPT AT LogStoreAppendLiveQSOs (ONE AT LogStoreAppendQSO, which is
+  its one-leg call). aBusy comes back True when the log was busy and this was
+  not the last attempt: the attempt has been rolled back and may be run
+  again, WHOLE. Every other failure goes to Disable as it always has (whose
+  busy branch handles the last attempt's).
+
+  IT WAS AppendQSOOnce, FOR ONE ROW, until plan commit 2 (2026-11-22). The
+  steps are the same, per leg; the one insert and commit became
+  TLogRepository.AppendBatch, which is the same begin, insert and commit for
+  one row and ONE transaction for several. *)
+function AppendLiveQSOsOnce(const aLegs: array of ContestExchange;
+                            aLastAttempt: boolean;
+                            out aFacts: TLiveQsoFacts;
+                            out aRowIds: TLiveQsoRowIds;
+                            out aBusy: boolean): boolean;
 var
    rebuilt: boolean;
-   rowId: Int64;
 begin
    (* FALSE UNTIL A COMMIT SAYS OTHERWISE. Every exit below that is not a
      completed commit leaves it here, which is the only default that cannot
      acknowledge a QSO nobody wrote. *)
    Result := False;
    aBusy := False;
+   aFacts := nil;
+   aRowIds := nil;
 
    if GDisabled then
       begin
@@ -3288,6 +3364,33 @@ begin
       (* A CURRENT SNAPSHOT BEFORE THE FIRST WRITE -- see BeginMainWrite. *)
       BeginMainWrite;
 
+      (* THE SEQUENTIAL CURSOR MAY BE OPEN, AND THAT IS ORDINARY: the Search
+        Log window keeps it open between searches while the operator logs
+        (uLogSearchForm.ReadLogFacets; pinned by LogSearchFilters). The
+        one-row append wrote into the cursor's transaction and its COMMIT
+        closed the cursor's dataset, which the reader reopens on its next
+        rewind. The batch does the same thing one statement earlier -- it
+        commits that (read-only) transaction as it begins -- so WriteLiveLegs
+        passes aCursorMayClose. Refusing here (as the first version of plan
+        commit 2 did) refused every QSO while Search Log was open.
+
+        INSIDE ANOTHER BATCH IS REFUSED: BeginBatchUpdate would raise an
+        uncoded error and Disable would stand the store down. A batch runs to
+        completion on the main thread, so no caller is known to get here;
+        this is the guard, not a path. Said in tr4w.log, the store stays
+        open, the caller keeps the entry. *)
+      if GRepository.InBatch then
+         begin
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] NOT appending %s: a batch is open on the log, ' +
+                         'and the append would end it. Refused; the log is ' +
+                         'unchanged and stays open.',
+                         [LegsCallsText(aLegs)]);
+            end;
+         Exit;
+         end;
+
       (* AN APPEND ALWAYS INSERTS, WHETHER OR NOT THIS CALL MIGRATED THE LOG.
 
         ~~"if rebuilt then update the newest row and return True"~~ stood
@@ -3306,13 +3409,62 @@ begin
         happens there -- but the store's promise cannot rest on its caller
         having opened it first. *)
 
-      (* The contest comes from the records; a binary log has no header naming
-        it, and the shadow must answer the same question the same way the
-        importer does. *)
-      if GRepository.LogContest <> aQso.ceContest then
+      WriteLiveLegs(aLegs, aFacts, aRowIds);
+
+      (* AND ONLY NOW. *)
+      GLastAppendedMyFacts := aFacts[High(aFacts)];
+      Result := True;
+      LogStoreStartExternalDelivery;
+   except
+      on E: Exception do
          begin
-         GRepository.SetContest(aQso.ceContest);
+         (* Nothing of a failed attempt is reported as written. *)
+         aFacts := nil;
+         aRowIds := nil;
+         if SQLiteIsStaleSnapshot(E) and (not aLastAttempt) and
+            ((GRepository = nil) or (not GRepository.InBatch)) then
+            begin
+            if logger <> nil then
+               begin
+               logger.Warn('[LogStore] the log was busy appending %s: %s -- trying again',
+                           [LegsCallsText(aLegs), E.Message]);
+               end;
+            RollBackAfterBusy;
+            aBusy := True;
+            end
+         else
+            begin
+            (* 'appending a QSO' for any number of legs: it is said to the
+              operator in the busy and read-only notices, and one Enter is one
+              QSO to him. *)
+            Disable('appending a QSO', E);
+            end;
          end;
+   end;
+end;
+
+(* EVERY LEG CAPTURED AND WRITTEN, IN ONE TRANSACTION -- the body of
+  AppendLiveQSOsOnce's attempt, after the log is open and writable. Raises
+  on any failure; AppendBatch has then rolled the whole entry back. *)
+procedure WriteLiveLegs(const aLegs: array of ContestExchange;
+                        out aFacts: TLiveQsoFacts;
+                        out aRowIds: TLiveQsoRowIds);
+var
+   appends: TLogQsoAppends;
+   delivery: TLiveAppendDelivery;
+   hook: TQsoRowHook;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   failedIndex, i: integer;
+begin
+   aFacts := nil;
+   aRowIds := nil;
+   appends := TLogQsoAppends.Create;
+   delivery := nil;
+   try
+      (* THE CONTEST comes from the records, as it always did: AppendBatch
+        stamps the log with a leg's contest when the log carries another,
+        before that leg's insert -- the one-row append's SetContest. *)
 
       (* WHAT WAS SENT, CAPTURED NOW -- this is TR4W-D12 issue #2 being fixed
         rather than worked around.
@@ -3334,12 +3486,17 @@ begin
         ONLY A QSO HAS EITHER (log schema 3, stage 5). A note or a QTC record
         is not a contact: it has no station of ours and no exchange we sent,
         and stamping them (the CQ template rebuilt over a note's fields) put
-        invented text into the log. *)
-      GPendingMyFacts := NotCapturedMyFacts;
-      GRepository.SetNextSentExchange('');
-      if aQso.ceRecordKind = rkQSO then
+        invented text into the log.
+
+        PER LEG, AT THE MOMENT OF THE ATTEMPT: a busy retry captures again,
+        as the one-row append always did. *)
+      for i := 0 to High(aLegs) do
          begin
-         GPendingMyFacts := CaptureMyFactsNow(aQso);
+         facts := NotCapturedMyFacts;
+         sent := '';
+         if aLegs[i].ceRecordKind = rkQSO then
+            begin
+            facts := CaptureMyFactsNow(aLegs[i]);
 
          (* A PEER'S QSO SENT WHAT THE PEER SENT, AND THE V1 PACKET DOES NOT
            SAY WHAT THAT WAS (D4, stage 5). The serial is in the record, and
@@ -3350,54 +3507,42 @@ begin
            with ours, MARKED assumed (ruling D) -- the export rebuilds its
            sent columns from that and from the record, and never reads an
            assumed row's exchange_sent. *)
-         if GPendingMyFacts.Source = mfsLogged then
-            begin
-            GRepository.SetNextSentExchange(
-               AnsiString(BuildSentExchangeText(aQso)));
+            if facts.Source = mfsLogged then
+               begin
+               sent := AnsiString(BuildSentExchangeText(aLegs[i]));
+               end;
             end;
+         appends.Add(aLegs[i], facts, sent);
          end;
-      GRepository.SetNextMyFacts(GPendingMyFacts);
 
-      (* The same grouping rule the importer uses -- a county line logged
-        live must relate its rows exactly as an imported one does. *)
-      rowId := GRepository.SaveQSOGroupingByExchangeId(aQso);
+      (* The durable delivery capture, inside the transaction, per row --
+        only when there is an external logger, as before. *)
+      hook := nil;
       if externalLogger <> nil then
          begin
-         externalLogger.CaptureSavedQso(GDatabase, GRepository, rowId, True);
+         delivery := TLiveAppendDelivery.Create;
+         hook := delivery.CaptureDelivery;
          end;
 
-      (* PER QSO, not batched -- section 9b. An operator who loses power should
-        lose at most the contact in progress.
+      (* The same grouping rule the importer uses -- a county line logged
+        live must relate its rows exactly as an imported one does -- and
+        inside ONE transaction the later legs find the earlier ones.
 
-        THE SECOND HALF OF THAT SENTENCE USED TO READ "and this is a shadow of
-        a log that has already been written, so a slow commit costs nothing".
-        It is not a shadow any more -- it is the log, and the .TRW behind that
-        reassurance is gone. The commit is the contact. *)
-      GRepository.Commit;
+        ONE COMMIT FOR THE ENTRY, not one per QSO (NY4I, 2026-11-21: one
+        Enter is one transaction, all legs or none -- which reverses the
+        "a county line commits per QSO" decision of section 9b). An operator
+        who loses power loses at most the entry in progress. The commit is
+        the contact. *)
+      GRepository.AppendBatch(appends, failedIndex, aRowIds, hook, True);
 
-      (* AND ONLY NOW. *)
-      GLastAppendedMyFacts := GPendingMyFacts;
-      Result := True;
-      LogStoreStartExternalDelivery;
-   except
-      on E: Exception do
+      SetLength(aFacts, appends.Count);
+      for i := 0 to appends.Count - 1 do
          begin
-         if SQLiteIsStaleSnapshot(E) and (not aLastAttempt) and
-            ((GRepository = nil) or (not GRepository.InBatch)) then
-            begin
-            if logger <> nil then
-               begin
-               logger.Warn('[LogStore] the log was busy appending %s: %s -- trying again',
-                           [aQso.Callsign, E.Message]);
-               end;
-            RollBackAfterBusy;
-            aBusy := True;
-            end
-         else
-            begin
-            Disable('appending a QSO', E);
-            end;
+         aFacts[i] := appends.MyFacts(i);
          end;
+   finally
+      delivery.Free;
+      appends.Free;
    end;
 end;
 
@@ -3407,29 +3552,69 @@ end;
   SetNextSentExchange included, which a save clears. After the last attempt
   the QSO is REFUSED, never lost: it stays in the entry fields, the caller
   shows "QSO NOT LOGGED" and beeps, and Disable's busy branch tells the
-  operator and keeps the store open for the next one. *)
-function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
+  operator and keeps the store open for the next one.
+
+  AN ENTRY OF SEVERAL LEGS IS RETRIED WHOLE, NEVER HALF (plan commit 2): every
+  attempt is the whole batch, captured again, and a busy failure rolls back
+  every leg the attempt had written. *)
+function LogStoreAppendLiveQSOs(const aLegs: array of ContestExchange;
+                                out aFacts: TLiveQsoFacts;
+                                out aRowIds: TLiveQsoRowIds): boolean;
 var
-   attempt: integer;
+   attempt, i: integer;
    busy: boolean;
+   (* ONE RECORD AT A TIME, stamped as LogStoreAppendQSO always stamped it
+     (uTestAutomaticXQSO reads this file for that call), then kept. *)
    stamped: ContestExchange;
+   legs: array of ContestExchange;
 begin
    Result := False;
+   aFacts := nil;
+   aRowIds := nil;
+   if Length(aLegs) = 0 then
+      begin
+      if logger <> nil then
+         begin
+         logger.Error('[LogStore] an entry with no QSO in it was handed to the log; nothing written');
+         end;
+      Exit;
+      end;
+
    (* EVERY NEW ROW CARRIES ITS CONTEST'S RULE AS IT STANDS NOW -- log schema
      10. An append IS the moment a QSO is logged, whoever calls: LogContact
      (which stamped already, to score with it -- the same answer again), a
      peer's note or QTC record, the contest matrix. One place, so no path
-     that appends can leave the stored value unset. *)
-   stamped := aQso;
-   StampOffContest(stamped);
+     that appends can leave the stored value unset. Stamped on copies: the
+     caller's legs are its own. *)
+   SetLength(legs, Length(aLegs));
+   for i := 0 to High(aLegs) do
+      begin
+      stamped := aLegs[i];
+      StampOffContest(stamped);
+      legs[i] := stamped;
+      end;
+
    for attempt := 1 to LOG_WRITE_ATTEMPTS do
       begin
-      Result := AppendQSOOnce(stamped, attempt = LOG_WRITE_ATTEMPTS, busy);
+      Result := AppendLiveQSOsOnce(legs, attempt = LOG_WRITE_ATTEMPTS,
+                                   aFacts, aRowIds, busy);
       if Result or (not busy) then
          begin
          Exit;
          end;
       end;
+end;
+
+(* ONE QSO IS AN ENTRY OF ONE LEG -- so there is ONE live append path (plan
+  commit 2). For one row it writes what it always wrote: the same stamp, the
+  same capture, the same insert, the same commit, the same delivery rows and
+  the same messages. *)
+function LogStoreAppendQSO(const aQso: ContestExchange): boolean;
+var
+   facts: TLiveQsoFacts;
+   rowIds: TLiveQsoRowIds;
+begin
+   Result := LogStoreAppendLiveQSOs([aQso], facts, rowIds);
 end;
 
 function LogStoreLastAppendedMyFacts: TQsoMyFacts;
@@ -3458,7 +3643,7 @@ var
    rowId: Int64;
    rebuilt: boolean;
 begin
-   (* FALSE UNTIL A COMMIT SAYS OTHERWISE -- AppendQSOOnce's rule. *)
+   (* FALSE UNTIL A COMMIT SAYS OTHERWISE -- AppendLiveQSOsOnce's rule. *)
    Result := False;
    if GDisabled then
       begin
@@ -3530,7 +3715,7 @@ var
    rowId: Int64;
    rebuilt: boolean;
 begin
-   (* FALSE UNTIL A COMMIT SAYS OTHERWISE -- AppendQSOOnce's rule. *)
+   (* FALSE UNTIL A COMMIT SAYS OTHERWISE -- AppendLiveQSOsOnce's rule. *)
    Result := False;
    if GDisabled then
       begin

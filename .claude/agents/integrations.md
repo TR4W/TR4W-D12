@@ -49,7 +49,8 @@ CQ decode, STATUS, CLEAR and LOGGED ADIF -- `PostCQDecode` / `PostStatus` /
 `MainUnit.ParseSessionADIFRecord`, NOT `ParseADIFRecord` (2026-11-20): WSJT-X
 writes its OVERLAY's `CONTEST_ID` (the Delaware QSO Party's FT8 arrives as
 `ARRL-FIELD-DAY`), and the file import's reader takes the record's contest from
-it -- Field Day's class interpreted the QSO and `uLogStore.AppendQSOOnce`
+it -- Field Day's class interpreted the QSO and `uLogStore.AppendQSOOnce` (now
+`AppendLiveQSOsOnce`, via `TLogRepository.AppendBatch`'s per-row `SetContest`)
 rewrote the log's contest row to Field Day. Pinned by
 `uTestContestDelawareQP.Test_DelawareWSJTXFieldDayRecordStaysDelaware`.
 Do not add a second queue:
