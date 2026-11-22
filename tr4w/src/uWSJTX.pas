@@ -196,6 +196,8 @@ uses
   , utils_text
   , LogK1EA // for Settings.Ptt.ViaCommands
   , PostUnit
+  , uADIF           // ParseADIFFieldsList -- the record's GRIDSQUARE (issue 52)
+  , uGridLookup     // StateOfGrid (issue 52)
   , uContestBase    // ContestHasGridFieldMultiplier (M11 S6)
   , uContestFactory // ActiveContest
   , uCabrilloFormat // for tCabrilloFreqString (moved here from PostUnit,
@@ -1359,6 +1361,82 @@ begin
    HandleMessage_Clear;
 end;
 
+(* MAY A STATE BE TAKEN FROM A WSJT-X GRID FOR THIS CONTEST? (issue 52.) No
+  contest declares "my QTH is a state", so this is the smallest answer built
+  from what each contest does declare: it has a domestic multiplier looked up
+  in a domestic file, that file is not the ARRL section list, and its exchange
+  is not itself a grid. The caller then asks the contest's own table whether
+  the state is one of its QTHs (DomesticQTHAndKeyOf), so a contest whose keys
+  are counties or provinces simply declines. *)
+function WSJTXContestTakesAStateFromGrid(aContest: TContestBase): boolean;
+begin
+   Result := ContestHasDomesticMultiplier(aContest)       and
+             ContestUsesDomesticFile(aContest)            and
+             (not ContestQTHIsAnARRLSection(aContest))    and
+             (not ContestReceivesGridSquareExchange(aContest)) and
+             (not ContestHasGridSquareMultiplier(aContest))    and
+             (not ContestHasGridFieldMultiplier(aContest));
+end;
+
+(* THE GRIDSQUARE OF A LOGGED-ADIF RECORD, '' when it has none. The tag name
+  is read case-insensitively: WSJT-X writes it in lower case. *)
+function WSJTXGridOfADIF(const aAdif: string): string;
+var
+   fields: TADIFFieldList;
+   i: integer;
+begin
+   Result := '';
+   ParseADIFFieldsList(aAdif, fields);
+   for i := 0 to High(fields) do
+      begin
+      if SameText(fields[i].Name, 'GRIDSQUARE') then
+         begin
+         Result := fields[i].Value;
+         Exit;
+         end;
+      end;
+end;
+
+(* A STATE FROM THE GRID, ONLY WHEN IT IS CERTAIN (issue 52, NY4I): a grid in
+  exactly one state, in a contest that takes a state, and nothing was already
+  received. An ambiguous grid fills NOTHING; aComment says which states are
+  possible. Main thread: it asks the contest. *)
+procedure DeriveStateFromWSJTXGrid(const aAdif: string;
+                                   var aExch: ContestExchange;
+                                   out aComment: string);
+var
+   grid: string;
+   state: string;
+   domesticQTH: string;
+   key: string;
+begin
+   aComment := '';
+   if aExch.QTHString <> '' then
+      begin
+      Exit;
+      end;
+   if not WSJTXContestTakesAStateFromGrid(ActiveContest(Contest)) then
+      begin
+      Exit;
+      end;
+   grid := WSJTXGridOfADIF(aAdif);
+   case StateOfGrid(grid, state) of
+      gskUnique:
+         begin
+         if DomesticQTHAndKeyOf(state, domesticQTH, key) then
+            begin
+            aExch.QTHString := ShortString(state);
+            logger.Debug('[uWSJTX] grid %s is only in %s: state taken from the grid',
+                         [grid, state]);
+            end;
+         end;
+      gskAmbiguous:
+         begin
+         aComment := PossibleStatesComment(grid);
+         end;
+   end;
+end;
+
 (* A QSO WSJT-X logged: parse it, locate the call, check it and LOG IT.  Main
   thread, as typed entry is -- LogContact writes the log store and the sheet,
   ParametersOkay reads the entry state, and the flags below are the entry
@@ -1368,7 +1446,9 @@ var
    TempRXData: ContestExchange;
    tempBand: BandType;
    tempFreq: integer;
+   gridComment: string;
 begin
+   gridComment := '';
    if OffMainThread('EvaluateLoggedADIF') then
       begin
       Exit;
@@ -1406,6 +1486,10 @@ begin
 
       //TempRXData.NumberSent := TotalContacts;
       //LogContact(TempRXData, true);
+
+      (* Issue 52: a state from the grid, only when the grid is in one state
+         and the contest takes a state; an ambiguous grid is shown, not filled. *)
+      DeriveStateFromWSJTXGrid(adif, TempRXData, gridComment);
 
       // ParseADIFRecord populates QTHString (state/grid/zone) for most
       // contests but does not always copy it into ExchString.
@@ -1480,6 +1564,13 @@ begin
          SeventyThreeMessageSent := False;
          EscapeDeletedCallEntry := CallWindowString;
          ReadyForNextQSO;
+         (* The QSO log has no comment field, so the candidates of an
+            ambiguous grid go to the status line (non-modal) and the log. *)
+         if gridComment <> '' then
+            begin
+            logger.Info('[uWSJTX] %s', [gridComment]);
+            QuickDisplay(gridComment);
+            end;
          end;
 
       //tCleareCallWindow;

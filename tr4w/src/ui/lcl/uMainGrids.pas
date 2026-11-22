@@ -352,6 +352,20 @@ begin
       end;
 end;
 
+(* A SCORE CELL OR AN IDLE BAND HEADER: FLAT, WITH A THIN RULE IN PLACE OF THE
+  RECESSED EDGE (the UI refresh proposal's band strip and score cells,
+  2026-11-22). The panel derives the rule's colour from its own colours and
+  keeps it current itself -- see TElementPanel.FlatRule. Bounds, bevel width,
+  alignment and fonts are untouched, so the columns operators compare across
+  stay where they were. *)
+procedure MakeFlat(const aPanel: TElementPanel);
+begin
+   if aPanel <> nil then
+      begin
+      aPanel.FlatRule := True;
+      end;
+end;
+
 procedure BindMainGrids;
 var
    c, r: integer;
@@ -408,15 +422,25 @@ begin
       for r := 0 to TOTALS_ROWS - 1 do
          begin
          GTotalsCell[c, r] := BindPanel(Format('pnlTotalCell_%d_%d', [c, r]));
+         MakeFlat(GTotalsCell[c, r]);
          PrepareNeedPanel(GTotalsCell[c, r], mweWholeScreen, '');
          end;
       end;
 
+   (* EVERY HEADER STARTS FLAT; HighlightTotalsColumn takes the rule off the
+     one band in play. *)
    for c := TOTALS_FIRST_HEADER to TOTALS_COLUMNS - 1 do
       begin
       GTotalsHead[c] := BindPanel(Format('pnlTotalHead_%d', [c]));
+      MakeFlat(GTotalsHead[c]);
       PrepareNeedPanel(GTotalsHead[c], mweWholeScreen, '');
       end;
+
+   (* THE POINTS TOTAL IS A SCORE CELL TOO, though it is a TWindows[] element
+     (mweTotalScore) rather than one of the grid's: flat like its neighbours.
+     Its weight is MainUnit.LayOutMainWindow's, which sets every element's
+     font on each layout. *)
+   MakeFlat(TR4WMainForm.pnlTotalScore);
 
    for row := Low(TNeedRow) to High(TNeedRow) do
       begin
@@ -693,13 +717,20 @@ begin
          Continue;
          end;
 
+      (* THE ACTIVE BAND KEEPS EXACTLY WHAT IT HAD -- the solid blue, white
+        text and the widget set's own edge (FlatRule False) -- and only the
+        idle headers are flat (the UI refresh proposal, 2026-11-22). The rule
+        is switched before the colours, so each header is drawn once in its
+        new state. *)
       if c = aColumn then
          begin
+         GTotalsHead[c].FlatRule := False;
          GTotalsHead[c].Color := tr4wColorsArray[trBlue];
          GTotalsHead[c].Font.Color := tr4wColorsArray[trWhite];
          end
       else
          begin
+         GTotalsHead[c].FlatRule := True;
          ApplyElementColors(GTotalsHead[c], mweWholeScreen);
          end;
       end;

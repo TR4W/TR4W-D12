@@ -21,6 +21,8 @@ interface
 uses
    SysUtils, Classes, StrUtils, uTR4WTestFramework, VC, utils_text, uOperatorList,
    uCbrSum, uContestRegistry,
+   (* TStationContext -- the station a contest's header lines are for. *)
+   uContestBase,
    (* SourceText -- a file under tr4w/src, as text (the issue 326 pin). *)
    uTestAutomaticXQSO;
 
@@ -53,6 +55,7 @@ type
       procedure Test_Header_OperatorsLine_MultiOp;
       procedure Test_Header_OperatorsLine_ErmakContests;
       procedure Test_Header_WriterHasNoErmakSkip;
+      procedure Test_Header_StoreHasNoErmakSection;
    public
       procedure RunAllTests; override;
    end;
@@ -385,14 +388,28 @@ begin
                'an empty list is still a bare OPERATORS line');
 end;
 
+(* ISSUE 74 (2026-11-22, closed as not planned): the ERMAK specification and
+  its flag are gone. The two contests of issue 326 -- the ALRS UA1DZ Cup and
+  Arktika Spring -- write the standard OPERATORS line for a Russian station,
+  and neither writes a line of its own before it (which is how a contest could
+  still replace or shadow the tag). The writer's own loop is pinned by
+  Test_Header_WriterHasNoErmakSkip, and the header store every station reads
+  by Test_Header_StoreHasNoErmakSection. *)
 procedure TOperatorListTests.Test_Header_OperatorsLine_ErmakContests;
+var
+   station: TStationContext;
 begin
    BeginTest('Test_Header_OperatorsLine_ErmakContests');
-   (* The two contests of the issue, and Gagarin Cup, still carry the flag: the
-     line must not depend on it. *)
-   CheckTrue(ContestIdentity(ALRS_UA1DZ_CUP).ErmakSpecification, 'ALRS UA1DZ Cup is an ERMAK contest');
-   CheckTrue(ContestIdentity(ARKTIKA_SPRING).ErmakSpecification, 'Arktika Spring is an ERMAK contest');
-   CheckTrue(ContestIdentity(GAGARINCUP).ErmakSpecification, 'Gagarin Cup is an ERMAK contest');
+   station := Default(TStationContext);
+   station.MyCall := 'UA1AAA';
+   station.MyCountry := 'UA';
+
+   CheckEquals('', ContestIdentity(ALRS_UA1DZ_CUP).CabrilloHeaderLinesBeforeTag(
+                      'OPERATORS', 'UA1AAA, RA1BBB', station),
+               'ALRS UA1DZ Cup writes nothing before OPERATORS');
+   CheckEquals('', ContestIdentity(ARKTIKA_SPRING).CabrilloHeaderLinesBeforeTag(
+                      'OPERATORS', 'UA1AAA, RA1BBB', station),
+               'Arktika Spring writes nothing before OPERATORS');
    CheckEquals('OPERATORS: UA1AAA, RA1BBB'#13#10,
                CabrilloHeaderTagLine(ctOperators, 'UA1AAA, RA1BBB'),
                'OPERATORS is written whatever the contest');
@@ -426,6 +443,7 @@ begin
    Test_Header_OperatorsLine_MultiOp;
    Test_Header_OperatorsLine_ErmakContests;
    Test_Header_WriterHasNoErmakSkip;
+   Test_Header_StoreHasNoErmakSection;
 end;
 
 (* THE TEXT A COMPILER READS: block comments of both kinds and line comments
@@ -564,6 +582,49 @@ begin
    CheckFalse(HeaderWriterTestsErmak(SourceText('trdos' + PathDelim + 'postunit.pas'), anchors),
               'PostUnit''s Cabrillo header writer does not ask ErmakSpecification (issue 326)');
    CheckTrue(anchors, 'PostUnit''s header writer has its START-OF-LOG and GRID-LOCATOR lines');
+end;
+
+(* DOES THIS SOURCE NAME ERMAK IN CODE? -- an identifier (ERMAKSECTION,
+   ErmakSpecification) or a string literal ('ERMAKREPORT'). Comments do not
+   count. *)
+function CodeNamesErmak(const aSource: string): boolean;
+begin
+   Result := Pos('ERMAK', UpperCase(PascalCodeOnly(aSource))) > 0;
+end;
+
+(* ISSUE 74, AND A PIN THAT CAN FAIL. The two units that choose the Cabrillo
+   header store -- uCbrSum.CabrilloTagText (what the export writes, headless
+   or not) and the summary window -- switched a Russian station in a contest
+   flagged for the ERMAK specification to a separate ERMAKREPORT store, so its
+   header lost the values entered for every other contest. That switch ran
+   only after the main window was built, so no corpus, matrix or headless
+   test ever saw it; this reads the two units and fails if either names ERMAK
+   in code again. First run on the old shape, to prove it sees it, and on
+   that shape commented out. *)
+procedure TOperatorListTests.Test_Header_StoreHasNoErmakSection;
+const
+   OLD_SHAPE =
+      'function HeaderSectionInUse: string;'#13#10 +
+      'begin'#13#10 +
+      '   if ErmakSpecification then'#13#10 +
+      '      begin'#13#10 +
+      '      Result := ''ERMAKREPORT'';'#13#10 +
+      '      end;'#13#10 +
+      'end;'#13#10;
+   COMMENTED_SHAPE =
+      '(* ERMAKSECTION was deleted with issue 74 *)'#13#10 +
+      '// ErmakSpecification'#13#10 +
+      'Result := CABRILLOSECTION;'#13#10;
+begin
+   BeginTest('Test_Header_StoreHasNoErmakSection');
+   CheckTrue(CodeNamesErmak(OLD_SHAPE), 'the pin sees the old ERMAK store switch');
+   CheckFalse(CodeNamesErmak(COMMENTED_SHAPE), 'a comment naming ERMAK is not code');
+
+   CheckFalse(CodeNamesErmak(SourceText('uCbrSum.pas')),
+              'uCbrSum reads the Cabrillo header store for every station (issue 74)');
+   CheckFalse(CodeNamesErmak(SourceText('ui' + PathDelim + 'lcl' + PathDelim +
+                                        'uCabrilloSummaryForm.pas')),
+              'the summary window reads and writes the Cabrillo header store for every station (issue 74)');
 end;
 
 end.

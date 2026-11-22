@@ -1622,15 +1622,15 @@ type
       and the members are declared IN BIT ORDER (cfQSOByBand is bit 0,
       cfRTCCapable bit 8), so a set compares bit for bit with the word while
       the word exists (plan S8 deletes it; the base stopped reading it at
-      M10 S6 and answers []). Each member answers the property of the
-      same name on TContestBase:
+      M10 S6 and answers []). The word is gone, so no ordinal is a contract:
+      cfErmakSpecification (bit 4) was deleted with issue 74 (2026-11-22),
+      and nothing stores, sends or prints the set as a number. Each member
+      answers the property of the same name on TContestBase:
 
         cfQSOByBand, cfQSOByMode       a station may be worked once per
                                        band / per mode
         cfMultByBand, cfMultByMode     a multiplier counts per band / mode
-        cfErmakSpecification           the ERMAK Cabrillo specification is
-                                       offered to a Russian station
-        cfVHFBandsEnabled              the VHF bands are on
+        cfVHFBandsEnabled             the VHF bands are on
         cfCQZoneMode                   CTY.DAT answers CQ zones; absent
                                        means ITU zones (ZoneMode)
         cfCountsDomesticCountries      a domestic country counts as one
@@ -1646,7 +1646,6 @@ type
       cfQSOByMode,
       cfMultByBand,
       cfMultByMode,
-      cfErmakSpecification,
       cfVHFBandsEnabled,
       cfCQZoneMode,
       cfCountsDomesticCountries,
@@ -1935,19 +1934,15 @@ type
          worked station's now -- ADIFWorkedStationState. *)
       function GetQSOPartyArea: string; virtual;
 
-      (* THE LAST TWO BITS OF THE ROW'S FLAG WORD -- M10 S0, 2026-10-14.
+      (* THE LAST BIT OF THE ROW'S FLAG WORD -- M10 S0, 2026-10-14.
 
-         ErmakSpecification: the contest offers the ERMAK Cabrillo
-         specification to a Russian station (MainUnit's set-up, ERMAK_BIT).
          RTCCapable: the contest takes HamScore's real-time contact upload
-         (uHamScore, RTC_CAPABLE_BIT).
+         (uHamScore, RTC_CAPABLE_BIT). A member of the set like the others;
+         uHamScore's contact upload asks it since M10 S6 (it read
+         ContestsBooleanArray before). The matrix does not record it.
 
-         Both are members of the set like the seven above. MainUnit's ERMAK
-         menu and uHamScore's contact upload ask them since M10 S6 (they read
-         ContestsBooleanArray before). Test_MovedRowValuesStillMatchTheArray
-         pins the class's answer against the table for every contest -- the
-         matrix records neither. *)
-      function GetErmakSpecification: boolean;
+         ErmakSpecification stood beside it (MainUnit's ERMAK menu and header
+         store) and was deleted with issue 74, 2026-11-22. *)
       function GetRTCCapable: boolean;
 
       (* DOES THIS CONTEST MARK A REPEATED CONTACT AS A DUPE? -- M3, 2026-10-01.
@@ -2121,7 +2116,6 @@ type
       property ZoneMode: ZoneModeType read GetZoneMode;
       property InStateDomesticFileName: string read GetInStateDomesticFileName;
       property QSOPartyArea: string read GetQSOPartyArea;
-      property ErmakSpecification: boolean read GetErmakSpecification;
       property RTCCapable: boolean read GetRTCCapable;
 
       (* The dupe policy -- see the getter. LOGSUBS2 asks it through
@@ -5395,11 +5389,6 @@ begin
       begin
       Result := ITUZoneMode;
       end;
-end;
-
-function TContestBase.GetErmakSpecification: boolean;
-begin
-   Result := cfErmakSpecification in Flags;
 end;
 
 function TContestBase.GetRTCCapable: boolean;

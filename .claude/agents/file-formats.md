@@ -392,6 +392,15 @@ multipliers, CTY.DAT, band lookup and CRC32.
   header is read as space-delimited -- changing it is NY4I's decision, and the
   corpus compares only QSO lines, not the header, but the frozen rescored.cbr would move.
   Pinned by `uTestOperatorList`.
+- **THERE IS ONE CABRILLO HEADER STORE, `CABRILLOSECTION` (issue 74, 2026-11-22).**
+  ERMAK is gone: `ErmakSpecification`, `cfErmakSpecification`, `ERMAKSECTION`,
+  `ERMAK_` and the ERMAK overlay/category values are deleted. Until then a Russian
+  MY CALL in ~22 flagged Russian contests (ALRS UA1DZ Cup, Arktika Spring, Cup RF,
+  RDA, Gagarin...) read and wrote the header from `ERMAKREPORT` -- GUI only, set in
+  `CreateMainWindow`, so no corpus, matrix or headless test ever saw it. Its
+  OPERATORS line had already been restored by issue 326. `uRadioConfigStore` still
+  maps `ERMAKREPORT` <-> `ermakHeader` so old settings files round-trip; nothing
+  reads it. Pinned by `uTestOperatorList.Test_Header_StoreHasNoErmakSection`.
 - **THE STATE SENT IS NOT MY STATE (M9a, design 7.11).** The Cabrillo sent
   column and the ADIF `STX_STRING` read `FCONTEST.SentMyState` -- MY STATE,
   unless the contest's set-up states what it sends instead (Canada Day/Winter

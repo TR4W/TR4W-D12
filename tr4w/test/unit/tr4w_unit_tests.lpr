@@ -90,8 +90,13 @@ uses
    uTestFlowGridCells   in 'uTestFlowGridCells.pas',
    uRemMultWorkState    in '..\..\src\uRemMultWorkState.pas',
    uTestRemMultWorkState in 'uTestRemMultWorkState.pas',
-   uEntryStatus         in '..\..\src\uEntryStatus.pas',
+   uTestLogGridStyle    in 'uTestLogGridStyle.pas',
+   uScoreCellStyle      in '..\..\src\uScoreCellStyle.pas',
+   uTestScoreCellStyle  in 'uTestScoreCellStyle.pas',
+   uEntryStatus        in '..\..\src\uEntryStatus.pas',
    uTestEntryStatus     in 'uTestEntryStatus.pas',
+   uRadioPanelState     in '..\..\src\uRadioPanelState.pas',
+   uTestRadioPanelState in 'uTestRadioPanelState.pas',
    uFlexRadioUtils      in '..\..\src\radioFactory\uFlexRadioUtils.pas',
    uTestFlexRadioUtils  in 'uTestFlexRadioUtils.pas',
    VC                   in '..\..\src\VC.pas',
@@ -198,6 +203,8 @@ uses
    uN1MMMode            in '..\..\src\uN1MMMode.pas',
    uWSJTXReport         in '..\..\src\uWSJTXReport.pas',
    uTestWSJTXReport     in 'uTestWSJTXReport.pas',
+   uGridLookup          in '..\..\src\uGridLookup.pas',
+   uTestGridLookup      in 'uTestGridLookup.pas',
    uTestN1MMMode        in 'uTestN1MMMode.pas',
    uN1MMLogEnvelope     in '..\..\src\uN1MMLogEnvelope.pas',
    uTestN1MMLogEnvelope in 'uTestN1MMLogEnvelope.pas',
@@ -1210,6 +1217,7 @@ begin
    RegisterSuite(TServerLogHealthTests.Create('ServerLogHealth'));
    RegisterSuite(TServerLogStoreTests.Create('ServerLogStore'));
    RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
+   RegisterSuite(TGridLookupTests.Create('GridLookup'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));
    RegisterSuite(TIcomCIVTests.Create('IcomCIV'));
@@ -1478,7 +1486,10 @@ begin
    RegisterSuite(TDXSpotParseTests.Create('DXSpotParse'));
    RegisterSuite(TSpotAgeTests.Create('SpotAge'));
    RegisterSuite(TRemMultWorkStateTests.Create('RemMultWorkState'));
+   RegisterSuite(TLogGridStyleTests.Create('LogGridStyle'));
+   RegisterSuite(TScoreCellStyleTests.Create('ScoreCellStyle'));
    RegisterSuite(TEntryStatusTests.Create('EntryStatus'));
+   RegisterSuite(TRadioPanelStateTests.Create('RadioPanelState'));
    RegisterSuite(TSelfSpotTests.Create('SelfSpot'));
    RegisterSuite(TBandMapOrderTests.Create('BandMapOrder'));
    RegisterSuite(TFunctionKeyBankTests.Create('FunctionKeyBank'));

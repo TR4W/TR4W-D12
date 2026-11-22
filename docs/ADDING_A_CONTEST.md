@@ -1065,7 +1065,7 @@ comment; read it there.
 |---|---|---|
 | `GetDisplayName`, `GetFriendlyName`, `GetCabrilloName`, `GetADIFContestId` | the contest's id | every class states the first three itself (A3). The ADIF id is what export writes AND import matches. `FormerADIFContestIds`: old ids import still accepts after a rename |
 | `GetWA7BNMId`, `GetQRZRUId`, `GetSubmissionEmail`, `GetDomesticFileName` | 0, 0, `''`, `''` | |
-| `GetFlags` | `[]` | `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries`, `ErmakSpecification`, `RTCCapable`, `cfCQZoneMode` (else ITU) read from it. Set-up (`FCONTEST.ApplyContestTraits`) writes them; an operator's statement wins |
+| `GetFlags` | `[]` | `QSOByBand`, `QSOByMode`, `MultByBand`, `MultByMode`, `VHFBandsEnabled`, `CountsDomesticCountries`, `RTCCapable`, `cfCQZoneMode` (else ITU) read from it. Set-up (`FCONTEST.ApplyContestTraits`) writes them; an operator's statement wins |
 | `GetIsUSQSOParty`, `GetHostState`, `GetQSOPartyArea`, `GetInStateDomesticFileName` | False, `''`, `''`, `''` | the party base answers the first and third |
 | `DescribeSession(aStation, aSession)` | states nothing | session values (bands, mode, memories, domestic countries, `SentState`, ...) on a `TSessionDefaults`. **A stated value is stated even when False**; state only what you set. A choice that depends on the entrant is stated both ways on `aStation` (`uContestARRLDXBase`). What you SEND where MY STATE goes is `SentState`, never MY STATE |
 | `CQExchangeDefault`, `RepeatSPExchangeDefault` | `''` | used only where the operator has none |

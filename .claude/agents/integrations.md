@@ -99,6 +99,22 @@ the radio's frequency on 53 QSOs across four bands. Only `lookupinfo` (the call 
 typed NOW) reads the live radio. `<operator>` is `RXData.ceOperator`. Pinned in
 `uTestUDPContactXml`.
 
+## A WSJT-X grid names a state only when it lies in ONE (issue 52, 2026-11-22)
+
+`uGridLookup` holds WSJT-X's `grid.dat` COMPILED IN (695 grids, GPL v3, attribution in
+the unit header; NY4I: grids and state borders do not change). A unique grid names its
+state; **a multi-state grid infers NOTHING** (the file's order is not "mostly the first")
+and the candidates are worded `possible states for EN61 are IL, IN and MI`
+(`PossibleStatesComment`). `EvaluateLoggedADIF` calls `DeriveStateFromWSJTXGrid` before
+`ParametersOkay`: it fills `QTHString` only when it is empty, the contest "takes a state"
+(`WSJTXContestTakesAStateFromGrid`: domestic multiplier from a domestic file, not the
+ARRL section list, exchange not itself a grid -- no contest declares "my QTH is a state",
+so this is built from what they do declare) AND the contest's own table knows the state
+(`DomesticQTHAndKeyOf`). The ambiguous-grid text goes to `QuickDisplay` and the log
+because **a QSO has no comment field**. The grid is read from the raw ADIF text
+(`ContestExchange` carries none). Pinned in `uTestGridLookup`. Not built: the ARRL-section
+variant the issue mentions. The text is an English literal, not a resourcestring yet.
+
 ## MMTTY
 
 **MMTTY is out-of-process** — launched with `WinExec`, not loaded as a DLL. That

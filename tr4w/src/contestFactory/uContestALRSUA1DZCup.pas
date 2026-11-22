@@ -367,7 +367,7 @@ end;
 
 function TContestALRSUA1DZCup.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfErmakSpecification];
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand];
 end;
 
 function TContestALRSUA1DZCup.GetIsUSQSOParty: boolean;

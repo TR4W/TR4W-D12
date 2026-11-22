@@ -287,7 +287,7 @@ end;
 
 function TContestCupRFDIG.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfMultByBand, cfErmakSpecification];
+   Result := [cfQSOByBand, cfMultByBand];
 end;
 
 function TContestCupRFDIG.GetIsUSQSOParty: boolean;

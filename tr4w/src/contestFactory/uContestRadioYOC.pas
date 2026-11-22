@@ -338,7 +338,7 @@ end;
 
 function TContestRadioYOC.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfErmakSpecification];
+   Result := [cfQSOByBand];
 end;
 
 function TContestRadioYOC.GetIsUSQSOParty: boolean;

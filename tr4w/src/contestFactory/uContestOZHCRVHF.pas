@@ -272,7 +272,7 @@ end;
 
 function TContestOZHCRVHF.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfErmakSpecification, cfVHFBandsEnabled];
+   Result := [cfQSOByBand, cfVHFBandsEnabled];
 end;
 
 function TContestOZHCRVHF.GetIsUSQSOParty: boolean;

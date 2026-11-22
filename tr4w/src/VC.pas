@@ -2634,13 +2634,16 @@ const
 
   (* _RESTARTBIN, _LOGFILE, _COM, LATEST_CONFIG_FILE and OPERATORINFO were
     deleted on 2026-09-14: each was declared here and read NOWHERE in the
-    tree, including the tests.  OPERATORINFO's only surviving mention is a
-    comment in PostUnit explaining that Delphi spells its C format '%.3u',
-    inside a block that is itself commented out. *)
+    tree, including the tests.
+
+    ERMAK_, ERMAKSECTION and the ErmakSpecification variable were deleted on
+    2026-11-22 (issue 74, closed as not planned): the ERMAK report was
+    retired, and the switch that remained only sent a Russian station's
+    Cabrillo header to a separate store. The settings file's
+    'ERMAKREPORT' / ermakHeader map entry is uRadioConfigStore's, kept for
+    files that carry it. *)
   _COMMANDS                             : string = 'COMMANDS';
 
-  ERMAK_                                : string = 'ERMAK';
-  ERMAKSECTION                          : string = 'ERMAKREPORT';
   CABRILLOSECTION                       : string = 'REPORT';
 
 //  TRAINER                          = 'TRAINER';
@@ -3284,8 +3287,7 @@ var
 //  NET_CLEARLOG_MESSAGE                  : DWORD = 3030001000;
   NET_LOGINFO_MESSAGE                   : DWORD = 3030002000;
 
-  ErmakSpecification                    : boolean;
-//  sDISMESSAGE                           : array[0..4] of Char = ('D', 'I', 'S', 'C', #0);
+//  sDISMESSAGE                          : array[0..4] of Char = ('D', 'I', 'S', 'C', #0);
 
 //  tr4w_saddr                            : sockaddr_in = (sin_family: AF_INET);
   {Fonts}

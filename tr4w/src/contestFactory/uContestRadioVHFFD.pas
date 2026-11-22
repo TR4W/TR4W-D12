@@ -266,7 +266,7 @@ end;
 
 function TContestRadioVHFFD.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfErmakSpecification, cfVHFBandsEnabled];
+   Result := [cfQSOByBand, cfVHFBandsEnabled];
 end;
 
 function TContestRadioVHFFD.GetIsUSQSOParty: boolean;

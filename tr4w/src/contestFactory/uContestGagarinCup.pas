@@ -296,7 +296,6 @@ function TContestGagarinCup.GetFlags: TContestFlags;
 begin
    Result := [cfQSOByBand,
               cfMultByBand,
-              cfErmakSpecification,
               cfVHFBandsEnabled];
 end;
 

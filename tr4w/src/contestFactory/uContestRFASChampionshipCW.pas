@@ -228,7 +228,7 @@ end;
 
 function TContestRFASChampionshipCW.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfErmakSpecification];
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 function TContestRFASChampionshipCW.GetIsUSQSOParty: boolean;

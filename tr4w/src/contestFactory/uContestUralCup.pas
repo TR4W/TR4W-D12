@@ -294,7 +294,7 @@ end;
 
 function TContestUralCup.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfErmakSpecification];
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand];
 end;
 
 function TContestUralCup.GetIsUSQSOParty: boolean;

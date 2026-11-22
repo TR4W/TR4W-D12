@@ -996,7 +996,8 @@ the target shape, the M-step migration order and the open questions.
   `ZoneMode` (stated, never a Boolean cast -- that gave 255),
   `QSOByBand/Mode`, `MultByBand/Mode`, `VHFBandsEnabled`,
   `CountsDomesticCountries`, `InStateDomesticFileName`. **Since M10 S5 the
-  nine flag properties (with ERMAK and RTC) are ONE set every class states,
+  flag properties (with RTC; ERMAK's member was DELETED with issue 74,
+  2026-11-22 -- do not add it back) are ONE set every class states,
   `GetFlags: TContestFlags`** (`cf...` members in bit order; the five CW/SSB
   pair families state it on their base); the per-flag getters are not
   virtual. Every party states `InStateDomesticFileName`, and
@@ -1005,7 +1006,7 @@ the target shape, the M-step migration order and the open questions.
   DUMMYCONTEST's neutral row (`[]`, `No*Mults`, `UnknownExchange`, `''`, 0,
   the enum's spelling), so a value a class does not state is NEUTRAL, not its
   row; `VC.USQSOPartyStateName` and `QSOPartyAreaName` are deleted, and the
-  outside readers (MainUnit ERMAK, uHamScore RTC, `postunit.ZoneSentForThisContest`,
+  outside readers (uHamScore RTC, `postunit.ZoneSentForThisContest`,
   `/MATRIXLIST`) ask the class. **ADIF STATE IS THE WORKED STATION'S, PER
   QSO (Q76/Q89, NY4I 2026-10-16)** -- `TContestBase.ADIFWorkedStationState`
   (base `''`), through `uADIF.GetADIFStateForQSO`: a party county gives its

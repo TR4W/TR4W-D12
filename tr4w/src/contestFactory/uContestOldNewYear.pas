@@ -220,7 +220,7 @@ end;
 
 function TContestOldNewYear.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfErmakSpecification];
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 function TContestOldNewYear.GetIsUSQSOParty: boolean;

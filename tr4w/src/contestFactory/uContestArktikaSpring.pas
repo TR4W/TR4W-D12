@@ -300,7 +300,7 @@ end;
 
 function TContestArktikaSpring.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfErmakSpecification];
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand];
 end;
 
 function TContestArktikaSpring.GetIsUSQSOParty: boolean;

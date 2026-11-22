@@ -74,7 +74,6 @@ uses
   uMults,
   // uSelectFile,
   //
-  (* uErmak, *)   { ERMAK commented out -- see the banner in uErmak.pas }
   uCheckLatestVersion,
   // uMakeHelpFile,
   uAltP,
@@ -812,6 +811,7 @@ uses
    uSettingsModel,   // Settings -- where retired CFGCA rows live
    Version,          (* TR4W_WEBSITE -- Help > Home Page *)
    uCategoryWindow,  (* CategoryOpeningWindow -- issue 201 *)
+   uScoreCellStyle,  (* PointsTotalBold -- LayOutMainWindow *)
   uAppPaths,  // ContestDir, DownloadedDataFilePath, BackupDir -- where files live
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,              // TMenuItem -- the menu is a TMainMenu now
@@ -4990,7 +4990,18 @@ begin
      // own TFont, so the SHAPE goes across instead.  These are the same three
      // numbers tCreateFont was given for MainFont.  The WSJT-X indicator and
      // the QSO number have their own, set below.
-     if (e <> mweWSJTX) and (e <> mweQSONumber) then
+     (* THE POINTS TOTAL ('0 Pts') IS BOLD -- the UI refresh proposal's
+       "slightly stronger weight" (2026-11-22), decided by
+       uScoreCellStyle.PointsTotalBold. Here, not once at startup, because this
+       loop sets every element's weight on each layout and would undo it. The
+       face and the size are the window's, as before. *)
+     if e = mweTotalScore then
+        begin
+        SetElementFont(e, Settings.Font.Face,
+                       ElementFontHeight(aWS, Settings.Font.Size),
+                       PointsTotalBold(Settings.Font.Bold));
+        end
+     else if (e <> mweWSJTX) and (e <> mweQSONumber) then
         begin
         SetElementFont(e, Settings.Font.Face,
                        ElementFontHeight(aWS, Settings.Font.Size), Settings.Font.Bold);
@@ -5307,16 +5318,6 @@ begin
      MenuItemById(menu_recording_control).Visible := False;
      end;
 {$ENDIF}
-  (* THE CONTEST SAYS WHETHER IT OFFERS THE ERMAK SPECIFICATION (M10 S6); this
-     read ContestsBooleanArray's ERMAK_BIT, which the class's flag set states. *)
-  ErmakSpecification := ContestIdentity(Contest).ErmakSpecification and
-                        RussianID(Settings.My.Call);
-
-  if ErmakSpecification then
-     begin
-     SetMenuCaption(menu_cabrillo, ERMAK_);
-     end;
-
   // AppendMenu(GetSubMenu(tr4w_main_menu, menu_rescore), MF_POPUP , 11010, 'NepItem');
   // InsertMenu(tr4w_main_menu, menu_rescore, MF_BYCOMMAND, 177, 'aa');
   (* THE MAIN WINDOW IS RESIZEABLE IN BOTH AXES, AND THE LOG IS WHAT GROWS.

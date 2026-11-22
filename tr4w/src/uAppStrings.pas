@@ -1560,6 +1560,15 @@ resourcestring
    SEntryFieldCallName = 'Call';
    SEntryFieldExchangeName = 'Exchange';
 
+   (* THE RADIO PANEL'S ACTIVE-RADIO LABEL (uRadioPanelForm, 2026-11-22): shown
+     on the ACTIVE radio's panel only, beside its cyan tint -- the station's
+     choice of radio, never the rig's VFO A/B. One row the panel's full width
+     (185 px at the smallest size), so a longer word fits; keep it one word.
+     The second string is the name the label gives assistive technology
+     (AccessibleName). *)
+   SRadioPanelActive = 'Active';
+   SRadioPanelActiveName = 'Active radio';
+
    (* WHY A DOUBLE CLICK ON THE LOG OPENED NO EDIT QSO WINDOW -- on the status
      line, because it said nothing at all (2026-11-18). *)
    SEditQSONoQSOSelected = 'No QSO selected.';

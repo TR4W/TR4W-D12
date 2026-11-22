@@ -48,6 +48,7 @@ type
       lblSplit: TPanel;
       lblStatus: TPanel;
       btnSpectrum: TButton;
+      lblActive: TLabel;
       procedure HandleClose(Sender: TObject; var CloseAction: TCloseAction);
       procedure HandleResize(Sender: TObject);
       procedure SpectrumClick(Sender: TObject);
@@ -71,7 +72,13 @@ type
 
       { Light blue when this panel belongs to the active radio, as
         WM_CTLCOLORDLG did. }
+      (* And the "Active" label on that panel only (uRadioPanelState). *)
       procedure SyncActiveTint;
+
+      (* The active VFO's readout keeps its designed bold and the other one
+        drops to regular -- see uRadioPanelState. Asks the two readouts'
+        Enabled, which IS the rig's VFO A/B state on this form. *)
+      procedure SyncVFOWeights;
 
       property Slot: integer read FSlot write FSlot;
    end;
@@ -93,6 +100,10 @@ implementation
 {$R *.lfm}
 
 uses
+   (* FIRST, so nothing below is shadowed by one of uAppStrings' many names --
+     a later unit in a uses list wins an identifier clash. *)
+   uAppStrings,         (* SRadioPanelActive, SRadioPanelActiveName *)
+   uRadioPanelState,    (* the active-radio label and VFO weight rules *)
    MainUnit,
    LOGRADIO,
    uFactoryRadioBase,   { rcSpectrum / SpectrumAvailable -- the two radio gates }
@@ -295,16 +306,20 @@ end;
 procedure TfrmRadioPanel.SyncActiveTint;
 var
    mine: boolean;
+   activeSlot: integer;
    i: integer;
 begin
-   if FSlot = 2 then
+   activeSlot := 0;
+   if ActiveRadioPtr = @Radio1 then
       begin
-      mine := ActiveRadioPtr = @Radio2;
+      activeSlot := 1;
       end
-   else
+   else if ActiveRadioPtr = @Radio2 then
       begin
-      mine := ActiveRadioPtr = @Radio1;
+      activeSlot := 2;
       end;
+
+   mine := RadioPanelShowsActive(FSlot, activeSlot);
 
    if mine then
       begin
@@ -315,6 +330,26 @@ begin
       Color := clBtnFace;
       end;
 
+   (* THE "ACTIVE" LABEL SAYS IN WORDS WHAT THE TINT SAYS IN COLOUR, so the
+     cue no longer rests on colour alone. The CAPTION is emptied on the other
+     panel rather than the label hidden: ApplyContentMinimumSize skips an
+     invisible control and runs only when the panel opens, so a label made
+     visible by a later SO2R swap could fall outside the window's minimum.
+     A resourcestring is 8-bit and goes onto the caption directly.
+
+     AccessibleName reaches nothing on win32, gtk2 or cocoa today (lcl-ui,
+     issue 278); it is set so the label is named the day it does. *)
+   if mine then
+      begin
+      lblActive.Caption := SRadioPanelActive;
+      lblActive.AccessibleName := SRadioPanelActiveName;
+      end
+   else
+      begin
+      lblActive.Caption := '';
+      lblActive.AccessibleName := '';
+      end;
+
    // The unset flags take their colour FROM the form, so they must be redone
    // when it changes.  Reapplied from the STORED state, never read back off the
    // control -- reading it back is what made colour and state the same thing.
@@ -322,6 +357,33 @@ begin
       begin
       SetFlag(i, FFlagOn[i]);
       end;
+end;
+
+(* THE RIG'S VFO A/B, AS WEIGHT. Kept off the active-radio path on purpose:
+  the tint and the "Active" label are the STATION's radio, this is the RIG's
+  VFO, and the two must never be read as one cue.
+
+  The state is asked of the controls -- PanelEnableToForm has just set the
+  readout's Enabled from the polling thread's VFO post -- so there is no field
+  beside them to fall out of step. Only the STYLE is set: the scaler owns
+  Font.Height and rewrites it on every resize, and leaves the style alone. *)
+procedure TfrmRadioPanel.SyncVFOWeights;
+
+   procedure ApplyWeight(const aReadout: TPanel; const aBold: boolean);
+   begin
+      if aBold then
+         begin
+         aReadout.Font.Style := [fsBold];
+         end
+      else
+         begin
+         aReadout.Font.Style := [];
+         end;
+   end;
+
+begin
+   ApplyWeight(lblVFOA, VFOReadoutIsBold(lblVFOA.Enabled, lblVFOB.Enabled));
+   ApplyWeight(lblVFOB, VFOReadoutIsBold(lblVFOB.Enabled, lblVFOA.Enabled));
 end;
 
 procedure RadioPanelsRefreshActive;
@@ -490,6 +552,12 @@ begin
      Exit;
    end;
 
+   (* The VFO rows' Enabled is the rig's A/B state; their weight follows it. *)
+   if (aControlId = 102) or (aControlId = 104) then
+      begin
+      f.SyncVFOWeights;
+      end;
+
    Result := True;
 end;
 
@@ -566,6 +634,7 @@ begin
    ApplyContentMinimumSize(GForms[slot]);
 
    GForms[slot].SyncActiveTint;
+   GForms[slot].SyncVFOWeights;
    GForms[slot].UpdateSpectrumButton;
 
    (* AFTER the form exists and is owned, and on EVERY open rather than only on

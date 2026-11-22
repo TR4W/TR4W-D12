@@ -52,6 +52,9 @@ begin
 **The cyan IS the active-radio indicator.** Removing it deletes a state signal an
 operator uses mid-contest; the review recommended adding the thing it had just
 recommended removing, because a screenshot cannot show what a colour MEANS.
+Since 2026-11-22 the active radio's panel also says `Active` in words
+(`uRadioPanelForm.lblActive`, rule in `uRadioPanelState`), so the state no longer
+rests on the colour alone -- but the cyan is still the cue, and still unchanged.
 
 Two other items from that review are rejected here on domain grounds:
 

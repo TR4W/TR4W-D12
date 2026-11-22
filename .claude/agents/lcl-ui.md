@@ -263,6 +263,22 @@ not RGB. Weight is an output but normal everywhere (bold may clip a 49-px
 cell; on the bench queue). The band map's mult-flag gradient is a different
 thing and was left alone.
 
+**The log grid's look is four pure functions in `uLogGrid`** (2026-11-22, the
+UI refresh proposal's "Band strip and log grid"; `uTestLogGridStyle`):
+`LogCellFontStyle` (the callsign column bold; headings stay regular),
+`LogColumnAlignment` (serials, points and frequency right-aligned; every other
+column its `ColumnsArray` LVCFMT_ flag, which is not edited), `LogRowColors`
+(deleted red wins over X-QSO grey; the selection moves only the background)
+and `LogSoftRuleColor` (the vertical rule, derived from the window colour,
+at least `LOG_RULE_MIN_CONTRAST` from it). **Size and paint in ONE font**:
+every value measurement goes through `TLogGrid.FittedWidth` (heading and pad
+in the grid's Font, values through `AssignCellFont`), which DrawCell matches.
+**Data rows never reach the LCL's `DrawCellGrid`** -- the override does not
+call inherited below the header -- so before this a data row had NO grid
+lines whatever SHOW GRIDLINES said. The vertical rule is drawn in DrawCell
+when `goVertLine` is set; horizontal lines on data rows are still absent, on
+purpose (`DrawCellGrid` would draw both, in one `GridLineColor`).
+
 **The needs strips (`uMainGrids`) are written, never polled** (issue #100,
 2026-10-26). Their cells hold the answer in `Caption` and colour; what decides
 WHEN they are rewritten is the engine (`LOGEDIT.ShowNeedsForCall`, asked by
@@ -888,6 +904,45 @@ until the next refresh. The proposal's "Call"/"Exchange" captions, shared
 background and focus outline were NOT built: no cell beside either field is
 free, and an outline inside a field takes text height. Both fields were already
 bold. Their `AccessibleName` is set (reaches nothing on win32 today).
+
+## The radio panel: the active RADIO is a label, the rig's VFO is weight (2026-11-22)
+
+Two facts the panel keeps apart (UI refresh proposal, "Radio display"):
+
+- **The station's active radio** is the cyan tint (unchanged; it IS the state
+  signal, `COLOR_ROLES_DESIGN.md`) plus `lblActive`, a designed `TLabel` in a
+  fourth row. `SyncActiveTint` sets its CAPTION to `SRadioPanelActive` on the
+  active radio's panel and to `''` on the other -- never `Visible`, because
+  `ApplyContentMinimumSize` skips an invisible control and runs only on open,
+  so a label shown by a later SO2R swap could fall outside the minimum.
+  `RadioPanelsRefreshActive` re-runs it on both panels on every swap.
+- **The rig's VFO A/B** is the readouts' `Font.Style`: `SyncVFOWeights`, run
+  from `PanelEnableToForm` on 102/104, asks the two readouts' `Enabled` (which
+  is that state) -- the named VFO keeps bold, the other goes regular, unknown
+  leaves both bold. STYLE, not size: `ApplyLayoutScale` rewrites
+  `Font.Height` on every resize and never the style. Readouts are
+  `taRightJustify` in the `.lfm`.
+
+The rules are `uRadioPanelState` (a leaf, unit tested). A quieter default
+tint was NOT tried: no colour changes without a matched baseline.
+
+## The band strip and score cells are flat (UI refresh proposal, 2026-11-22)
+
+The totals grid's cells, its IDLE band headers and `pnlTotalScore` set
+`TElementPanel.FlatRule` (`uMainGrids.BindMainGrids`): `BevelOuter` stays
+`bvLowered` (so nothing moves and the `.lfm` and generator are unchanged), and
+`BevelColor` becomes a colour derived from the panel's OWN resolved colours,
+`uScoreCellStyle.FlatRuleRGB` (a leaf, unit tested). Any `BevelColor` other
+than `clDefault` makes `TCustomPanel.PaintBevel` draw a plain pen frame instead
+of the widget set's groove. The panel re-derives it in `SetColor` and
+`FontChanged`, so a palette change needs no call. **The active band's header
+is NOT flat**: `HighlightTotalsColumn` sets `FlatRule := False` on it before
+the blue, so the marker is what it was. `0 Pts` is bold through
+`PointsTotalBold` at `LayOutMainWindow`'s element loop. Do not set its weight
+anywhere else, because that loop rewrites every element's style on each layout.
+Abutting cells each draw a frame, so the line between them is 2 px. This
+mechanism was rejected on the Mac in 2026-09 with a fixed colour (`uElementPanel`'s
+bevel note), and the verdict on this one is on `BENCH_QUEUE.md`.
 
 ## Coordinate with
 

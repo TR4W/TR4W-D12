@@ -321,7 +321,6 @@ function TContestRU3AXMemorial.GetFlags: TContestFlags;
 begin
    Result := [cfQSOByMode,
               cfMultByMode,
-              cfErmakSpecification,
               cfCountsDomesticCountries];
 end;
 

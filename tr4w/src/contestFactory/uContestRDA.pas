@@ -351,7 +351,6 @@ begin
    Result := [cfQSOByBand,
               cfQSOByMode,
               cfMultByBand,
-              cfErmakSpecification,
               cfCountsDomesticCountries];
 end;
 

@@ -29,7 +29,6 @@ uses
   uCallSignRoutines,
   uCTYDAT,
   LogDom,
-  (* uErmak, *)   { ERMAK commented out -- see the banner in uErmak.pas }
   uCallsigns,
   LogK1EA,
   utils_text,
@@ -337,12 +336,6 @@ const
   NumberTransmitterCategories = 5;
   NumberCertificateCategories = 2;
   NumberSections              = 81;
-
-  NumberErmakOverlayCategories = 11;
-
-  ErmakOverlayCategory: array [ 0 .. NumberErmakOverlayCategories - 1 ]
-     of string = ( 'YL', 'JR', 'JR-13', 'JR-15', 'JR-18', 'JR-19', 'VETERAN',
-     'SPECIAL', 'OVER-50', 'OVER-100', 'POLAR' );
 
   { OperatorCategory                      : array[0..NumberOperatorCategories - 1] of PChar = (
     'SINGLE-OP',
@@ -3409,15 +3402,6 @@ function tGenerateSummaryPortionOfCabrilloFile( const aCallsign: string;
     tagName: string;
     (* What the contest writes before a tag -- see CabrilloHeaderLinesBeforeTag. *)
     contestLines: string;
-    Operator: integer;
-    ControlID:
-      integer;
-    (* TempErmakField:
-      TErmakFields; *)   { ERMAK commented out }
-    TempInteger:
-      integer;
-      const
-        op = 'OPERATORS: ';
 
         // Fetch a Cabrillo summary tag's text into TempBuffer2, returning its length
         // (0 = empty) so every existing "= 0" / "[0] = #0" check keeps working.
@@ -3484,8 +3468,10 @@ function tGenerateSummaryPortionOfCabrilloFile( const aCallsign: string;
          begin
          (* OPERATORS IS WRITTEN FOR EVERY CONTEST, ERMAK ONES INCLUDED (issue
            326). D7 skipped the tag here because the ERMAK roster loop wrote
-           its own OPERATORS lines; that loop was retired (commented out below)
-           and the skip stayed, so a Russian station's Cabrillo had none. *)
+           its own OPERATORS lines; that loop was retired and the skip stayed,
+           so a Russian station's Cabrillo had none. The loop itself, and the
+           ERMAK switch that remained, were deleted with issue 74
+           (2026-11-22). *)
          GetCabrilloTagText( TempTag );
          (* A BLANK TAG IS LEFT OUT -- EXCEPT A CATEGORY, whose bare line is
            written: no CATEGORY-* field is required, and "none" is a choice
@@ -3540,76 +3526,6 @@ function tGenerateSummaryPortionOfCabrilloFile( const aCallsign: string;
          sWriteFileFromString( tReportFileWrite,
             UTF8Encode( 'GRID-LOCATOR: ' + Settings.My.ResolvedGrid + #13#10 ) );
          end;
-
-      (*
-      if ErmakSpecification then
-         begin
-         for Operator         := 1 to 10 do
-            begin
-            for TempErmakField := Low( TErmakFields ) to High( TErmakFields ) do
-               begin
-               ControlID := integer( TempErmakField ) + ( Operator ) * 100;
-               // Issue #998: builds the INI key into TempBuffer2 (not file output).
-               // OPERATORINFO is C '_OP_INFO_%03u' (zero-pad); Delphi Format uses '%.3u'.
-               utils_text.StrPCopy( TempBuffer2,
-                  sysutils.Format( '_OP_INFO_%.3u', [ ControlID ] ) );
-               // From settings\tr4w.json, same as every other ERMAKREPORT
-               // read since 2026-08-17.  The ini default of '?' is reproduced
-               // explicitly: HeaderTagText has no default parameter, and the
-               // loop below tests TempBuffer1[0] against '1' to decide whether
-               // this operator slot is populated.
-               TempInteger := HeaderTagText( ERMAKSECTION, TempBuffer2,
-                  TempBuffer1, SizeOf( TempBuffer1 ) );
-               if TempInteger = 0 then
-                  begin
-                  utils_text.StrPCopy( TempBuffer1, '?' );
-                  end;
-               TempPchar := @TempBuffer1[ 0 ];
-               if TempErmakField = efOp then
-                  begin
-                  if TempBuffer1[ 0 ] <> '1' then
-                     begin
-                     Break;
-                     end;
-                  sWriteFileFromString( tReportFileWrite, op );
-                  Continue;
-                  end;
-
-               if TempErmakField = efLevel then
-                 if TempBuffer1[ 0 ] in [ '0' .. '7' ] then
-                    begin
-                    TempPchar   := ZVANIYA[ Ord( TempBuffer1[ 0 ] ) - Ord( '0' ) ];
-                    TempInteger := Windows.lstrlenA( TempPchar );
-                    end;
-
-               if TempErmakField = efTrainer then
-                  begin
-                  if TempBuffer1[ 0 ] = '1' then
-                     begin
-                     TempPchar   := '??????';
-                     TempInteger := 6;
-                     end
-                  else
-                     begin
-                     TempPchar   := nil;
-                     TempInteger := 0;
-                     end;
-
-                  end;
-
-               sWriteFile( tReportFileWrite, TempPchar^, TempInteger );
-               if TempErmakField <> High( TErmakFields ) then
-                  begin
-                  sWriteFileFromString( tReportFileWrite, ', ' )
-                  end
-               else
-                  begin
-                  sWriteFileFromString( tReportFileWrite, #13#10 );
-                  end;
-               end;
-            end;
-         end;
-      *)
 
       Result := true;
       end;

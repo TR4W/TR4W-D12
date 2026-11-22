@@ -90,7 +90,6 @@ type
       procedure BuildRows;
       procedure FillCategoryItems(const aTag: CabrilloTags;
                                   const aCombo: TComboBox);
-      procedure ApplyErmakCategories;
       procedure FillOverlayItems;
       procedure FillStationItems;
       procedure LoadValues;
@@ -133,8 +132,8 @@ implementation
 
 uses
    LCLType,               { VK_ESCAPE }
-   VC,                    { ErmakSpecification, ERMAKSECTION, CABRILLOSECTION }
-   PostUnit,              (* ErmakOverlayCategory, OverlayCategory, Contest *)
+   VC,                    (* CABRILLOSECTION *)
+   PostUnit,              (* OverlayCategory, Contest *)
    uCabrilloHeader,       { the header store, settings\tr4w.json }
    uOperatorList,         (* OperatorListFromLog -- the OPERATORS row *)
    uLCLFormHelpers,       { ApplyContentMinimumSize, ShowModalOverWin32Parent }
@@ -166,18 +165,12 @@ const
    FIELD_H    = 24;
    RIGHT_GAP  = 16;
 
-{ The header section this window reads and writes.  ERMAK selects a different
-  one; ErmakSpecification comes from the contest table's ERMAK_BIT. }
+(* The header section this window reads and writes: CABRILLOSECTION for every
+  contest and station, as uCbrSum.CabrilloTagText reads it (issue 74,
+  2026-11-22 -- the ERMAK store a Russian station was switched to is gone). *)
 function HeaderSection: string;
 begin
-   if ErmakSpecification then
-      begin
-      Result := ERMAKSECTION;
-      end
-   else
-      begin
-      Result := CABRILLOSECTION;
-      end;
+   Result := CABRILLOSECTION;
 end;
 
 { 'CATEGORY-ASSISTED' from '_CATEGORY-ASSISTED'.  The stored key keeps the
@@ -270,41 +263,15 @@ begin
       end;
 end;
 
-{ ERMAK's extra category values.  Kept because ErmakSpecification is still set
-  from the contest table and these are ordinary Cabrillo header values -- the
-  part of ERMAK that is commented out is its own report window, not this.  See
-  the banner in uErmak.pas. }
-procedure TfrmCabrilloSummary.ApplyErmakCategories;
-begin
-   if not ErmakSpecification then
-      begin
-      Exit;
-      end;
-
-   if FRow[ctCategoryMode] is TComboBox then
-      begin
-      TComboBox(FRow[ctCategoryMode]).Items.Add('DIGI');
-      end;
-   if FRow[ctCategoryOperator] is TComboBox then
-      begin
-      TComboBox(FRow[ctCategoryOperator]).Items.Add('MULTI-OP-2');
-      end;
-   if FRow[ctCategoryBand] is TComboBox then
-      begin
-      TComboBox(FRow[ctCategoryBand]).Items.Add('10M-15M-20M');
-      TComboBox(FRow[ctCategoryBand]).Items.Add('80M-40M-160M');
-      end;
-   (* ERMAK's overlay list is FillOverlayItems', which runs at every opening. *)
-end;
-
 (* THE OVERLAY ROW, REFILLED AT EVERY OPENING -- issue 122. The window lives
   for the session and BuildRows runs once, but the overlays a sponsor names
   belong to the contest open NOW (ContestIdentity(Contest).
   CabrilloOverlayCategories), so they are asked here, before LoadValues
   restores the saved choice -- a saved POTA must be in the list to be
-  selected again. The base list is ERMAK's where that specification is in
-  force (it REPLACED the standard list -- CB_RESETCONTENT stood here), else
-  the standard one; uCbrSum.OverlayValuesWith composes them, blank last. *)
+  selected again. The base list is the standard one; uCbrSum.OverlayValuesWith
+  adds the sponsor's, blank last. (ERMAK's replacement overlay list and its
+  extra mode, operator and band values went with issue 74, 2026-11-22: a
+  sponsor that needs one states it in its class.) *)
 procedure TfrmCabrilloSummary.FillOverlayItems;
 var
    values : TArray<string>;
@@ -317,16 +284,8 @@ begin
       end;
    cbo := TComboBox(FRow[ctCategoryOverlay]);
 
-   if ErmakSpecification then
-      begin
-      values := OverlayValuesWith(ErmakOverlayCategory,
-                                  ContestIdentity(Contest).CabrilloOverlayCategories);
-      end
-   else
-      begin
-      values := OverlayValuesWith(OverlayCategory,
-                                  ContestIdentity(Contest).CabrilloOverlayCategories);
-      end;
+   values := OverlayValuesWith(OverlayCategory,
+                               ContestIdentity(Contest).CabrilloOverlayCategories);
 
    cbo.Items.BeginUpdate;
    try
@@ -771,7 +730,6 @@ begin
    if not FBuilt then
       begin
       BuildRows;
-      ApplyErmakCategories;
       FBuilt := True;
       end;
 

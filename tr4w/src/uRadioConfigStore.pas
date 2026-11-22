@@ -963,9 +963,13 @@ type
 const
    // THE ONE PLACE THAT SAYS WHICH EXPORT HEADERS EXIST.  Save, load and the
    // one-time ini seed all iterate this, so adding a header section is one row
-   // here and nothing else.  The section spellings match CABRILLOSECTION and
-   // ERMAKSECTION in VC.pas -- repeated as literals rather than pulling VC into
-   // the store, which has no other reason to know about the program's globals.
+   // here and nothing else.  'REPORT' matches CABRILLOSECTION in VC.pas --
+   // repeated as a literal rather than pulling VC into the store, which has no
+   // other reason to know about the program's globals.  'ERMAKREPORT' has had
+   // no reader in the program since issue 74 (2026-11-22, ERMAKSECTION
+   // deleted); the row is kept so a settings file that carries ermakHeader
+   // still loads and saves it unchanged.  Dropping it is a settings-format
+   // decision, not part of that clean-up.
    HEADER_SECTIONS: array[0..1] of TExportHeaderSection = (
       (Section: 'REPORT';      JSONKey: 'cabrilloHeader'),
       (Section: 'ERMAKREPORT'; JSONKey: 'ermakHeader'));

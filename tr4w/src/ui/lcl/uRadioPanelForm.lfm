@@ -1,11 +1,11 @@
 object frmRadioPanel: TfrmRadioPanel
   Left = 0
-  Height = 100
+  Height = 122
   Top = 0
   Width = 195
   BorderStyle = bsSizeToolWin
   Caption = 'Radio'
-  ClientHeight = 100
+  ClientHeight = 122
   ClientWidth = 195
   KeyPreview = True
   LCLVersion = '4.8.0.0'
@@ -36,6 +36,7 @@ object frmRadioPanel: TfrmRadioPanel
     Height = 23
     Top = 5
     Width = 100
+    Alignment = taRightJustify
     BevelOuter = bvLowered
     Font.Height = -16
     Font.Style = [fsBold]
@@ -47,6 +48,7 @@ object frmRadioPanel: TfrmRadioPanel
     Height = 23
     Top = 30
     Width = 100
+    Alignment = taRightJustify
     BevelOuter = bvLowered
     Font.Height = -16
     Font.Style = [fsBold]
@@ -124,5 +126,17 @@ object frmRadioPanel: TfrmRadioPanel
     Font.Color = clRed
     ParentFont = False
     TabOrder = 11
+  end
+  object lblActive: TLabel
+    Left = 5
+    Height = 18
+    Top = 101
+    Width = 185
+    Alignment = taCenter
+    AutoSize = False
+    Caption = '(assigned at run time)'
+    Font.Style = [fsBold]
+    Layout = tlCenter
+    ParentFont = False
   end
 end

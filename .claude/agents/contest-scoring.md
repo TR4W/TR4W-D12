@@ -1172,6 +1172,14 @@ SAME SCORE"): `ClaimedScore` is read ONCE and handed to
 `tGenerateSummaryPortionOfCabrilloFile`, which no longer reads it itself.
 There is no per-activation score anywhere; do not add one.
 
+**ERMAK IS DELETED, FLAG AND ALL (issue 74, closed as not planned, 2026-11-22).**
+`cfErmakSpecification` is out of `TContestFlags` and every class's `GetFlags`; the
+`ErmakSpecification` global, the ERMAK menu caption and the `ERMAKREPORT` header
+store switch (`uCbrSum`, the summary window) went with it, so every station writes
+the one `CABRILLOSECTION` header (file-formats.md). No matrix or corpus byte moved:
+the switch was set only in `CreateMainWindow`. If a Russian sponsor needs a
+category or overlay value, its class states it (`CabrilloOverlayCategories`).
+
 ## Coordinate with
 
 `contest-factory` (behaviour is migrating there — check which side you are on) ·

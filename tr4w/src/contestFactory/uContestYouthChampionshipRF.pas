@@ -254,7 +254,7 @@ end;
 
 function TContestYouthChampionshipRF.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfErmakSpecification, cfCountsDomesticCountries];
+   Result := [cfQSOByBand, cfCountsDomesticCountries];
 end;
 
 function TContestYouthChampionshipRF.GetIsUSQSOParty: boolean;

@@ -158,6 +158,17 @@ type
       function  HeaderText(const aColumn: LogColumnsType): RawByteString;
       (* LogCellPad for the canvas's current font. The caller has assigned it. *)
       function  CellPad: integer;
+      (* The canvas in the font a VALUE of aColumn is painted in: the grid's
+        Font, with LogCellFontStyle's weight. Painting and every measurement
+        of a value go through it, so a column is never sized in one font and
+        drawn in another. Headers stay in the grid's own Font. *)
+      procedure AssignCellFont(const aColumn: LogColumnsType);
+      (* THE WIDEST OF A COLUMN'S HEADING AND ITS CACHED VALUES, PLUS THE PAD
+        EITHER SIDE -- the one measurement fit-and-fill, MinimumWidth and the
+        divider double-click share. The heading and the pad are in the grid's
+        Font, the values in the cell font. Leaves the canvas in the grid's
+        Font. *)
+      function  FittedWidth(const aColumn: LogColumnsType): integer;
    protected
       (* A divider was dragged or double-clicked: the width is this grid's,
         and is marked for the settings file -- see the body. *)
@@ -276,6 +287,48 @@ type
   measured for. *)
 function LogCellPad(const aTextHeight: integer): integer;
 
+(* HOW A LOG ROW LOOKS -- the UI refresh proposal's "Band strip and log grid"
+  (docs/TR4W_UI_REFRESH_PROPOSAL.md, 2026-11-22). Pure, so the decisions are
+  unit tested (uTestLogGridStyle); DrawCell resolves every colour through
+  ColorToRGB before it asks, because a system colour is an index, not RGB.
+  Colours are $00BBGGRR longints, as uRemMultWorkState's are. *)
+
+const
+   (* A soft rule must still be SEEN: never closer to its window than this. *)
+   LOG_RULE_MIN_CONTRAST = 1.3;
+
+(* THE VERTICAL RULE BETWEEN COLUMNS, DERIVED FROM THE WINDOW'S OWN COLOUR.
+
+  Not a literal and not the LCL's clSilver: the window colour is the
+  operator's (TR4WEditableLogApplyColors), so a fixed grey would be a heavy
+  line on white and invisible on a dark window. The window colour moved a
+  fraction of the way toward the text that reads on it (black on a light
+  window, white on a dark one), and further if that is not yet
+  LOG_RULE_MIN_CONTRAST away from the window. *)
+function LogSoftRuleColor(const aWindowRGB: longint): longint;
+
+(* THE WEIGHT OF A VALUE: bold for the callsign column, the grid's own style
+  for every other. A font already bold comes back unchanged -- there is no
+  heavier weight in a TFont. *)
+function LogCellFontStyle(const aColumn: LogColumnsType;
+                          const aBase: TFontStyles): TFontStyles;
+
+(* WHERE A COLUMN'S TEXT SITS. The numbers an operator compares down the log
+  -- the serials sent and received, the QSO points and the frequency -- are
+  right-aligned, so their digits line up whatever their length; every other
+  column keeps the LVCFMT_ flag ColumnsArray declares. Heading and value are
+  aligned alike. ColumnsArray itself is not changed. *)
+function LogColumnAlignment(const aColumn: LogColumnsType;
+                            const aDeclaredAlign: byte): TAlignment;
+
+(* ONE ROW'S BACKGROUND AND TEXT. A deleted QSO is red and an X-QSO grey,
+  whether or not the row is selected; the selection moves only the
+  background (the grid's SelectedColor), so those two meanings survive it.
+  Deleted wins over X-QSO. *)
+procedure LogRowColors(const aDeleted, aXQSO, aSelected: boolean;
+                       const aWindowRGB, aTextRGB, aSelectedRGB: longint;
+                       out aBackRGB, aForeRGB: longint);
+
 implementation
 
 uses
@@ -286,6 +339,7 @@ uses
    utils_text,       (* LclText -- a header's text, converted for the LCL once *)
    PostUnit,         (* Contest -- the open contest's handle *)
    uMainLayout,      (* LogRowHeight -- the row height the layout assumes *)
+   uRemMultWorkState, (* ContrastRatio, ReadableTextOn -- LogSoftRuleColor *)
    uContestRegistry; (* ContestIdentity -- the zone column's heading *)
 
 const
@@ -777,23 +831,8 @@ begin
          Continue;
          end;
 
-      (* The heading is a floor: a column narrower than its own name is
-        unreadable however short its values are. *)
-      w := HeaderTextWidth(c);
-
-      for k := Low(FCache) to High(FCache) do
-         begin
-         if not FCache[k].Row.Valid then
-            begin
-            Continue;
-            end;
-         if Canvas.TextWidth(FCache[k].Row.Text[c]) > w then
-            begin
-            w := Canvas.TextWidth(FCache[k].Row.Text[c]);
-            end;
-         end;
-
-      Inc(w, CellPad * 2);
+      (* Measured in the font the values are painted in -- see FittedWidth. *)
+      w := FittedWidth(c);
       if w < MIN_COLUMN_WIDTH then
          begin
          w := MIN_COLUMN_WIDTH;
@@ -930,7 +969,7 @@ end;
 
 function TLogGrid.MinimumWidth: integer;
 var
-   i, k:   integer;
+   i:      integer;
    c:      LogColumnsType;
    w:      integer;
 begin
@@ -954,16 +993,7 @@ begin
          end
       else
          begin
-         w := HeaderTextWidth(c);
-         for k := Low(FCache) to High(FCache) do
-            begin
-            if FCache[k].Row.Valid and
-               (Canvas.TextWidth(FCache[k].Row.Text[c]) > w) then
-               begin
-               w := Canvas.TextWidth(FCache[k].Row.Text[c]);
-               end;
-            end;
-         Inc(w, CellPad * 2);
+         w := FittedWidth(c);
          end;
 
       if w < MIN_COLUMN_WIDTH then
@@ -1122,6 +1152,161 @@ begin
    Result := LogCellPad(Canvas.TextHeight('Ag'));
 end;
 
+const
+   (* How far a soft rule first moves from its window toward the readable
+     text, and how far again while it is still below the floor. *)
+   LOG_RULE_BLEND = 0.15;
+   LOG_RULE_BLEND_STEP = 0.05;
+
+function BlendChannel(const aFrom, aTo: integer; const aFraction: double): integer;
+begin
+   Result := Round(aFrom + (aTo - aFrom) * aFraction);
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+   if Result > 255 then
+      begin
+      Result := 255;
+      end;
+end;
+
+(* aFromRGB moved aFraction of the way to aToRGB, channel by channel. *)
+function BlendRGB(const aFromRGB, aToRGB: longint; const aFraction: double): longint;
+var
+   r, g, b: integer;
+begin
+   r := BlendChannel(aFromRGB and $FF, aToRGB and $FF, aFraction);
+   g := BlendChannel((aFromRGB shr 8) and $FF, (aToRGB shr 8) and $FF, aFraction);
+   b := BlendChannel((aFromRGB shr 16) and $FF, (aToRGB shr 16) and $FF, aFraction);
+   Result := r or (g shl 8) or (b shl 16);
+end;
+
+function LogSoftRuleColor(const aWindowRGB: longint): longint;
+var
+   window:   longint;
+   toward:   longint;
+   fraction: double;
+begin
+   window   := aWindowRGB and $FFFFFF;
+   (* Black or white, whichever reads on the window -- at least 4.5:1 from
+     any colour, so the loop below always reaches the floor and ends. *)
+   toward   := ReadableTextOn(window);
+   fraction := LOG_RULE_BLEND;
+   Result   := BlendRGB(window, toward, fraction);
+
+   while (ContrastRatio(Result, window) < LOG_RULE_MIN_CONTRAST) and
+         (fraction < 1.0) do
+      begin
+      fraction := fraction + LOG_RULE_BLEND_STEP;
+      if fraction > 1.0 then
+         begin
+         fraction := 1.0;
+         end;
+      Result := BlendRGB(window, toward, fraction);
+      end;
+end;
+
+function LogCellFontStyle(const aColumn: LogColumnsType;
+                          const aBase: TFontStyles): TFontStyles;
+begin
+   Result := aBase;
+   if aColumn = logColCallsign then
+      begin
+      Include(Result, fsBold);
+      end;
+end;
+
+function LogColumnAlignment(const aColumn: LogColumnsType;
+                            const aDeclaredAlign: byte): TAlignment;
+begin
+   if aColumn in [logColNumberSent, logColNumberReceive, logColPoints, logColFreq] then
+      begin
+      Result := taRightJustify;
+      Exit;
+      end;
+
+   (* ColumnsArray's Win32 LVCFMT_ numbers, read as the numbers they are --
+     the CFG files and the corpus references carry them. *)
+   case aDeclaredAlign of
+      LVCFMT_RIGHT:
+         begin
+         Result := taRightJustify;
+         end;
+      LVCFMT_CENTER:
+         begin
+         Result := taCenter;
+         end;
+      else
+         begin
+         Result := taLeftJustify;
+         end;
+      end;
+end;
+
+procedure LogRowColors(const aDeleted, aXQSO, aSelected: boolean;
+                       const aWindowRGB, aTextRGB, aSelectedRGB: longint;
+                       out aBackRGB, aForeRGB: longint);
+begin
+   if aSelected then
+      begin
+      aBackRGB := aSelectedRGB;
+      end
+   else
+      begin
+      aBackRGB := aWindowRGB;
+      end;
+
+   if aDeleted then
+      begin
+      aForeRGB := longint(clRed);
+      end
+   else if aXQSO then
+      begin
+      aForeRGB := longint(clGray);
+      end
+   else
+      begin
+      aForeRGB := aTextRGB;
+      end;
+end;
+
+procedure TLogGrid.AssignCellFont(const aColumn: LogColumnsType);
+begin
+   Canvas.Font.Assign(Font);
+   Canvas.Font.Style := LogCellFontStyle(aColumn, Font.Style);
+end;
+
+function TLogGrid.FittedWidth(const aColumn: LogColumnsType): integer;
+var
+   k:   integer;
+   w:   integer;
+   pad: integer;
+begin
+   Canvas.Font.Assign(Font);
+   (* The heading is a floor: a column narrower than its own name is
+     unreadable however short its values are. *)
+   Result := HeaderTextWidth(aColumn);
+   pad    := CellPad;
+
+   AssignCellFont(aColumn);
+   for k := Low(FCache) to High(FCache) do
+      begin
+      if not FCache[k].Row.Valid then
+         begin
+         Continue;
+         end;
+      w := Canvas.TextWidth(FCache[k].Row.Text[aColumn]);
+      if w > Result then
+         begin
+         Result := w;
+         end;
+      end;
+
+   Canvas.Font.Assign(Font);
+   Inc(Result, pad * 2);
+end;
+
 (* A COLUMN'S HEADING, AS THE OPERATOR READS IT, for the LCL. ColumnsArray's
   text, except over the zone column, whose heading is the open contest's
   (TContestBase.ZoneColumnHeading, 2026-11-11): the European HF Championship
@@ -1249,9 +1434,7 @@ end;
   divider takes, so the operator's choice persists either way. *)
 procedure TLogGrid.AutoAdjustColumn(aCol: integer);
 var
-   i:     integer;
-   c:     LogColumnsType;
-   w:     integer;
+   c:      LogColumnsType;
    widest: integer;
 begin
    if (aCol < 0) or (aCol > High(FColumnOf)) then
@@ -1265,25 +1448,10 @@ begin
       end;
 
    c := FColumnOf[aCol];
-   Canvas.Font.Assign(Font);
 
-   widest := HeaderTextWidth(c);
-
-   for i := Low(FCache) to High(FCache) do
-      begin
-      if not FCache[i].Row.Valid then
-         begin
-         Continue;
-         end;
-
-      w := Canvas.TextWidth(FCache[i].Row.Text[c]);
-      if w > widest then
-         begin
-         widest := w;
-         end;
-      end;
-
-   widest := widest + CellPad * 2 + DIVIDER_DBLCLICK_PAD;
+   (* The heading, the cached values in their painted font, and the pad --
+     the same measurement fit-and-fill makes. *)
+   widest := FittedWidth(c) + DIVIDER_DBLCLICK_PAD;
    if widest < MIN_COLUMN_WIDTH then
       begin
       widest := MIN_COLUMN_WIDTH;
@@ -1533,7 +1701,17 @@ end;
   appeared as `14070NY4I` with no way to tell there were two values.
 
   A DELETED QSO IS RED AND AN X-QSO IS GREY. Those two rules were in a
-  custom-draw handler on each of two list views; they are one rule now. *)
+  custom-draw handler on each of two list views; they are one rule now
+  (LogRowColors).
+
+  THE DATA ROWS NEVER REACH THE LCL's DrawCellGrid. It is called only from
+  the base DrawCell, which this override does not call below the header, and
+  the fill covers the whole cell -- so until 2026-11-22 a data row had NO grid
+  lines at all, whatever goVertLine/goHorzLine (SHOW GRIDLINES) said. The
+  vertical rule is drawn here now, in LogSoftRuleColor, when goVertLine is
+  set. DrawCellGrid is still not called: it would draw the horizontal line as
+  well, and in GridLineColor, one colour for both directions. Horizontal
+  lines on data rows stay absent, as they were. *)
 procedure TLogGrid.DrawCell(aCol, aRow: integer; aRect: TRect;
                             aState: TGridDrawState);
 var
@@ -1541,6 +1719,10 @@ var
    s:     string;
    c:     LogColumnsType;
    style: TTextStyle;
+   pad:   integer;
+   cell:  TRect;
+   back:  longint;
+   fore:  longint;
 begin
    if (aCol < 0) or (aCol > High(FColumnOf)) then
       begin
@@ -1549,11 +1731,12 @@ begin
 
    c := FColumnOf[aCol];
 
+   (* The pad in the grid's own Font, as FittedWidth measures it, so the text
+     never clips against the width it was sized for. *)
    Canvas.Font.Assign(Font);
+   pad  := CellPad;
+   cell := aRect;
 
-   (* ALIGNMENT COMES FROM ColumnsArray as the Win32 LVCFMT_ constants it has
-     always carried -- read as the numbers they are rather than renamed and
-     migrated, because the CFG files and the corpus references carry them. *)
    FillChar(style, SizeOf(style), 0);
    style.SingleLine  := True;
    style.Layout      := tlCenter;
@@ -1561,21 +1744,8 @@ begin
    style.Wordbreak   := False;
    style.Clipping    := True;
    style.Opaque      := False;
-
-   case ColumnsArray[c].Align of
-      LVCFMT_RIGHT:
-         begin
-         style.Alignment := taRightJustify;
-         end;
-      LVCFMT_CENTER:
-         begin
-         style.Alignment := taCenter;
-         end;
-      else
-         begin
-         style.Alignment := taLeftJustify;
-         end;
-      end;
+   (* The heading sits over its values: both ask LogColumnAlignment. *)
+   style.Alignment   := LogColumnAlignment(c, ColumnsArray[c].Align);
 
    if aRow < FixedRows then
       begin
@@ -1594,6 +1764,9 @@ begin
       Exit;
       end;
 
+   (* The value's font: the callsign in its heavier weight (LogCellFontStyle),
+     the font FittedWidth measured it in. *)
+   AssignCellFont(c);
    Canvas.Brush.Color := Color;
    Canvas.Font.Color  := Font.Color;
 
@@ -1605,15 +1778,6 @@ begin
       end;
 
    s := e^.Row.Text[c];
-
-   if e^.Row.Deleted then
-      begin
-      Canvas.Font.Color := clRed;
-      end
-   else if e^.Row.XQSO then
-      begin
-      Canvas.Font.Color := clGray;
-      end;
 
    (* THE SELECTED ROW. clHighlight/clHighlightText rather than a colour from
      tr4wColorsArray, because that palette names COLOURS and has no role for a
@@ -1640,10 +1804,9 @@ begin
 
      THE FONT COLOUR IS LEFT ALONE when unfocused, deliberately: red means
      deleted and grey means X-QSO, and reversing them out would delete two
-     meanings to signal one. DrawMatchIn's note makes the same argument. *)
-   if gdSelected in aState then
-      begin
-      (* THE GRID'S OWN SelectedColor, WHICHEVER WAY THE FOCUS HAPPENS TO BE.
+     meanings to signal one. DrawMatchIn's note makes the same argument.
+
+     THE GRID'S OWN SelectedColor, WHICHEVER WAY THE FOCUS HAPPENS TO BE.
 
         THIS LINE WAS clBtnFace WHEN UNFOCUSED, AND clBtnFace IS WINDOW CHROME.
         On Windows it is F0F0F0, near enough to white that a muted selection
@@ -1666,20 +1829,41 @@ begin
         once in the constructor instead of being decided per paint, and
         FadeUnfocusedSelection is off so the LCL never swaps in clBtnFace on
         its own account -- which its PrepareCanvas does, with a comment naming
-        the same two colours this went wrong on. *)
-      Canvas.Brush.Color := SelectedColor;
-      end;
+        the same two colours this went wrong on.
+
+        THE DECISION IS LogRowColors (2026-11-22), pure and unit tested; every
+        colour is resolved to RGB first, because the operator's may be a
+        system colour. *)
+   LogRowColors(e^.Row.Deleted, e^.Row.XQSO, gdSelected in aState,
+                longint(ColorToRGB(Color)), longint(ColorToRGB(Font.Color)),
+                longint(ColorToRGB(SelectedColor)), back, fore);
+   Canvas.Brush.Color := TColor(back);
+   Canvas.Font.Color  := TColor(fore);
 
    Canvas.FillRect(aRect);
 
    Canvas.Brush.Style := bsClear;
-   Inc(aRect.Left, CellPad);
-   Dec(aRect.Right, CellPad);
+   Inc(aRect.Left, pad);
+   Dec(aRect.Right, pad);
    Canvas.TextRect(aRect, aRect.Left, aRect.Top, s, style);
 
-   if (c = FMatchColumn) and (ColumnsArray[c].Align = LVCFMT_LEFT) then
+   if (c = FMatchColumn) and (style.Alignment = taLeftJustify) then
       begin
       DrawMatchIn(aRect, s, aRect.Left);
+      end;
+
+   (* THE SOFT VERTICAL RULE, on the cell's last pixel column -- where the
+     LCL's DrawCellGrid puts it, and inside the cell's width, which already
+     includes its grid line (see SizeColumnsToFit). Derived from the window
+     colour on every row, selected or not, so it reads as one rule down the
+     log. *)
+   if goVertLine in Options then
+      begin
+      Canvas.Pen.Style := psSolid;
+      Canvas.Pen.Width := 1;
+      Canvas.Pen.Color := TColor(LogSoftRuleColor(longint(ColorToRGB(Color))));
+      Canvas.MoveTo(cell.Right - 1, cell.Top);
+      Canvas.LineTo(cell.Right - 1, cell.Bottom);
       end;
 
    Canvas.Brush.Style := bsSolid;

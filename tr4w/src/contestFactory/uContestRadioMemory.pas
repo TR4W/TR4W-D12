@@ -223,7 +223,7 @@ end;
 
 function TContestRadioMemory.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfErmakSpecification];
+   Result := [cfQSOByBand, cfQSOByMode];
 end;
 
 function TContestRadioMemory.GetIsUSQSOParty: boolean;

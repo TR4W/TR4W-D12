@@ -232,7 +232,7 @@ end;
 
 function TContestR9WUW9WKMemorial.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfErmakSpecification];
+   Result := [cfQSOByBand];
 end;
 
 function TContestR9WUW9WKMemorial.GetIsUSQSOParty: boolean;

@@ -136,7 +136,7 @@ function CategoryValuesFor(const aTag: CabrilloTags): TArray<string>;
 (* THE CATEGORY-OVERLAY DROP-DOWN FOR ONE CONTEST -- issue 122 (NY4I,
   2026-11-18: a sponsor's overlays must be offered "for this contest", and
   only once the contest is known). aBase is the standard list (PostUnit's
-  OverlayCategory, or ERMAK's), in its old positions; then each of
+  OverlayCategory), in its old positions; then each of
   aSponsor -- the contest's CabrilloOverlayCategories -- that aBase does not
   already hold (compared without case; a blank is skipped); then the one
   blank "no overlay" choice, LAST, as every category list ends.
@@ -460,27 +460,18 @@ begin
    FocusCabrilloSummary;
 end;
 
-(* WHICH HEADER STORE IS IN USE -- the ERMAK one under the ERMAK
-  specification, else the Cabrillo one. *)
-function HeaderSectionInUse: string;
-begin
-   if ErmakSpecification then
-      begin
-      Result := ERMAKSECTION;
-      end
-   else
-      begin
-      Result := CABRILLOSECTION;
-      end;
-end;
-
+(* THE HEADER STORE IS CABRILLOSECTION FOR EVERY CONTEST AND EVERY STATION
+  (issue 74, 2026-11-22). A Russian station in a contest flagged for the
+  retired ERMAK specification read and wrote a separate ERMAKREPORT store
+  here, so its Cabrillo header lost every value entered for any other
+  contest and gained nothing ERMAK-specific. *)
 function StationCategoryInForce: string;
 begin
    Result := Trim(Settings.Contest.CategoryStation);
    if (Result = '') and
       (not Settings.CommandIsStated('CATEGORY-STATION')) then
       begin
-      Result := Trim(HeaderValue(HeaderSectionInUse,
+      Result := Trim(HeaderValue(CABRILLOSECTION,
                                  CabrilloTagsArray[ctCategoryStation].ctrTag));
       end;
 end;
@@ -566,7 +557,7 @@ begin
          end;
    end;
 
-   Result := HeaderValue(HeaderSectionInUse, CabrilloTagsArray[aTag].ctrTag);
+   Result := HeaderValue(CABRILLOSECTION, CabrilloTagsArray[aTag].ctrTag);
 end;
 
 function CabrilloTagItemIndex(const aTag: CabrilloTags): integer;

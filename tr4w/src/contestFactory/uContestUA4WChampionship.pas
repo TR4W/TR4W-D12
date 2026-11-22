@@ -329,7 +329,7 @@ end;
 
 function TContestUA4WChampionship.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfErmakSpecification];
+   Result := [cfQSOByBand];
 end;
 
 function TContestUA4WChampionship.GetIsUSQSOParty: boolean;

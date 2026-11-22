@@ -12287,3 +12287,13 @@ msgstr ""
 #, fuzzy
 msgid "Exchange"
 msgstr ""
+
+#: uappstrings.sradiopanelactive
+#, fuzzy
+msgid "Active"
+msgstr ""
+
+#: uappstrings.sradiopanelactivename
+#, fuzzy
+msgid "Active radio"
+msgstr ""

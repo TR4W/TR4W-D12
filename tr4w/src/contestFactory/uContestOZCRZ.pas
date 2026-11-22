@@ -277,7 +277,7 @@ end;
 
 function TContestOZCRZ.GetFlags: TContestFlags;
 begin
-   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand, cfErmakSpecification];
+   Result := [cfQSOByBand, cfQSOByMode, cfMultByBand];
 end;
 
 function TContestOZCRZ.GetIsUSQSOParty: boolean;

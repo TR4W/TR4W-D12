@@ -99,9 +99,15 @@ type
       (* Set when a caption could not be shrunk far enough to fit; cleared on
         resize so a wider window is measured afresh. See FitCaption. *)
       FOverflowReported: boolean;
+      (* See FlatRule. *)
+      FFlatRule: boolean;
       procedure FitCaption;
       procedure ApplyBevel(const aRequested: TPanelBevel);
+      procedure SetFlatRule(const aValue: boolean);
+      procedure UpdateFlatRule;
    protected
+      (* A font colour change re-derives the flat rule. See FlatRule. *)
+      procedure FontChanged(Sender: TObject); override;
       procedure RealSetText(const aValue: TCaption); override;
       (* Re-measure the caption when the panel changes size. *)
       procedure Resize; override;
@@ -146,6 +152,26 @@ type
         and fits the caption from it. With the same aHeight the font comes out
         as it was, so a layout run twice changes nothing. *)
       procedure SetFittedFontHeight(const aHeight: integer);
+      (* A FLAT CELL WITH A THIN RULE, INSTEAD OF THE RECESSED EDGE -- the UI
+        refresh proposal's band strip and score cells (2026-11-22).
+
+        True: the bevel is drawn as a 1 px rule in a colour DERIVED from this
+        panel's own background and text (uScoreCellStyle.FlatRuleRGB), through
+        the LCL's TCustomPanel.BevelColor -- set to anything but clDefault,
+        PaintBevel draws a plain pen frame instead of asking the widget set for
+        its two-tone groove. BevelOuter and BevelWidth are untouched, so the
+        frame is the same 1 px and the caption's room is what it was: nothing
+        moves.
+
+        False (the default): BevelColor is clDefault and the widget set draws
+        the bevel as it always has.
+
+        THE PANEL KEEPS THE RULE ITSELF: every colour change -- Color through
+        SetColor, the text colour through FontChanged -- re-derives it, so a
+        palette changed in Preferences needs no second call anywhere. A panel
+        whose BevelOuter is bvNone (MAIN WINDOW NO BORDER) draws no frame at
+        all, and this changes nothing for it. *)
+      property FlatRule: boolean read FFlatRule write SetFlatRule;
    end;
 
 type
@@ -177,7 +203,8 @@ implementation
 
 uses
    SysUtils,
-   InterfaceBase;   { WidgetSet -- see the finalization }
+   InterfaceBase,     (* WidgetSet -- see the finalization *)
+   uScoreCellStyle;   (* FlatRuleRGB -- a leaf, so lintlfm still links this *)
 
 const
    (* Below this the text is not worth reading, and a caption that still does
@@ -322,7 +349,19 @@ end;
 
   WHICH LEAVES THIS ROUTINE WITH NOTHING PLATFORM-SPECIFIC TO DO, and that is
   the right outcome: the bevel is the bevel on every platform now, and how a
-  bevel is DRAWN is the widget set's business. *)
+  bevel is DRAWN is the widget set's business.
+
+  2026-11-22: A RULE CAME BACK, FOR SOME CELLS, AND THE BRACKET ABOVE STILL
+  APPLIES TO IT. The UI refresh proposal flattens the totals grid's cells, its
+  idle band headers and the points total (FlatRule, below) with a 1 px
+  BevelColor rule -- the mechanism rejected above. What differs is the colour:
+  not a fixed $929292 but the cell's own background blended a fifth of the
+  way toward its own text (uScoreCellStyle), so it sits on the surface it is
+  drawn on, light or dark. Two cells that abut each draw their own frame, so
+  the line between them is 2 px of that colour and the outer edge 1 px. Every
+  other element keeps the widget set's groove. NY4I's verdict on the Mac and
+  at 150% is on docs/BENCH_QUEUE.md; if it is "no lines" or "too heavy" again,
+  FlatRule False on those panels puts the groove back. *)
 procedure TElementPanel.ApplyBevel(const aRequested: TPanelBevel);
 begin
    if BevelOuter <> aRequested then
@@ -387,6 +426,47 @@ begin
    {$ENDIF}
 
    inherited SetColor(Value);
+   UpdateFlatRule;
+end;
+
+procedure TElementPanel.FontChanged(Sender: TObject);
+begin
+   inherited FontChanged(Sender);
+   UpdateFlatRule;
+end;
+
+procedure TElementPanel.SetFlatRule(const aValue: boolean);
+begin
+   if FFlatRule <> aValue then
+      begin
+      FFlatRule := aValue;
+      if FFlatRule then
+         begin
+         UpdateFlatRule;
+         end
+      else
+         begin
+         BevelColor := clDefault;
+         end;
+      end;
+end;
+
+(* FROM THE PANEL'S RESOLVED Color, NOT FROM THE PALETTE ENTRY IT WAS GIVEN:
+  on macOS SetColor has already turned the neutral clBtnFace into clForm, and
+  the rule has to sit on the surface actually drawn. ColorToRGB resolves a
+  system colour; SetBevelColor ignores an unchanged value, so a colour change
+  that leaves the rule as it was repaints nothing extra.
+
+  NOTHING AT ALL WHILE THE RULE IS OFF, which is every panel until uMainGrids
+  says otherwise: SetColor and FontChanged run during construction too, before
+  TCustomPanel.Create has given BevelColor its clDefault, and a panel that is
+  not flat has no business touching it. SetFlatRule(False) puts clDefault back. *)
+procedure TElementPanel.UpdateFlatRule;
+begin
+   if FFlatRule then
+      begin
+      BevelColor := TColor(FlatRuleRGB(ColorToRGB(Color), ColorToRGB(Font.Color)));
+      end;
 end;
 
 procedure TElementPanel.SetSunken(const aSunken: boolean);
