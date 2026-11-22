@@ -60,11 +60,16 @@ framing is not involved.
 
 Same 1,855 frames, decode plus checksum recompute, microseconds per record:
 
-| format     | Windows PC, Python 3.12 | Raspberry Pi 400, Python 3.11 (aarch64) |
-| ---------- | ----------------------: | --------------------------------------: |
-| JSON full  |                    24.5 |                                   122.1 |
-| JSON omit  |                    19.9 |                                    96.6 |
-| TLV        |                    16.4 |                                    72.0 |
+| format     | Windows PC, Python 3.12 | Raspberry Pi 400, Python 3.11 | Raspberry Pi 5 (bench5), Python 3.13 |
+| ---------- | ----------------------: | ----------------------------: | -----------------------------------: |
+| JSON full  |                    24.5 |                         122.1 |                                 52.3 |
+| JSON omit  |                    19.9 |                          96.6 |                                 39.4 |
+| TLV        |                    16.4 |                          72.0 |                                 31.1 |
+
+The Pi 5 is about 2x the Pi 400 and about 2x slower than the PC; every frame
+verified there too (0 failures, 152,016 of 152,016 dropped fields detected).
+bench5's ssh port (22) was open and answered, so no firewall rule is in the way
+of the step-1 copy; the step-2 listener port has not been tested.
 
 - **The checksum agrees across languages and machines**: every frame verified
   (0 failures) in all three formats on both, and 152,016 of 152,016 dropped
