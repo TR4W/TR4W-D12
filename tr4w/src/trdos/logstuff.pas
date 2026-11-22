@@ -862,6 +862,10 @@ uses uNet,
   uBackupCopyService,
   (* PeriodicBackupDue -- when the periodic backup is due (2026-10-31). *)
   uLogBackup,
+  (* TLogBackupResult, and the worker that runs the periodic backup off this
+    thread (issue 350). *)
+  uLogBackupWorker,
+  uPeriodicBackupService,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
 
 (* THE CONTEST THAT PARSES AND VALIDATES AN EXCHANGE -- M5b, 2026-10-02.
@@ -6378,8 +6382,9 @@ end;
   queued for it (uBackupCopyService). That copy runs on its own thread; this
   one only queues.
 
-  THE LOCAL SNAPSHOT IS STILL SYNCHRONOUS ON THE MAIN THREAD -- local disk, a
-  VACUUM INTO and a verification. Moving it off is a later step of #98.
+  THE LOCAL SNAPSHOT RUNS ON THE BACKUP WORKER'S THREAD SINCE ISSUE 350
+  (2026-11-21) -- the VACUUM INTO, the verification, the publish and the
+  outbox copy -- whenever the log is in WAL; see BackupLogNow below.
 
   ONLY A SUCCESS RESTARTS THE PERIODIC COUNT (issue 351 (b), 2026-11-21;
   until then every call reset it, failure included). A failure leaves the
@@ -6398,34 +6403,114 @@ end;
   a short session after a long gap still backs up on its first QSO. *)
 var
   QsosLoggedSinceBackup: integer = 0;
+  (* ISSUE 350: the QSOs counted this session, and how many of them the last
+    successful backup was ASKED FOR after. A worker backup's Tag is the
+    first at its request, so a result rebases the count exactly -- even when
+    a menu request coalesced behind a run and two results arrive. *)
+  QsosCountedThisSession: integer = 0;
+  QsosCoveredByBackup: integer = 0;
 
-procedure BackupLogNow;
-var
-  path, report, destination, why: string;
-  queued: boolean;
+(* WHAT THE OPERATOR IS TOLD, AND WHAT THE STORE IS TOLD, ONCE A PERIODIC
+  BACKUP HAS RUN -- one routine for both paths (the worker's result and the
+  synchronous run), so the two cannot drift.
+
+  THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
+  file either way -- a periodic backup runs unattended and the only place an
+  operator will ever see it is this line. WITH A DESTINATION, the line names
+  the destination folder instead (BackupDoneText), and "Backup copied to ..."
+  follows when the copy arrives. *)
+procedure ShowPeriodicBackupOutcome(aSucceeded: boolean; const aReport: string;
+   aQueued: boolean; const aDestination, aWhy: string);
 begin
-  (* THE REPORT IS THE ROUTINE'S OUTPUT, success or failure, and it names the
-    file either way -- a periodic backup runs unattended and the only place an
-    operator will ever see it is this line. The "Saving to" line that stood
-    before it is gone: it was replaced in the same call, before anything could
-    paint it, so nobody ever saw it.
-    WITH A DESTINATION, the line names the destination folder instead
-    (BackupDoneText), and "Backup copied to ..." follows when the copy
-    arrives. *)
-  if LogStoreBackupPeriodic(BackupDir, path, report) then
-     begin
-     QsosLoggedSinceBackup := 0;
-     LogStoreNotePeriodicBackup(True);
-     queued := BackupCopySubmit(path, destination, why);
-     QuickDisplay(AnsiString(BackupDoneText(report, queued, destination, why)));
-     end
-  else
-     begin
-     LogStoreNotePeriodicBackup(False);
-     QuickDisplay(AnsiString(report));
-     logger.Error('[Backup] %s', [report]);
-     DoABeep(Warning);
-     end;
+   if aSucceeded then
+      begin
+      LogStoreNotePeriodicBackup(True);
+      QuickDisplay(AnsiString(BackupDoneText(aReport, aQueued, aDestination, aWhy)));
+      end
+   else
+      begin
+      LogStoreNotePeriodicBackup(False);
+      QuickDisplay(AnsiString(aReport));
+      logger.Error('[Backup] %s', [aReport]);
+      DoABeep(Warning);
+      end;
+end;
+
+(* THE WORKER'S RESULT, ON THE MAIN THREAD (uPeriodicBackupService.Deliver).
+
+  ONLY THE QSOs THE SNAPSHOT COULD HOLD ARE TAKEN OFF THE COUNT: Tag is
+  QsosCountedThisSession when the backup was asked for, and QSOs logged
+  while it ran stay counted -- they may not be in it. The synchronous path
+  covers everything because no QSO can be logged during it. *)
+procedure PeriodicBackupArrived(aResult: TLogBackupResult);
+begin
+   if aResult.Succeeded then
+      begin
+      if aResult.Tag > QsosCoveredByBackup then
+         begin
+         QsosCoveredByBackup := aResult.Tag;
+         end;
+      QsosLoggedSinceBackup := QsosCountedThisSession - QsosCoveredByBackup;
+      if QsosLoggedSinceBackup < 0 then
+         begin
+         QsosLoggedSinceBackup := 0;
+         end;
+      end;
+   ShowPeriodicBackupOutcome(aResult.Succeeded, aResult.Report,
+                             aResult.CopyQueued, aResult.CopyDestination,
+                             aResult.CopyWhy);
+end;
+
+(* THE SYNCHRONOUS BACKUP -- the whole run on this thread, as before issue
+  350. Kept for a log that is NOT in WAL (see LogStoreJournalIsWal) and for a
+  log the store cannot open (its report says why). *)
+procedure BackupLogNowInline;
+var
+   path, report, destination, why: string;
+   queued: boolean;
+   succeeded: boolean;
+begin
+   succeeded := LogStoreBackupPeriodic(BackupDir, path, report);
+   queued := False;
+   destination := '';
+   why := '';
+   if succeeded then
+      begin
+      QsosLoggedSinceBackup := 0;
+      QsosCoveredByBackup := QsosCountedThisSession;
+      queued := BackupCopySubmit(path, destination, why);
+      end;
+   ShowPeriodicBackupOutcome(succeeded, report, queued, destination, why);
+end;
+
+(* ISSUE 350 (2026-11-21): THE SNAPSHOT, ITS VERIFICATION, THE PUBLISH AND
+  THE OUTBOX COPY RUN ON THE BACKUP WORKER'S THREAD (uLogBackupWorker), so
+  the QSO that made the backup due is ready for the next one at once. This
+  hands the job over and returns; the result arrives later through
+  PeriodicBackupArrived.
+
+  BOTH CALLERS COME HERE: CountQsoTowardPeriodicBackup (the Enter path) and
+  the Backup Log menu. One path, so the two can never write the same
+  "<log> periodic.db.new" at once; a menu request while a backup runs is
+  remembered once and run after it (the worker's "again" flag).
+
+  NOT the dated backups before Clear Log, a catch-up or a schema upgrade:
+  those are LogStoreBackupBefore* / BackUpLogBeforeUpgrade and stay
+  synchronous, because the destructive step must wait for them. *)
+procedure BackupLogNow;
+begin
+   (* SYNCHRONOUS when the worker may not be used: a log that is not WAL, a
+     log the store cannot open (the inline run reports why), or a run in
+     which uProgramMain never enabled the worker -- every headless mode
+     (/MATRIX logs QSOs through LogContact) and the unit-test program. *)
+   if LogStoreEnsureOpen and LogStoreJournalIsWal and
+      PeriodicBackupRequest(LogStoreFileName, BackupDir,
+                            LogStorePeriodicBackupPath(BackupDir),
+                            QsosCountedThisSession, PeriodicBackupArrived) then
+      begin
+      Exit;
+      end;
+   BackupLogNowInline;
 end;
 
 (* EVERY RECORD LogContact WRITES COUNTS -- an X-QSO, a dupe and a peer's QSO
@@ -6440,9 +6525,17 @@ begin
      begin
      Exit;
      end;
+  (* The session total moves with the count PeriodicBackupDue adds to, so
+    QsosLoggedSinceBackup = QsosCountedThisSession - QsosCoveredByBackup. *)
+  inc(QsosCountedThisSession);
+  (* COUNTED EVEN WHILE A BACKUP RUNS (PeriodicBackupDue adds the QSO), but
+    NOT ASKED AGAIN: until its result arrives, the count and the published
+    file's age both still say "due", and asking would only queue a second
+    full run behind the first (issue 350). *)
   if PeriodicBackupDue(QsosLoggedSinceBackup, Settings.Log.BackupFrequency,
                        LogStoreSecondsSincePeriodicBackup(BackupDir),
-                       LogStoreSecondsSincePeriodicBackupFailure) then
+                       LogStoreSecondsSincePeriodicBackupFailure) and
+     (not PeriodicBackupInFlight) then
      begin
      BackupLogNow;
      end;

@@ -65,6 +65,35 @@ type
       function Run(const aDestination: string; out aReport: string): boolean;
    end;
 
+   (* A LOG FILE, BY ITS PATH, AS A BACKUP SOURCE. Every connection it opens
+     is its own and READ-ONLY (OpenReadOnly, then TLogDatabase.SnapshotTo's
+     own read-only VACUUM INTO connection), so it never writes the log and
+     needs nothing of the connection that does.
+
+     TWO USERS (lifted to the interface for the second, issue 350):
+       BackUpLogBeforeUpgrade  the file before the upgrade, which nothing in
+                               this process has open for writing yet;
+       uLogBackupWorker        the periodic backup, on the backup worker's
+                               thread, while the main thread keeps logging
+                               through its own connection. Under WAL a reader
+                               and the writer do not block each other.
+     NOT the store's TLogStoreBackup: that one asks LogStoreEnsureOpen whether
+     the source is ready, which is main-thread state. *)
+   TLogFileBackup = class(TLogBackup)
+   private
+      FSource: string;
+   protected
+      function SourceIsReady: boolean; override;
+      procedure SnapshotTo(const aStaged: string); override;
+   public
+      constructor Create(const aSource: string);
+   end;
+
+(* THE REPORT FOR A BACKUP FOLDER THAT IS NOT THERE -- one sentence, shared by
+  the store's synchronous backups (uLogStore.BackupIntoFolder) and the backup
+  worker, so the operator reads the same words whichever ran. *)
+function BackupFolderMissingReport(const aBackupDir: string): string;
+
 (* Open aPath on its OWN connection and ask SQLite whether it is sound. A
   second connection is the point: verifying through the connection that wrote
   it would prove far less, since that one already has the pages in its own
@@ -370,20 +399,11 @@ begin
                                   '.db');
 end;
 
-type
-   (* A LOG FILE, BY ITS PATH, AS A BACKUP SOURCE -- the file before the
-     upgrade, which nothing in this process has open for writing yet. NOT the
-     store's TLogStoreBackup: that one asks LogStoreEnsureOpen whether the
-     source is ready, and this runs INSIDE the store's open. *)
-   TLogFileBackup = class(TLogBackup)
-   private
-      FSource: string;
-   protected
-      function SourceIsReady: boolean; override;
-      procedure SnapshotTo(const aStaged: string); override;
-   public
-      constructor Create(const aSource: string);
-   end;
+function BackupFolderMissingReport(const aBackupDir: string): string;
+begin
+   Result := 'the backup folder ' + aBackupDir + ' does not exist and could '
+             + 'not be created, so no backup was written';
+end;
 
 constructor TLogFileBackup.Create(const aSource: string);
 begin

@@ -102,8 +102,9 @@ other.
   (`LogStorePeriodicBackupFileName`), one per log, `.bak` kept by
   `TLogBackup`. It replaced `logback.db`, one name every contest overwrote
   beside the logs. **BACKUP LOG FREQUENCY = 0 is the off switch**; an empty
-  name no longer is (there is no name). Still SYNCHRONOUS on the main thread
-  -- local disk; moving the snapshot off is a later #98 step.
+  name no longer is (there is no name). **OFF THE MAIN THREAD SINCE ISSUE
+  350** when the log is WAL -- see "THE PERIODIC BACKUP RUNS ON A WORKER"
+  below; `BackupLogNowInline` keeps the synchronous run for a non-WAL log.
 - **THE TRIGGER IS A COUNT OF QSOs LOGGED SINCE THE LAST BACKUP, NOT
   `QSOTotals mod N` (2026-10-31).** QSOTotals is a score total (no X-QSO, no
   deleted QSO, rebuilt by a rescore), so it went DOWN and fired a second
@@ -194,9 +195,53 @@ other.
   never probes a share), which also offers this log's existing periodic
   backup to the destination, copied only if it differs. Tests:
   `uTestBackupCopier` (copier + setting), `uTestLogStore` (names, folder).
-- **Still open in #98**: the snapshot off the main thread, the 60 s dirty
+- **Still open in #98**: the 60 s dirty
   timer, generations/catalog/SHA-256, retention, Restore, and reconciling an
-  ambiguous rename on a share by name + hash.
+  ambiguous rename on a share by name + hash. (The snapshot off the main
+  thread is done: issue 350, below.)
+- **THE PERIODIC BACKUP RUNS ON A WORKER (issue 350, 2026-11-22).**
+  `src/domain/uLogBackupWorker.pas` (leaf: one `TThread`, `TCriticalSection`,
+  `TEvent`) runs `uLogBackup.TLogFileBackup.Run` -- the SAME stage, verify
+  and publish as the synchronous path, lifted to the interface, not copied
+  -- then the outbox copy (`OnPublished` = `BackupCopySubmit`, which locks
+  inside the copier). Glue `src/uPeriodicBackupService.pas`: lazy creation,
+  results hopped to the main thread by `Application.QueueAsyncCall`,
+  `PeriodicBackupStop` in `tr4w_ShutDown` BEFORE `BackupCopyStop` and
+  `LogStoreClose`. Main thread: `logstuff.PeriodicBackupArrived` ->
+  `ShowPeriodicBackupOutcome` (shared with `BackupLogNowInline`, so the
+  status line, beep, `LogStoreNotePeriodicBackup` and the 351 reminder are
+  one code path).
+  - **WAL ONLY** (`uLogStore.LogStoreJournalIsWal`). In rollback-journal mode
+    a reader's SHARED lock blocks the writer's commit, so a non-WAL log (a
+    share) keeps the synchronous run.
+  - **Coalesced, not queued** (`TBackupCoalescer`, pure, pinned in
+    `uTestLogBackupWorker`): a request during a run is ONE more run, the
+    newest request's values. `CountQsoTowardPeriodicBackup` does not ask
+    while `PeriodicBackupInFlight` (the count and the file age still say
+    "due" until the result lands); the menu does ask (the "again" flag). Both
+    callers use the worker, so they never write the same `.new` at once.
+  - **The count**: `Tag` is `QsosCountedThisSession` at the request; a
+    success raises `QsosCoveredByBackup` to it and the count becomes total
+    minus covered, so QSOs logged during the run stay counted and two
+    coalesced results never subtract twice. The inline path covers all.
+  - **Enabled only by `uProgramMain`** (`PeriodicBackupEnable`, beside
+    `BackupCopyStart`, after every headless Halt): `/MATRIX`, `/EXPORT` and
+    the unit-test program keep the synchronous run and never start the
+    thread.
+  - **Per-run connections, NOT watched**: `TLogFileBackup` opens read-only
+    and closes per run, so no long-lived read transaction blocks WAL resets
+    between runs; `uLogConnectionWatch` would interrupt a long VACUUM INTO,
+    so the backup's connections take no `Watch`.
+  - **Shutdown waits for the run in progress** (unbounded: local disk, and
+    the thread holds a SQLite connection); a request not yet started is
+    dropped -- the next session backs up on its first QSO by file age. No
+    startup sweep of `.new`: `Run` step 3 deletes a stale one, and `Run`
+    deliberately KEEPS a verified `.new` when the publish rename fails.
+  - **Stay synchronous**: `LogStoreBackupBefore*` (Clear Log, catch-up) and
+    `BackUpLogBeforeUpgrade`. There is no Restore yet.
+  - **Measure**: `tr4w/test/bench/bench_enter_latency.lpr` (phases: commit
+    only / inline backup / worker; p50-p99-max; `sqlite3.dll` beside it).
+    No numbers recorded yet -- BENCH_QUEUE.md.
 - **NEVER RUN `VACUUM` (INTO OR NOT) ON THE LIVE CONNECTION (2026-10-24).**
   A VACUUM resets every schema of the connection that runs it, and FPC's
   connector prepares with the LEGACY `sqlite3_prepare`, which never

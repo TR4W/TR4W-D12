@@ -34,9 +34,12 @@ unit uBackupCopyService;
                        the next start with no new QSO.
     Preferences (main) BackupCopyDestinationChanged, from uSettingsEffects:
                        the new folder is probed; the old one's state goes.
-    every N QSOs (main) logstuff.BackupLogNow writes the LOCAL backup and
-                       BackupCopySubmit queues it. One local file copy; the
-                       destination is the worker's.
+    every N QSOs       the periodic backup's worker (uLogBackupWorker, issue
+                       350) writes the LOCAL backup and calls
+                       BackupCopySubmit ON ITS OWN THREAD -- Submit takes the
+                       copier's lock. A non-WAL log does the same from the
+                       main thread (logstuff.BackupLogNowInline). One local
+                       file copy; the destination is the copier worker's.
     worker             probes, copies, retries every 60 s, and reports.
     shutdown (main)    BackupCopyStop, bounded.
 

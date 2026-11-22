@@ -821,6 +821,8 @@ uses
   uLogStore,
   uBackupCopyService, (* BackupCopyStop -- the backup destination's copier,
                         stopped before the log closes *)
+  uPeriodicBackupService, (* PeriodicBackupStop -- the periodic backup's
+                            worker, stopped before the copier (issue 350) *)
   uCallbookFactory,   (* CallbookLookupsShutdown -- no late reply at exit *)
   uLogEditForm,      // View / Edit Log -- an LCL virtual list now; also
                       // SaveLogEditLayout, see SaveTR4WPOSFILE
@@ -4421,6 +4423,12 @@ begin
     BACKUP_COPY_SHUTDOWN_MS for a copy to a share, and holds no SQLite object,
     so it never delays the log's close for long and never needs it. Before the
     logger goes, because its last word is a log line. *)
+  (* THE PERIODIC BACKUP'S WORKER BEFORE IT (issue 350): a run in progress
+    may still be handing its published file to the copier, and it reads the
+    log through connections of its own, so it ends before the log closes. It
+    waits for that run to finish -- verified and published, or reported
+    failed -- and drops a request that had not started. *)
+  PeriodicBackupStop;
   BackupCopyStop;
   LogStoreClose;
 

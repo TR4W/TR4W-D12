@@ -827,6 +827,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogLocking      in 'uTestLogLocking.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
+   uLogBackupWorker     in '..\..\src\domain\uLogBackupWorker.pas',
+   uTestLogBackupWorker in 'uTestLogBackupWorker.pas',
    uBackupCopier        in '..\..\src\domain\uBackupCopier.pas',
    uTestBackupCopier    in 'uTestBackupCopier.pas',
    uQsoMyFacts          in '..\..\src\domain\uQsoMyFacts.pas',
@@ -1496,6 +1498,8 @@ begin
    RegisterSuite(TLogLockingTests.Create('LogLocking'));
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TPeriodicBackupDueTests.Create('PeriodicBackupDue'));
+   RegisterSuite(TBackupCoalescerTests.Create('BackupCoalescer'));
+   RegisterSuite(TLogBackupWorkerTests.Create('LogBackupWorker'));
    RegisterSuite(TBackupCopierTests.Create('BackupCopier'));
    RegisterSuite(TBackupDestinationSettingTests.Create('BackupDestinationSetting'));
    RegisterSuite(TBackupCopyNoticeTests.Create('BackupCopyNotice'));

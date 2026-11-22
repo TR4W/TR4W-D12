@@ -204,6 +204,7 @@ uses
   uQsoDispatcher,
   uQsoSinks,
   uBackupCopyService, (* BackupCopyStart -- the backup destination's copier *)
+  uPeriodicBackupService, (* PeriodicBackupEnable -- the periodic backup's worker *)
   uWindowLayoutStore,
   uColumnWidthStore,
   uTR4WConfigFile,
@@ -3126,6 +3127,12 @@ begin
     and after the log is open, so its periodic backup can be named and, if the
     destination missed it, copied now rather than at the next QSO. *)
   BackupCopyStart(BackupDir, LogStorePeriodicBackupPath(BackupDir));
+
+  (* THE PERIODIC BACKUP'S WORKER MAY BE USED FROM HERE ON (issue 350) --
+    after every headless Halt, so a batch run backs up synchronously and
+    never leaves a thread running into Halt. It is created on first use and
+    stopped by tr4w_ShutDown. *)
+  PeriodicBackupEnable;
 
   (* THE EXTERNAL LOGGER'S DELIVERY (the WRL worker, its own connection to
     the log) -- HERE, for the same two reasons, and the second is the one

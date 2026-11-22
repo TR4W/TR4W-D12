@@ -409,6 +409,15 @@ var
   nothing is written to it; LogStoreAppendQSO returns False. *)
 function LogStoreIsReadOnly: boolean;
 
+(* True when the log is open and its journal is WAL (issue 350). Only then may
+  the periodic backup run on the backup worker's thread: under WAL a reader on
+  another connection never blocks this connection's commit. In
+  rollback-journal mode (a network share that refused WAL) a reader's SHARED
+  lock WOULD block the commit of the QSO being logged (busy, retried and
+  finally refused), so logstuff.BackupLogNow takes the synchronous path there,
+  as it always did. *)
+function LogStoreJournalIsWal: boolean;
+
 (* THE STATUS-LINE TEXT FOR A SAVE THAT WAS REFUSED -- one source for the new
   QSO's "not logged" line (tAddQSOToLog) and Edit QSO's refusal. When the log
   is read-only it says so and why ("Log is read-only (disk full): not
@@ -976,6 +985,12 @@ end;
 function LogStoreIsReadOnly: boolean;
 begin
    Result := GReadOnly and (GDatabase <> nil);
+end;
+
+function LogStoreJournalIsWal: boolean;
+begin
+   Result := (GDatabase <> nil) and GDatabase.IsOpen and
+             UnicodeSameText(GDatabase.JournalMode, 'wal');
 end;
 
 (* Why the log is read-only, in the few words the notices carry. *)
@@ -3030,8 +3045,7 @@ begin
      SQLite error a VACUUM INTO a missing directory would give. *)
    if not DirectoryExists(aBackupDir) then
       begin
-      aReport := 'the backup folder ' + aBackupDir + ' does not exist and could '
-                 + 'not be created, so no backup was written';
+      aReport := BackupFolderMissingReport(aBackupDir);
       Result := False;
       Exit;
       end;

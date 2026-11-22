@@ -23,8 +23,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# A guard that finds nothing must fail, not pass. Five programs exist today.
-$MIN_BENCH_PROGRAMS = 5
+# A guard that finds nothing must fail, not pass. Six programs exist today
+# (bench_enter_latency, issue 350, is the sixth). Every bench_*.lpr is built:
+# there is no list to add a program to.
+$MIN_BENCH_PROGRAMS = 6
 
 if ($Run -and -not $Program) {
    Write-Output 'FAIL: -Run needs a single -Program; it will not run every bench program.'
@@ -84,16 +86,20 @@ function Build-OneBench([string] $Name) {
       # "range check error while evaluating constants" -- a WARNING -- as a build
       # failure. Same pattern Build-Tests.ps1 uses.
       $errors = @($output | Select-String -Pattern '\bError:|\bFatal:')
-      Write-Output ("{0}: errors+fatals : {1}" -f $Name, $errors.Count)
+      # Write-Host, NOT Write-Output: output inside a PowerShell function is part of
+      # its RETURN VALUE, so a failed build returned a non-empty array, which is
+      # TRUE -- 'bench programs: 1 built, 0 failed' after a compile error
+      # (found 2026-11-22 with bench_enter_latency).
+      Write-Host ("{0}: errors+fatals : {1}" -f $Name, $errors.Count)
       if ($errors.Count -gt 0) {
-         $errors | Select-Object -First 10 | ForEach-Object { Write-Output ("  " + $_.Line.Trim()) }
+         $errors | Select-Object -First 10 | ForEach-Object { Write-Host ("  " + $_.Line.Trim()) }
          return $false
       }
       if (-not (Test-Path $exe)) {
-         Write-Output "  no exe produced at $exe"
+         Write-Host "  no exe produced at $exe"
          return $false
       }
-      Write-Output "BUILD OK -> $exe"
+      Write-Host "BUILD OK -> $exe"
       return $true
    }
    finally {

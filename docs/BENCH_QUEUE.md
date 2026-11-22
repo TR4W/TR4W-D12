@@ -188,6 +188,17 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-22 -- THE PERIODIC BACKUP RUNS OFF THE ENTER PATH (issue 350; log-database)
+
+The periodic backup (VACUUM INTO snapshot, verification, publish, the outbox copy for BACKUP DESTINATION) used to run inside Enter on the QSO that made it due. It now runs on one backup worker thread with its own read-only connections (`uLogBackupWorker`, glue `uPeriodicBackupService`), when the log is in WAL; a rollback-journal log (a share that refused WAL) still backs up on Enter as before. The Backup Log menu takes the same path. Clear Log, catch-up and schema-upgrade backups are unchanged and still finish before their step.
+
+- [ ] **Measure first:** build the benches and run `tr4w\test\bench\bench_enter_latency.exe 20000 200 20` with `sqlite3.dll` copied beside it from `tr4w\redist\x86_64-win64`. Send the printed table: phase B "ready" against phase C "ready" is the case for the change; "C commit while worker busy" against "A commit only" says whether the worker costs the writer anything. Try a large real log size too (`50000`).
+- [ ] **BACKUP LOG FREQUENCY = 5, a large log:** log QSOs quickly. Enter returns at once on the 5th; "Log backed up to ..." (or "copying to <folder>") arrives on the status line a moment later. No second backup starts while one is running.
+- [ ] **With BACKUP DESTINATION set:** "Backup copied to ..." still follows, as before.
+- [ ] **A broken backup folder** (make `settings\backup` a file): the failure line, the beep and "Last log backup FAILED" after each QSO as before (issue 351), with retries five minutes apart.
+- [ ] **Close TR4W while a backup runs** (a big log, frequency 1): the program waits for the run, then closes; `settings\backup` holds `<log> periodic.db` and NO `.new`.
+- [ ] **A log on a network share** (journal not WAL; the startup line says so): the backup still runs, on Enter, as before.
+
 ## Added 2026-11-21 -- THE MULTIPLIER WINDOWS SHOW HOW MANY TIMES (issue 357; lcl-ui, contest-scoring)
 
 The remaining-multiplier windows (Stations > multipliers, DX / domestic / zone / prefix) in HIGHLIGHT mode. A worked multiplier now shows its count after its name from the SECOND working on the window's band and mode (`Oh 2`, `05 3`); once looks as it always did. With BAND MAP WORKED MULT LIMIT above 1 (Preferences > Band Map > Window and tuning), a multiplier worked at least once but fewer than that many times fades from BAND MAP WORKED MULT COLOR (orange by default) with black text, the same "backup wanted" the band map shows as an orange M. The rule is `uRemMultWorkState` (unit tested); the count is the sheet's `mo.WorkedCount`, the band map's.
