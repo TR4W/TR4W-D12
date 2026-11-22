@@ -480,6 +480,16 @@ begin
       begin
       grdSpots.ColCount := colsAcross;
       end;
+
+   (* A MINIMUM SIZE (NY4I, 2026-11-21: the window could be dragged down to a
+     sliver): one spot column wide and three rows tall, plus whatever the
+     window adds round the grid. Only once the grid has a window, because
+     before that its size means nothing. *)
+   if grdSpots.HandleAllocated then
+      begin
+      Constraints.MinWidth  := CellWidth + (Width - grdSpots.ClientWidth);
+      Constraints.MinHeight := 3 * CellHeight + (Height - grdSpots.ClientHeight);
+      end;
 end;
 
 (* KEEP THE RADIO'S FREQUENCY IN THE MIDDLE OF THE VIEW (issue 246).
