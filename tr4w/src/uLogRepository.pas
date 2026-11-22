@@ -72,8 +72,11 @@ uses
    Contnrs,
    SysUtils, DateUtils, db, sqldb, VC, uLogDatabase,
    (* TQsoMyFacts -- our station as it was for one QSO, the my_* columns.
-      Last, and it declares nothing any unit above also does. *)
-   uQsoMyFacts;
+      It declares nothing any unit above also does. *)
+   uQsoMyFacts,
+   (* TWireColumns / TWireValues -- the multi-op wire's canonical row (W1).
+      A leaf; it declares nothing any unit above also does. *)
+   uWireQso;
 
 type
    ELogRepositoryError = class(Exception);
@@ -376,6 +379,10 @@ type
         it once per QSO: the 2026-10-14 prototype measured 150 us a call
         before and 47 after. *)
       FRowIdAtIndex: TSQLQuery;
+
+      (* ReadWireValues' statement, prepared once like FRowIdAtIndex: the
+         sender reads one row per QSO. *)
+      FSelectWire: TSQLQuery;
 
       (* True between BeginBatchUpdate and a CommitBatch or RollbackBatch that
          completed. Stays True if a rollback itself fails, so BeginBatchUpdate
@@ -807,6 +814,23 @@ type
         first time something is. *)
       function RowIdAtIndex(aIndex: Int64): Int64;
 
+      (* ONE ROW AS THE MULTI-OP WIRE CARRIES IT (stage W1, design note
+        section 13): its values in QsoWireColumns order, as canonical text --
+        NULL is '', an integer its decimal digits, text decoded from UTF-8 to
+        the native string with every NUL removed (uWireQso.WireText; a data
+        finding, the writer should store NULL). aNulStripped counts the values
+        that held a NUL, so the finding is never hidden.
+
+        BY ROW ID, because the sender reads a COMMITTED row after the main
+        thread's commit. Read through a kept statement opened like every other
+        qso reader (QSO_COLUMNS, then id, then WIRE_EXTRA_COLUMNS, checked by
+        name once per Open) and placed by the wire table's positions.
+
+        False when there is no such row. Raises when the wire table and
+        QSO_COLUMNS disagree (QsoWireTableProblem). *)
+      function ReadWireValues(aRowId: Int64; out aValues: TWireValues;
+                              out aNulStripped: integer): boolean;
+
       (* A RUN OF RECORDS IN LOG ORDER, starting at aFirstIndex, in ONE
         statement. Fills aRows from its low bound and returns how many were
         read -- fewer than requested at the end of the log.
@@ -1128,6 +1152,27 @@ function QsoColumnList: AnsiString;
 (* '' when the ordinal table ReadRecord reads by agrees with QSO_COLUMNS, else
   what disagrees. Computed once, when the unit initializes. *)
 function QsoColumnTableProblem: AnsiString;
+
+(* THE WIRE'S COLUMNS (stage W1, design note section 13, issues 300 and 341).
+
+  Defined ONCE, in the implementation's QSO_TABLE_COLUMNS: every column of the
+  qso table, in the CREATE TABLE's order (which is not QSO_COLUMNS' order), each
+  with whether it is an INTEGER, its DEFAULT as canonical text, and whether it
+  is ON THE WIRE or LOCAL to this database. uTestWireColumns pins it to the
+  CREATE TABLE, so a column added to the schema fails the build until it is
+  classified here.
+
+  Both lists are built once at initialization and are READ-ONLY after that:
+  share them, never free them. *)
+
+(* The on-wire columns in tag order (tag i = entry i - 1). *)
+function QsoWireColumns: TWireColumns;
+(* Every qso column, local ones included, in the CREATE TABLE's order. *)
+function QsoTableColumns: TWireColumns;
+(* True for a column that is about THIS database and never sent. *)
+function QsoColumnIsLocal(const aName: string): boolean;
+(* '' when every on-wire column has a place in the wire reader, else why not. *)
+function QsoWireTableProblem: AnsiString;
 
 (* RAISES ELogRepositoryError unless aQuery's fields are QSO_COLUMNS, by name,
   position for position. ReadRecord reads a column by its POSITION, so a reader
@@ -1817,12 +1862,18 @@ end;
 
 (* ONCE PER OPEN, NOT PER ROW: sixty-eight name comparisons against a
   table built at start-up, a few microseconds, so the guard costs nothing a
-  reader would notice and is never skipped. *)
-procedure VerifyQsoColumns(aQuery: TSQLQuery; aTrailingRowId: boolean);
+  reader would notice and is never skipped.
+
+  aExtras: columns the reader SELECTs after the row id (the wire reader's
+  WIRE_EXTRA_COLUMNS), each checked by name at its position; empty for every
+  other reader. Requires aTrailingRowId when not empty. *)
+procedure VerifyQsoColumnsWith(aQuery: TSQLQuery; aTrailingRowId: boolean;
+                               const aExtras: TAnsiStringArray);
 var
    column: TQsoColumn;
    actual: AnsiString;
    expected: integer;
+   i: integer;
 begin
    if Length(GQsoColumnTableProblem) > 0 then
       begin
@@ -1833,6 +1884,24 @@ begin
    if aTrailingRowId then
       begin
       Inc(expected);
+      end;
+   Inc(expected, Length(aExtras));
+
+   if aQuery.Fields.Count = expected then
+      begin
+      for i := 0 to High(aExtras) do
+         begin
+         if not SameText(aQuery.Fields[QSO_COLUMN_COUNT + 1 + i].FieldName,
+                         aExtras[i]) then
+            begin
+            raise ELogRepositoryError.Create(SysUtils.Format(
+               'A qso reader returned "%s" as column %d where "%s" belongs. ' +
+               'It is read by POSITION, so it refuses rather than read one ' +
+               'column into another field.',
+               [aQuery.Fields[QSO_COLUMN_COUNT + 1 + i].FieldName,
+                QSO_COLUMN_COUNT + 1 + i, aExtras[i]]));
+            end;
+         end;
       end;
 
    if aQuery.Fields.Count <> expected then
@@ -1870,6 +1939,261 @@ begin
             [actual, Ord(column), GQsoColumnName[column]]));
          end;
       end;
+end;
+
+procedure VerifyQsoColumns(aQuery: TSQLQuery; aTrailingRowId: boolean);
+begin
+   VerifyQsoColumnsWith(aQuery, aTrailingRowId, nil);
+end;
+
+(* --------------------------------------------------------------------------- *)
+(* the wire's column table (stage W1)                                           *)
+(* --------------------------------------------------------------------------- *)
+
+type
+   (* ONE ROW OF THE TABLE BELOW. A record because it is a constant table's
+     row and nothing else: it never leaves this unit -- the program sees the
+     table through QsoWireColumns / QsoTableColumns, which are classes. *)
+   TQsoTableColumn = record
+      Name: string;
+      Numeric: boolean;   (* declared INTEGER *)
+      Default: string;    (* the DEFAULT as canonical text; '' = NULL / none *)
+      OnWire: boolean;    (* False: about THIS database, never sent *)
+   end;
+
+const
+   (* EVERY COLUMN OF THE qso TABLE, IN THE CREATE TABLE'S ORDER -- which is
+     the wire's tag order and the checksum's field order, so it is NOT
+     QSO_COLUMNS' order (my_county, my_grid and my_state sit mid-table; rcvd_year
+     and is_off_contest after my_source; dxcc_prefix before standard_call).
+     uTestWireColumns compares this with PRAGMA table_info(qso) of a new log:
+     name, INTEGER or not, default, order. A schema change fails that test
+     until this table says whether the new column is on the wire.
+
+     LOCAL (OnWire False): id, session_id, session_seq, sent_to_server,
+     server_dirty, sent_udp, udp_dirty -- this database's row number, which
+     session wrote it, and what has been handed to the server or the UDP
+     broadcast. A receiver's database has its own.
+
+     ON THE WIRE PENDING A RULING (design note 13.5): notes, rcvd_extra and
+     qso_set_id. Taking one off is flipping its OnWire here.
+
+     rcvd_extra IS NOT IN QSO_COLUMNS (no build writes or reads it), so the
+     wire reader SELECTs it after the row id -- WIRE_EXTRA_COLUMNS. *)
+   QSO_TABLE_COLUMNS: array[0..95] of TQsoTableColumn = (
+      (Name: 'id';                Numeric: True;  Default: '';    OnWire: False),
+      (Name: 'guid';              Numeric: False; Default: '';    OnWire: True),
+      (Name: 'exchange_id';       Numeric: False; Default: '';    OnWire: True),
+      (Name: 'qso_set_id';        Numeric: False; Default: '';    OnWire: True),
+      (Name: 'session_id';        Numeric: True;  Default: '';    OnWire: False),
+      (Name: 'session_seq';       Numeric: True;  Default: '';    OnWire: False),
+      (Name: 'computer_id';       Numeric: False; Default: '';    OnWire: True),
+      (Name: 'operator_id';       Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'record_kind';       Numeric: False; Default: 'QSO'; OnWire: True),
+      (Name: 'qso_at';            Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'callsign';          Numeric: False; Default: '';    OnWire: True),
+      (Name: 'freq_tx_hz';        Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'freq_rx_hz';        Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'is_split';          Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'band';              Numeric: False; Default: '';    OnWire: True),
+      (Name: 'mode';              Numeric: False; Default: '';    OnWire: True),
+      (Name: 'submode';           Numeric: False; Default: '';    OnWire: True),
+      (Name: 'exchange_sent';     Numeric: False; Default: '';    OnWire: True),
+      (Name: 'exchange_received'; Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rst_sent';          Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'rst_received';      Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'serial_sent';       Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'serial_received';   Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'rcvd_zone';         Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'rcvd_name';         Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_age';          Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'rcvd_check';        Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'rcvd_precedence';   Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_class';        Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_power';        Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_chapter';      Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_prefecture';   Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'rcvd_member_no';    Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'rcvd_qth';          Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_random';       Numeric: False; Default: '';    OnWire: True),
+      (Name: 'random_sent';       Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_kids';         Numeric: False; Default: '';    OnWire: True),
+      (Name: 'qtc_call';          Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_extra';        Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_county';         Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_grid';           Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_state';          Numeric: False; Default: '';    OnWire: True),
+      (Name: 'dxcc_prefix';       Numeric: False; Default: '';    OnWire: True),
+      (Name: 'standard_call';     Numeric: False; Default: '';    OnWire: True),
+      (Name: 'dxcc_entity';       Numeric: False; Default: '';    OnWire: True),
+      (Name: 'dxcc_code';         Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'cty_cq_zone';       Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'cty_continent';     Numeric: False; Default: '';    OnWire: True),
+      (Name: 'mult_domestic';     Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'mult_dx';           Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'mult_prefix';       Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'mult_zone';         Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'inhibit_mults';     Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'prefix_mult';       Numeric: False; Default: '';    OnWire: True),
+      (Name: 'dx_mult';           Numeric: False; Default: '';    OnWire: True),
+      (Name: 'domestic_mult';     Numeric: False; Default: '';    OnWire: True),
+      (Name: 'domestic_qth';      Numeric: False; Default: '';    OnWire: True),
+      (Name: 'qso_points';        Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'is_dupe';           Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'is_run';            Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'is_xqso';           Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'is_skipped';        Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'sent_in_qtc';       Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'name_sent';         Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'mp3_recorded';      Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'clear_dupe_sheet';  Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'clear_mult_sheet';  Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'radio_nr';          Numeric: True;  Default: '1';   OnWire: True),
+      (Name: 'operator_call';     Numeric: False; Default: '';    OnWire: True),
+      (Name: 'deleted';           Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'notes';             Numeric: False; Default: '';    OnWire: True),
+      (Name: 'sent_to_server';    Numeric: True;  Default: '0';   OnWire: False),
+      (Name: 'server_dirty';      Numeric: True;  Default: '0';   OnWire: False),
+      (Name: 'sent_udp';          Numeric: True;  Default: '0';   OnWire: False),
+      (Name: 'udp_dirty';         Numeric: True;  Default: '0';   OnWire: False),
+      (Name: 'my_call';           Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_section';        Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_park';           Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_iota';           Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_country';        Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_continent';      Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_cq_zone';        Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'my_itu_zone';       Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'my_source';         Numeric: False; Default: '';    OnWire: True),
+      (Name: 'rcvd_year';         Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'year_sent';         Numeric: True;  Default: '';    OnWire: True),
+      (Name: 'my_name';           Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_fd_class';       Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_check';          Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_prec';           Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_postal_code';    Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_foc_number';     Numeric: False; Default: '';    OnWire: True),
+      (Name: 'is_off_contest';    Numeric: True;  Default: '0';   OnWire: True),
+      (Name: 'my_rover_qth';      Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_sent_unit';      Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_rover_places';   Numeric: False; Default: '';    OnWire: True));
+
+   (* On-wire columns that are not in QSO_COLUMNS, SELECTed after the row id
+     by the wire reader, in this order. *)
+   (* UNTYPED, like QSO_COLUMNS: the wire reader's SELECT is then one
+     constant expression, and nothing mixes AnsiString with a literal. *)
+   WIRE_EXTRA_COLUMNS = 'rcvd_extra';
+
+var
+   (* FILLED ONCE, by BuildWireColumnTable from the initialization section,
+     and read-only after that. *)
+   GQsoWireColumns: TWireColumns = nil;
+   GQsoTableColumns: TWireColumns = nil;
+   (* For each wire tag (index 0 = tag 1): its field's position in the wire
+     reader's SELECT. *)
+   GWireReadPosition: array of integer;
+   GWireExtras: TAnsiStringArray;
+   GWireTableProblem: AnsiString = '';
+
+procedure BuildWireColumnTable;
+var
+   i, k, tag: integer;
+   column: TQsoColumn;
+   found: boolean;
+   inTable: boolean;
+begin
+   GQsoWireColumns := TWireColumns.Create;
+   GQsoTableColumns := TWireColumns.Create;
+   GWireExtras := SplitColumnList(WIRE_EXTRA_COLUMNS);
+   SetLength(GWireReadPosition, 0);
+   for i := Low(QSO_TABLE_COLUMNS) to High(QSO_TABLE_COLUMNS) do
+      begin
+      GQsoTableColumns.Add(QSO_TABLE_COLUMNS[i].Name, QSO_TABLE_COLUMNS[i].Numeric,
+                           QSO_TABLE_COLUMNS[i].Default);
+      if not QSO_TABLE_COLUMNS[i].OnWire then
+         begin
+         Continue;
+         end;
+      GQsoWireColumns.Add(QSO_TABLE_COLUMNS[i].Name, QSO_TABLE_COLUMNS[i].Numeric,
+                          QSO_TABLE_COLUMNS[i].Default);
+      tag := Length(GWireReadPosition);
+      SetLength(GWireReadPosition, tag + 1);
+      GWireReadPosition[tag] := -1;
+      for column := Low(TQsoColumn) to High(TQsoColumn) do
+         begin
+         if string(GQsoColumnName[column]) = QSO_TABLE_COLUMNS[i].Name then
+            begin
+            GWireReadPosition[tag] := Ord(column);
+            end;
+         end;
+      for k := 0 to High(GWireExtras) do
+         begin
+         if string(GWireExtras[k]) = QSO_TABLE_COLUMNS[i].Name then
+            begin
+            GWireReadPosition[tag] := QSO_COLUMN_COUNT + 1 + k;
+            end;
+         end;
+      if (GWireReadPosition[tag] < 0) and (GWireTableProblem = '') then
+         begin
+         GWireTableProblem := SysUtils.Format(
+            'uLogRepository: the on-wire column "%s" is neither in QSO_COLUMNS ' +
+            'nor in WIRE_EXTRA_COLUMNS, so the wire reader cannot read it.',
+            [QSO_TABLE_COLUMNS[i].Name]);
+         end;
+      end;
+
+   (* And the other way: every column a qso reader selects is in the table,
+     so the table cannot fall behind QSO_COLUMNS unnoticed. *)
+   for column := Low(TQsoColumn) to High(TQsoColumn) do
+      begin
+      inTable := GQsoTableColumns.IndexOfName(string(GQsoColumnName[column])) >= 0;
+      if (not inTable) and (GWireTableProblem = '') then
+         begin
+         GWireTableProblem := SysUtils.Format(
+            'uLogRepository: QSO_COLUMNS names "%s", which QSO_TABLE_COLUMNS ' +
+            'does not.', [GQsoColumnName[column]]);
+         end;
+      end;
+   for k := 0 to High(GWireExtras) do
+      begin
+      found := GQsoWireColumns.IndexOfName(string(GWireExtras[k])) >= 0;
+      if (not found) and (GWireTableProblem = '') then
+         begin
+         GWireTableProblem := SysUtils.Format(
+            'uLogRepository: WIRE_EXTRA_COLUMNS names "%s", which is not an ' +
+            'on-wire column.', [GWireExtras[k]]);
+         end;
+      end;
+end;
+
+function QsoWireColumns: TWireColumns;
+begin
+   Result := GQsoWireColumns;
+end;
+
+function QsoTableColumns: TWireColumns;
+begin
+   Result := GQsoTableColumns;
+end;
+
+function QsoColumnIsLocal(const aName: string): boolean;
+var
+   i: integer;
+begin
+   Result := False;
+   for i := Low(QSO_TABLE_COLUMNS) to High(QSO_TABLE_COLUMNS) do
+      begin
+      if QSO_TABLE_COLUMNS[i].Name = aName then
+         begin
+         Result := not QSO_TABLE_COLUMNS[i].OnWire;
+         Exit;
+         end;
+      end;
+end;
+
+function QsoWireTableProblem: AnsiString;
+begin
+   Result := GWireTableProblem;
 end;
 
 constructor TLogRepository.Create(aDatabase: TLogDatabase);
@@ -1910,6 +2234,7 @@ begin
    FreeAndNil(FSelectById);
    FreeAndNil(FSelectRange);
    FreeAndNil(FRowIdAtIndex);
+   FreeAndNil(FSelectWire);
    FreeAndNil(FUpdate);
    FreeAndNil(FUpdateMyFacts);
 end;
@@ -2025,6 +2350,13 @@ begin
    FRowIdAtIndex := NewReadQuery;
    FRowIdAtIndex.SQL.Text := 'SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET :n';
    FRowIdAtIndex.Prepare;
+
+   (* The wire reader: every qso reader's columns, then the row id, then the
+     on-wire columns QSO_COLUMNS does not carry. *)
+   FSelectWire := NewReadQuery;
+   FSelectWire.SQL.Text := 'SELECT ' + QSO_COLUMNS + ', ' + ROW_ID_COLUMN + ', ' +
+                           WIRE_EXTRA_COLUMNS + ' FROM qso WHERE id = :row_id';
+   FSelectWire.Prepare;
 
    (* guid is NOT in the SET clause: a row's identity does not change when its
      contents do, and rewriting it would break anything holding the old one. *)
@@ -4707,10 +5039,70 @@ begin
    FDatabase.Transaction.Commit;
 end;
 
+function TLogRepository.ReadWireValues(aRowId: Int64; out aValues: TWireValues;
+                                       out aNulStripped: integer): boolean;
+var
+   tag: integer;
+   field: TField;
+   text: string;
+begin
+   Result := False;
+   aNulStripped := 0;
+   SetLength(aValues, 0);
+   if Length(GWireTableProblem) > 0 then
+      begin
+      raise ELogRepositoryError.Create(GWireTableProblem);
+      end;
+   FSelectWire.Close;
+   FSelectWire.ParamByName('row_id').AsLargeInt := aRowId;
+   FSelectWire.Open;
+   try
+      VerifyQsoColumnsWith(FSelectWire, True, GWireExtras);
+      if FSelectWire.EOF then
+         begin
+         Exit;
+         end;
+      SetLength(aValues, GQsoWireColumns.Count);
+      for tag := 0 to GQsoWireColumns.Count - 1 do
+         begin
+         field := FSelectWire.Fields[GWireReadPosition[tag]];
+         if field.IsNull then
+            begin
+            aValues[tag] := '';
+            end
+         else if GQsoWireColumns.Numeric[tag] then
+            begin
+            aValues[tag] := IntToStr(field.AsLargeInt);
+            end
+         else
+            begin
+            (* The repository's own read of a text column (AnsiString of the
+              field, see ReadRecord), then decoded: SQLite text is UTF-8, and
+              UTF8Decode takes the bytes as they are (RawByteString). *)
+            text := UTF8Decode(AnsiString(field.AsString));
+            aValues[tag] := WireText(text);
+            if Length(aValues[tag]) <> Length(text) then
+               begin
+               Inc(aNulStripped);
+               end;
+            end;
+         end;
+      Result := True;
+   finally
+      FSelectWire.Close;
+   end;
+end;
+
 initialization
    Randomize;
    (* Before any repository can exist, and once. It never raises: a problem is
      recorded, and TLogRepository.Create and VerifyQsoColumns report it. *)
    BuildQsoColumnTable;
+   (* After it: the wire table is placed by the qso reader's positions. *)
+   BuildWireColumnTable;
+
+finalization
+   FreeAndNil(GQsoWireColumns);
+   FreeAndNil(GQsoTableColumns);
 
 end.

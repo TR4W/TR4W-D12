@@ -835,6 +835,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* Log schema 11: sixteen never-written qso columns removed by a table
       rebuild -- over a real schema-10 file (issue 94). *)
    uTestLogDroppedColumns in 'uTestLogDroppedColumns.pas',
+   (* Stage W1 (issues 300/341): the wire's column table pinned to the qso
+      table, and the codec against Python's golden vectors. *)
+   uTestWireColumns in 'uTestWireColumns.pas',
+   uTestWireQso in 'uTestWireQso.pas',
    (* An older log is backed up before it is upgraded (NY4I, 2026-11-19). *)
    uTestLogMigrationBackup in 'uTestLogMigrationBackup.pas',
    (* Schema 9 phase 2: a Station-page edit of ANY value the open contest
@@ -1580,6 +1584,8 @@ begin
    RegisterSuite(TLogStationFactsTests.Create('LogStationFacts'));
    RegisterSuite(TLogOffContestTests.Create('LogOffContest'));
    RegisterSuite(TLogDroppedColumnsTests.Create('LogDroppedColumns'));
+   RegisterSuite(TWireColumnsTests.Create('WireColumns'));
+   RegisterSuite(TWireQsoTests.Create('WireQso'));
    RegisterSuite(TLogMigrationBackupTests.Create('LogMigrationBackup'));
    RegisterSuite(TStationFactChangeTests.Create('StationFactChange'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));

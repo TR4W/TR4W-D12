@@ -8,12 +8,18 @@ program bench_wire_formats;
   the wire became the QSO AS AN EVENT: "the 376 byte record is woefully poor
   design for an event source".)
 
-  THE FIELD LIST IS THE SCHEMA'S, NOT A HAND LIST. The wire carries the qso
-  table's columns, by column name, minus the local bookkeeping that is about
-  THIS database and not about the QSO (LOCAL_COLUMNS). The columns, their types
-  and their defaults are read from PRAGMA table_info(qso); the values are the
-  rows themselves. A column added to the schema joins the wire and the
-  checksum by itself.
+  THE FIELD LIST IS THE REPOSITORY'S (stage W1, design note section 13). The
+  wire carries the qso table's columns, by column name, minus the local
+  bookkeeping that is about THIS database and not about the QSO. The list --
+  names, kinds, defaults, on the wire or local -- is defined ONCE, beside
+  TQsoColumn in uLogRepository (QsoWireColumns), and uTestWireColumns pins it
+  to the CREATE TABLE. The values are read by uLogRepository.ReadWireValues,
+  row by row id. This bench used to read PRAGMA table_info and run its own
+  SELECT, an interim exception that is now gone.
+
+  THE CODEC IS uWireQso -- the canonical stream, the CRC-32 and the JSON
+  encode/decode the program will ship -- so the corpus run below verifies the
+  code that ships, not a copy. Only TLV (not chosen) is local here.
 
   THREE ENCODINGS of the same row, over every QSO of the corpus logs:
 
@@ -51,8 +57,11 @@ program bench_wire_formats;
       values; decode time is parsing plus recomputing the checksum. Reading
       the row from SQLite is the same for every format and is not timed.
     - The corpus logs' non-ASCII content is nil; the unicode_synthetic set
-      (--out) pins that path. Text columns are read as UTF-8 and the cast from
-      the dataset's AnsiString is the same one uLogRepository uses.
+      (--out) pins that path, and so do the golden vectors
+      (tr4w\test\wire, uTestWireQso). Text columns are read by the repository.
+    - Encode now includes PackCanonical's per-record allocation (the bench
+      used a fixed buffer), so its microseconds are not comparable one for
+      one with the numbers recorded before W1; sizes and counts are.
 
   Usage:  bench_wire_formats [corpus-dir] [passes] [out-dir]
           defaults: ..\corpus  and 3 passes; with an out-dir it also writes
@@ -71,48 +80,28 @@ uses
 {$IFDEF WINDOWS}
    Windows,   (* QueryPerformanceCounter -- see StartClock *)
 {$ENDIF}
-   db,
-   sqldb,
-   crc,
-   fpjson,
-   jsonparser,
+   fpjson,     (* fields.json, for wire_check.py *)
    Log4D,
    MainUnit,  (* logger -- units below log through it *)
-   uLogDatabase;
+   uLogDatabase,
+   uLogRepository,   (* QsoWireColumns, ReadWireValues -- the wire's columns and a row *)
+   uWireQso;         (* the codec that ships *)
 
 const
-   MAX_FIELDS = 200;
    BUF_SIZE   = 131072;   (* 100+ fields; a few may be 255 non-Latin characters *)
 
-   (* Columns that are about THIS database, not about the QSO: its own row
-     number, which session wrote it, and the flags that say whether it has been
-     handed to the server or the UDP broadcast yet. A receiver's database has
-     its own. THE LIST IS FOR THE ISSUE 341 PLAN TO CONFIRM (notes, rcvd_extra
-     and qso_set_id are INCLUDED here pending a ruling). *)
-   LOCAL_COLUMNS = ',id,session_id,session_seq,sent_to_server,server_dirty,sent_udp,udp_dirty,';
-
 type
-   TVals = array[1..MAX_FIELDS] of string;
+   (* A row: one canonical value per wire column, index 0 = tag 1. *)
+   TVals = TWireValues;
    TByteBuf = array[0..BUF_SIZE - 1] of byte;
-
-   (* The schema, once: column names, whether numeric, and the default's
-     canonical text ('' for NULL). *)
-   TSchema = record
-      Count: integer;
-      Name: array[1..MAX_FIELDS] of string;
-      Def: TVals;
-      IsNum: array[1..MAX_FIELDS] of boolean;
-   end;
 
 var
    gFreq: Int64 = 0;
    gOutDir: string = '';
-   gSchema: TSchema;
-   gIndex: TStringList = nil;   (* column name -> tag, for decoding JSON *)
-   gHaveSchema: boolean = False;
+   (* uLogRepository's, shared and read-only: never freed here. *)
+   gCols: TWireColumns = nil;
    gDiffShown: integer = 0;   (* the first few field differences are printed *)
    gNulValues: Int64 = 0;     (* TEXT values that held a NUL character *)
-   gNulColumns: string = ',';
 
 (* THE CLOCK, as bench_callsign and bench_enter_latency. *)
 procedure StartClock(out aAt: Int64);
@@ -137,173 +126,27 @@ begin
 {$ENDIF}
 end;
 
-(* A column's DEFAULT as canonical text: NULL (no default) is '', a quoted
-  string loses its quotes, a number stays its digits. *)
-function DefaultText(const aRaw: string; aIsNull: boolean): string;
-begin
-   Result := '';
-   if aIsNull then
-      begin
-      Exit;
-      end;
-   Result := aRaw;
-   if (Length(Result) >= 2) and (Result[1] = '''') and (Result[Length(Result)] = '''') then
-      begin
-      Result := Copy(Result, 2, Length(Result) - 2);
-      Result := StringReplace(Result, '''''', '''', [rfReplaceAll]);
-      end;
-end;
-
-(* Reads the qso table's columns, types and defaults, minus the local ones. *)
-procedure LoadSchema(aDb: TLogDatabase; out aSelect: string);
-var
-   q: TSQLQuery;
-   name: string;
-begin
-   gSchema.Count := 0;
-   aSelect := '';
-   q := TSQLQuery.Create(nil);
-   try
-      q.DataBase := aDb.Connection;
-      q.SQL.Text := 'PRAGMA table_info(qso)';
-      q.Open;
-      while not q.EOF do
-         begin
-         name := q.FieldByName('name').AsString;
-         if Pos(',' + name + ',', LOCAL_COLUMNS) = 0 then
-            begin
-            inc(gSchema.Count);
-            gSchema.Name[gSchema.Count] := name;
-            gSchema.IsNum[gSchema.Count] := Pos('INT', UpperCase(q.FieldByName('type').AsString)) > 0;
-            gSchema.Def[gSchema.Count] := DefaultText(q.FieldByName('dflt_value').AsString,
-                                                      q.FieldByName('dflt_value').IsNull);
-            if aSelect <> '' then
-               begin
-               aSelect := aSelect + ',';
-               end;
-            aSelect := aSelect + name;
-            end;
-         q.Next;
-         end;
-      q.Close;
-   finally
-      q.Free;
-   end;
-   aSelect := 'SELECT ' + aSelect + ' FROM qso ORDER BY id';
-end;
-
-procedure BuildIndex;
-var
-   i: integer;
-begin
-   if gIndex <> nil then
-      begin
-      gIndex.Free;
-      end;
-   gIndex := TStringList.Create;
-   gIndex.CaseSensitive := True;
-   for i := 1 to gSchema.Count do
-      begin
-      gIndex.AddObject(gSchema.Name[i], TObject(PtrInt(i)));
-      end;
-   gIndex.Sorted := True;
-end;
-
-function SameSchema(const aOther: TSchema): boolean;
-var
-   i: integer;
-begin
-   Result := aOther.Count = gSchema.Count;
-   if Result then
-      begin
-      for i := 1 to gSchema.Count do
-         begin
-         if (aOther.Name[i] <> gSchema.Name[i]) or (aOther.Def[i] <> gSchema.Def[i]) then
-            begin
-            Result := False;
-            Exit;
-            end;
-         end;
-      end;
-end;
-
-(* THE CANONICAL STREAM: every field, in column order, as tag + 2-byte byte
-  length + the value's UTF-8 bytes, defaults included. aSkip is a field to
-  treat as never received (it reverts to its default; 0 = none). *)
-function PackCanon(const aVals: TVals; aSkip: integer; var aBuf: TByteBuf): integer;
-var
-   i, j: integer;
-   v: UTF8String;
-begin
-   Result := 0;
-   for i := 1 to gSchema.Count do
-      begin
-      if i = aSkip then
-         begin
-         v := UTF8Encode(gSchema.Def[i]);
-         end
-      else
-         begin
-         v := UTF8Encode(aVals[i]);
-         end;
-      aBuf[Result] := i;
-      inc(Result);
-      aBuf[Result] := Length(v) and $FF;
-      inc(Result);
-      aBuf[Result] := (Length(v) shr 8) and $FF;
-      inc(Result);
-      for j := 1 to Length(v) do
-         begin
-         aBuf[Result] := Ord(v[j]);
-         inc(Result);
-         end;
-      end;
-end;
-
+(* THE SHIPPING CODEC under the bench's old call shapes, so the measuring
+  logic below is unchanged. aSkip is a 0-based column, -1 = none; aBuf is no
+  longer used (PackCanonical allocates). *)
 function RecordCrc(const aVals: TVals; aSkip: integer; var aBuf: TByteBuf): Cardinal;
-var
-   n: integer;
 begin
-   n := PackCanon(aVals, aSkip, aBuf);
-   Result := crc32(0, nil, 0);
-   Result := crc32(Result, @aBuf[0], n);
+   Result := RecordCrc32(gCols, aVals, aSkip);
 end;
 
-(* aOmit True: a field equal to its default is left out. False: EVERY field is
-  named; a NULL number is JSON null, a blank string is "". *)
 function EncodeJson(const aVals: TVals; aCrc: Cardinal; aOmit: boolean): string;
-var
-   o: TJSONObject;
-   i: integer;
 begin
-   o := TJSONObject.Create;
-   try
-      for i := 1 to gSchema.Count do
-         begin
-         if (not aOmit) or (aVals[i] <> gSchema.Def[i]) then
-            begin
-            if gSchema.IsNum[i] then
-               begin
-               if aVals[i] = '' then
-                  begin
-                  o.Add(gSchema.Name[i]);   (* a null *)
-                  end
-               else
-                  begin
-                  o.Add(gSchema.Name[i], StrToInt64(aVals[i]));
-                  end;
-               end
-            else
-               begin
-               o.Add(gSchema.Name[i], aVals[i]);
-               end;
-            end;
-         end;
-      o.Add('k', IntToHex(aCrc, 8));
-      Result := o.AsJSON;
-   finally
-      o.Free;
-   end;
+   Result := uWireQso.EncodeJson(gCols, aVals, aCrc, aOmit);
+end;
+
+procedure DecodeJson(const aText: string; out aVals: TVals; out aSent: Cardinal);
+begin
+   uWireQso.DecodeJson(gCols, aText, aVals, aSent);
+end;
+
+procedure ResetToDefaults(out aVals: TVals);
+begin
+   aVals := gCols.DefaultValues;
 end;
 
 (* Tag 0 is the checksum, 4 bytes. *)
@@ -320,12 +163,12 @@ begin
    aBuf[Result] := (aCrc shr 8) and $FF; inc(Result);
    aBuf[Result] := (aCrc shr 16) and $FF; inc(Result);
    aBuf[Result] := (aCrc shr 24) and $FF; inc(Result);
-   for i := 1 to gSchema.Count do
+   for i := 0 to gCols.Count - 1 do
       begin
-      if aVals[i] <> gSchema.Def[i] then
+      if aVals[i] <> gCols.Default[i] then
          begin
          u := UTF8Encode(aVals[i]);
-         aBuf[Result] := i;
+         aBuf[Result] := i + 1;
          inc(Result);
          aBuf[Result] := Length(u) and $FF;
          inc(Result);
@@ -338,62 +181,6 @@ begin
             end;
          end;
       end;
-end;
-
-(* DECODE, and report the checksum the sender stated. A missing field takes
-  its column's default: that is the whole point of omitting them. *)
-procedure ResetToDefaults(out aVals: TVals);
-var
-   i: integer;
-begin
-   for i := 1 to MAX_FIELDS do
-      begin
-      aVals[i] := '';
-      end;
-   for i := 1 to gSchema.Count do
-      begin
-      aVals[i] := gSchema.Def[i];
-      end;
-end;
-
-procedure DecodeJson(const aText: string; out aVals: TVals; out aSent: Cardinal);
-var
-   d: TJSONData;
-   o: TJSONObject;
-   i, at: integer;
-   nm: string;
-begin
-   ResetToDefaults(aVals);
-   aSent := 0;
-   d := GetJSON(aText);
-   try
-      o := d as TJSONObject;
-      for i := 0 to o.Count - 1 do
-         begin
-         nm := o.Names[i];
-         if nm = 'k' then
-            begin
-            aSent := Cardinal(StrToInt64('$' + o.Items[i].AsString));
-            end
-         else
-            begin
-            at := gIndex.IndexOf(nm);
-            if at >= 0 then
-               begin
-               if o.Items[i].IsNull then
-                  begin
-                  aVals[PtrInt(gIndex.Objects[at])] := '';
-                  end
-               else
-                  begin
-                  aVals[PtrInt(gIndex.Objects[at])] := o.Items[i].AsString;
-                  end;
-               end;
-            end;
-         end;
-   finally
-      d.Free;
-   end;
 end;
 
 procedure DecodeTlv(const aBuf: TByteBuf; aLen: integer; out aVals: TVals; out aSent: Cardinal);
@@ -420,7 +207,7 @@ begin
             begin
             v[j + 1] := AnsiChar(aBuf[p + j]);
             end;
-         aVals[tag] := UTF8Decode(v);
+         aVals[tag - 1] := UTF8Decode(v);
          end;
       inc(p, ln);
       end;
@@ -456,12 +243,12 @@ begin
    a := TJSONArray.Create;
    sl := TStringList.Create;
    try
-      for i := 1 to gSchema.Count do
+      for i := 0 to gCols.Count - 1 do
          begin
          o := TJSONObject.Create;
-         o.Add('name', gSchema.Name[i]);
-         o.Add('num', gSchema.IsNum[i]);
-         o.Add('def', gSchema.Def[i]);
+         o.Add('name', gCols.Name[i]);
+         o.Add('num', gCols.Numeric[i]);
+         o.Add('def', gCols.Default[i]);
          a.Add(o);
          end;
       sl.Text := a.AsJSON;
@@ -497,7 +284,7 @@ var
    i: integer;
 begin
    Result := True;
-   for i := 1 to gSchema.Count do
+   for i := 0 to gCols.Count - 1 do
       begin
       if a[i] <> b[i] then
          begin
@@ -506,7 +293,7 @@ begin
             begin
             inc(gDiffShown);
             WriteLn(Format('  DIFF field %s (tag %d): decoded [%s] sent [%s]',
-               [gSchema.Name[i], i, a[i], b[i]]));
+               [gCols.Name[i], i + 1, a[i], b[i]]));
             end;
          Exit;
          end;
@@ -522,7 +309,7 @@ var
    again: Cardinal;
    same: boolean;
 begin
-   again := RecordCrc(aVals, 0, b);
+   again := RecordCrc(aVals, -1, b);
    same := SameVals(aVals, aRow);   (* always run, so the differing field is named *)
    Result := (aSent = aCrcFull) and (again = aCrcFull) and same;
    if (not Result) and (gDiffShown < 6) then
@@ -548,19 +335,17 @@ type
 procedure RunSet(const aName, aDb: string; aRepeat: integer; out aRes: TSetResult);
 var
    db: TLogDatabase;
-   q: TSQLQuery;
+   repo: TLogRepository;
    rows: array of TVals;
-   n, i, pass, f, k, tl: integer;
-   sel, scratch, js, jf: string;
+   n, i, pass, f, tl, nul: integer;
+   scratch, js, jf: string;
    buf, buf2: TByteBuf;
    crcFull, sent: Cardinal;
    vals: TVals;
-   at: Int64;
+   at, rowCount, index: Int64;
    jfs, jss: array of string;
    tls: TBytesArray;
    fJF, fJ, fT: TFileStream;
-   saved: TSchema;
-   fld: TField;
 begin
    FillChar(aRes, SizeOf(aRes), 0);
    db := TLogDatabase.Create;
@@ -576,69 +361,32 @@ begin
          CopyBytes(aDb + '-wal', scratch + '-wal');
          end;
       db.Open(scratch);
-      saved := gSchema;
-      LoadSchema(db, sel);
-      if not gHaveSchema then
-         begin
-         gHaveSchema := True;
-         BuildIndex;
-         end
-      else if not SameSchema(saved) then
-         begin
-         WriteLn('SCHEMA DIFFERS between sets at ', aName, ' -- not comparable');
-         Halt(3);
-         end;
 
-      q := TSQLQuery.Create(nil);
+      (* THE REPOSITORY READS THE ROWS, in log order, each by its row id --
+        the way the W4 sender will read a committed row. RowIdAtIndex is an
+        OFFSET walk; at corpus sizes it is not what is being measured (the
+        read is not timed). *)
+      repo := TLogRepository.Create(db);
       try
-         q.DataBase := db.Connection;
-         q.SQL.Text := sel;
-         q.Open;
-         SetLength(rows, 1024);
-         while not q.EOF do
+         rowCount := repo.RecordCount;
+         SetLength(rows, rowCount);
+         index := 0;
+         while index < rowCount do
             begin
-            if n = Length(rows) then
+            if repo.ReadWireValues(repo.RowIdAtIndex(index), rows[n], nul) then
                begin
-               SetLength(rows, n * 2);
+               (* FINDING (2026-11-22): a TEXT column can hold a literal NUL,
+                 the old record's "no character" (AnsiChar #0) stored as a
+                 one-character string where NULL was meant. The repository
+                 strips it (uWireQso.WireText) and COUNTS it, so the defect at
+                 the writer is not hidden. *)
+               inc(gNulValues, nul);
+               inc(n);
                end;
-            ResetToDefaults(rows[n]);
-            for k := 1 to gSchema.Count do
-               begin
-               fld := q.Fields[k - 1];
-               if fld.IsNull then
-                  begin
-                  rows[n][k] := '';
-                  end
-               else if gSchema.IsNum[k] then
-                  begin
-                  rows[n][k] := IntToStr(fld.AsLargeInt);
-                  end
-               else
-                  begin
-                  rows[n][k] := UTF8Decode(AnsiString(fld.AsString));
-                  (* FINDING (2026-11-22): a TEXT column can hold a literal NUL,
-                    the old record's "no character" (AnsiChar #0) stored as a
-                    one-character string where NULL was meant. JSON cannot
-                    carry it through this parser, and a NUL does not belong on
-                    the wire. The sender treats it as blank; it is COUNTED
-                    here so the defect at the writer is not hidden. *)
-                  if Pos(#0, rows[n][k]) > 0 then
-                     begin
-                     inc(gNulValues);
-                     if Pos(',' + gSchema.Name[k] + ',', gNulColumns) = 0 then
-                        begin
-                        gNulColumns := gNulColumns + gSchema.Name[k] + ',';
-                        end;
-                     rows[n][k] := StringReplace(rows[n][k], #0, '', [rfReplaceAll]);
-                     end;
-                  end;
-               end;
-            inc(n);
-            q.Next;
+            inc(index);
             end;
-         q.Close;
       finally
-         q.Free;
+         repo.Free;
       end;
    finally
       db.Free;
@@ -666,7 +414,7 @@ begin
       (* Sizes and CORRECTNESS, once per row. *)
       for i := 0 to n - 1 do
          begin
-         crcFull := RecordCrc(rows[i], 0, buf);
+         crcFull := RecordCrc(rows[i], -1, buf);
          jss[i] := EncodeJson(rows[i], crcFull, True);
          jfs[i] := EncodeJson(rows[i], crcFull, False);
          tl := EncodeTlv(rows[i], crcFull, buf2);
@@ -700,9 +448,9 @@ begin
             end;
 
          (* THE DROPPED-FIELD TEST: every non-default field, treated as lost. *)
-         for f := 1 to gSchema.Count do
+         for f := 0 to gCols.Count - 1 do
             begin
-            if rows[i][f] <> gSchema.Def[f] then
+            if rows[i][f] <> gCols.Default[f] then
                begin
                inc(aRes.NonDefault);
                inc(aRes.Trials);
@@ -720,7 +468,7 @@ begin
          begin
          for i := 0 to n - 1 do
             begin
-            crcFull := RecordCrc(rows[i], 0, buf);
+            crcFull := RecordCrc(rows[i], -1, buf);
             jf := EncodeJson(rows[i], crcFull, False);
             end;
          end;
@@ -730,7 +478,7 @@ begin
          begin
          for i := 0 to n - 1 do
             begin
-            crcFull := RecordCrc(rows[i], 0, buf);
+            crcFull := RecordCrc(rows[i], -1, buf);
             js := EncodeJson(rows[i], crcFull, True);
             end;
          end;
@@ -740,7 +488,7 @@ begin
          begin
          for i := 0 to n - 1 do
             begin
-            crcFull := RecordCrc(rows[i], 0, buf);
+            crcFull := RecordCrc(rows[i], -1, buf);
             tl := EncodeTlv(rows[i], crcFull, buf2);
             end;
          end;
@@ -752,7 +500,7 @@ begin
          for i := 0 to n - 1 do
             begin
             DecodeJson(jfs[i], vals, sent);
-            crcFull := RecordCrc(vals, 0, buf);
+            crcFull := RecordCrc(vals, -1, buf);
             end;
          end;
       aRes.MsDecJF := StopClock(at);
@@ -762,7 +510,7 @@ begin
          for i := 0 to n - 1 do
             begin
             DecodeJson(jss[i], vals, sent);
-            crcFull := RecordCrc(vals, 0, buf);
+            crcFull := RecordCrc(vals, -1, buf);
             end;
          end;
       aRes.MsDecJ := StopClock(at);
@@ -773,7 +521,7 @@ begin
             begin
             Move(tls[i][0], buf2[0], Length(tls[i]));
             DecodeTlv(buf2, Length(tls[i]), vals, sent);
-            crcFull := RecordCrc(vals, 0, buf);
+            crcFull := RecordCrc(vals, -1, buf);
             end;
          end;
       aRes.MsDecT := StopClock(at);
@@ -811,13 +559,13 @@ function TagOf(const aName: string): integer;
 var
    at: integer;
 begin
-   at := gIndex.IndexOf(aName);
+   at := gCols.IndexOfName(aName);
    if at < 0 then
       begin
       WriteLn('no such column: ', aName);
       Halt(3);
       end;
-   Result := PtrInt(gIndex.Objects[at]);
+   Result := at;
 end;
 
 (* THE NON-ASCII PIN (the wire is UTF-8; every sender converts from its own
@@ -860,7 +608,7 @@ begin
                end;
             7: row[TagOf('rcvd_qth')] := FromCodePoints([$FC, $DF, $E5, $F8, $20AC]);         (* Latin-1 and euro *)
          end;
-         crcFull := RecordCrc(row, 0, buf);
+         crcFull := RecordCrc(row, -1, buf);
          js := EncodeJson(row, crcFull, True);
          jf := EncodeJson(row, crcFull, False);
          tl := EncodeTlv(row, crcFull, buf2);
@@ -915,6 +663,12 @@ begin
    (* Any standalone EXE that links app units must assign the MainUnit global
      logger or it AVs on the first log call. *)
    logger := TLogLogger.GetLogger('bench');
+   gCols := QsoWireColumns;
+   if QsoWireTableProblem <> '' then
+      begin
+      WriteLn(string(QsoWireTableProblem));
+      Halt(3);
+      end;
 {$IFDEF WINDOWS}
    QueryPerformanceFrequency(gFreq);
 {$ENDIF}
@@ -990,9 +744,9 @@ begin
       WriteLn;
       if totRows > 0 then
          begin
-         WriteLn(Format('SCHEMA: %d wire fields (qso columns minus local ones)', [gSchema.Count]));
-         WriteLn(Format('DATA FINDING: %d TEXT values held a NUL character, in columns %s (stripped here)',
-            [gNulValues, gNulColumns]));
+         WriteLn(Format('SCHEMA: %d wire fields (uLogRepository.QsoWireColumns)', [gCols.Count]));
+         WriteLn(Format('DATA FINDING: %d TEXT values held a NUL character (stripped by the repository)',
+            [gNulValues]));
          WriteLn(Format('ALL: %d QSOs, %.1f non-default fields each on average', [totRows, totND / totRows]));
          WriteLn(Format('     JSON full %.1f B   JSON omit %.1f B   TLV %.1f B   (old record: 376 B)',
             [totJF / totRows, totJ / totRows, totT / totRows]));
