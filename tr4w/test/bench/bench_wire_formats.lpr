@@ -65,7 +65,7 @@ uses
 
 const
    MAX_FIELDS = 128;
-   BUF_SIZE   = 16384;
+   BUF_SIZE   = 65536;   (* 69 fields; a few may be 255 non-Latin characters *)
 
 type
    TVals = array[1..MAX_FIELDS] of string;
@@ -252,19 +252,26 @@ end;
 function PackCanon(const aVals: TVals; aCount, aSkip: integer; var aBuf: TByteBuf): integer;
 var
    i, j: integer;
-   v: string;
+   v: UTF8String;
 begin
    Result := 0;
    for i := 1 to aCount do
       begin
-      v := aVals[i];
+      (* THE VALUE IS ITS UTF-8 BYTES, and the length is in BYTES, 2 of them
+        little-endian: a 255-character non-Latin name is more than 255 bytes. *)
       if i = aSkip then
          begin
          v := '';
+         end
+      else
+         begin
+         v := UTF8Encode(aVals[i]);
          end;
       aBuf[Result] := i;
       inc(Result);
-      aBuf[Result] := Length(v);
+      aBuf[Result] := Length(v) and $FF;
+      inc(Result);
+      aBuf[Result] := (Length(v) shr 8) and $FF;
       inc(Result);
       for j := 1 to Length(v) do
          begin
@@ -324,10 +331,12 @@ end;
 function EncodeTlv(c: TFieldCollector; aCrc: Cardinal; var aBuf: TByteBuf): integer;
 var
    i, j: integer;
+   u: UTF8String;
 begin
    Result := 0;
    aBuf[Result] := 0; inc(Result);
    aBuf[Result] := 4; inc(Result);
+   aBuf[Result] := 0; inc(Result);
    aBuf[Result] := aCrc and $FF; inc(Result);
    aBuf[Result] := (aCrc shr 8) and $FF; inc(Result);
    aBuf[Result] := (aCrc shr 16) and $FF; inc(Result);
@@ -336,13 +345,16 @@ begin
       begin
       if c.Val[i] <> '' then
          begin
+         u := UTF8Encode(c.Val[i]);
          aBuf[Result] := i;
          inc(Result);
-         aBuf[Result] := Length(c.Val[i]);
+         aBuf[Result] := Length(u) and $FF;
          inc(Result);
-         for j := 1 to Length(c.Val[i]) do
+         aBuf[Result] := (Length(u) shr 8) and $FF;
+         inc(Result);
+         for j := 1 to Length(u) do
             begin
-            aBuf[Result] := Ord(c.Val[i][j]);
+            aBuf[Result] := Ord(u[j]);
             inc(Result);
             end;
          end;
@@ -397,7 +409,7 @@ end;
 procedure DecodeTlv(const aBuf: TByteBuf; aLen: integer; out aVals: TVals; out aSent: Cardinal);
 var
    p, tag, ln, j: integer;
-   v: string;
+   v: UTF8String;
 begin
    for p := 1 to MAX_FIELDS do
       begin
@@ -408,20 +420,20 @@ begin
    while p < aLen do
       begin
       tag := aBuf[p];
-      ln := aBuf[p + 1];
-      inc(p, 2);
+      ln := aBuf[p + 1] or (aBuf[p + 2] shl 8);
+      inc(p, 3);
       if tag = 0 then
          begin
          aSent := aBuf[p] or (aBuf[p + 1] shl 8) or (aBuf[p + 2] shl 16) or (Cardinal(aBuf[p + 3]) shl 24);
          end
       else
          begin
-         v := '';
+         SetLength(v, ln);
          for j := 0 to ln - 1 do
             begin
-            v := v + Chr(aBuf[p + j]);
+            v[j + 1] := AnsiChar(aBuf[p + j]);
             end;
-         aVals[tag] := v;
+         aVals[tag] := UTF8Decode(v);
          end;
       inc(p, ln);
       end;
@@ -741,6 +753,128 @@ begin
    end;
 end;
 
+(* A string from Unicode code points, so this source file carries no non-ASCII
+  literal (its own encoding is then irrelevant). Above $FFFF: a surrogate pair. *)
+function FromCodePoints(const aPoints: array of Cardinal): string;
+var
+   i: integer;
+   cp: Cardinal;
+begin
+   Result := '';
+   for i := Low(aPoints) to High(aPoints) do
+      begin
+      cp := aPoints[i];
+      if cp > $FFFF then
+         begin
+         cp := cp - $10000;
+         Result := Result + WideChar($D800 + (cp shr 10)) + WideChar($DC00 + (cp and $3FF));
+         end
+      else
+         begin
+         Result := Result + WideChar(cp);
+         end;
+      end;
+end;
+
+function IndexOfName(c: TFieldCollector; const aName: string): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := 1 to c.Count do
+      begin
+      if c.Name[i] = aName then
+         begin
+         Result := i;
+         Exit;
+         end;
+      end;
+end;
+
+(* THE NON-ASCII PIN (issue 300: the wire is UTF-8, every sender converts from
+  its own native strings). A ShortString on a Windows ANSI machine cannot hold
+  Cyrillic or Japanese, so these values go straight into the field list rather
+  than through a record: what is pinned is the ENCODING, not the record.
+  Written as unicode_synthetic.* beside the corpus sets, for wire_check.py. *)
+procedure RunUnicodeSet;
+const
+   CASES = 7;
+var
+   c: TFieldCollector;
+   z: ContestExchange;
+   buf, buf2: TByteBuf;
+   fJF, fJ, fT: TFileStream;
+   k, i, tl: integer;
+   crcFull, sent: Cardinal;
+   js, jf, longName: string;
+   vals: TVals;
+   bad: integer;
+begin
+   FillChar(z, SizeOf(ContestExchange), 0);
+   c := TFieldCollector.Create;
+   fJF := TFileStream.Create(gOutDir + PathDelim + 'unicode_synthetic.jsonfull', fmCreate);
+   fJ := TFileStream.Create(gOutDir + PathDelim + 'unicode_synthetic.jsonomit', fmCreate);
+   fT := TFileStream.Create(gOutDir + PathDelim + 'unicode_synthetic.tlv', fmCreate);
+   bad := 0;
+   try
+      longName := '';
+      for i := 1 to 255 do
+         begin
+         longName := longName + FromCodePoints([$0416]);   (* a Cyrillic letter, 2 UTF-8 bytes *)
+         end;
+      for k := 1 to CASES do
+         begin
+         EmitFields(z, c);
+         c.Val[IndexOfName(c, 'call')] := 'K1ABC';
+         case k of
+            1: c.Val[IndexOfName(c, 'name')] := 'Jos' + FromCodePoints([$E9]);                       (* accented Latin *)
+            2: c.Val[IndexOfName(c, 'name')] := FromCodePoints([$0418, $0432, $0430, $043D]);       (* Cyrillic *)
+            3: c.Val[IndexOfName(c, 'name')] := FromCodePoints([$5C71, $7530, $592A, $90CE]);       (* Japanese *)
+            4: c.Val[IndexOfName(c, 'kids')] := longName;                                           (* 255 chars = 510 bytes *)
+            5: c.Val[IndexOfName(c, 'exch')] := '73 ' + FromCodePoints([$1F600]);                   (* outside the BMP *)
+            6: begin
+               c.Val[IndexOfName(c, 'exch')] := '0';                                                (* a string "0" is not blank *)
+               c.Val[IndexOfName(c, 'pts')] := '2';
+               end;
+            7: c.Val[IndexOfName(c, 'qth')] := FromCodePoints([$FC, $DF, $E5, $F8, $20AC]);         (* mixed Latin-1 and euro *)
+         end;
+         crcFull := RecordCrc(c.Val, c.Count, 0, buf);
+         js := EncodeJson(c, crcFull, True);
+         jf := EncodeJson(c, crcFull, False);
+         tl := EncodeTlv(c, crcFull, buf2);
+         WriteFrameText(fJF, jf);
+         WriteFrameText(fJ, js);
+         WriteFrame(fT, buf2[0], tl);
+
+         DecodeJson(js, c, vals, sent);
+         if (sent <> crcFull) or (RecordCrc(vals, c.Count, 0, buf) <> crcFull) then
+            begin
+            inc(bad);
+            end;
+         DecodeJson(jf, c, vals, sent);
+         if (sent <> crcFull) or (RecordCrc(vals, c.Count, 0, buf) <> crcFull) then
+            begin
+            inc(bad);
+            end;
+         DecodeTlv(buf2, tl, vals, sent);
+         if (sent <> crcFull) or (RecordCrc(vals, c.Count, 0, buf) <> crcFull) then
+            begin
+            inc(bad);
+            end;
+         end;
+      WriteLn(Format('unicode_synthetic: %d records, Pascal round-trip failures: %d', [CASES, bad]));
+      if bad <> 0 then
+         begin
+         Halt(2);
+         end;
+   finally
+      fJF.Free;
+      fJ.Free;
+      fT.Free;
+      c.Free;
+   end;
+end;
+
 var
    corpusDir, setDir: string;
    repeatCount: integer;
@@ -776,6 +910,7 @@ begin
       gOutDir := ExpandFileName(ParamStr(3));
       ForceDirectories(gOutDir);
       WriteFieldList(gOutDir + PathDelim + 'fields.json');
+      RunUnicodeSet;
       end;
 
    WriteLn('bench_wire_formats: corpus ', corpusDir, ', ', repeatCount, ' timing passes');

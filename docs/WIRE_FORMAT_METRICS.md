@@ -15,7 +15,7 @@ record four ways. **No production code changed.**
 | binary        | today: raw record, `SizeOf(ContestExchange)` = 376 bytes              |
 | JSON full     | one object, **every** field named, blank number `0`, blank string `""` |
 | JSON omit     | one object, blank and zero fields left out                            |
-| TLV           | tag byte, length byte, value; blank and zero omitted                  |
+| TLV           | tag byte, 2-byte length, UTF-8 value; blanks omitted          |
 
 JSON and TLV both end with the record checksum (JSON member `k`, TLV tag 0): a
 CRC-32 over the **full** record, every field in a fixed order, blanks included,
@@ -28,7 +28,7 @@ so it is identical whether or not the sender omitted blanks.
 | binary     |             376 |      100% |        (copy) |        (copy) |
 | JSON full  |           959.8 |      255% |          ~33  |          ~50  |
 | JSON omit  |           435.6 |      116% |          ~16  |          ~23  |
-| TLV        |           147.1 |       39% |          ~1   |          ~6   |
+| TLV        |           175.4 |       47% |          ~4   |          ~5   |
 
 Per log the same ordering holds (JSON full 950-1010 B, JSON omit 428-541 B, TLV
 140-209 B). 1,316 of the 1,855 QSOs are `winter_fd`, so the totals lean on it;
@@ -58,25 +58,25 @@ code. Run `bench_wire_formats.exe <corpus> 1 <outdir>` to write the frames
 Nothing is sent over a network; this is step 1 of two, and the server's real
 framing is not involved.
 
-Same 1,855 frames, decode plus checksum recompute, microseconds per record:
+Same 1,862 frames (1,855 corpus QSOs plus 7 synthetic non-ASCII ones), decode plus checksum recompute, microseconds per record:
 
 | format     | Windows PC, Python 3.12 | Raspberry Pi 400, Python 3.11 | Raspberry Pi 5 (bench5), Python 3.13 |
 | ---------- | ----------------------: | ----------------------------: | -----------------------------------: |
-| JSON full  |                    24.5 |                         122.1 |                                 52.3 |
-| JSON omit  |                    19.9 |                          96.6 |                                 39.4 |
-| TLV        |                    16.4 |                          72.0 |                                 31.1 |
+| JSON full  |                    27.1 |                         127.1 |                                 55.5 |
+| JSON omit  |                    22.1 |                         103.6 |                                 41.5 |
+| TLV        |                    17.6 |                          82.3 |                                 35.1 |
 
 The Pi 5 is about 2x the Pi 400 and about 2x slower than the PC; every frame
-verified there too (0 failures, 152,016 of 152,016 dropped fields detected).
+verified there too (0 failures, 152,082 of 152,082 dropped fields detected).
 bench5's ssh port (22) was open and answered, so no firewall rule is in the way
 of the step-1 copy; the step-2 listener port has not been tested.
 
 - **The checksum agrees across languages and machines**: every frame verified
-  (0 failures) in all three formats on both, and 152,016 of 152,016 dropped
-  fields (3 formats x 50,672) were detected. Pascal and Python build the same
+  (0 failures) in all three formats on both, and 152,082 of 152,082 dropped
+  fields (3 formats x 50,672, plus 66 in the synthetic set) were detected. Pascal and Python build the same
   canonical stream.
-- **In Python the formats are closer than in Pascal** (TLV 72 us versus JSON omit
-  97 us on the Pi, where Pascal was 6 versus 23). The checksum itself is a
+- **In Python the formats are closer than in Pascal** (TLV 82 us versus JSON omit
+  104 us on the Pi, where Pascal was about 5 versus 23). The checksum itself is a
   Python loop over all 69 fields and is the same cost for every format, so it
   dominates TLV. A server that cared would compute the CRC incrementally or in C.
 - **The Pi is about 4-5x slower than the PC.** At ~100 us a record a burst of
@@ -85,21 +85,50 @@ of the step-1 copy; the step-2 listener port has not been tested.
 ## What this does and does not say
 
 - JSON that omits blanks is **larger than today's binary** (116%); only TLV
-  beats it (39%). JSON's price is the key names. Shorter keys, or a numeric tag
+  beats it (47%). JSON's price is the key names. Shorter keys, or a numeric tag
   in the JSON, would narrow that -- not measured.
 - Values are carried as **text** in both JSON and TLV (a number is its digits).
-  A binary-integer TLV would be smaller than 147 B; this is the pessimistic TLV.
+  A binary-integer TLV would be smaller than 175 B; this is the pessimistic TLV.
 - Packet framing is not counted for any format.
 - Times are one machine, three passes, a 1 us-class clock (QueryPerformanceCounter);
   read them as orders of magnitude.
 - The fixed 376 bytes also costs nothing to parse; the table has no row for it
   because the bench does not copy it.
-- Not built: version negotiation, unknown-tag skipping, an actual server side.
-  NY4I will bring tr4wserverpy down for that half.
+- Not built: an actual server side. No TCP listener was built: at a station's
+  worst case (1,200 QSOs an hour, one every 3 s) the slowest decode measured
+  (about 127 us on a Pi 400) is ~0.004% of a core, and a 10,000-QSO catch-up
+  is about 1.3 s on a Pi 400. Speed does not decide the format.
 
-## Decision for NY4I
+## Rulings and the design they imply (NY4I, 2026-11-22)
 
-The metrics support the direction (omit blanks + checksum). The open choice is
-the encoding: **JSON omit** (readable, extensible, 116% of today) versus **TLV**
-(39%, needs a tag registry that is the field order in `EmitFields`). Neither is
-built into the product.
+1. **No backward compatibility.** A peer or server speaking the old 376-byte
+   QSO messages is an error. Only the three messages that carry a
+   `ContestExchange` (new QSO, edit, offline QSO) get new forms; station status,
+   spots, intercom, parameters and HELLO stay as they are.
+2. **Version gate: report and reject.** The protocol version IS the schema
+   version (it fixes the field set the checksum covers and every default).
+   A client whose HELLO version differs from the server's is reported and
+   refused, so two stations never exchange QSOs under different field sets and
+   the checksum cannot raise a false "lost field" for a version mismatch. The
+   server already closes a connection whose HELLO names a protocol it does not
+   speak; what the operator SEES on the client when that happens has not been
+   checked.
+3. **The wire is UTF-8.** Every sender (Windows, Linux, macOS) converts from its
+   own native strings. The checksum is over each value's UTF-8 BYTES with a
+   byte-count length, never a character count. Pinned by `unicode_synthetic.*`
+   (accented Latin, Cyrillic, Japanese, a 255-character = 510-byte value, a
+   character outside the BMP, the string "0"): it verifies in Pascal and in
+   Python on the PC, the Pi 400 and the Pi 5.
+4. **Encoding: JSON with blanks omitted, plus the record checksum.** No
+   dependency, readable in a capture, named fields so an unknown member is
+   ignorable. Hand-rolled TLV and Protocol Buffers are considered and not chosen
+   (positional tags need registry discipline; protobuf needs a shared schema and
+   generated code). MessagePack or CBOR with string keys is the drop-in upgrade
+   if size ever matters: the checksum is over the logical fields, so only the
+   encode layer changes. Not measured.
+5. **Edits are complete snapshots** (reset, then overlay), never a patch. An
+   absent field means blank, not "unchanged" -- otherwise an operator clearing a
+   field would be lost.
+6. **Open:** which fields are REQUIRED (absence is an error, not a default);
+   how the server rebuilds its flat record, if it keeps one, from named fields;
+   the checksum's per-record role versus today's whole-log CRC32.

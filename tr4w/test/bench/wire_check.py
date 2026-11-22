@@ -5,7 +5,7 @@ of length-prefixed frames (4-byte little-endian length, then the payload):
 
    <set>.jsonfull   JSON, every field named
    <set>.jsonomit   JSON, blank and zero fields omitted
-   <set>.tlv        tag byte, length byte, value; tag 0 is the checksum
+   <set>.tlv        tag byte, 2-byte length, UTF-8 value; tag 0 is the checksum
 
 plus fields.json: the field names in TAG ORDER (tag i is entry i, 1-based) and
 whether each is numeric.
@@ -18,8 +18,13 @@ and Python about the canonical form shows up here as a mismatch, which is the
 point of running it in another language (and on another machine).
 
 THE CANONICAL RULE: for every field i = 1..N in order, with blanks included:
-   byte(i), byte(len(value)), value bytes (latin-1)
-where a numeric 0 and an empty string are both the empty value.
+   byte(i), 2-byte little-endian BYTE length, the value's UTF-8 bytes
+where a numeric 0 and an empty string are both the empty value. (The wire is
+UTF-8: every sender converts from its own native strings. A TLV frame is
+tag byte, 2-byte length, UTF-8 value; tag 0 is the 4-byte checksum.)
+
+unicode_synthetic.* is the non-ASCII pin: accented Latin, Cyrillic, Japanese, a
+255-character (510-byte) value, a character outside the BMP, the string "0".
 
 Also reports bytes per record and decode microseconds per record, and repeats
 the dropped-field test: every non-blank field treated as lost must change the
@@ -42,8 +47,8 @@ def canon_crc(vals, skip=0):
    parts = []
    for i in range(1, len(vals)):
       v = "" if i == skip else vals[i]
-      b = v.encode("latin-1")
-      parts.append(bytes((i, len(b))))
+      b = v.encode("utf-8")
+      parts.append(bytes((i, len(b) & 0xFF, len(b) >> 8)))
       parts.append(b)
    return zlib.crc32(b"".join(parts)) & 0xFFFFFFFF
 
@@ -82,14 +87,14 @@ def decode_tlv(frame, count):
    p = 0
    while p < len(frame):
       tag = frame[p]
-      ln = frame[p + 1]
-      p += 2
+      ln = frame[p + 1] | (frame[p + 2] << 8)
+      p += 3
       body = frame[p:p + ln]
       p += ln
       if tag == 0:
          stated = struct.unpack("<I", body)[0]
       else:
-         vals[tag] = body.decode("latin-1")
+         vals[tag] = body.decode("utf-8")
    return vals, stated
 
 
