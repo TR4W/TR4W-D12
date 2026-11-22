@@ -1022,8 +1022,10 @@ unannounced, never a difference). A difference is a REPORT and never a refusal:
   An older station's byte 331 is 0, so it reads ''. UNLIKE `ceOffContest`,
   the receiver KEEPS it: it is that QSO's own fact (the place the PEER sent
   it from), not a rule this station re-judges. The `.TRW` reader clears it.
-- A boundary entry logs one QSO per place (`DrainPendingMultiQSORefs`), so a
-  peer receives one packet per place, each with its own `ceRoverQTH`.
+- A boundary entry logs one QSO per place (`MainUnit.TEntryLegs`, legs of ONE
+  `LogEntry` since issue 348), so a peer receives one packet per place, each
+  with its own `ceRoverQTH` -- posted in leg order, and only after the whole
+  entry committed; a refused entry sends no packet for any leg.
 
 ## Coordinate with
 

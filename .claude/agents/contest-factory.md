@@ -1432,7 +1432,7 @@ the target shape, the M-step migration order and the open questions.
   PREFIX sheet with the mode in its key (`NSCW`/`NSPH`, set in the class's
   `ParseReceivedExchange` -- South Dakota's pattern) and the class's
   `CountsAsMultiplier` refuses it on the domestic sheet. The county-line
-  drain (`MainUnit.DrainPendingMultiQSORefs`) re-asks `SetPrefix` after
+  leg builder (`MainUnit.TEntryLegs.BuildLeg`, the drain until issue 348) re-asks `SetPrefix` after
   the QTH lookup since then, so each leg carries its own key.
 - **THE VERMONT QSO PARTY (2026-11-10, #130) SETTLED FOUR THINGS A PARTY
   WILL MEET AGAIN.** (1) A DX station that sends RST ONLY needs no override:

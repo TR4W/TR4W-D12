@@ -460,9 +460,9 @@ type
         here rather than in each of them.
 
         WHY THAT RULE. A county line or a POTA n-fer is one contact logged as
-        several QSOs, and TR4W writes them CONSECUTIVELY -- the county loop in
-        DrainPendingMultiQSORefs calls LogContact once per county without
-        anything in between. They also share ContestExchange.id, because that
+        several QSOs, and TR4W writes them CONSECUTIVELY -- every leg of the
+        entry in one AppendBatch, in leg order, with nothing in between
+        (logsubs2.LogEntry, issue 348). They also share ContestExchange.id, because that
         field identifies the EXCHANGE: measured on the shipped florida_qp
         fixture, where two W4THY rows both carry
         5cd6c61f69cf4422baef44f93b2cbbd2.

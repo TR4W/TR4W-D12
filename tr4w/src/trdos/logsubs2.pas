@@ -226,6 +226,26 @@ procedure OTRSPCommand;
   typed it -- see MainUnit.TryLogContact. The refusal has already been put on
   the status line, with a beep. *)
 function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;
+
+type
+   (* BUILDS LEG aLeg (1 or more) OF A SEVERAL-LEG ENTRY into aLegs[aLeg],
+     from aLegs[0 .. aLeg - 1] AS PREPARE AND SCORE LEFT THEM -- the earlier
+     legs are on the sheets when it is called (issue 348). Entries above aLeg
+     are placeholders and must not be read. *)
+   TLiveQSOBuildLeg = procedure(aLeg: integer;
+                                var aLegs: array of ContestExchange) of object;
+
+(* ONE OPERATOR ENTRY OF 1 + aExtraLegs QSOs -- a county line, several parks,
+  a rover at a boundary -- written in ONE transaction, all of it or none
+  (issue 348, plan commit 5; NY4I's rulings 1 and 5). RXData is leg 0, and
+  aBuildLeg makes each further leg once the legs before it are scored. True
+  only when EVERY leg is committed and released; on False nothing of the
+  entry is in the log or was published, a leg already scored has been taken
+  back off the sheets by a reload of the log (LoadinLog), and the store's
+  failure notice is shown after that reload. RXData comes back as leg 0 as
+  the steps left it, refused or not. LogContact is this with no extra leg. *)
+function LogEntry(var RXData: ContestExchange; MyComputer: boolean;
+                  aExtraLegs: integer; aBuildLeg: TLiveQSOBuildLeg): boolean;
 (* THE NEEDS STRIPS, ASKED AGAIN ONCE A QSO HAS REACHED THE SHEETS -- issue
   #100. LogContact calls it after the dupe and multiplier sheets are updated,
   so the band just worked drops out of "QSO needs" and "Mult needs" for that
@@ -1743,19 +1763,23 @@ type
       destructor Destroy; override;
    end;
 
-   (* ONE OPERATOR ENTRY -- ONE LEG TODAY, SEVERAL AT PLAN COMMIT 5 -- driven
-     through uSubmitSequence.TSubmitSequence, which decides only WHEN each
-     step runs: Prepare(0); Write; then Score(0) and Release(0) when the
-     write committed, else Discard(0). One leg scores nothing before its
-     write, so a refusal has nothing to rebuild. The records (FQsos) are
-     kept apart from the legs so each can be handed to a step as the var
-     RXData the steps have always been written against. *)
+   (* ONE OPERATOR ENTRY -- ONE LEG, OR SEVERAL (a county line, parks, a
+     rover's boundary; issue 348, plan commit 5) -- driven through
+     uSubmitSequence.TSubmitSequence, which decides only WHEN each step runs:
+     Prepare(0); for each further leg Score(i - 1), then BUILD and Prepare(i);
+     ONE Write of every leg; then Score of the last and Release of each in
+     order when the write committed, else Discard of each and -- when a leg
+     had been scored -- the rebuild. One leg scores nothing before its write,
+     so its refusal has nothing to rebuild. The records (FQsos) are kept
+     apart from the legs so each can be handed to a step as the var RXData
+     the steps have always been written against. *)
    TLiveQSOSubmission = class
    private
       FQsos: array of ContestExchange;
       FLegs: array of TLiveQSOLeg;
       FFacts: TLiveQsoFacts;
       FSequence: TSubmitSequence;
+      FBuildLeg: TLiveQSOBuildLeg;
       function PrepareLeg(aLeg: integer): boolean;
       procedure ScoreLeg(aLeg: integer);
       function WriteLegs(aLegCount: integer): boolean;
@@ -1766,6 +1790,10 @@ type
       constructor Create;
       destructor Destroy; override;
       procedure AddLeg(const aQso: ContestExchange; aMyComputer: boolean);
+      (* aCount further legs, each made by aBuildLeg just before its Prepare
+        (a placeholder record until then). *)
+      procedure AddBuiltLegs(aCount: integer; aMyComputer: boolean;
+                             aBuildLeg: TLiveQSOBuildLeg);
       (* True only when every leg is committed to the log and released. *)
       function Submit: boolean;
       (* Leg aLeg's record as the steps left it -- refused or not. *)
@@ -1780,11 +1808,27 @@ function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;
 { This procedure will log the contact just completed.  It will be
   pushed onto the editable log and the log entry popped off the editable
   log will be examined and written to the LOG.DAT file.                 }
+begin
+  (* ONE LEG: the entry of one QSO -- WSJT-X, a peer's QSO, the Enter of a
+     single QSO. Exactly the path of plan commit 4 (issue 348). *)
+  Result := LogEntry(RXData, MyComputer, 0, nil);
+end;
+
+function LogEntry(var RXData: ContestExchange; MyComputer: boolean;
+                  aExtraLegs: integer; aBuildLeg: TLiveQSOBuildLeg): boolean;
 var
   submission                            : TLiveQSOSubmission;
+  holdNotices                           : boolean;
 begin
   Result := False;
   logger.trace('>>>Entering LogContact');
+  (* A FURTHER LEG NOBODY CAN BUILD is a caller's mistake, refused before
+     anything is touched. *)
+  if (aExtraLegs > 0) and (not Assigned(aBuildLeg)) then
+     begin
+     raise ESubmitSequenceError.Create(
+        'LogEntry: further legs need a leg builder');
+     end;
 
   (* A LOG THAT CANNOT TAKE THE QSO IS SAID SO FIRST -- 2026-11-18, NY4I's
      full D: drive. Read-only (a full disk, a write error, a locked log opened
@@ -1815,15 +1859,36 @@ begin
 
   (* PREPARE, WRITE, THEN SCORE AND RELEASE -- or, refused, DISCARD: the
      order is TSubmitSequence's. The record goes back to the caller as the
-     steps left it, refused or not, as it always has (the county drain,
-     uNet and WSJT-X read it after). *)
+     steps left it, refused or not, as it always has (TryLogContact, uNet
+     and WSJT-X read it after).
+
+     SEVERAL LEGS HOLD THE STORE'S FAILURE NOTICE until the submission is
+     over (issue 348, plan section 3): legs 0 .. n-2 are on the sheets
+     before the write, and a modal shown inside the refused write would pump
+     messages -- a peer's QSO, a network settle, a WSJT-X job -- against
+     sheets the rebuild has not yet put back. Shown in the finally, so after
+     the discard and the rebuild, raised or not. ONE leg holds nothing: it
+     has scored nothing, and its notice comes where it always has. *)
+  holdNotices := aExtraLegs > 0;
   submission := TLiveQSOSubmission.Create;
   try
      submission.AddLeg(RXData, MyComputer);
+     if aExtraLegs > 0 then
+        begin
+        submission.AddBuiltLegs(aExtraLegs, MyComputer, aBuildLeg);
+        end;
+     if holdNotices then
+        begin
+        LogStoreHoldFailureNotices;
+        end;
      try
         Result := submission.Submit;
      finally
         RXData := submission.Qso(0);
+        if holdNotices then
+           begin
+           LogStoreShowHeldFailureNotices;
+           end;
      end;
   finally
      submission.Free;
@@ -1853,11 +1918,12 @@ var
 begin
   MyComputer := aLeg.MyComputer;
 
-  { ONE LINE PER QSO WRITTEN, and the county-line drain comes through here
-    too -- DrainPendingMultiQSORefs calls LogContact once per queued county.
+  (* ONE LINE PER QSO WRITTEN, and every further leg of an entry comes through
+    here too -- each county, park and rover copy is a leg of LogEntry, made by
+    MainUnit.TEntryLegs.BuildLeg (issue 348).
     That makes "one exchange, several QSOs" observable to the UI harness,
     which had no way to see it: the corpus reads finished files and the unit
-    tests cannot reach this unit at all. }
+    tests cannot reach this unit at all. *)
 
   if logger.IsDebugEnabled then
      begin
@@ -1932,7 +1998,7 @@ begin
   // ceClearDupeSheet bypass: county-line / Nfer follow-up records carry
   // this flag so the dupe check below (and the matching one in
   // tUpdateLog(actRescore)) does NOT flag them as dupes.  See
-  // MainUnit.DrainPendingMultiQSORefs for where the flag is set.
+  // MainUnit.TEntryLegs.BuildLeg for where the flag is set.
   (* THE GRID-SQUARE ROVER -- the contest says whether its multiplier is the
     grid square (TContestBase.HasGridSquareMultiplier, M11 S6 part 1); both
     tests below asked `ContestSession.DomesticMult = GridSquares`. Asked
@@ -2308,6 +2374,18 @@ begin
    FLegs[n].MyComputer := aMyComputer;
 end;
 
+procedure TLiveQSOSubmission.AddBuiltLegs(aCount: integer; aMyComputer: boolean;
+                                          aBuildLeg: TLiveQSOBuildLeg);
+var
+   i: integer;
+begin
+   FBuildLeg := aBuildLeg;
+   for i := 1 to aCount do
+      begin
+      AddLeg(Default(ContestExchange), aMyComputer);
+      end;
+end;
+
 function TLiveQSOSubmission.Submit: boolean;
 begin
    Result := FSequence.Run(Length(FLegs));
@@ -2320,6 +2398,14 @@ end;
 
 function TLiveQSOSubmission.PrepareLeg(aLeg: integer): boolean;
 begin
+   (* A FURTHER LEG IS MADE HERE, NOT BEFORE: from the legs before it as
+     Prepare and Score left them, with every one of them already on the
+     sheets -- what the county drain copied, one whole LogContact per leg,
+     until issue 348. *)
+   if aLeg > 0 then
+      begin
+      FBuildLeg(aLeg, FQsos);
+      end;
    LiveQSOPrepare(FQsos[aLeg], FLegs[aLeg]);
    Result := True;
 end;
@@ -2355,14 +2441,34 @@ end;
 
 procedure TLiveQSOSubmission.RebuildAfterRefusal;
 begin
-   (* NOT REACHED WITH ONE LEG: a one-leg entry scores nothing before its
-     write, so a refusal leaves no score state to rebuild. A submission of
-     several legs is plan commit 5, which makes this the log's reload
-     (LoadinLog) once it is shown to write nothing. Until then, loud. *)
-   logger.Error('[LogContact] a refused entry of %d leg(s) needs a rebuild, ' +
-                'and none is wired (plan commit 5)', [Length(FLegs)]);
-   raise ESubmitSequenceError.Create(
-      'TLiveQSOSubmission: a rebuild after a refused entry is not wired');
+   (* NEVER REACHED WITH ONE LEG: a one-leg entry scores nothing before its
+     write. Several legs (issue 348, plan commit 5): legs 0 .. n-2 were
+     scored onto the sheets before the one write, the store has rolled the
+     whole entry back, so the session's score is rebuilt FROM THE LOG -- the
+     loader RescoreLog ends in. It rebuilds exactly what Score wrote (totals,
+     multiplier and dupe sheets, points, continent counts, all emptied by
+     Sheet.DisposeOfMemoryAndZeroTotals and refilled); the initial-exchange
+     history and the rate counters it does not rebuild are Release's, which
+     no refused leg reached.
+
+     IT WRITES NO QSO. Its one store write is the restart file at its foot,
+     behind LogStoreReadyToWrite: nothing on a read-only log (a full disk),
+     and on a log a held lock refused, the session_state rows only if a band,
+     mode or speed memory moved -- not the entry's data.
+
+     A LOG STOOD DOWN (a failure Disable could not roll back into read-only:
+     a constraint, corruption) cannot be read, so the loader leaves at once
+     and the scored legs STAY on the sheets. The store has already told the
+     operator to stop; this says what the sheets hold. *)
+   logger.Warn('[LogContact] a refused entry of %d legs: the score is rebuilt from the log',
+               [Length(FLegs)]);
+   LoadinLog;
+   if not LogStoreIsUsable then
+      begin
+      logger.Error('[LogContact] the log could not be read after the refused entry of %d ' +
+                   'legs: the totals and multiplier sheets still hold its scored legs ' +
+                   'until the log is reopened', [Length(FLegs)]);
+      end;
 end;
 
 function SearchAndPounce: boolean;

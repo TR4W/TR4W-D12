@@ -129,7 +129,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   keys, and TR4W already writes it that way: one row per county sharing the
   transmitted serial number, with ceClearDupeSheet set on the follow-ups so the
   generic dupe check does not blank them. The application owns that queue
-  (LOGSTUFF.ApplyFirstQTHAndQueueRest and MainUnit.DrainPendingMultiQSORefs);
+  (LOGSTUFF.ApplyFirstQTHAndQueueRest and MainUnit.TEntryLegs);
   the contest states only HOW MANY counties are legal. Nothing here is ever
   handed a list. *)
 unit uContestStateQSOPartyBase;
@@ -149,7 +149,7 @@ uses
 const
    (* NO LIMIT IS ENFORCED ANYWHERE IN TR4W TODAY -- measured, not assumed:
       LOGSTUFF.ApplyFirstQTHAndQueueRest pushes EVERY valid county after the
-      first onto uPendingCounties and MainUnit.DrainPendingMultiQSORefs writes
+      first onto uPendingCounties and MainUnit.TEntryLegs makes
       one QSO for each. Nothing counts them, so "two versus four" is a
       behaviour this program does not have.
 

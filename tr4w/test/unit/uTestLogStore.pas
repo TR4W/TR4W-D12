@@ -2468,6 +2468,11 @@ begin
       LogStoreFillTheDiskForTests;
       entries := 0;
       refused := False;
+      (* HELD, as LogEntry holds it for an entry of several legs (issue 348,
+         plan commit 5): the full disk's modal is NOT shown inside the store
+         call, while the entry's earlier legs would still be on the sheets,
+         but when the hold ends -- after the caller's rebuild. *)
+      LogStoreHoldFailureNotices;
       for k := 1 to 1000 do
          begin
          MakeEntryLegs(last, 'test-348-full-' + IntToStr(k), legs);
@@ -2479,11 +2484,13 @@ begin
          CheckEquals(3, integer(Length(ids)), 'an entry that fits gives three row ids');
          Inc(entries);
          end;
+      CheckEquals(0, GNotices, 'held: no notice inside the store call');
+      LogStoreShowHeldFailureNotices;
 
       CheckTrue(refused, 'an entry that needs a new page is refused, not acknowledged');
       CheckTrue(LogStoreIsReadOnly, 'the log is now READ-ONLY');
       CheckTrue(LogStoreIsUsable, 'and still open: NOT disabled');
-      CheckEquals(1, GNotices, 'the operator is told, once');
+      CheckEquals(1, GNotices, 'the operator is told, once, when the hold ends');
       CheckTrue(LogSourceOpen, 'the log still opens for a read');
       count := LogSourceRecordCount;
       LogSourceClose;

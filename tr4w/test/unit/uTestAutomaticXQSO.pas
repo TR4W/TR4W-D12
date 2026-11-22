@@ -82,6 +82,10 @@ type
       (* Issue 347 (2026-11-22): a QSO logged here is published only after
          the log has committed it (read from the source). *)
       procedure Test_AQSOIsPublishedOnlyAfterItsCommit;
+      (* Issue 348 (plan commit 5): an entry of several legs is ONE write,
+         the windows are cleared only after it, and a refusal rebuilds the
+         score from the log (read from the source). *)
+      procedure Test_AnEntryOfSeveralLegsIsOneWrite;
       (* Issue 349 (2026-11-22): Edit QSO's save and Alt-Y announce a change
          only after the log has committed it (read from the source). *)
       procedure Test_AChangeIsAnnouncedOnlyAfterItsCommit;
@@ -538,11 +542,15 @@ begin
 end;
 
 const
-   (* THE TWO DECLARATIONS THE SOURCE READS FIND THEIR BODIES BY. Both became
-      functions on 2026-11-18 (a refused save answers False). *)
+   (* THE TWO DECLARATIONS THE SOURCE READS FIND THEIR BODIES BY. LogContact
+      became a function on 2026-11-18 (a refused save answers False). The
+      county-line drain (DrainPendingMultiQSORefs, one LogContact per leg)
+      became the leg builder of ONE submission at issue 348 (plan commit 5):
+      it builds each further leg and logs none. *)
    LOG_CONTACT_DECLARATION =
       'function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;';
-   DRAIN_DECLARATION = 'function DrainPendingMultiQSORefs: boolean;';
+   DRAIN_DECLARATION =
+      'procedure TEntryLegs.BuildLeg(aLeg: integer; var aLegs: array of ContestExchange);';
 
 function SourceText(const aRelative: string): string;
 var
@@ -733,12 +741,15 @@ begin
    text := SourceText('MainUnit.pas');
 
    p := Pos(DRAIN_DECLARATION, text);
-   CheckTrue(p > 0, 'DrainPendingMultiQSORefs is found');
+   CheckTrue(p > 0, 'the leg builder (was DrainPendingMultiQSORefs) is found');
    e := PosEx('function LocateCallStrippingRoverCounty(', text, p);
    CheckTrue(e > p, 'and its end');
    body := Copy(text, p, e - p);
-   CheckTrue(Pos('TempRX := ReceivedData;', body) > 0,
-             'every leg is a copy of the first leg''s record');
+   (* ISSUE 348: each leg is a copy of the leg before it as the submission
+      holds it (prepared and scored) -- the drain's chained TempRX, which
+      started from ReceivedData after leg 0 was logged. *)
+   CheckTrue(Pos('TempRX := aLegs[aLeg - 1];', body) > 0,
+             'every leg is a copy of the leg before it, from the first leg''s record');
    CheckTrue(Pos('NumberSent :=', body) = 0,
              'and the drain assigns no serial of its own');
 
@@ -809,8 +820,12 @@ begin
    e := PosEx('procedure ResetRadioPorts;', text, p);
    CheckTrue(e > p, 'and its end');
    body := Copy(text, p, e - p);
-   r := Pos('if (not LogContact(ReceivedData, True)) or', body);
-   CheckTrue(r > 0, 'TryLogContact acts on LogContact''s answer');
+   (* ISSUE 348: the whole entry -- every leg -- is ONE LogEntry, and its
+      answer is acted on. *)
+   CheckTrue(Pos('saved := LogEntry(ReceivedData, True, entryLegs.ExtraLegCount,', body) > 0,
+             'TryLogContact logs the entry with all its legs at once');
+   r := Pos('if not saved then', body);
+   CheckTrue(r > 0, 'TryLogContact acts on the entry''s answer');
    CheckEquals(0, Pos('      LogContact(ReceivedData, True);', body),
                'and never ignores it');
    x := PosEx('Exit;', body, r);
@@ -959,6 +974,114 @@ begin
    CheckTrue(Pos('FSequence.OnWrite := WriteLegs;', part) > 0, 'the sequence drives the write');
    CheckTrue(Pos('FSequence.OnDiscard := DiscardLeg;', part) > 0, 'and the discard');
    CheckTrue(Pos('FSequence.OnRelease := ReleaseLeg;', part) > 0, 'and the release');
+end;
+
+(* ISSUE 348 (plan commit 5, 2026-11-22): A COUNTY LINE, SEVERAL PARKS OR A
+   ROVER'S BOUNDARY IS ONE ENTRY, WRITTEN IN ONE TRANSACTION. Every leg was
+   its own LogContact -- its own commit and its own publication -- so a later
+   leg the log refused left the earlier legs logged and sent, and the retyped
+   entry logged them again under a new exchange id. None of it can be driven
+   headless, so this READS it: TryLogContact makes one LogEntry of every leg
+   and clears nothing before its answer; the leg builder logs nothing; the
+   submission builds each leg just before preparing it; a refusal of several
+   legs rebuilds the score from the log; and the store's failure notice is
+   held until that rebuild. The ORDER is TSubmitSequence's (uTestSubmitSequence). *)
+procedure TAutomaticXQSOTests.Test_AnEntryOfSeveralLegsIsOneWrite;
+var
+   text, body, part: string;
+   p, e, w: integer;
+
+   function Span(const aFrom, aTo: string): string;
+   var
+      a, b: integer;
+   begin
+      Result := '';
+      a := Pos(aFrom, text);
+      if a = 0 then
+         begin
+         Exit;
+         end;
+      b := PosEx(aTo, text, a + Length(aFrom));
+      if b = 0 then
+         begin
+         Exit;
+         end;
+      Result := Copy(text, a, b - a);
+   end;
+
+begin
+   BeginTest('Test_AnEntryOfSeveralLegsIsOneWrite');
+
+   (* MAINUNIT.TryLogContact: ONE call for the whole entry, before anything
+      that clears the windows; no LogContact of its own; no drain. *)
+   text := SourceText('MainUnit.pas');
+   CheckEquals(0, Pos('function DrainPendingMultiQSORefs', text),
+               'the per-leg drain is gone');
+   p := Pos('function TryLogContact: boolean;' + sLineBreak + 'var', text);
+   e := PosEx('procedure ResetRadioPorts;', text, p);
+   CheckTrue((p > 0) and (e > p), 'TryLogContact''s body is found');
+   body := Copy(text, p, e - p);
+   w := Pos('saved := LogEntry(ReceivedData, True, entryLegs.ExtraLegCount,', body);
+   CheckTrue(w > 0, 'the entry is ONE LogEntry, with every further leg');
+   CheckEquals(0, PosEx('LogEntry(', body, w + Length('saved := LogEntry(')), 'and only one');
+   CheckEquals(0, Pos('LogContact(', body), 'TryLogContact logs no leg on its own');
+   CheckTrue(Pos('entryLegs := TEntryLegs.Create;', body) < w,
+             'the queued legs are taken before the entry is logged');
+   CheckTrue(w < Pos('if not saved then', body), 'the answer is asked after the one write');
+   CheckTrue(Pos('if not saved then', body) < Pos('tCleareCallWindow;', body),
+             'and the call window is cleared only after it');
+   CheckTrue(Pos('if not saved then', body) < Pos('tCleareExchangeWindow;', body),
+             'as is the exchange window');
+   CheckTrue(Pos('if not saved then', body) < Pos('ClearContestExchange(ReceivedData);', body),
+             'and the exchange');
+
+   (* THE LEG BUILDER BUILDS AND NEVER LOGS. *)
+   part := Span(DRAIN_DECLARATION, 'function LocateCallStrippingRoverCounty(');
+   CheckTrue(part <> '', 'the leg builder is found');
+   CheckEquals(0, Pos('LogContact(', part), 'it logs no leg');
+   CheckEquals(0, Pos('LogEntry(', part), 'nor an entry');
+   CheckTrue(Pos('TempRX.ceClearDupeSheet := True;', part) > 0,
+             'a county leg is still no dupe of the first');
+   CheckTrue(Pos('CalculateQSOPoints(TempRX);', part) > 0,
+             'and a rover copy still works out its own points');
+
+   (* LOGSUBS2: the leg is built just before it is prepared; several legs hold
+      the store's notice around the submission; the rebuild is the loader. *)
+   text := SourceText('trdos' + PathDelim + 'logsubs2.pas');
+   part := Span('function TLiveQSOSubmission.PrepareLeg(', 'procedure TLiveQSOSubmission.ScoreLeg(');
+   CheckTrue(part <> '', 'PrepareLeg is found');
+   w := Pos('FBuildLeg(aLeg, FQsos);', part);
+   CheckTrue(w > 0, 'a further leg is built in PrepareLeg');
+   CheckTrue(w < Pos('LiveQSOPrepare(FQsos[aLeg], FLegs[aLeg]);', part),
+             'just before it is prepared');
+
+   part := Span('function LogEntry(var RXData: ContestExchange; MyComputer: boolean;' + sLineBreak +
+                '                  aExtraLegs: integer; aBuildLeg: TLiveQSOBuildLeg): boolean;' + sLineBreak +
+                'var',
+                'procedure LiveQSOPrepare(');
+   CheckTrue(part <> '', 'LogEntry''s body is found');
+   w := Pos('Result := submission.Submit;', part);
+   CheckTrue(w > 0, 'one submission');
+   CheckTrue(Pos('LogStoreTryRecoverWrites', part) < Pos('TLiveQSOSubmission.Create', part),
+             'an unwritable log is refused before anything is prepared');
+   CheckTrue((Pos('LogStoreHoldFailureNotices;', part) > 0) and
+             (Pos('LogStoreHoldFailureNotices;', part) < w),
+             'several legs hold the store''s notice before the submission');
+   CheckTrue(PosEx('LogStoreShowHeldFailureNotices;', part, w) > w,
+             'and show it after (so after the rebuild)');
+   CheckTrue(Pos('holdNotices := aExtraLegs > 0;', part) > 0,
+             'only for several legs: one leg''s notice comes where it always did');
+
+   part := Span('procedure TLiveQSOSubmission.RebuildAfterRefusal;', 'function SearchAndPounce: boolean;');
+   CheckTrue(part <> '', 'the rebuild is found');
+   CheckTrue(Pos('LoadinLog;', part) > 0, 'the rebuild is the log''s reload');
+   CheckEquals(0, Pos('raise ', part), 'and it is wired: no longer a loud stub');
+
+   (* LOGCONTACT IS THE ONE-LEG CASE OF THE SAME PATH. *)
+   part := Span('function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;' + sLineBreak + '{',
+                'function LogEntry(');
+   CheckTrue(Pos('Result := LogEntry(RXData, MyComputer, 0, nil);', part) > 0,
+             'LogContact is LogEntry with no further leg');
 end;
 
 (* ISSUE 349 (2026-11-22): AN EDIT, A DELETE OR A RESTORE IS ANNOUNCED ONLY
@@ -1184,6 +1307,7 @@ procedure TAutomaticXQSOTests.RunAllTests;
 begin
    Test_ARefusedSaveKeepsTheEntryAndItsReason;
    Test_AQSOIsPublishedOnlyAfterItsCommit;
+   Test_AnEntryOfSeveralLegsIsOneWrite;
    Test_AChangeIsAnnouncedOnlyAfterItsCommit;
    Test_ASharedSerialAdvancesTheNextByOne;
    Test_TheMultiCountyDrainKeepsOneSerial;

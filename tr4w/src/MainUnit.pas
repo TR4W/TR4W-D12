@@ -1018,46 +1018,111 @@ end;
 var
   QSOSaveRefused: boolean = False;
 
-(* True when every queued leg is in the log; False at the first that is not
-  (the rest are not tried, and the queues are emptied by the caller). *)
-function DrainPendingMultiQSORefs: boolean;
-var
-  TempRX : ContestExchange;
-  leadsWithSerial: boolean;
-  (* A ROVER AT A BOUNDARY (issue 133): every QSO this entry logged from the
-    first place, and the copies from each further place. *)
-  logged: TRoverLegs;
-  roverLegs: TRoverLegs;
-  i: integer;
+(* THE FURTHER LEGS OF ONE ENTER -- every queued park, every queued county,
+  and a rover's copies from each further place -- logged with the first leg
+  in ONE transaction, all of them or none (issue 348, plan commit 5; NY4I's
+  rulings 1 and 5). Until then this was DrainPendingMultiQSORefs, one whole
+  LogContact per leg, each its own commit and its own publication: a later
+  leg the log refused left the earlier ones logged and sent, and the retyped
+  entry logged them again under a new exchange id.
+
+  Made once per Enter, BEFORE the submission: the queues are taken here (so
+  the leg count is known), and each leg is BUILT by BuildLeg, which the
+  submission calls just before it prepares that leg -- after every leg before
+  it has been prepared and scored. That is the order the drain had, and it is
+  load-bearing: a later leg's multiplier question must see the earlier legs
+  on the sheets, or a second leg with the same call counts the country,
+  prefix or zone again.
+
+  THE LEGS, IN ORDER (as the drain logged them):
+     1 .. P            the parks; each a copy of the leg before it
+     P+1 .. P+C        the counties; each a copy of the leg before it, its
+                       QTH and prefix key resolved again, ceClearDupeSheet
+     P+C+1 ..          the rover's copies (RoverBoundaryLegs) of leg 0 and
+                       of every county leg -- not of the parks, as before --
+                       one set per further place, each with its own points *)
+type
+   TEntryLegs = class
+   private
+      FParks: array of string;
+      FCounties: array of string;
+      FRoverPlaces: integer;
+      FLeadsWithSerial: boolean;
+      (* Made when the first rover copy is built, from the legs it copies. *)
+      FRoverLegs: TRoverLegs;
+   public
+      (* Takes the parser's park and county queues; empty when there is no
+        further leg. *)
+      constructor Create;
+      function ExtraLegCount: integer;
+      procedure BuildLeg(aLeg: integer; var aLegs: array of ContestExchange);
+   end;
+
+constructor TEntryLegs.Create;
 begin
-  Result := True;
-  if (not HasPendingParks)     and
-     (not HasPendingCounties) and
-     (RoverState.Count < 2)   then
-     begin
-     Exit;
-     end;
-  SetLength(logged, 1);
-  logged[0] := ReceivedData;
-  leadsWithSerial := ContestPerQSOExchangeLeadsWithSerial(ActiveContest(Contest));
-  TempRX := ReceivedData;
+  inherited Create;
   while HasPendingParks do
      begin
-     TempRX.QTHString := DequeuePendingPark;
-     TempRX.ExchString := PerQSOExchString(leadsWithSerial, TempRX);   // Issue #889
-     if not LogContact(TempRX, True) then
-        begin
-        Result := False;
-        Exit;
-        end;
+     SetLength(FParks, Length(FParks) + 1);
+     FParks[High(FParks)] := DequeuePendingPark;
      end;
   while HasPendingCounties do
      begin
-     TempRX.QTHString := DequeuePendingCounty;
+     SetLength(FCounties, Length(FCounties) + 1);
+     FCounties[High(FCounties)] := DequeuePendingCounty;
+     end;
+  FRoverPlaces := RoverState.Count;
+  (* The contest is asked only for an entry of several legs, as the drain
+     asked it. *)
+  if ExtraLegCount > 0 then
+     begin
+     FLeadsWithSerial := ContestPerQSOExchangeLeadsWithSerial(ActiveContest(Contest));
+     end;
+end;
+
+function TEntryLegs.ExtraLegCount: integer;
+begin
+  Result := Length(FParks) + Length(FCounties);
+  (* RoverBoundaryLegs: one copy of each of leg 0 and the county legs per
+    further place. *)
+  if FRoverPlaces >= 2 then
+     begin
+     Result := Result + (FRoverPlaces - 1) * (1 + Length(FCounties));
+     end;
+end;
+
+procedure TEntryLegs.BuildLeg(aLeg: integer; var aLegs: array of ContestExchange);
+var
+  TempRX : ContestExchange;
+  (* A ROVER AT A BOUNDARY (issue 133): every QSO this entry logs from the
+    first place, and the copies from each further place. *)
+  logged: TRoverLegs;
+  i: integer;
+  firstCounty, firstRover: integer;
+begin
+  firstCounty := 1 + Length(FParks);
+  firstRover := firstCounty + Length(FCounties);
+  (* EVERY PARK OR COUNTY LEG IS A COPY OF THE LEG BEFORE IT, as the drain's
+     TempRX was: leg 0 first, and each leg after the one before it as it
+     was logged. *)
+  if aLeg < firstRover then
+     begin
+     TempRX := aLegs[aLeg - 1];
+     end;
+  if aLeg < firstCounty then
+     begin
+     TempRX.QTHString := FParks[aLeg - 1];
+     TempRX.ExchString := PerQSOExchString(FLeadsWithSerial, TempRX);   // Issue #889
+     aLegs[aLeg] := TempRX;
+     Exit;
+     end;
+  if aLeg < firstRover then
+     begin
+     TempRX.QTHString := FCounties[aLeg - firstCounty];
      FoundDomesticQTH(TempRX);  // refresh DomMultQTH/DomesticQTH
      // and the prefix key a contest reads from that QTH (issue 116: the Atlantic Canada province of THIS leg)
      SetPrefix(TempRX);
-     TempRX.ExchString := PerQSOExchString(leadsWithSerial, TempRX);   // Issue #889
+     TempRX.ExchString := PerQSOExchString(FLeadsWithSerial, TempRX);   // Issue #889
      // QSO-party rule: a station that changes county is a new station and
      // is NOT a dupe of an earlier QSO with the same call.  The follow-up
      // county records share callsign+band+mode with the first one, so the
@@ -1074,13 +1139,8 @@ begin
      // serial moves by one, not by the number of legs (issue 28): it is
      // LOGEDIT.NextSerialToSend, the highest serial sent + 1 (Issue #954),
      // not a count of records.  Pinned by uTestAutomaticXQSO.
-     if not LogContact(TempRX, True) then
-        begin
-        Result := False;
-        Exit;
-        end;
-     SetLength(logged, Length(logged) + 1);
-     logged[High(logged)] := TempRX;
+     aLegs[aLeg] := TempRX;
+     Exit;
      end;
 
   (* A ROVER AT A BOUNDARY LOGS ONE QSO PER PLACE (issue 133; NY4I
@@ -1090,20 +1150,28 @@ begin
     them, its own place stamped, after them and with nothing in between, so
     the store files them in the entry's qso_set_id. The dupe question is
     asked of each copy as of any QSO: its key carries its place (D), so a
-    place the station has not worked this call from is no dupe. *)
-  roverLegs := RoverBoundaryLegs(logged, RoverState);
-  for i := 0 to High(roverLegs) do
+    place the station has not worked this call from is no dupe.
+
+    The copies are made ONCE, when the first is built: leg 0 and every
+    county leg are prepared and scored by then, as they were logged by
+    then. *)
+  if aLeg = firstRover then
      begin
-     (* ITS OWN POINTS: a copy of a leg that was a dupe from the first place
-       carries 0, and from this place it may be new. LogContact zeroes it
-       again if it is a dupe here. *)
-     CalculateQSOPoints(roverLegs[i]);
-     if not LogContact(roverLegs[i], True) then
+     SetLength(logged, 1 + Length(FCounties));
+     logged[0] := aLegs[0];
+     for i := 0 to High(FCounties) do
         begin
-        Result := False;
-        Exit;
+        logged[1 + i] := aLegs[firstCounty + i];
         end;
+     FRoverLegs := RoverBoundaryLegs(logged, RoverState);
      end;
+  TempRX := FRoverLegs[aLeg - firstRover];
+  (* ITS OWN POINTS: a copy of a leg that was a dupe from the first place
+    carries 0, and from this place it may be new. LogContact zeroes it
+    again if it is a dupe here. Worked out just before the copy is
+    prepared, with every leg before it scored, as the drain did. *)
+  CalculateQSOPoints(TempRX);
+  aLegs[aLeg] := TempRX;
 end;
 
 // State-QP rover slash-in-call ("KG1S/MON"):
@@ -1292,6 +1360,10 @@ var
   // the call and pre-fill the exchange after the caller's window clears.
   SavedCall    : CallString;
   SavedRSTSent : Integer;
+  (* The further legs of this Enter (issue 348), and whether all of it is in
+     the log. *)
+  entryLegs    : TEntryLegs;
+  saved        : boolean;
 begin
    Result := False;
    QSOSaveRefused := False;
@@ -1344,9 +1416,24 @@ begin
          CleanUpDisplay, and NOTHING THAT TOUCHES THE STATUS LINE -- the
          reason LogContact put there, with its beep, stays. The parser's
          queues are emptied, so the next Enter parses the exchange afresh and
-         queues each leg once. *)
-      if (not LogContact(ReceivedData, True)) or
-         (not DrainPendingMultiQSORefs) then
+         queues each leg once.
+
+         ONE ENTER, ONE TRANSACTION -- issue 348 (plan commit 5; NY4I's
+         rulings 1 and 5). A county line, several parks or a rover's boundary
+         are the further legs of THIS entry, written with it in one store
+         call: all of them or none, nothing published unless all committed.
+         Refused, the windows keep what the operator typed as for one QSO,
+         and a retry is a new parse -- a new exchange id and fresh network
+         sequences. One QSO with no further leg is exactly LogContact. *)
+      saved := False;
+      entryLegs := TEntryLegs.Create;
+      try
+         saved := LogEntry(ReceivedData, True, entryLegs.ExtraLegCount,
+                           entryLegs.BuildLeg);
+      finally
+         entryLegs.Free;
+      end;
+      if not saved then
          begin
          QSOSaveRefused := True;
          ClearPendingParks;

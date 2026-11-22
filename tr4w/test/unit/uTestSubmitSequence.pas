@@ -31,6 +31,7 @@ type
       procedure TestThreeLegsWrittenScoreLazilyAndReleaseInOrder;
       procedure TestThreeLegsRefusedDiscardEveryLegThenRebuild;
       procedure TestALegRefusedAtPrepareStopsBeforeTheWrite;
+      procedure TestTheThirdLegFailingBeforeTheWriteRebuilds;
       procedure TestAPrepareThatRaisesCleansUpAndRebuilds;
       procedure TestAWriteThatRaisesCleansUp;
       procedure TestAReleaseThatRaisesRebuildsNothing;
@@ -269,6 +270,40 @@ begin
    end;
 end;
 
+(* ISSUE 348 (plan commit 5): the LAST leg of three fails before the write --
+  its build or its prepare (TLiveQSOSubmission builds a further leg inside
+  Prepare). Legs 0 and 1 are on the sheets by then, and none is in the log:
+  both are discarded, the write never runs, and the rebuild runs once, last. *)
+procedure TSubmitSequenceTests.TestTheThirdLegFailingBeforeTheWriteRebuilds;
+var
+   rec: TSubmitRecorder;
+   ok, rebuilt: boolean;
+begin
+   BeginTest('the third leg of three refused or raising before the write: ' +
+             'no write, legs 0 and 1 discarded, ONE rebuild after them');
+   rec := TSubmitRecorder.Create;
+   try
+      rec.RefusePrepareAt := 2;
+      CheckEquals('', RunCatching(rec, 3, ok, rebuilt), 'nothing raised');
+      CheckFalse(ok, 'the entry is reported refused');
+      CheckTrue(rebuilt, 'two legs were scored, so the score state is rebuilt');
+      CheckEquals('P0 S0 P1 S1 P2 F0 F1 B', rec.Trace, 'refused at its prepare');
+   finally
+      rec.Free;
+   end;
+
+   rec := TSubmitRecorder.Create;
+   try
+      rec.RaisePrepareAt := 2;
+      CheckEquals('prepare raised', RunCatching(rec, 3, ok, rebuilt), 'the exception reaches the caller');
+      CheckFalse(ok, 'nothing is reported written');
+      CheckTrue(rebuilt, 'and the score state is rebuilt');
+      CheckEquals('P0 S0 P1 S1 P2 F0 F1 B', rec.Trace, 'raised in its build or prepare');
+   finally
+      rec.Free;
+   end;
+end;
+
 procedure TSubmitSequenceTests.TestAPrepareThatRaisesCleansUpAndRebuilds;
 var
    rec: TSubmitRecorder;
@@ -384,6 +419,7 @@ begin
    TestThreeLegsWrittenScoreLazilyAndReleaseInOrder;
    TestThreeLegsRefusedDiscardEveryLegThenRebuild;
    TestALegRefusedAtPrepareStopsBeforeTheWrite;
+   TestTheThirdLegFailingBeforeTheWriteRebuilds;
    TestAPrepareThatRaisesCleansUpAndRebuilds;
    TestAWriteThatRaisesCleansUp;
    TestAReleaseThatRaisesRebuildsNothing;

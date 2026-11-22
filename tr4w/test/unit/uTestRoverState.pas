@@ -564,11 +564,13 @@ begin
    try
       source.LoadFromFile(ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' +
                           PathDelim + 'src' + PathDelim + 'MainUnit.pas');
-      drain := Pos('function DrainPendingMultiQSORefs: boolean;', source.Text);
-      CheckTrue(drain > 0, 'MainUnit has the drain');
+      (* ISSUE 348: the drain is the leg builder of one submission
+         (MainUnit.TEntryLegs.BuildLeg); the copies are legs of the entry. *)
+      drain := Pos('procedure TEntryLegs.BuildLeg(', source.Text);
+      CheckTrue(drain > 0, 'MainUnit has the leg builder');
       CheckTrue(Pos('RoverBoundaryLegs(logged, RoverState)',
                     Copy(source.Text, drain, 6000)) > 0,
-                'and the drain logs the rover''s boundary legs');
+                'and it makes the rover''s boundary legs');
    finally
       source.Free;
    end;

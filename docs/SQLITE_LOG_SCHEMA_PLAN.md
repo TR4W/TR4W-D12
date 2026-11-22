@@ -1444,7 +1444,7 @@ original error is raised. No message text is matched. `RollbackBatch` and
 | `ApplySchema` (`CreateNew`) | tables in one transaction. The identity stamp follows it | — | left. A failure deletes the file; a crash between the commit and the stamp is a window of microseconds |
 | `MigrateSchema` | `CREATE ... IF NOT EXISTS`, then the version stamp | — | left on purpose: idempotent, and the version is stamped last |
 | ADIF import (`MainUnit.ImportFromADIF`, one `LogStoreAppendQSO` per record) | **no**, one commit per record | a decision | ~~left: deliberately per record~~ **ruled all-or-nothing by NY4I the same day, and done**: `LogStoreAppendQSOs` / `TLogRepository.AppendBatch`, one transaction. See the rulings |
-| a county-line contact (one `LogStoreAppendQSO` per county) | **no**, one commit per QSO | a decision | **left: deliberately per QSO** (section 9b: "the commit is the contact") |
+| a county-line contact (one `LogStoreAppendQSO` per county) | **no**, one commit per QSO | a decision | ~~left: deliberately per QSO~~ **reversed by NY4I, 2026-11-21 (issue 348; `LOG_COMMIT_BEFORE_PUBLISH_PLAN.md` section 7, rulings 1 and 5), and done 2026-11-22 (plan commit 5)**: one Enter -- a county line, several parks, a rover's boundary -- is ONE `LogStoreAppendLiveQSOs` call, one transaction, all legs or none; nothing is published until it commits. The agent's "the commit is the contact" was a decision, not a ruling: the contact is the whole entry |
 
 **Pins and mutations.** Five pins:
 

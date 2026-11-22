@@ -512,6 +512,27 @@ procedure LogStoreShowRecoveryNotice;
   pure half of LogStoreShowRecoveryNotice, for the tests. *)
 function LogStoreTakeRecoveryNotice: string;
 
+(* THE STORE'S FAILURE NOTICES, HELD UNTIL THE CALLER HAS PUT ITS SESSION
+  BACK (issue 348, plan commit 5, section 3 "re-entrancy").
+
+  Every failure notice the store gives the operator -- the modal of a full
+  disk, a held lock, a log stood down, a read-only refusal -- goes through
+  ONE routine, and shown at once it is a modal INSIDE the store call. A modal
+  pumps messages. A county-line, multi-park or rover entry has scored its
+  earlier legs onto the sheets before its one write, so a refused write would
+  let a queued peer QSO, a network settle or a WSJT-X job run against sheets
+  holding legs the log does not have, until the rebuild.
+
+  So the entry HOLDS the notices for the length of its submission and SHOWS
+  them after the rebuild: LogStoreHoldFailureNotices before, and
+  LogStoreShowHeldFailureNotices after, always paired (a finally). Nested
+  holds are counted; the held notices are shown, in the order given, when the
+  outermost hold ends. Nothing is lost and nothing is said twice: a held
+  notice is the same text, given once, a moment later. The log line each
+  failure writes is not held. Main thread only, as every store write is. *)
+procedure LogStoreHoldFailureNotices;
+procedure LogStoreShowHeldFailureNotices;
+
 (* THE LAST PERIODIC BACKUP'S OUTCOME, AND HOW LONG AGO A FAILURE WAS
   (issue 351 (b)). logstuff.BackupLogNow tells the store every result; a
   failure is then said on the status line after every QSO
@@ -983,9 +1004,18 @@ begin
    Result := (not GDisabled) and (GRepository <> nil);
 end;
 
-(* THE OPERATOR'S NOTICE of a store failure: the modal, unless a test has
-  installed LogStoreFailureNotice to take it instead. *)
-procedure ShowFailureNotice(const aText: RawByteString);
+type
+   (* One named type, so the held list can be taken by assignment. *)
+   TFailureNoticeList = array of RawByteString;
+
+var
+   (* LogStoreHoldFailureNotices' depth, and what it holds (issue 348). *)
+   GNoticeHoldDepth: integer = 0;
+   GHeldNotices: TFailureNoticeList = nil;
+
+(* THE NOTICE GIVEN NOW: the modal, unless a test has installed
+  LogStoreFailureNotice to take it instead. *)
+procedure DeliverFailureNotice(const aText: RawByteString);
 begin
    if Assigned(LogStoreFailureNotice) then
       begin
@@ -994,6 +1024,48 @@ begin
    else
       begin
       ShowMessage(aText);
+      end;
+end;
+
+(* THE OPERATOR'S NOTICE of a store failure -- given now, or HELD while a
+  caller has asked for it (LogStoreHoldFailureNotices). The hold is asked
+  first, so a test's seam sees a held notice only when the hold ends. *)
+procedure ShowFailureNotice(const aText: RawByteString);
+begin
+   if GNoticeHoldDepth > 0 then
+      begin
+      SetLength(GHeldNotices, Length(GHeldNotices) + 1);
+      GHeldNotices[High(GHeldNotices)] := aText;
+      Exit;
+      end;
+   DeliverFailureNotice(aText);
+end;
+
+procedure LogStoreHoldFailureNotices;
+begin
+   inc(GNoticeHoldDepth);
+end;
+
+procedure LogStoreShowHeldFailureNotices;
+var
+   held: TFailureNoticeList;
+   i: integer;
+begin
+   if GNoticeHoldDepth > 0 then
+      begin
+      dec(GNoticeHoldDepth);
+      end;
+   if GNoticeHoldDepth > 0 then
+      begin
+      Exit;
+      end;
+   (* TAKEN FIRST: a notice that pumps messages cannot see this list again,
+     and one given while these are shown is shown at once. *)
+   held := GHeldNotices;
+   GHeldNotices := nil;
+   for i := 0 to High(held) do
+      begin
+      DeliverFailureNotice(held[i]);
       end;
 end;
 
@@ -1007,6 +1079,8 @@ begin
    GWriteFailureNoticeShown := False;
    GRecoveryNoticePending := False;
    GLastBusyNotice := 0;
+   GNoticeHoldDepth := 0;
+   GHeldNotices := nil;
    FreeAndNil(GRepository);
    FreeAndNil(GDatabase);
 end;

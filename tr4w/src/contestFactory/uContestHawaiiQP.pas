@@ -176,8 +176,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     location. Each is scored separately and not considered a duplicate."
     GetCountyLineCountiesMax = 2. The worked side already does that: the
     party base's county-line entry logs the first district through the
-    parse and queues the second, which MainUnit.DrainPendingMultiQSORefs
-    logs through LogContact (its own multiplier flags, the first QSO's
+    parse and queues the second, which MainUnit.TEntryLegs.BuildLeg makes
+    a leg of the same entry (its own multiplier flags, the first QSO's
     points, ceClearDupeSheet so it is no dupe).
     NOT BUILT -- THE ROVER'S OWN SIDE: "AH7RF/KOH is a different station than
       AH7RF/KON ... Such mobile stations must submit a separate log for each

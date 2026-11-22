@@ -739,8 +739,10 @@ var
 begin
    BeginTest('Test_ACQPTheCountyLineDrainRefreshesTheKey');
    text := SourceText('MainUnit.pas');
-   p := Pos('function DrainPendingMultiQSORefs: boolean;', text);
-   CheckTrue(p > 0, 'DrainPendingMultiQSORefs is found');
+   (* ISSUE 348: the drain is the leg builder of one submission now
+      (MainUnit.TEntryLegs.BuildLeg); the county leg is built the same way. *)
+   p := Pos('procedure TEntryLegs.BuildLeg(', text);
+   CheckTrue(p > 0, 'the leg builder (was DrainPendingMultiQSORefs) is found');
    e := Pos('function LocateCallStrippingRoverCounty(', text);
    CheckTrue(e > p, 'and its end');
    body := Copy(text, p, e - p);

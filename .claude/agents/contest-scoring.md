@@ -332,8 +332,44 @@ store's facts.** A peer's QSO (`MyComputer` False) takes the same path, so its
 UDP/HamScore post now waits for the commit too. Pinned (source reads):
 `uTestAutomaticXQSO.Test_AQSOIsPublishedOnlyAfterItsCommit`,
 `Test_LogContactCountsNoXQSOButAdvancesTheSerial`; the order by
-`uTestSubmitSequence`. Several legs are commit 5 (`RebuildAfterRefusal` is a
-loud stub until then).
+`uTestSubmitSequence`.
+
+**SEVERAL LEGS ARE ONE SUBMISSION (issue 348, plan commit 5, 2026-11-22;
+unbenched).** `logsubs2.LogEntry(var RXData, MyComputer, aExtraLegs,
+aBuildLeg)` is the general call; `LogContact` is `LogEntry(..., 0, nil)`, so
+one QSO, WSJT-X and a peer's QSO are commit 4's path unchanged.
+`MainUnit.TryLogContact` takes the parser's queues into a
+`MainUnit.TEntryLegs` (parks, then counties, then the rover copies of leg 0
+and each county leg -- not of the parks, as the drain did), and makes ONE
+`LogEntry`; `DrainPendingMultiQSORefs` is DELETED. **A leg is built inside
+`TLiveQSOSubmission.PrepareLeg`, just before its Prepare** (`FBuildLeg(aLeg,
+FQsos)`), from the legs before it as Prepare and Score left them: the order
+the drain had (it copied the leg before after its whole LogContact), and
+load-bearing -- a later leg's `SetMultFlags` must see the earlier legs on the
+sheets. Prepare(i) no longer runs after Release(i-1); grep found no Prepare or
+`BuildLoggedQso` read of what Release alone sets (`MaxSerialSent`, the
+initial-exchange history, the bonus view, `riTotalRecordsInLog`, rate
+counters), so legs 1..n publish the same bytes -- NOT benched. A county leg
+still shares the serial and sets `ceClearDupeSheet`; a rover copy still works
+out its own points (`CalculateQSOPoints`, with every earlier leg scored).
+**Refused, several legs: `RebuildAfterRefusal` is `LoadinLog`** (the reload
+`RescoreLog` ends in). It rebuilds everything Score writes (totals, mult and
+dupe sheets, points, the continent count -- in the loader's form, which counts
+the AllBands cell the live Score does not; pre-existing). Not rebuilt, and
+never reached by a refused leg because Release has them: the initial-exchange
+history, rate counters, the serial high-water (also rebuilt), the bonus view.
+Its one store write is the restart file, behind `LogStoreReadyToWrite`. Two
+residuals: a store STOOD DOWN cannot be read, so the loader leaves early and
+the scored legs stay on the sheets (logged at Error; the store has already
+said stop); and the loader increments `TimeSpentByBand` without zeroing it
+(as every `RescoreLog` does; pre-existing). Its cost on a large log is a
+bench item. **The store's failure modal is HELD for several legs**
+(`LogStoreHoldFailureNotices` before the submission, shown in `LogEntry`'s
+finally -- after the discard and the rebuild); one leg holds nothing. The
+read-only precheck (`LogStoreEnsureOpen` / `LogStoreTryRecoverWrites`) runs
+once per entry, before leg 0. Pinned: `uTestAutomaticXQSO.
+Test_AnEntryOfSeveralLegsIsOneWrite` (source reads), `uTestSubmitSequence`
+(the order, including the third leg failing before the write).
 
 ## `FoundContest` READS STATION STATE, so what it reads must already be set
 
@@ -539,7 +575,8 @@ contest's digital multipliers under CW. Pinned by `uTestMultiplierMode`. **`SetP
 through `ContestPrefixMultiplierKey(ActiveContest(Contest), ...)`, once per
 QSO, and assigns only on True (False leaves a stored prefix alone -- the
 rescore depends on it). **The county-line drain asks it too** (issue 116,
-2026-11-18): `MainUnit.DrainPendingMultiQSORefs` calls `SetPrefix(TempRX)`
+2026-11-18): the leg builder `MainUnit.TEntryLegs.BuildLeg` (the drain until
+issue 348) calls `SetPrefix(TempRX)`
 after `FoundDomesticQTH`, so a leg whose key comes from its QTH (the Atlantic
 Canada province) carries its own key, not the first leg's; pinned by a source
 read in `uTestContestAtlanticCanadaQP` (the drain cannot run headless).

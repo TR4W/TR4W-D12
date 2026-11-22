@@ -129,7 +129,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   COUNTY LINES -- "a separate QSO and complete exchange must be logged for each
     county/division", no maximum: CountyLineCountiesUnlimited, stated. Each
     leg's province key is refreshed by the engine's county-line drain
-    (MainUnit.DrainPendingMultiQSORefs asks SetPrefix after the QTH lookup,
+    (MainUnit.TEntryLegs.BuildLeg asks SetPrefix after the QTH lookup,
     2026-11-18), so an NB/NS line credits both provinces.
 
   MOBILE AND PORTABLE ENTRANTS -- NOT BUILT, issue #133: the entrant's own

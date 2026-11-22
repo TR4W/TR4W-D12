@@ -1349,8 +1349,30 @@ over `TSubmitSequence`; its write is `logsubs2.tAddQSOsToLog` ->
 `LogStoreAppendLiveQSOs` (`tAddQSOToLog`, notes and QTCs, is its one-record
 call), and Release's `AddLoggedQSO` takes the facts that call returned, not
 `LogStoreLastAppendedMyFacts`. The packet and the dispatcher message are
-posted only after the commit. `TryLogContact` and `DrainPendingMultiQSORefs`
-still run one `LogContact` (one transaction) per leg until commit 5.
+posted only after the commit. **Commit 5 (2026-11-22, issue 348) WIRES
+SEVERAL LEGS**: `TryLogContact` makes ONE `logsubs2.LogEntry` of the whole
+Enter (county line, parks, rover boundary -- `MainUnit.TEntryLegs` builds each
+further leg; `DrainPendingMultiQSORefs` is deleted), so every leg is in ONE
+`LogStoreAppendLiveQSOs` call and one transaction, all or none. The SQLite
+schema plan's "county line commits per QSO" row is reversed.
+- **THE STORE'S FAILURE NOTICES CAN BE HELD** (commit 5, plan section 3):
+  `LogStoreHoldFailureNotices` / `LogStoreShowHeldFailureNotices`, always
+  paired, depth-counted. Every notice goes through ONE routine,
+  `ShowFailureNotice`; while held it queues the text and the modal (or the
+  test seam `LogStoreFailureNotice`) is given at the outermost show, in order.
+  `LogEntry` holds for an entry of more than one leg only -- its earlier legs
+  are on the sheets before the write, and a modal pumping messages inside the
+  refused write would let a peer QSO, a network settle or WSJT-X run against
+  them before the `LoadinLog` rebuild. One leg is never held.
+  `LogStoreForgetFailureForTests` clears the hold. Pinned in
+  `uTestLogStore.TestAFullDiskRefusesTheWholeEntryAndTheRetryWritesOneSet`.
+- **`LoadinLog` AS THE REBUILD, checked (commit 5)**: it writes no QSO. Its one
+  store write is `Sheet.SaveRestartFile` at its foot, behind
+  `LogStoreReadyToWrite` (nothing on a read-only log; on a writable one only
+  `session_state` rows that changed). A store STOOD DOWN (`GDisabled`) cannot
+  be read: `LogSourceOpen` fails and `LoadinLog` returns before
+  `DisposeOfMemoryAndZeroTotals`, so the scored legs stay on the sheets until
+  the log is reopened (`RebuildAfterRefusal` logs it at Error).
 
 - **`TLogRepository.AppendBatch` has a second overload** (commit 1):
   `out aRowIds: TInt64Array` (each row's id, in order; EMPTY whenever the batch
