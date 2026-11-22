@@ -326,6 +326,17 @@ fixed frame widths (24/48/96/192/384 kHz) with a fixed ~40+3 bin pad per
 edge. Pinned by `uTestK4SpectrumCrop` against two real captures. Details:
 `docs/PANADAPTER_LCL_DESIGN.md` section 10.4.
 
+**THE PANADAPTER'S COLUMNS ARE ONE INTEGER PARTITION** (issue 155, NY4I
+2026-11-22). Column x of W holds bins `(x*N) div W .. ((x+1)*N) div W - 1`
+(one repeated bin when the window is wider) -- `uSpectrumTypes.SpectrumColumnBins`,
+and the trace, waterfall, click and markers all derive from it: the click
+tunes the bin under the pixel centre kept inside the column
+(`SpectrumClickBin`, NOT the column's peak -- NY4I chose exact), a marker goes
+Hz -> bin -> `SpectrumBinColumn` (axis ticks too). `SpectrumBinsPerPixel`
+(the Double whose truncation lost the top bin at some widths) is deleted; do
+not bring a Double back into this mapping. `uTestSpectrumMapping` pins the
+agreements over a grid of bin counts and widths.
+
 **TX INHIBITED IS A RADIO CONDITION CARRIED IN THE STATUS (issue #97, phase 1,
 2026-10-26).** A radio that can say "I will not radiate when keyed" declares
 `rcReportsTXInhibit`; its parser calls the base's protected

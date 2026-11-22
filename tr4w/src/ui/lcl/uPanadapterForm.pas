@@ -296,14 +296,14 @@ type
       procedure ApplyDisplayDefaults(const ADefaults: TSpectrumDisplayDefaults);
       procedure ApplyLiveDisplay(const ALive: TSpectrumLiveDisplay);
       procedure DrawTrace(ACanvas: TCanvas; AWidth, ASpecH: Integer;
-                          AMinDb, ARangeDb: Single; ABinsPerPixel: Double);
+                          AMinDb, ARangeDb: Single);
       procedure ShowScaleCaption;
-      function PeakForPixel(AX: Integer; ABinsPerPixel: Double): Single;
+      function PeakForPixel(AX, AWidth: Integer): Single;
       procedure DisplayRange(out AMinDb, ARangeDb: Single);
       function WaterfallColor(ARelDb: Single): LongWord;
       procedure EnsureWaterfall(AWidth, AHeight: Integer);
       procedure ClearWaterfallHistory;
-      procedure PushWaterfallRow(ABinsPerPixel: Double);
+      procedure PushWaterfallRow(AWidth: Integer);
       procedure RenderWaterfall;
    public
       procedure AttachRadio(ARadio: TFactoryRadioBase; const ASourceId: string);
@@ -1245,12 +1245,12 @@ end;
 (* Which bins column AX covers is uSpectrumTypes.SpectrumColumnBins, the one
    definition click-to-tune also reads; this only takes their maximum, so a
    narrow signal is never lost between columns. *)
-function TfrmPanadapter.PeakForPixel(AX: Integer; ABinsPerPixel: Double): Single;
+function TfrmPanadapter.PeakForPixel(AX, AWidth: Integer): Single;
 var
    first, last, i: Integer;
 begin
    Result := 0;
-   SpectrumColumnBins(AX, Length(FRenderBins), ABinsPerPixel, first, last);
+   SpectrumColumnBins(AX, Length(FRenderBins), AWidth, first, last);
 
    if first < 0 then
       begin
@@ -1406,7 +1406,7 @@ begin
    Result := FLUT[Round(n * 255)];
 end;
 
-procedure TfrmPanadapter.PushWaterfallRow(ABinsPerPixel: Double);
+procedure TfrmPanadapter.PushWaterfallRow(AWidth: Integer);
 var
    reference: Single;
    x, y: Integer;
@@ -1460,7 +1460,7 @@ begin
 
    for x := 0 to FWfW - 1 do
       begin
-      FWfDb[x] := PeakForPixel(x, ABinsPerPixel) - reference;
+      FWfDb[x] := PeakForPixel(x, AWidth) - reference;
       end;
 
    if FWaterfall = nil then
@@ -1614,7 +1614,7 @@ begin
          FWfSpanHz := FRenderSpanHz;
          end;
 
-      PushWaterfallRow(SpectrumBinsPerPixel(Length(FRenderBins), w));
+      PushWaterfallRow(w);
       end;
 
    pbSpectrum.Invalidate;
@@ -2044,8 +2044,9 @@ begin
 end;
 
 (* Where a marker, a spot tick or a passband edge goes.  The arithmetic is
-   uSpectrumTypes.SpectrumHzToPixel, shared with the axis ticks; it is NOT yet
-   the exact inverse of FreqAtPixel or of the trace -- see the note there. *)
+   uSpectrumTypes.SpectrumHzToPixel, shared with the axis ticks: Hz to bin
+   to the column the trace draws that bin in -- the same integer partition
+   as the trace and FreqAtPixel (issue 155). *)
 function TfrmPanadapter.PixelForFreq(AHz: Int64; AWidth: Integer): Integer;
 begin
    Result := SpectrumHzToPixel(RenderFrame, AHz, AWidth);
@@ -2280,13 +2281,9 @@ begin
 end;
 
 (* Through the bin, not straight from the pixel: the trace is drawn per bin,
-   so this is the frequency of the data under the cursor -- the FIRST bin of
-   the column, while the trace shows the column's maximum.
-
-   The bins-per-pixel is the trace's own Double (SpectrumBinsPerPixel).  It
-   used to be computed inline here, which on i386 stays in x87 extended
-   precision and truncated to a different bin than the trace in some columns;
-   sharing the Double makes the click land on the trace's first bin always. *)
+   so this is the frequency of the data under the cursor -- the bin under
+   the pixel's centre, always one the column draws
+   (uSpectrumTypes.SpectrumClickBin; issue 155). *)
 function TfrmPanadapter.FreqAtPixel(AX: Integer): Int64;
 var
    frame: TSpectrumFrame;
@@ -2301,7 +2298,7 @@ begin
       Exit;
       end;
 
-   Result := SpectrumColumnHz(frame, AX, SpectrumBinsPerPixel(frame.BinCount, w));
+   Result := SpectrumColumnHz(frame, AX, w);
 end;
 
 procedure TfrmPanadapter.UpdateLabels;
@@ -2343,7 +2340,7 @@ end;
 (* The spectrum half: the noise-floor line, the pan centre, the passbands, the
    trace and the spots.  ASpecH > 0 -- the caller does not ask otherwise. *)
 procedure TfrmPanadapter.DrawTrace(ACanvas: TCanvas; AWidth, ASpecH: Integer;
-                                   AMinDb, ARangeDb: Single; ABinsPerPixel: Double);
+                                   AMinDb, ARangeDb: Single);
 var
    x, y, centreX: Integer;
    peak: Single;
@@ -2373,7 +2370,7 @@ begin
 
    for x := 0 to AWidth - 1 do
       begin
-      peak := PeakForPixel(x, ABinsPerPixel);
+      peak := PeakForPixel(x, AWidth);
       y := ASpecH - Round(((peak - AMinDb) / ARangeDb) * ASpecH);
 
       if y < 0 then
@@ -2405,7 +2402,6 @@ var
    w, h, specH, wfH: Integer;
    axisTop, wfTop: Integer;
    minDb, rangeDb: Single;
-   binsPerPixel: Double;
    readout: string;
    tw: Integer;
    started: QWord;
@@ -2457,14 +2453,12 @@ begin
       cv.Draw(0, wfTop, FWaterfall);
       end;
 
-   binsPerPixel := SpectrumBinsPerPixel(Length(FRenderBins), w);
-
    (* THE TRACE ONLY WHEN IT HAS ROOM.  At a 100 percent waterfall (the radio
       may ask for one) there is no trace, but the VFO markers and the cursor
       below still cross the waterfall -- they used to be skipped with it. *)
    if specH > 0 then
       begin
-      DrawTrace(cv, w, specH, minDb, rangeDb, binsPerPixel);
+      DrawTrace(cv, w, specH, minDb, rangeDb);
       end;
 
    // ---- VFO markers, OVER the trace -------------------------------------
@@ -2484,7 +2478,7 @@ begin
       cv.Line(FCursorX, 0, FCursorX, wfTop + wfH);
 
       readout := FormatMHz(FreqAtPixel(FCursorX)) + '    ' +
-                 Format('%.0f dB', [PeakForPixel(FCursorX, binsPerPixel)]);
+                 Format('%.0f dB', [PeakForPixel(FCursorX, w)]);
 
       cv.Font.Color := clWhite;
       cv.Brush.Style := bsClear;

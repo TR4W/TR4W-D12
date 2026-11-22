@@ -376,42 +376,61 @@ function SpectrumCropCentred(const AFrame: TSpectrumFrame;
 
    The panadapter's trace, its waterfall, its axis, its VFO markers, its spot
    ticks and click-to-tune all place things across the same AWidth columns.
-   They used to do it with four inline formulas in the form; these are those
-   formulas, moved here unchanged so they can be tested without a window.
+   They used to do it with four inline formulas that disagreed (issue 155).
 
-   THEY ARE NOT ONE DEFINITION YET, and the tests in uTestSpectrumMapping say
-   by how much.  The trace takes, for column x, the bins
-   [Trunc(x * bpp), Trunc((x + 1) * bpp) - 1] (one bin when that is empty);
-   click-to-tune reports the CENTRE OF THE FIRST of those bins, while the trace
-   and the readout show their MAXIMUM; a marker rounds its Hz to the nearest
-   column edge, which is not always the column the trace draws that bin in.
-   Changing any of that changes pixels, so it is a decision, not a refactor.
+   ONE INTEGER PARTITION, AND EVERYTHING IS DERIVED FROM IT (NY4I, issue 155,
+   2026-11-22).  With N bins across W columns, column x holds the bins
 
-   ABinsPerPixel is a Double ON PURPOSE.  The trace computes it once as
-   BinCount / Width into a Double, and Trunc of x times that Double is what it
-   draws.  Integer arithmetic would differ wherever the Double undershoots an
-   integer -- which is also why, for some widths, the top bin falls in no
-   column at all.  Callers get the value from SpectrumBinsPerPixel so that
-   every one of them truncates the same Double. *)
+      first = (x * N) div W   ..   last = ((x + 1) * N) div W - 1
 
-(* BinCount / Width as the trace has always computed it; 0 for no width. *)
-function SpectrumBinsPerPixel(ABinCount, AWidth: Integer): Double;
+   and, where the window is wider than the data (last < first), the one bin
+   first -- repeated across several columns, never interpolated.  Integer
+   arithmetic tiles the bins exactly: every bin is in exactly one column when
+   N >= W, column 0 starts at bin 0 and the last column ends at bin N - 1 at
+   EVERY width.  (The old Double formula lost the top bin at some widths: a
+   carrier at the right edge was drawn nowhere.)
+
+   Click-to-tune tunes the bin under the pixel's CENTRE, kept inside the
+   column's own bins -- NY4I's "exact" rather than the column's peak.  A
+   marker goes Hz -> bin -> the column holding that bin.  So a marker for a
+   frequency is drawn in the column the trace draws its bin in, and a click
+   tunes a bin that the clicked column draws.  It changes pixels by at most
+   one column against the old continuous rounding; that was accepted. *)
 
 (* The bins the trace draws in column AX: AFirst..ALast, both inside
-   0..ABinCount - 1.  Wider than the data, one bin repeats across several
-   columns.  Both are -1 when there are no bins. *)
-procedure SpectrumColumnBins(AX, ABinCount: Integer; ABinsPerPixel: Double;
+   0..ABinCount - 1.  A column off either side clamps to the end bin, so a
+   caller never reads off the array.  Both are -1 when there are no bins or
+   no width. *)
+procedure SpectrumColumnBins(AX, ABinCount, AWidth: Integer;
                              out AFirst, ALast: Integer);
 
-(* Click-to-tune: the centre of the FIRST bin of column AX.  0 when the frame
-   has no bins. *)
-function SpectrumColumnHz(const AFrame: TSpectrumFrame; AX: Integer;
-                          ABinsPerPixel: Double): Int64;
+(* The column that holds ABin: ((ABin + 1) * W - 1) div N, floor division.
+   NOT clamped, so a bin off either end lands off the window (< 0, >= W).
+   Where the window is wider than the data, a bin is repeated over several
+   columns and this is the RIGHTMOST of them.  -1 when there are no bins or
+   no width. *)
+function SpectrumBinColumn(ABin, ABinCount, AWidth: Integer): Integer;
 
-(* Markers, spots and axis ticks: AHz rounded to the nearest column edge.
-   NOT clamped -- a passband edge off either side still has to be placed so
-   the visible part is drawn -- so a caller drawing a point checks
-   0 <= x < AWidth itself.  -1 when the span or the width is not positive. *)
+(* The bin a click on column AX tunes: the bin under the pixel's centre,
+   ((2x + 1) * N) div 2W, kept inside SpectrumColumnBins(AX).  At a whole
+   number of bins per column the centre sits on a bin edge and this is the
+   bin to its right (2048/1024: bin 2x + 1).  -1 when there are no bins or
+   no width. *)
+function SpectrumClickBin(AX, ABinCount, AWidth: Integer): Integer;
+
+(* Click-to-tune: the centre of SpectrumClickBin.  0 when the frame has no
+   bins or there is no width. *)
+function SpectrumColumnHz(const AFrame: TSpectrumFrame; AX: Integer;
+                          AWidth: Integer): Int64;
+
+(* Markers, spots, passband edges and axis ticks: AHz to its bin (floor of
+   (AHz - start) * N / span, EXTRAPOLATED past either end), and from the
+   bin SpectrumBinColumn.  NOT clamped -- a passband edge off either side still
+   has to be placed so the visible part is drawn -- so a caller drawing a
+   point checks 0 <= x < AWidth itself.  The result is bounded to
+   -1..AWidth: anything left of the window is -1, anything right of it
+   (the span's high edge included) is AWidth.  -1 too when the span, the
+   width or the bin count is not positive. *)
 function SpectrumHzToPixel(const AFrame: TSpectrumFrame; AHz: Int64;
                            AWidth: Integer): Integer;
 
@@ -798,43 +817,60 @@ begin
    Result := True;
 end;
 
-function SpectrumBinsPerPixel(ABinCount, AWidth: Integer): Double;
+(* Floor division for a positive divisor.  Pascal's div truncates toward
+   zero, which would put a frequency just below the span into bin 0 and
+   column 0 instead of off the window. *)
+function SpectrumFloorDiv(ANumerator, ADivisor: Int64): Int64;
 begin
-   Result := 0;
+   Result := ANumerator div ADivisor;
 
-   if AWidth <= 0 then
+   if (ANumerator mod ADivisor) < 0 then
       begin
-      Exit;
+      Dec(Result);
       end;
-
-   Result := ABinCount / AWidth;
 end;
 
-procedure SpectrumColumnBins(AX, ABinCount: Integer; ABinsPerPixel: Double;
+procedure SpectrumColumnBins(AX, ABinCount, AWidth: Integer;
                              out AFirst, ALast: Integer);
 var
    top: Integer;
+   x: Int64;
 begin
    AFirst := -1;
    ALast := -1;
 
-   if ABinCount <= 0 then
+   if (ABinCount <= 0) or (AWidth <= 0) then
       begin
       Exit;
       end;
 
    top := ABinCount - 1;
 
-   (* The trace's own expressions, in the trace's own order.  Do not turn
-      them into integer division: see the note on ABinsPerPixel. *)
-   AFirst := Trunc(AX * ABinsPerPixel);
-   ALast := Trunc((AX + 1) * ABinsPerPixel) - 1;
+   (* A column off the window clamps onto the end bins -- the trace never
+      asks for one, click-to-tune always clamped it, and this keeps that. *)
+   x := AX;
+
+   if x < 0 then
+      begin
+      x := 0;
+      end;
+
+   if x > AWidth - 1 then
+      begin
+      x := AWidth - 1;
+      end;
+
+   (* THE PARTITION.  Int64 so no product can overflow at any width. *)
+   AFirst := Integer((x * ABinCount) div AWidth);
+   ALast := Integer((((x + 1) * ABinCount) div AWidth) - 1);
 
    if ALast < AFirst then
       begin
       ALast := AFirst;
       end;
 
+   (* Cannot trigger for 0 <= x < AWidth; kept so an array index can never
+      leave the array whatever the arithmetic. *)
    if AFirst > top then
       begin
       AFirst := top;
@@ -844,48 +880,109 @@ begin
       begin
       ALast := top;
       end;
-
-   (* Only a column left of the window gets here -- the trace never asks for
-      one, click-to-tune used to clamp it to bin 0, and this keeps that. *)
-   if AFirst < 0 then
-      begin
-      AFirst := 0;
-      end;
-
-   if ALast < AFirst then
-      begin
-      ALast := AFirst;
-      end;
 end;
 
-function SpectrumColumnHz(const AFrame: TSpectrumFrame; AX: Integer;
-                          ABinsPerPixel: Double): Int64;
+(* The partition's inverse, once, in Int64 so SpectrumHzToPixel can hand it
+   an extrapolated bin.  The largest x whose first bin, (x * N) div W, is at
+   most ABin: the column that holds ABin, the rightmost of a repeated run.
+   Callers have checked N > 0 and W > 0. *)
+function SpectrumBinColumnOf(ABin: Int64; ABinCount, AWidth: Integer): Int64;
+begin
+   Result := SpectrumFloorDiv((ABin + 1) * AWidth - 1, ABinCount);
+end;
+
+function SpectrumBinColumn(ABin, ABinCount, AWidth: Integer): Integer;
+begin
+   Result := -1;
+
+   if (ABinCount <= 0) or (AWidth <= 0) then
+      begin
+      Exit;
+      end;
+
+   Result := Integer(SpectrumBinColumnOf(ABin, ABinCount, AWidth));
+end;
+
+function SpectrumClickBin(AX, ABinCount, AWidth: Integer): Integer;
 var
    first, last: Integer;
+   x: Int64;
 begin
-   Result := 0;
-   SpectrumColumnBins(AX, AFrame.BinCount, ABinsPerPixel, first, last);
+   Result := -1;
+   SpectrumColumnBins(AX, ABinCount, AWidth, first, last);
 
    if first < 0 then
       begin
       Exit;
       end;
 
-   Result := SpectrumBinHz(AFrame, first);
+   x := AX;
+   Result := Integer(SpectrumFloorDiv(((2 * x) + 1) * ABinCount, 2 * Int64(AWidth)));
+
+   (* KEPT INSIDE THE COLUMN.  The pixel's centre can sit in a bin the
+      column does not draw (5 bins over 4 columns: column 2 draws bin 2, its
+      centre is in bin 3), and a click must tune a bin the operator can see
+      there.  This also clamps a click off either side onto the end bins. *)
+   if Result < first then
+      begin
+      Result := first;
+      end;
+
+   if Result > last then
+      begin
+      Result := last;
+      end;
 end;
 
-function SpectrumHzToPixel(const AFrame: TSpectrumFrame; AHz: Int64;
-                           AWidth: Integer): Integer;
+function SpectrumColumnHz(const AFrame: TSpectrumFrame; AX: Integer;
+                          AWidth: Integer): Int64;
+var
+   bin: Integer;
 begin
-   Result := -1;
+   Result := 0;
+   bin := SpectrumClickBin(AX, AFrame.BinCount, AWidth);
 
-   if (AFrame.SpanHz <= 0) or (AWidth <= 0) then
+   if bin < 0 then
       begin
       Exit;
       end;
 
-   (* Round is the RTL's banker's rounding, exactly as the form had it. *)
-   Result := Round(((AHz - SpectrumStartHz(AFrame)) / AFrame.SpanHz) * AWidth);
+   Result := SpectrumBinHz(AFrame, bin);
+end;
+
+function SpectrumHzToPixel(const AFrame: TSpectrumFrame; AHz: Int64;
+                           AWidth: Integer): Integer;
+var
+   bin, column: Int64;
+begin
+   Result := -1;
+
+   if (AFrame.SpanHz <= 0) or (AWidth <= 0) or (AFrame.BinCount <= 0) then
+      begin
+      Exit;
+      end;
+
+   (* SpectrumHzToBin's rule, extrapolated: it refuses an off-span frequency
+      with -1, and a passband edge off the window still has to be placed.
+      Int64 throughout: a VFO on another band is gigahertz away. *)
+   bin := SpectrumFloorDiv((AHz - SpectrumStartHz(AFrame)) * AFrame.BinCount,
+                           AFrame.SpanHz);
+   column := SpectrumBinColumnOf(bin, AFrame.BinCount, AWidth);
+
+   (* Bounded to one column either side of the window before the narrowing,
+      so a far-off frequency can never wrap an Integer back onto the
+      display.  Every caller treats both values as off the window. *)
+   if column < -1 then
+      begin
+      column := -1;
+      end;
+
+   if column > AWidth then
+      begin
+      column := AWidth;
+      end;
+
+   Result := Integer(column);
 end;
 
 function SpectrumDialFrequency(ARfHz: Int64; APitchHz: Integer;

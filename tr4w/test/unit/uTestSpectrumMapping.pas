@@ -2,22 +2,27 @@ unit uTestSpectrumMapping;
 {$I ..\..\src\tr4w.inc}
 
 (*
-  The panadapter's horizontal mapping -- column, bin, Hz -- as it is TODAY.
+  The panadapter's horizontal mapping -- column, bin, Hz -- as ONE integer
+  partition (issue 155, NY4I 2026-11-22: one partition for trace, click and
+  markers; the click tunes the exact bin under the pointer; markers follow
+  the partition).
 
-  These pin the behaviour the form had before the arithmetic moved into
-  uSpectrumTypes, so the move is provably a move.  Where the trace, the markers
-  and click-to-tune disagree, the disagreement is pinned too, with its size:
-  a test named ..._Disagree... states a defect to be decided, not a property
-  to be protected.  When the definitions are unified those tests change, on
-  purpose, in the same commit.
+  Until that ruling this unit pinned four DISAGREEMENTS between the trace,
+  the markers and click-to-tune, and could not assert that the top bin was
+  drawn at all, because the old Double formula lost it at some widths.  Those
+  pins are rewritten here as AGREEMENTS, on purpose:
 
-  ONLY ARITHMETIC THAT IS EXACT IN A DOUBLE IS PINNED.  The trace truncates
-  x * (BinCount / Width), and BinCount / Width is usually inexact: i386 does
-  that multiply in x87 extended precision and x86_64 in SSE double, so the two
-  disagree about the bucket boundary in some columns.  The suite runs on both,
-  so a case whose answer depends on that rounding is measured outside the
-  suite, never asserted here.  The exact cases are widths that divide the
-  bin count or that the bin count divides, and small ratios such as 10/4.
+    - every bin is in exactly one column when there are at least as many
+      bins as columns, and every column is non-empty;
+    - the last column holds the top bin at EVERY width;
+    - a click tunes a bin the clicked column draws -- the bin under the
+      pixel's centre, kept inside the column;
+    - a marker is drawn in the column the trace draws its bin in;
+    - a click's marker draws the clicked bin, and is the clicked column
+      itself whenever bins >= columns.
+
+  Integer arithmetic is exact, so unlike the old suite every width can be
+  asserted, inexact ratios included.
 *)
 
 interface
@@ -33,18 +38,19 @@ type
       function PeakColumnOf(ABinCount, AWidth, ACarrierBin: Integer): Integer;
       function ColumnHolds(ABinCount, AWidth, AX, ABin: Integer): Boolean;
 
-      procedure Test_BinsPerPixel;
       procedure Test_Columns_WholeBinsPerPixel;
       procedure Test_Columns_FractionalBinsPerPixel;
       procedure Test_Columns_WiderThanTheData_RepeatBins;
+      procedure Test_Columns_OneBin;
       procedure Test_Columns_TileTheBins;
       procedure Test_Columns_NoBins;
       procedure Test_Carrier_AtBothEnds;
-      procedure Test_ClickHz_IsTheFirstBinCentre;
-      procedure Test_HzToPixel_EdgesAndRounding;
-      procedure Test_Disagree_MarkerVsTrace;
-      procedure Test_Disagree_ClickVsTracePeak;
-      procedure Test_Disagree_ClickRoundTrip;
+      procedure Test_ClickBin_IsTheBinUnderThePointer;
+      procedure Test_ClickHz_Values;
+      procedure Test_HzToPixel_EdgesAndOffSpan;
+      procedure Test_Agree_MarkerIsTheTraceColumn;
+      procedure Test_Agree_ClickTunesADrawnBin;
+      procedure Test_Agree_ClickRoundTrip;
       procedure Test_SpanCommand_Syntax;
    public
       procedure RunAllTests; override;
@@ -69,8 +75,8 @@ var
    first, last: Integer;
    tag: string;
 begin
-   SpectrumColumnBins(AX, ABinCount, SpectrumBinsPerPixel(ABinCount, AWidth), first, last);
-   tag := IntToStr(ABinCount) + ' bins / ' + IntToStr(AWidth) + ' px, column ' + IntToStr(AX);
+   SpectrumColumnBins(AX, ABinCount, AWidth, first, last);
+   tag :=IntToStr(ABinCount) + ' bins / ' + IntToStr(AWidth) + ' px, column ' + IntToStr(AX);
    CheckEquals(AFirst, first, tag + ': first bin');
    CheckEquals(ALast, last, tag + ': last bin');
 end;
@@ -106,18 +112,8 @@ begin
       Exit;
       end;
 
-   SpectrumColumnBins(AX, ABinCount, SpectrumBinsPerPixel(ABinCount, AWidth), first, last);
+   SpectrumColumnBins(AX, ABinCount, AWidth, first, last);
    Result := (ABin >= first) and (ABin <= last);
-end;
-
-procedure TSpectrumMappingTests.Test_BinsPerPixel;
-begin
-   BeginTest('Test_BinsPerPixel');
-   Check(SpectrumBinsPerPixel(2048, 0) = 0, 'no width is 0, not a division by zero');
-   Check(SpectrumBinsPerPixel(2048, -5) = 0, 'a negative width is 0');
-   Check(SpectrumBinsPerPixel(2048, 1024) = 2.0, '2048 / 1024');
-   Check(SpectrumBinsPerPixel(10, 4) = 2.5, '10 / 4');
-   Check(SpectrumBinsPerPixel(3, 4) = 0.75, '3 / 4');
 end;
 
 procedure TSpectrumMappingTests.Test_Columns_WholeBinsPerPixel;
@@ -136,12 +132,23 @@ end;
 procedure TSpectrumMappingTests.Test_Columns_FractionalBinsPerPixel;
 begin
    BeginTest('Test_Columns_FractionalBinsPerPixel');
-   (* 2.5 bins per column: the buckets are UNEVEN, 2-3-2-3, because both ends
-      are truncated.  That is today's behaviour, not a goal. *)
+   (* 2.5 bins per column: (x * N) div W gives 2-3-2-3, every bin once. *)
    CheckColumn(10, 4, 0, 0, 1);
    CheckColumn(10, 4, 1, 2, 4);
    CheckColumn(10, 4, 2, 5, 6);
    CheckColumn(10, 4, 3, 7, 9);
+
+   (* 1.25: 1-1-1-2, and the top bin is in the last column. *)
+   CheckColumn(5, 4, 0, 0, 0);
+   CheckColumn(5, 4, 1, 1, 1);
+   CheckColumn(5, 4, 2, 2, 2);
+   CheckColumn(5, 4, 3, 3, 4);
+
+   (* An inexact ratio the old Double could not be trusted with: 2048 bins
+      across 700 columns.  Column 699 starts at (699 * 2048) div 700 = 2045
+      and ends at the top bin. *)
+   CheckColumn(2048, 700, 0, 0, 1);
+   CheckColumn(2048, 700, 699, 2045, 2047);
 end;
 
 procedure TSpectrumMappingTests.Test_Columns_WiderThanTheData_RepeatBins;
@@ -165,21 +172,47 @@ begin
    CheckColumn(1024, 2048, 5000, 1023, 1023);
 end;
 
-(* PROPERTIES that hold under either rounding, so they are safe to assert for
-   inexact ratios too: column 0 starts at bin 0, and when there are at least as
-   many bins as columns, neighbouring columns meet with no gap and no overlap;
-   when there are fewer, every bin is shown and the last column shows the top
-   bin.  (Whether the last column REACHES the top bin when there are more bins
-   than columns is exactly what depends on rounding -- see the unit header.) *)
+(* One bin across five columns: every column draws it, a click anywhere
+   tunes it, and its marker is the rightmost column of the run. *)
+procedure TSpectrumMappingTests.Test_Columns_OneBin;
+var
+   x: Integer;
+   f: TSpectrumFrame;
+begin
+   BeginTest('Test_Columns_OneBin');
+   f := MakeFrame(1);
+
+   for x := 0 to 4 do
+      begin
+      CheckColumn(1, 5, x, 0, 0);
+      CheckEquals(0, SpectrumClickBin(x, 1, 5), 'one bin: click column ' + IntToStr(x));
+      end;
+
+   CheckEquals(4, SpectrumBinColumn(0, 1, 5), 'one bin: its column is the rightmost');
+   CheckEquals(IntToStr(CENTRE_HZ), IntToStr(SpectrumColumnHz(f, 2, 5)),
+               'one bin: a click tunes its centre, the frame centre');
+   CheckEquals(4, SpectrumHzToPixel(f, CENTRE_HZ, 5), 'one bin: the centre marker');
+
+   (* One bin, one column. *)
+   CheckColumn(1, 1, 0, 0, 0);
+   CheckEquals(0, SpectrumBinColumn(0, 1, 1), 'one bin, one column');
+end;
+
+(* THE PARTITION'S PROPERTIES, at every width -- exact integer arithmetic, so
+   inexact ratios are asserted too.  Column 0 starts at bin 0 and the last
+   column holds the TOP bin (the old Double formula lost it at some widths).
+   With bins >= columns: neighbouring columns meet with no gap and no overlap,
+   every column is non-empty, and every bin is in exactly one column.  With
+   fewer bins: one bin per column, never skipping a bin, every bin shown. *)
 procedure TSpectrumMappingTests.Test_Columns_TileTheBins;
 const
-   BIN_COUNTS: array[0..2] of Integer = (2048, 1024, 10);
-   WIDTHS: array[0..7] of Integer = (3, 7, 100, 333, 700, 1000, 1999, 3001);
+   BIN_COUNTS: array[0..6] of Integer = (2048, 2047, 1024, 10, 5, 3, 1);
+   WIDTHS: array[0..9] of Integer = (1, 3, 4, 7, 100, 333, 700, 1000, 1999, 3001);
 var
-   ni, wi, n, w, x, first, last, prevLast, prevFirst: Integer;
-   bpp: Double;
+   ni, wi, n, w, x, b, first, last, prevLast, prevFirst: Integer;
    tag: string;
-   gapFound, skipFound: Boolean;
+   gapFound, skipFound, emptyFound, countWrong: Boolean;
+   seen: array of Integer;
 begin
    BeginTest('Test_Columns_TileTheBins');
 
@@ -189,20 +222,28 @@ begin
          begin
          n := BIN_COUNTS[ni];
          w := WIDTHS[wi];
-         bpp := SpectrumBinsPerPixel(n, w);
          tag := IntToStr(n) + ' bins / ' + IntToStr(w) + ' px';
          gapFound := False;
          skipFound := False;
+         emptyFound := False;
+         countWrong := False;
          prevLast := -1;
          prevFirst := -1;
+         seen := nil;
+         SetLength(seen, n);
 
          for x := 0 to w - 1 do
             begin
-            SpectrumColumnBins(x, n, bpp, first, last);
+            SpectrumColumnBins(x, n, w, first, last);
 
             if x = 0 then
                begin
                CheckEquals(0, first, tag + ': column 0 starts at bin 0');
+               end;
+
+            if last < first then
+               begin
+               emptyFound := True;
                end;
 
             if n >= w then
@@ -211,6 +252,11 @@ begin
                   begin
                   gapFound := True;
                   end;
+
+               for b := first to last do
+                  begin
+                  Inc(seen[b]);
+                  end;
                end
             else
                begin
@@ -218,19 +264,27 @@ begin
                   begin
                   skipFound := True;
                   end;
+
+               seen[first] := 1;
                end;
 
             prevFirst := first;
             prevLast := last;
             end;
 
+         for b := 0 to n - 1 do
+            begin
+            if seen[b] <> 1 then
+               begin
+               countWrong := True;
+               end;
+            end;
+
+         Check(not emptyFound, tag + ': every column draws at least one bin');
          Check(not gapFound, tag + ': neighbouring columns must tile the bins');
          Check(not skipFound, tag + ': one bin per column, never skipping one');
-
-         if n < w then
-            begin
-            CheckEquals(n - 1, prevLast, tag + ': the last column shows the top bin');
-            end;
+         Check(not countWrong, tag + ': every bin in exactly one column (or shown, when wider)');
+         CheckEquals(n - 1, prevLast, tag + ': the last column holds the top bin');
          end;
       end;
 end;
@@ -241,12 +295,22 @@ var
    f: TSpectrumFrame;
 begin
    BeginTest('Test_Columns_NoBins');
-   SpectrumColumnBins(3, 0, 1.0, first, last);
+   SpectrumColumnBins(3, 0, 4, first, last);
    CheckEquals(-1, first, 'no bins: first');
    CheckEquals(-1, last, 'no bins: last');
 
+   SpectrumColumnBins(3, 2048, 0, first, last);
+   CheckEquals(-1, first, 'no width: first');
+   CheckEquals(-1, last, 'no width: last');
+
+   CheckEquals(-1, SpectrumBinColumn(0, 0, 4), 'no bins: no column');
+   CheckEquals(-1, SpectrumBinColumn(0, 2048, 0), 'no width: no column');
+   CheckEquals(-1, SpectrumClickBin(3, 0, 4), 'no bins: no click bin');
+   CheckEquals(-1, SpectrumClickBin(3, 2048, 0), 'no width: no click bin');
+
    f := MakeFrame(0);
-   CheckEquals('0', IntToStr(SpectrumColumnHz(f, 3, 1.0)), 'no bins: no click frequency');
+   CheckEquals('0', IntToStr(SpectrumColumnHz(f, 3, 4)), 'no bins: no click frequency');
+   CheckEquals(-1, SpectrumHzToPixel(f, CENTRE_HZ, 4), 'no bins: no marker');
 end;
 
 procedure TSpectrumMappingTests.Test_Carrier_AtBothEnds;
@@ -263,42 +327,77 @@ begin
    CheckEquals(0, PeakColumnOf(10, 4, 0), '10/4 bottom');
    CheckEquals(3, PeakColumnOf(10, 4, 9), '10/4 top');
 
-   (* The bottom bin is in column 0 at ANY width -- Trunc(0) is exact. *)
+   (* At inexact ratios too -- the top-bin cure.  The old Double formula
+      drew a top-bin carrier in NO column at some of these widths. *)
    CheckEquals(0, PeakColumnOf(2048, 700, 0), '2048/700 bottom');
+   CheckEquals(699, PeakColumnOf(2048, 700, 2047), '2048/700 top');
+   CheckEquals(1998, PeakColumnOf(2048, 1999, 2047), '2048/1999 top');
+   CheckEquals(332, PeakColumnOf(2048, 333, 2047), '2048/333 top');
    CheckEquals(0, PeakColumnOf(2048, 3001, 0), '2048/3001 bottom');
+   CheckEquals(3000, PeakColumnOf(2048, 3001, 2047), '2048/3001 top');
 end;
 
-procedure TSpectrumMappingTests.Test_ClickHz_IsTheFirstBinCentre;
-var
-   f: TSpectrumFrame;
-   bpp: Double;
+(* NY4I's "exact": the bin under the pixel's centre, ((2x + 1) * N) div 2W,
+   kept inside the column's own bins. *)
+procedure TSpectrumMappingTests.Test_ClickBin_IsTheBinUnderThePointer;
 begin
-   BeginTest('Test_ClickHz_IsTheFirstBinCentre');
-   f := MakeFrame(2048);
-   bpp := SpectrumBinsPerPixel(2048, 1024);
+   BeginTest('Test_ClickBin_IsTheBinUnderThePointer');
 
-   CheckEquals(IntToStr(SpectrumBinHz(f, 0)), IntToStr(SpectrumColumnHz(f, 0, bpp)), 'column 0');
-   CheckEquals(IntToStr(SpectrumBinHz(f, 2)), IntToStr(SpectrumColumnHz(f, 1, bpp)), 'column 1');
-   CheckEquals(IntToStr(SpectrumBinHz(f, 2046)), IntToStr(SpectrumColumnHz(f, 1023, bpp)), 'column 1023');
+   (* A whole number of bins per column puts the pixel centre ON a bin edge,
+      and the bin to its right is taken: 2048/1024 gives bin 2x + 1. *)
+   CheckEquals(1, SpectrumClickBin(0, 2048, 1024), '2048/1024 column 0');
+   CheckEquals(3, SpectrumClickBin(1, 2048, 1024), '2048/1024 column 1');
+   CheckEquals(701, SpectrumClickBin(350, 2048, 1024), '2048/1024 column 350');
+   CheckEquals(2047, SpectrumClickBin(1023, 2048, 1024), '2048/1024 column 1023');
+
+   (* 2.5 bins per column: the centre lands inside the column. *)
+   CheckEquals(1, SpectrumClickBin(0, 10, 4), '10/4 column 0 (bins 0..1)');
+   CheckEquals(3, SpectrumClickBin(1, 10, 4), '10/4 column 1 (bins 2..4)');
+   CheckEquals(6, SpectrumClickBin(2, 10, 4), '10/4 column 2 (bins 5..6)');
+   CheckEquals(8, SpectrumClickBin(3, 10, 4), '10/4 column 3 (bins 7..9)');
+
+   (* THE CLAMP: the centre of column 2 of 5 bins over 4 columns is in bin 3,
+      but that column draws bin 2 only, so bin 2 is tuned. *)
+   CheckEquals(2, SpectrumClickBin(2, 5, 4), '5/4 column 2: kept inside the column');
+   CheckEquals(4, SpectrumClickBin(3, 5, 4), '5/4 column 3 (bins 3..4)');
+
+   (* Wider than the data: the column's one bin, whatever the centre says. *)
+   CheckEquals(0, SpectrumClickBin(1, 3, 4), '3/4 column 1 draws bin 0, centre is in bin 1');
+   CheckEquals(2, SpectrumClickBin(3, 3, 4), '3/4 column 3');
 
    (* Off either side clamps to the end bins, as click-to-tune always did. *)
-   CheckEquals(IntToStr(SpectrumBinHz(f, 0)), IntToStr(SpectrumColumnHz(f, -10, bpp)), 'left of the window');
-   CheckEquals(IntToStr(SpectrumBinHz(f, 2047)), IntToStr(SpectrumColumnHz(f, 5000, bpp)), 'right of the window');
-
-   (* The real values, so a change to SpectrumBinHz shows here too: bins are
-      93.75 Hz, the start is 14,004,000. *)
-   CheckEquals('14004047', IntToStr(SpectrumColumnHz(f, 0, bpp)), 'column 0 in Hz');
-   CheckEquals('14004234', IntToStr(SpectrumColumnHz(f, 1, bpp)), 'column 1 in Hz');
+   CheckEquals(0, SpectrumClickBin(-10, 2048, 1024), 'left of the window');
+   CheckEquals(2047, SpectrumClickBin(5000, 2048, 1024), 'right of the window');
 end;
 
-procedure TSpectrumMappingTests.Test_HzToPixel_EdgesAndRounding;
+procedure TSpectrumMappingTests.Test_ClickHz_Values;
+var
+   f: TSpectrumFrame;
+begin
+   BeginTest('Test_ClickHz_Values');
+   f := MakeFrame(2048);
+
+   CheckEquals(IntToStr(SpectrumBinHz(f, 1)), IntToStr(SpectrumColumnHz(f, 0, 1024)), 'column 0');
+   CheckEquals(IntToStr(SpectrumBinHz(f, 3)), IntToStr(SpectrumColumnHz(f, 1, 1024)), 'column 1');
+   CheckEquals(IntToStr(SpectrumBinHz(f, 2047)), IntToStr(SpectrumColumnHz(f, 1023, 1024)), 'column 1023');
+   CheckEquals(IntToStr(SpectrumBinHz(f, 0)), IntToStr(SpectrumColumnHz(f, -10, 1024)), 'left of the window');
+   CheckEquals(IntToStr(SpectrumBinHz(f, 2047)), IntToStr(SpectrumColumnHz(f, 5000, 1024)), 'right of the window');
+
+   (* The real values, so a change to SpectrumBinHz shows here too: bins are
+      93.75 Hz, the start is 14,004,000, so bin 1's centre is 140.625 Hz up
+      and bin 3's is 328.125. *)
+   CheckEquals('14004141', IntToStr(SpectrumColumnHz(f, 0, 1024)), 'column 0 in Hz');
+   CheckEquals('14004328', IntToStr(SpectrumColumnHz(f, 1, 1024)), 'column 1 in Hz');
+end;
+
+procedure TSpectrumMappingTests.Test_HzToPixel_EdgesAndOffSpan;
 var
    f: TSpectrumFrame;
    start: Int64;
 begin
-   BeginTest('Test_HzToPixel_EdgesAndRounding');
-   (* 1024 Hz across 8 columns: 128 Hz each, so every value below is exact. *)
-   f := MakeFrame(2048);
+   BeginTest('Test_HzToPixel_EdgesAndOffSpan');
+   (* 16 bins of 64 Hz across 8 columns: two bins, 128 Hz, per column. *)
+   f := MakeFrame(16);
    f.SpanHz := 1024;
    start := SpectrumStartHz(f);
 
@@ -308,123 +407,202 @@ begin
    f.SpanHz := 1024;
 
    CheckEquals(0, SpectrumHzToPixel(f, start, 8), 'the low edge');
-   CheckEquals(4, SpectrumHzToPixel(f, f.CentreHz, 8), 'the centre');
+   CheckEquals(4, SpectrumHzToPixel(f, f.CentreHz, 8), 'the centre (bin 8)');
    CheckEquals(8, SpectrumHzToPixel(f, SpectrumEndHz(f), 8),
                'the high edge is column 8 -- one past the last, so a caller drops it');
 
-   (* Banker's rounding: a half rounds to EVEN. *)
-   CheckEquals(0, SpectrumHzToPixel(f, start + 64, 8), 'half a column rounds to 0');
-   CheckEquals(2, SpectrumHzToPixel(f, start + 192, 8), 'one and a half rounds to 2');
-   CheckEquals(1, SpectrumHzToPixel(f, start + 65, 8), 'just past half rounds up');
+   (* By bin, not by rounding: the whole of bins 0 and 1 is column 0. *)
+   CheckEquals(0, SpectrumHzToPixel(f, start + 64, 8), 'bin 1 is column 0');
+   CheckEquals(0, SpectrumHzToPixel(f, start + 127, 8), 'the top of bin 1 is column 0');
+   CheckEquals(1, SpectrumHzToPixel(f, start + 128, 8), 'bin 2 is column 1');
+   CheckEquals(7, SpectrumHzToPixel(f, start + 1023, 8), 'the top Hz of the span is column 7');
 
-   (* Not clamped: off-span frequencies land off the window. *)
-   CheckEquals(-1, SpectrumHzToPixel(f, start - 65, 8), 'left of the span');
-   CheckEquals(10, SpectrumHzToPixel(f, start + 1280, 8), 'right of the span');
-
-   (* Half a column BELOW the span still rounds to column 0, so a marker for a
-      frequency the display does not cover is drawn on its left edge. *)
-   CheckEquals(0, SpectrumHzToPixel(f, start - 64, 8), 'half a column below the span');
+   (* Off the span, extrapolated by the same rule and bounded to one column
+      either side, so a passband edge off the window is still placed. *)
+   CheckEquals(-1, SpectrumHzToPixel(f, start - 1, 8), 'one Hz below the span');
+   CheckEquals(-1, SpectrumHzToPixel(f, start - 64, 8), 'a bin below the span');
+   CheckEquals(8, SpectrumHzToPixel(f, start + 1280, 8), 'right of the span');
+   CheckEquals(8, SpectrumHzToPixel(f, start + 1000000000, 8), 'another band, above');
+   CheckEquals(-1, SpectrumHzToPixel(f, start - 1000000000, 8), 'another band, below');
 end;
 
-(* DISAGREEMENT, PINNED: a marker for a bin's centre can land one column right
-   of the column the trace draws that bin in.  At 2048 bins across 1024 columns
-   the trace puts bins 2x and 2x+1 in column x; the marker for bin 2x+1's
-   centre is at x + 0.75 and rounds to x + 1.  Half the bins, by exactly one
-   column. *)
-procedure TSpectrumMappingTests.Test_Disagree_MarkerVsTrace;
+(* AGREEMENT (was a pinned disagreement until issue 155): a marker for any
+   frequency in a bin is drawn in a column the trace draws that bin in -- the
+   rightmost of the run when a bin repeats.  The old continuous rounding put
+   half of the 2048/1024 markers one column right of their bin. *)
+procedure TSpectrumMappingTests.Test_Agree_MarkerIsTheTraceColumn;
+const
+   BIN_COUNTS: array[0..5] of Integer = (2048, 2047, 1024, 10, 3, 1);
+   WIDTHS: array[0..7] of Integer = (1, 4, 7, 333, 700, 1024, 1999, 3001);
 var
+   ni, wi, n, w, b, x, misses, notRightmost, notTheBinColumn: Integer;
    f: TSpectrumFrame;
-   b, x, misses, worst: Integer;
+   tag: string;
 begin
-   BeginTest('Test_Disagree_MarkerVsTrace');
-   f := MakeFrame(2048);
-   misses := 0;
-   worst := 0;
+   BeginTest('Test_Agree_MarkerIsTheTraceColumn');
 
-   for b := 0 to 2047 do
+   for ni := Low(BIN_COUNTS) to High(BIN_COUNTS) do
       begin
-      x := SpectrumHzToPixel(f, SpectrumBinHz(f, b), 1024);
-
-      if not ColumnHolds(2048, 1024, x, b) then
+      for wi := Low(WIDTHS) to High(WIDTHS) do
          begin
-         Inc(misses);
+         n := BIN_COUNTS[ni];
+         w := WIDTHS[wi];
+         f := MakeFrame(n);
+         tag := IntToStr(n) + ' bins / ' + IntToStr(w) + ' px';
+         misses := 0;
+         notRightmost := 0;
+         notTheBinColumn := 0;
 
-         if Abs(x - PeakColumnOf(2048, 1024, b)) > worst then
+         for b := 0 to n - 1 do
             begin
-            worst := Abs(x - PeakColumnOf(2048, 1024, b));
+            x := SpectrumBinColumn(b, n, w);
+
+            if not ColumnHolds(n, w, x, b) then
+               begin
+               Inc(misses);
+               end;
+
+            if ColumnHolds(n, w, x + 1, b) then
+               begin
+               Inc(notRightmost);
+               end;
+
+            (* Through Hz: the bin's centre places the marker in the bin's
+               column (every bin here is wider than 1 Hz). *)
+            if (SpectrumHzToPixel(f, SpectrumBinHz(f, b), w) <> x) then
+               begin
+               Inc(notTheBinColumn);
+               end;
+            end;
+
+         CheckEquals(0, misses, tag + ': bins whose column does not draw them');
+         CheckEquals(0, notRightmost, tag + ': a repeated bin marks its rightmost column');
+         CheckEquals(0, notTheBinColumn, tag + ': marker for a bin centre is the bin''s column');
+         end;
+      end;
+
+   (* The old disagreement's own example: bin 1 at 2048/1024 is drawn in
+      column 0, and its marker is now column 0 too. *)
+   f := MakeFrame(2048);
+   CheckEquals(0, PeakColumnOf(2048, 1024, 1), 'bin 1 drawn');
+   CheckEquals(0, SpectrumHzToPixel(f, SpectrumBinHz(f, 1), 1024), 'bin 1 marker');
+   CheckEquals(1023, SpectrumHzToPixel(f, SpectrumBinHz(f, 2047), 1024), 'the top bin''s marker');
+end;
+
+(* AGREEMENT (was "click vs trace peak"): a click tunes a bin the clicked
+   column DRAWS, at every width.  It is the bin under the pointer, NOT the
+   column's peak -- NY4I chose exact over peak -- so a carrier in bin 700,
+   drawn in column 350 at 2048/1024, is tuned by a click there only to the
+   bin beside it, 701, one bin (94 Hz) high.  That is stated, not hidden. *)
+procedure TSpectrumMappingTests.Test_Agree_ClickTunesADrawnBin;
+const
+   BIN_COUNTS: array[0..6] of Integer = (2048, 2047, 1024, 10, 5, 3, 1);
+   WIDTHS: array[0..8] of Integer = (1, 3, 4, 7, 333, 700, 1024, 1999, 3001);
+var
+   ni, wi, n, w, x, b, outside, wrongHz: Integer;
+   f: TSpectrumFrame;
+   tag: string;
+begin
+   BeginTest('Test_Agree_ClickTunesADrawnBin');
+
+   for ni := Low(BIN_COUNTS) to High(BIN_COUNTS) do
+      begin
+      for wi := Low(WIDTHS) to High(WIDTHS) do
+         begin
+         n := BIN_COUNTS[ni];
+         w := WIDTHS[wi];
+         f := MakeFrame(n);
+         tag := IntToStr(n) + ' bins / ' + IntToStr(w) + ' px';
+         outside := 0;
+         wrongHz := 0;
+
+         for x := 0 to w - 1 do
+            begin
+            b := SpectrumClickBin(x, n, w);
+
+            if not ColumnHolds(n, w, x, b) then
+               begin
+               Inc(outside);
+               end;
+
+            if SpectrumHzToBin(f, SpectrumColumnHz(f, x, w)) <> b then
+               begin
+               Inc(wrongHz);
+               end;
+            end;
+
+         CheckEquals(0, outside, tag + ': clicks tuning a bin their column does not draw');
+         CheckEquals(0, wrongHz, tag + ': click Hz is the click bin''s centre');
+         end;
+      end;
+
+   f := MakeFrame(2048);
+   CheckEquals(350, PeakColumnOf(2048, 1024, 700), 'bin 700 is drawn in column 350');
+   CheckEquals(IntToStr(SpectrumBinHz(f, 701)), IntToStr(SpectrumColumnHz(f, 350, 1024)),
+               'a click on column 350 tunes bin 701, the bin under the pointer');
+   CheckEquals('94', IntToStr(SpectrumColumnHz(f, 350, 1024) - SpectrumBinHz(f, 700)),
+               'one bin above a carrier in bin 700, in Hz');
+end;
+
+(* AGREEMENT (was a pinned disagreement): a click's marker draws the bin the
+   click tuned, at every width; with bins >= columns it is the clicked column
+   itself.  Wider than the data a bin repeats -- 1024 bins over 2048 columns,
+   columns 2b and 2b+1 both draw bin b -- and its marker is the rightmost of
+   the run, so a click on an even column marks its right twin, which draws
+   the same bin. *)
+procedure TSpectrumMappingTests.Test_Agree_ClickRoundTrip;
+const
+   BIN_COUNTS: array[0..6] of Integer = (2048, 2047, 1024, 10, 5, 3, 1);
+   WIDTHS: array[0..8] of Integer = (1, 3, 4, 7, 333, 700, 1024, 1999, 3001);
+var
+   ni, wi, n, w, x, xm, b, notDrawn, moved: Integer;
+   f: TSpectrumFrame;
+   tag: string;
+begin
+   BeginTest('Test_Agree_ClickRoundTrip');
+
+   for ni := Low(BIN_COUNTS) to High(BIN_COUNTS) do
+      begin
+      for wi := Low(WIDTHS) to High(WIDTHS) do
+         begin
+         n := BIN_COUNTS[ni];
+         w := WIDTHS[wi];
+         f := MakeFrame(n);
+         tag := IntToStr(n) + ' bins / ' + IntToStr(w) + ' px';
+         notDrawn := 0;
+         moved := 0;
+
+         for x := 0 to w - 1 do
+            begin
+            b := SpectrumClickBin(x, n, w);
+            xm := SpectrumHzToPixel(f, SpectrumColumnHz(f, x, w), w);
+
+            if not ColumnHolds(n, w, xm, b) then
+               begin
+               Inc(notDrawn);
+               end;
+
+            if xm <> x then
+               begin
+               Inc(moved);
+               end;
+            end;
+
+         CheckEquals(0, notDrawn, tag + ': a click''s marker draws the clicked bin');
+
+         if n >= w then
+            begin
+            CheckEquals(0, moved, tag + ': every click''s marker is the clicked column');
             end;
          end;
       end;
 
-   CheckEquals(1024, misses, 'bins whose marker misses the drawn column');
-   CheckEquals(1, worst, 'by at most one column');
-   CheckEquals(1, SpectrumHzToPixel(f, SpectrumBinHz(f, 1), 1024), 'bin 1 marker');
-   CheckEquals(0, PeakColumnOf(2048, 1024, 1), 'bin 1 drawn');
-end;
-
-(* DISAGREEMENT, PINNED: the trace shows a column's MAXIMUM, click-to-tune
-   tunes its FIRST bin.  A carrier in bin 2x+1 peaks in column x, and a click
-   there tunes bin 2x -- one bin, 93.75 Hz at a 192 kHz span, low. *)
-procedure TSpectrumMappingTests.Test_Disagree_ClickVsTracePeak;
-var
-   f: TSpectrumFrame;
-   bpp: Double;
-   x: Integer;
-begin
-   BeginTest('Test_Disagree_ClickVsTracePeak');
-   f := MakeFrame(2048);
-   bpp := SpectrumBinsPerPixel(2048, 1024);
-   x := PeakColumnOf(2048, 1024, 701);
-
-   CheckEquals(350, x, 'bin 701 is drawn in column 350');
-   CheckEquals(IntToStr(SpectrumBinHz(f, 700)), IntToStr(SpectrumColumnHz(f, x, bpp)),
-               'a click on that column tunes bin 700, not the carrier');
-   CheckEquals('94', IntToStr(SpectrumBinHz(f, 701) - SpectrumColumnHz(f, x, bpp)),
-               'the miss in Hz');
-end;
-
-(* DISAGREEMENT, PINNED: wider than the data, a click and the marker for the
-   frequency it tuned are not in the same column.  1024 bins across 2048
-   columns: columns 2b and 2b+1 both show bin b, a click on either tunes bin
-   b's centre, and that centre's marker is column 2b+1 -- so a click on an
-   EVEN column draws its marker one column right. *)
-procedure TSpectrumMappingTests.Test_Disagree_ClickRoundTrip;
-var
-   f: TSpectrumFrame;
-   bpp: Double;
-   x, moved: Integer;
-begin
-   BeginTest('Test_Disagree_ClickRoundTrip');
+   (* The old pinned case, now an agreement in the sense above. *)
    f := MakeFrame(1024);
-   bpp := SpectrumBinsPerPixel(1024, 2048);
-   moved := 0;
-
-   for x := 0 to 2047 do
-      begin
-      if SpectrumHzToPixel(f, SpectrumColumnHz(f, x, bpp), 2048) <> x then
-         begin
-         Inc(moved);
-         end;
-      end;
-
-   CheckEquals(1024, moved, '1024/2048: clicks whose marker is another column');
-   CheckEquals(1, SpectrumHzToPixel(f, SpectrumColumnHz(f, 0, bpp), 2048), 'click column 0');
-
-   (* At two bins per column the round trip holds, which is why it looked
-      right on the bench. *)
-   f := MakeFrame(2048);
-   bpp := SpectrumBinsPerPixel(2048, 1024);
-   moved := 0;
-
-   for x := 0 to 1023 do
-      begin
-      if SpectrumHzToPixel(f, SpectrumColumnHz(f, x, bpp), 1024) <> x then
-         begin
-         Inc(moved);
-         end;
-      end;
-
-   CheckEquals(0, moved, '2048/1024: every click round-trips');
+   CheckEquals(1, SpectrumHzToPixel(f, SpectrumColumnHz(f, 0, 2048), 2048),
+               '1024/2048: click column 0 marks column 1, its twin');
+   CheckTrue(ColumnHolds(1024, 2048, 1, 0) and ColumnHolds(1024, 2048, 0, 0),
+             '1024/2048: columns 0 and 1 both draw bin 0');
 end;
 
 (* Issue 192: the SPAN function-key command's argument.  Accepted forms, and
@@ -485,18 +663,19 @@ end;
 
 procedure TSpectrumMappingTests.RunAllTests;
 begin
-   Test_BinsPerPixel;
    Test_Columns_WholeBinsPerPixel;
    Test_Columns_FractionalBinsPerPixel;
    Test_Columns_WiderThanTheData_RepeatBins;
+   Test_Columns_OneBin;
    Test_Columns_TileTheBins;
    Test_Columns_NoBins;
    Test_Carrier_AtBothEnds;
-   Test_ClickHz_IsTheFirstBinCentre;
-   Test_HzToPixel_EdgesAndRounding;
-   Test_Disagree_MarkerVsTrace;
-   Test_Disagree_ClickVsTracePeak;
-   Test_Disagree_ClickRoundTrip;
+   Test_ClickBin_IsTheBinUnderThePointer;
+   Test_ClickHz_Values;
+   Test_HzToPixel_EdgesAndOffSpan;
+   Test_Agree_MarkerIsTheTraceColumn;
+   Test_Agree_ClickTunesADrawnBin;
+   Test_Agree_ClickRoundTrip;
    Test_SpanCommand_Syntax;
 end;
 
