@@ -305,6 +305,36 @@ fills what is still empty afterwards. **Still open:** WRTC sends a zone
 (`WriteRSTStateOrZone`) but is `NoZoneMults`, so it sends and exports the MY
 ZONE text (a CQ zone when stated) inside IARU HF.
 
+## COMMIT BEFORE PUBLISH: `LogContact` is Prepare / Write / Score / Release (issue 347, plan commit 4, 2026-11-22)
+
+`docs/LOG_COMMIT_BEFORE_PUBLISH_PLAN.md` 2a/2b. `LogContact` keeps its
+signature (WSJT-X, uNet, the Enter paths) and now refuses an unwritable log,
+then hands the record to `TLiveQSOSubmission` (logsubs2 implementation; one
+leg; `TSubmitSequence` decides the order) and copies the record back in a
+`finally`, refused or not. **`LiveQSOPrepare`** is everything before the old
+append (auto time, ten-minute date, mobile rewrite, `StampOffContest`, rover
+place, dupe test, `ProcessMultipliers`, network ids) plus a COPY of the record
+for the QSOINFO packet (`aLeg.Packet`) and the dispatcher message BUILT
+(`BuildLoggedQso`, with `SecondDomesticKeyForUDP` asked before the sheets hold
+the QSO, HamScore facts from `LogStoreCurrentMyFacts` -- never the store's).
+It posts nothing and writes nothing. **Write** is `tAddQSOsToLog`.
+**`LiveQSOScore`** (after the commit for one leg): totals, `SetMultFlags`,
+`AddQSOToSheets`, dupe sheets behind `QSOCountsTowardTotals`, then
+`AddToTotalQSOPoints` -- only what `LoadinLog` rebuilds. **`LiveQSORelease`**:
+serial high-water and initial-exchange history (outside the guard),
+`AddLoggedQSO(RXData, aFacts)` (behind it), then `SendRecordToServer(...,
+aLeg.Packet)`, `QsoDispatcher.Post`, `SendStationStatus`, needs strips, rate
+counters, spots, score UDP, and LAST `CountQsoTowardPeriodicBackup` and
+`SaveRestartFile`. A refusal Discards: the message is freed, nothing posted,
+the sequence number unused. **Do not post or score in Prepare, do not post the
+LIVE record (Score writes it), and do not build the HamScore body from the
+store's facts.** A peer's QSO (`MyComputer` False) takes the same path, so its
+UDP/HamScore post now waits for the commit too. Pinned (source reads):
+`uTestAutomaticXQSO.Test_AQSOIsPublishedOnlyAfterItsCommit`,
+`Test_LogContactCountsNoXQSOButAdvancesTheSerial`; the order by
+`uTestSubmitSequence`. Several legs are commit 5 (`RebuildAfterRefusal` is a
+loud stub until then).
+
 ## `FoundContest` READS STATION STATE, so what it reads must already be set
 
 **`MY COUNTRY` IS DERIVED — do not "add" a derivation.** `FoundContest` calls

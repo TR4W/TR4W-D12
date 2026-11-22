@@ -119,6 +119,17 @@ the integer form. RTTY text display has no automated oracle -- it is in
 
 ## The QSO dispatcher -- ONE thread delivers to every outside program (2026-10-24)
 
+**A LOGGED QSO'S MESSAGE IS POSTED ONLY AFTER THE LOG COMMITS IT (issue 347,
+plan commit 4, 2026-11-22).** `PostLoggedQso` is gone: `LogContact`'s Prepare
+calls `BuildLoggedQso` (`BuildQsoEvent` + no post; same inputs, read at the
+same point, so the UDP text, the command-queue logger's command and the
+HamScore body are the bytes they were), and Release posts it with
+`QsoDispatcher.Post` after the write. A refused QSO's message is freed unposted
+(the leg owns it until Release lets go of it just before the post; `Post` owns
+it on every branch). A peer's QSO (`BROADCAST ALL QSOS`, HamScore) waits for
+the commit too. `PostQsoEvent` (edits, deletes, Alt-Y) is unchanged:
+`BuildQsoEvent` + `Post`. Durable loggers were already commit-gated.
+
 **Why:** two QSOs in CQ WW SSB froze the main thread 2.7 s each (tr4w.log
 `Milliseconds to send UDP...` = 2702 / 2680; the others 2-6 ms). External logger and
 HamScore were off, so the UDP broadcast ran inline on the Enter key to a destination

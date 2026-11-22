@@ -1,11 +1,20 @@
 # Commit before publish: a QSO leaves the station only after it is in the log
 
-Status: **APPROVED (section 7). Commits 1-3 BUILT 2026-11-22, NOT WIRED** --
+Status: **APPROVED (section 7). Commits 1-4 BUILT 2026-11-22** --
 `AppendBatch`'s row ids and per-row hook, `LogStoreAppendLiveQSOs` (with
-`LogStoreAppendQSO` as its one-leg call) and the sequencing leaf
-`src/domain/uSubmitSequence.pas`. Nothing in `LogContact`, `TryLogContact` or
-`DrainPendingMultiQSORefs` calls them yet: the program still publishes before
-the append (commits 4-8 open). Detail and the decisions taken while building
+`LogStoreAppendQSO` as its one-leg call), the sequencing leaf
+`src/domain/uSubmitSequence.pas`, and (commit 4) `LogContact` split into
+Prepare / Write / Score / Release: `logsubs2.TLiveQSOSubmission` drives ONE
+leg through `TSubmitSequence`, the write is `tAddQSOsToLog` ->
+`LogStoreAppendLiveQSOs`, and the QSOINFO packet (a copy of the record as
+Prepare left it) and the dispatcher message (`BuildLoggedQso`, the split of
+`PostLoggedQso`) are posted only in Release, after the commit; a refusal frees
+them unposted. The peer path (`LogContact(rec, False)`) shares it, so its
+UDP/HamScore post waits for the commit too (1d). Commits 5-8 open: the county
+line / parks / rover legs are still one `LogContact` each
+(`DrainPendingMultiQSORefs`), and `RebuildAfterRefusal` is a loud stub until
+commit 5 wires `LoadinLog`. Commit 4's decisions are in
+`.claude/agents/contest-scoring.md`, "COMMIT BEFORE PUBLISH". Detail and the decisions taken while building
 them: `.claude/agents/log-database.md`, "ONE ENTRY, ONE TRANSACTION". Written
 2026-11-21 against `main` at `6924737c`.
 

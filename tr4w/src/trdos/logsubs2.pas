@@ -164,7 +164,7 @@ procedure SendFullLogToHamScore;  // Issue #783 -- enqueue every QSO for RTC res
   callers differ: a network-received QSO is broadcast only when BROADCAST ALL
   QSOS is on, and never goes to the external logger). HamScore is asked of the
   uploader itself. aFacts and aRecordedSent are the station the QSO recorded
-  (Q13); PostLoggedQso captures the session's own for a QSO being logged now.
+  (Q13); BuildLoggedQso captures the session's own for a QSO being logged now.
 
   aAdditionalDomesticMults is the QSO's second domestic multiplier (issue
   #318; 0 or 1), which no stored flag carries: the caller asks LOGDUPE as
@@ -178,10 +178,25 @@ procedure PostQsoEvent(const aKind: TQsoMessageKind;
                        const aAdditionalDomesticMults: integer;
                        const aUDP: boolean;
                        const aExternal: boolean);
-procedure PostLoggedQso(const RXData: ContestExchange;
+(* PostQsoEvent'S MESSAGE, BUILT AND NOT POSTED (issue 347). The caller owns
+  the result until it hands it to QsoDispatcher.Post, and frees it if it
+  never does. PostQsoEvent is this plus the post. *)
+function BuildQsoEvent(const aKind: TQsoMessageKind;
+                       const RXData: ContestExchange;
+                       const aFacts: TQsoMyFacts;
+                       const aRecordedSent: AnsiString;
+                       const aAdditionalDomesticMults: integer;
+                       const aUDP: boolean;
+                       const aExternal: boolean): TQsoMessage;
+(* THE MESSAGE FOR A QSO BEING LOGGED NOW, BUILT AND NOT POSTED -- what
+  PostLoggedQso posted at once until issue 347. LogContact builds it before
+  the log's write (the sheets as they stood, the session's station) and posts
+  it only after the write has committed; a refused QSO's message is freed
+  unposted. Same ownership rule as BuildQsoEvent. *)
+function BuildLoggedQso(const RXData: ContestExchange;
                         const aAdditionalDomesticMults: integer;
                         const aUDP: boolean;
-                        const aExternal: boolean);
+                        const aExternal: boolean): TQsoMessage;
 
 type
    (* WHERE A RESYNC DELIVERS EACH QSO -- HamScoreOnLog's own shape, so the
@@ -270,6 +285,9 @@ uses
     -- a QSO that failed to commit was acknowledged anyway. See
     LogStoreAppendQSO. }
   uLogStore,
+  (* TSubmitSequence -- the order LogContact's prepare, write, score and
+     release run in (issue 347, plan commit 4). *)
+  uSubmitSequence,
   { SQsoNotLogged. }
   uAppStrings,
   (* AddLoggedQSO -- the final score's view of the log, kept with the totals
@@ -1700,25 +1718,70 @@ begin
       end;
 end;
 
+type
+   (* ONE LEG OF AN ENTRY BETWEEN ITS PREPARE AND ITS RELEASE -- what it
+     will publish once the log has committed it (issue 347; plan
+     docs/LOG_COMMIT_BEFORE_PUBLISH_PLAN.md 2a, commit 4).
+
+     Packet is the record AS PREPARE LEFT IT, copied there: the QSOINFO
+     packet was built from exactly that record before issue 347, and Score
+     writes the live record afterwards (SetMultFlags, AddQSOToSheets), so
+     posting the live one after Score could change a byte. Message is the
+     dispatcher's message (UDP, the non-durable external logger, HamScore),
+     BUILT in Prepare and OWNED here until Release hands it to
+     QsoDispatcher.Post; FreeMessage and the destructor free one never
+     handed over, so a refusal, or a step that raises, leaks nothing and
+     posts nothing. *)
+   TLiveQSOLeg = class
+   public
+      MyComputer: boolean;
+      ContestRules: TContestBase;
+      PacketOwed: boolean;
+      Packet: ContestExchange;
+      Message: TQsoMessage;
+      procedure FreeMessage;
+      destructor Destroy; override;
+   end;
+
+   (* ONE OPERATOR ENTRY -- ONE LEG TODAY, SEVERAL AT PLAN COMMIT 5 -- driven
+     through uSubmitSequence.TSubmitSequence, which decides only WHEN each
+     step runs: Prepare(0); Write; then Score(0) and Release(0) when the
+     write committed, else Discard(0). One leg scores nothing before its
+     write, so a refusal has nothing to rebuild. The records (FQsos) are
+     kept apart from the legs so each can be handed to a step as the var
+     RXData the steps have always been written against. *)
+   TLiveQSOSubmission = class
+   private
+      FQsos: array of ContestExchange;
+      FLegs: array of TLiveQSOLeg;
+      FFacts: TLiveQsoFacts;
+      FSequence: TSubmitSequence;
+      function PrepareLeg(aLeg: integer): boolean;
+      procedure ScoreLeg(aLeg: integer);
+      function WriteLegs(aLegCount: integer): boolean;
+      procedure ReleaseLeg(aLeg: integer);
+      procedure DiscardLeg(aLeg: integer);
+      procedure RebuildAfterRefusal;
+   public
+      constructor Create;
+      destructor Destroy; override;
+      procedure AddLeg(const aQso: ContestExchange; aMyComputer: boolean);
+      (* True only when every leg is committed to the log and released. *)
+      function Submit: boolean;
+      (* Leg aLeg's record as the steps left it -- refused or not. *)
+      function Qso(aLeg: integer): ContestExchange;
+   end;
+
+(* The write: tAddQSOToLog for several records in ONE transaction. *)
+function tAddQSOsToLog(const aQsos: array of ContestExchange;
+                       out aFacts: TLiveQsoFacts): boolean; forward;
+
 function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;
 { This procedure will log the contact just completed.  It will be
   pushed onto the editable log and the log entry popped off the editable
   log will be examined and written to the LOG.DAT file.                 }
-label
-  1;
 var
-
-  Address                               : integer;
-
-  TempMode                              : ModeType;
-  perfTimeStart, perfTimeStop: TDateTime;
-  (* The active contest, and whether it counts grid squares -- each asked
-    once, below. *)
-  contestRules                          : TContestBase;
-  countsGridSquares                     : boolean;
-  (* Whether this QSO's UDP message is wanted -- the second domestic key
-     (issue #318) is asked only then. *)
-  udpWanted                             : boolean;
+  submission                            : TLiveQSOSubmission;
 begin
   Result := False;
   logger.trace('>>>Entering LogContact');
@@ -1731,12 +1794,12 @@ begin
      windows (TryLogContact keeps them on False).
 
      A PEER'S QSO (MyComputer False) KEEPS ITS PATH: it is refused at the
-     append as before, and its packet has already arrived.
+     write, and its packet has already arrived.
 
-     THE FIRST FAILURE IS STILL FOUND AT THE APPEND, below: a disk that fills
-     during this QSO is not known until tAddQSOToLog writes, and by then the
-     QSO has been posted above. That order (post before commit) is the one
-     already raised with NY4I and is not changed here. *)
+     A FAILURE FOUND AT THE WRITE (a disk that fills during this QSO) NOW
+     POSTS NOTHING EITHER -- issue 347, plan commit 4: the network packet and
+     the UDP / external logger / HamScore message are BUILT before the write
+     and POSTED only after it has committed (TLiveQSOSubmission). *)
   (* LogStoreTryRecoverWrites: a log made read-only by a full disk is tried
      again here, once, by a probe write -- space freed means this same QSO
      logs (NY4I: free the space, press Enter, no restart). *)
@@ -1749,6 +1812,46 @@ begin
                   [RXData.Callsign]);
      Exit;
      end;
+
+  (* PREPARE, WRITE, THEN SCORE AND RELEASE -- or, refused, DISCARD: the
+     order is TSubmitSequence's. The record goes back to the caller as the
+     steps left it, refused or not, as it always has (the county drain,
+     uNet and WSJT-X read it after). *)
+  submission := TLiveQSOSubmission.Create;
+  try
+     submission.AddLeg(RXData, MyComputer);
+     try
+        Result := submission.Submit;
+     finally
+        RXData := submission.Qso(0);
+     end;
+  finally
+     submission.Free;
+  end;
+end;
+
+(* PREPARE: everything LogContact did before the log's write, against the
+  sheets as they stand -- the auto time increment and the ten-minute date,
+  the mobile rewrite, the contest's stamp, the rover's place, the dupe test,
+  the multipliers (read), the network ids -- and then the packet and the
+  dispatcher message BUILT, never posted (issue 347). Nothing here may
+  reach the network, the dispatcher or a store write. *)
+procedure LiveQSOPrepare(var RXData: ContestExchange; aLeg: TLiveQSOLeg);
+var
+
+  Address                               : integer;
+
+  perfTimeStart, perfTimeStop: TDateTime;
+  (* The active contest, and whether it counts grid squares -- each asked
+    once, below. *)
+  contestRules                          : TContestBase;
+  countsGridSquares                     : boolean;
+  (* Whether this QSO's UDP message is wanted -- the second domestic key
+     (issue #318) is asked only then. *)
+  udpWanted                             : boolean;
+  MyComputer                            : boolean;
+begin
+  MyComputer := aLeg.MyComputer;
 
   { ONE LINE PER QSO WRITTEN, and the county-line drain comes through here
     too -- DrainPendingMultiQSORefs calls LogContact once per queued county.
@@ -1795,6 +1898,8 @@ begin
     `ContestSession.DomesticMult = DomesticFile`; the contest states it now
     (TContestBase.UsesDomesticFile, part 1b). *)
   contestRules := ActiveContest(Contest);
+  (* The same object for this leg's Score and Release. *)
+  aLeg.ContestRules := contestRules;
   if MobileCall(RXData.Callsign) and ContestUsesDomesticFile(contestRules) and (RXData.DomesticQTH <> '')then    // n4af 4.41.8 Add Q.P. Rover  // 4.98.6
      begin
      RXData.Callsign := PrecedingString(RXData.Callsign,'/')  + '/' + RXData.DomesticQTH;  // n4af 4.41.7
@@ -1912,43 +2017,103 @@ begin
        mp3_recorded in the SQLite log and migrated forward from v1.5 and v1.6
        logs. Removing the field would change the log format; nothing writes it
        now, and old logs keep whatever they recorded. *)
-     if not SendRecordToServer(NET_QSOINFO_ID, RXData) then
-        begin
-        inc(tUSQ);
-        end;
+     (* THE PACKET IS THE RECORD AS IT STANDS HERE -- copied, and posted
+       by Release only after the write has committed (issue 347). It was
+       posted at this point until then, so the bytes are the same. *)
+     aLeg.Packet := RXData;
+     aLeg.PacketOwed := True;
      (* ONE MESSAGE TO THE QSO DISPATCHER (2026-10-24). What was timed here
        made three deliveries inline -- UDP, the external logger, HamScore -- and
        the UDP one froze the operator for 2.7 s when a destination was a host
-       name that was slow to resolve. This now builds the text each sink needs
-       (the part that reads live state) and posts; the dispatcher thread
-       delivers, in that order. The timing line stays: it measures the build
-       and the post, which is what the main thread still pays. *)
+       name that was slow to resolve. This builds the text each sink needs
+       (the part that reads live state); Release posts it after the commit
+       (issue 347) and the dispatcher thread delivers, in that order. The
+       timing line measures the build, which is what the main thread pays
+       here. *)
      perfTimeStart := Now;
-     (* THE SECOND DOMESTIC KEY (#317) IS ASKED HERE, BEFORE the sheets
-        below have the QSO, so `mo` is the sheet as it stood (issue #318). *)
+     (* THE SECOND DOMESTIC KEY (#317) IS ASKED HERE, BEFORE Score puts the
+        QSO on the sheets, so `mo` is the sheet as it stood (issue #318). *)
      udpWanted := UDPBroadcaster.Enabled(usContact);
-     PostLoggedQso(RXData,
-                   SecondDomesticKeyForUDP(udpWanted, contestRules, RXData),
-                   udpWanted,
-                   Assigned(externalLogger));
+     (* THE LAST STATEMENT THAT BUILDS ANYTHING: from here the leg owns the
+        message (freed by Discard or the leg's destructor if never posted). *)
+     aLeg.Message := BuildLoggedQso(RXData,
+                                    SecondDomesticKeyForUDP(udpWanted, contestRules, RXData),
+                                    udpWanted,
+                                    Assigned(externalLogger));
      perfTimeStop := Now;
-     logger.Debug('Milliseconds to build and post the QSO to the dispatcher = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
+     logger.Debug('Milliseconds to build the QSO''s dispatcher message = %d',[DateUtils.MilliSecondsBetween(perfTimeStop, perfTimeStart)]);
      end
   else
      begin     // ny4i issue 82 - If the option is set, broadcast contacts received from the Network
      // Issue #783 -- network-received QSOs also feed RTC if multi-op uplink is enabled.
+     (* A PEER'S QSO: no packet (it came from the network), and its message
+        too waits for the commit (plan 1d) -- a peer QSO this station could
+        not store is no longer broadcast. *)
      udpWanted := UDPBroadcaster.BroadcastAllQSOs;
-     PostLoggedQso(RXData,
-                   SecondDomesticKeyForUDP(udpWanted, contestRules, RXData),
-                   udpWanted, False);
+     aLeg.Message := BuildLoggedQso(RXData,
+                                    SecondDomesticKeyForUDP(udpWanted, contestRules, RXData),
+                                    udpWanted, False);
      end;
-  (* False: not in the log. tAddQSOToLog has put the reason on the status line
-     and beeped; the caller keeps what the operator typed. *)
-  if not tAddQSOToLog(RXData) then
+end;
+
+(* SCORE: the state the log's loader rebuilds (LoadinLog), and nothing
+  else -- the totals, the multiplier sheets, the dupe sheets, the points.
+  A one-leg entry runs it only after the write has committed, exactly where
+  it always ran; the bonus view (AddLoggedQSO), the serial high-water, the
+  initial-exchange history and the status packet are Release's. *)
+procedure LiveQSOScore(var RXData: ContestExchange; aLeg: TLiveQSOLeg);
+var
+  TempMode                              : ModeType;
+  contestRules                          : TContestBase;
+begin
+  contestRules := aLeg.ContestRules;
+  TempMode := RXData.Mode;
+  if TempMode = FM then
      begin
-     Exit;
+     TempMode := Phone;
      end;
-  Result := True;
+  (* AN X-QSO COUNTS NOWHERE -- Q98 S1 (design 8.2v) and Q51 ("x-qso never
+     counts as worked"): no totals, no multiplier, no dupe or worked-there
+     mark, not in the bonus view. The SAME test the loader asks
+     (QSOCountsTowardTotals), so a QSO logged live and the same QSO after a
+     reopen count alike. An off-band or off-mode QSO is an X-QSO by the
+     contest's rule; it is still logged and still sent to the network,
+     UDP, the external logger and HamScore. *)
+  if QSOCountsTowardTotals(contestRules, RXData) then
+     begin
+     inc(ContinentQSOCount[RXData.Band, RXData.QTH.Continent]);
+     inc(QSOTotals[RXData.Band, TempMode]);
+     inc(QSOTotals[RXData.Band, Both]);
+     inc(QSOTotals[AllBands, TempMode]);
+     inc(QSOTotals[AllBands, Both]);
+     Sheet.SetMultFlags(RXData);
+     Sheet.AddQSOToSheets(@RXData, True);
+     AddQSOToDupeSheets(RXData, False);
+     end;
+  (* TotalQSOPoints, and the digital share (issue 129) -- the one statement,
+     LOGDUPE.AddToTotalQSOPoints, whose band test is the one that stood here.
+     Still OUTSIDE the X-QSO test above, as before: an X-QSO scores 0. *)
+  AddToTotalQSOPoints(RXData);
+end;
+
+(* RELEASE: after the commit only. What shows the log and what is not
+  rebuilt by a reload, then the posts -- the network packet and the
+  dispatcher message Prepare built -- then the status packet, the needs
+  strips, the rate counters, spots and the score; LAST the periodic backup
+  and the restart file, so a due backup never delays the relay. *)
+procedure LiveQSORelease(var RXData: ContestExchange; aLeg: TLiveQSOLeg;
+                         const aFacts: TQsoMyFacts);
+label
+  1;
+var
+  TempMode                              : ModeType;
+  contestRules                          : TContestBase;
+  MyComputer                            : boolean;
+  counted                               : boolean;
+  msg                                   : TQsoMessage;
+begin
+  contestRules := aLeg.ContestRules;
+  MyComputer := aLeg.MyComputer;
   TempMode := RXData.Mode;
   if TempMode = FM then
      begin
@@ -1965,34 +2130,38 @@ begin
         test does (MainUnit.LoadinLog; Q98 S1). *)
      CallsignsList.AddIniitialExchange(RXData.Callsign, GetInitialExchangeStringFromContestExchange(RXData));
      end;
-  (* AN X-QSO COUNTS NOWHERE -- Q98 S1 (design 8.2v) and Q51 ("x-qso never
-     counts as worked"): no totals, no multiplier, no dupe or worked-there
-     mark, not in the bonus view. The SAME test the loader asks
-     (QSOCountsTowardTotals), so a QSO logged live and the same QSO after a
-     reopen count alike. An off-band or off-mode QSO is an X-QSO by the
-     contest's rule; it is still logged above and still sent to the network,
-     UDP, the external logger and HamScore. *)
-  if QSOCountsTowardTotals(contestRules, RXData) then
+  (* THE SAME TEST SCORE ASKED: an X-QSO is not in the bonus view and sends
+     no status count. *)
+  counted := QSOCountsTowardTotals(contestRules, RXData);
+  if counted then
      begin
-     inc(ContinentQSOCount[RXData.Band, RXData.QTH.Continent]);
-     inc(QSOTotals[RXData.Band, TempMode]);
-     inc(QSOTotals[RXData.Band, Both]);
-     inc(QSOTotals[AllBands, TempMode]);
-     inc(QSOTotals[AllBands, Both]);
-     Sheet.SetMultFlags(RXData);
-     Sheet.AddQSOToSheets(@RXData, True);
      (* AND TO THE VIEW THE FINAL SCORE'S BONUSES READ (M6), as the log's
         loader does -- see uScoreTotals. It keeps only what
         QSOCountsTowardTotals accepts, which is the loader's test. *)
-     (* WITH THE STATION THE STORE JUST RECORDED FOR IT (log schema 3). *)
-     AddLoggedQSO(RXData, LogStoreLastAppendedMyFacts);
-     AddQSOToDupeSheets(RXData, False);
+     (* WITH THE STATION THE STORE RECORDED FOR THIS ROW (log schema 3). *)
+     AddLoggedQSO(RXData, aFacts);
+     end;
+
+  (* THE POSTS -- the QSO is in the log (issue 347). The network packet first
+     and then the dispatcher message, the order they always went in. The
+     leg lets go of the message BEFORE the post: QsoDispatcher.Post owns it
+     on every branch, and the leg's destructor must not free it again. *)
+  if aLeg.PacketOwed then
+     begin
+     aLeg.PacketOwed := False;
+     if not SendRecordToServer(NET_QSOINFO_ID, aLeg.Packet) then
+        begin
+        inc(tUSQ);
+        end;
+     end;
+  msg := aLeg.Message;
+  aLeg.Message := nil;
+  QsoDispatcher.Post(msg);
+
+  if counted then
+     begin
      SendStationStatus(sstQSOs);
      end;
-  (* TotalQSOPoints, and the digital share (issue 129) -- the one statement,
-     LOGDUPE.AddToTotalQSOPoints, whose band test is the one that stood here.
-     Still OUTSIDE the X-QSO test above, as before: an X-QSO scores 0. *)
-  AddToTotalQSOPoints(RXData);
 
   (* ~~THE CONTEST'S LIVE TALLY~~ stood here -- Missouri's peak-hour count,
      kept only in live entry and so lost on every reopen (M6's preserved
@@ -2041,17 +2210,6 @@ begin
      begin
      QuickBeep;
      end;
-  (* THE PERIODIC BACKUP COUNTS QSOs LOGGED, NOT THE SCORE TOTAL (2026-10-31).
-    It asked QSOTotals[AllBands, Both] mod BACKUP LOG FREQUENCY, and QSOTotals
-    leaves out an X-QSO and a deleted QSO and is rebuilt by a rescore, so it
-    can go DOWN and fire again one QSO after the last backup. Reached once per
-    record written: tAddQSOToLog has succeeded above, and the goto 1 lands
-    before this line. *)
-  CountQsoTowardPeriodicBackup;
-  if Settings.Log.UpdateRestartFile then
-     begin
-     Sheet.SaveRestartFile;
-     end;
   BeSilent := False;
   NameCallsignPutUp := '';
   if Settings.Log.CheckFileSize then
@@ -2083,9 +2241,130 @@ begin
         SendScoreToUDP;
         end;
      end;
+  (* THE PERIODIC BACKUP COUNTS QSOs LOGGED, NOT THE SCORE TOTAL (2026-10-31).
+    It asked QSOTotals[AllBands, Both] mod BACKUP LOG FREQUENCY, and QSOTotals
+    leaves out an X-QSO and a deleted QSO and is rebuilt by a rescore, so it
+    can go DOWN and fire again one QSO after the last backup. Reached once per
+    record written: Release runs only after the write has committed, and the
+    goto 1 lands before this line. LAST, with the restart file (a store
+    write), since issue 347: everything this QSO publishes has been posted
+    first, so a due backup never delays the relay. *)
+  CountQsoTowardPeriodicBackup;
+  if Settings.Log.UpdateRestartFile then
+     begin
+     Sheet.SaveRestartFile;
+     end;
   //**************************
   ///StationInformationCall := ''; // ny4i - Moved this to be cleared here.
 end;
+
+procedure TLiveQSOLeg.FreeMessage;
+begin
+   FreeAndNil(Message);
+end;
+
+destructor TLiveQSOLeg.Destroy;
+begin
+   (* A message never handed to the dispatcher -- a refusal, or a step that
+     raised before the post -- dies with its leg. *)
+   FreeMessage;
+   inherited Destroy;
+end;
+
+constructor TLiveQSOSubmission.Create;
+begin
+   inherited Create;
+   FSequence := TSubmitSequence.Create;
+   FSequence.OnPrepare := PrepareLeg;
+   FSequence.OnScore := ScoreLeg;
+   FSequence.OnWrite := WriteLegs;
+   FSequence.OnRelease := ReleaseLeg;
+   FSequence.OnDiscard := DiscardLeg;
+   FSequence.OnRebuild := RebuildAfterRefusal;
+end;
+
+destructor TLiveQSOSubmission.Destroy;
+var
+   i: integer;
+begin
+   for i := 0 to High(FLegs) do
+      begin
+      FLegs[i].Free;
+      end;
+   FLegs := nil;
+   FSequence.Free;
+   inherited Destroy;
+end;
+
+procedure TLiveQSOSubmission.AddLeg(const aQso: ContestExchange; aMyComputer: boolean);
+var
+   n: integer;
+begin
+   n := Length(FLegs);
+   SetLength(FQsos, n + 1);
+   SetLength(FLegs, n + 1);
+   FQsos[n] := aQso;
+   FLegs[n] := TLiveQSOLeg.Create;
+   FLegs[n].MyComputer := aMyComputer;
+end;
+
+function TLiveQSOSubmission.Submit: boolean;
+begin
+   Result := FSequence.Run(Length(FLegs));
+end;
+
+function TLiveQSOSubmission.Qso(aLeg: integer): ContestExchange;
+begin
+   Result := FQsos[aLeg];
+end;
+
+function TLiveQSOSubmission.PrepareLeg(aLeg: integer): boolean;
+begin
+   LiveQSOPrepare(FQsos[aLeg], FLegs[aLeg]);
+   Result := True;
+end;
+
+procedure TLiveQSOSubmission.ScoreLeg(aLeg: integer);
+begin
+   LiveQSOScore(FQsos[aLeg], FLegs[aLeg]);
+end;
+
+(* THE ONE WRITE, AND ITS ANSWER ACTED ON: False -- not in the log;
+  tAddQSOsToLog has put the reason on the status line and beeped, the
+  sequence discards every leg (nothing posted) and the caller keeps what the
+  operator typed. True only after the COMMIT, with each leg's station as the
+  store recorded it in FFacts. *)
+function TLiveQSOSubmission.WriteLegs(aLegCount: integer): boolean;
+begin
+   Result := tAddQSOsToLog(FQsos, FFacts);
+end;
+
+procedure TLiveQSOSubmission.ReleaseLeg(aLeg: integer);
+begin
+   LiveQSORelease(FQsos[aLeg], FLegs[aLeg], FFacts[aLeg]);
+end;
+
+procedure TLiveQSOSubmission.DiscardLeg(aLeg: integer);
+begin
+   (* REFUSED: what this leg would have published dies here, unposted. Its
+     network sequence (ceQSOID2) was seen by no one and is simply not used
+     (plan 2d: a retry takes a fresh one). *)
+   FLegs[aLeg].PacketOwed := False;
+   FLegs[aLeg].FreeMessage;
+end;
+
+procedure TLiveQSOSubmission.RebuildAfterRefusal;
+begin
+   (* NOT REACHED WITH ONE LEG: a one-leg entry scores nothing before its
+     write, so a refusal leaves no score state to rebuild. A submission of
+     several legs is plan commit 5, which makes this the log's reload
+     (LoadinLog) once it is shown to write nothing. Until then, loud. *)
+   logger.Error('[LogContact] a refused entry of %d leg(s) needs a rebuild, ' +
+                'and none is wired (plan commit 5)', [Length(FLegs)]);
+   raise ESubmitSequenceError.Create(
+      'TLiveQSOSubmission: a rebuild after a refused entry is not wired');
+end;
+
 function SearchAndPounce: boolean;
 label
   ControlEnterCommand1, ControlEnterCommand2;
@@ -2864,11 +3143,28 @@ var
        end;
   until False;
 end;
+(* ONE RECORD -- notes and QTC records (AddRecordToLogAndSendToNetwork, the
+  network arm). The operator's QSOs go through LogContact's submission, which
+  calls tAddQSOsToLog itself (issue 347). *)
 function tAddQSOToLog(RXData: ContestExchange): boolean;
 var
-  lpNumberOfBytesWritten                : Cardinal;
+  facts                                 : TLiveQsoFacts;
+begin
+  Result := tAddQSOsToLog([RXData], facts);
+end;
+
+(* THE LOG'S WRITE FOR ONE ENTRY: every record in ONE transaction
+  (uLogStore.LogStoreAppendLiveQSOs, of which LogStoreAppendQSO is the
+  one-record call), then -- only once it has COMMITTED -- the record count
+  and the windows that show the log. aFacts: each record's station as the
+  store recorded it. *)
+function tAddQSOsToLog(const aQsos: array of ContestExchange;
+                       out aFacts: TLiveQsoFacts): boolean;
+var
+  rowIds                                : TLiveQsoRowIds;
 begin
   Result := False;
+  aFacts := nil;
   if tPreviousDupeQSOsShowed then ShowPreviousDupeQSOsWnd(False); //DestroyPreviousDupeQSOsWnd;
 
   (* THE QSO GOES TO THE DATABASE, AND NOWHERE ELSE -- step B5.
@@ -2898,18 +3194,21 @@ begin
     cleared the call and exchange windows (NY4I, a full D: drive). LogContact
     now returns this answer and TryLogContact keeps the windows on False.
     What must not happen is the program saying it is safe. *)
-  if not LogStoreAppendQSO(RXData) then
+  if not LogStoreAppendLiveQSOs(aQsos, aFacts, rowIds) then
      begin
      (* The store's text: "Log is read-only (disk full): not saved." when the
         log is read-only, else the general NOT LOGGED line. *)
      QuickDisplay(AnsiString(LogStoreNotSavedText));
      DoABeep(Warning);
-     logger.Error('[Log] REFUSING to acknowledge %s -- the QSO did not commit',
-                  [RXData.Callsign]);
+     if Length(aQsos) > 0 then
+        begin
+        logger.Error('[Log] REFUSING to acknowledge %s (%d record(s)) -- the entry did not commit',
+                     [aQsos[0].Callsign, Length(aQsos)]);
+        end;
      Exit;
      end;
 
-  inc(tRestartInfo.riTotalRecordsInLog);
+  inc(tRestartInfo.riTotalRecordsInLog, Length(aQsos));
   (* ONE MORE RECORD, AND SHOW IT.
 
     THE TRIM IS GONE WITH THE FIXED WINDOW. This deleted row 0 and re-added at
@@ -3345,6 +3644,18 @@ procedure PostQsoEvent(const aKind: TQsoMessageKind;
                        const aAdditionalDomesticMults: integer;
                        const aUDP: boolean;
                        const aExternal: boolean);
+begin
+   QsoDispatcher.Post(BuildQsoEvent(aKind, RXData, aFacts, aRecordedSent,
+                                    aAdditionalDomesticMults, aUDP, aExternal));
+end;
+
+function BuildQsoEvent(const aKind: TQsoMessageKind;
+                       const RXData: ContestExchange;
+                       const aFacts: TQsoMyFacts;
+                       const aRecordedSent: AnsiString;
+                       const aAdditionalDomesticMults: integer;
+                       const aUDP: boolean;
+                       const aExternal: boolean): TQsoMessage;
 var
    msg: TQsoMessage;
 begin
@@ -3394,13 +3705,13 @@ begin
       msg.Free;
       raise;
    end;
-   QsoDispatcher.Post(msg);
+   Result := msg;
 end;
 
-procedure PostLoggedQso(const RXData: ContestExchange;
+function BuildLoggedQso(const RXData: ContestExchange;
                         const aAdditionalDomesticMults: integer;
                         const aUDP: boolean;
-                        const aExternal: boolean);
+                        const aExternal: boolean): TQsoMessage;
 var
    facts: TQsoMyFacts;
 begin
@@ -3414,7 +3725,7 @@ begin
       begin
       facts := NotCapturedMyFacts;
       end;
-   PostQsoEvent(qmNew, RXData, facts, '', aAdditionalDomesticMults, aUDP, aExternal);
+   Result := BuildQsoEvent(qmNew, RXData, facts, '', aAdditionalDomesticMults, aUDP, aExternal);
 end;
 
 

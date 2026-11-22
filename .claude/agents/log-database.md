@@ -1343,9 +1343,14 @@ UDP, HamScore and the multi-op server BEFORE the write.
 ## ONE ENTRY, ONE TRANSACTION: THE LIVE APPEND TAKES N LEGS (issues 347/348, plan commits 1-3, 2026-11-22)
 
 `docs/LOG_COMMIT_BEFORE_PUBLISH_PLAN.md` (approved; NY4I's rulings in its
-section 7). Commits 1-3 CHANGE NO BEHAVIOUR and are **NOT WIRED**: `LogContact`,
-`TryLogContact` and `DrainPendingMultiQSORefs` still log one leg per call and
-publish before the append (commits 4-5).
+section 7). Commits 1-3 changed no behaviour. **Commit 4 (2026-11-22) WIRES
+THE ONE-LEG PATH**: `LogContact` is `logsubs2.TLiveQSOSubmission` (one leg)
+over `TSubmitSequence`; its write is `logsubs2.tAddQSOsToLog` ->
+`LogStoreAppendLiveQSOs` (`tAddQSOToLog`, notes and QTCs, is its one-record
+call), and Release's `AddLoggedQSO` takes the facts that call returned, not
+`LogStoreLastAppendedMyFacts`. The packet and the dispatcher message are
+posted only after the commit. `TryLogContact` and `DrainPendingMultiQSORefs`
+still run one `LogContact` (one transaction) per leg until commit 5.
 
 - **`TLogRepository.AppendBatch` has a second overload** (commit 1):
   `out aRowIds: TInt64Array` (each row's id, in order; EMPTY whenever the batch

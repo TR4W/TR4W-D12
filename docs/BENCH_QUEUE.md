@@ -421,6 +421,18 @@ The rules are unit-tested (`uCategoryWindow`, `TContestIN7QPNE.PartyScore`, `uSp
 - [ ] **Issue 86: IN7QPNE's score hint.** In an IN7QPNE log with QSOs in several parties, hover the score panel: four lines, Indiana, 7QP, New England, Delaware, each "QSOs, points, mults, score". Check the hint is readable and not clipped, and that another contest's score panel shows no hint. The Cabrillo `CLAIMED-SCORE:` of an out-of-area entrant is unchanged (the combined score).
 - [ ] **Issue 59: the band map's colours.** Preferences > Colors shows a "Band map colors" block under the main-window grid with six drop-downs. With the defaults, the band map must look exactly as before: blue and silver frequency fields, red-to-white M, yellow D, the system highlight on the selected spot. Pick another colour for each of the first five, save, and check the band map repaints with it (the VFO marker colour is checked by the issue 65 item below). Check the grid above still scrolls and the block is not clipped at the default window size and at 14 pt. A light selection colour makes the selected call hard to read: its text is still the system's highlight text.
 
+## Added 2026-11-22 -- A QSO IS PUBLISHED ONLY AFTER IT IS IN THE LOG (issue 347, plan commit 4; contest-scoring, log-database, multi-op-network, integrations)
+
+`LogContact` now builds the multi-op packet and the UDP / external-logger / HamScore message before the log's write and posts them only after it has committed. A refused QSO posts nothing. The unit tests read the source; only a run proves the order. Use an isolated contest with a UDP listener, a DXKeeper-style (command-queue) external logger, HamScore and a two-station network (plan section 5c). Single-row entries only: county-line, multi-park and rover entries are commit 5.
+
+- [ ] **Forced write failure** (a full disk, as in the section below): for the refused Enter, no UDP contact, no logger command, no HamScore upload, no QSOINFO packet at the server or the peer; the entry stays typed; after freeing space one Enter logs it once, with a new network key.
+- [ ] **Held lock** (another process holding the log's write lock past the busy wait): refused, nothing published, then logs once.
+- [ ] **Kill before commit** (a debugger break at the append): reopen; the QSO is absent and nobody saw it; retype it once: one row everywhere.
+- [ ] **Kill after commit, before release**: reopen; the QSO is present with `sent_to_server = 0`; on link-up it is resent once and the peer holds it once.
+- [ ] **Compare a normal QSO** with a pre-change build: the packet's keys, the UDP `contactinfo` text (including `<ismultiplierN>` for a #317 second key, e.g. a Kentucky in-state county), the logger command and the HamScore id are the same.
+- [ ] **A peer's QSO this station cannot store** (fill the receiving station's disk, `BROADCAST ALL QSOS` on): no UDP broadcast and no HamScore upload for it (the reporting of the refusal itself is commit 6).
+- [ ] **WSJT-X**: a logged FT8 QSO still logs once and is published once.
+
 ## Added 2026-11-18 -- A FULL DISK: THE LOG GOES READ-ONLY, AND A REFUSED QSO STAYS TYPED (log-database)
 
 When the disk is full, the log now becomes read-only instead of being disabled (`uLogStore.Disable`). After that, a QSO the log refuses keeps its call and exchange on screen (`LogContact` now returns a Boolean, and `TryLogContact` stops when it is False). The unit tests read the Enter path's source. Only a real run can show the windows, the status line and the beep. Put the contest log on a small drive or a nearly full USB stick, not on the system drive. `BEEP ENABLE` must be on, because `DoABeep` does nothing when it is off.

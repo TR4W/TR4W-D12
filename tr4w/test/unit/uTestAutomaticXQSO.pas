@@ -79,6 +79,9 @@ type
       (* 2026-11-18: a QSO the log would not take keeps the entry and the
          status line's reason (read from the source). *)
       procedure Test_ARefusedSaveKeepsTheEntryAndItsReason;
+      (* Issue 347 (2026-11-22): a QSO logged here is published only after
+         the log has committed it (read from the source). *)
+      procedure Test_AQSOIsPublishedOnlyAfterItsCommit;
       (* Issue 349 (2026-11-22): Edit QSO's save and Alt-Y announce a change
          only after the log has committed it (read from the source). *)
       procedure Test_AChangeIsAnnouncedOnlyAfterItsCommit;
@@ -577,23 +580,42 @@ begin
    CheckTrue(e > p, 'and its end');
    body := Copy(text, p, e - p);
 
-   serial := Pos('UpdateMaxSerialSent(RXData.Band, RXData.NumberSent)', body);
-   guard := Pos('if QSOCountsTowardTotals(contestRules, RXData) then', body);
+   (* ISSUE 347 (plan commit 4): LogContact's step after the write is split.
+      LiveQSOScore holds what the loader rebuilds (totals, sheets, dupe
+      sheets), behind the guard; LiveQSORelease feeds the serial and the
+      initial-exchange history OUTSIDE its own guard, and the bonus view
+      behind it. Each routine is read on its own. *)
+   p := Pos('procedure LiveQSOScore(var RXData: ContestExchange; aLeg: TLiveQSOLeg);', body);
+   e := Pos('procedure LiveQSORelease(var RXData: ContestExchange; aLeg: TLiveQSOLeg;', body);
+   CheckTrue((p > 0) and (e > p), 'LogContact''s Score step is found');
+   text := Copy(body, p, e - p);
+   guard := Pos('if QSOCountsTowardTotals(contestRules, RXData) then', text);
+   CheckTrue(guard > 0, 'Score asks QSOCountsTowardTotals');
+   CheckTrue(guard < Pos('inc(QSOTotals[RXData.Band, TempMode]);', text), 'the totals are behind the guard');
+   CheckTrue(guard < Pos('Sheet.SetMultFlags(RXData);', text), 'the multipliers are behind the guard');
+   CheckTrue(guard < Pos('Sheet.AddQSOToSheets(@RXData, True);', text), 'the sheets are behind the guard');
+   CheckTrue(guard < Pos('AddQSOToDupeSheets(RXData, False);', text), 'the dupe sheet is behind the guard');
+   CheckTrue(guard < Pos('inc(ContinentQSOCount[', text), 'the continent count is behind the guard');
+   CheckEquals(0, Pos('UpdateMaxSerialSent(', text), 'the serial is not Score''s');
+
+   p := e;
+   e := PosEx('procedure TLiveQSOLeg.FreeMessage;', body, p);
+   CheckTrue(e > p, 'LogContact''s Release step is found');
+   text := Copy(body, p, e - p);
+   serial := Pos('UpdateMaxSerialSent(RXData.Band, RXData.NumberSent)', text);
+   guard := Pos('counted := QSOCountsTowardTotals(contestRules, RXData);', text);
    CheckTrue(serial > 0, 'LogContact advances the serial');
-   CheckTrue(guard > 0, 'LogContact asks QSOCountsTowardTotals');
+   CheckTrue(guard > 0, 'Release asks QSOCountsTowardTotals');
    CheckTrue(serial < guard, 'the serial is advanced BEFORE, outside, the guard');
-   CheckTrue(Pos('end;', Copy(body, serial, guard - serial)) > 0,
+   CheckTrue(Pos('end;', Copy(text, serial, guard - serial)) > 0,
              'and its block is closed before the guard');
-   CheckTrue(guard < Pos('inc(QSOTotals[RXData.Band, TempMode]);', body), 'the totals are behind the guard');
-   CheckTrue(guard < Pos('Sheet.SetMultFlags(RXData);', body), 'the multipliers are behind the guard');
-   CheckTrue(guard < Pos('Sheet.AddQSOToSheets(@RXData, True);', body), 'the sheets are behind the guard');
-   CheckTrue(guard < Pos('AddLoggedQSO(RXData', body), 'the bonus view is behind the guard');
-   CheckTrue(guard < Pos('AddQSOToDupeSheets(RXData, False);', body), 'the dupe sheet is behind the guard');
-   CheckTrue(guard < Pos('inc(ContinentQSOCount[', body), 'the continent count is behind the guard');
+   CheckTrue(guard < Pos('AddLoggedQSO(RXData', text), 'the bonus view is behind the guard');
+   CheckTrue(PosEx('if counted then', text, guard) < Pos('AddLoggedQSO(RXData', text),
+             'behind the guard''s answer');
    (* THE INITIAL-EXCHANGE HISTORY IS WHAT THE STATION SENT, NOT CREDIT: an
       automatic X-QSO still feeds it (the contest matrix's initialexchange
       section, which S1 must not move). *)
-   p := Pos('CallsignsList.AddIniitialExchange(RXData.Callsign', body);
+   p := Pos('CallsignsList.AddIniitialExchange(RXData.Callsign', text);
    CheckTrue((p > serial) and (p < guard),
              'the initial-exchange history is fed beside the serial, outside the guard');
 end;
@@ -757,18 +779,27 @@ begin
    body := Copy(text, p, e - p);
    r := Pos('LogStoreNotSavedText', body);
    CheckTrue(r > 0, 'LogContact refuses an unsaveable QSO with the store''s text');
-   CheckTrue(r < Pos('PostLoggedQso(', body), 'before the QSO is posted to UDP and the loggers');
+   (* ISSUE 347 (plan commit 4): the message is BUILT (BuildLoggedQso) in
+      Prepare and posted (QsoDispatcher.Post) in Release; PostLoggedQso is
+      gone. The refusal still comes before all of it. *)
+   CheckTrue(r < Pos('BuildLoggedQso(', body), 'before the QSO''s UDP / logger message is built');
+   CheckTrue(r < Pos('QsoDispatcher.Post(', body), 'or posted');
    CheckTrue(r < Pos('SendRecordToServer(', body), 'and before it is sent to the server');
    (* A FULL DISK FREED SINCE: the store is tried again right there, before
       the post too -- so a probe that fails posts nothing (2026-11-18). *)
    x := Pos('LogStoreTryRecoverWrites', body);
    CheckTrue(x > 0, 'LogContact tries the log again before refusing');
-   CheckTrue(x < Pos('PostLoggedQso(', body), 'before the QSO is posted');
+   CheckTrue(x < Pos('TLiveQSOSubmission.Create', body), 'before the QSO is prepared');
+   CheckTrue(x < Pos('QsoDispatcher.Post(', body), 'before the QSO is posted');
    CheckTrue(x < Pos('SendRecordToServer(', body), 'and before it is sent to the server');
-   x := Pos('if not tAddQSOToLog(RXData) then', body);
-   CheckTrue(x > 0, 'LogContact asks the append');
-   CheckTrue(PosEx('Result := True;', body, x) > x, 'and answers True only after it');
-   CheckTrue(Pos('Result := True;', body) > x, 'and nowhere before it');
+   (* LogContact's own answer is the submission's, which is True only when
+      the write committed (TSubmitSequence; uTestSubmitSequence). *)
+   x := Pos('Result := submission.Submit;', body);
+   CheckTrue(x > 0, 'LogContact answers with the submission');
+   CheckTrue(Pos('Result := True;', Copy(body, 1, Pos('procedure LiveQSOPrepare(', body))) = 0,
+             'and never answers True itself');
+   x := Pos('Result := tAddQSOsToLog(FQsos, FFacts);', body);
+   CheckTrue(x > 0, 'the submission''s write is the log''s append');
 
    (* MAINUNIT.TryLogContact: on False, out -- before anything that clears a
       window, the exchange or the status line. *)
@@ -825,6 +856,109 @@ begin
    CheckTrue(q > 0, 'the S&P Enter path asks the flag');
    CheckTrue(PosEx('Exit;', text, q) < PosEx('goto loop;', text, q),
              'and leaves before the several-QTH loop');
+end;
+
+(* ISSUE 347 (plan commit 4, 2026-11-22): A QSO LOGGED HERE IS PUBLISHED ONLY
+   AFTER THE LOG HAS COMMITTED IT. LogContact sent the multi-op packet and
+   posted the UDP / external-logger / HamScore message BEFORE the append, so
+   a QSO the log refused had already left the station. It cannot be driven
+   headless, so this READS it: Prepare builds and never posts, the write is
+   asked and its answer acted on, Release posts, a refusal frees what was
+   built, and the backup and restart file come last. The ORDER the steps run
+   in is TSubmitSequence's, pinned by uTestSubmitSequence. *)
+procedure TAutomaticXQSOTests.Test_AQSOIsPublishedOnlyAfterItsCommit;
+var
+   text, body, part: string;
+   p, e, w: integer;
+
+   function Span(const aFrom, aTo: string): string;
+   var
+      a, b: integer;
+   begin
+      Result := '';
+      a := Pos(aFrom, text);
+      if a = 0 then
+         begin
+         Exit;
+         end;
+      b := PosEx(aTo, text, a + Length(aFrom));
+      if b = 0 then
+         begin
+         Exit;
+         end;
+      Result := Copy(text, a, b - a);
+   end;
+
+begin
+   BeginTest('Test_AQSOIsPublishedOnlyAfterItsCommit');
+   text := SourceText('trdos' + PathDelim + 'logsubs2.pas');
+
+   (* LOGCONTACT ITSELF: the refusal of an unwritable log, then one
+      submission; it posts nothing of its own. *)
+   p := Pos(LOG_CONTACT_DECLARATION, text);
+   p := PosEx(LOG_CONTACT_DECLARATION, text, p + 1);
+   e := PosEx('procedure LiveQSOPrepare(', text, p);
+   CheckTrue((p > 0) and (e > p), 'LogContact''s own body is found');
+   body := Copy(text, p, e - p);
+   CheckTrue(Pos('LogStoreTryRecoverWrites', body) < Pos('TLiveQSOSubmission.Create', body),
+             'an unwritable log is refused before anything is prepared');
+   CheckTrue(Pos('RXData := submission.Qso(0);', body) > 0,
+             'the record goes back to the caller as the steps left it');
+   CheckEquals(0, Pos('SendRecordToServer(', body), 'LogContact sends no packet itself');
+   CheckEquals(0, Pos('QsoDispatcher.Post(', body), 'nor posts a message');
+
+   (* PREPARE BUILDS, NEVER POSTS. *)
+   part := Span('procedure LiveQSOPrepare(', 'procedure LiveQSOScore(');
+   CheckTrue(part <> '', 'Prepare is found');
+   CheckTrue(Pos('aLeg.Packet := RXData;', part) > 0, 'Prepare copies the packet''s record');
+   CheckTrue(Pos('aLeg.Message := BuildLoggedQso(', part) > 0, 'and builds the message');
+   CheckTrue(Pos('SecondDomesticKeyForUDP(', part) > 0,
+             'asking the second domestic key before Score puts the QSO on the sheets');
+   CheckEquals(0, Pos('SendRecordToServer(', part), 'Prepare sends no packet');
+   CheckEquals(0, Pos('QsoDispatcher.Post(', part), 'nor posts a message');
+   CheckEquals(0, Pos('PostQsoEvent(', part), 'nor posts an event');
+   CheckEquals(0, Pos('LogStoreAppend', part), 'nor writes the log');
+   CheckEquals(0, Pos('Sheet.AddQSOToSheets(', part), 'nor scores');
+
+   (* THE WRITE: asked, and its answer is the submission's. *)
+   part := Span('function TLiveQSOSubmission.WriteLegs(', 'procedure TLiveQSOSubmission.ReleaseLeg(');
+   CheckTrue(Pos('Result := tAddQSOsToLog(FQsos, FFacts);', part) > 0,
+             'the write is the log''s append, and its answer is returned');
+   part := Span('function tAddQSOsToLog(const aQsos: array of ContestExchange;' + sLineBreak +
+                '                       out aFacts: TLiveQsoFacts): boolean;' + sLineBreak + 'var',
+                'TR4WEditableLogRefreshCount;');
+   w := Pos('if not LogStoreAppendLiveQSOs(aQsos, aFacts, rowIds) then', part);
+   CheckTrue(w > 0, 'the append is the live, all-or-none store call');
+   CheckTrue((PosEx('Exit;', part, w) > w) and
+             (PosEx('Exit;', part, w) < Pos('inc(tRestartInfo.riTotalRecordsInLog', part)),
+             'and a refusal leaves before anything counts or shows the record');
+
+   (* RELEASE POSTS -- the packet, then the message -- and lets go first. *)
+   part := Span('procedure LiveQSORelease(', 'procedure TLiveQSOLeg.FreeMessage;');
+   CheckTrue(part <> '', 'Release is found');
+   w := Pos('SendRecordToServer(NET_QSOINFO_ID, aLeg.Packet)', part);
+   CheckTrue(w > 0, 'Release sends the packet Prepare copied');
+   CheckTrue(w < Pos('QsoDispatcher.Post(msg);', part), 'then posts the message');
+   CheckTrue(Pos('aLeg.Message := nil;', part) < Pos('QsoDispatcher.Post(msg);', part),
+             'having let go of it first (the dispatcher owns it)');
+   CheckTrue(Pos('QsoDispatcher.Post(msg);', part) < Pos('CountQsoTowardPeriodicBackup;', part),
+             'and the periodic backup comes after the posts');
+   CheckTrue(Pos('QsoDispatcher.Post(msg);', part) < Pos('Sheet.SaveRestartFile;', part),
+             'as does the restart file');
+   CheckTrue(Pos('SendScoreToUDP;', part) < Pos('CountQsoTowardPeriodicBackup;', part),
+             'LAST, after the score message');
+
+   (* A REFUSAL FREES WHAT WAS BUILT AND POSTS NOTHING. *)
+   part := Span('procedure TLiveQSOSubmission.DiscardLeg(', 'procedure TLiveQSOSubmission.RebuildAfterRefusal;');
+   CheckTrue(Pos('FreeMessage;', part) > 0, 'Discard frees the message');
+   CheckEquals(0, Pos('SendRecordToServer(', part), 'and sends nothing');
+   CheckEquals(0, Pos('QsoDispatcher.Post(', part), 'and posts nothing');
+   part := Span('destructor TLiveQSOLeg.Destroy;', 'constructor TLiveQSOSubmission.Create;');
+   CheckTrue(Pos('FreeMessage;', part) > 0, 'a leg frees a message it still holds');
+   part := Span('constructor TLiveQSOSubmission.Create;', 'destructor TLiveQSOSubmission.Destroy;');
+   CheckTrue(Pos('FSequence.OnWrite := WriteLegs;', part) > 0, 'the sequence drives the write');
+   CheckTrue(Pos('FSequence.OnDiscard := DiscardLeg;', part) > 0, 'and the discard');
+   CheckTrue(Pos('FSequence.OnRelease := ReleaseLeg;', part) > 0, 'and the release');
 end;
 
 (* ISSUE 349 (2026-11-22): AN EDIT, A DELETE OR A RESTORE IS ANNOUNCED ONLY
@@ -1009,9 +1143,12 @@ begin
    s := Pos('StampOffContest(RXData);', body);
    CheckTrue(s > 0, 'LogContact stamps the rule');
    CheckTrue(s < Pos('VisibleLog.ProcessMultipliers(RXData);', body), 'before the multipliers');
+   (* Issue 347: the packet is copied (aLeg.Packet) and the message built
+      (BuildLoggedQso) in Prepare; both are posted after the append. *)
+   CheckTrue(s < Pos('aLeg.Packet := RXData;', body), 'before the network packet is taken');
    CheckTrue(s < Pos('SendRecordToServer(', body), 'before the network packet');
-   CheckTrue(s < Pos('PostLoggedQso(', body), 'before the UDP, logger and HamScore post');
-   CheckTrue(s < Pos('if not tAddQSOToLog(RXData) then', body), 'and before the append');
+   CheckTrue(s < Pos('BuildLoggedQso(', body), 'before the UDP, logger and HamScore message');
+   CheckTrue(s < Pos('Result := tAddQSOsToLog(FQsos, FFacts);', body), 'and before the append');
 
    (* uEditQSO: the save stamps before it posts, sends or writes -- and the
       operator's flag is read back only when the box was his to tick. *)
@@ -1046,6 +1183,7 @@ end;
 procedure TAutomaticXQSOTests.RunAllTests;
 begin
    Test_ARefusedSaveKeepsTheEntryAndItsReason;
+   Test_AQSOIsPublishedOnlyAfterItsCommit;
    Test_AChangeIsAnnouncedOnlyAfterItsCommit;
    Test_ASharedSerialAdvancesTheNextByOne;
    Test_TheMultiCountyDrainKeepsOneSerial;

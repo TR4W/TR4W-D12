@@ -384,7 +384,8 @@ function ParseADIFRecord(sADIF: string; var exch: ContestExchange): boolean; ove
   Read as the file import does, that id made the record a Field Day QSO:
   Field Day's class interpreted it, the off-contest stamp judged it by Field
   Day's rules, and the log store rewrote the log's contest row to Field Day
-  on the append (uLogStore.AppendQSOOnce sets the contest from the record). *)
+  on the append (uLogStore.AppendLiveQSOsOnce, the live append's one attempt,
+  sets the contest from the record). *)
 function ParseSessionADIFRecord(sADIF: string; var exch: ContestExchange): boolean;
 // GetContestByADIFName moved to uADIF.pas (Issue #887).
 procedure SetExtendedModeFromMode(RData: ContestExchange);

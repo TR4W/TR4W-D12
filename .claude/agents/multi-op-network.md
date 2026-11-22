@@ -32,6 +32,19 @@ You own the link between stations at a multi-op.
 against this tree and **do not hold**, and the V2 design in it is TR4QT's, not a
 plan for this repo.
 
+## A NEW QSO'S PACKET IS SENT ONLY AFTER THE LOCAL COMMIT (issue 347, plan commit 4, 2026-11-22)
+
+`LogContact` copies the record into its leg at the point it used to call
+`SendRecordToServer(NET_QSOINFO_ID, ...)` and sends THAT COPY from Release,
+after `LogStoreAppendLiveQSOs` committed -- same record, same bytes, later. A
+refused QSO sends nothing; its `ceQSOID2` is simply never used (a retry takes
+a fresh one, plan 2d). `sent_to_server` keeps its meaning: the row now exists
+before any `SettleServerProgress` can mark it, and a crash between the commit
+and the post leaves it 0 for `ResendOfflineWork`. `tUSQ` still counts a post
+that found no link. Not changed yet: the receive arm ignores `LogContact`'s
+answer (commit 6) and notes/QTCs still send before the append (commit 7,
+`AddRecordToLogAndSendToNetwork`).
+
 ## Log comparison is GONE, and a late catch-up replaced it (Phase 1, C6, 2026-10-27)
 
 There is **no comparison of two logs any more**, and no wish for one: it was a
