@@ -116,13 +116,13 @@ msgstr "Jos kirjoitat lokia käsin, AUTO TIME INCREMENT ominaisuus voi olla erit
 #, fuzzy
 msgctxt "TC_HELP_AUTO_CQ_DELAY_TIME"
 msgid "The amount of time to wait between AUTO CQ in milliseconds."
-msgstr ""
+msgstr "Aikaa odottaa AUTO CQ:n välillä millisekunneissa."
 
 #. Config command: BAND MAP ACTIVE BAND COLOR   (default: BLUE)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_ACTIVE_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on the active band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Taajuuden väri bändikartassa, kun kohde on aktiivisella bändillä. Se on oletus värille, johon bändikartta on aina piirtänyt sen, joten mikään ei muutu ennen kuin valitset toisen. Aseta se värien sivulle asetukset."
 
 #. Config command: BAND MAP ALL BANDS   (default: FALSE)
 #, fuzzy
@@ -158,13 +158,13 @@ msgstr "Milloin FALSE, CQ merkinnät ei näy bändikartassa."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
-msgstr ""
+msgstr "Eniten kohteita bändikartta näyttää, 30-1000. Kartta näyttää pienemmän tämän ja ikkunaan mahtuvan numeron, pyöristettynä tasaiseen numeroon ja keskitettynä radion taajuudelle, joten ikkunan uudelleenkokoaminen keskittää kartan radioon."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
 msgid "The fill colour behind a dupe's D in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Bändikartassa on täyteväri. Se on oletus värille, johon bändikartta on aina piirtänyt sen, joten mikään ei muutu ennen kuin valitset toisen. Aseta se värien sivulle asetukset."
 
 #. Config command: BAND MAP DUPE DISPLAY   (default: TRUE)
 #, fuzzy
@@ -182,7 +182,7 @@ msgstr "Määrittää, onko bandmap näytetään. Katso lisätietoja kohdasta 6.
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
 msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
-msgstr ""
+msgstr "Arvot: Integer (Hz), oletus 0. Näin monen Hz:n alueella on radion taajuuskenttä. BAND MAP VFO MAERKE COLOR. Nollalla vain piste radion taajuudella korostuu. Lähin kohta, johon radio on sijoitettu, on piirretty."
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 #, fuzzy
@@ -200,7 +200,7 @@ msgstr "Band Mapin kohteen leveys. Muuta tämä mukaisesti BAND MAP SIZEEtäisyy
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_MULT_COLOR"
 msgid "The fill colour behind a multiplier's M in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Täyttöväri kertoimen M takana bändikartassa. Se on oletus värille, johon bändikartta on aina piirtänyt sen, joten mikään ei muutu ennen kuin valitset toisen. Aseta se värien sivulle asetukset."
 
 #. Config command: BAND MAP MULTS ONLY   (default: FALSE)
 #, fuzzy
@@ -212,13 +212,13 @@ msgstr "Näytä vain kertoimet."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_OTHER_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on another band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Taajuuden väri bändikartassa, kun kohde on toisella bändillä. Se on oletus värille, johon bändikartta on aina piirtänyt sen, joten mikään ei muutu ennen kuin valitset toisen. Aseta se värien sivulle asetukset."
 
 #. Config command: BAND MAP SELECTION COLOR   (default: HIGHLIGHT)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SELECTION_COLOR"
 msgid "The colour of the selected spot in the band map. The default, HIGHLIGHT, is the system highlight colour. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Valitun paikan väri bändikartassa. Oletuksena on järjestelmän kohokohta väri. Se on oletus värille, johon bändikartta on aina piirtänyt sen, joten mikään ei muutu ennen kuin valitset toisen. Aseta se värien sivulle asetukset."
 
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
@@ -242,7 +242,7 @@ msgstr "Voit valita bändin, jolle TR4W käynnistyy, jos yhteydenottoja ei ole v
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
 msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "Väri, joka merkitsee radion taajuuden bändikartassa: taajuus kenttä jokaisen paikalla BAND MAP GUARD BAND 1-pikselin ääriviiva radion vieressä. Eikä valintaa eikä radiotaajuutta ole merkitty. Aseta se värien sivulle asetukset."
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 #, fuzzy
@@ -326,13 +326,13 @@ msgstr "Ohjelma tyhjentää dupesheet, kun tämä parametri on asetettu TRUE *.C
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_AUTO_SELF_SPOT"
 msgid "Spots your own call on the DX cluster automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while you are running (CQ mode). Only in a contest whose rules allow self-spotting; ignored otherwise. Off by default."
-msgstr ""
+msgstr "Huomaa oman puhelun DX-ryppään automaattisesti, CLUSTER SELF SPOT INTERVALin asettamana aikana, kun olet käynnissä (CQ-tila). Vain kilpailussa, jonka säännöt mahdollistavat itsekartoituksen, ei oteta huomioon. Poissa oletusarvoisesti."
 
 #. Config command: CLUSTER SELF SPOT INTERVAL   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_SELF_SPOT_INTERVAL"
 msgid "Minutes between automatic self-spots. 10 minutes is the established minimum; review the contest's rules before changing it. The contest's own minimum, where it states one, is never undercut."
-msgstr ""
+msgstr "Minuutti automaattien välillä. 10 minuuttia on vahvistettu vähimmäismäärä; tarkistaa kilpailun säännöt ennen sen muuttamista. Kilpailun omaa minimiä ei koskaan vähennetä."
 
 #. Config command: CODE SPEED   (default: 35)
 #, fuzzy
@@ -446,7 +446,7 @@ msgstr "Kun tämä parametri on totta, TR4W etsii TRMASTER-tietokannasta CW Spee
 #, fuzzy
 msgctxt "TC_HELP_CW_SPEED_INCREMENT"
 msgid "When pressing page up or page down, this is the increment the CW increases or decreases respectively."
-msgstr ""
+msgstr "Kun painat sivua ylös tai alas, tämä on lisäys CW kasvaa tai pienenee vastaavasti."
 
 #. Config command: CW TONE   (default: 700)
 #, fuzzy
@@ -518,13 +518,13 @@ msgstr "Tämä komento määrittää, onko DVK käytössä."
 #, fuzzy
 msgctxt "TC_HELP_DVK_PATH"
 msgid "This is the location of the program used to playback DVK messages when using the computer for audio."
-msgstr ""
+msgstr "Tämä on DVK-viestien toistoon käytettävän ohjelman sijainti, kun tietokonetta käytetään äänen toistoon."
 
 #. Config command: DVK RECORDER   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_DVK_RECORDER"
 msgid "This is the program that is run to playback DVK messages form the computer."
-msgstr ""
+msgstr "Tämä on ohjelma, joka ajetaan toistoon DVK-viestit muodostavat tietokoneen."
 
 #. Config command: DX MULTIPLIER   (default: NONE)
 #, fuzzy
@@ -602,7 +602,7 @@ msgstr "Tämä komento määrittää, mitä tapahtuu, kun painat jalkakytkintä,
 #, fuzzy
 msgctxt "TC_HELP_FOOT_SWITCH_PORT"
 msgid "The serial port to which the foot switch is connected."
-msgstr ""
+msgstr "Sarjaportti, johon jalkakytkin on kytketty."
 
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 #, fuzzy
@@ -614,7 +614,7 @@ msgstr "Kun valittu TRUE, Tämä parametri mahdollistaa taajuusmuistin. Tämä t
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
 msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr ""
+msgstr "Arvot: Integr 10-1000 (msek). Tämä kertoo TR4W: lle, kuinka usein lautalta haetaan uutta taajuutta. Se on asetettu jokaiselle radiolle, radioeditorille, joten kaksi radiota voi tehdä kyselyjä eri hinnoilla. Arvo on millisekuntia, ja sallitut arvot ovat 10-1000."
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy
@@ -626,7 +626,7 @@ msgstr "Arvot: Neljän tai kuuden merkin ruudukkoviite. Tämä parametri asettaa
 #, fuzzy
 msgctxt "TC_HELP_HAND_LOG_MODE"
 msgid "For entering a paper log after the event. When this parameter is TRUE, the QSO time no longer follows the computer clock; it moves only when you advance it with Alt-1 to Alt-0 (1 to 10 minutes) or through AUTO TIME INCREMENT; when it is FALSE, those increment-time menu items are greyed out. TR4W shows a warning at startup while this is TRUE; restart TR4W after changing it."
-msgstr ""
+msgstr "Paperilokin kirjoittamisesta tapahtuman jälkeen. Kun tämä parametri on TRUE, QSO aika ei enää seuraa tietokoneen kello; se liikkuu vain, kun etenet sen Alt-1 Alt-0 (1-10 minuuttia) tai läpi AUTO TIME INCREMENT; kun se on FALSE, nuo lisäys-aika valikko kohteita on harmaa. TR4W näyttää varoituksen käynnistettäessä TRUE; käynnistä TR4W uudelleen sen muuttamisen jälkeen."
 
 #. Config command: HF BAND ENABLE   (default: TRUE)
 #, fuzzy
@@ -656,7 +656,7 @@ msgstr "arvot:True/False. Oletus TRUE estää Band Map valinta, joka sijoittaa m
 #, fuzzy
 msgctxt "TC_HELP_INCLUDE_F_KEY_NUMBER"
 msgid "When viewing the F-Keys window, if this option is true, the F key name/number is displayed (e.g., F1 - <caption>)."
-msgstr ""
+msgstr "Jos tämä on totta, F-nimen nimi/numero näytetään F-näppäinikkunaa katsottaessa (esim. F1 - < caption>)."
 
 #. Config command: INCREMENT TIME ENABLE   (default: FALSE)
 #, fuzzy
@@ -782,7 +782,7 @@ msgstr "Kun tämä parametri on TRUE, Lähetetty RST voidaan syöttää Exchange
 #, fuzzy
 msgctxt "TC_HELP_MAIN_CALLSIGN"
 msgid "Your station's own callsign, remembered from contest to contest. The New Contest dialog fills its callsign box from it (or from MY CALL when this is empty), and the first callsign you enter there is saved here if it is empty. It is not the callsign you log with: that is MY CALL, which a contest may change (for example to a club call) without touching this one."
-msgstr ""
+msgstr "Asemasi oma puhelumerkki, joka muistetaan kilpailusta kilpailuun. Uusi Kilpailu ikkuna täyttää sen Callsign box siitä (tai MY CALL kun tämä on tyhjä), ja ensimmäinen puhelumerkki, jonka syötät sinne, tallennetaan tähän, jos se on tyhjä. Se ei ole puhelumerkki kirjaudut: se on MY CALL, joka kilpailu voi muuttua (esimerkiksi klubipuhelu) koskematta tätä."
 
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
@@ -806,13 +806,13 @@ msgstr "Arvo: kokonaisluku 5-60. Määrittelee minuutteja kiertueen kesto usean 
 #, fuzzy
 msgctxt "TC_HELP_MISSINGCALLSIGNS_FILE_ENABLE"
 msgid "Works with USE RECORDED SIGNS. When this parameter is TRUE and the voice keyer has no recording <callsign>.WAV in its FULLCALLSIGNS folder for a callsign it has to say, that callsign is added to the file MISSINGCALLSIGNS.TXT in the same folder, so you can record it later."
-msgstr ""
+msgstr "Toimii USE RECORDED SIGNS. Kun tämä parametri on TRUE ja ääninäppäimellä ei ole nauhoitusta <puhelunmerkki>. WAV sen FullCALLSINGS kansiossa puhelumerkin se on sanottava, että puhelumerkki lisätään tiedostoon MissingCALLSINGS. TXT samassa kansiossa, joten voit tallentaa sen myöhemmin."
 
 #. Config command: MMTTY ENGINE   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MMTTY_ENGINE"
 msgid "The path to the MMTTY program for working RTTY contests (experimental)."
-msgstr ""
+msgstr "Polku MMTTY-ohjelmaan työskennellä RTTY-kilpailuja (kokeilu)."
 
 #. Config command: MODE   (default: CW)
 #, fuzzy
@@ -842,7 +842,7 @@ msgstr "MP3-tallennin bitrate."
 #, fuzzy
 msgctxt "TC_HELP_MP3_RECORDER_DURATION"
 msgid "To be determined"
-msgstr ""
+msgstr "Määritettävä"
 
 #. Config command: MP3 RECORDER ENABLE   (default: FALSE)
 #, fuzzy
@@ -938,7 +938,7 @@ msgstr "JÄLLEENRAKENTAMINEN Arvot: IOTA-tunnus. Asettaa IOTA-tunnisteen saarell
 #, fuzzy
 msgctxt "TC_HELP_MY_LICENSE_YEAR"
 msgid "Enter the year you were first licensed, for the contests that exchange it (the European HF Championship, KVP). Four digits (1985) or the last two (85) are both accepted; the contest decides what is sent -- two digits, four digits or the number of years licensed. A contest may state its own value; this is the default. It is read when the contest is set up, so a change takes effect for the next contest or when TR4W next starts."
-msgstr ""
+msgstr "Anna vuosi sait ensimmäisen luvan, kilpailut, jotka vaihtavat sitä (Euroopan HF Championship, KVP). Neljä numeroa (1985) tai kaksi viimeistä numeroa (85) hyväksytään; kilpailu päättää, mitä lähetetään -- kaksi numeroa, neljä numeroa tai lupavuosien määrä. Kilpailu voi ilmoittaa oman arvonsa; tämä on oletus. Se luetaan, kun kilpailu on perustettu, joten muutos tulee voimaan seuraavan kilpailun tai kun TR4W seuraava alkaa."
 
 #. Config command: MY NAME   (default: NONE)
 #, fuzzy
@@ -992,13 +992,13 @@ msgstr "Kun tämä parametri on TRUE, tähti näkyy lokikirjassa, kun teet QSO k
 #, fuzzy
 msgctxt "TC_HELP_NET_STATUS_UPDATE_INTERVAL"
 msgid "Values: 1000 to 10000 milliseconds. While you want to be connected to the multi-op network and the link is down, TR4W tries to connect again at this interval. A change takes effect the next time you connect."
-msgstr ""
+msgstr "Arvot: 1000-10000 millisekuntia. Vaikka haluat olla yhteydessä monitoimiverkkoon ja linkki on alhaalla, TR4W yrittää muodostaa yhteyden uudelleen tällä välin. Muutos tulee voimaan, kun olet yhteydessä."
 
 #. Config command: NO BORDER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_BORDER"
 msgid "When this parameter is TRUE, the panels of the main window and the call and exchange entry fields are drawn flat, without their sunken edge. It takes effect the next time TR4W starts."
-msgstr ""
+msgstr "Kun tämä parametri on TRUE, paneelit pääikkunan ja puhelu- ja vaihto kentät piirretään tasainen, ilman niiden uponnut reuna. Se tulee voimaan seuraavan kerran TR4W alkaa."
 
 #. Config command: NO CAPTION   (default: FALSE)
 #, fuzzy
@@ -1010,7 +1010,7 @@ msgstr "Jos arvo on TRUE Käynnistyksen jälkeen kaikki ikkunat paitsi tärkein 
 #, fuzzy
 msgctxt "TC_HELP_NO_COLUMN_HEADER"
 msgid "If the value is TRUE, the log windows show no row of column headings: the log on the main window (and the B4 list that takes its place), View/Edit Log, Log Search and the downloaded server log, and also the Network and Stations windows. The QSOs themselves are unchanged. The change takes effect at once in every open window; a column's width cannot be dragged while its heading is hidden."
-msgstr ""
+msgstr "Jos arvo on TRUE, lokiikkunat eivät näytä riviä sarakkeen otsikoita: loki pääikkunassa (ja B4-listassa, joka ottaa sen paikan), View/Edit-loki, Log Search ja ladattu palvelin loki, ja myös Verkko- ja Stations-ikkunat. QSO:t eivät muutu. Muutos tulee voimaan heti jokaisessa avoimessa ikkunassa; sarakkeen leveyttä ei voi vetää sen ollessa piilossa."
 
 #. Config command: NO LOG   (default: FALSE)
 #, fuzzy
@@ -1040,7 +1040,7 @@ msgstr "Tietokonekaiutinmonitoria käytetään yleensä, kun lähetät melalla, 
 #, fuzzy
 msgctxt "TC_HELP_PADDLE_PORT"
 msgid "The Serial port used to connect the CW paddle."
-msgstr ""
+msgstr "Serial portti yhdistää CW melon."
 
 #. Config command: PADDLE PTT HOLD COUNT   (default: 13)
 #, fuzzy
@@ -1232,7 +1232,7 @@ msgstr "Arvot: Mikä tahansa avain. Kun suoritat kontaktin suoritettaessa CW:tä
 #, fuzzy
 msgctxt "TC_HELP_QZB_RANDOM_OFFSET_ENABLE"
 msgid "When this parameter is TRUE and you are on CW, tuning the radio to a band map spot adds a small random offset of up to 30 Hz either side of the spot frequency (and of its split frequency, if the spot has one), so you do not land exactly on the spotted frequency. When FALSE, the radio is tuned exactly to the spot."
-msgstr ""
+msgstr "Kun tämä parametri on TRUE ja olet CW, virittämällä radion bändikartta kohtaan lisää pieni satunnaisoffset jopa 30 Hz molemmin puolin spot taajuus (ja sen jaettu taajuus, jos paikalla on yksi), joten et laskeudu täsmälleen paikalla taajuus. Milloin FALSERadio on viritetty juuri oikeaan kohtaan."
 
 #. Config command: R150S MODE   (default: FALSE)
 #, fuzzy
@@ -1550,13 +1550,13 @@ msgstr "Ethernet-portin numero, joka käyttää yhteyttä TR4WSERVER."
 #, fuzzy
 msgctxt "TC_HELP_SERVER_TAILCAT_ADDRESS"
 msgid "The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel's key, so treat it like a password."
-msgstr ""
+msgstr "Osoite operaattori TR4WSERVER antaa sinulle niin, että tämä tietokone voi päästä palvelimelle toisesta verkosta kautta Tailcat tunneli. Liitä se juuri niin kuin on annettu. Sitä käytetään vain, kun SERVER KÄYTETTÄVÄÄ INVESTOINTIA TRUESiinä on tunnelin avain."
 
 #. Config command: SERVER USE TAILCAT   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SERVER_USE_TAILCAT"
 msgid "Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server's port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server's own network; the address is kept for next time."
-msgstr ""
+msgstr "Aseta TRUE tavoittaa TR4WSERVER Tailcat tunnelin kautta nimeltään SERVER TALLECTAT OSOITE sijaan SERVER ADDRESS. Vaikka se on TRUE, SERVER ADDRESS ei käytetä; SERVER PORT Se on yhä, koska se on palvelimen portti tunnelissa. Jos SERVER NALFCAT-OSOITTEEN tyhjyys, yhteys epäonnistuu ja sanoo niin; TR4W ei peräänny SERVER ADDRESS. Aseta se FALSE kun olet palvelimen omassa verkossa; osoite säilytetään seuraavan kerran."
 
 #. Config command: SHIFT KEY ENABLE   (default: TRUE)
 #, fuzzy
@@ -1598,7 +1598,7 @@ msgstr "Kun tämä parametri on TRUE, TR4W mahdollistaa lyhyet lyhenteet joitaki
 #, fuzzy
 msgctxt "TC_HELP_SHOW_DOMESTIC_MULTIPLIER_NAME"
 msgid "When this parameter is TRUE, the remaining multipliers window lists each domestic multiplier by the name its domestic multiplier (.dom) file gives it (the entry starting with ^), where it has one, instead of its abbreviation, and widens the column to fit. The change is shown at once."
-msgstr ""
+msgstr "Kun tämä parametri on TRUE, jäljellä oleva kertoinikkuna luettelee jokaisen kotimaisen kertoimen nimellä sen kotimaisen kertoimen (.dom) tiedosto antaa sen (merkintä alkaa ^), jossa se on yksi, sen lyhenne, ja laajentaa sarake sopii. Muutos näkyy heti."
 
 #. Config command: SHOW FREQUENCY IN LOG   (default: TRUE)
 #, fuzzy
@@ -1610,7 +1610,7 @@ msgstr "Jos arvo on TRUE Cabrillo log korvaa QSO:n todellisen taajuuden."
 #, fuzzy
 msgctxt "TC_HELP_SHOW_GRIDLINES"
 msgid "When this parameter is TRUE, grid lines are drawn between the rows and columns of the log grid in the main window. The change is shown at once."
-msgstr ""
+msgstr "Kun tämä parametri on TRUE, ruudukko viivat piirretään rivien ja sarakkeiden välillä lokiruudun pääikkunassa. Muutos näkyy heti."
 
 #. Config command: SHOW TYPED CALLSIGN   (default: TRUE)
 #, fuzzy
@@ -1664,7 +1664,7 @@ msgstr "Arvot: Mikä tahansa avain. Jos olet käynnissä asemat CW ja asema, jok
 #, fuzzy
 msgctxt "TC_HELP_STATIONS_CALLSIGNS_MASK"
 msgid "Values: any text. The Stations window lists only the callsigns that contain this text anywhere in them (it is a plain match, not a wildcard pattern); leave it empty to list every station. The list on screen is filtered again as soon as you change it."
-msgstr ""
+msgstr "Arvot: mikä tahansa teksti. Asemien ikkuna listaa vain puhelumerkit, jotka sisältävät tämän tekstin missä tahansa niissä (se on tavallinen vastaavuus, ei wildcard-kuvio); jätä se tyhjäksi luetella jokainen asema. Näytöllä oleva luettelo suodatetaan uudelleen heti kun vaihdat sitä."
 
 #. Config command: STEREO CONTROL PIN   (default: 9)
 #, fuzzy
@@ -1820,7 +1820,7 @@ msgstr "Arvot: Mikä tahansa kelvollinen tiedostonimi. TR4W tallentaa tuntematto
 #, fuzzy
 msgctxt "TC_HELP_USE_RECORDED_SIGNS"
 msgid "When this parameter is TRUE, the voice keyer speaks every word of a voice message that is not a .WAV file name, including # (the QSO number) and @ (the call in the call window), from recordings: a number from <number>.WAV in the FULLSERIALNUMBERS folder, else digit by digit from the LETTERSANDNUMBERS folder; anything else from <callsign>.WAV in the FULLCALLSIGNS folder, else letter by letter from LETTERSANDNUMBERS (a / is played from _.WAV). These folders are in the voice keyer folder. When FALSE, only the .WAV file names in a voice message are played."
-msgstr ""
+msgstr "Kun tämä parametri on TRUE, ääninäppäin puhuu ääniviestin jokaisen sanan, joka ei ole .WAV-tiedoston nimi, mukaan lukien # (QSO-numero) ja @ (puhelu puheluikkunassa), tallennuksista: numero <numero>. WAV FULLSERIALNUMBERS kansiossa, muu numeroitu numeron mukaan KIRJAINSANDNUMBERS kansiosta; kaikki muu < callsign>.WAV FULLCALLSIGNS kansiossa, muu kirjain kirjaimella KIRJAINSANDNUMBERS (a / soitetaan  WAV). Nämä kansiot ovat ääninäppäimen kansiossa. Milloin FALSE, vain .WAV-tiedostojen nimet ääniviestissä pelataan."
 
 #. Config command: USER INFO SHOWN   (default: NONE)
 #, fuzzy
@@ -2503,430 +2503,430 @@ msgstr "Jos TRUE, YCCC SO2R-laatikko on tuettu radioäänivirtojen ja muiden vai
 #. Config command: ALERT COLOR   (default: ALERT)
 msgctxt "TC_HELP_ALERT_COLOR"
 msgid "The color TR4W uses for an alert in the main window: the text of a radio's name and frequency while that radio is disconnected, and the background of the PTT indicator when a key-up is inhibited because the radio will not transmit. Choose from the color list; the default is ALERT."
-msgstr ""
+msgstr "Väri TR4W käyttää hälytystä pääikkunassa: teksti radion nimi ja taajuus, kun radio on kytketty, ja tausta PTT ilmaisin, kun avain-up on estetty, koska radio ei lähetä. Valitse värilistasta; oletus on ALERT."
 
 #. Config command: BAND MAP WORKED MULT COLOR   (default: ORANGE)
 msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_COLOR"
 msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window. The default is ORANGE."
-msgstr ""
+msgstr "M:n väri bändikartalla, jonka kerroin olet jo työskennellyt, mutta harvemmin kuin BAND MAP TOIMI MULT RAJA, puhelu, joka ei ole dupe. Samaa väriä käytetään tällaisen paikan linja DX-klusterin ikkunassa. Oletusarvo on ORANGE."
 
 #. Config command: BAND MAP WORKED MULT LIMIT   (default: 1)
 msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_LIMIT"
 msgid "How many times a multiplier must be worked (non-dupe QSOs, counted per band and mode where the contest counts them that way) before its spots stop showing an M. From 1 to 9. With 1 the M goes away at the first QSO; with 2 or more a spot shows an M in BAND MAP WORKED MULT COLOR until the limit is reached."
-msgstr ""
+msgstr "Kuinka monta kertaa kerroin on käytettävä (ei-dupe QSOs, lasketaan per bändi ja tila, jossa kilpailu laskee ne näin) ennen kuin sen pisteitä lopettaa M. 1-9. 1 M menee pois ensimmäisessä QSO; 2 tai enemmän paikalla osoittaa M in BAND MAP TOIMITETTU MULT COLOR kunnes raja on saavutettu."
 
 #. Config command: CALL HISTORY FILENAME
 msgctxt "TC_HELP_CALL_HISTORY_FILENAME"
 msgid "The call history file to read when USE CALL HISTORY FILE is TRUE: a bare file name, looked for in the CallHistoryFiles folder, or a full path. Leave it blank to use the contest's own default file, which Preferences shows in the empty box. The file is read when the contest is opened, so a change takes effect the next time the contest is opened."
-msgstr ""
+msgstr "Kutsu historiatiedosto lukea, kun käytät CALL HISTORIA FILE on TRUE: paljas tiedoston nimi, etsi CallHistoryFiles kansio, tai koko polku. Jätä se tyhjäksi käyttääksesi kilpailun omaa oletustiedostoa, jonka asetukset näkyvät tyhjässä laatikossa. Tiedosto luetaan, kun kilpailu avataan, joten muutos tulee voimaan seuraavan kerran kilpailu avataan."
 
 #. Config command: CALL WINDOW SHOW ALL SPOTS   (default: FALSE)
 msgctxt "TC_HELP_CALL_WINDOW_SHOW_ALL_SPOTS"
 msgid "When this parameter is TRUE and you tune in S&P mode, every callsign TR4W knows appears in the call window, even when it does not appear on the band map. For example, with BAND MAP DUPE DISPLAY set to FALSE, dupes stay off the band map but still appear in the call window. (Not yet implemented.)"
-msgstr ""
+msgstr "Kun tämä parametri on TRUE ja virität S&P-tilassa, jokainen puhelumerkki TR4W ilmestyy puheluikkunassa, vaikka se ei näy bändikartassa. Esimerkiksi BAND MAP DUPE DISPLAY asetettu FALSE, Dupes pysyä pois bändi kartalla, mutta esiintyy edelleen puheluikkunassa. (Ei vielä toteutettu.)"
 
 #. Config command: CATEGORY-STATION
 msgctxt "TC_HELP_CATEGORY_STATION"
 msgid "The Cabrillo CATEGORY-STATION for this contest (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). Saved with the contest; a contest whose sponsor names its own list offers only those values."
-msgstr ""
+msgstr "Cabrillo LUOKKA-STAtion tämän kilpailun (FIXED, MOBILE, Sportable, Rover, Expedition, School ...). Säästetty kilpailu; kilpailu, jonka sponsori nimeää oman luettelon tarjoaa vain nämä arvot."
 
 #. Config command: CLUSTER SPOT COMMENT MULTIPLIER   (default: FALSE)
 msgctxt "TC_HELP_CLUSTER_SPOT_COMMENT_MULTIPLIER"
 msgid "When this parameter is set to TRUE and the contest looks its domestic multiplier (section or state) up in its domestic file, a DX cluster spot whose comment names a section or state is shown as a needed multiplier when that one is needed. The first UPPER CASE word of the comment that the contest's domestic file knows is used; a section the cluster appends with a plus sign (+NC) is used only when no earlier word qualifies. A section already known for the station from the call history or from a contact in the log overrules the comment. Beacon spots (NCDXF) are ignored. Not every spot has one, and the cluster's section can be where a station lives rather than where it is operating, so leave this FALSE unless you want it."
-msgstr ""
+msgstr "Kun tämä parametri on asetettu TRUE ja kilpailu näyttää sen kotimainen kerroin (osio tai tila) ylöspäin sen kotimaisen tiedoston, DX klusteri piste, jonka kommenttia nimetään osa tai tila on esitetty tarvittavana kerroin, kun sitä tarvitaan. Ensimmäinen UPPER CASE sana kommentti, että kilpailun kotimainen tiedosto tietää käytetään; osa klusteri liittää plus merkki (+NC) käytetään vain, jos aikaisempi sana ei täytä. Osa, joka on jo tunnettu asemalle puheluhistoriasta tai lokin yhteyshenkilöstä, kumoaa kommentin. Majakkaläiskiä (NCDXF) ei oteta huomioon. Kaikissa paikoissa ei ole yhtä, ja klusterin osa voi olla asema, jossa se asuu eikä toimi. FALSE Ellet halua sitä."
 
 #. Config command: DISPLAY LANGUAGE
 msgctxt "TC_HELP_DISPLAY_LANGUAGE"
 msgid "The language TR4W's menus, windows, messages and these tooltips are shown in. Blank follows the operating system's language. The language is chosen once at startup, so a change takes effect the next time TR4W starts; a --lang switch on the command line overrides this setting."
-msgstr ""
+msgstr "Kieli TR4W valikot, ikkunat, viestit ja nämä työkaluvihjeet näytetään. Tyhjä noudattaa käyttöjärjestelmän kieltä. Kieli valitaan kerran käynnistettäessä, joten muutos tulee voimaan seuraavan kerran TR4W alkaa; komentorivin --lang-kytkin ohittaa tämän asetuksen."
 
 #. Config command: EXTERNAL LOGGER EDITOR ACTIVE
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_ACTIVE"
 msgid "When ticked, each newly logged QSO is also sent to this logger. Each active logger sends on its own. For a logger that was running when TR4W started, a change takes effect when it is saved, with no restart; a logger added since then, or one whose key, host or logbook changed, applies after TR4W is restarted."
-msgstr ""
+msgstr "Kun se tikitetään, jokainen äskettäin rekisteröity QSO lähetetään myös tälle kirjautujalle. Jokainen aktiivinen kirjautuja lähettää itsestään. TR4W:n käynnistyessä käynnissä olleelle lokikirjalle muutos tulee voimaan, kun se tallennetaan, ilman uudelleenkäynnistystä; sen jälkeen lisätty kirjain, jonka avainta, isäntää tai lokikirjaa on muutettu, sovelletaan TR4W:n uudelleenkäynnistyksen jälkeen."
 
 #. Config command: EXTERNAL LOGGER EDITOR NAME
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_NAME"
 msgid "The name this logger is listed under. It is required and must differ from every other external logger's name (capitals do not count as a difference)."
-msgstr ""
+msgstr "Tämän kirjaajan nimi on listattu. Se on tarpeen ja sen on poikettava kaikista muista ulkoisista kirjautujista (pääomaa ei lasketa eroksi)."
 
 #. Config command: EXTERNAL LOGGER EDITOR PROVIDER
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_PROVIDER"
 msgid "The logbook program or online service this logger sends QSOs to. The fields below change to the ones that provider needs. Changing the provider keeps the host and port, clears any key or password, and moves a port still at the old provider's default to the new provider's default."
-msgstr ""
+msgstr "Lokikirjaohjelma tai verkkopalvelu, johon tämä kirjautuja lähettää QSO:t. Alla olevat kentät muuttuvat palveluntarjoajan tarpeisiin. Muuttaminen palveluntarjoaja pitää isäntä ja portti, tyhjentää avaimen tai salasanan, ja siirtää portin edelleen vanhan palveluntarjoajan oletus uuden palveluntarjoajan oletus."
 
 #. Config command: HAMSCORE VERIFY SERVER   (default: TRUE)
 msgctxt "TC_HELP_HAMSCORE_VERIFY_SERVER"
 msgid "When TRUE, TR4W checks the HamScore server's certificate before uploading, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send, including your HamScore password. It is read when the uploader starts, at TR4W startup."
-msgstr ""
+msgstr "Milloin TRUE, TR4W tarkistaa HamScore-palvelimen varmenteen ennen lataamista, kunhan ohjelman laajuinen varmenteen tarkistus asetukset/tr4w.json on päällä (se on oletusarvoisesti). Tyhjennä se vain palvelimelle, jonka varmennusta ei voida tarkistaa: palvelimen henkilöllisyyttä ei tarkistaa, ja kuka tahansa välilläsi voi lukea mitä lähetät, mukaan lukien HamScore-salasanasi. Se luetaan, kun lataus käynnistyy, TR4W startup."
 
 #. Config command: KEYER EDITOR NAME
 msgctxt "TC_HELP_KEYER_EDITOR_NAME"
 msgid "The name this keying device is listed under in the keyer library and in a station profile's CW output choices. It is required. A profile refers to the keyer by a hidden identity, so renaming it is safe."
-msgstr ""
+msgstr "Nimi tämä avain laite on listattu alla avainkirjasto ja aseman profiilin CW lähtö valinnat. Se on välttämätöntä. Profiili viittaa avaimeen salatun henkilöllisyyden avulla, joten sen nimeäminen on turvallista."
 
 #. Config command: KEYER EDITOR PORT
 msgctxt "TC_HELP_KEYER_EDITOR_PORT"
 msgid "The serial port the keyer is connected to. A keyer cannot be saved without one."
-msgstr ""
+msgstr "Sarjaportti, johon avain on kytketty. Avainta ei voi tallentaa ilman avainta."
 
 #. Config command: KEYER EDITOR TYPE
 msgctxt "TC_HELP_KEYER_EDITOR_TYPE"
 msgid "What kind of device this is: a WinKeyer, or a YCCC SO2R+ box. The WinKeyer settings below apply only to a WinKeyer and are greyed for any other type."
-msgstr ""
+msgstr "Millainen laite tämä on: WinKeyer tai YCCC SO2R+ laatikko. Alla olevat WinKeyer-asetukset koskevat vain WinKeyeria ja ne ovat harmaat muille tyypeille."
 
 #. Config command: NETWORK AUTO CONNECT   (default: FALSE)
 msgctxt "TC_HELP_NETWORK_AUTO_CONNECT"
 msgid "When TRUE, TR4W connects to the multi-op server when it starts, provided COMPUTER ID is set to a letter A to Z. When FALSE, connect with Connect on the Net menu. Leave it FALSE on a single-operator station."
-msgstr ""
+msgstr "Milloin TRUE, TR4W kytkee monitoimipalvelimen kun se alkaa, edellyttäen COMPUTER ID A-kirjain Z:lle. Milloin FALSE, yhteyden Connect on the Net menu. Anna olla. FALSE yhden operaattorin asemalla."
 
 #. Config command: NETWORK HTTP TRANSPORT   (default: generic)
 msgctxt "TC_HELP_NETWORK_HTTP_TRANSPORT"
 msgid "Chooses what carries TR4W's internet requests: the downloads (country file, TRMASTER, call history, POTA parks, version check) and the uploads (the external logging services, HamScore, contest scores, SuperCheckPartial). generic is TR4W's own connection code, which checks server certificates against the cacert.pem shipped with the program. auto and platform use the operating system's own connection code where this platform has one (Windows only, today: WinHTTP). It trusts the Windows certificate store, follows the system proxy settings and needs no cacert.pem. Where there is none, both use generic, and platform says so in the log. A change applies from the next request, with no restart. A request that fails is never repeated on the other transport. The Windows transport is new: leave this on generic unless you were asked to try it."
-msgstr ""
+msgstr "Valitsee, mitä TR4W:n internet-pyynnöissä on: lataukset (maatiedosto, TRMASTER, puheluhistoria, POTA puistot, version tarkistus) ja lataukset (ulkoinen hakkuupalvelut, HamScore, kilpailutulokset, SuperCheckPartial). geneerinen on TR4W:n oma yhteyskoodi, joka tarkistaa palvelinvarmennetta vastaan. Pem lähetetään mukana ohjelman. auto ja alusta käyttää käyttöjärjestelmän omaa yhteyskoodia, jossa tällä alustalla on yksi (Windows vain tänään: WinHTTP). Se luottaa Windows-varmennevarastoon, seuraa järjestelmän välityspalvelimen asetuksia eikä tarvitse cacert.pemiä. Jos ei ole, molemmat käyttävät geneerisiä, ja alusta sanoo niin loki. Muutos koskee seuraavaa pyyntöä ilman uudelleenkäynnistystä. Toisissa kuljetuksissa ei toisteta epäonnistunutta pyyntöä. Windows-kuljetus on uusi: jätä tämä yleiskäyttöön, ellet halua kokeilla sitä."
 
 #. Config command: NETWORK SHARE SPOTS   (default: TRUE)
 msgctxt "TC_HELP_NETWORK_SHARE_SPOTS"
 msgid "When TRUE, this station sends the DX spots its own cluster connection receives to the other stations on the multi-op network, and accepts the spots they send. When FALSE it does neither. Each station has its own setting, and a change takes effect at once."
-msgstr ""
+msgstr "Milloin TRUE, tämä asema lähettää DX spots sen oma klusteri yhteys vastaanottaa muille asemat multi-op verkossa, ja hyväksyy paikkoja he lähettävät. Milloin FALSE -Ei kumpikaan. Jokaisella asemalla on oma asetus, ja muutos tulee voimaan heti."
 
 #. Config command: OPERATING STANDARD EDIT KEYS   (default: FALSE)
 msgctxt "TC_HELP_OPERATING_STANDARD_EDIT_KEYS"
 msgid "When TRUE, Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A copy, paste, cut and select all in a text box or drop-down list of any window other than the main window, instead of running the TR4W command assigned to that key. The main window always keeps TR4W's commands."
-msgstr ""
+msgstr "Milloin TRUE, Ctrl+C, Ctrl+V, Ctrl+X ja Ctrl+ Kopio, liitä, leikkaa ja valitse kaikki tekstilaatikosta tai pudotuslistasta kaikista muista ikkunoista kuin pääikkunasta sen sijaan, että suorittaisit TR4W-komentoa, joka on annettu tuolle avaimelle. Pääikkuna pitää aina TR4W:n komennot."
 
 #. Config command: PREFERENCES CLUSTER LOGIN
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_LOGIN"
 msgid "The callsign to log in to the cluster with. Leave it blank to log in with your station callsign, which is looked up each time TR4W connects."
-msgstr ""
+msgstr "Soittomerkki, jonka kanssa kirjaudut sisään. Jätä se tyhjäksi kirjautuaksesi asemasi puhelutunnuksella, joka tarkistetaan joka kerta, kun TR4W yhdistää."
 
 #. Config command: PREFERENCES CLUSTER NAME
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_NAME"
 msgid "The name this cluster is listed under. Clearing the box keeps the old name. Renaming the cluster in use keeps it in use."
-msgstr ""
+msgstr "Tämän ryhmän nimi on lueteltu. Laatikon tyhjentäminen pitää vanhan nimen. Klusterin nimeäminen pitää sen käytössä."
 
 #. Config command: PREFERENCES CLUSTER PASSWORD
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_PASSWORD"
 msgid "The password, for a cluster that asks for one. Spaces at either end are kept. It is stored in the operating system's credential store (Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux), not in the settings file; where no store can be reached it is kept for this session only."
-msgstr ""
+msgstr "Salasana klusterille, joka pyytää sellaista. Tilat molemmissa päissä pidetään. Se on tallennettu käyttöjärjestelmän tunnistevarastoon (Windows Credential Manager, macOS Keychain tai Salainen Palvelu Linuxissa), ei asetustiedostoon; jos mitään myymälää ei voi saavuttaa, se säilytetään vain tätä istuntoa varten."
 
 #. Config command: PREFERENCES CONNECT RADIOS AT STARTUP   (default: TRUE)
 msgctxt "TC_HELP_PREFERENCES_CONNECT_RADIOS_AT_STARTUP"
 msgid "Whether TR4W connects this profile's radios when it starts. Activating the profile and Reset Radio Ports always connect, whatever this says."
-msgstr ""
+msgstr "Yhdistääkö TR4W tämän profiilin radiot sen alkaessa. Aktivoimme profiilin ja Nollaamme radioportit."
 
 #. Config command: PREFERENCES CW OUTPUT 1
 msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_1"
 msgid "How CW is sent for Radio 1: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
-msgstr ""
+msgstr "Miten CW lähetetään Radio 1: ei mitään, CW CAT (tarjotaan vain silloin, kun radio voi tehdä sen), radion oma avainportti (tarjotaan, kun radio on yksi sarja), tai laite avainkirjasto."
 
 #. Config command: PREFERENCES CW OUTPUT 2
 msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_2"
 msgid "How CW is sent for Radio 2: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
-msgstr ""
+msgstr "Miten CW lähetetään Radio 2: ei mitään, CW CAT (tarjotaan vain silloin, kun radio voi tehdä sen), radion oma näppäinportti (tarjotaan, kun radio on yksi), tai laite avainkirjasto."
 
 #. Config command: PREFERENCES PROFILE
 msgctxt "TC_HELP_PREFERENCES_PROFILE"
 msgid "The station profile shown below for editing. A profile names the radios in the two slots and how each one sends CW. Choosing one here does not switch to it: the Activate this profile now button does."
-msgstr ""
+msgstr "Aseman profiili näyttää alla editointi. Profiili nimeää radiot kahdessa lähtö ja miten jokainen lähettää CW. Valitse yksi tässä ei siirry siihen: Aktivoi tämä profiili nyt painike ei."
 
 #. Config command: PREFERENCES RADIO 1
 msgctxt "TC_HELP_PREFERENCES_RADIO_1"
 msgid "The radio from the radio library that this profile uses as Radio 1. A radio already in the Radio 2 slot is marked as in use there and cannot be chosen for both slots."
-msgstr ""
+msgstr "Radiokirjaston radio, jota tämä profiili käyttää Radio 1. Radio 2:ssa jo oleva radio on merkitty käytettäväksi, eikä sitä voida valita kummallekin lähtö- ja saapumispaikalle."
 
 #. Config command: PREFERENCES RADIO 2
 msgctxt "TC_HELP_PREFERENCES_RADIO_2"
 msgid "The radio from the radio library that this profile uses as Radio 2. A radio already in the Radio 1 slot is marked as in use there and cannot be chosen for both slots."
-msgstr ""
+msgstr "Radiokirjaston radio, jota tämä profiili käyttää Radio 2:na. Radio 1 -kolikossa jo oleva radio on merkitty käytettäväksi, eikä sitä voida valita molempiin lähtö- ja saapumisaikoihin."
 
 #. Config command: PREFERENCES ROTATOR BANDS
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_BANDS"
 msgid "The bands this rotator turns for, separated by spaces, for example 20 15 10. Blank means every band, which is what a station with one antenna wants. Only the rotator in use turns, and only on a band it lists."
-msgstr ""
+msgstr "Tämän pyörittäjän käyttämät tangot erotetaan välilyönneillä, esimerkiksi 20 15 10. Tyhjä tarkoittaa jokaista bändiä, jota yksi antenni haluaa. Vain rotaattori käytössä vuorottelee, ja vain bändillä se listaa."
 
 #. Config command: PREFERENCES ROTATOR BAUD RATE
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_BAUD_RATE"
 msgid "The serial speed for the rotator controller. Blank or 0 uses the default for the chosen type, which is shown greyed in the box."
-msgstr ""
+msgstr "Kiertosäätimen sarjanopeus. Tyhjä tai 0 käyttää valitun tyypin oletusta, joka näkyy harmaana laatikossa."
 
 #. Config command: PREFERENCES ROTATOR IP ADDRESS
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_IP_ADDRESS"
 msgid "For a network rotator (PstRotator), the IP address of the computer it runs on. Blank uses the PSTROTATOR IP ADDRESS setting, 127.0.0.1 unless changed."
-msgstr ""
+msgstr "Verkkorotaattorille (PstRotator) sen käyttämän tietokoneen IP-osoite. Tyhjä PSTROTATOR IP ADDRESS asetus 127.0.0.1, ellei sitä muuteta."
 
 #. Config command: PREFERENCES ROTATOR NAME
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_NAME"
 msgid "The name this rotator is listed under. Clearing the box keeps the old name."
-msgstr ""
+msgstr "Rotaattorin nimi on lueteltu alla. Laatikon tyhjentäminen pitää vanhan nimen."
 
 #. Config command: PREFERENCES ROTATOR PORT
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_PORT"
 msgid "The serial port the rotator controller is connected to. Used only by a type that has a serial port; greyed for a network rotator."
-msgstr ""
+msgstr "Sarjaportti, johon pyörivä ohjain on kytketty. Käytetään vain tyypissä, jossa on sarjaportti; harmaa verkkorotaattori."
 
 #. Config command: PREFERENCES ROTATOR TYPE
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_TYPE"
 msgid "The rotator controller and the protocol TR4W speaks to it. PstRotator is reached over UDP; every other type uses a serial port."
-msgstr ""
+msgstr "Pyörittäjäohjain ja protokolla TR4W puhuvat sille. PstRotator on tavoitettu yli UDP; jokainen muu tyyppi käyttää sarjaporttia."
 
 #. Config command: PREFERENCES ROTATOR UDP PORT
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_UDP_PORT"
 msgid "For a network rotator (PstRotator), the UDP port it listens on. Blank uses the PSTROTATOR UDP PORT setting, 12000 unless changed."
-msgstr ""
+msgstr "Verkkorotaattori (PstRotator), UDP-portti se kuuntelee. Tyhjä PSTROTATOR UDP PORT asetus 12000, ellei sitä muuteta."
 
 #. Config command: PREFERENCES SO2R ENABLED
 msgctxt "TC_HELP_PREFERENCES_SO2R_ENABLED"
 msgid "Marks this profile as a two-radio (SO2R) station. The flag is saved with the profile, but in this build nothing else reads it, so ticking or clearing it changes no behaviour."
-msgstr ""
+msgstr "Merkitse tämä profiili kaksiradioasemaksi (SO2R). Lippu on tallennettu profiili, mutta tässä rakentaa mitään muuta lukee sitä, joten tikittäminen tai puhdistaminen se ei muuta käyttäytymistä."
 
 #. Config command: PREFERENCES TCI LISTEN ON NETWORK   (default: FALSE)
 msgctxt "TC_HELP_PREFERENCES_TCI_LISTEN_ON_NETWORK"
 msgid "Lets other computers connect to the TCI server, not just this one. The server has no password: anything that can reach the port can move your VFO and key your transmitter. A change made while the server is running applies the next time it starts."
-msgstr ""
+msgstr "Antaa muiden tietokoneiden yhteyden TCI-palvelimeen, ei vain tähän. Palvelimella ei ole salasanaa: kaikki, mikä pääsee portille, voi siirtää VFO:ta ja avata lähettimen. Kun palvelin on käynnissä, muutos tapahtuu seuraavan kerran."
 
 #. Config command: PREFERENCES TCI PORT   (default: 50001)
 msgctxt "TC_HELP_PREFERENCES_TCI_PORT"
 msgid "The TCP port the TCI server listens on. Blank uses the default, 50001; a value that is not 1 to 65535 is refused and the previous port kept. A change made while the server is running applies the next time it starts."
-msgstr ""
+msgstr "TCP-portti, jota TCI-palvelin kuuntelee. Tyhjä käyttää oletusarvoa 5001; arvo, joka ei ole 1-65535, hylätään ja edellinen satama säilytetään. Kun palvelin on käynnissä, muutos tapahtuu seuraavan kerran."
 
 #. Config command: PREFERENCES TCI SERVER   (default: FALSE)
 msgctxt "TC_HELP_PREFERENCES_TCI_SERVER"
 msgid "Runs a TCI server so other programs (WSJT-X, JTDX, a skimmer) can control the radio TR4W has open, even one with no TCI of its own; Radio 1 is trx 0 and Radio 2 is trx 1. Saving starts or stops it. It listens only on this computer unless network listening is ticked."
-msgstr ""
+msgstr "Toimii TCI-palvelimella, joten muut ohjelmat (WSJT-X, JTDX, skimmer) voivat ohjata radiota TR4W on auki, jopa sellainen, jossa ei ole omaa TCI:tä; Radio 1 on trx 0 ja Radio 2 on trx 1. Pelastaminen alkaa tai pysäyttää sen. Se kuuntelee vain tällä tietokoneella, ellei verkkoa kuunnella."
 
 #. Config command: PREFERENCES UDP BROADCAST ENABLED   (default: TRUE)
 msgctxt "TC_HELP_PREFERENCES_UDP_BROADCAST_ENABLED"
 msgid "The master switch for UDP broadcasting. Cleared, nothing is sent to any destination, and the destinations are kept as they are."
-msgstr ""
+msgstr "UDP-lähetysten pääkytkin. Tyhjennetty, mitään ei lähetetä mihinkään kohteeseen, ja määränpäät pidetään sellaisina kuin ne ovat."
 
 #. Config command: PTT TX INHIBIT BEEP   (default: FALSE)
 msgctxt "TC_HELP_PTT_TX_INHIBIT_BEEP"
 msgid "When TRUE, TR4W beeps once when you key up a radio that reports it will not transmit (for example a K4 in TX test mode). The PTT indicator and the status line show this whatever the setting. BEEP ENABLE must also be TRUE for the beep to sound."
-msgstr ""
+msgstr "Milloin TRUE, TR4W piippaa kerran, kun näppäilet radion, joka ilmoittaa, että se ei lähetä (esimerkiksi K4 TX testitilassa). PTT-indikaattori ja tilalinja osoittavat tämän riippumatta asetuksista. BEEP ENABLE on myös oltava TRUE äänimerkin."
 
 #. Config command: RADIO EDITOR AUTO INFO LEVEL
 msgctxt "TC_HELP_RADIO_EDITOR_AUTO_INFO_LEVEL"
 msgid "The Elecraft auto-information level (the AI command): how much the radio reports by itself when something changes, instead of waiting to be asked. Leave it empty to let TR4W choose, which is 2; 0 turns it off, and the radio is then asked for everything, which is slower. Shown only for the K2, K3, KX3, and the K4 on a serial connection (on a network connection the K4 is always set to AI5 and this field is ignored). Saving a typed value asks you to confirm it."
-msgstr ""
+msgstr "Elecraftin automaattisen tiedon taso (AI-komento): kuinka paljon radio raportoi itsestään, kun jokin muuttuu, sen sijaan että odottaisi kysymistä. Jätä se tyhjäksi antaa TR4W valita, joka on 2; 0 sammuttaa sen, ja radio sitten pyydetään kaikkea, joka on hitaampi. Näytetään vain K2, K3, KX3 ja K4 sarjayhteyden (verkkoyhteyden K4 on aina asetettu AI5 ja tämä kenttä jätetään huomiotta). Kirjoitetun arvon tallentaminen pyytää vahvistamaan sen."
 
 #. Config command: RADIO EDITOR BAUD RATE
 msgctxt "TC_HELP_RADIO_EDITOR_BAUD_RATE"
 msgid "The speed of the CAT serial port. It must match the setting in the radio's own menu. Choosing a radio type fills in that model's usual speed when the box is empty, and an empty box uses the model's default. The keyer output port is opened at this speed too."
-msgstr ""
+msgstr "CAT-sarjaportin nopeus. Sen on vastattava radion omassa ruokalistassa olevaa asetusta. Radiotyypin valinta täyttää tämän mallin tavanomaisen nopeuden, kun laatikko on tyhjä, ja tyhjässä laatikossa käytetään mallin oletusta. Avaimen ulostuloportti avataan myös tällä nopeudella."
 
 #. Config command: RADIO EDITOR CAT DTR   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_CAT_DTR"
 msgid "The DTR line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
-msgstr ""
+msgstr "Radion CAT-sarjaportin DTR-linja. ON pitää kiinni linjasta, kun TR4W:n portti on auki, mitä jotkut rajapintakaapelit tarvitsevat; kaikki muut valinnat (NONE, OFF, CW, PTT) eivät vahvista. Tämä ei ole CW- tai PTT-näppäin: tähän tarkoitukseen Keyer RTS-linja ja Keyer DTR-linja."
 
 #. Config command: RADIO EDITOR CAT RTS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_CAT_RTS"
 msgid "The RTS line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
-msgstr ""
+msgstr "Radion CAT-sarjaportin RTS-linja. ON pitää kiinni linjasta, kun TR4W:n portti on auki, mitä jotkut rajapintakaapelit tarvitsevat; kaikki muut valinnat (NONE, OFF, CW, PTT) eivät vahvista. Tämä ei ole CW- tai PTT-näppäin: tähän tarkoitukseen Keyer RTS-linja ja Keyer DTR-linja."
 
 #. Config command: RADIO EDITOR CIV ADDRESS
 msgctxt "TC_HELP_RADIO_EDITOR_CIV_ADDRESS"
 msgid "The radio's CI-V address, in hexadecimal as the radio's menu and manual show it. Empty uses the model's default address, shown in grey in the box. It must match the address set in the radio. Offered only for radios that have a CI-V address."
-msgstr ""
+msgstr "Radion CI-V-osoite, heksadesimaalina, kun radion valikko ja manuaali näyttävät sen. Tyhjä käyttää mallin oletusosoitetta, joka näkyy harmaana laatikossa. Sen on vastattava radion osoitetta. Tarjottu vain radioille, joissa on CI-V-osoite."
 
 #. Config command: RADIO EDITOR DATA BITS
 msgctxt "TC_HELP_RADIO_EDITOR_DATA_BITS"
 msgid "The number of data bits on the CAT serial port, 7 or 8. Together with parity and stop bits it is the serial frame, which must match the radio's own setting. Most radios use 8 data bits, no parity and 1 stop bit; choosing the type of a new radio fills in that model's usual frame."
-msgstr ""
+msgstr "CAT-sarjaportin databittien lukumäärä 7 tai 8. Yhdessä pariteettien ja stop bittien kanssa se on sarjakehys, jonka on vastattava radion omaa asetusta. Useimmissa radioissa käytetään 8 databittiä, ei pariteettia ja 1 stop-bittiä; uuden radiotyypin valinta täyttää mallin tavanomaisen kehyksen."
 
 #. Config command: RADIO EDITOR DISCOVER
 msgctxt "TC_HELP_RADIO_EDITOR_DISCOVER"
 msgid "Searches the local network for radios of the chosen type and lists those that answer under Found. The search takes a few seconds. Offered only for radio types that announce themselves on the network."
-msgstr ""
+msgstr "Etsii paikallisesta verkosta valitun tyypin radioita ja listaa ne, jotka vastaavat alla Löydössä. Etsintä kestää muutaman sekunnin. Tarjottu vain radiotyypeille, jotka ilmoittavat itsensä verkossa."
 
 #. Config command: RADIO EDITOR FOUND
 msgctxt "TC_HELP_RADIO_EDITOR_FOUND"
 msgid "The radios Discover found on the network. Choosing one copies its IP address into the IP address box."
-msgstr ""
+msgstr "Radiot löysivät verkon. Valitsemalla yhden kopion IP-osoitteesta IP-osoitelaatikkoon."
 
 #. Config command: RADIO EDITOR FREQUENCY OFFSET
 msgctxt "TC_HELP_RADIO_EDITOR_FREQUENCY_OFFSET"
 msgid "For a transverter: the offset in Hz added to every frequency the radio reports and subtracted from every frequency TR4W tells it to tune, so TR4W shows and logs the frequency on the air. Empty or 0 means no transverter. Note: at present a value above 65535 or below 0 is refused when the radio is set up (the log says NOT applied), so a typical VHF or UHF transverter offset does not take effect yet."
-msgstr ""
+msgstr "Transvertteri: taajuuspoikkeama, joka lisätään jokaiseen taajuuteen, radioraportit ja vähennettynä jokaisesta taajuudesta TR4W käskee sen virittää, joten TR4W näyttää ja kirjaa taajuuden ilmaan. Tyhjä tai nolla tarkoittaa, ettei siirrintä. Huomaa: Tällä hetkellä yli 65535 tai alle 0:n arvo evätään radion käyttöönoton yhteydessä (lokin mukaan EI sovelleta), joten tyypillinen VHF- tai UHF-transvertterioffsetti ei vielä tule voimaan."
 
 #. Config command: RADIO EDITOR FT1000MP CW REVERSE
 msgctxt "TC_HELP_RADIO_EDITOR_FT1000MP_CW_REVERSE"
 msgid "When ticked, TR4W asks the radio for reverse CW (CW-R) instead of CW whenever it sets the radio to CW. Offered only for the Yaesu FT-1000MP."
-msgstr ""
+msgstr "Kun rastitetaan, TR4W pyytää radiolta käänteistä CW (CW-R) eikä CW:tä, kun se asettaa radion CW:lle. Tarjottu vain Yaesu FT-1000MP."
 
 #. Config command: RADIO EDITOR HAMLIB MODEL ID
 msgctxt "TC_HELP_RADIO_EDITOR_HAMLIB_MODEL_ID"
 msgid "The HamLib model number (rig_model) used when the radio is driven through HamLib. Empty uses the model's registered number, shown in grey in the box. Offered only when the radio is driven through HamLib, and emptied when the radio type changes, because a number belongs to one model."
-msgstr ""
+msgstr "HamLib-mallinumero (rig malli), jota käytetään, kun radio ajetaan HamLibin kautta. Tyhjä käyttää mallin rekisteröityä numeroa, joka näkyy harmaana laatikossa. Tarjottu vain silloin, kun radio on ajettu HamLibin läpi, ja tyhjennetty, kun radiotyyppi muuttuu, koska numero kuuluu yhteen malliin."
 
 #. Config command: RADIO EDITOR ICOM DATA MODE ID
 msgctxt "TC_HELP_RADIO_EDITOR_ICOM_DATA_MODE_ID"
 msgid "Which Icom data mode TR4W selects when it puts the radio into a data mode: 1, 2 or 3 for D1, D2 or D3 (for example USB-D1). Empty means 1. Offered for Icom radios only."
-msgstr ""
+msgstr "Mikä Icom-datatila TR4W valitsee, kun se laittaa radion datatilaan: 1, 2 tai 3 D1, D2 tai D3 (esimerkiksi USB-D1). Tyhjä tarkoittaa 1. Tarjotaan vain Icom-radioita."
 
 #. Config command: RADIO EDITOR ICOM FILTER BYTE
 msgctxt "TC_HELP_RADIO_EDITOR_ICOM_FILTER_BYTE"
 msgid "An Icom filter choice: 1, 2 or 3 for the wide, normal or narrow filter, empty or 0 for none. Offered for Icom radios only. At present nothing in TR4W reads this value, so it has no effect: the code that used it is commented out."
-msgstr ""
+msgstr "Icom-suodatinvalinta: 1, 2 tai 3 leveälle, normaalille tai kapealle suodattimelle, tyhjä tai 0 yhdelle. Tarjottu vain Icom-radioille. Tällä hetkellä mikään TR4W:ssä ei lue tätä arvoa, joten sillä ei ole vaikutusta: käytettyä koodia kommentoidaan."
 
 #. Config command: RADIO EDITOR IP ADDRESS
 msgctxt "TC_HELP_RADIO_EDITOR_IP_ADDRESS"
 msgid "The IP address of a radio connected over the network (the Network tab). The radio's manual or network menu shows its address; where Discover is offered, it can find the radio for you."
-msgstr ""
+msgstr "Verkkoon liitetyn radion IP-osoite (verkkovälilehti). Radion manuaalinen tai verkkovalikko näyttää sen osoitteen; missä Discover on tarjolla, se voi löytää radion sinulle."
 
 #. Config command: RADIO EDITOR IP PORT
 msgctxt "TC_HELP_RADIO_EDITOR_IP_PORT"
 msgid "The network port the radio listens on. It is called IP port because the radios differ: the Icom network protocol uses UDP, while Elecraft and Flex use TCP. Choosing a radio type fills in that model's usual port when the box is empty, and an empty box uses the model's default."
-msgstr ""
+msgstr "Verkkoportti, jota radio kuuntelee. Sitä kutsutaan IP-portiksi, koska radiot eroavat toisistaan: Icom-verkkoprotokolla käyttää UDP:tä, kun taas Elecraft ja Flex käyttävät TCP:tä. Radiotyypin valinta täyttää mallin tavanomaisen portin, kun laatikko on tyhjä, ja tyhjässä laatikossa käytetään mallin oletusta."
 
 #. Config command: RADIO EDITOR KEYER DTR   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_DTR"
 msgid "What the DTR line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention DTR is used for CW. If both lines are set to PTT, DTR switches it. This is the keyer port, not the CAT port (see CAT DTR)."
-msgstr ""
+msgstr "Mitä DTR linja keyer lähtöportti tekee: CW avaimet CW, PTT vaihtaa lähettimen, ON ja OFF pitää linja päällä tai pois, eikä kukaan jätä sitä yksin. Sopimuksen mukaan DTR käytetään CW. Jos molemmat rivit on asetettu PTT, DTR vaihtaa sen. Tämä on avainportti, ei CAT-portti (katso CAT DTR)."
 
 #. Config command: RADIO EDITOR KEYER OUTPUT PORT   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_OUTPUT_PORT"
 msgid "The serial port TR4W keys CW and PTT on for this radio, through the Keyer RTS line and Keyer DTR line choices. It is not used when the station profile sends CW by CAT, sends no CW, or uses a keyer device such as a WinKeyer, which opens its own port."
-msgstr ""
+msgstr "Sarjaportti TR4W avaimet CW ja PTT tämän radion kautta Keyer RTS linja ja Keyer DTR linja valintoja. Sitä ei käytetä, kun aseman profiili lähettää CAT:n CW:n, ei lähetä CW:tä tai käyttää WinKeyerin kaltaista avainlaitetta, joka avaa oman porttinsa."
 
 #. Config command: RADIO EDITOR KEYER RTS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_RTS"
 msgid "What the RTS line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention RTS is used for PTT. If both lines are set to CW, RTS keys. This is the keyer port, not the CAT port (see CAT RTS)."
-msgstr ""
+msgstr "Mitä RTS-linjan näppäimiä CW, PTT kytkee lähettimen, ON ja OFF pitää linjan päällä tai pois, eikä kukaan jätä sitä yksin. Yleissopimuksen mukaan RTS:ää käytetään PTT:hen. Jos molemmat rivit on asetettu CW, RTS avaimet. Tämä on avainportti, ei CAT-satama (katso CAT RTS)."
 
 #. Config command: RADIO EDITOR KEYER STOP BITS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_STOP_BITS"
 msgid "The stop bits used when the keyer output port is opened: 2 opens it with 2 stop bits, while 1 or (none) opens it with 1. It rarely matters; try 2 only if keying through this port misbehaves. It is separate from the CAT port's Stop bits on the Serial tab."
-msgstr ""
+msgstr "Stop bitit, joita käytetään avattaessa näppäimen ulostuloporttia: 2 avaa sen 2 stop bittiä, kun taas 1 tai (ei) avaa sen 1. Sillä on harvoin väliä; kokeile kahta vain jos tämän sataman läpi näppäilee huonosti. Se on erillinen CAT-portin stop bittiä Sarja-välilehti."
 
 #. Config command: RADIO EDITOR NAME
 msgctxt "TC_HELP_RADIO_EDITOR_NAME"
 msgid "The name this radio is listed under in the radio library and in the station profile's radio choices. It is required and must differ from every other radio's name. Renaming is safe: a profile refers to the radio by a hidden identity, not by this name."
-msgstr ""
+msgstr "Radion nimi on merkitty radiokirjastoon ja aseman profiiliin. Sitä tarvitaan, ja sen on poikettava kaikkien muiden radioiden nimestä. Nimeäminen on turvallista: profiili viittaa radioon salatun henkilöllisyyden avulla, ei tällä nimellä."
 
 #. Config command: RADIO EDITOR PARITY
 msgctxt "TC_HELP_RADIO_EDITOR_PARITY"
 msgid "The parity of the CAT serial port: None, Odd or Even. Part of the serial frame with data bits and stop bits, and it must match the radio's own setting. Almost every radio uses None."
-msgstr ""
+msgstr "CAT-sarjaportin pariteetti: Ei mitään, Outoa tai Even. Osa sarjaketta, jossa on datan palasia ja pysäytä osia, ja sen on vastattava radion omaa asetusta. Lähes jokainen radio käyttää Ei."
 
 #. Config command: RADIO EDITOR PASSWORD
 msgctxt "TC_HELP_RADIO_EDITOR_PASSWORD"
 msgid "The password for a network radio that asks for a login, used with User name. The eye button beside the box shows or hides what you typed. The box is greyed and emptied for a radio type that needs no login."
-msgstr ""
+msgstr "Verkkoradion salasana, joka pyytää käyttäjätunnusta. Silmänappi laatikon vieressä näyttää tai piilottaa mitä kirjoitit. Laatikko on harmaa ja tyhjennetty radiotyyppi, joka ei tarvitse kirjautumista."
 
 #. Config command: RADIO EDITOR POLL THIS RADIO   (default: TRUE)
 msgctxt "TC_HELP_RADIO_EDITOR_POLL_THIS_RADIO"
 msgid "When ticked, TR4W keeps reading the radio's frequency and mode, at the Frequency Poll Rate. When cleared, no polling is started for this radio, so TR4W does not follow its frequency, band or mode."
-msgstr ""
+msgstr "TR4W lukee radion taajuutta ja tilaa taajuustaajuudella. Tyhjennyksen jälkeen tätä radiota varten ei aloiteta kyselyjä, joten TR4W ei noudata sen taajuutta, taajuutta tai tilaa."
 
 #. Config command: RADIO EDITOR PORT   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_PORT"
 msgid "The serial port the radio's CAT (control) cable is connected to. A port marked (not present) is the port this radio is set to but which is not plugged in right now; it is kept unless you choose another."
-msgstr ""
+msgstr "Sarjaportti, johon radion CAT-kaapeli on kytketty. Portti merkitty (ei läsnä) on portti, johon radio on asetettu, mutta jota ei ole kytketty juuri nyt; se säilytetään ellet valitse toista."
 
 #. Config command: RADIO EDITOR STARTUP COMMAND
 msgctxt "TC_HELP_RADIO_EDITOR_STARTUP_COMMAND"
 msgid "Text sent to the radio exactly as typed (up to 50 characters), once each time the link to the radio comes up, after a short wait for the radio to settle; it is sent again after the radio is power-cycled. Use it for a radio setting you always want. On an Icom radio it is not sent: a CI-V frame must begin with the bytes FE FE and end with FD, which typed text is not, and the log says why."
-msgstr ""
+msgstr "Radioon lähetetty teksti on kirjoitettu täsmälleen samalla tavalla (enintään 50 merkkiä), joka kerta, kun yhteys radioon ilmestyy, sen jälkeen kun radio on odottanut hetken, se lähetetään uudelleen sen jälkeen, kun radio on sähköpyöräitetty. Käytä sitä aina haluamassasi radiossa. Icom-radiossa sitä ei lähetetä: CI-V-kehyksen on alettava tavuilla FE ja päätyttävä FD:ään, joka ei ole kirjoitettu teksti, ja lokikirja kertoo miksi."
 
 #. Config command: RADIO EDITOR STOP BITS
 msgctxt "TC_HELP_RADIO_EDITOR_STOP_BITS"
 msgid "The number of stop bits on the CAT serial port, 1 or 2. Part of the serial frame with data bits and parity, and it must match the radio's own setting. This is the CAT port; the keyer output port has its own Stop bits choice below the tabs."
-msgstr ""
+msgstr "CAT-sarjaportissa olevien stop bittien lukumäärä 1 tai 2. Osa sarjaketta, jossa on databittejä ja pariteettia, ja sen on vastattava radion omaa asetusta. Tämä on CAT-portti; näppäinlähtöportilla on oma Stop-bittien valinta välilehtien alla."
 
 #. Config command: RADIO EDITOR TYPE
 msgctxt "TC_HELP_RADIO_EDITOR_TYPE"
 msgid "The radio model. It chooses the driver TR4W uses to talk to the radio, fills in that model's usual baud rate, serial frame and network port where those are empty, and decides which tabs and fields on this form apply. It is required."
-msgstr ""
+msgstr "Radiomalli. Se valitsee ajurin TR4W käyttää puhua radio, täyttää kyseisen mallin tavallinen baud korko, sarjakehys ja verkkoportti, jossa ne ovat tyhjiä, ja päättää, mitkä välilehdet ja kentät tässä lomakkeessa sovelletaan. Se on välttämätöntä."
 
 #. Config command: RADIO EDITOR USER NAME
 msgctxt "TC_HELP_RADIO_EDITOR_USER_NAME"
 msgid "The user name for a network radio that asks for a login, such as the network Icom radios and the Kenwood LAN radios. The box is greyed and emptied for a radio type that needs no login, such as the Elecraft K4."
-msgstr ""
+msgstr "Verkkoradion käyttäjätunnus, joka pyytää kirjautumista, kuten Icom-verkkoradiot ja Kenwood LAN -radiot. Laatikko on harmaa ja tyhjennetty radiotyypille, joka ei tarvitse sisäänkirjautumista, kuten Elecraft K4."
 
 #. Config command: RADIO EDITOR WIDE CW FILTER
 msgctxt "TC_HELP_RADIO_EDITOR_WIDE_CW_FILTER"
 msgid "Meant to select the wide CW filter on older Yaesu radios (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). At present nothing in TR4W reads this value, so it has no effect."
-msgstr ""
+msgstr "Tarkoituksena on valita laaja CW-suodatin vanhemmista Yaesun radioista (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). Tällä hetkellä mikään TR4W:ssä ei lue tätä arvoa, joten sillä ei ole vaikutusta."
 
 #. Config command: SCORE VERIFY SERVER   (default: TRUE)
 msgctxt "TC_HELP_SCORE_VERIFY_SERVER"
 msgid "When TRUE, TR4W checks the score board server's certificate when it posts your score to the Posting URL, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send."
-msgstr ""
+msgstr "Milloin TRUE, TR4W tarkistaa pisteet hallituksen palvelimen varmenteen, kun se lähettää pisteet Posting URL, kunhan ohjelman koko varmenne tarkistaa asetukset/tr4w.json on päällä (se on oletusarvoisesti). Tyhjennä se vain palvelimelle, jonka varmennusta ei voida tarkistaa: palvelimen henkilöllisyyttä ei tarkistaa, ja kuka tahansa välilläsi voi lukea mitä lähetät."
 
 #. Config command: SETUP WIZARD CLUSTER
 msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER"
 msgid "Tick to add a page that sets up a DX cluster connection for spots. The cluster is added to the cluster list and becomes the one TR4W connects to."
-msgstr ""
+msgstr "Tick lisätä sivun, joka asettaa DX-klusterin yhteys paikkoja. Klusteri lisätään klusterilistalle ja siitä tulee TR4W-yhteys."
 
 #. Config command: SETUP WIZARD CLUSTER PORT
 msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER_PORT"
 msgid "The cluster's TCP port, from 1 to 65535. Leave it blank for the standard port, 23."
-msgstr ""
+msgstr "Klusterin TCP-portti 1-65535. Jätä se tyhjäksi vakioporttiin 23."
 
 #. Config command: SETUP WIZARD KEYER
 msgctxt "TC_HELP_SETUP_WIZARD_KEYER"
 msgid "Tick to add a page that sets up a WinKeyer. It is added to the keyer library and becomes the CW output for Radio 1, used instead of CW by CAT when both are chosen."
-msgstr ""
+msgstr "Tick lisätä sivun, joka asettaa WinKeyer. Se lisätään avainkirjastoon ja siitä tulee CW-ulostulo Radio 1:lle, jota käytetään CAT:n CW:n sijasta, kun molemmat valitaan."
 
 #. Config command: SETUP WIZARD LOGGER
 msgctxt "TC_HELP_SETUP_WIZARD_LOGGER"
 msgid "Tick to add a page that sets up an external logger (a logbook program or online service) that each QSO is also sent to. It is added to the external logger list, active if its Active box is ticked."
-msgstr ""
+msgstr "Kello lisätä sivun, joka perustaa ulkoisen kirjautumiskoneen (lokikirjaohjelma tai verkkopalvelu), jolle jokainen QSO on myös lähetetty. Se lisätään ulkoiseen kirjautumislistaan, joka toimii, jos sen Aktiivinen laatikko on rastittu."
 
 #. Config command: SETUP WIZARD RADIO
 msgctxt "TC_HELP_SETUP_WIZARD_RADIO"
 msgid "Tick to add a page that sets up a radio for rig control. The radio is added to the radio library and put in Radio 1 of the active station profile; when no profile is active, of one the wizard makes active."
-msgstr ""
+msgstr "Tick lisätä sivun, joka asettaa radion rektoreiden hallintaan. Radio lisätään radiokirjastoon ja laitetaan aktiivisen aseman profiilin Radio 1:een; kun profiilia ei ole, velho toimii."
 
 #. Config command: SETUP WIZARD ROTATOR
 msgctxt "TC_HELP_SETUP_WIZARD_ROTATOR"
 msgid "Tick to add a page that sets up an antenna rotator. It is added to the rotator list and becomes the rotator in use."
-msgstr ""
+msgstr "Tick lisätä sivun, joka asettaa antennin pyörivä. Se lisätään rotaattorilistaan ja siitä tulee käytössä oleva rotaattori."
 
 #. Config command: SETUP WIZARD SHOW DETAILS
 msgctxt "TC_HELP_SETUP_WIZARD_SHOW_DETAILS"
 msgid "Shows the full report of what the wizard did, with the detail lines added to the summary."
-msgstr ""
+msgstr "Näyttää koko raportin siitä, mitä velho teki, jossa yksityiskohtaiset rivit lisätään yhteenvetoon."
 
 #. Config command: SETUP WIZARD WSJT-X
 msgctxt "TC_HELP_SETUP_WIZARD_WSJT_X"
 msgid "Tick to add a page for the WSJT-X settings. Only the values changed on that page are saved."
-msgstr ""
+msgstr "Lisää sivu WSJT-X-asetuksiin. Vain tällä sivulla muuttuneet arvot tallennetaan."
 
 #. Config command: TCI DEBUG   (default: FALSE)
 msgctxt "TC_HELP_TCI_DEBUG"
 msgid "Writes every TCI server command, in both directions, to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
-msgstr ""
+msgstr "Kirjoittaa jokaisen TCI-palvelimen komento, molempiin suuntiin, tr4w.log. Viivat on kirjoitettu INFO-tasolla, joten ne näkyvät vain silloin, kun lokitaso on INFO, DEBUG tai TRACE. Vastaa, kun säästät."
 
 #. Config command: TCI MAX TX SECONDS   (default: 180)
 msgctxt "TC_HELP_TCI_MAX_TX_SECONDS"
 msgid "A safety limit in seconds, 0 to 3600. When a TCI client has kept the transmitter keyed this long, TR4W unkeys it, which covers a client that crashed or lost its connection while transmitting. 0 means no limit. A transmission you start yourself is never cut."
-msgstr ""
+msgstr "Turvaraja sekunneissa 0-3600. Kun TCI-asiakas on pitänyt lähetintä näin pitkään, TR4W avaa sen, joka kattaa asiakkaan, joka kaatui tai menetti yhteyden lähetyksessä. 0 tarkoittaa ei rajaa. Lähetystä ei koskaan katkaista."
 
 #. Config command: TELNET CONSOLE LINES   (default: 10000)
 msgctxt "TC_HELP_TELNET_CONSOLE_LINES"
 msgid "The most lines the DX cluster window keeps, from 1000 to 100000. When the window goes over the limit, the oldest lines are removed, down to nine tenths of the limit."
-msgstr ""
+msgstr "Useimmat linjat DX-klusterin ikkuna pitää, 1000-100000. Kun ikkuna menee rajan yli, vanhimmat viivat poistetaan, alas yhdeksän kymmenesosaa rajan."
 
 #. Config command: TELNET DEBUG   (default: FALSE)
 msgctxt "TC_HELP_TELNET_DEBUG"
 msgid "Writes every line sent to and received from the DX cluster to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
-msgstr ""
+msgstr "Kirjoittaa jokaisen rivin lähetetty ja vastaanotettu DX ryppään pr4w.log. Viivat on kirjoitettu INFO-tasolla, joten ne näkyvät vain silloin, kun lokitaso on INFO, DEBUG tai TRACE. Vastaa, kun säästät."
 
 #. Config command: TUNE WITH DITS   (default: FALSE)
 msgctxt "TC_HELP_TUNE_WITH_DITS"
 msgid "If this parameter is TRUE, TR4W sends a string of dits at 75 WPM when you press Ctrl-Left-Shift, instead of a solid carrier. (Not yet implemented.)"
-msgstr ""
+msgstr "Jos tämä parametri on TRUE, TR4W lähettää sarjan dits 75 WPM kun painat Ctrl-Left-Shift, sijaan kiinteä kantaja. (Ei vielä toteutettu.)"
 
 #. Config command: UDP DESTINATION PORT
 msgctxt "TC_HELP_UDP_DESTINATION_PORT"
 msgid "The UDP port the receiving program listens on, from 1 to 65535. The port belongs to this destination, so a program that wants different kinds of data on different ports needs one destination for each port."
-msgstr ""
+msgstr "UDP-portti vastaanottava ohjelma kuuntelee, 1-65535. Satama kuuluu tähän kohteeseen, joten ohjelma, joka haluaa erilaisia tietoja eri satamista tarvitsee yhden kohteen jokaiselle satamalle."
 
 #. Config command: USE CALL HISTORY FILE   (default: FALSE)
 msgctxt "TC_HELP_USE_CALL_HISTORY_FILE"
 msgid "When TRUE, TR4W reads a call history file when the contest is opened and uses it to fill in a station's exchange from the call. The file is CALL HISTORY FILENAME, or the contest's own default when that is blank; a contest that takes nothing from a call history file reads none. A change takes effect the next time the contest is opened."
-msgstr ""
+msgstr "Milloin TRUE, TR4W lukee puheluhistorian tiedoston, kun kilpailu avataan ja käyttää sitä täyttää aseman vaihto puhelu. Tiedosto on CALL HISTORIA FILENAME, tai kilpailun oma oletus, kun se on tyhjä; kilpailu, joka ei ota mitään puhelu historiatiedosto lukee mitään. Muutos tulee voimaan seuraavan kerran, kun kilpailu avataan."
 

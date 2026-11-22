@@ -116,13 +116,13 @@ msgstr "Se você está entrando em um tronco à mão, o AUTO TIME INCREMENT O re
 #, fuzzy
 msgctxt "TC_HELP_AUTO_CQ_DELAY_TIME"
 msgid "The amount of time to wait between AUTO CQ in milliseconds."
-msgstr ""
+msgstr "A quantidade de tempo para esperar entre AUTO CQ em milissegundos."
 
 #. Config command: BAND MAP ACTIVE BAND COLOR   (default: BLUE)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_ACTIVE_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on the active band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "A cor da frequência de um ponto no mapa da banda quando o ponto está na banda ativa. O padrão é a cor que o mapa da banda sempre desenhou, então nada muda até você escolher outro. Coloque na página de Preferências das Cores."
 
 #. Config command: BAND MAP ALL BANDS   (default: FALSE)
 #, fuzzy
@@ -158,13 +158,13 @@ msgstr "Quando FALSE, entradas CQ não aparecerão no mapa da banda."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
-msgstr ""
+msgstr "A maioria dos pontos que o mapa da banda vai mostrar, de 30 a 1000. O mapa mostra o menor e o número que se encaixa em sua janela, arredondado para um número par e centrado na frequência do rádio, assim redimensionando a janela re-centra o mapa no rádio."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
 msgid "The fill colour behind a dupe's D in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "A cor de preenchimento atrás de um dupe's D no mapa da banda. O padrão é a cor que o mapa da banda sempre desenhou, então nada muda até você escolher outro. Coloque na página de Preferências das Cores."
 
 #. Config command: BAND MAP DUPE DISPLAY   (default: TRUE)
 #, fuzzy
@@ -182,7 +182,7 @@ msgstr "Determina se o mapa é exibido. Veja a seção 6.13 para mais informaç�
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
 msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
-msgstr ""
+msgstr "Valores: Inteiro (Hz), padrão 0. Um ponto dentro de tantas Hz da frequência do seu rádio conectado tem seu campo de frequência desenhado em BAND MAP VFO MARKER COLOR. Em 0, apenas um ponto na frequência exata do rádio é destacado. O contorno ao redor do local mais próximo o rádio é desenhado para o que quer que esteja definido."
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 #, fuzzy
@@ -200,7 +200,7 @@ msgstr "Largura do item do Mapa da Banda. Mude isso de acordo com BAND MAP SIZED
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_MULT_COLOR"
 msgid "The fill colour behind a multiplier's M in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "A cor de preenchimento atrás de um multiplicador M no mapa da banda. O padrão é a cor que o mapa da banda sempre desenhou, então nada muda até você escolher outro. Coloque na página de Preferências das Cores."
 
 #. Config command: BAND MAP MULTS ONLY   (default: FALSE)
 #, fuzzy
@@ -212,13 +212,13 @@ msgstr "Só mostra multiplicadores."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_OTHER_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on another band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "A cor da frequência de um ponto no mapa da banda quando o ponto está em outra banda. O padrão é a cor que o mapa da banda sempre desenhou, então nada muda até você escolher outro. Coloque na página de Preferências das Cores."
 
 #. Config command: BAND MAP SELECTION COLOR   (default: HIGHLIGHT)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SELECTION_COLOR"
 msgid "The colour of the selected spot in the band map. The default, HIGHLIGHT, is the system highlight colour. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "A cor do local selecionado no mapa da banda. O padrão, DESTAQUE, é a cor de destaque do sistema. O padrão é a cor que o mapa da banda sempre desenhou, então nada muda até você escolher outro. Coloque na página de Preferências das Cores."
 
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
@@ -242,7 +242,7 @@ msgstr "Você pode selecionar a banda na qual o TR4W começará se nenhum contat
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
 msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "A cor que marca a frequência do rádio no mapa da banda: o campo de frequência de cada ponto dentro BAND MAP GUARD BAND do rádio, e um esboço de 1 pixel em volta do ponto mais próximo do rádio. Nem a seleção, e sem frequência de rádio nada é marcado. Coloque na página de Preferências das Cores."
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 #, fuzzy
@@ -326,13 +326,13 @@ msgstr "O programa vai limpar o dupesheet quando este parâmetro estiver definid
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_AUTO_SELF_SPOT"
 msgid "Spots your own call on the DX cluster automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while you are running (CQ mode). Only in a contest whose rules allow self-spotting; ignored otherwise. Off by default."
-msgstr ""
+msgstr "Acende sua própria chamada no cluster DX automaticamente, no intervalo definido por CLUSTER SELF SPOT INTERVAL, enquanto você está rodando (modo CQ). Apenas em um concurso cujas regras permitem auto-ponto, ignorado de outra forma. Desligado por padrão."
 
 #. Config command: CLUSTER SELF SPOT INTERVAL   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_SELF_SPOT_INTERVAL"
 msgid "Minutes between automatic self-spots. 10 minutes is the established minimum; review the contest's rules before changing it. The contest's own minimum, where it states one, is never undercut."
-msgstr ""
+msgstr "Minutos entre autopontos automáticos. 10 minutos é o mínimo estabelecido, reveja as regras do concurso antes de mudá-lo. O mínimo do concurso, onde ele diz, nunca é subestimado."
 
 #. Config command: CODE SPEED   (default: 35)
 #, fuzzy
@@ -446,7 +446,7 @@ msgstr "Quando este parâmetro for verdadeiro, TR4W irá procurar no banco de da
 #, fuzzy
 msgctxt "TC_HELP_CW_SPEED_INCREMENT"
 msgid "When pressing page up or page down, this is the increment the CW increases or decreases respectively."
-msgstr ""
+msgstr "Ao pressionar a página para cima ou para baixo, este é o incremento que o CW aumenta ou diminui, respectivamente."
 
 #. Config command: CW TONE   (default: 700)
 #, fuzzy
@@ -518,13 +518,13 @@ msgstr "Este comando determina se o DVK está ativado."
 #, fuzzy
 msgctxt "TC_HELP_DVK_PATH"
 msgid "This is the location of the program used to playback DVK messages when using the computer for audio."
-msgstr ""
+msgstr "Esta é a localização do programa usado para reproduzir mensagens DVK ao usar o computador para áudio."
 
 #. Config command: DVK RECORDER   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_DVK_RECORDER"
 msgid "This is the program that is run to playback DVK messages form the computer."
-msgstr ""
+msgstr "Este é o programa que é executado para reproduzir mensagens DVK do computador."
 
 #. Config command: DX MULTIPLIER   (default: NONE)
 #, fuzzy
@@ -602,7 +602,7 @@ msgstr "Este comando determina o que acontece quando você pressiona um interrup
 #, fuzzy
 msgctxt "TC_HELP_FOOT_SWITCH_PORT"
 msgid "The serial port to which the foot switch is connected."
-msgstr ""
+msgstr "A porta serial à qual o interruptor está conectado."
 
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 #, fuzzy
@@ -614,7 +614,7 @@ msgstr "Quando pronto para TRUEEste parâmetro irá ativar a memória de frequê
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
 msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr ""
+msgstr "Valores: 10 a 1000 inteiros. Isso diz ao TR4W com que frequência procurar uma nova frequência. Está definido para cada rádio, no editor de rádio, para que dois rádios possam fazer pesquisas em taxas diferentes. O valor está em milissegundos, e os valores permitidos estão na faixa de 10 a 1000."
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy
@@ -626,7 +626,7 @@ msgstr "Valores: referência de quatro ou seis caracteres. Este parâmetro defin
 #, fuzzy
 msgctxt "TC_HELP_HAND_LOG_MODE"
 msgid "For entering a paper log after the event. When this parameter is TRUE, the QSO time no longer follows the computer clock; it moves only when you advance it with Alt-1 to Alt-0 (1 to 10 minutes) or through AUTO TIME INCREMENT; when it is FALSE, those increment-time menu items are greyed out. TR4W shows a warning at startup while this is TRUE; restart TR4W after changing it."
-msgstr ""
+msgstr "Por ter entrado em um diário após o evento. Quando este parâmetro é TRUE, o tempo QSO não segue mais o relógio do computador, ele se move apenas quando você avança com Alt-1 para Alt-0 (1 a 10 minutos) ou através AUTO TIME INCREMENT; quando é FALSE, esses itens de menu de tempo incremental estão acinzentados. TR4W mostra um aviso na inicialização enquanto isso é TRUEReinicie TR4W depois de mudá-lo."
 
 #. Config command: HF BAND ENABLE   (default: TRUE)
 #, fuzzy
@@ -656,7 +656,7 @@ msgstr "Valores: Verdadeiro/Falso. Predefinição de TRUE impede a seleção de 
 #, fuzzy
 msgctxt "TC_HELP_INCLUDE_F_KEY_NUMBER"
 msgid "When viewing the F-Keys window, if this option is true, the F key name/number is displayed (e.g., F1 - <caption>)."
-msgstr ""
+msgstr "Ao ver a janela F-Keys, se esta opção for verdadeira, o nome/número da chave F é exibido (por exemplo, F1 - <caption>)."
 
 #. Config command: INCREMENT TIME ENABLE   (default: FALSE)
 #, fuzzy
@@ -782,7 +782,7 @@ msgstr "Quando este parâmetro é TRUE, um RST transmitido pode ser inserido na 
 #, fuzzy
 msgctxt "TC_HELP_MAIN_CALLSIGN"
 msgid "Your station's own callsign, remembered from contest to contest. The New Contest dialog fills its callsign box from it (or from MY CALL when this is empty), and the first callsign you enter there is saved here if it is empty. It is not the callsign you log with: that is MY CALL, which a contest may change (for example to a club call) without touching this one."
-msgstr ""
+msgstr "O próprio sinal de sua estação, lembrado do concurso ao concurso. O diálogo do Novo Concurso preenche sua caixa de chamada. MY CALL Quando isso estiver vazio), e o primeiro sinal que você entrar lá é salvo aqui se estiver vazio. Não é o sinal de chamada com o qual você faz login. MY CALL, que um concurso pode mudar (por exemplo, para uma chamada de clube) sem tocar neste."
 
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
@@ -806,13 +806,13 @@ msgstr "Valor: inteiro de 5 a 60. Especifica em minutos a duração da turnê em
 #, fuzzy
 msgctxt "TC_HELP_MISSINGCALLSIGNS_FILE_ENABLE"
 msgid "Works with USE RECORDED SIGNS. When this parameter is TRUE and the voice keyer has no recording <callsign>.WAV in its FULLCALLSIGNS folder for a callsign it has to say, that callsign is added to the file MISSINGCALLSIGNS.TXT in the same folder, so you can record it later."
-msgstr ""
+msgstr "Funciona com USE RECORDED SIGNSQuando este parâmetro é TRUE E o teclador de voz não tem nenhuma gravação. WAV em sua pasta de sinais FULLCALLS para um sinal de chamada que tem a dizer, que o sinal de chamada é adicionado ao arquivo missingcallsigns. TXT na mesma pasta, então você pode gravar depois."
 
 #. Config command: MMTTY ENGINE   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MMTTY_ENGINE"
 msgid "The path to the MMTTY program for working RTTY contests (experimental)."
-msgstr ""
+msgstr "O caminho para o programa MMTTY para trabalhar concursos RTTY (experimental)."
 
 #. Config command: MODE   (default: CW)
 #, fuzzy
@@ -842,7 +842,7 @@ msgstr "Gravador MP3 bitratado."
 #, fuzzy
 msgctxt "TC_HELP_MP3_RECORDER_DURATION"
 msgid "To be determined"
-msgstr ""
+msgstr "A ser determinado"
 
 #. Config command: MP3 RECORDER ENABLE   (default: FALSE)
 #, fuzzy
@@ -938,7 +938,7 @@ msgstr "Re-implementação pendente. Valores: designador IOTA. Define o identifi
 #, fuzzy
 msgctxt "TC_HELP_MY_LICENSE_YEAR"
 msgid "Enter the year you were first licensed, for the contests that exchange it (the European HF Championship, KVP). Four digits (1985) or the last two (85) are both accepted; the contest decides what is sent -- two digits, four digits or the number of years licensed. A contest may state its own value; this is the default. It is read when the contest is set up, so a change takes effect for the next contest or when TR4W next starts."
-msgstr ""
+msgstr "Entre no ano em que foi licenciado pela primeira vez, para os concursos que o trocam (o Campeonato Europeu de HF, KVP). Quatro dígitos (1985) ou os dois últimos (85) são aceitos, o concurso decide o que é enviado, dois dígitos, quatro dígitos ou o número de anos licenciados. Um concurso pode indicar seu próprio valor, este é o padrão. É lido quando o concurso é montado, então uma mudança faz efeito para o próximo concurso ou quando TR4W começar."
 
 #. Config command: MY NAME   (default: NONE)
 #, fuzzy
@@ -992,13 +992,13 @@ msgstr "Quando este parâmetro é TRUE, um asterisco é mostrado no registro qua
 #, fuzzy
 msgctxt "TC_HELP_NET_STATUS_UPDATE_INTERVAL"
 msgid "Values: 1000 to 10000 milliseconds. While you want to be connected to the multi-op network and the link is down, TR4W tries to connect again at this interval. A change takes effect the next time you connect."
-msgstr ""
+msgstr "Valores: 1000 a 10000 mil segundos. Enquanto você quer ser conectado à rede multi-op e o link está desligado, TR4W tenta se conectar novamente neste intervalo. Uma mudança fará efeito na próxima vez que você se conectar."
 
 #. Config command: NO BORDER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_BORDER"
 msgid "When this parameter is TRUE, the panels of the main window and the call and exchange entry fields are drawn flat, without their sunken edge. It takes effect the next time TR4W starts."
-msgstr ""
+msgstr "Quando este parâmetro é TRUE, os painéis da janela principal e os campos de entrada de chamada e troca são desenhados sem sua borda afundada. Faz efeito na próxima vez que o TR4W começar."
 
 #. Config command: NO CAPTION   (default: FALSE)
 #, fuzzy
@@ -1010,7 +1010,7 @@ msgstr "Se o valor é TRUE Depois de iniciar todas as janelas exceto o principal
 #, fuzzy
 msgctxt "TC_HELP_NO_COLUMN_HEADER"
 msgid "If the value is TRUE, the log windows show no row of column headings: the log on the main window (and the B4 list that takes its place), View/Edit Log, Log Search and the downloaded server log, and also the Network and Stations windows. The QSOs themselves are unchanged. The change takes effect at once in every open window; a column's width cannot be dragged while its heading is hidden."
-msgstr ""
+msgstr "Se o valor é TRUE, as janelas de log não mostram linhas de cabeçalhos de colunas: o log na janela principal (e na lista B4 que toma seu lugar), View/Edit Log, Log Search e o log do servidor baixado, e também as janelas Network e Stations. Os próprios QSO estão inalterados. A mudança faz efeito imediatamente em cada janela aberta, a largura de uma coluna não pode ser arrastada enquanto sua direção está escondida."
 
 #. Config command: NO LOG   (default: FALSE)
 #, fuzzy
@@ -1040,7 +1040,7 @@ msgstr "O monitor de alto-falante do computador é normalmente usado quando voc�
 #, fuzzy
 msgctxt "TC_HELP_PADDLE_PORT"
 msgid "The Serial port used to connect the CW paddle."
-msgstr ""
+msgstr "A porta serial usada para conectar o remo CW."
 
 #. Config command: PADDLE PTT HOLD COUNT   (default: 13)
 #, fuzzy
@@ -1232,7 +1232,7 @@ msgstr "Qualquer chave. Quando você termina um contato enquanto corre em CW, no
 #, fuzzy
 msgctxt "TC_HELP_QZB_RANDOM_OFFSET_ENABLE"
 msgid "When this parameter is TRUE and you are on CW, tuning the radio to a band map spot adds a small random offset of up to 30 Hz either side of the spot frequency (and of its split frequency, if the spot has one), so you do not land exactly on the spotted frequency. When FALSE, the radio is tuned exactly to the spot."
-msgstr ""
+msgstr "Quando este parâmetro é TRUE E você está no CW, sintonizando o rádio para um ponto de mapa de banda adiciona um pequeno deslocamento aleatório de até 30 Hz de ambos os lados da frequência de ponto (e de sua freqüência dividida, se o local tem um), para que você não pousar exatamente na frequência manchada. Quando FALSEO rádio está ligado exatamente ao local."
 
 #. Config command: R150S MODE   (default: FALSE)
 #, fuzzy
@@ -1550,13 +1550,13 @@ msgstr "Número da porta Ethernet, que usará conexão com TR4WSERVER."
 #, fuzzy
 msgctxt "TC_HELP_SERVER_TAILCAT_ADDRESS"
 msgid "The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel's key, so treat it like a password."
-msgstr ""
+msgstr "O endereço que o operador de um TR4WSERVER lhe dá para que este computador possa chegar ao servidor de outra rede através de um túnel Tailcat. Colar exatamente como dado. É usado apenas enquanto o servidor usa o TAILCAT. TRUEContém a chave do túnel, então trate-a como uma senha."
 
 #. Config command: SERVER USE TAILCAT   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SERVER_USE_TAILCAT"
 msgid "Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server's port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server's own network; the address is kept for next time."
-msgstr ""
+msgstr "Preparar para TRUE para chegar TR4WSERVER através do túnel Tailcat nomeado por SERVER TAILCAT ADDRESS em vez de em SERVER ADDRESSEnquanto é TRUE, SERVER ADDRESS Não é usado; SERVER PORT Ainda é, porque é a porta do servidor dentro do túnel. Se o endereço do servidor está vazio, a conexão falha e diz: SERVER ADDRESSDefina para FALSE Quando você está na rede do servidor, o endereço é guardado para a próxima vez."
 
 #. Config command: SHIFT KEY ENABLE   (default: TRUE)
 #, fuzzy
@@ -1598,7 +1598,7 @@ msgstr "Quando este parâmetro é TRUETR4W permitirá abreviações curtas para 
 #, fuzzy
 msgctxt "TC_HELP_SHOW_DOMESTIC_MULTIPLIER_NAME"
 msgid "When this parameter is TRUE, the remaining multipliers window lists each domestic multiplier by the name its domestic multiplier (.dom) file gives it (the entry starting with ^), where it has one, instead of its abbreviation, and widens the column to fit. The change is shown at once."
-msgstr ""
+msgstr "Quando este parâmetro é TRUE, a janela de multiplicadores restantes lista cada multiplicador doméstico pelo nome seu arquivo doméstico (.dom) dá-lhe (a entrada começando com ^), onde ele tem um, em vez de sua abreviatura, e amplia a coluna para caber. A mudança é mostrada imediatamente."
 
 #. Config command: SHOW FREQUENCY IN LOG   (default: TRUE)
 #, fuzzy
@@ -1610,7 +1610,7 @@ msgstr "Se o valor é TRUE Em Cabrillo log irá substituir a frequência real de
 #, fuzzy
 msgctxt "TC_HELP_SHOW_GRIDLINES"
 msgid "When this parameter is TRUE, grid lines are drawn between the rows and columns of the log grid in the main window. The change is shown at once."
-msgstr ""
+msgstr "Quando este parâmetro é TRUE, linhas de grade são desenhadas entre as linhas e colunas da grade de log na janela principal. A mudança é mostrada imediatamente."
 
 #. Config command: SHOW TYPED CALLSIGN   (default: TRUE)
 #, fuzzy
@@ -1664,7 +1664,7 @@ msgstr "Qualquer chave. Se você está executando estações em CW e uma estaç�
 #, fuzzy
 msgctxt "TC_HELP_STATIONS_CALLSIGNS_MASK"
 msgid "Values: any text. The Stations window lists only the callsigns that contain this text anywhere in them (it is a plain match, not a wildcard pattern); leave it empty to list every station. The list on screen is filtered again as soon as you change it."
-msgstr ""
+msgstr "Valores: qualquer texto. A janela das estações lista apenas os sinais de chamada que contêm este texto em qualquer lugar deles (é uma combinação simples, não um padrão de caracteres); deixá-lo vazio para listar cada estação. A lista na tela é filtrada de novo assim que você mudar."
 
 #. Config command: STEREO CONTROL PIN   (default: 9)
 #, fuzzy
@@ -1820,7 +1820,7 @@ msgstr "Valores: qualquer nome válido. TR4W salvará entradas de registro para 
 #, fuzzy
 msgctxt "TC_HELP_USE_RECORDED_SIGNS"
 msgid "When this parameter is TRUE, the voice keyer speaks every word of a voice message that is not a .WAV file name, including # (the QSO number) and @ (the call in the call window), from recordings: a number from <number>.WAV in the FULLSERIALNUMBERS folder, else digit by digit from the LETTERSANDNUMBERS folder; anything else from <callsign>.WAV in the FULLCALLSIGNS folder, else letter by letter from LETTERSANDNUMBERS (a / is played from _.WAV). These folders are in the voice keyer folder. When FALSE, only the .WAV file names in a voice message are played."
-msgstr ""
+msgstr "Quando este parâmetro é TRUE, o teclador de voz fala cada palavra de uma mensagem de voz que não é um nome de arquivo .WAV, incluindo # (o número QSO) e @ (a chamada na janela de chamada), de gravações: um número de <número>. WAV na pasta FULLSERIALNUMBERS, outro dígito por dígito da pasta LETTERSandNUMBERS, qualquer outra coisa na pasta FULLCALLSIGNS, outra carta por carta de LETTERSANNUMBERS (um / é jogado de  .WAV). Essas pastas estão na pasta do teclado de voz. Quando FALSE, apenas os nomes dos arquivos .WAV em uma mensagem de voz são reproduzidos."
 
 #. Config command: USER INFO SHOWN   (default: NONE)
 #, fuzzy
@@ -2503,430 +2503,430 @@ msgstr "Sim TRUE, a caixa YCCC SO2R é suportada para alternar fluxos de áudio 
 #. Config command: ALERT COLOR   (default: ALERT)
 msgctxt "TC_HELP_ALERT_COLOR"
 msgid "The color TR4W uses for an alert in the main window: the text of a radio's name and frequency while that radio is disconnected, and the background of the PTT indicator when a key-up is inhibited because the radio will not transmit. Choose from the color list; the default is ALERT."
-msgstr ""
+msgstr "A cor TR4W usa para um alerta na janela principal: o texto do nome e frequência de um rádio enquanto esse rádio é desconectado, e o fundo do indicador PTT quando uma chave é inibida porque o rádio não vai transmitir. Escolha na lista de cores; o padrão é ALERT."
 
 #. Config command: BAND MAP WORKED MULT COLOR   (default: ORANGE)
 msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_COLOR"
 msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window. The default is ORANGE."
-msgstr ""
+msgstr "A cor do M em um local de mapa de banda cujo multiplicador você já trabalhou, mas menos vezes que BAND MAP TRABALHARAM MULT LIMITE, em uma chamada que não é uma farsa. A mesma cor é usada para tal linha de ponto na janela DX cluster. O padrão é ORANGE."
 
 #. Config command: BAND MAP WORKED MULT LIMIT   (default: 1)
 msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_LIMIT"
 msgid "How many times a multiplier must be worked (non-dupe QSOs, counted per band and mode where the contest counts them that way) before its spots stop showing an M. From 1 to 9. With 1 the M goes away at the first QSO; with 2 or more a spot shows an M in BAND MAP WORKED MULT COLOR until the limit is reached."
-msgstr ""
+msgstr "Quantas vezes um multiplicador deve ser trabalhado (não dupe QSOs, contados por banda e modo onde o concurso os conta dessa forma) antes que seus pontos parem de mostrar um M. De 1 a 9. Com 1 o M vai embora no primeiro QSO; com 2 ou mais pontos mostra um M em BAND O mapa funcionou até o limite ser atingido."
 
 #. Config command: CALL HISTORY FILENAME
 msgctxt "TC_HELP_CALL_HISTORY_FILENAME"
 msgid "The call history file to read when USE CALL HISTORY FILE is TRUE: a bare file name, looked for in the CallHistoryFiles folder, or a full path. Leave it blank to use the contest's own default file, which Preferences shows in the empty box. The file is read when the contest is opened, so a change takes effect the next time the contest is opened."
-msgstr ""
+msgstr "O arquivo de histórico de chamadas para ler quando usar o arquivo de histórico é TRUEUm nome de arquivo nu, procurado na pasta de arquivos CallHistory, ou um caminho completo. Deixe em branco para usar o próprio arquivo padrão do concurso, que Preferências mostram na caixa vazia. O arquivo é lido quando o concurso é aberto, então uma mudança faz efeito na próxima vez que o concurso for aberto."
 
 #. Config command: CALL WINDOW SHOW ALL SPOTS   (default: FALSE)
 msgctxt "TC_HELP_CALL_WINDOW_SHOW_ALL_SPOTS"
 msgid "When this parameter is TRUE and you tune in S&P mode, every callsign TR4W knows appears in the call window, even when it does not appear on the band map. For example, with BAND MAP DUPE DISPLAY set to FALSE, dupes stay off the band map but still appear in the call window. (Not yet implemented.)"
-msgstr ""
+msgstr "Quando este parâmetro é TRUE e você sintoniza no modo S&P, cada sinal de chamada TR4W aparece na janela de chamada, mesmo quando não aparece no mapa da banda. Por exemplo, com BAND MAP DUPE DISPLAY Pronto para FALSE, dupes ficar fora do mapa da banda mas ainda aparecer na janela de chamada. (Ainda não implementado.)"
 
 #. Config command: CATEGORY-STATION
 msgctxt "TC_HELP_CATEGORY_STATION"
 msgid "The Cabrillo CATEGORY-STATION for this contest (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). Saved with the contest; a contest whose sponsor names its own list offers only those values."
-msgstr ""
+msgstr "A CATEGORIA Cabrillo para este concurso (FIXED, MOBILE, PORtable, ROVER, EXPEDITION, ESCOLA ...). Salvo com o concurso, um concurso cujo patrocinador nomeia sua própria lista oferece apenas esses valores."
 
 #. Config command: CLUSTER SPOT COMMENT MULTIPLIER   (default: FALSE)
 msgctxt "TC_HELP_CLUSTER_SPOT_COMMENT_MULTIPLIER"
 msgid "When this parameter is set to TRUE and the contest looks its domestic multiplier (section or state) up in its domestic file, a DX cluster spot whose comment names a section or state is shown as a needed multiplier when that one is needed. The first UPPER CASE word of the comment that the contest's domestic file knows is used; a section the cluster appends with a plus sign (+NC) is used only when no earlier word qualifies. A section already known for the station from the call history or from a contact in the log overrules the comment. Beacon spots (NCDXF) are ignored. Not every spot has one, and the cluster's section can be where a station lives rather than where it is operating, so leave this FALSE unless you want it."
-msgstr ""
+msgstr "Quando este parâmetro está definido para TRUE e o concurso parece seu multiplicador doméstico (seção ou estado) em seu arquivo doméstico, um ponto de cluster DX cujo comentário nomeia uma seção ou estado é mostrado como um multiplicador necessário quando esse é necessário. A primeira palavra UPPER CASE do comentário que o arquivo doméstico do concurso sabe que é usado, uma seção que o cluster adiciona com um sinal de mais (+NC) é usado apenas quando nenhuma palavra anterior se qualifica. Uma seção já conhecida pela estação do histórico de chamadas ou de um contato no registro anula o comentário. Pontos de Beacon (NCDXF) são ignorados. Nem todo lugar tem um, e a seção do cluster pode ser onde uma estação mora em vez de onde está operando, então deixe isso. FALSE A menos que você queira."
 
 #. Config command: DISPLAY LANGUAGE
 msgctxt "TC_HELP_DISPLAY_LANGUAGE"
 msgid "The language TR4W's menus, windows, messages and these tooltips are shown in. Blank follows the operating system's language. The language is chosen once at startup, so a change takes effect the next time TR4W starts; a --lang switch on the command line overrides this setting."
-msgstr ""
+msgstr "Os menus da linguagem TR4W, janelas, mensagens e essas dicas são mostrados. Em branco segue a linguagem do sistema operacional. O idioma é escolhido uma vez na inicialização, então uma mudança faz efeito na próxima vez que o TR4W começar; um interruptor de lang na linha de comando sobrepõe esta configuração."
 
 #. Config command: EXTERNAL LOGGER EDITOR ACTIVE
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_ACTIVE"
 msgid "When ticked, each newly logged QSO is also sent to this logger. Each active logger sends on its own. For a logger that was running when TR4W started, a change takes effect when it is saved, with no restart; a logger added since then, or one whose key, host or logbook changed, applies after TR4W is restarted."
-msgstr ""
+msgstr "Quando marcado, cada QSO recém registrado também é enviado para este registrador. Cada registrador ativo envia por conta própria. Para um registrador que estava rodando quando TR4W começou, uma mudança faz efeito quando é salvo, sem reiniciar; um registrador adicionado desde então, ou alguém cuja chave, host ou diário de bordo mudou, se aplica após TR4W ser reiniciado."
 
 #. Config command: EXTERNAL LOGGER EDITOR NAME
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_NAME"
 msgid "The name this logger is listed under. It is required and must differ from every other external logger's name (capitals do not count as a difference)."
-msgstr ""
+msgstr "O nome deste registrador está na lista. É necessário e deve diferir do nome de qualquer outro registrador externo (capital não conta como uma diferença)."
 
 #. Config command: EXTERNAL LOGGER EDITOR PROVIDER
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_PROVIDER"
 msgid "The logbook program or online service this logger sends QSOs to. The fields below change to the ones that provider needs. Changing the provider keeps the host and port, clears any key or password, and moves a port still at the old provider's default to the new provider's default."
-msgstr ""
+msgstr "O programa de diário de bordo ou o serviço online para o qual o registrador envia QSOs. Os campos abaixo mudam para os que o provedor precisa. Mudar o provedor mantém o host e a porta, limpa qualquer chave ou senha, e move uma porta ainda no padrão do provedor antigo para o padrão do novo provedor."
 
 #. Config command: HAMSCORE VERIFY SERVER   (default: TRUE)
 msgctxt "TC_HELP_HAMSCORE_VERIFY_SERVER"
 msgid "When TRUE, TR4W checks the HamScore server's certificate before uploading, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send, including your HamScore password. It is read when the uploader starts, at TR4W startup."
-msgstr ""
+msgstr "Quando TRUE, TR4W verifica o certificado do servidor HamScore antes de enviar, contanto que o certificado de todo o programa verifique as configurações/tr4w.json está ligado (é por padrão). Limpe só para um servidor cujo certificado não pode ser verificado: a identidade do servidor não é verificada e ninguém entre você e ele pode ler o que você envia, incluindo sua senha do HamScore. É lido quando o uploader começa, na inicialização TR4W."
 
 #. Config command: KEYER EDITOR NAME
 msgctxt "TC_HELP_KEYER_EDITOR_NAME"
 msgid "The name this keying device is listed under in the keyer library and in a station profile's CW output choices. It is required. A profile refers to the keyer by a hidden identity, so renaming it is safe."
-msgstr ""
+msgstr "O nome deste dispositivo de chave está listado na biblioteca de chaves e nas opções de saída CW do perfil de uma estação. É necessário. Um perfil refere-se ao chaveiro por uma identidade escondida, então renomeá-lo é seguro."
 
 #. Config command: KEYER EDITOR PORT
 msgctxt "TC_HELP_KEYER_EDITOR_PORT"
 msgid "The serial port the keyer is connected to. A keyer cannot be saved without one."
-msgstr ""
+msgstr "A porta serial à qual o chaveiro está conectado. Um chaveiro não pode ser salvo sem um."
 
 #. Config command: KEYER EDITOR TYPE
 msgctxt "TC_HELP_KEYER_EDITOR_TYPE"
 msgid "What kind of device this is: a WinKeyer, or a YCCC SO2R+ box. The WinKeyer settings below apply only to a WinKeyer and are greyed for any other type."
-msgstr ""
+msgstr "Que tipo de dispositivo é esse: um WinKeyer, ou uma caixa de SO2R+ YCCC. As configurações do WinKeyer abaixo se aplicam apenas a um WinKeyer e são cinzentas para qualquer outro tipo."
 
 #. Config command: NETWORK AUTO CONNECT   (default: FALSE)
 msgctxt "TC_HELP_NETWORK_AUTO_CONNECT"
 msgid "When TRUE, TR4W connects to the multi-op server when it starts, provided COMPUTER ID is set to a letter A to Z. When FALSE, connect with Connect on the Net menu. Leave it FALSE on a single-operator station."
-msgstr ""
+msgstr "Quando TRUE, TR4W se conecta ao servidor multi-op quando ele começa, desde que COMPUTER ID está definido para uma letra A a Z. Quando FALSE, conecte-se com Connect no menu Net. Deixe-o. FALSE em uma estação de um único operador."
 
 #. Config command: NETWORK HTTP TRANSPORT   (default: generic)
 msgctxt "TC_HELP_NETWORK_HTTP_TRANSPORT"
 msgid "Chooses what carries TR4W's internet requests: the downloads (country file, TRMASTER, call history, POTA parks, version check) and the uploads (the external logging services, HamScore, contest scores, SuperCheckPartial). generic is TR4W's own connection code, which checks server certificates against the cacert.pem shipped with the program. auto and platform use the operating system's own connection code where this platform has one (Windows only, today: WinHTTP). It trusts the Windows certificate store, follows the system proxy settings and needs no cacert.pem. Where there is none, both use generic, and platform says so in the log. A change applies from the next request, with no restart. A request that fails is never repeated on the other transport. The Windows transport is new: leave this on generic unless you were asked to try it."
-msgstr ""
+msgstr "Escolhe o que carrega os pedidos de internet do TR4W: os downloads (arquivo de país, TRMASTER, histórico de chamadas, parques de Pota, verificação de versão) e os uploads (os serviços de registro externo, HamScore, pontuação do concurso, SuperCheckPartial). genérico é o próprio código de conexão do TR4W, que verifica os certificados do servidor contra o cacert. Pem enviado com o programa. Auto e plataforma usam o próprio código de conexão do sistema operacional onde esta plataforma tem um (Windows somente, hoje: WinHTTP). Confia na loja de certificados do Windows, segue as configurações de proxy do sistema e não precisa de cacert.pem. Onde não há nenhum, ambos usam genérico, e plataforma diz isso no registro. Uma mudança se aplica ao próximo pedido, sem reiniciar. Um pedido que falha nunca é repetido no outro transporte. O transporte do Windows é novo: deixe isso no genérico a menos que lhe peçam para experimentar."
 
 #. Config command: NETWORK SHARE SPOTS   (default: TRUE)
 msgctxt "TC_HELP_NETWORK_SHARE_SPOTS"
 msgid "When TRUE, this station sends the DX spots its own cluster connection receives to the other stations on the multi-op network, and accepts the spots they send. When FALSE it does neither. Each station has its own setting, and a change takes effect at once."
-msgstr ""
+msgstr "Quando TRUE, esta estação envia o DX manchas sua própria conexão cluster recebe para as outras estações na rede multi-op, e aceita os pontos que enviam. Quando FALSE Nem um nem outro. Cada estação tem sua própria configuração, e uma mudança faz efeito imediatamente."
 
 #. Config command: OPERATING STANDARD EDIT KEYS   (default: FALSE)
 msgctxt "TC_HELP_OPERATING_STANDARD_EDIT_KEYS"
 msgid "When TRUE, Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A copy, paste, cut and select all in a text box or drop-down list of any window other than the main window, instead of running the TR4W command assigned to that key. The main window always keeps TR4W's commands."
-msgstr ""
+msgstr "Quando TRUE, Ctrl+C, Ctrl+V, Ctrl+X e Ctrl+ Uma cópia, colar, cortar e selecionar tudo em uma caixa de texto ou lista drop-down de qualquer janela que não seja a janela principal, em vez de executar o comando TR4W atribuído a essa chave. A janela principal sempre mantém os comandos do TR4W."
 
 #. Config command: PREFERENCES CLUSTER LOGIN
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_LOGIN"
 msgid "The callsign to log in to the cluster with. Leave it blank to log in with your station callsign, which is looked up each time TR4W connects."
-msgstr ""
+msgstr "O sinal para entrar no cluster com. Deixe em branco para entrar com seu sinal de rádio, que é pesquisado cada vez que TR4W se conecta."
 
 #. Config command: PREFERENCES CLUSTER NAME
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_NAME"
 msgid "The name this cluster is listed under. Clearing the box keeps the old name. Renaming the cluster in use keeps it in use."
-msgstr ""
+msgstr "O nome deste grupo está listado. Limpar a caixa mantém o nome antigo. Renomear o grupo em uso o mantém em uso."
 
 #. Config command: PREFERENCES CLUSTER PASSWORD
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_PASSWORD"
 msgid "The password, for a cluster that asks for one. Spaces at either end are kept. It is stored in the operating system's credential store (Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux), not in the settings file; where no store can be reached it is kept for this session only."
-msgstr ""
+msgstr "A senha, para um grupo que pede uma. Espaços em ambos os lados são mantidos. Ele é armazenado na loja de credenciais do sistema operacional (Windows Credential Manager, o macOS Keychain, ou o Serviço Secreto no Linux), não no arquivo de configurações; onde nenhuma loja pode ser alcançada é guardada apenas para esta sessão."
 
 #. Config command: PREFERENCES CONNECT RADIOS AT STARTUP   (default: TRUE)
 msgctxt "TC_HELP_PREFERENCES_CONNECT_RADIOS_AT_STARTUP"
 msgid "Whether TR4W connects this profile's radios when it starts. Activating the profile and Reset Radio Ports always connect, whatever this says."
-msgstr ""
+msgstr "Se TR4W conecta os rádios desse perfil quando começa. Ativando o perfil e Reset Radio Ports sempre se conectam, o que quer que isso diga."
 
 #. Config command: PREFERENCES CW OUTPUT 1
 msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_1"
 msgid "How CW is sent for Radio 1: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
-msgstr ""
+msgstr "Como CW é enviado para Rádio 1: nenhum, CW por CAT (oferecido apenas quando o rádio pode fazê-lo), porta chaveiro do próprio rádio (oferecido quando o rádio tem um conjunto), ou um dispositivo da biblioteca de chaves."
 
 #. Config command: PREFERENCES CW OUTPUT 2
 msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_2"
 msgid "How CW is sent for Radio 2: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
-msgstr ""
+msgstr "Como CW é enviado para Rádio 2: nenhum, CW por CAT (oferecido apenas quando o rádio pode fazê-lo), porta chaveiro do próprio rádio (oferecido quando o rádio tem um conjunto), ou um dispositivo da biblioteca de chaves."
 
 #. Config command: PREFERENCES PROFILE
 msgctxt "TC_HELP_PREFERENCES_PROFILE"
 msgid "The station profile shown below for editing. A profile names the radios in the two slots and how each one sends CW. Choosing one here does not switch to it: the Activate this profile now button does."
-msgstr ""
+msgstr "O perfil da estação mostrado abaixo para edição. Um perfil nomeia os rádios nos dois slots e como cada um envia CW. Escolher um aqui não muda para ele: o botão Ativar este perfil agora muda."
 
 #. Config command: PREFERENCES RADIO 1
 msgctxt "TC_HELP_PREFERENCES_RADIO_1"
 msgid "The radio from the radio library that this profile uses as Radio 1. A radio already in the Radio 2 slot is marked as in use there and cannot be chosen for both slots."
-msgstr ""
+msgstr "O rádio da biblioteca de rádio que este perfil usa como Rádio 1. Um rádio já na ranhura da Rádio 2 está marcado como sendo usado lá e não pode ser escolhido para ambas as ranhuras."
 
 #. Config command: PREFERENCES RADIO 2
 msgctxt "TC_HELP_PREFERENCES_RADIO_2"
 msgid "The radio from the radio library that this profile uses as Radio 2. A radio already in the Radio 1 slot is marked as in use there and cannot be chosen for both slots."
-msgstr ""
+msgstr "O rádio da biblioteca de rádio que este perfil usa como Rádio 2. Um rádio já na ranhura da Rádio 1 está marcado como sendo usado lá e não pode ser escolhido para ambas as ranhuras."
 
 #. Config command: PREFERENCES ROTATOR BANDS
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_BANDS"
 msgid "The bands this rotator turns for, separated by spaces, for example 20 15 10. Blank means every band, which is what a station with one antenna wants. Only the rotator in use turns, and only on a band it lists."
-msgstr ""
+msgstr "As bandas que este rotador gira para, separados por espaços, por exemplo 20 15 10. Em branco significa cada banda, que é o que uma estação com uma antena quer. Apenas o rotador em uso vira, e só em uma banda que ele lista."
 
 #. Config command: PREFERENCES ROTATOR BAUD RATE
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_BAUD_RATE"
 msgid "The serial speed for the rotator controller. Blank or 0 uses the default for the chosen type, which is shown greyed in the box."
-msgstr ""
+msgstr "A velocidade serial para o controlador rotador. Em branco ou 0 usa o padrão para o tipo escolhido, que é mostrado acinzentado na caixa."
 
 #. Config command: PREFERENCES ROTATOR IP ADDRESS
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_IP_ADDRESS"
 msgid "For a network rotator (PstRotator), the IP address of the computer it runs on. Blank uses the PSTROTATOR IP ADDRESS setting, 127.0.0.1 unless changed."
-msgstr ""
+msgstr "Para um rotador de rede (PstRotator), o endereço IP do computador que ele roda. Em branco usa o PSTROTATOR IP ADDRESS Ajustando, 127.0.0.1 a menos que mude."
 
 #. Config command: PREFERENCES ROTATOR NAME
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_NAME"
 msgid "The name this rotator is listed under. Clearing the box keeps the old name."
-msgstr ""
+msgstr "O nome deste rotador está na lista. Limpar a caixa mantém o nome antigo."
 
 #. Config command: PREFERENCES ROTATOR PORT
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_PORT"
 msgid "The serial port the rotator controller is connected to. Used only by a type that has a serial port; greyed for a network rotator."
-msgstr ""
+msgstr "A porta serial à qual o controlador rotador está conectado. Usado apenas por um tipo que tem uma porta serial, cinza para um rotador de rede."
 
 #. Config command: PREFERENCES ROTATOR TYPE
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_TYPE"
 msgid "The rotator controller and the protocol TR4W speaks to it. PstRotator is reached over UDP; every other type uses a serial port."
-msgstr ""
+msgstr "O controlador rotador e o protocolo TR4W falam com ele. PstRotator é alcançado sobre UDP, todos os outros tipos usam uma porta serial."
 
 #. Config command: PREFERENCES ROTATOR UDP PORT
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_UDP_PORT"
 msgid "For a network rotator (PstRotator), the UDP port it listens on. Blank uses the PSTROTATOR UDP PORT setting, 12000 unless changed."
-msgstr ""
+msgstr "Para um rotador de rede (PstRotator), a porta UDP que ele ouve. Em branco usa o PSTROTATOR UDP PORT Ajustando, 12000 a menos que mude."
 
 #. Config command: PREFERENCES SO2R ENABLED
 msgctxt "TC_HELP_PREFERENCES_SO2R_ENABLED"
 msgid "Marks this profile as a two-radio (SO2R) station. The flag is saved with the profile, but in this build nothing else reads it, so ticking or clearing it changes no behaviour."
-msgstr ""
+msgstr "Marca este perfil como uma estação de dois raios (SO2R). A bandeira é salva com o perfil, mas nesta construção nada mais a lê, então tique-taque ou limpe-a não muda nenhum comportamento."
 
 #. Config command: PREFERENCES TCI LISTEN ON NETWORK   (default: FALSE)
 msgctxt "TC_HELP_PREFERENCES_TCI_LISTEN_ON_NETWORK"
 msgid "Lets other computers connect to the TCI server, not just this one. The server has no password: anything that can reach the port can move your VFO and key your transmitter. A change made while the server is running applies the next time it starts."
-msgstr ""
+msgstr "Deixa outros computadores se conectarem ao servidor TCI, não só este. O servidor não tem senha: qualquer coisa que possa chegar ao porto pode mover seu VFO e chave seu transmissor. Uma mudança feita enquanto o servidor está rodando se aplica na próxima vez que ele começar."
 
 #. Config command: PREFERENCES TCI PORT   (default: 50001)
 msgctxt "TC_HELP_PREFERENCES_TCI_PORT"
 msgid "The TCP port the TCI server listens on. Blank uses the default, 50001; a value that is not 1 to 65535 is refused and the previous port kept. A change made while the server is running applies the next time it starts."
-msgstr ""
+msgstr "A porta TCP que o servidor TCI escuta. Em branco usa o padrão, 50001; um valor que não é de 1 a 65535 é recusado e o porto anterior mantido. Uma mudança feita enquanto o servidor está rodando se aplica na próxima vez que ele começar."
 
 #. Config command: PREFERENCES TCI SERVER   (default: FALSE)
 msgctxt "TC_HELP_PREFERENCES_TCI_SERVER"
 msgid "Runs a TCI server so other programs (WSJT-X, JTDX, a skimmer) can control the radio TR4W has open, even one with no TCI of its own; Radio 1 is trx 0 and Radio 2 is trx 1. Saving starts or stops it. It listens only on this computer unless network listening is ticked."
-msgstr ""
+msgstr "Executa um servidor TCI para que outros programas (WSJT-X, JTDX, um skimmer) possam controlar o rádio que TR4W tem aberto, mesmo um sem TCI próprio; Rádio 1 é trx 0 e Rádio 2 é trx 1. Salvar começa ou pára. Ele só escuta neste computador a menos que a rede de escuta esteja marcada."
 
 #. Config command: PREFERENCES UDP BROADCAST ENABLED   (default: TRUE)
 msgctxt "TC_HELP_PREFERENCES_UDP_BROADCAST_ENABLED"
 msgid "The master switch for UDP broadcasting. Cleared, nothing is sent to any destination, and the destinations are kept as they are."
-msgstr ""
+msgstr "O interruptor principal para a transmissão UDP. Nada é enviado para qualquer destino, e os destinos são mantidos como são."
 
 #. Config command: PTT TX INHIBIT BEEP   (default: FALSE)
 msgctxt "TC_HELP_PTT_TX_INHIBIT_BEEP"
 msgid "When TRUE, TR4W beeps once when you key up a radio that reports it will not transmit (for example a K4 in TX test mode). The PTT indicator and the status line show this whatever the setting. BEEP ENABLE must also be TRUE for the beep to sound."
-msgstr ""
+msgstr "Quando TRUE, TR4W apita uma vez quando você tecla um rádio que relata que não irá transmitir (por exemplo, um K4 no modo de teste TX). O indicador de PTT e a linha de status mostram isso qualquer que seja a configuração. BEEP ENABLE deve ser também TRUE para o bip soar."
 
 #. Config command: RADIO EDITOR AUTO INFO LEVEL
 msgctxt "TC_HELP_RADIO_EDITOR_AUTO_INFO_LEVEL"
 msgid "The Elecraft auto-information level (the AI command): how much the radio reports by itself when something changes, instead of waiting to be asked. Leave it empty to let TR4W choose, which is 2; 0 turns it off, and the radio is then asked for everything, which is slower. Shown only for the K2, K3, KX3, and the K4 on a serial connection (on a network connection the K4 is always set to AI5 and this field is ignored). Saving a typed value asks you to confirm it."
-msgstr ""
+msgstr "O nível de auto-informação Elecraft (o comando IA): o quanto o rádio reporta por si só quando algo muda, em vez de esperar para ser perguntado. Deixe vazio para deixar TR4W escolher, que é 2; 0 desliga, e o rádio é pedido para tudo, que é mais lento. Mostrado apenas para o K2, K3, KX3, e o K4 em uma conexão serial (em uma conexão de rede o K4 é sempre definido como AI5 e este campo é ignorado). Salvar um valor digitado pede que você confirme."
 
 #. Config command: RADIO EDITOR BAUD RATE
 msgctxt "TC_HELP_RADIO_EDITOR_BAUD_RATE"
 msgid "The speed of the CAT serial port. It must match the setting in the radio's own menu. Choosing a radio type fills in that model's usual speed when the box is empty, and an empty box uses the model's default. The keyer output port is opened at this speed too."
-msgstr ""
+msgstr "A velocidade da porta serial CAT. Deve combinar com a configuração no menu do rádio. Escolher um tipo de rádio preenche a velocidade usual do modelo quando a caixa está vazia, e uma caixa vazia usa o padrão do modelo. A porta de saída do chaveiro é aberta a esta velocidade também."
 
 #. Config command: RADIO EDITOR CAT DTR   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_CAT_DTR"
 msgid "The DTR line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
-msgstr ""
+msgstr "A linha DTR da porta de série CAT do rádio. ON detém a linha afirmada enquanto TR4W tem a porta aberta, que alguns cabos de interface precisam; qualquer outra escolha (nenhum, OFF, CW, PTT) deixa desprotegida. Este não é CW ou PTT chaveando: para que use linha Keyer RTS e linha DTR Keyer."
 
 #. Config command: RADIO EDITOR CAT RTS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_CAT_RTS"
 msgid "The RTS line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
-msgstr ""
+msgstr "A linha RTS da porta serial CAT do rádio. ON detém a linha afirmada enquanto TR4W tem a porta aberta, que alguns cabos de interface precisam; qualquer outra escolha (nenhum, OFF, CW, PTT) deixa desprotegida. Este não é CW ou PTT chaveando: para que use linha Keyer RTS e linha DTR Keyer."
 
 #. Config command: RADIO EDITOR CIV ADDRESS
 msgctxt "TC_HELP_RADIO_EDITOR_CIV_ADDRESS"
 msgid "The radio's CI-V address, in hexadecimal as the radio's menu and manual show it. Empty uses the model's default address, shown in grey in the box. It must match the address set in the radio. Offered only for radios that have a CI-V address."
-msgstr ""
+msgstr "O endereço CI-V do rádio, em hexadecimal como menu do rádio e manual mostra. Vazio usa o endereço padrão do modelo, mostrado em cinza na caixa. Deve corresponder ao endereço definido no rádio. Ofereceu apenas para rádios que têm um endereço CI-V."
 
 #. Config command: RADIO EDITOR DATA BITS
 msgctxt "TC_HELP_RADIO_EDITOR_DATA_BITS"
 msgid "The number of data bits on the CAT serial port, 7 or 8. Together with parity and stop bits it is the serial frame, which must match the radio's own setting. Most radios use 8 data bits, no parity and 1 stop bit; choosing the type of a new radio fills in that model's usual frame."
-msgstr ""
+msgstr "O número de bits de dados na porta serial CAT, 7 ou 8. Juntamente com paridade e pontos de parada, é o quadro serial, que deve combinar com a própria configuração do rádio. A maioria dos rádios usa 8 bits de dados, sem paridade e 1 stop bit; escolher o tipo de um novo rádio preenche o quadro habitual do modelo."
 
 #. Config command: RADIO EDITOR DISCOVER
 msgctxt "TC_HELP_RADIO_EDITOR_DISCOVER"
 msgid "Searches the local network for radios of the chosen type and lists those that answer under Found. The search takes a few seconds. Offered only for radio types that announce themselves on the network."
-msgstr ""
+msgstr "Procura na rede local por rádios do tipo escolhido e lista aqueles que respondem sob \"Encontrado\". A busca leva alguns segundos. Ofereceu apenas para tipos de rádio que se anunciam na rede."
 
 #. Config command: RADIO EDITOR FOUND
 msgctxt "TC_HELP_RADIO_EDITOR_FOUND"
 msgid "The radios Discover found on the network. Choosing one copies its IP address into the IP address box."
-msgstr ""
+msgstr "Os rádios Discover encontrados na rede. Escolhendo um copia seu endereço IP na caixa de endereço IP."
 
 #. Config command: RADIO EDITOR FREQUENCY OFFSET
 msgctxt "TC_HELP_RADIO_EDITOR_FREQUENCY_OFFSET"
 msgid "For a transverter: the offset in Hz added to every frequency the radio reports and subtracted from every frequency TR4W tells it to tune, so TR4W shows and logs the frequency on the air. Empty or 0 means no transverter. Note: at present a value above 65535 or below 0 is refused when the radio is set up (the log says NOT applied), so a typical VHF or UHF transverter offset does not take effect yet."
-msgstr ""
+msgstr "Para um transversor, o deslocamento em Hz adicionado a cada frequência o rádio reporta e subtraído de cada frequência TR4W diz para sintonizar, então TR4W mostra e registra a frequência no ar. Vazio ou 0 significa sem transversor. Nota: no momento, um valor acima de 65535 ou abaixo de 0 é recusado quando o rádio é configurado (o registro diz que não se aplica), então um deslocamento típico de VHF ou UHF não faz efeito ainda."
 
 #. Config command: RADIO EDITOR FT1000MP CW REVERSE
 msgctxt "TC_HELP_RADIO_EDITOR_FT1000MP_CW_REVERSE"
 msgid "When ticked, TR4W asks the radio for reverse CW (CW-R) instead of CW whenever it sets the radio to CW. Offered only for the Yaesu FT-1000MP."
-msgstr ""
+msgstr "Quando marcado, TR4W pede ao rádio CW inverso (CW-R) em vez de CW sempre que ele define o rádio para CW. Ofereceu apenas para o Yaesu FT-1000MP."
 
 #. Config command: RADIO EDITOR HAMLIB MODEL ID
 msgctxt "TC_HELP_RADIO_EDITOR_HAMLIB_MODEL_ID"
 msgid "The HamLib model number (rig_model) used when the radio is driven through HamLib. Empty uses the model's registered number, shown in grey in the box. Offered only when the radio is driven through HamLib, and emptied when the radio type changes, because a number belongs to one model."
-msgstr ""
+msgstr "O número do modelo HamLib (rig model) usado quando o rádio é conduzido através de HamLib. Vazio usa o número registrado do modelo, mostrado em cinza na caixa. Oferecido apenas quando o rádio é conduzido através de HamLib, e esvaziado quando o tipo de rádio muda, porque um número pertence a um modelo."
 
 #. Config command: RADIO EDITOR ICOM DATA MODE ID
 msgctxt "TC_HELP_RADIO_EDITOR_ICOM_DATA_MODE_ID"
 msgid "Which Icom data mode TR4W selects when it puts the radio into a data mode: 1, 2 or 3 for D1, D2 or D3 (for example USB-D1). Empty means 1. Offered for Icom radios only."
-msgstr ""
+msgstr "O modo de dados Icom TR4W seleciona quando coloca o rádio em um modo de dados: 1, 2 ou 3 para D1, D2 ou D3 (por exemplo USB-D1). Oferecida apenas para rádios Icom."
 
 #. Config command: RADIO EDITOR ICOM FILTER BYTE
 msgctxt "TC_HELP_RADIO_EDITOR_ICOM_FILTER_BYTE"
 msgid "An Icom filter choice: 1, 2 or 3 for the wide, normal or narrow filter, empty or 0 for none. Offered for Icom radios only. At present nothing in TR4W reads this value, so it has no effect: the code that used it is commented out."
-msgstr ""
+msgstr "Uma escolha de filtro Icom: 1, 2 ou 3 para o filtro largo, normal ou estreito, vazio ou 0 para nenhum. Ofereceu apenas rádios Icom. No momento, nada no TR4W lê esse valor, então não tem efeito: o código que o usou é comentado."
 
 #. Config command: RADIO EDITOR IP ADDRESS
 msgctxt "TC_HELP_RADIO_EDITOR_IP_ADDRESS"
 msgid "The IP address of a radio connected over the network (the Network tab). The radio's manual or network menu shows its address; where Discover is offered, it can find the radio for you."
-msgstr ""
+msgstr "O endereço IP de um rádio conectado pela rede. O menu manual ou de rede do rádio mostra seu endereço, onde o Discover é oferecido, ele pode encontrar o rádio para você."
 
 #. Config command: RADIO EDITOR IP PORT
 msgctxt "TC_HELP_RADIO_EDITOR_IP_PORT"
 msgid "The network port the radio listens on. It is called IP port because the radios differ: the Icom network protocol uses UDP, while Elecraft and Flex use TCP. Choosing a radio type fills in that model's usual port when the box is empty, and an empty box uses the model's default."
-msgstr ""
+msgstr "A rede porta o rádio escuta. Chama-se porta IP porque os rádios diferem: o protocolo de rede Icom usa UDP, enquanto Elecraft e Flex usam TCP. Escolher um tipo de rádio preenche a porta usual do modelo quando a caixa está vazia, e uma caixa vazia usa o padrão do modelo."
 
 #. Config command: RADIO EDITOR KEYER DTR   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_DTR"
 msgid "What the DTR line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention DTR is used for CW. If both lines are set to PTT, DTR switches it. This is the keyer port, not the CAT port (see CAT DTR)."
-msgstr ""
+msgstr "O que a linha DTR da porta de saída chave faz: CW teclas CW, PTT muda o transmissor, ON e OFF manter a linha ligada ou desligada, e NENHUM deixá-lo sozinho. Por convenção DTR é usado para CW. Se ambas as linhas estão definidas para PTT, DTR muda. Esta é a porta chave, não a porta CAT (ver CAT DTR)."
 
 #. Config command: RADIO EDITOR KEYER OUTPUT PORT   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_OUTPUT_PORT"
 msgid "The serial port TR4W keys CW and PTT on for this radio, through the Keyer RTS line and Keyer DTR line choices. It is not used when the station profile sends CW by CAT, sends no CW, or uses a keyer device such as a WinKeyer, which opens its own port."
-msgstr ""
+msgstr "A porta serial TR4W chaves CW e PTT ligado para este rádio, através do Keyer RTS linha e Keyer DTR linha escolhas. Não é usado quando o perfil da estação envia CW por CAT, não envia CW, ou usa um dispositivo chaveiro como um WinKeyer, que abre sua própria porta."
 
 #. Config command: RADIO EDITOR KEYER RTS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_RTS"
 msgid "What the RTS line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention RTS is used for PTT. If both lines are set to CW, RTS keys. This is the keyer port, not the CAT port (see CAT RTS)."
-msgstr ""
+msgstr "O que a linha RTS da porta de saída chave faz: CW teclas o CW, PTT muda o transmissor, ON e OFF manter a linha ligado ou desligado, e NENHUM deixá-lo sozinho. Por convenção RTS é usado para PTT. Se ambas as linhas estão definidas para CW, chaves RTS. Esta é a porta chave, não a porta CAT (ver CAT RTS)."
 
 #. Config command: RADIO EDITOR KEYER STOP BITS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_STOP_BITS"
 msgid "The stop bits used when the keyer output port is opened: 2 opens it with 2 stop bits, while 1 or (none) opens it with 1. It rarely matters; try 2 only if keying through this port misbehaves. It is separate from the CAT port's Stop bits on the Serial tab."
-msgstr ""
+msgstr "Os bits de parada usados quando a porta de saída do chaveiro é aberta: 2 abre com 2 bits de parada, enquanto 1 ou (nenhum) abre com 1. Raramente importa, tente 2 apenas se a chave através deste porto se comportar mal. Está separado da porta CAT's Stop bits na guia Serial."
 
 #. Config command: RADIO EDITOR NAME
 msgctxt "TC_HELP_RADIO_EDITOR_NAME"
 msgid "The name this radio is listed under in the radio library and in the station profile's radio choices. It is required and must differ from every other radio's name. Renaming is safe: a profile refers to the radio by a hidden identity, not by this name."
-msgstr ""
+msgstr "O nome deste rádio está listado na biblioteca de rádio e nas opções de rádio da estação. É necessário e deve diferir do nome de qualquer outro rádio. Renaming é seguro: um perfil se refere ao rádio por uma identidade escondida, não por este nome."
 
 #. Config command: RADIO EDITOR PARITY
 msgctxt "TC_HELP_RADIO_EDITOR_PARITY"
 msgid "The parity of the CAT serial port: None, Odd or Even. Part of the serial frame with data bits and stop bits, and it must match the radio's own setting. Almost every radio uses None."
-msgstr ""
+msgstr "A paridade da porta serial da CAT: nenhuma, odd ou mesmo. Parte do quadro serial com bits de dados e bits de parada, e deve corresponder à configuração do rádio. Quase todo rádio usa nenhum."
 
 #. Config command: RADIO EDITOR PASSWORD
 msgctxt "TC_HELP_RADIO_EDITOR_PASSWORD"
 msgid "The password for a network radio that asks for a login, used with User name. The eye button beside the box shows or hides what you typed. The box is greyed and emptied for a radio type that needs no login."
-msgstr ""
+msgstr "A senha de um rádio de rede que pede um login, usado com nome de usuário. O botão do olho ao lado da caixa mostra ou esconde o que você digitou. A caixa está cinza e vazia para um tipo de rádio que não precisa de login."
 
 #. Config command: RADIO EDITOR POLL THIS RADIO   (default: TRUE)
 msgctxt "TC_HELP_RADIO_EDITOR_POLL_THIS_RADIO"
 msgid "When ticked, TR4W keeps reading the radio's frequency and mode, at the Frequency Poll Rate. When cleared, no polling is started for this radio, so TR4W does not follow its frequency, band or mode."
-msgstr ""
+msgstr "Quando marcada, TR4W continua lendo a frequência e o modo do rádio, na Taxa de Pesquisa de Frequência. Quando liberado, nenhuma votação é iniciada para este rádio, então TR4W não segue sua frequência, banda ou modo."
 
 #. Config command: RADIO EDITOR PORT   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_PORT"
 msgid "The serial port the radio's CAT (control) cable is connected to. A port marked (not present) is the port this radio is set to but which is not plugged in right now; it is kept unless you choose another."
-msgstr ""
+msgstr "A porta serial a que o cabo CAT (controle) do rádio está conectado. Um porto marcado (não presente) é o porto para o qual o rádio está definido, mas que não está conectado agora, é mantido a menos que você escolha outro."
 
 #. Config command: RADIO EDITOR STARTUP COMMAND
 msgctxt "TC_HELP_RADIO_EDITOR_STARTUP_COMMAND"
 msgid "Text sent to the radio exactly as typed (up to 50 characters), once each time the link to the radio comes up, after a short wait for the radio to settle; it is sent again after the radio is power-cycled. Use it for a radio setting you always want. On an Icom radio it is not sent: a CI-V frame must begin with the bytes FE FE and end with FD, which typed text is not, and the log says why."
-msgstr ""
+msgstr "Texto enviado para o rádio exatamente como digitado (até 50 caracteres), uma vez que o link para o rádio aparece, depois de uma pequena espera para o rádio se estabelecer; ele é enviado novamente depois que o rádio é ciclado. Use para uma configuração de rádio que você sempre quer. Em um rádio Icom não é enviado: uma moldura CI-V deve começar com os bytes FE FE e terminar com FD, que texto digitado não é, e o registro diz por quê."
 
 #. Config command: RADIO EDITOR STOP BITS
 msgctxt "TC_HELP_RADIO_EDITOR_STOP_BITS"
 msgid "The number of stop bits on the CAT serial port, 1 or 2. Part of the serial frame with data bits and parity, and it must match the radio's own setting. This is the CAT port; the keyer output port has its own Stop bits choice below the tabs."
-msgstr ""
+msgstr "O número de paradas na porta serial CAT, 1 ou 2. Parte do quadro serial com bits de dados e paridade, e deve corresponder à configuração do rádio. Esta é a porta CAT, a porta de saída do chaveiro tem sua própria escolha Stop bits abaixo das abas."
 
 #. Config command: RADIO EDITOR TYPE
 msgctxt "TC_HELP_RADIO_EDITOR_TYPE"
 msgid "The radio model. It chooses the driver TR4W uses to talk to the radio, fills in that model's usual baud rate, serial frame and network port where those are empty, and decides which tabs and fields on this form apply. It is required."
-msgstr ""
+msgstr "O modelo de rádio. Ele escolhe o motorista que TR4W usa para falar com o rádio, preenche a taxa de baud usual do modelo, quadro serial e porta de rede onde estão vazios, e decide quais tabulações e campos neste formulário se aplicam. É necessário."
 
 #. Config command: RADIO EDITOR USER NAME
 msgctxt "TC_HELP_RADIO_EDITOR_USER_NAME"
 msgid "The user name for a network radio that asks for a login, such as the network Icom radios and the Kenwood LAN radios. The box is greyed and emptied for a radio type that needs no login, such as the Elecraft K4."
-msgstr ""
+msgstr "O nome de usuário de um rádio de rede que pede um login, como os rádios de rede Icom e os rádios Kenwood LAN. A caixa está cinza e vazia para um tipo de rádio que não precisa de login, como o Elecraft K4."
 
 #. Config command: RADIO EDITOR WIDE CW FILTER
 msgctxt "TC_HELP_RADIO_EDITOR_WIDE_CW_FILTER"
 msgid "Meant to select the wide CW filter on older Yaesu radios (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). At present nothing in TR4W reads this value, so it has no effect."
-msgstr ""
+msgstr "Pretendia selecionar o filtro CW em rádios Yaesu mais antigos (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). No momento nada em TR4W lê esse valor, então não tem efeito."
 
 #. Config command: SCORE VERIFY SERVER   (default: TRUE)
 msgctxt "TC_HELP_SCORE_VERIFY_SERVER"
 msgid "When TRUE, TR4W checks the score board server's certificate when it posts your score to the Posting URL, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send."
-msgstr ""
+msgstr "Quando TRUE, TR4W verifica o certificado do servidor de placa de pontuação quando ele posta sua pontuação na URL de Posting, contanto que o certificado de todo o programa check in settings/tr4w.json está ligado (é por padrão). Limpe só para um servidor cujo certificado não pode ser verificado: a identidade do servidor não é verificada e ninguém entre você e ele pode ler o que você envia."
 
 #. Config command: SETUP WIZARD CLUSTER
 msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER"
 msgid "Tick to add a page that sets up a DX cluster connection for spots. The cluster is added to the cluster list and becomes the one TR4W connects to."
-msgstr ""
+msgstr "Marque para adicionar uma página que estabelece uma conexão de cluster DX para pontos. O cluster é adicionado à lista de clusters e se torna o único com o qual TR4W se conecta."
 
 #. Config command: SETUP WIZARD CLUSTER PORT
 msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER_PORT"
 msgid "The cluster's TCP port, from 1 to 65535. Leave it blank for the standard port, 23."
-msgstr ""
+msgstr "A porta TCP do cluster, de 1 a 65535. Deixe em branco para o porto padrão, 23."
 
 #. Config command: SETUP WIZARD KEYER
 msgctxt "TC_HELP_SETUP_WIZARD_KEYER"
 msgid "Tick to add a page that sets up a WinKeyer. It is added to the keyer library and becomes the CW output for Radio 1, used instead of CW by CAT when both are chosen."
-msgstr ""
+msgstr "Tique para adicionar uma página que cria um WinKeyer. Ele é adicionado à biblioteca chaveiro e torna-se a saída CW para Rádio 1, usado em vez de CW por CAT quando ambos são escolhidos."
 
 #. Config command: SETUP WIZARD LOGGER
 msgctxt "TC_HELP_SETUP_WIZARD_LOGGER"
 msgid "Tick to add a page that sets up an external logger (a logbook program or online service) that each QSO is also sent to. It is added to the external logger list, active if its Active box is ticked."
-msgstr ""
+msgstr "Marque para adicionar uma página que configura um registrador externo (um programa de diário de bordo ou serviço online) para o qual cada QSO também é enviado. É adicionado à lista de registradores externos, ativo se sua caixa ativa estiver marcada."
 
 #. Config command: SETUP WIZARD RADIO
 msgctxt "TC_HELP_SETUP_WIZARD_RADIO"
 msgid "Tick to add a page that sets up a radio for rig control. The radio is added to the radio library and put in Radio 1 of the active station profile; when no profile is active, of one the wizard makes active."
-msgstr ""
+msgstr "Tique para adicionar uma página que cria um rádio para controle de equipamento. O rádio é adicionado à biblioteca de rádio e colocado na Rádio 1 do perfil da estação ativa; quando nenhum perfil está ativo, de um que o mago torna ativo."
 
 #. Config command: SETUP WIZARD ROTATOR
 msgctxt "TC_HELP_SETUP_WIZARD_ROTATOR"
 msgid "Tick to add a page that sets up an antenna rotator. It is added to the rotator list and becomes the rotator in use."
-msgstr ""
+msgstr "Tique para adicionar uma página que cria um rotador de antena. É adicionado à lista de rotadores e torna-se o rotador em uso."
 
 #. Config command: SETUP WIZARD SHOW DETAILS
 msgctxt "TC_HELP_SETUP_WIZARD_SHOW_DETAILS"
 msgid "Shows the full report of what the wizard did, with the detail lines added to the summary."
-msgstr ""
+msgstr "Mostra o relatório completo do que o mago fez, com as linhas de detalhes adicionadas ao resumo."
 
 #. Config command: SETUP WIZARD WSJT-X
 msgctxt "TC_HELP_SETUP_WIZARD_WSJT_X"
 msgid "Tick to add a page for the WSJT-X settings. Only the values changed on that page are saved."
-msgstr ""
+msgstr "Marque para adicionar uma página para as configurações WSJT-X. Só os valores alterados nessa página são salvos."
 
 #. Config command: TCI DEBUG   (default: FALSE)
 msgctxt "TC_HELP_TCI_DEBUG"
 msgid "Writes every TCI server command, in both directions, to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
-msgstr ""
+msgstr "Escreve todos os comandos do servidor TCI, em ambas as direções, para tr4w.log. As linhas são escritas no nível INFO, então só aparecem quando o nível de log é INFO, DEBUG ou TRACE. Aplica-se quando você salvar."
 
 #. Config command: TCI MAX TX SECONDS   (default: 180)
 msgctxt "TC_HELP_TCI_MAX_TX_SECONDS"
 msgid "A safety limit in seconds, 0 to 3600. When a TCI client has kept the transmitter keyed this long, TR4W unkeys it, which covers a client that crashed or lost its connection while transmitting. 0 means no limit. A transmission you start yourself is never cut."
-msgstr ""
+msgstr "Um limite de segurança em segundos, 0 a 3600. Quando um cliente da TCI mantém o transmissor ligado por tanto tempo, TR4W o desaperta, que cobre um cliente que caiu ou perdeu sua conexão enquanto transmitia. 0 significa sem limite. Uma transmissão que você começa nunca é cortada."
 
 #. Config command: TELNET CONSOLE LINES   (default: 10000)
 msgctxt "TC_HELP_TELNET_CONSOLE_LINES"
 msgid "The most lines the DX cluster window keeps, from 1000 to 100000. When the window goes over the limit, the oldest lines are removed, down to nine tenths of the limit."
-msgstr ""
+msgstr "A maioria das linhas que a janela DX mantém, de 1000 a 10000. Quando a janela passa do limite, as linhas mais antigas são removidas, até nove décimos do limite."
 
 #. Config command: TELNET DEBUG   (default: FALSE)
 msgctxt "TC_HELP_TELNET_DEBUG"
 msgid "Writes every line sent to and received from the DX cluster to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
-msgstr ""
+msgstr "Escreve todas as linhas enviadas e recebidas do grupo DX para tr4w.log. As linhas são escritas no nível INFO, então só aparecem quando o nível de log é INFO, DEBUG ou TRACE. Aplica-se quando você salvar."
 
 #. Config command: TUNE WITH DITS   (default: FALSE)
 msgctxt "TC_HELP_TUNE_WITH_DITS"
 msgid "If this parameter is TRUE, TR4W sends a string of dits at 75 WPM when you press Ctrl-Left-Shift, instead of a solid carrier. (Not yet implemented.)"
-msgstr ""
+msgstr "Se este parâmetro é TRUE, TR4W envia uma série de dits em 75 WPM quando você pressiona Ctrl-Esquerda-Shift, em vez de um suporte sólido. (Ainda não implementado.)"
 
 #. Config command: UDP DESTINATION PORT
 msgctxt "TC_HELP_UDP_DESTINATION_PORT"
 msgid "The UDP port the receiving program listens on, from 1 to 65535. The port belongs to this destination, so a program that wants different kinds of data on different ports needs one destination for each port."
-msgstr ""
+msgstr "O UDP porta o programa receptor escuta, de 1 a 65535. O porto pertence a este destino, então um programa que quer diferentes tipos de dados em diferentes portos precisa de um destino para cada porto."
 
 #. Config command: USE CALL HISTORY FILE   (default: FALSE)
 msgctxt "TC_HELP_USE_CALL_HISTORY_FILE"
 msgid "When TRUE, TR4W reads a call history file when the contest is opened and uses it to fill in a station's exchange from the call. The file is CALL HISTORY FILENAME, or the contest's own default when that is blank; a contest that takes nothing from a call history file reads none. A change takes effect the next time the contest is opened."
-msgstr ""
+msgstr "Quando TRUETR4W lê um histórico de chamadas quando o concurso é aberto e o usa para preencher a troca de uma estação da chamada. O arquivo é chamado de história FILENAME, ou o próprio padrão do concurso quando está em branco, um concurso que não pega nada de um arquivo de histórico de chamadas não lê nada. Uma mudança fará efeito na próxima vez que o concurso for aberto."
 

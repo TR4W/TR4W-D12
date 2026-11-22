@@ -116,13 +116,13 @@ msgstr "손으로 로그인하면 AUTO TIME INCREMENT 특징은 아주 유용할
 #, fuzzy
 msgctxt "TC_HELP_AUTO_CQ_DELAY_TIME"
 msgid "The amount of time to wait between AUTO CQ in milliseconds."
-msgstr ""
+msgstr "밀리 초에 AUTO CQ를 기다리는 시간의 양."
 
 #. Config command: BAND MAP ACTIVE BAND COLOR   (default: BLUE)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_ACTIVE_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on the active band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "스포트가 활성 밴드에있을 때 밴드 맵의 색상. 그것은 기본 색상 밴드 맵 항상 그려, 그래서 아무것도 변경할 때까지 다른 선택. Preferences의 색상 페이지에서 설정하십시오."
 
 #. Config command: BAND MAP ALL BANDS   (default: FALSE)
 #, fuzzy
@@ -158,13 +158,13 @@ msgstr "시간 : FALSE, CQ 항목은 밴드 맵에 나타나지 않습니다."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
-msgstr ""
+msgstr "대부분의 밴드 맵은 30에서 1000까지 표시됩니다. 지도는 이의 더 작을 보여줍니다 그리고 그것의 창에 적합하는 수는, 라디오의 빈도에 균등하고 중심에 두었습니다, 그래서 창을 재소화하는 라디오에 지도."
 
 #. Config command: BAND MAP DUPE COLOR   (default: YELLOW)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_DUPE_COLOR"
 msgid "The fill colour behind a dupe's D in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "밴드 맵의 dupe's D 뒤에 채색. 그것은 기본 색상 밴드 맵 항상 그려, 그래서 아무것도 변경할 때까지 다른 선택. Preferences의 색상 페이지에서 설정하십시오."
 
 #. Config command: BAND MAP DUPE DISPLAY   (default: TRUE)
 #, fuzzy
@@ -182,7 +182,7 @@ msgstr "Bandmap이 표시된지 결정합니다. 더 많은 정보를 위한 단
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_GUARD_BAND"
 msgid "Values: Integer (Hz), default 0. A spot within this many Hz of your interfaced radio's frequency has its frequency field drawn in BAND MAP VFO MARKER COLOR. At 0, only a spot on exactly the radio's frequency is highlighted. The outline round the spot nearest the radio is drawn whatever this is set to."
-msgstr ""
+msgstr "값: Integer (Hz), 기본값 0. 인터페이스 된 라디오의 주파수의이 많은 Hz의 자리에는 주파수 필드가 그려져 있습니다. BAND MAP VFO 마커 컬러. 0에서 정확히 라디오의 주파수는 강조됩니다. 가장 가까운 라디오가 그려져있는 윤곽."
 
 #. Config command: BAND MAP ITEM HEIGHT   (default: 14)
 #, fuzzy
@@ -200,7 +200,7 @@ msgstr "Band Map 아이템 폭. 이 변경 사항 BAND MAP SIZE. 범위 = 100-20
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_MULT_COLOR"
 msgid "The fill colour behind a multiplier's M in the band map. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "밴드 맵의 멀티 플라이어 M 뒤에 채색. 그것은 기본 색상 밴드 맵 항상 그려, 그래서 아무것도 변경할 때까지 다른 선택. Preferences의 색상 페이지에서 설정하십시오."
 
 #. Config command: BAND MAP MULTS ONLY   (default: FALSE)
 #, fuzzy
@@ -212,13 +212,13 @@ msgstr "단지 전시 multipliers."
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_OTHER_BAND_COLOR"
 msgid "The colour of a spot's frequency in the band map when the spot is on another band. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "점이 다른 밴드에 있을 때 밴드 지도에 있는 반점의 빈도의 색깔. 그것은 기본 색상 밴드 맵 항상 그려, 그래서 아무것도 변경할 때까지 다른 선택. Preferences의 색상 페이지에서 설정하십시오."
 
 #. Config command: BAND MAP SELECTION COLOR   (default: HIGHLIGHT)
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_SELECTION_COLOR"
 msgid "The colour of the selected spot in the band map. The default, HIGHLIGHT, is the system highlight colour. It defaults to the colour the band map has always drawn it in, so nothing changes until you choose another. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "밴드 맵에서 선택한 자리의 색상. 기본적으로 HighLIGHT는 시스템 하이라이트 색상입니다. 그것은 기본 색상 밴드 맵 항상 그려, 그래서 아무것도 변경할 때까지 다른 선택. Preferences의 색상 페이지에서 설정하십시오."
 
 #. Config command: BAND MAP SIZE   (default: 2)
 #, fuzzy
@@ -242,7 +242,7 @@ msgstr "TR4W의 밴드를 선택하면 접촉이 아직 제작되지 않은 경�
 #, fuzzy
 msgctxt "TC_HELP_BAND_MAP_VFO_MARKER_COLOR"
 msgid "The colour that marks the radio's frequency in the band map: the frequency field of every spot within BAND MAP GUARD BAND of the radio, and a 1-pixel outline round the one spot nearest the radio. Neither is the selection, and with no radio frequency nothing is marked. Set it on the Colors page of Preferences."
-msgstr ""
+msgstr "밴드 맵의 라디오 주파수를 표시하는 색상 : 내의 모든 지점의 주파수 영역 BAND MAP GUARD BAND 라디오의 1 화소 윤곽은 라디오를 가장 가까운 1개의 반점을 돌립니다. Neither는 선택이며 라디오 주파수가 표시되지 않습니다. Preferences의 색상 페이지에서 설정하십시오."
 
 #. Config command: BEEP ENABLE   (default: TRUE)
 #, fuzzy
@@ -326,13 +326,13 @@ msgstr "이 매개 변수가 설정될 때 Program은 dupesheet을 삭제합니�
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_AUTO_SELF_SPOT"
 msgid "Spots your own call on the DX cluster automatically, at the interval set by CLUSTER SELF SPOT INTERVAL, while you are running (CQ mode). Only in a contest whose rules allow self-spotting; ignored otherwise. Off by default."
-msgstr ""
+msgstr "DX 클러스터에서 자동적으로 통화를 Spots, CLUSTER SELF SPOT INTERVAL에 의해 설정된 간격에서, 실행중인 동안 (CQ 모드). 규칙이 자기 스포팅을 허용하는 대회에서만; 그렇지 않으면 무시. 기본값으로."
 
 #. Config command: CLUSTER SELF SPOT INTERVAL   (default: 10)
 #, fuzzy
 msgctxt "TC_HELP_CLUSTER_SELF_SPOT_INTERVAL"
 msgid "Minutes between automatic self-spots. 10 minutes is the established minimum; review the contest's rules before changing it. The contest's own minimum, where it states one, is never undercut."
-msgstr ""
+msgstr "자동 셀프스팟 사이 분. 10 분은 설치 된 최소입니다. 변경하기 전에 대회 규칙을 검토하십시오. 대회의 자신의 최소, 그것은 하나의 상태, 절대 undercut."
 
 #. Config command: CODE SPEED   (default: 35)
 #, fuzzy
@@ -446,7 +446,7 @@ msgstr "이 매개 변수가 true일 때, TR4W는 호출에 대한 CW 속도 항
 #, fuzzy
 msgctxt "TC_HELP_CW_SPEED_INCREMENT"
 msgid "When pressing page up or page down, this is the increment the CW increases or decreases respectively."
-msgstr ""
+msgstr "페이지를 누르거나 페이지 아래로 스크롤하면 CW가 증가하거나 감소합니다."
 
 #. Config command: CW TONE   (default: 700)
 #, fuzzy
@@ -518,13 +518,13 @@ msgstr "이 명령은 DVK가 활성화되었는지 결정합니다."
 #, fuzzy
 msgctxt "TC_HELP_DVK_PATH"
 msgid "This is the location of the program used to playback DVK messages when using the computer for audio."
-msgstr ""
+msgstr "이 프로그램은 오디오의 컴퓨터를 사용할 때 DVK 메시지를 재생하는 데 사용되는 프로그램의 위치입니다."
 
 #. Config command: DVK RECORDER   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_DVK_RECORDER"
 msgid "This is the program that is run to playback DVK messages form the computer."
-msgstr ""
+msgstr "이것은 재생 DVK 메시지가 컴퓨터를 형성하기 위해 실행되는 프로그램입니다."
 
 #. Config command: DX MULTIPLIER   (default: NONE)
 #, fuzzy
@@ -602,7 +602,7 @@ msgstr "이 명령은 지정된 포트의 15 핀에 연결 된 발 스위치를 
 #, fuzzy
 msgctxt "TC_HELP_FOOT_SWITCH_PORT"
 msgid "The serial port to which the foot switch is connected."
-msgstr ""
+msgstr "발 스위치가 연결되는 직렬 포트."
 
 #. Config command: FREQUENCY MEMORY ENABLE   (default: TRUE)
 #, fuzzy
@@ -614,7 +614,7 @@ msgstr "설정할 때 TRUE, 이 모수는 빈도 기억을 가능하게 할 것�
 #, fuzzy
 msgctxt "TC_HELP_FREQUENCY_POLL_RATE"
 msgid "Values: Integer 10 to 1000 (msec). This tells TR4W how frequently to poll the rig for a new frequency. It is set for each radio, in the radio editor, so two radios can poll at different rates. The value is in milliseconds, and the allowed values are in the range 10 to 1000."
-msgstr ""
+msgstr "값: 정수 10 ~ 1000 (msec). 이것은 TR4W에게 새로운 빈도를 위한 의장을 오염하는 방법 자주 말합니다. 라디오 편집기에서 각 라디오를 설정하므로 두 개의 라디오는 다른 속도로 오염 할 수 있습니다. 값은 밀리 초에 있으며 허용되는 값은 범위 10 ~ 1000입니다."
 
 #. Config command: GRID MAP CENTER   (default: NONE)
 #, fuzzy
@@ -626,7 +626,7 @@ msgstr "가치: 4개 6개 특성 격자 참고. 이 매개 변수는 당신이 �
 #, fuzzy
 msgctxt "TC_HELP_HAND_LOG_MODE"
 msgid "For entering a paper log after the event. When this parameter is TRUE, the QSO time no longer follows the computer clock; it moves only when you advance it with Alt-1 to Alt-0 (1 to 10 minutes) or through AUTO TIME INCREMENT; when it is FALSE, those increment-time menu items are greyed out. TR4W shows a warning at startup while this is TRUE; restart TR4W after changing it."
-msgstr ""
+msgstr "이벤트 후 종이 로그를 입력합니다. 이 매개변수가 있을 때 TRUE, QSO 시간은 더 이상 컴퓨터 시계를 따르지 않습니다; 당신이 Alt-1에 Alt-0 (1 10 분) 또는 통해 그것을 전진할 때만 이동 AUTO TIME INCREMENT; 때 그것은 FALSE, 그 increment 시간 메뉴 품목은 밖으로 회색으로 합니다. TR4W는 시작시 경고를 보여줍니다. TRUE; 그것을 바꾸기 후에 TR4W를 재시작하십시오."
 
 #. Config command: HF BAND ENABLE   (default: TRUE)
 #, fuzzy
@@ -656,7 +656,7 @@ msgstr "값:True/False. 의 기본 TRUE Band Map 선택을 방지하여 단일 �
 #, fuzzy
 msgctxt "TC_HELP_INCLUDE_F_KEY_NUMBER"
 msgid "When viewing the F-Keys window, if this option is true, the F key name/number is displayed (e.g., F1 - <caption>)."
-msgstr ""
+msgstr "F-Keys 창을 볼 때, 이 옵션이 true인 경우, F 키 이름/숫자는 표시됩니다 (예: F1 - <caption>)."
 
 #. Config command: INCREMENT TIME ENABLE   (default: FALSE)
 #, fuzzy
@@ -782,7 +782,7 @@ msgstr "이 매개 변수가 TRUE, 전송된 RST는 S.에 그것을 전진해서
 #, fuzzy
 msgctxt "TC_HELP_MAIN_CALLSIGN"
 msgid "Your station's own callsign, remembered from contest to contest. The New Contest dialog fills its callsign box from it (or from MY CALL when this is empty), and the first callsign you enter there is saved here if it is empty. It is not the callsign you log with: that is MY CALL, which a contest may change (for example to a club call) without touching this one."
-msgstr ""
+msgstr "당신의 역의 자신의 호출, 대회에서 기억. 새로운 경연대회 대화 상자가 호출됩니다. (또는에서 MY CALL 이것은 비어있을 때), 그리고 당신이 빈이면 여기에 저장되는 첫 번째 호출은 여기에 입력됩니다. 로그인할 수 없습니다. 즉, MY CALL대회가 변경 될 수 있습니다 (예를 들어 클럽 호출) 이 하나를 터치하지 않고."
 
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
@@ -806,13 +806,13 @@ msgstr "가치: 5에서 60까지 정수. 멀티 투어 대회에서 분 투어 �
 #, fuzzy
 msgctxt "TC_HELP_MISSINGCALLSIGNS_FILE_ENABLE"
 msgid "Works with USE RECORDED SIGNS. When this parameter is TRUE and the voice keyer has no recording <callsign>.WAV in its FULLCALLSIGNS folder for a callsign it has to say, that callsign is added to the file MISSINGCALLSIGNS.TXT in the same folder, so you can record it later."
-msgstr ""
+msgstr "일하기 USE RECORDED SIGNS. 이 모수가 있을 때 TRUE 그리고 음성 keyer는 <callsign>를 기록하지 않습니다. Callsign에 대한 FULLCALLSIGNS 폴더에 WAV는 MISSINGCALLSIGNS 파일에 호출됩니다. 같은 폴더에 TXT, 그래서 나중에 기록 할 수 있습니다."
 
 #. Config command: MMTTY ENGINE   (default: NONE)
 #, fuzzy
 msgctxt "TC_HELP_MMTTY_ENGINE"
 msgid "The path to the MMTTY program for working RTTY contests (experimental)."
-msgstr ""
+msgstr "작업 RTTY 경연 대회에 대한 MMTTY 프로그램에 대한 경로 (경쟁)."
 
 #. Config command: MODE   (default: CW)
 #, fuzzy
@@ -842,7 +842,7 @@ msgstr "MP3 레코더 비트레이트."
 #, fuzzy
 msgctxt "TC_HELP_MP3_RECORDER_DURATION"
 msgid "To be determined"
-msgstr ""
+msgstr "결정"
 
 #. Config command: MP3 RECORDER ENABLE   (default: FALSE)
 #, fuzzy
@@ -938,7 +938,7 @@ msgstr "감사합니다. 가치: IOTA 설계자. 운영중인 섬의 IOTA 식별
 #, fuzzy
 msgctxt "TC_HELP_MY_LICENSE_YEAR"
 msgid "Enter the year you were first licensed, for the contests that exchange it (the European HF Championship, KVP). Four digits (1985) or the last two (85) are both accepted; the contest decides what is sent -- two digits, four digits or the number of years licensed. A contest may state its own value; this is the default. It is read when the contest is set up, so a change takes effect for the next contest or when TR4W next starts."
-msgstr ""
+msgstr "당신이 첫 번째 라이센스를 입력, 그것을 교환 대회에 대한 (유럽 HF 선수권 대회, KVP). 4 자리 (1985) 또는 마지막 두 (85) 모두 허용; 대회는 전송되는 것을 결정한다 -- 두 자리, 4 자리 또는 수 년 라이센스. 대회는 자신의 값에 주의할 수 있습니다; 이것은 기본값입니다. 대회가 설정되면 변경 사항이 다음 대회에 영향을 주거나 TR4W가 시작될 때 읽습니다."
 
 #. Config command: MY NAME   (default: NONE)
 #, fuzzy
@@ -992,13 +992,13 @@ msgstr "이 매개 변수가 TRUE, asterisk는 이름이 알려진 역과 QSO를
 #, fuzzy
 msgctxt "TC_HELP_NET_STATUS_UPDATE_INTERVAL"
 msgid "Values: 1000 to 10000 milliseconds. While you want to be connected to the multi-op network and the link is down, TR4W tries to connect again at this interval. A change takes effect the next time you connect."
-msgstr ""
+msgstr "가치: 1000년에서 10000 milliseconds. Multi-op 네트워크에 연결하고 싶은 동안 링크가 아래로, TR4W는이 간격에서 다시 연결할 것이다. 변경은 연결 한 다음 시간이 걸립니다."
 
 #. Config command: NO BORDER   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_NO_BORDER"
 msgid "When this parameter is TRUE, the panels of the main window and the call and exchange entry fields are drawn flat, without their sunken edge. It takes effect the next time TR4W starts."
-msgstr ""
+msgstr "이 매개변수가 있을 때 TRUE, 주요 창의 패널 및 통화 및 교환 입력 필드는 선켄 가장자리없이 평평하게 그려집니다. 그것은 다음 시간 TR4W 시작 효과."
 
 #. Config command: NO CAPTION   (default: FALSE)
 #, fuzzy
@@ -1010,7 +1010,7 @@ msgstr "값이 있는 경우 TRUE 메인을 제외하고 모든 창을 시작 �
 #, fuzzy
 msgctxt "TC_HELP_NO_COLUMN_HEADER"
 msgid "If the value is TRUE, the log windows show no row of column headings: the log on the main window (and the B4 list that takes its place), View/Edit Log, Log Search and the downloaded server log, and also the Network and Stations windows. The QSOs themselves are unchanged. The change takes effect at once in every open window; a column's width cannot be dragged while its heading is hidden."
-msgstr ""
+msgstr "값이 있는 경우 TRUE, 로그 윈도우는 열 제목의 행을 표시하지 않습니다: 주요 창에 로그 (그리고 그 자리에 B4 목록), View/Edit 로그, 로그 검색 및 다운로드 서버 로그, 그리고 또한 네트워크와 역 창. QSOs는 변하지 않습니다. 변경은 각 열린 창에서 한 번에 효과 걸립니다; 열의 폭은 숨겨지은 동안 끌 수 없습니다."
 
 #. Config command: NO LOG   (default: FALSE)
 #, fuzzy
@@ -1040,7 +1040,7 @@ msgstr "컴퓨터 스피커 모니터는 일반적으로 병렬 포트에 연결
 #, fuzzy
 msgctxt "TC_HELP_PADDLE_PORT"
 msgid "The Serial port used to connect the CW paddle."
-msgstr ""
+msgstr "CW 패들 연결하는 직렬 포트."
 
 #. Config command: PADDLE PTT HOLD COUNT   (default: 13)
 #, fuzzy
@@ -1232,7 +1232,7 @@ msgstr "가치: 어떤 열쇠. CW를 실행하는 동안 접촉을 끝내면 일
 #, fuzzy
 msgctxt "TC_HELP_QZB_RANDOM_OFFSET_ENABLE"
 msgid "When this parameter is TRUE and you are on CW, tuning the radio to a band map spot adds a small random offset of up to 30 Hz either side of the spot frequency (and of its split frequency, if the spot has one), so you do not land exactly on the spotted frequency. When FALSE, the radio is tuned exactly to the spot."
-msgstr ""
+msgstr "이 매개변수가 있을 때 TRUE 그리고 당신은 CW에, 밴드 지도 반점에 라디오를 조정하는 것은 반점 빈도의 한쪽으로 30 Hz까지 작은 무작위 상쇄를 추가합니다 (그리고 그것의 쪼개지는 빈도의, 반점이 하나 있는 경우에), 그래서 당신은 스포트라이트 빈도에 정확하게 착륙하지 않습니다. 시간 : FALSE, 라디오는 반점에 정확하게 조정됩니다."
 
 #. Config command: R150S MODE   (default: FALSE)
 #, fuzzy
@@ -1550,13 +1550,13 @@ msgstr "TR4WSERVER와 연결되는 이더넷 포트 번호."
 #, fuzzy
 msgctxt "TC_HELP_SERVER_TAILCAT_ADDRESS"
 msgid "The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel's key, so treat it like a password."
-msgstr ""
+msgstr "TR4WSERVER의 운영자는 이 컴퓨터가 Tailcat 터널을 통해 다른 네트워크에서 서버에 도달할 수 있도록 해줍니다. 주어진대로 정확히 붙여 넣으십시오. SERVER USE TAILCAT만 사용됩니다. TRUE. 그것은 갱도의 열쇠를 포함합니다, 그래서 암호 같이 그것을 대우하십시오."
 
 #. Config command: SERVER USE TAILCAT   (default: FALSE)
 #, fuzzy
 msgctxt "TC_HELP_SERVER_USE_TAILCAT"
 msgid "Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server's port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server's own network; the address is kept for next time."
-msgstr ""
+msgstr "설정하기 TRUE SERVER TAILCAT 주소로 지정된 테일캣 터널을 통해 TR4WSERVER에 도달 SERVER ADDRESS· TRUE· SERVER ADDRESS 사용되지 않습니다; SERVER PORT 여전히 터널 내부의 서버 포트이기 때문에. SERVER TAILCAT 주소가 비어있는 경우 연결이 실패하고 말한다. TR4W는 다시 떨어지지 않습니다 SERVER ADDRESS. 설정하기 FALSE 서버의 자신의 네트워크에있을 때; 주소는 다음 시간에 보관됩니다."
 
 #. Config command: SHIFT KEY ENABLE   (default: TRUE)
 #, fuzzy
@@ -1598,7 +1598,7 @@ msgstr "이 매개 변수가 TRUE, TR4W는 QSO 번호의 일부로 전송 될 �
 #, fuzzy
 msgctxt "TC_HELP_SHOW_DOMESTIC_MULTIPLIER_NAME"
 msgid "When this parameter is TRUE, the remaining multipliers window lists each domestic multiplier by the name its domestic multiplier (.dom) file gives it (the entry starting with ^), where it has one, instead of its abbreviation, and widens the column to fit. The change is shown at once."
-msgstr ""
+msgstr "이 매개변수가 있을 때 TRUE, 나머지 멀티 플라이어 창은 국내 멀티 플라이어(.dom) 파일에 의해 각 국내 멀티 플라이어(.dom)를 나열합니다(^^로 시작하는 항목), 그 약어 대신 하나가 있고, 열을 맞출 수 있습니다. 변경은 한 번에 표시됩니다."
 
 #. Config command: SHOW FREQUENCY IN LOG   (default: TRUE)
 #, fuzzy
@@ -1610,7 +1610,7 @@ msgstr "값이 있는 경우 TRUE Cabrillo 로그에서 QSO의 실제 주파수�
 #, fuzzy
 msgctxt "TC_HELP_SHOW_GRIDLINES"
 msgid "When this parameter is TRUE, grid lines are drawn between the rows and columns of the log grid in the main window. The change is shown at once."
-msgstr ""
+msgstr "이 매개변수가 있을 때 TRUE, 그리드 라인은 주요 창에서 로그 그리드의 행과 열 사이에 그려집니다. 변경은 한 번에 표시됩니다."
 
 #. Config command: SHOW TYPED CALLSIGN   (default: TRUE)
 #, fuzzy
@@ -1664,7 +1664,7 @@ msgstr "가치: 어떤 열쇠. CW와 응답 한 역에 역을 실행하는 경�
 #, fuzzy
 msgctxt "TC_HELP_STATIONS_CALLSIGNS_MASK"
 msgid "Values: any text. The Stations window lists only the callsigns that contain this text anywhere in them (it is a plain match, not a wildcard pattern); leave it empty to list every station. The list on screen is filtered again as soon as you change it."
-msgstr ""
+msgstr "값: 모든 텍스트. 역 창은이 텍스트를 어디에 포함 하는 호출만 나열합니다 (그것은 일반 일치, 와일드 카드 패턴이 아닙니다); 모든 역을 목록으로 비워. 화면의 목록은 당신이 그것을 바꾸기 때문에 다시 필터링됩니다."
 
 #. Config command: STEREO CONTROL PIN   (default: 9)
 #, fuzzy
@@ -1820,7 +1820,7 @@ msgstr "값: 유효한 파일명. TR4W는 알 수없는 국가에 QSOs에 대한
 #, fuzzy
 msgctxt "TC_HELP_USE_RECORDED_SIGNS"
 msgid "When this parameter is TRUE, the voice keyer speaks every word of a voice message that is not a .WAV file name, including # (the QSO number) and @ (the call in the call window), from recordings: a number from <number>.WAV in the FULLSERIALNUMBERS folder, else digit by digit from the LETTERSANDNUMBERS folder; anything else from <callsign>.WAV in the FULLCALLSIGNS folder, else letter by letter from LETTERSANDNUMBERS (a / is played from _.WAV). These folders are in the voice keyer folder. When FALSE, only the .WAV file names in a voice message are played."
-msgstr ""
+msgstr "이 매개변수가 있을 때 TRUE, 음성 keyer는 # (QSO 번호) 및 @ (전화 창에서 호출)를 포함하여 .WAV 파일 이름이 아닌 음성 메시지의 모든 단어를, 기록에서: 번호 <number>. FULLSERIALNUMBERS 폴더의 WAV, LETTERSANDNUMBERS 폴더의 숫자로 다른 숫자; <callsign>.WAV의 다른 것, LETTERSANDNUMBERS의 다른 편지 (a / 에서 재생됩니다  .WAV). 이 폴더는 음성 키퍼 폴더에 있습니다. 시간 : FALSE, 음성 메시지의 .WAV 파일 이름만 재생됩니다."
 
 #. Config command: USER INFO SHOWN   (default: NONE)
 #, fuzzy
@@ -2503,430 +2503,430 @@ msgstr "이름 * TRUE, YCCC SO2R 상자는 2 라디오 형태를 포함하는 �
 #. Config command: ALERT COLOR   (default: ALERT)
 msgctxt "TC_HELP_ALERT_COLOR"
 msgid "The color TR4W uses for an alert in the main window: the text of a radio's name and frequency while that radio is disconnected, and the background of the PTT indicator when a key-up is inhibited because the radio will not transmit. Choose from the color list; the default is ALERT."
-msgstr ""
+msgstr "색상 TR4W는 주요 창에 경고를 사용합니다 : 라디오가 분리되고있는 동안 라디오의 이름과 주파수의 텍스트, 키 업이 라디오가 전달되지 않기 때문에 억제 될 때 PTT 지표의 배경. 색상 목록에서 선택하십시오. 기본값은 ALERT입니다."
 
 #. Config command: BAND MAP WORKED MULT COLOR   (default: ORANGE)
 msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_COLOR"
 msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window. The default is ORANGE."
-msgstr ""
+msgstr "이미 일한 멀티플레이어의 밴드 맵 스폿에서 M의 색상, 하지만 몇 번 보다 BAND MAP WORKED MULT LIMIT, 중복되지 않은 통화에. 같은 색상은 DX 클러스터 창의 자리 라인에 사용됩니다. 기본값은 ORANGE입니다."
 
 #. Config command: BAND MAP WORKED MULT LIMIT   (default: 1)
 msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_LIMIT"
 msgid "How many times a multiplier must be worked (non-dupe QSOs, counted per band and mode where the contest counts them that way) before its spots stop showing an M. From 1 to 9. With 1 the M goes away at the first QSO; with 2 or more a spot shows an M in BAND MAP WORKED MULT COLOR until the limit is reached."
-msgstr ""
+msgstr "멀티플레이어는 얼마나 많은 시간 일해야 합니다 (비 듀프 QSOs, 밴드 당 계산 및 M. 에서 1 에 9. 1로 M은 첫 번째 QSO에서 멀리 간다; 2 개 이상의 자리는 M을 보여줍니다 BAND MAP WORKED MULT COLOR 제한이 도달 될 때까지."
 
 #. Config command: CALL HISTORY FILENAME
 msgctxt "TC_HELP_CALL_HISTORY_FILENAME"
 msgid "The call history file to read when USE CALL HISTORY FILE is TRUE: a bare file name, looked for in the CallHistoryFiles folder, or a full path. Leave it blank to use the contest's own default file, which Preferences shows in the empty box. The file is read when the contest is opened, so a change takes effect the next time the contest is opened."
-msgstr ""
+msgstr "CALL HISTORY FILE을 사용할 때 읽는 통화 기록 파일 TRUE: bare 파일 이름, CallHistoryFiles 폴더 또는 전체 경로에서 볼. 대회의 기본 파일을 사용하려면 빈 박스에 Preferences가 표시됩니다. 대회가 열릴 때 파일이 읽습니다. 따라서 변경은 다음 대회가 열립니다."
 
 #. Config command: CALL WINDOW SHOW ALL SPOTS   (default: FALSE)
 msgctxt "TC_HELP_CALL_WINDOW_SHOW_ALL_SPOTS"
 msgid "When this parameter is TRUE and you tune in S&P mode, every callsign TR4W knows appears in the call window, even when it does not appear on the band map. For example, with BAND MAP DUPE DISPLAY set to FALSE, dupes stay off the band map but still appear in the call window. (Not yet implemented.)"
-msgstr ""
+msgstr "이 매개변수가 있을 때 TRUE 그리고 당신은 S & P 모드에서 조정, 모든 호출 TR4W는 호출 창에서 나타납니다, 심지어 밴드 맵에 나타나지 않는 경우에도. 예를 들어, BAND MAP DUPE DISPLAY 설정하기 FALSE, dupes는 밴드 맵을 유지하지만 여전히 호출 창에 나타납니다. ( 아직 구현되지 않음)"
 
 #. Config command: CATEGORY-STATION
 msgctxt "TC_HELP_CATEGORY_STATION"
 msgid "The Cabrillo CATEGORY-STATION for this contest (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). Saved with the contest; a contest whose sponsor names its own list offers only those values."
-msgstr ""
+msgstr "이번 대회에 대한 Cabrillo CATEGORY-STATION (FIXED, MOBILE, PORTABLE, ROVER, EXPEDITION, SCHOOL ...). 대회와 함께 저장; 그의 스폰서 이름은 자신의 목록 만 제공합니다 그 값."
 
 #. Config command: CLUSTER SPOT COMMENT MULTIPLIER   (default: FALSE)
 msgctxt "TC_HELP_CLUSTER_SPOT_COMMENT_MULTIPLIER"
 msgid "When this parameter is set to TRUE and the contest looks its domestic multiplier (section or state) up in its domestic file, a DX cluster spot whose comment names a section or state is shown as a needed multiplier when that one is needed. The first UPPER CASE word of the comment that the contest's domestic file knows is used; a section the cluster appends with a plus sign (+NC) is used only when no earlier word qualifies. A section already known for the station from the call history or from a contact in the log overrules the comment. Beacon spots (NCDXF) are ignored. Not every spot has one, and the cluster's section can be where a station lives rather than where it is operating, so leave this FALSE unless you want it."
-msgstr ""
+msgstr "이 매개변수가 설정될 때 TRUE 그리고 대회는 국내 파일에서 국내 multiplier (구면 또는 국가), 단면도 또는 국가를 지명하는 DX 클러스터 반점은 필요한 multiplier로 그 것을 필요로 할 때 보입니다. 대회의 국내 파일이 사용되는 의견의 첫 번째 UPPER CASE 낱말; 더하기 기호 (+NC)를 가진 클러스터 부목은 이전 단어가 할당될 때만 사용됩니다. 이 페이지는 자동으로 번역 되었다. 원문 언어: How to the call History 비콘 스팟(NCDXF)은 무시됩니다. 모든 자리에는 하나가 없으며 클러스터의 섹션은 역이 운영되는 곳보다 오히려 어디에서나 살고있을 수 있으므로 이것을 떠나십시오. FALSE 당신이 그것을 원하지 않는 경우."
 
 #. Config command: DISPLAY LANGUAGE
 msgctxt "TC_HELP_DISPLAY_LANGUAGE"
 msgid "The language TR4W's menus, windows, messages and these tooltips are shown in. Blank follows the operating system's language. The language is chosen once at startup, so a change takes effect the next time TR4W starts; a --lang switch on the command line overrides this setting."
-msgstr ""
+msgstr "언어 TR4W의 메뉴, 창, 메시지 및 도구 팁이 표시됩니다. 공백은 운영 체제의 언어를 따릅니다. 언어는 시작시 한 번 선택되므로 변경은 다음 시간 TR4W가 시작됩니다. 명령줄에 --lang 스위치는이 설정을 오버라이드합니다."
 
 #. Config command: EXTERNAL LOGGER EDITOR ACTIVE
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_ACTIVE"
 msgid "When ticked, each newly logged QSO is also sent to this logger. Each active logger sends on its own. For a logger that was running when TR4W started, a change takes effect when it is saved, with no restart; a logger added since then, or one whose key, host or logbook changed, applies after TR4W is restarted."
-msgstr ""
+msgstr "진지한 경우, 각 새로 로그인한 QSO는 이 로거로 보내집니다. 각 활성 로거는 자체에 보냅니다. TR4W가 시작될 때 실행된 로거를 위해, 변경은 재시작 없이 저장될 때 효력이 걸립니다; 그 후에 추가된 로거, 또는 그 열쇠, 주인 또는 로그북이 변경된 것, TR4W가 재시작한 후에 적용합니다."
 
 #. Config command: EXTERNAL LOGGER EDITOR NAME
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_NAME"
 msgid "The name this logger is listed under. It is required and must differ from every other external logger's name (capitals do not count as a difference)."
-msgstr ""
+msgstr "이 로거 이름은 아래에 나열되어 있습니다. 다른 외부 로거의 이름과는 다를 수 있습니다 (자본은 차이로 계산하지 않습니다)."
 
 #. Config command: EXTERNAL LOGGER EDITOR PROVIDER
 msgctxt "TC_HELP_EXTERNAL_LOGGER_EDITOR_PROVIDER"
 msgid "The logbook program or online service this logger sends QSOs to. The fields below change to the ones that provider needs. Changing the provider keeps the host and port, clears any key or password, and moves a port still at the old provider's default to the new provider's default."
-msgstr ""
+msgstr "로그북 프로그램 또는 온라인 서비스 이로거는 QSOs를 보냅니다. 아래 필드는 공급자가 필요로하는 것들로 변경됩니다. 공급자를 바꾸는 것은 주인과 항구를 지키고, 어떤 열쇠 또는 암호를 삭제하고, 오래된 공급자의 기본적으로 새로운 공급자의 기본적으로 항구를 이동합니다."
 
 #. Config command: HAMSCORE VERIFY SERVER   (default: TRUE)
 msgctxt "TC_HELP_HAMSCORE_VERIFY_SERVER"
 msgid "When TRUE, TR4W checks the HamScore server's certificate before uploading, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send, including your HamScore password. It is read when the uploader starts, at TR4W startup."
-msgstr ""
+msgstr "시간 : TRUE, TR4W는 설정/tr4w.json에 있는 프로그램 넓은 증명서 체크로 업로드하기 전에 HamScore 서버의 증명서를 검사합니다 (기본값에 의하여 입니다). 인증서를 검사할 수 없는 서버에 대해서만 지우십시오: 서버의 정체성은 검사되지 않으며 누구든지 당신 사이와 그것을 당신이 보내는 것을 읽을 수 있습니다, 당신의 HamScore 암호를 포함하여. 업로드가 시작될 때, TR4W 시작될 때 읽습니다."
 
 #. Config command: KEYER EDITOR NAME
 msgctxt "TC_HELP_KEYER_EDITOR_NAME"
 msgid "The name this keying device is listed under in the keyer library and in a station profile's CW output choices. It is required. A profile refers to the keyer by a hidden identity, so renaming it is safe."
-msgstr ""
+msgstr "이 키우는 장치 이름은 키우기 라이브러리와 역 프로파일의 CW 출력 선택에 따라 나열됩니다. 필수입니다. 프로필은 숨겨지은 정체성으로 키우기 때문에 안전합니다."
 
 #. Config command: KEYER EDITOR PORT
 msgctxt "TC_HELP_KEYER_EDITOR_PORT"
 msgid "The serial port the keyer is connected to. A keyer cannot be saved without one."
-msgstr ""
+msgstr "직렬 포트 열쇠는 연결됩니다. 열쇠는 1개 없이 저장될 수 없습니다."
 
 #. Config command: KEYER EDITOR TYPE
 msgctxt "TC_HELP_KEYER_EDITOR_TYPE"
 msgid "What kind of device this is: a WinKeyer, or a YCCC SO2R+ box. The WinKeyer settings below apply only to a WinKeyer and are greyed for any other type."
-msgstr ""
+msgstr "이 장치의 어떤 종류는: WinKeyer, 또는 YCCC SO2R+ 상자. 아래 WinKeyer 설정은 WinKeyer에만 적용되며 다른 유형의 회색입니다."
 
 #. Config command: NETWORK AUTO CONNECT   (default: FALSE)
 msgctxt "TC_HELP_NETWORK_AUTO_CONNECT"
 msgid "When TRUE, TR4W connects to the multi-op server when it starts, provided COMPUTER ID is set to a letter A to Z. When FALSE, connect with Connect on the Net menu. Leave it FALSE on a single-operator station."
-msgstr ""
+msgstr "시간 : TRUE, TR4W는 제공될 때 다 op 서버에 연결합니다 COMPUTER ID 문자 A에서 Z로 설정됩니다. 시간 : FALSE, Net 메뉴에 연결. 내 계정 FALSE 단일 운영자 역에."
 
 #. Config command: NETWORK HTTP TRANSPORT   (default: generic)
 msgctxt "TC_HELP_NETWORK_HTTP_TRANSPORT"
 msgid "Chooses what carries TR4W's internet requests: the downloads (country file, TRMASTER, call history, POTA parks, version check) and the uploads (the external logging services, HamScore, contest scores, SuperCheckPartial). generic is TR4W's own connection code, which checks server certificates against the cacert.pem shipped with the program. auto and platform use the operating system's own connection code where this platform has one (Windows only, today: WinHTTP). It trusts the Windows certificate store, follows the system proxy settings and needs no cacert.pem. Where there is none, both use generic, and platform says so in the log. A change applies from the next request, with no restart. A request that fails is never repeated on the other transport. The Windows transport is new: leave this on generic unless you were asked to try it."
-msgstr ""
+msgstr "TR4W의 인터넷 요청을 수행하는 것을 선택하십시오. 다운로드 (국가 파일, TRMASTER, 통화 기록, POTA 공원, 버전 확인) 및 업로드 (외부 로깅 서비스, HamScore, 콘테스트 점수, SuperCheckPartial). generic은 TR4W의 자체 연결 코드이며, cacert에 대한 서버 인증서를 확인합니다. 프로그램으로 배송 pem. 자동 및 플랫폼은 운영 체제의 자체 연결 코드를 사용하여이 플랫폼은 하나 (Windows 만, 오늘: WinHTTP). 그것은 Windows 인증서 저장소를 신뢰하고, 시스템 프록시 설정을 따르고 cacert.pem을 필요로한다. 아무도, 모두 일반을 사용, 플랫폼은 로그에서 말한다. 변경은 다음 요청에서 적용되며 다시 시작하지 않습니다. 실패한 요청은 다른 수송에 결코 반복되지 않습니다. Windows 수송은 새로운 것입니다: 당신이 그것을 시도할 것을 요구한 경우에 이 일반적인에 남겨두십시오."
 
 #. Config command: NETWORK SHARE SPOTS   (default: TRUE)
 msgctxt "TC_HELP_NETWORK_SHARE_SPOTS"
 msgid "When TRUE, this station sends the DX spots its own cluster connection receives to the other stations on the multi-op network, and accepts the spots they send. When FALSE it does neither. Each station has its own setting, and a change takes effect at once."
-msgstr ""
+msgstr "시간 : TRUE, 이 역은 DX 반점을 그것의 자신의 송이 연결 다 op 네트워크에 다른 역에 받고, 그들이 보내는 반점을 받아들입니다. 시간 : FALSE 그것은 없습니다. 각 역에는 자체 설정이 있으며 한 번에 변경이 가능합니다."
 
 #. Config command: OPERATING STANDARD EDIT KEYS   (default: FALSE)
 msgctxt "TC_HELP_OPERATING_STANDARD_EDIT_KEYS"
 msgid "When TRUE, Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A copy, paste, cut and select all in a text box or drop-down list of any window other than the main window, instead of running the TR4W command assigned to that key. The main window always keeps TR4W's commands."
-msgstr ""
+msgstr "시간 : TRUE, Ctrl + C, Ctrl + V, Ctrl + X 및 Ctrl + C 복사, 붙여넣기, 잘라서 모든 텍스트 상자에 선택하거나 메인 창보다 다른 창의 드롭다운 목록, 대신 TR4W 명령을 실행하는 대신 그 키에 할당. 메인 창은 항상 TR4W의 명령을 유지합니다."
 
 #. Config command: PREFERENCES CLUSTER LOGIN
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_LOGIN"
 msgid "The callsign to log in to the cluster with. Leave it blank to log in with your station callsign, which is looked up each time TR4W connects."
-msgstr ""
+msgstr "호출은 클러스터에 로그인합니다. 각 시간의 TR4W가 연결되는 역 통화로 로그인하려면 공백을 남겨두십시오."
 
 #. Config command: PREFERENCES CLUSTER NAME
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_NAME"
 msgid "The name this cluster is listed under. Clearing the box keeps the old name. Renaming the cluster in use keeps it in use."
-msgstr ""
+msgstr "이 클러스터 이름은 아래에 나열됩니다. 상자가 오래된 이름을 지었다. 사용중인 클러스터 이름을 바꾸는 것은 사용 중입니다."
 
 #. Config command: PREFERENCES CLUSTER PASSWORD
 msgctxt "TC_HELP_PREFERENCES_CLUSTER_PASSWORD"
 msgid "The password, for a cluster that asks for one. Spaces at either end are kept. It is stored in the operating system's credential store (Windows Credential Manager, the macOS Keychain, or the Secret Service on Linux), not in the settings file; where no store can be reached it is kept for this session only."
-msgstr ""
+msgstr "비밀번호는 한 번에 요청한 클러스터입니다. 끝에서 공간은 유지됩니다. 운영 체제의 자격점(Windows Credential Manager, macOS Keychain, 또는 Linux의 비밀 서비스)에 저장되어 설정 파일이 아니라 설정 파일에 저장됩니다. 이 세션에만 보관할 수 없습니다."
 
 #. Config command: PREFERENCES CONNECT RADIOS AT STARTUP   (default: TRUE)
 msgctxt "TC_HELP_PREFERENCES_CONNECT_RADIOS_AT_STARTUP"
 msgid "Whether TR4W connects this profile's radios when it starts. Activating the profile and Reset Radio Ports always connect, whatever this says."
-msgstr ""
+msgstr "TR4W가 시작될 때 이 프로필의 라디오를 연결합니다. 프로필 활성화 및 재설정 라디오 포트 항상 연결, 이 말한다."
 
 #. Config command: PREFERENCES CW OUTPUT 1
 msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_1"
 msgid "How CW is sent for Radio 1: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
-msgstr ""
+msgstr "Radio 1 : none, CW by CAT (무선이 할 때만), 라디오 자체 키퍼 포트 (무선이 한 세트가있을 때) 또는 키퍼 라이브러리의 장치로 전송되는 방법."
 
 #. Config command: PREFERENCES CW OUTPUT 2
 msgctxt "TC_HELP_PREFERENCES_CW_OUTPUT_2"
 msgid "How CW is sent for Radio 2: none, CW by CAT (offered only when the radio can do it), the radio's own keyer port (offered when the radio has one set), or a device from the keyer library."
-msgstr ""
+msgstr "Radio 2 : none, CW by CAT (무선이 할 때만), 라디오의 자체 키터 포트 (무선이 한 세트가있을 때), 또는 Keyer 라이브러리의 장치."
 
 #. Config command: PREFERENCES PROFILE
 msgctxt "TC_HELP_PREFERENCES_PROFILE"
 msgid "The station profile shown below for editing. A profile names the radios in the two slots and how each one sends CW. Choosing one here does not switch to it: the Activate this profile now button does."
-msgstr ""
+msgstr "편집을 위해 아래의 역 프로파일. 프로필 이름은 두 개의 슬롯의 라디오와 각 하나는 CW를 전송하는 방법. 여기로 전환하지 않는 것을 선택: 이 프로파일을 활성화 지금 버튼."
 
 #. Config command: PREFERENCES RADIO 1
 msgctxt "TC_HELP_PREFERENCES_RADIO_1"
 msgid "The radio from the radio library that this profile uses as Radio 1. A radio already in the Radio 2 slot is marked as in use there and cannot be chosen for both slots."
-msgstr ""
+msgstr "이 프로필은 라디오 1로 사용됩니다 라디오 라이브러리의 라디오 Radio 2 슬롯에서 이미 라디오가 표시되어 있으며 슬롯 모두 선택 할 수 없습니다."
 
 #. Config command: PREFERENCES RADIO 2
 msgctxt "TC_HELP_PREFERENCES_RADIO_2"
 msgid "The radio from the radio library that this profile uses as Radio 2. A radio already in the Radio 1 slot is marked as in use there and cannot be chosen for both slots."
-msgstr ""
+msgstr "이 프로필은 라디오 2로 사용됩니다 라디오 라이브러리의 라디오 Radio 1 슬롯에서 이미 라디오가 표시되어 있으며 슬롯 모두 선택 할 수 없습니다."
 
 #. Config command: PREFERENCES ROTATOR BANDS
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_BANDS"
 msgid "The bands this rotator turns for, separated by spaces, for example 20 15 10. Blank means every band, which is what a station with one antenna wants. Only the rotator in use turns, and only on a band it lists."
-msgstr ""
+msgstr "밴드 이 로터는 공백에 의해 분리, 예를 들어 20 15 10. 공백은 1개의 안테나를 가진 역인 각 밴드를, 원합니다 의미합니다. 사용의 회전자 만, 밴드에서만 목록입니다."
 
 #. Config command: PREFERENCES ROTATOR BAUD RATE
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_BAUD_RATE"
 msgid "The serial speed for the rotator controller. Blank or 0 uses the default for the chosen type, which is shown greyed in the box."
-msgstr ""
+msgstr "회전자 관제사를 위한 일련 속도. 공백 또는 0은 상자에서 회색을 보이는 선택된 유형에 대한 기본을 사용합니다."
 
 #. Config command: PREFERENCES ROTATOR IP ADDRESS
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_IP_ADDRESS"
 msgid "For a network rotator (PstRotator), the IP address of the computer it runs on. Blank uses the PSTROTATOR IP ADDRESS setting, 127.0.0.1 unless changed."
-msgstr ""
+msgstr "네트워크 로터 (PstRotator)의 경우 컴퓨터의 IP 주소가 켜집니다. 빈 용도 PSTROTATOR IP ADDRESS 설정, 127.0.0.1 변경하지 않는."
 
 #. Config command: PREFERENCES ROTATOR NAME
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_NAME"
 msgid "The name this rotator is listed under. Clearing the box keeps the old name."
-msgstr ""
+msgstr "이 회전 장치는 아래에 나열됩니다. 상자가 오래된 이름을 지었다."
 
 #. Config command: PREFERENCES ROTATOR PORT
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_PORT"
 msgid "The serial port the rotator controller is connected to. Used only by a type that has a serial port; greyed for a network rotator."
-msgstr ""
+msgstr "직렬 포트 로터 컨트롤러가 연결됩니다. 직렬 포트가 있는 유형에 의해서만 사용해; 네트워크 로터를 위해 회색으로 합니다."
 
 #. Config command: PREFERENCES ROTATOR TYPE
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_TYPE"
 msgid "The rotator controller and the protocol TR4W speaks to it. PstRotator is reached over UDP; every other type uses a serial port."
-msgstr ""
+msgstr "rotator 컨트롤러와 프로토콜 TR4W는 그것을 말합니다. PstRotator는 UDP에 도달합니다; 다른 유형은 직렬 포트를 사용합니다."
 
 #. Config command: PREFERENCES ROTATOR UDP PORT
 msgctxt "TC_HELP_PREFERENCES_ROTATOR_UDP_PORT"
 msgid "For a network rotator (PstRotator), the UDP port it listens on. Blank uses the PSTROTATOR UDP PORT setting, 12000 unless changed."
-msgstr ""
+msgstr "네트워크 rotator (PstRotator)의 경우 UDP 포트가 듣습니다. 빈 용도 PSTROTATOR UDP PORT 설정, 변경하지 않는 12000."
 
 #. Config command: PREFERENCES SO2R ENABLED
 msgctxt "TC_HELP_PREFERENCES_SO2R_ENABLED"
 msgid "Marks this profile as a two-radio (SO2R) station. The flag is saved with the profile, but in this build nothing else reads it, so ticking or clearing it changes no behaviour."
-msgstr ""
+msgstr "이 프로필을 두 개의 라디오 (SO2R) 역으로 표시합니다. 플래그는 프로필에 저장되지만,이 빌드에서 아무것도 다른 읽기, 그래서  ticking or clearing it changes no behavior."
 
 #. Config command: PREFERENCES TCI LISTEN ON NETWORK   (default: FALSE)
 msgctxt "TC_HELP_PREFERENCES_TCI_LISTEN_ON_NETWORK"
 msgid "Lets other computers connect to the TCI server, not just this one. The server has no password: anything that can reach the port can move your VFO and key your transmitter. A change made while the server is running applies the next time it starts."
-msgstr ""
+msgstr "다른 컴퓨터가 TCI 서버에 연결하자, 그냥이 것. 서버는 암호가 없습니다. 포트에 도달 할 수있는 것은 VFO를 이동하고 송신기를 키 할 수 있습니다. 서버가 실행되는 동안 변경은 다음 시간을 시작합니다."
 
 #. Config command: PREFERENCES TCI PORT   (default: 50001)
 msgctxt "TC_HELP_PREFERENCES_TCI_PORT"
 msgid "The TCP port the TCI server listens on. Blank uses the default, 50001; a value that is not 1 to 65535 is refused and the previous port kept. A change made while the server is running applies the next time it starts."
-msgstr ""
+msgstr "TCP 포트 TCI 서버가 켜집니다. 공백은 기본, 50001을 사용합니다. 1 ~ 65535가 거부되지 않은 값은 이전 포트가 유지됩니다. 서버가 실행되는 동안 변경은 다음 시간을 시작합니다."
 
 #. Config command: PREFERENCES TCI SERVER   (default: FALSE)
 msgctxt "TC_HELP_PREFERENCES_TCI_SERVER"
 msgid "Runs a TCI server so other programs (WSJT-X, JTDX, a skimmer) can control the radio TR4W has open, even one with no TCI of its own; Radio 1 is trx 0 and Radio 2 is trx 1. Saving starts or stops it. It listens only on this computer unless network listening is ticked."
-msgstr ""
+msgstr "TCI 서버가 이렇게 다른 프로그램을 실행합니다 (WSJT-X, JTDX, 스키머)는 라디오 TR4W를 열 수 있습니다, 그 자체의 TCI 없이 조차; 라디오 1는 trx 0이고 라디오 2는 trx 1입니다. 저장 시작 또는 중지. 이 컴퓨터에서만 듣는 것은 네트워크 듣는 것은 ticked."
 
 #. Config command: PREFERENCES UDP BROADCAST ENABLED   (default: TRUE)
 msgctxt "TC_HELP_PREFERENCES_UDP_BROADCAST_ENABLED"
 msgid "The master switch for UDP broadcasting. Cleared, nothing is sent to any destination, and the destinations are kept as they are."
-msgstr ""
+msgstr "UDP 방송의 마스터 스위치. 맑음, 어떤 목적지로 보내지 않으며, 목적지는 그대로 유지됩니다."
 
 #. Config command: PTT TX INHIBIT BEEP   (default: FALSE)
 msgctxt "TC_HELP_PTT_TX_INHIBIT_BEEP"
 msgid "When TRUE, TR4W beeps once when you key up a radio that reports it will not transmit (for example a K4 in TX test mode). The PTT indicator and the status line show this whatever the setting. BEEP ENABLE must also be TRUE for the beep to sound."
-msgstr ""
+msgstr "시간 : TRUE, TR4W beeps 일단 당신이 그것을 보고하는 라디오를 키울 때 (TX 시험 형태에 있는 K4 예를 들면). PTT 지표와 상태 선은 설정이 무엇이든 보여줍니다. BEEP ENABLE 자주 묻는 질문 TRUE 소리에 푹."
 
 #. Config command: RADIO EDITOR AUTO INFO LEVEL
 msgctxt "TC_HELP_RADIO_EDITOR_AUTO_INFO_LEVEL"
 msgid "The Elecraft auto-information level (the AI command): how much the radio reports by itself when something changes, instead of waiting to be asked. Leave it empty to let TR4W choose, which is 2; 0 turns it off, and the radio is then asked for everything, which is slower. Shown only for the K2, K3, KX3, and the K4 on a serial connection (on a network connection the K4 is always set to AI5 and this field is ignored). Saving a typed value asks you to confirm it."
-msgstr ""
+msgstr "Elecraft auto-information level (AI 명령) : 무언가가 변경 될 때 스스로의 라디오 보고서가 얼마나 많은지, 기다리지. TR4W가 선택하는 것을 빈번하게 남겨두면 2; 0이 꺼지고, 라디오가 그런 다음 모든 것을 요청합니다. K2, K3, KX3, K4, K4를 연속 연결(네트워크 연결에 K4는 항상 AI5로 설정되며 이 필드는 무시됩니다). 유형의 값을 저장하면 확인해야합니다."
 
 #. Config command: RADIO EDITOR BAUD RATE
 msgctxt "TC_HELP_RADIO_EDITOR_BAUD_RATE"
 msgid "The speed of the CAT serial port. It must match the setting in the radio's own menu. Choosing a radio type fills in that model's usual speed when the box is empty, and an empty box uses the model's default. The keyer output port is opened at this speed too."
-msgstr ""
+msgstr "CAT 직렬 포트의 속도. 라디오의 자신의 메뉴에서 설정을 일치해야합니다. 상자가 비어있을 때 그 모델의 보통 속도에 라디오 유형을 채우고 빈 상자는 모델의 기본을 사용합니다. keyer 출력 포트는 이 속도로 열립니다."
 
 #. Config command: RADIO EDITOR CAT DTR   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_CAT_DTR"
 msgid "The DTR line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
-msgstr ""
+msgstr "라디오의 CAT 직렬 포트의 DTR 라인. TR4W는 포트가 열려있을 때, 어떤 공용영역 케이블이 필요로 하는 동안 선 asserted를 붙듭니다; 다른 선택 (NONE, 떨어져, CW, PTT)는 그것을 unasserted 떠납니다. 이것은 CW 또는 PTT 열쇠가 아닙니다: 그 사용을 위해 Keyer RTS 선과 Keyer DTR 선."
 
 #. Config command: RADIO EDITOR CAT RTS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_CAT_RTS"
 msgid "The RTS line of the radio's CAT serial port. ON holds the line asserted while TR4W has the port open, which some interface cables need; every other choice (NONE, OFF, CW, PTT) leaves it unasserted. This is not CW or PTT keying: for that use Keyer RTS line and Keyer DTR line."
-msgstr ""
+msgstr "라디오의 CAT 직렬 포트의 RTS 선. TR4W는 포트가 열려있을 때, 어떤 공용영역 케이블이 필요로 하는 동안 선 asserted를 붙듭니다; 다른 선택 (NONE, 떨어져, CW, PTT)는 그것을 unasserted 떠납니다. 이것은 CW 또는 PTT 열쇠가 아닙니다: 그 사용을 위해 Keyer RTS 선과 Keyer DTR 선."
 
 #. Config command: RADIO EDITOR CIV ADDRESS
 msgctxt "TC_HELP_RADIO_EDITOR_CIV_ADDRESS"
 msgid "The radio's CI-V address, in hexadecimal as the radio's menu and manual show it. Empty uses the model's default address, shown in grey in the box. It must match the address set in the radio. Offered only for radios that have a CI-V address."
-msgstr ""
+msgstr "라디오의 CI-V 주소, 라디오 메뉴와 수동으로 16 진수에서 그것을 보여줍니다. 빈은 상자에서 회색에서 보이는 모델의 기본 주소를 사용합니다. 라디오에서 설정된 주소와 일치해야 합니다. CI-V 주소가 있는 라디오에만 제공."
 
 #. Config command: RADIO EDITOR DATA BITS
 msgctxt "TC_HELP_RADIO_EDITOR_DATA_BITS"
 msgid "The number of data bits on the CAT serial port, 7 or 8. Together with parity and stop bits it is the serial frame, which must match the radio's own setting. Most radios use 8 data bits, no parity and 1 stop bit; choosing the type of a new radio fills in that model's usual frame."
-msgstr ""
+msgstr "CAT 직렬 포트, 7 또는 8.에 데이터 비트의 수 패리티와 정지 비트와 함께 라디오의 자신의 설정을 일치해야 직렬 프레임입니다. 대부분의 라디오는 8개의 자료 조금, parity 및 1개의 정지 조금을 이용합니다; 그 모형의 보통 구조에 있는 새로운 라디오 충분한 양의 유형을 선택하십시오."
 
 #. Config command: RADIO EDITOR DISCOVER
 msgctxt "TC_HELP_RADIO_EDITOR_DISCOVER"
 msgid "Searches the local network for radios of the chosen type and lists those that answer under Found. The search takes a few seconds. Offered only for radio types that announce themselves on the network."
-msgstr ""
+msgstr "선택한 유형의 라디오에 대한 로컬 네트워크를 검색하고 찾을 수 있습니다. 검색은 몇 초 걸립니다. 네트워크에서 자신을 발표 한 라디오 유형에만 제공."
 
 #. Config command: RADIO EDITOR FOUND
 msgctxt "TC_HELP_RADIO_EDITOR_FOUND"
 msgid "The radios Discover found on the network. Choosing one copies its IP address into the IP address box."
-msgstr ""
+msgstr "라디오는 네트워크에서 발견. IP 주소 상자에 IP 주소를 복사합니다."
 
 #. Config command: RADIO EDITOR FREQUENCY OFFSET
 msgctxt "TC_HELP_RADIO_EDITOR_FREQUENCY_OFFSET"
 msgid "For a transverter: the offset in Hz added to every frequency the radio reports and subtracted from every frequency TR4W tells it to tune, so TR4W shows and logs the frequency on the air. Empty or 0 means no transverter. Note: at present a value above 65535 or below 0 is refused when the radio is set up (the log says NOT applied), so a typical VHF or UHF transverter offset does not take effect yet."
-msgstr ""
+msgstr "transverter의 경우 : 모든 주파수에 추가 된 Hz의 오프셋은 라디오 보고서와 각 주파수에서 추적을 말한다 TR4W는 그것을 조정, 그래서 TR4W 쇼와 공기에 주파수를 로그. 빈 또는 0은 transverter를 의미하지 않습니다. 참고 : 현재 65535 이상 또는 0 미만의 값은 라디오가 설정되면 거부됩니다 (그 로그는 적용되지 않음), 그래서 전형적인 VHF 또는 UHF 변환기 오프셋은 아직 영향을 미치지 않습니다."
 
 #. Config command: RADIO EDITOR FT1000MP CW REVERSE
 msgctxt "TC_HELP_RADIO_EDITOR_FT1000MP_CW_REVERSE"
 msgid "When ticked, TR4W asks the radio for reverse CW (CW-R) instead of CW whenever it sets the radio to CW. Offered only for the Yaesu FT-1000MP."
-msgstr ""
+msgstr "진드 때, TR4W는 CW 대신 CW의 역 CW (CW-R)에 대한 라디오를 묻습니다. Yaesu FT-1000MP에만 제공."
 
 #. Config command: RADIO EDITOR HAMLIB MODEL ID
 msgctxt "TC_HELP_RADIO_EDITOR_HAMLIB_MODEL_ID"
 msgid "The HamLib model number (rig_model) used when the radio is driven through HamLib. Empty uses the model's registered number, shown in grey in the box. Offered only when the radio is driven through HamLib, and emptied when the radio type changes, because a number belongs to one model."
-msgstr ""
+msgstr "HamLib를 통해 라디오가 구동될 때 사용되는 HamLib 모델 번호(rig model). 빈은 모델의 등록 번호를 사용, 상자에 회색에 표시. 라디오가 HamLib를 통해 구동 될 때만 제공되며, 라디오 유형이 변경 될 때, 숫자는 하나의 모델에 속합니다."
 
 #. Config command: RADIO EDITOR ICOM DATA MODE ID
 msgctxt "TC_HELP_RADIO_EDITOR_ICOM_DATA_MODE_ID"
 msgid "Which Icom data mode TR4W selects when it puts the radio into a data mode: 1, 2 or 3 for D1, D2 or D3 (for example USB-D1). Empty means 1. Offered for Icom radios only."
-msgstr ""
+msgstr "어떤 Icom 데이터 모드 TR4W는 데이터 모드로 라디오를 넣을 때 선택: 1, 2 또는 3 D1, D2 또는 D3 (예: USB-D1). 빈 수단 1. Icom 라디오에만 제공."
 
 #. Config command: RADIO EDITOR ICOM FILTER BYTE
 msgctxt "TC_HELP_RADIO_EDITOR_ICOM_FILTER_BYTE"
 msgid "An Icom filter choice: 1, 2 or 3 for the wide, normal or narrow filter, empty or 0 for none. Offered for Icom radios only. At present nothing in TR4W reads this value, so it has no effect: the code that used it is commented out."
-msgstr ""
+msgstr "Icom 필터 선택: 1, 2 또는 3 넓은, 일반 또는 좁은 필터, 빈 또는 0 아무도. Icom 라디오 만 제공. 현재 TR4W에서 아무것도이 값을 읽습니다, 그래서 그것은 효과가 없다 : 사용 된 코드는 밖으로 언급."
 
 #. Config command: RADIO EDITOR IP ADDRESS
 msgctxt "TC_HELP_RADIO_EDITOR_IP_ADDRESS"
 msgid "The IP address of a radio connected over the network (the Network tab). The radio's manual or network menu shows its address; where Discover is offered, it can find the radio for you."
-msgstr ""
+msgstr "네트워크에 연결된 라디오의 IP 주소 (네트워크 탭). 라디오의 설명서 또는 네트워크 메뉴는 그것의 주소를 보여줍니다; 발견이 제안되는 곳에, 그것은 당신을 위한 라디오를 찾아낼 수 있습니다."
 
 #. Config command: RADIO EDITOR IP PORT
 msgctxt "TC_HELP_RADIO_EDITOR_IP_PORT"
 msgid "The network port the radio listens on. It is called IP port because the radios differ: the Icom network protocol uses UDP, while Elecraft and Flex use TCP. Choosing a radio type fills in that model's usual port when the box is empty, and an empty box uses the model's default."
-msgstr ""
+msgstr "네트워크 포트 라디오는 듣습니다. 라디오가 다르기 때문에 IP 포트라고합니다. Icom 네트워크 프로토콜은 UDP를 사용하고 있으며, Elecraft 및 Flex는 TCP를 사용합니다. 상자가 비어있을 때 그 모델의 보통 포트에서 라디오 유형 채우고 빈 박스는 모델의 기본을 사용합니다."
 
 #. Config command: RADIO EDITOR KEYER DTR   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_DTR"
 msgid "What the DTR line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention DTR is used for CW. If both lines are set to PTT, DTR switches it. This is the keyer port, not the CAT port (see CAT DTR)."
-msgstr ""
+msgstr "중요한 출력 포트의 DTR 라인은 다음과 같습니다. CW 키, PTT는 송신기를 전환, ON 및 OFF는 라인을 잡고, NONE은 혼자 나뭇잎. 컨벤션 DTR은 CW에 사용됩니다. 두 줄이 PTT로 설정되면, DTR 스위치. 이것은 더 중요한 항구, CAT 항구 아닙니다 (CA DTR를 보십시오)."
 
 #. Config command: RADIO EDITOR KEYER OUTPUT PORT   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_OUTPUT_PORT"
 msgid "The serial port TR4W keys CW and PTT on for this radio, through the Keyer RTS line and Keyer DTR line choices. It is not used when the station profile sends CW by CAT, sends no CW, or uses a keyer device such as a WinKeyer, which opens its own port."
-msgstr ""
+msgstr "시리얼 포트 TR4W 키 CW와 PTT는 Keyer RTS 라인과 Keyer DTR 라인 선택을 통해이 라디오에. 그것은 역 단면도가 CAT에 의하여 CW를 보낼 때 사용되지 않습니다, CW를 보내고, 또는 WinKeyer와 같은 중요한 장치를 이용합니다, 그것의 자신의 항구를 열."
 
 #. Config command: RADIO EDITOR KEYER RTS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_RTS"
 msgid "What the RTS line of the keyer output port does: CW keys the CW, PTT switches the transmitter, ON and OFF hold the line on or off, and NONE leaves it alone. By convention RTS is used for PTT. If both lines are set to CW, RTS keys. This is the keyer port, not the CAT port (see CAT RTS)."
-msgstr ""
+msgstr "키터 출력 포트의 RTS 라인은 다음과 같습니다. CW 키, PTT는 송신기를 전환, ON 및 OFF는 라인을 유지하거나 떨어져, NONE은 혼자 나타날. 컨벤션 RTS는 PTT에 사용됩니다. 두 줄이 CW로 설정되면 RTS 키. 이것은 더 중요한 항구, CAT 항구 아닙니다 (CA RTS를 보십시오)."
 
 #. Config command: RADIO EDITOR KEYER STOP BITS   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_KEYER_STOP_BITS"
 msgid "The stop bits used when the keyer output port is opened: 2 opens it with 2 stop bits, while 1 or (none) opens it with 1. It rarely matters; try 2 only if keying through this port misbehaves. It is separate from the CAT port's Stop bits on the Serial tab."
-msgstr ""
+msgstr "keyer 출력 포트가 열릴 때 사용되는 스톱 비트 : 2는 1 또는 (none)가 1로 열립니다. 그것은 거의 중요; 이 포트 misbehaves를 통해 키하면 2 만 시도. CAT 포트의 정지 비트에서 직렬 탭에 분리됩니다."
 
 #. Config command: RADIO EDITOR NAME
 msgctxt "TC_HELP_RADIO_EDITOR_NAME"
 msgid "The name this radio is listed under in the radio library and in the station profile's radio choices. It is required and must differ from every other radio's name. Renaming is safe: a profile refers to the radio by a hidden identity, not by this name."
-msgstr ""
+msgstr "이 라디오 이름은 라디오 라이브러리와 역 프로필의 라디오 선택에서 나열됩니다. 그것은 필수이며 다른 라디오의 이름과는 다릅니다. Renaming은 안전합니다: 단면도는 이 이름에 의해 숨겨지은 ID에 의해 라디오를 나타납니다."
 
 #. Config command: RADIO EDITOR PARITY
 msgctxt "TC_HELP_RADIO_EDITOR_PARITY"
 msgid "The parity of the CAT serial port: None, Odd or Even. Part of the serial frame with data bits and stop bits, and it must match the radio's own setting. Almost every radio uses None."
-msgstr ""
+msgstr "CAT 직렬 포트의 패성 : 없음, Odd 또는 심지어. 데이터 비트와 정지 비트와 직렬 프레임의 일부, 그리고 그것은 라디오의 자신의 설정을 일치해야합니다. 거의 모든 라디오는 아무도를 사용합니다."
 
 #. Config command: RADIO EDITOR PASSWORD
 msgctxt "TC_HELP_RADIO_EDITOR_PASSWORD"
 msgid "The password for a network radio that asks for a login, used with User name. The eye button beside the box shows or hides what you typed. The box is greyed and emptied for a radio type that needs no login."
-msgstr ""
+msgstr "로그인을 요청하는 네트워크 라디오의 암호는 사용자 이름과 함께 사용됩니다. 상자 쇼 옆에 눈 버튼 또는 당신이 입력 한 것을 숨깁니다. 이 박스는 로그인이 필요없는 라디오 유형에 대해 회색과 비난합니다."
 
 #. Config command: RADIO EDITOR POLL THIS RADIO   (default: TRUE)
 msgctxt "TC_HELP_RADIO_EDITOR_POLL_THIS_RADIO"
 msgid "When ticked, TR4W keeps reading the radio's frequency and mode, at the Frequency Poll Rate. When cleared, no polling is started for this radio, so TR4W does not follow its frequency, band or mode."
-msgstr ""
+msgstr "ticked 때, TR4W는 주파수 오염률에서 라디오의 주파수 및 모드를 읽습니다. 명확하게 할 때, 오염은이 라디오를 위해 시작되지 않습니다, 그래서 TR4W는 그것의 빈도, 밴드 또는 형태를 따르지 않습니다."
 
 #. Config command: RADIO EDITOR PORT   (default: NONE)
 msgctxt "TC_HELP_RADIO_EDITOR_PORT"
 msgid "The serial port the radio's CAT (control) cable is connected to. A port marked (not present) is the port this radio is set to but which is not plugged in right now; it is kept unless you choose another."
-msgstr ""
+msgstr "직렬 포트 라디오의 CAT (제어) 케이블에 연결됩니다. 표시된 포트 (현재 되지 않음) 포트 이 라디오 설정 하지만 지금은 폐쇄 되지 않는; 그것은 당신이 다른 선택 하지 않는 한 유지."
 
 #. Config command: RADIO EDITOR STARTUP COMMAND
 msgctxt "TC_HELP_RADIO_EDITOR_STARTUP_COMMAND"
 msgid "Text sent to the radio exactly as typed (up to 50 characters), once each time the link to the radio comes up, after a short wait for the radio to settle; it is sent again after the radio is power-cycled. Use it for a radio setting you always want. On an Icom radio it is not sent: a CI-V frame must begin with the bytes FE FE and end with FD, which typed text is not, and the log says why."
-msgstr ""
+msgstr "입력 (최대 50 문자)로 정확히 라디오로 전송 된 텍스트는 라디오에 링크를 한 번, 전파가 정착하기 위해 짧은 대기 후; 라디오가 재생 된 후 다시 전송됩니다. 항상 원하는 라디오 설정을 위해 사용하십시오. Icom 라디오에서 전송되지 않습니다 : CI-V 프레임은 바이트 FE FE와 FD와 함께 시작해야하며, 유형 텍스트가 아니라 로그는 왜 말한다."
 
 #. Config command: RADIO EDITOR STOP BITS
 msgctxt "TC_HELP_RADIO_EDITOR_STOP_BITS"
 msgid "The number of stop bits on the CAT serial port, 1 or 2. Part of the serial frame with data bits and parity, and it must match the radio's own setting. This is the CAT port; the keyer output port has its own Stop bits choice below the tabs."
-msgstr ""
+msgstr "CAT 직렬 포트, 1 또는 2의 정지 비트의 수 데이터 비트 및 패리티와 직렬 프레임의 일부, 그리고 그것은 라디오의 자신의 설정을 일치해야합니다. 이것은 CAT 항구입니다; 중요한 산출 항구에는 그것의 자신의 정지 조금이 탭의 밑에 선택합니다 있습니다."
 
 #. Config command: RADIO EDITOR TYPE
 msgctxt "TC_HELP_RADIO_EDITOR_TYPE"
 msgid "The radio model. It chooses the driver TR4W uses to talk to the radio, fills in that model's usual baud rate, serial frame and network port where those are empty, and decides which tabs and fields on this form apply. It is required."
-msgstr ""
+msgstr "라디오 모델. 그것은 드라이버 TR4W는 라디오에 이야기, 그 모델의 일반 배율, 직렬 프레임 및 네트워크 포트에서 채우고,이 양식에 탭과 필드를 결정한다. 필수입니다."
 
 #. Config command: RADIO EDITOR USER NAME
 msgctxt "TC_HELP_RADIO_EDITOR_USER_NAME"
 msgid "The user name for a network radio that asks for a login, such as the network Icom radios and the Kenwood LAN radios. The box is greyed and emptied for a radio type that needs no login, such as the Elecraft K4."
-msgstr ""
+msgstr "네트워크 Icom 라디오 및 Kenwood LAN 라디오와 같은 로그인을 요청하는 네트워크 라디오의 사용자 이름. 이 박스는 Elecraft K4와 같은 로그인이 필요없는 라디오 유형에 대해 회색과 비난합니다."
 
 #. Config command: RADIO EDITOR WIDE CW FILTER
 msgctxt "TC_HELP_RADIO_EDITOR_WIDE_CW_FILTER"
 msgid "Meant to select the wide CW filter on older Yaesu radios (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000). At present nothing in TR4W reads this value, so it has no effect."
-msgstr ""
+msgstr "오래된 Yaesu 라디오 (FT-747GX, FT-840, FT-890, FT-900, FT-990, FT-1000)에 넓은 CW 필터를 선택해야 합니다. TR4W의 현재 아무것도이 값을 읽었다, 그래서 그것은 효과가 없다."
 
 #. Config command: SCORE VERIFY SERVER   (default: TRUE)
 msgctxt "TC_HELP_SCORE_VERIFY_SERVER"
 msgid "When TRUE, TR4W checks the score board server's certificate when it posts your score to the Posting URL, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server's identity is then not checked and anyone between you and it can read what you send."
-msgstr ""
+msgstr "시간 : TRUE, TR4W는 설정/tr4w.json의 프로그램 전체 인증서 체크와 같은 포스트 URL에 점수를 게시 할 때 점수 보드 서버의 인증서를 확인합니다 (기본값에 의해). 인증서를 검사할 수 없는 서버에 대해서만 지우십시오: 서버의 정체성은 검사되지 않으며 누구든지 당신이 보낸 것을 읽을 수 있습니다."
 
 #. Config command: SETUP WIZARD CLUSTER
 msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER"
 msgid "Tick to add a page that sets up a DX cluster connection for spots. The cluster is added to the cluster list and becomes the one TR4W connects to."
-msgstr ""
+msgstr "Tick은 DX 클러스터 연결을 설정하는 페이지를 추가합니다. 클러스터는 클러스터 목록에 추가되며 하나의 TR4W가 연결됩니다."
 
 #. Config command: SETUP WIZARD CLUSTER PORT
 msgctxt "TC_HELP_SETUP_WIZARD_CLUSTER_PORT"
 msgid "The cluster's TCP port, from 1 to 65535. Leave it blank for the standard port, 23."
-msgstr ""
+msgstr "클러스터의 TCP 포트, 1에서 65535. 표준 포트에 대 한 공백을 남겨, 23."
 
 #. Config command: SETUP WIZARD KEYER
 msgctxt "TC_HELP_SETUP_WIZARD_KEYER"
 msgid "Tick to add a page that sets up a WinKeyer. It is added to the keyer library and becomes the CW output for Radio 1, used instead of CW by CAT when both are chosen."
-msgstr ""
+msgstr "WinKeyer를 설정하는 페이지를 추가하려면 Tick. 키커 라이브러리에 추가되며 모두 선택되었을 때 CW by CAT 대신 사용되는 Radio 1의 CW 출력이됩니다."
 
 #. Config command: SETUP WIZARD LOGGER
 msgctxt "TC_HELP_SETUP_WIZARD_LOGGER"
 msgid "Tick to add a page that sets up an external logger (a logbook program or online service) that each QSO is also sent to. It is added to the external logger list, active if its Active box is ticked."
-msgstr ""
+msgstr "Tick은 외부 로거 (로그북 프로그램 또는 온라인 서비스)를 설정하는 페이지를 추가합니다. 외부 로거 목록에 추가되어 Active box가 ticked 경우 활성화됩니다."
 
 #. Config command: SETUP WIZARD RADIO
 msgctxt "TC_HELP_SETUP_WIZARD_RADIO"
 msgid "Tick to add a page that sets up a radio for rig control. The radio is added to the radio library and put in Radio 1 of the active station profile; when no profile is active, of one the wizard makes active."
-msgstr ""
+msgstr "Tick은 rig 제어를위한 라디오를 설정하는 페이지를 추가합니다. 라디오는 라디오 라이브러리에 추가되며 활성 역 프로파일의 라디오 1에 넣어집니다. 프로파일이 활성화되지 않을 때 마법사가 활성화됩니다."
 
 #. Config command: SETUP WIZARD ROTATOR
 msgctxt "TC_HELP_SETUP_WIZARD_ROTATOR"
 msgid "Tick to add a page that sets up an antenna rotator. It is added to the rotator list and becomes the rotator in use."
-msgstr ""
+msgstr "Tick은 안테나 로터를 설정하는 페이지를 추가합니다. 로터 목록에 추가되며 사용중인 로터가 됩니다."
 
 #. Config command: SETUP WIZARD SHOW DETAILS
 msgctxt "TC_HELP_SETUP_WIZARD_SHOW_DETAILS"
 msgid "Shows the full report of what the wizard did, with the detail lines added to the summary."
-msgstr ""
+msgstr "wizard가 되었는지 전체 보고서를 표시하고 요약에 추가 된 세부 라인."
 
 #. Config command: SETUP WIZARD WSJT-X
 msgctxt "TC_HELP_SETUP_WIZARD_WSJT_X"
 msgid "Tick to add a page for the WSJT-X settings. Only the values changed on that page are saved."
-msgstr ""
+msgstr "WSJT-X 설정에 대한 페이지를 추가하려면 Tick. 그 페이지의 값만 저장됩니다."
 
 #. Config command: TCI DEBUG   (default: FALSE)
 msgctxt "TC_HELP_TCI_DEBUG"
 msgid "Writes every TCI server command, in both directions, to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
-msgstr ""
+msgstr "모든 TCI 서버 명령을 작성, 두 방향으로, tr4w.log. 라인은 INFO 수준에서 작성되므로 로그 레벨이 INFO, DEBUG 또는 TRACE일 때만 나타납니다. 저장할 때 적용됩니다."
 
 #. Config command: TCI MAX TX SECONDS   (default: 180)
 msgctxt "TC_HELP_TCI_MAX_TX_SECONDS"
 msgid "A safety limit in seconds, 0 to 3600. When a TCI client has kept the transmitter keyed this long, TR4W unkeys it, which covers a client that crashed or lost its connection while transmitting. 0 means no limit. A transmission you start yourself is never cut."
-msgstr ""
+msgstr "초당 안전 한도, 0 ~ 3600. TCI 클라이언트가 긴 송신기를 유지했을 때, TR4W unkeys it, 이는 클라이언트를 충돌하거나 전송하는 동안 그것의 연결을 잃었다. 0은 제한이 없습니다. 직접 시작하는 전송은 결코 잘라."
 
 #. Config command: TELNET CONSOLE LINES   (default: 10000)
 msgctxt "TC_HELP_TELNET_CONSOLE_LINES"
 msgid "The most lines the DX cluster window keeps, from 1000 to 100000. When the window goes over the limit, the oldest lines are removed, down to nine tenths of the limit."
-msgstr ""
+msgstr "DX 클러스터 창이 가장 줄이 1000에서 100000으로 유지됩니다. 창이 한계를 뛰어 넘을 때, 가장 오래된 라인이 제거되고, 한계의 9개의 10로 아래로."
 
 #. Config command: TELNET DEBUG   (default: FALSE)
 msgctxt "TC_HELP_TELNET_DEBUG"
 msgid "Writes every line sent to and received from the DX cluster to tr4w.log. The lines are written at the INFO level, so they appear only when the log level is INFO, DEBUG or TRACE. Applies when you save."
-msgstr ""
+msgstr "DX 클러스터에서 tr4w.log로 전송된 모든 줄을 작성합니다. 라인은 INFO 수준에서 작성되므로 로그 레벨이 INFO, DEBUG 또는 TRACE일 때만 나타납니다. 저장할 때 적용됩니다."
 
 #. Config command: TUNE WITH DITS   (default: FALSE)
 msgctxt "TC_HELP_TUNE_WITH_DITS"
 msgid "If this parameter is TRUE, TR4W sends a string of dits at 75 WPM when you press Ctrl-Left-Shift, instead of a solid carrier. (Not yet implemented.)"
-msgstr ""
+msgstr "이 매개 변수가 있다면 TRUE, TR4W는 고체 캐리어 대신 Ctrl-Left-Shift를 누르면 75 WPM의 디트 문자열을 보냅니다. ( 아직 구현되지 않음)"
 
 #. Config command: UDP DESTINATION PORT
 msgctxt "TC_HELP_UDP_DESTINATION_PORT"
 msgid "The UDP port the receiving program listens on, from 1 to 65535. The port belongs to this destination, so a program that wants different kinds of data on different ports needs one destination for each port."
-msgstr ""
+msgstr "UDP 포트 수신 프로그램은 듣기, 1에서 65535. 항구는 이 목적지에 속합니다, 그래서 다른 항구에 자료의 다른 종류를 원하는 프로그램은 각 항구를 위한 1개의 목적지를 필요로 합니다."
 
 #. Config command: USE CALL HISTORY FILE   (default: FALSE)
 msgctxt "TC_HELP_USE_CALL_HISTORY_FILE"
 msgid "When TRUE, TR4W reads a call history file when the contest is opened and uses it to fill in a station's exchange from the call. The file is CALL HISTORY FILENAME, or the contest's own default when that is blank; a contest that takes nothing from a call history file reads none. A change takes effect the next time the contest is opened."
-msgstr ""
+msgstr "시간 : TRUE, TR4W는 대회가 열릴 때 통화 기록 파일을 읽고 통화에서 역 교환을 채우기 위해 사용합니다. 이 파일은 CALL HISTORY FILENAME, 또는 그 공백이있을 때 콘테스트의 자신의 기본입니다; 호출 기록 파일에서 아무것도하지 않는 대회는 아무도 읽습니다. 변화는 다음 번의 대회가 열립니다."
 
