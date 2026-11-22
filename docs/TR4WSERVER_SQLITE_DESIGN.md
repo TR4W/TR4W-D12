@@ -762,3 +762,86 @@ swaps it in behind the `uServerLogStore` seam).
     `mult_domestic`, `mult_dx`, `mult_prefix`, `mult_zone` to 0; both answer
     False for an empty store. **MaxNumberSent** is
     `COALESCE(MAX(serial_sent), 0)` over every row (the old -1 is NULL).
+
+### 13.7 Protocol 5 and catch-up: the W3+W5 contract (NY4I, 2026-11-22)
+
+W3 and W5 are ONE change. The survey (scratchpad `w3_map.md`) showed the sync
+port, the client catch-up, push and restock all work on the 376-byte file image
+and on `(ceQSOID1, ceQSOID2)`, which the wire no longer carries; a W3 that left
+them would not leave a working program. It lands as commits on one branch and
+ships together. No bridge that fabricates 376-byte images.
+
+**Rulings (NY4I, 2026-11-22):**
+
+1. W3+W5 merged, as above.
+2. **A receiver stores the SENDER's facts verbatim**: every wire column of a
+   peer's QSO, `my_*` and `my_source` included, goes into its row as sent. This
+   replaces ruling D for rows that arrive on the wire.
+3. **A station pushes only rows logged HERE** (the wire `computer_id` equals this
+   station's own computer id), so pre-upgrade rows copied from peers, which carry
+   local guids, cannot be duplicated onto the server. **Catch-up DOWNLOAD is
+   unchanged in effect**: a station that was offline receives every QSO the server
+   holds that it lacks, insert-only by guid, after a backup, as today.
+4. **The server holds one contest**: the server database `meta` carries
+   `contest` (the contest id string the first accepted station announced in its
+   HELLO). A client compares it once at catch-up and refuses with the existing
+   contest-mismatch notice; there is no per-row judge.
+5. The wire's `notes`, `rcvd_extra` and `qso_set_id` stay on the wire (W1 table).
+6. The operator-visible version refusal already exists (`RefuseServerProtocol`,
+   `SM_PROTOCOL_MISMATCH`, `SNetServerProtocolOlder/Newer`); W3 raises the
+   version to 5 and keeps the HELLO a FIXED 70 bytes parsed first, so a
+   protocol-4 peer is still refused readably.
+
+**Framing.** The three QSO messages (new, edited, offline) become variable
+length. Every other message keeps its fixed size and the existing table. A
+variable message is: 2-byte LE message id, 4-byte LE payload length, payload.
+New ids (old 1040/1050/1055 are deleted and become unknown ids, logged and
+dropped): `NET_WIRE_QSO_ID` 1041, `NET_WIRE_EDIT_ID` 1051,
+`NET_WIRE_OFFLINE_ID` 1057 (1056 is taken by NET_THIS_QTC_WAS__SEND_ID). Payload length cap
+60000; larger is a protocol error: the sender of it is disconnected and the
+reason logged (never a buffer left holding bytes that cannot complete).
+Receive buffers on the client and both servers are raised to 131072 so a whole
+frame always fits; a frame is consumed only when whole.
+
+**Payload.** 1 byte sender computer id (the client sets its own; the server
+re-stamps it on relay from the accepted HELLO), then the UTF-8 JSON object from
+`uWireQso.EncodeJson` (defaults omitted, member `"k"` the record CRC-32 as hex).
+A bad checksum, unparsable JSON, or a numeric value that fails
+`TryCanonicalInt64` rejects the row: logged, not stored, not relayed, and the
+link is NOT dropped. A NUL is never sent (blank).
+
+**Server behaviour.** Stores through `TServerWireStore`; relays a NEW or EDIT to
+every other station only when stored (or already held, for the duplicate case:
+not relayed); an OFFLINE row is stored but never relayed and is ACKed only after
+`Release` (13.6 rule 11); an edit for a guid not held is relayed and ACKed, not
+stored (as today). Clear-all, clear-dupesheet, clear-mults and the serial scan
+use the store's `Clear`, `ClearFlags`, `MaxNumberSent`. **Clear-all-logs copies
+the database to a dated backup first (D9).** An existing `SERVERLOG.TRW` is
+reported once in the server log as unused and left in place (never deleted).
+The server file is `SERVERLOG.tr4wsrv`.
+
+**Sync stream (the sync port).** One connection, server to client: a header
+frame `{"contest":"<id>","rows":N,"schema":5}` as 4-byte LE length + UTF-8 JSON,
+then N row frames of 4-byte LE length + the UTF-8 JSON row (no sender byte), in
+arrival order, taken from ONE `ReadAll` snapshot. The log-info packet becomes the
+row count.
+
+**Client.** After the commit the main thread posts the row id; the message is
+built from the committed row (`ReadWireValues` -> `EncodeJson`); W4 later moves
+that to a sender thread. A received NEW row is saved through the by-guid path
+keeping the sender's guid and columns; a guid already held is ignored; an EDIT
+replaces the row's wire columns. Own-echo test and contest judge keep using the
+header's sender id. Catch-up: read the sync stream; refuse on a contest
+mismatch; insert (by guid, after backup) every row the station lacks; push (as
+OFFLINE rows) every row logged here that the server's guid set lacks. Restock
+pushes only rows logged here. `TPushPlan`, `uNetCatchUp`, `uGetServerLog`,
+`uServerLogForm`, dedupe, the delivery tag, the resend set and
+`CollectSessionKeys` / `CollectUnsentToServer` move from the pair to the guid.
+
+**Retired in the same change:** `TFileServerLogStore`, the 376-byte sync image,
+the whole-log CRC32, the Python `CE_*` offsets, the byte-oracle baselines and
+their scripts (or turned into a row dump), the old 1040/1050/1055 framing.
+
+**The Move/FillChar ceiling (418) must not rise.** New code uses `TBytes`,
+`SetLength`/`Copy`, `Default()`, assignment and indexed loops, never `Move`,
+`FillChar` or `ZeroMemory`; the lint is run on every commit of this change.
