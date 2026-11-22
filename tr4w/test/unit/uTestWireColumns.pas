@@ -51,7 +51,7 @@ implementation
 
 uses
    SysUtils, Classes, db, sqldb, fpjson, jsonparser,
-   VC, uLogDatabase, uLogRepository, uWireQso;
+   VC, uLogDatabase, uLogRepository, uQsoColumns, uWireQso;
 
 const
    NONE_DEFAULT = '<none>';

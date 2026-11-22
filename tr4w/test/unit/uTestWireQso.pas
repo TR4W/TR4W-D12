@@ -39,7 +39,7 @@ implementation
 
 uses
    SysUtils, Classes, fpjson, jsonparser,
-   uLogRepository, uWireQso,
+   uQsoColumns, uWireQso,
    uTestWireColumns;   (* WireTestFile, ReadUtf8File *)
 
 function HexOf(const aBytes: TBytes): string;

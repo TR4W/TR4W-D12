@@ -733,6 +733,35 @@ state follows the server's Clear-server-log or any restart that lost `SERVERLOG.
   `TStubLink`, `WaitWrites` and `NewImage` now live in `uTestNetSupport`. **The real
   two-station check is BENCH_QUEUE ("A SERVER THAT LOST ITS LOG").**
 
+## The server's SQLite store EXISTS and nothing calls it yet (W2, 2026-11-22)
+
+`src/uServerWireStore.pas` (`TServerWireStore`, tests `uTestServerWireStore`) is the
+server's log as its own SQLite database over `TWireValues` rows: hold/release (one
+transaction), insert-if-identity-absent, update-newest, holds, clear, clear-flags,
+max serial, count, and `ReadAll` (arrival order, one read transaction on its own
+connection, any thread). **Identity is the `guid` column** -- the old pair is the
+station's LOCAL `session_id`/`session_seq` and never reaches the wire; an empty guid
+is stored every time and an edit carrying it changes nothing. The rules both servers
+follow (schema, NULL versus '', refusals) are design note section 13.6. **W3 swaps
+it in behind the `uServerLogStore` seam; until then `tr4wserverUnit` and
+`SERVERLOG.TRW` are untouched and the store is only compiled** (listed in
+`tr4wserver.lpr`). Facts a later stage needs:
+
+- **The table of columns moved**: `uQsoColumns.pas` (a leaf over `uWireQso`) holds
+  `QSO_TABLE_COLUMNS`, `QsoWireColumns`, `QsoTableColumns`, `QsoColumnIsLocal`;
+  `uLogRepository` uses it and keeps the wire READER (`GWireReadPosition`,
+  `QsoWireTableProblem`). `uLogRepository` itself cannot be linked into the server
+  (registry, TF, ADIF, zones).
+- **The connection layer is reused, not lifted**: `TLogDatabase.OpenWithoutIdentity`
+  (new, public) is `OpenConnection` with no schema, no 'TR4W' check, no migration.
+  The server's own identity is application id `$54523453` ('TR4S'), file `.tr4wsrv`.
+- **The Server search path now has `sqlite`, `fcl-db`, `fcl-base`**
+  (`Get-SearchPaths.ps1`): the guard that withheld them is retired by ruling, not
+  replaced. The installer must ship `sqlite3.dll` beside `tr4wserver.exe` (design 7).
+- **A held run is durable only at Release**: ACK an OFFLINEQSO run AFTER `Release`.
+- **This framework calls `TearDown` after EVERY check**: a suite that removes its
+  scratch directory there loses it mid-test (it cost a failed run).
+
 ## The server log is behind ONE seam (SQLite plan phase P1, 2026-11-19)
 
 `tr4wserverUnit` no longer touches `SERVERLOG.TRW`. `src/uServerLogStore.pas` (a leaf,

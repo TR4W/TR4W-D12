@@ -86,6 +86,11 @@ type
   NUL as blank. *)
 function WireText(const aValue: string): string;
 
+(* An integer's CANONICAL digits: an optional '-' then decimal digits, nothing
+  else ('$1F', '0x1F' and spaces are refused). Public since W2: the server's
+  store binds a numeric column by the same rule the JSON encoder checks it by. *)
+function TryCanonicalInt64(const aText: string; out aValue: Int64): boolean;
+
 (* aSkip: a column index (0-based) to treat as never received -- it takes its
   default. -1 = none. Used by the dropped-field test. *)
 function PackCanonical(aColumns: TWireColumns; const aValues: TWireValues;

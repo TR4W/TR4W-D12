@@ -545,6 +545,22 @@ type
         live log, which is worse. *)
       procedure OpenToPeek(const aFileName: string);
 
+      (* THE CONNECTION LAYER WITHOUT THE CONTEST LOG'S SCHEMA OR IDENTITY
+        (stage W2, 2026-11-22). For a SQLite file that is NOT a contest log --
+        today the multi-op server's own database (uServerWireStore) -- and which
+        therefore must not be judged by the 'TR4W' application id or the
+        station's user_version, nor migrated.
+
+        What it DOES do is what every connection here gets from OpenConnection:
+        the busy timeout, foreign_keys read back and, unless aReadOnly,
+        synchronous = FULL and journal_mode = WAL read back. Creates the file
+        when it is missing and aReadOnly is False (DefaultOpenFlags); a
+        read-only open of a missing file is refused, like OpenReadOnly. The
+        caller asks its own identity questions through Connection, and calls
+        Close. A read-only open writes nothing, so a file that turns out not to
+        be the caller's is left as it was found. *)
+      procedure OpenWithoutIdentity(const aFileName: string; aReadOnly: boolean);
+
       procedure Close;
       function IsOpen: boolean;
 
@@ -2166,6 +2182,17 @@ begin
      NOT MigrateSchema: it creates tables and stamps user_version, which is a
      write, and a file being inspected is not a file being adopted. *)
    VerifyIdentity;
+end;
+
+procedure TLogDatabase.OpenWithoutIdentity(const aFileName: string; aReadOnly: boolean);
+begin
+   if aReadOnly then
+      begin
+      RefuseAMissingFile(aFileName);
+      end;
+   FReadOnly := aReadOnly;
+   FImmutable := False;
+   OpenConnection(aFileName);
 end;
 
 procedure TLogDatabase.OpenToPeek(const aFileName: string);

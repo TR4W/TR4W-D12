@@ -467,14 +467,11 @@ read_version() {
 #                               fcl-db and fcl-base.  Naming them again would be
 #                               hardcoding a distro layout for no gain.
 #
-#                               AND IT COSTS THE SERVER GUARD.  Get-SearchPaths
-#                               deliberately withholds sqlite/fcl-db from the
-#                               Server target so a unit that grows a database
-#                               dependency FAILS THE SERVER BUILD rather than
-#                               quietly linking an engine into a relay.  That
-#                               guard cannot exist here while the config's
-#                               wildcard supplies those units to every compile.
-#                               Reported below rather than papered over.
+#                               (Get-SearchPaths once withheld sqlite/fcl-db
+#                               from the Server target as a guard; that guard
+#                               was retired 2026-11-22 when the server's own
+#                               log became SQLite, so there is nothing left
+#                               here for it to differ from.)
 #   datetimectrls            -- source or compiled, whichever is present, same
 #                               as compile-native.sh.  uEditQSOForm needs
 #                               TDateTimePicker and it is not part of the LCL.
@@ -920,10 +917,7 @@ judge_test_failures() {
 # STAGE 6 -- tr4wserver.
 #
 # It is an LCL application since 2026-09-06, so it gets the same paths as the
-# app.  The one thing it does NOT get on Windows -- sqlite and fcl-db, withheld
-# so a database dependency creeping into the relay fails the build -- cannot be
-# withheld here; see the search-path header.  Said out loud in the summary so
-# nobody reads a green server build as proof of that boundary.
+# app, sqlite and fcl-db included since 2026-11-22 (its log is SQLite now).
 # ---------------------------------------------------------------------------
 stage_server() {
    phase 'TR4WServer'
@@ -2272,11 +2266,6 @@ report_gates_not_run() {
    say '  version stamp check        no PE version resource on ELF'
    say '  manifest verification      no side-by-side assemblies on Linux'
    say '  DLL architecture check     no bundled DLLs; ELF loader reports this'
-   say '  server LCL/sqlite guard    /etc/fpc.cfg supplies the package units to'
-   say '                             every compile via its -Fu wildcard, so the'
-   say '                             Windows search-path guard has no effect'
-   say '                             here.  Do not read a green server build as'
-   say '                             evidence the boundary held.'
 }
 
 # ---------------------------------------------------------------------------

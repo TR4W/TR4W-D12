@@ -29,9 +29,9 @@
 #             the NATIVE CI builds replace it -- same class of defect,
 #             the platform that now matters.
 #
-#             THE SQLITE EXCLUSION BELOW IS UNTOUCHED and guards a different
-#             boundary for a different reason. Read it before assuming Server
-#             is now simply App.
+#             THE SQLITE EXCLUSION THAT USED TO FOLLOW IS RETIRED TOO (2026-11-22,
+#             W2): the server's own log is SQLite now. Server IS simply App for
+#             the unit paths. Read the SQLite note below.
 
 # ---------------------------------------------------------------------------
 # INCLUDE paths -- a SEPARATE list from the unit paths, and it has to be.
@@ -187,19 +187,16 @@ function Get-Tr4wSearchPaths
    #   fcl-db      sqlite3conn, sqldb, db, bufdataset
    #   fcl-base    what fcl-db itself needs
    #
-   # DELIBERATELY NOT ADDED TO Server.  tr4wserver has no log of its own -- it
-   # relays QSOs between clients -- and the search path is the only thing
-   # guarding that boundary, exactly as it is for the LCL. A unit that grows a
-   # sqldb dependency and gets pulled into the server should FAIL THE SERVER
-   # BUILD rather than quietly link a database engine into a relay. That guard
-   # has already earned its keep once: uCrashLog reached Forms through TF and
-   # broke the server build for three days before anyone noticed (2026-08-23).
-   if ($For -ne 'Server')
-      {
-      $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\sqlite"))
-      $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\fcl-db"))
-      $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\fcl-base"))
-      }
+   # ADDED TO Server TOO, since 2026-11-22 (stage W2 of
+   # docs\TR4WSERVER_SQLITE_DESIGN.md section 13, NY4I's ruling: the server's
+   # log is its own SQLite database). Until then this was withheld from the
+   # Server target on purpose -- "tr4wserver has no log of its own, so a unit
+   # that grows a sqldb dependency should FAIL THE SERVER BUILD" -- and that
+   # guard is retired, not replaced: the server now legitimately links a
+   # database engine (uServerWireStore). build-unix.sh could never keep it.
+   $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\sqlite"))
+   $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\fcl-db"))
+   $paths.Add((Join-Path $Toolchain.FpcRoot "units\$cpu-$os\fcl-base"))
 
    # Vendored Indy 10.6.3.3 -- kept deliberately; D12 ships Indy as DCUs only.
    $paths.Add((Join-Path $Tr4wDir 'Include'))

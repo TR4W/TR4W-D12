@@ -839,6 +839,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       table, and the codec against Python's golden vectors. *)
    uTestWireColumns in 'uTestWireColumns.pas',
    uTestWireQso in 'uTestWireQso.pas',
+   (* Stage W2 (issues 300/341): the server's SQLite store of wire rows. *)
+   uQsoColumns in '..\..\src\uQsoColumns.pas',
+   uServerWireStore in '..\..\src\uServerWireStore.pas',
+   uTestServerWireStore in 'uTestServerWireStore.pas',
    (* An older log is backed up before it is upgraded (NY4I, 2026-11-19). *)
    uTestLogMigrationBackup in 'uTestLogMigrationBackup.pas',
    (* Schema 9 phase 2: a Station-page edit of ANY value the open contest
@@ -1586,6 +1590,7 @@ begin
    RegisterSuite(TLogDroppedColumnsTests.Create('LogDroppedColumns'));
    RegisterSuite(TWireColumnsTests.Create('WireColumns'));
    RegisterSuite(TWireQsoTests.Create('WireQso'));
+   RegisterSuite(TServerWireStoreTests.Create('ServerWireStore'));
    RegisterSuite(TLogMigrationBackupTests.Create('LogMigrationBackup'));
    RegisterSuite(TStationFactChangeTests.Create('StationFactChange'));
    RegisterSuite(TLogStoreTests.Create('LogStore'));

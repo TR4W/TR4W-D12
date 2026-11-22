@@ -56,9 +56,9 @@ uses
     and Build-Server.ps1 deliberately keeps the LCL off its search path". That
     HAD been true, and stopped being true on 2026-09-06: Get-SearchPaths.ps1
     adds the LCL units for ALL THREE targets, its own header says "Server has
-    it too since it became an LCL application", and the only `-ne 'Server'`
-    exclusion left guards SQLite. This program file already uses Interfaces,
-    Forms and Dialogs.
+    it too since it became an LCL application", and (since 2026-11-22) it adds
+    the SQLite units for the Server target as well. This program file already
+    uses Interfaces, Forms and Dialogs.
 
     The reason it was wrong is worth more than the fix: it was MEASURED --
     the import was removed and the compiler read -- but measured against a
@@ -75,6 +75,13 @@ uses
   tr4wserverUnit in '..\src\tr4wserverUnit.pas',
   uCRC32 in '..\src\uCRC32.pas',
   uServerLogStore in '..\src\uServerLogStore.pas',
+  (* STAGE W2 (docs\TR4WSERVER_SQLITE_DESIGN.md 13): the server's log as its own
+    SQLite database. Nothing calls it yet -- W3 swaps it in behind the seam and
+    W5 retires uServerLogStore -- but it is listed here so the server build
+    COMPILES it, and so uQsoColumns and the connection layer are proven to
+    link into a program with no contest registry. *)
+  uQsoColumns in '..\src\uQsoColumns.pas',
+  uServerWireStore in '..\src\uServerWireStore.pas',
   Log4D,       // the dialog proc logs through tr4wserverUnit's logger
   VC in '..\src\vc.pas';
 

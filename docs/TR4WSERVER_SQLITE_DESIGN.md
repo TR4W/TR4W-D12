@@ -693,3 +693,72 @@ checked run are run once per batch.
   built; their status in the tree was not re-checked for this section. The store
   seam (`uServerLogStore`) is still the right interface; the byte oracle is the
   thing W5 retires.
+
+### 13.6 The server database: the rules both servers follow (stage W2, 2026-11-22)
+
+Built in Pascal as `src/uServerWireStore.pas` (tests `uTestServerWireStore`) and
+to be built in Python from `tr4w/test/wire/columns.json`. The file is the same
+thing in both: either server must be able to open the other's file, and a test
+may compare them. Nothing in `tr4wserverUnit` calls the Pascal store yet (W3
+swaps it in behind the `uServerLogStore` seam).
+
+1. **File.** Extension `.tr4wsrv` (never `.db`: the station's Open dialog scans
+   for that). `PRAGMA application_id = 0x54523453` (`'TR4S'`; the station's
+   contest logs are `0x54523457`, `'TR4W'`). WAL and `synchronous = FULL`, set on
+   the write connection and read back. A journal mode other than WAL is a warning,
+   not a refusal.
+2. **`meta`.** `CREATE TABLE meta (key TEXT PRIMARY KEY, value)`, one row:
+   `('schema_version', 1)`. The version is `WIRE_STORE_SCHEMA_VERSION`, independent
+   of `NET_PROTOCOL_VERSION` (W3 may decide to tie them). It is not defined in
+   `uWireQso`, which has no version; the number lives here until W3.
+3. **`qso`.** `seq INTEGER PRIMARY KEY AUTOINCREMENT`, then the 89 wire columns of
+   `columns.json` IN FILE ORDER, each named as in the file. A column with
+   `"num": true` is declared `INTEGER`, otherwise `TEXT` (those two words exactly).
+   When `"def"` is `""` there is NO `DEFAULT` clause; otherwise `DEFAULT <def>`,
+   unquoted for a numeric column and single-quoted (quotes doubled) for text
+   (`DEFAULT 0`, `DEFAULT 'QSO'`). No `NOT NULL`, no `UNIQUE`, no other
+   constraint. The defaults are descriptive only: every insert names every column.
+4. **Index.** `CREATE INDEX idx_qso_guid ON qso(guid)`, NON-unique.
+5. **Identity is `guid`**, because the old pair `(ceQSOID1, ceQSOID2)` is the
+   station's `session_id` / `session_seq`, which are local columns and never on
+   the wire. `''` (NULL) is the old `(0, 0)`: it names nothing, is stored every
+   time, is never "held", and an edit carrying it changes nothing. (Before, a
+   `(0, 0)` edit rewrote the newest `(0, 0)` record: that was a guess.)
+6. **Insert if absent**, in the insert, inside its transaction:
+   `INSERT INTO qso (...) SELECT :p0, ... WHERE NOT EXISTS (SELECT 1 FROM qso
+   WHERE guid = :g)` when the guid is not empty, a plain `INSERT` when it is.
+   Rows affected 0 is "duplicate": nothing stored, nothing relayed, an OFFLINEQSO
+   still ACKed. Never a UNIQUE index: a log restocked from several stations may
+   hold repeats (5.2).
+7. **Edit** (last writer wins, the whole row, no edit counter):
+   `UPDATE qso SET <every column> = :p WHERE seq = (SELECT MAX(seq) FROM qso WHERE
+   guid = :g)`. A field the edit omits is its DEFAULT, never "unchanged". An edit
+   for a guid the server does not hold stores nothing and is not a failure
+   (relayed and ACKed, as today; design 6.4, decision D7 still open).
+8. **NULL versus ''.** Canonical text makes NULL and `''` one value, so EVERY
+   column stores `''` as NULL and reads NULL back as `''`. A numeric column holds
+   an integer (bound as one, read back as its canonical digits); a text column
+   holds text, so the string `"0"` stays text. A numeric value that is not
+   canonical digits is rejected before any write (`TryCanonicalInt64`: optional
+   `-`, then digits; no `$1F`, `0x1F`, `14.025`, spaces).
+9. **Text is UTF-8** bytes, stored and read byte for byte.
+10. **ReadAll** is `SELECT <the 89 columns> FROM qso ORDER BY seq` on a read-only
+    connection of its own, one transaction: arrival order, a snapshot of what is
+    committed, safe from any thread. This replaces the byte-exact sync image.
+11. **Held run** (a run of OFFLINEQSO packets): one transaction, committed at
+    Release. An ACK sent before Release is an ACK for a row that is not yet
+    durable, so W3 must ACK a held run AFTER Release. A failure inside the run
+    rolls back the whole run and ends the hold.
+12. **Open.** A missing file or an empty SQLite file is created (tables, version,
+    application id). An existing file is examined READ-ONLY first (no write at
+    all) and refused, left untouched, and reported when: its application id is
+    not `0x54523453` (and not 0 with no tables); its `schema_version` is not this
+    server's; its `qso` columns are not exactly `seq` then the wire's columns in
+    order; or it fails `PRAGMA integrity_check`. Never silently reused, never
+    migrated.
+13. **Clear** deletes every `qso` row (`seq` keeps increasing). **ClearFlags**
+    changes only rows whose `record_kind = 'QSO'`: set-dupesheet sets
+    `clear_dupe_sheet = 1`; clear-mults sets `clear_mult_sheet = 1` and
+    `mult_domestic`, `mult_dx`, `mult_prefix`, `mult_zone` to 0; both answer
+    False for an empty store. **MaxNumberSent** is
+    `COALESCE(MAX(serial_sent), 0)` over every row (the old -1 is NULL).

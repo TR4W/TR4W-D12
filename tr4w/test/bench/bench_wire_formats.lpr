@@ -84,7 +84,8 @@ uses
    Log4D,
    MainUnit,  (* logger -- units below log through it *)
    uLogDatabase,
-   uLogRepository,   (* QsoWireColumns, ReadWireValues -- the wire's columns and a row *)
+   uLogRepository,   (* ReadWireValues -- a row as wire values *)
+   uQsoColumns,      (* QsoWireColumns -- the wire's columns *)
    uWireQso;         (* the codec that ships *)
 
 const
