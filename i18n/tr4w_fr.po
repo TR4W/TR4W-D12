@@ -13213,3 +13213,107 @@ msgstr ""
 #, fuzzy
 msgid "The restored log's record of what was sent to external loggers (Club Log, WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may already be at those services but are not in this log, and QSOs the backup had not yet sent will be sent again. Check each service's log."
 msgstr ""
+
+#: uappstrings.smenucorrectstationfacts
+#, fuzzy
+msgid "Correct Station Facts..."
+msgstr ""
+
+#: uappstrings.sstationcorrectionbackupfailed
+#, fuzzy
+msgid "Nothing was changed: the log could not be backed up first. %s"
+msgstr ""
+
+#: uappstrings.sstationcorrectionbadfrom
+#, fuzzy
+msgid "A log record number is a whole number from 1 up."
+msgstr ""
+
+#: uappstrings.sstationcorrectioncancelbutton
+#, fuzzy
+msgctxt "uappstrings.sstationcorrectioncancelbutton"
+msgid "Cancel"
+msgstr ""
+
+#: uappstrings.sstationcorrectionchangebutton
+#, fuzzy
+msgid "Change the QSOs"
+msgstr ""
+
+#: uappstrings.sstationcorrectionchoosefact
+#, fuzzy
+msgid "Which of your station's values is wrong on the QSOs already logged?"
+msgstr ""
+
+#: uappstrings.sstationcorrectionconfirm
+#, fuzzy
+msgid ""
+"This CHANGES %0:s to \"%1:s\" on %2:d logged QSO(s): %3:s.\n"
+"They say now: %4:s.\n"
+"\n"
+"The log is BACKED UP FIRST. Each changed QSO is then sent again as an edit -- to Club Log, WRL and any other external logger, to the multi-op server and as a UDP replace -- and the log is rescored. %8:d of them are a multi-op peer's: corrected here, sent by that station.\n"
+"\n"
+"Not changed: %5:d imported, %6:d never recorded (they follow your setting: correct it in Preferences too), %7:d per place (a rover or an in-state party)."
+msgstr ""
+
+#: uappstrings.sstationcorrectiondone
+#, fuzzy
+msgid ""
+"%0:s is now \"%1:s\" on %2:d logged QSO(s).\n"
+"The log as it was is in %3:s"
+msgstr ""
+
+#: uappstrings.sstationcorrectionemptyvalue
+#, fuzzy
+msgid "Type the value the QSOs should have."
+msgstr ""
+
+#: uappstrings.sstationcorrectionfailed
+#, fuzzy
+msgid "Nothing was changed: the contest log did not take the correction. See tr4w.log."
+msgstr ""
+
+#: uappstrings.sstationcorrectionfromprompt
+#, fuzzy
+msgid "Change the QSOs from log record number (1 = every QSO in the log):"
+msgstr ""
+
+#: uappstrings.sstationcorrectionnotallowed
+#, fuzzy
+msgid "%s cannot be changed on logged QSOs."
+msgstr ""
+
+#: uappstrings.sstationcorrectionnothing
+#, fuzzy
+msgid "No logged QSO needs changing."
+msgstr ""
+
+#: uappstrings.sstationcorrectionreadonly
+#, fuzzy
+msgid "Nothing was changed: the contest log is read-only."
+msgstr ""
+
+#: uappstrings.sstationcorrectionscopeall
+#, fuzzy
+msgid "ALL PRIOR CONTACTS in the log"
+msgstr ""
+
+#: uappstrings.sstationcorrectionscopefrom
+#, fuzzy
+msgid "every contact from log record %d on"
+msgstr ""
+
+#: uappstrings.sstationcorrectiontitle
+#, fuzzy
+msgid "Correct station facts on logged QSOs"
+msgstr ""
+
+#: uappstrings.sstationcorrectionvalueprompt
+#, fuzzy
+msgid "The value the QSOs should have for %s:"
+msgstr ""
+
+#: uappstrings.sstationcorrectionzonezero
+#, fuzzy
+msgid "A zone of 0 is not a zone."
+msgstr ""

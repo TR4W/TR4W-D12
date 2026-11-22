@@ -268,6 +268,53 @@ type
       Sample: string;
    end;
 
+   (* ONE STATION VALUE SET ON LOGGED QSOs -- Tools > Correct Station Facts
+      (issue 223). The caller fills Column, NewText, IsZone and FromIndex;
+      TLogRepository.PlanStationValueCorrection fills the rest, in ONE pass
+      over the log in record order, and ApplyStationValueCorrection writes
+      exactly the rows planned.
+
+      Which rows (a QSO, not deleted, at record index FromIndex or later --
+      the index RowIdAtIndex counts, notes and deleted rows included):
+         my_source logged / edited / stamped   changed, marked 'edited',
+                                               server_dirty set
+         my_source assumed (a multi-op PEER's  changed, provenance KEPT and
+           QSO stamped with THIS station's     server_dirty untouched: the
+           values)                             value was ours, the QSO is not,
+                                               and this station never
+                                               re-delivers it (Peer[i] True)
+         my_source imported                    skipped (the file's own
+                                               statement): Imported
+         my_source NULL                        skipped (it follows the session,
+                                               so the setting is its fix):
+                                               NotCaptured
+         my_rover_qth or my_sent_unit set      skipped (its station is per
+                                               place): PerPlace
+         already NewText                       unchanged: Already
+      A class, not a record: it owns lists and answers questions. *)
+   TStationValueCorrectionPlan = class
+   public
+      Column: AnsiString;
+      (* As the column stores it: a zone's decimal digits, else UTF-8 text.
+         Never '' -- a correction states a value. *)
+      NewText: AnsiString;
+      IsZone: boolean;
+      FromIndex: Int64;
+      (* The rows to change, in log order, kept in step. *)
+      RowIds: TInt64Array;
+      RecordIndexes: TInt64Array;
+      OldTexts: array of AnsiString;
+      Peer: array of boolean;
+      Already, NotCaptured, Imported, PerPlace: integer;
+      procedure Clear;
+      procedure AddRow(aRowId, aRecordIndex: Int64; const aOld: AnsiString;
+                       aPeer: boolean);
+      function Count: integer;
+      (* The distinct old values, in first-seen order, joined by ', ', each
+         quoted; "(none)" for a NULL. For the one audit line. *)
+      function OldValuesText: string;
+   end;
+
    (* Reads and writes QSOs.  Owns its prepared statements and nothing else --
      the connection belongs to the TLogDatabase handed in. *)
    TLogRepository = class(TObject)
@@ -679,6 +726,19 @@ type
         answers how many. DOES NOT COMMIT. *)
       function CountQSOsSentStationValue(const aColumn, aOld: AnsiString): integer;
       function CorrectSentStationValue(const aColumn, aOld, aNew: AnsiString): integer;
+
+      (* TOOLS > CORRECT STATION FACTS (issue 223) -- see
+         TStationValueCorrectionPlan for which rows.
+
+         Plan READS ONLY: one pass in record order, the cursor closed before
+         it returns. Apply writes every planned row by its id, each UPDATE
+         guarded by "the value is not already NewText", and RAISES if any row
+         is not changed -- the plan and the log disagree, so the caller rolls
+         back. Answers the rows changed. DOES NOT COMMIT. aPlan.Column must
+         be a station value column (RequireStationValueColumn) and NOT
+         my_call: the call is the identity every export signs with. *)
+      procedure PlanStationValueCorrection(aPlan: TStationValueCorrectionPlan);
+      function ApplyStationValueCorrection(aPlan: TStationValueCorrectionPlan): integer;
       (* aEdited is the row's edited flag (schema 4, Q113): True for a memory
          the OPERATOR edited, which LoadEditedMessages hands back at open.
          Every other row records the contest's default as it stood. *)
@@ -3107,6 +3167,239 @@ begin
          end;
       q.ExecSQL;
       Result := q.RowsAffected;
+   finally
+      q.Free;
+   end;
+end;
+
+(* ---------------------------------------------------------------------------
+  TStationValueCorrectionPlan -- issue 223
+  --------------------------------------------------------------------------- *)
+
+procedure TStationValueCorrectionPlan.Clear;
+begin
+   SetLength(RowIds, 0);
+   SetLength(RecordIndexes, 0);
+   SetLength(OldTexts, 0);
+   SetLength(Peer, 0);
+   Already := 0;
+   NotCaptured := 0;
+   Imported := 0;
+   PerPlace := 0;
+end;
+
+procedure TStationValueCorrectionPlan.AddRow(aRowId, aRecordIndex: Int64;
+   const aOld: AnsiString; aPeer: boolean);
+var
+   n: integer;
+begin
+   n := Length(RowIds);
+   SetLength(RowIds, n + 1);
+   SetLength(RecordIndexes, n + 1);
+   SetLength(OldTexts, n + 1);
+   SetLength(Peer, n + 1);
+   RowIds[n] := aRowId;
+   RecordIndexes[n] := aRecordIndex;
+   OldTexts[n] := aOld;
+   Peer[n] := aPeer;
+end;
+
+function TStationValueCorrectionPlan.Count: integer;
+begin
+   Result := Length(RowIds);
+end;
+
+function TStationValueCorrectionPlan.OldValuesText: string;
+var
+   seen: TStringList;
+   i: integer;
+   shown: string;
+begin
+   (* See the declaration. A TStringList only to remember what was seen; the
+      values are compared as the column holds them. *)
+   Result := '';
+   seen := TStringList.Create;
+   try
+      seen.CaseSensitive := True;
+      for i := 0 to High(OldTexts) do
+         begin
+         if seen.IndexOf(OldTexts[i]) >= 0 then
+            begin
+            Continue;
+            end;
+         seen.Add(OldTexts[i]);
+         if OldTexts[i] = '' then
+            begin
+            shown := '(none)';
+            end
+         else
+            begin
+            shown := '"' + UTF8Decode(OldTexts[i]) + '"';
+            end;
+         if Result <> '' then
+            begin
+            Result := Result + ', ';
+            end;
+         Result := Result + shown;
+         end;
+   finally
+      seen.Free;
+   end;
+end;
+
+const
+   (* The correction's statements, typed AnsiString for the reason on
+     COUNT_OUR_SENT_YEAR_ROWS: the column name is joined at run time. *)
+   SQL_PLAN_HEAD: AnsiString =
+      'SELECT id, record_kind, deleted, my_source, my_rover_qth, my_sent_unit, ';
+   SQL_PLAN_TAIL: AnsiString = ' FROM qso ORDER BY id';
+   SQL_APPLY_SET: AnsiString =
+      ' = :new, ' +
+      'my_source = CASE WHEN my_source = ''assumed'' THEN my_source ELSE ''edited'' END, ' +
+      'server_dirty = CASE WHEN my_source = ''assumed'' THEN server_dirty ELSE 1 END ' +
+      'WHERE id = :id AND ';
+   (* A second name for the same value: one parameter name used twice is not
+     something to rely on through sqldb's parameter parsing. *)
+   SQL_APPLY_GUARD: AnsiString = ' IS NOT :same';
+
+(* THE CORRECTION'S COLUMN, checked: a station value column, never the call,
+  and a zone's value is one or two digits. *)
+procedure RequireCorrectableColumn(aPlan: TStationValueCorrectionPlan);
+var
+   i: integer;
+begin
+   RequireStationValueColumn(aPlan.Column);
+   if aPlan.Column = 'my_call' then
+      begin
+      raise Exception.Create('my_call is not corrected in bulk: it is the ' +
+                             'identity every export signs with');
+      end;
+   if aPlan.NewText = '' then
+      begin
+      raise Exception.Create('a station value correction states a value');
+      end;
+   if aPlan.IsZone then
+      begin
+      if Length(aPlan.NewText) > 2 then
+         begin
+         raise Exception.CreateFmt('not a zone: "%s"', [aPlan.NewText]);
+         end;
+      for i := 1 to Length(aPlan.NewText) do
+         begin
+         if not (aPlan.NewText[i] in ['0'..'9']) then
+            begin
+            raise Exception.CreateFmt('not a zone: "%s"', [aPlan.NewText]);
+            end;
+         end;
+      end;
+end;
+
+(* A zone's text as a number; RequireCorrectableColumn has checked it. *)
+function ZoneTextValue(const aText: AnsiString): integer;
+var
+   i: integer;
+begin
+   Result := 0;
+   for i := 1 to Length(aText) do
+      begin
+      Result := Result * 10 + (Ord(aText[i]) - Ord('0'));
+      end;
+end;
+
+procedure TLogRepository.PlanStationValueCorrection(aPlan: TStationValueCorrectionPlan);
+var
+   q: TSQLQuery;
+   recIndex: Int64;
+   source: AnsiString;
+   old: AnsiString;
+begin
+   (* See the declaration. *)
+   RequireCorrectableColumn(aPlan);
+   aPlan.Clear;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := SQL_PLAN_HEAD + aPlan.Column + SQL_PLAN_TAIL;
+      q.Open;
+      recIndex := 0;
+      while not q.EOF do
+         begin
+         if (recIndex >= aPlan.FromIndex) and
+            (AnsiString(q.Fields[1].AsString) = 'QSO') and
+            (q.Fields[2].AsInteger = 0) then
+            begin
+            source := AnsiString(q.Fields[3].AsString);
+            old := AnsiString(q.Fields[6].AsString);
+            if (AnsiString(q.Fields[4].AsString) <> '') or
+               (AnsiString(q.Fields[5].AsString) <> '') then
+               begin
+               Inc(aPlan.PerPlace);
+               end
+            else if source = '' then
+               begin
+               Inc(aPlan.NotCaptured);
+               end
+            else if source = MyFactsSourceToken(mfsImported) then
+               begin
+               Inc(aPlan.Imported);
+               end
+            else if old = aPlan.NewText then
+               begin
+               Inc(aPlan.Already);
+               end
+            else
+               begin
+               aPlan.AddRow(q.Fields[0].AsLargeInt, recIndex, old,
+                            source = MyFactsSourceToken(mfsAssumed));
+               end;
+            end;
+         Inc(recIndex);
+         q.Next;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.ApplyStationValueCorrection(aPlan: TStationValueCorrectionPlan): integer;
+var
+   q: TSQLQuery;
+   i: integer;
+begin
+   (* See the declaration. *)
+   RequireCorrectableColumn(aPlan);
+   Result := 0;
+   if aPlan.Count = 0 then
+      begin
+      Exit;
+      end;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.SQL.Text := SQL_UPDATE_HEAD + aPlan.Column + SQL_APPLY_SET +
+                    aPlan.Column + SQL_APPLY_GUARD;
+      for i := 0 to aPlan.Count - 1 do
+         begin
+         if aPlan.IsZone then
+            begin
+            q.ParamByName('new').AsInteger := ZoneTextValue(aPlan.NewText);
+            q.ParamByName('same').AsInteger := ZoneTextValue(aPlan.NewText);
+            end
+         else
+            begin
+            BindText(q.ParamByName('new'), aPlan.NewText);
+            BindText(q.ParamByName('same'), aPlan.NewText);
+            end;
+         q.ParamByName('id').AsLargeInt := aPlan.RowIds[i];
+         q.ExecSQL;
+         if q.RowsAffected <> 1 then
+            begin
+            raise ELogRepositoryError.CreateFmt(
+               'correcting %s: row %d was not changed -- the log changed ' +
+               'after the plan was made', [aPlan.Column, aPlan.RowIds[i]]);
+            end;
+         Inc(Result);
+         end;
    finally
       q.Free;
    end;

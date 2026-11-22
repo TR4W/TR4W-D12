@@ -322,6 +322,71 @@ function LogStoreCorrectSentStation(aCorrectYear: boolean;
                                     aNewYearKnown: boolean; aNewYear: integer;
                                     const aFacts: TStationFactCorrections): integer;
 
+type
+   (* WHAT TOOLS > CORRECT STATION FACTS DID, OR WOULD DO (issue 223). The
+     caller frees it. Ok False: Reason says why, in the operator's words, and
+     NOTHING in the log changed. Plan is owned and lists the rows (changed,
+     or to be changed) and what was skipped -- see
+     uLogRepository.TStationValueCorrectionPlan. *)
+   TStationCorrectionResult = class
+   public
+      Ok: boolean;
+      Reason: string;
+      (* The fact in the operator's words (StationFactCaption) and its column. *)
+      FactCaption: string;
+      Column: string;
+      NewValue: string;
+      (* The distinct values the changed rows held (Plan.OldValuesText). *)
+      OldValues: string;
+      RowsChanged: integer;
+      (* The verified backup taken first; '' for a plan, or when none was made. *)
+      BackupPath: string;
+      Plan: TStationValueCorrectionPlan;
+      constructor Create;
+      destructor Destroy; override;
+   end;
+
+(* TOOLS > CORRECT STATION FACTS (issue 223, NY4I 2026-11-22): ONE of our
+  station's facts set to ONE value on every logged QSO, or on those from
+  record index aFromIndex on (0 = all; the index RowIdAtIndex and the log
+  window count -- notes and deleted rows included).
+
+  aCorrection names the fact (Fact) and the new value AS TYPED (NewText,
+  UTF8Encoded as TStationFactCorrection's other users fill it); OldText and
+  Count are not read -- every row that does not already hold the value is a
+  candidate, whatever it holds. The fact must be in
+  STATION_FACT_BULK_CORRECTABLE and the value must pass
+  StationFactBulkProblem.
+
+  PLAN reads only: which rows would change, and what is skipped (Ok True
+  when the log could be read; RowsChanged is the count planned). The
+  confirmation question shows it.
+
+  CORRECT, in this order, and refused (Ok False, nothing changed) at any
+  step that fails:
+    1. the value is acceptable, the store is open and NOT read-only;
+    2. BeginMainWrite -- anything pending commits first;
+    3. a dated, verified backup "<log> before correction <UTC>Z.db" in
+       aBackupDir (LogStoreBackupBefore, synchronous; never the periodic
+       slot); a failed backup changes nothing;
+    4. the plan read and every planned row written in ONE transaction, with
+       the durable external loggers' capture of each of OUR rows (an edit:
+       Club Log / WRL replace it) inside it, then COMMIT;
+    5. only now Ok True, ONE audit line in tr4w.log (fact, old value(s), new
+       value, rows), and the delivery worker woken.
+  A failed write or commit goes through Disable (rolled back; the log made
+  read-only or stood down as for any failed write).
+
+  NOT DONE HERE, because the store cannot reach them: the rescore, and the
+  per-row edit event (UDP, the non-durable loggers, HamScore) and
+  NET_EDITEDQSO_ID. uStationCorrection.AnnounceStationCorrection does those,
+  after this commit. *)
+function LogStorePlanStationCorrection(const aCorrection: TStationFactCorrection;
+                                       aFromIndex: Int64): TStationCorrectionResult;
+function LogStoreCorrectStationFacts(const aCorrection: TStationFactCorrection;
+                                     aFromIndex: Int64;
+                                     const aBackupDir: string): TStationCorrectionResult;
+
 (* EMPTY THE LOG. False if there was no usable store to empty, so a caller can
   tell "cleared" from "could not".
 
@@ -4512,6 +4577,197 @@ begin
          begin
          Result := -1;
          Disable('correcting what logged QSOs sent', E);
+         end;
+   end;
+end;
+
+(* ---------------------------------------------------------------------------
+  TOOLS > CORRECT STATION FACTS (issue 223)
+  --------------------------------------------------------------------------- *)
+
+constructor TStationCorrectionResult.Create;
+begin
+   inherited Create;
+   Plan := TStationValueCorrectionPlan.Create;
+end;
+
+destructor TStationCorrectionResult.Destroy;
+begin
+   Plan.Free;
+   inherited Destroy;
+end;
+
+(* THE HALF PLAN AND CORRECT SHARE: the value judged, the plan's column, value
+  and scope filled. False, with the reason in aResult, when the value is
+  refused -- before anything is opened or read. *)
+function PrepareStationCorrection(const aCorrection: TStationFactCorrection;
+   aFromIndex: Int64; aResult: TStationCorrectionResult): boolean;
+var
+   typed: string;
+   problem: string;
+begin
+   Result := False;
+   typed := UTF8Decode(aCorrection.NewText);
+   aResult.FactCaption := StationFactCaption(aCorrection.Fact);
+   aResult.Column := STATION_FACT_IN_RECORD[aCorrection.Fact].Column;
+   aResult.NewValue := Trim(typed);
+   problem := StationFactBulkProblem(aCorrection.Fact, typed);
+   if problem <> '' then
+      begin
+      aResult.Reason := problem;
+      Exit;
+      end;
+   aResult.Plan.Column := AnsiString(aResult.Column);
+   aResult.Plan.NewText := StationFactBulkColumnText(aCorrection.Fact, typed);
+   aResult.Plan.IsZone := StationFactColumnIsZone(aCorrection.Fact);
+   if aFromIndex < 0 then
+      begin
+      aFromIndex := 0;
+      end;
+   aResult.Plan.FromIndex := aFromIndex;
+   Result := True;
+end;
+
+function LogStorePlanStationCorrection(const aCorrection: TStationFactCorrection;
+                                       aFromIndex: Int64): TStationCorrectionResult;
+var
+   rebuilt: boolean;
+begin
+   (* See the declaration. A READ: a failure is logged and the store stays
+      enabled. *)
+   Result := TStationCorrectionResult.Create;
+   if not PrepareStationCorrection(aCorrection, aFromIndex, Result) then
+      begin
+      Exit;
+      end;
+   Result.Reason := SStationCorrectionFailed;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      GRepository.PlanStationValueCorrection(Result.Plan);
+      Result.RowsChanged := Result.Plan.Count;
+      Result.OldValues := Result.Plan.OldValuesText;
+      Result.Reason := '';
+      Result.Ok := True;
+   except
+      on E: Exception do
+         begin
+         Result.Ok := False;
+         Result.Reason := SStationCorrectionFailed;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not read which QSOs a station ' +
+                         'correction would change: %s', [E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreCorrectStationFacts(const aCorrection: TStationFactCorrection;
+                                     aFromIndex: Int64;
+                                     const aBackupDir: string): TStationCorrectionResult;
+const
+   WHAT = 'correcting a station fact on logged QSOs';
+var
+   rebuilt: boolean;
+   backupReport: string;
+   i: integer;
+begin
+   (* See the declaration; the numbered steps are its. *)
+   Result := TStationCorrectionResult.Create;
+
+   (* 1. *)
+   if not PrepareStationCorrection(aCorrection, aFromIndex, Result) then
+      begin
+      Exit;
+      end;
+   Result.Reason := SStationCorrectionFailed;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      if RefuseReadOnly(WHAT) then
+         begin
+         Result.Reason := SStationCorrectionReadOnly;
+         Exit;
+         end;
+
+      (* 2. *)
+      BeginMainWrite;
+
+      (* 3. THE BACKUP FIRST, AND NO BACKUP MEANS NO CHANGE (NY4I). Its own
+         read-only connection: what it copies is what the plan reads. *)
+      if not LogStoreBackupBefore(CORRECTION_BACKUP_INFIX, aBackupDir,
+                                  Result.BackupPath, backupReport) then
+         begin
+         Result.Reason := UnicodeFormat(SStationCorrectionBackupFailed, [backupReport]);
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] station correction NOT done: the backup ' +
+                         'to %s failed: %s', [Result.BackupPath, backupReport]);
+            end;
+         Result.BackupPath := '';
+         Exit;
+         end;
+
+      (* 4. ONE TRANSACTION: the plan's read, every row's write, and each of
+         our rows' durable delivery. A peer's row is corrected here but never
+         delivered from this station (TStationValueCorrectionPlan). *)
+      GRepository.PlanStationValueCorrection(Result.Plan);
+      Result.RowsChanged := GRepository.ApplyStationValueCorrection(Result.Plan);
+      if externalLogger <> nil then
+         begin
+         for i := 0 to Result.Plan.Count - 1 do
+            begin
+            if not Result.Plan.Peer[i] then
+               begin
+               externalLogger.CaptureSavedQso(GDatabase, GRepository,
+                                              Result.Plan.RowIds[i], False);
+               end;
+            end;
+         end;
+      if Result.RowsChanged > 0 then
+         begin
+         GRepository.Commit;
+         end;
+
+      (* 5. AND ONLY NOW. *)
+      Result.OldValues := Result.Plan.OldValuesText;
+      Result.Reason := '';
+      Result.Ok := True;
+      if logger <> nil then
+         begin
+         logger.Info('[LogStore] STATION CORRECTION: %s (%s) %s -> "%s" on %d QSO(s) ' +
+                     'from record %d; not changed: %d already, %d never recorded, ' +
+                     '%d imported, %d per place; backup %s',
+                     [Result.FactCaption, Result.Column, Result.OldValues,
+                      Result.NewValue, Result.RowsChanged, Result.Plan.FromIndex,
+                      Result.Plan.Already, Result.Plan.NotCaptured,
+                      Result.Plan.Imported, Result.Plan.PerPlace,
+                      Result.BackupPath]);
+         end;
+      if Result.RowsChanged > 0 then
+         begin
+         LogStoreStartExternalDelivery;
+         end;
+   except
+      on E: Exception do
+         begin
+         Result.Ok := False;
+         Result.RowsChanged := 0;
+         Result.Reason := SStationCorrectionFailed;
+         Disable(WHAT, E);
          end;
    end;
 end;

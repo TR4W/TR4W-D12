@@ -2037,7 +2037,7 @@ end;
   in the -wal -- and the reopened file must match the seed exactly. *)
 procedure TLogRepositoryTests.TestEveryWriteWaitsForItsCommit;
 const
-   STEPS = 21;
+   STEPS = 22;
    NAMES: array[0..STEPS - 1] of string = (
       'SaveQSO',
       'UpdateQSO',
@@ -2059,7 +2059,8 @@ const
       'BackfillYearSent',
       'CorrectSentYear',
       'BackfillStationFacts',
-      'BackfillOffContest');
+      'BackfillOffContest',
+      'ApplyStationValueCorrection');
 var
    db: TLogDatabase;
    repo: TLogRepository;
@@ -2070,6 +2071,7 @@ var
    seedPrint, written: string;
    decl: TLogEntryDeclaration;
    facts: TQsoMyFacts;
+   correction: TStationValueCorrectionPlan;
    wasNew: boolean;
    fn: string;
    step: integer;
@@ -2222,6 +2224,43 @@ begin
                     stamp calls every QSO off-contest, so the fill writes. *)
                   repo.SaveSessionValue(LOG_OFF_CONTEST_BACKFILL_KEY, '1');
                   repo.BackfillOffContest(@StampEveryQsoOffContest);
+                  end;
+               21:
+                  begin
+                  (* Issue 223: the seed captures a station in zone 5, then
+                    the Tools-menu correction plans and writes zone 14 --
+                    none of it committed. *)
+                  (* THE SEED MADE PLANNABLE, column by column, on this
+                    connection and in this transaction (ExecuteDirect starts
+                    it; nothing commits): a QSO, not deleted, OUR captured
+                    station ('logged', the stored spelling), no per-place
+                    value, and an old zone that is not the new one. The same
+                    shape uTestLogStore seeds by SQL. *)
+                  db.Connection.ExecuteDirect(AnsiString(
+                     'UPDATE qso SET record_kind = ''QSO'', deleted = 0, ' +
+                     'my_source = ''logged'', my_cq_zone = 5, ' +
+                     'my_rover_qth = NULL, my_sent_unit = NULL ' +
+                     'WHERE id = ' + IntToStr(seedId)));
+                  (* Said if the seed did not take, so a failure below names
+                    the planner and not the seed. *)
+                  CheckTrue(repo.LoadQSOMyFacts(seedId, facts) and
+                            (facts.Source = mfsLogged) and (facts.CQZone = 5),
+                            'ApplyStationValueCorrection: the seed reads back as ' +
+                            'our station in zone 5');
+                  correction := TStationValueCorrectionPlan.Create;
+                  try
+                     correction.Column := 'my_cq_zone';
+                     correction.NewText := '14';
+                     correction.IsZone := True;
+                     correction.FromIndex := 0;
+                     repo.PlanStationValueCorrection(correction);
+                     CheckEquals(1, correction.Count,
+                                 'ApplyStationValueCorrection: the seed is planned');
+                     CheckEquals(1, repo.ApplyStationValueCorrection(correction),
+                                 'ApplyStationValueCorrection: and written');
+                  finally
+                     correction.Free;
+                  end;
                   end;
             end;
 

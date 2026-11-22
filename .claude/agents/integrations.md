@@ -408,6 +408,17 @@ zeroing the totals; building XML from them posts a zero score. `uScoreBreakdown.
 (seams for the read and the build) decides; a failed read keeps the last XML, leaves the dirty flag set, and warns once per
 streak. A successful read of an empty log still publishes zeros.
 
+**Tools > Correct Station Facts (issue 223, 2026-11-22) is an EDIT of every
+changed row, to every destination.** The durable loggers (Club Log, WRL, ...)
+are captured INSIDE the store's one transaction
+(`uLogStore.LogStoreCorrectStationFacts` calls `CaptureSavedQso(rowId, False)`
+per row of ours, exactly as `UpdateQSOAtIndex` does), so their replacement is
+atomic with the change. After the commit and `RescoreLog`,
+`uEditQSO.AnnounceStationCorrection` posts `PostQsoEvent(qmEdited, ...)` per
+row (UDP replace, HamScore, a non-durable logger such as DXKeeper; never for an
+X-QSO). A peer's (`assumed`) row is not delivered from this station. A large
+log is one replacement per row: the confirmation shows the count.
+
 ## Mode names on the wire (2026-10-23)
 
 **Never send `VC.ExtendedModeStringArray` to another program** -- `DATA`,

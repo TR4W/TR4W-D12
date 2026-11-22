@@ -962,6 +962,18 @@ the contest's all-modes caption. **Do not add a fit rule**: the cell's own
 `FitCaption` shrinks and logs; `uTestTotalsModeText` measures `123/456` in the
 All column at `WS_MIN` through a real `TElementPanel`.
 
+## Tools > Correct Station Facts (issue 223, 2026-11-22)
+
+`src/ui/lcl/uCorrectStationFactsDialog.pas`, NO `.lfm`: the LCL's own
+`InputCombo` (which fact), `InputQuery` (the value, offered from
+`Settings.My.Resolved`; the first log record, 1-based) and `QuestionDlg`
+(the confirmation; Cancel is the default AND the Esc answer, compared by modal
+result). Every string through `LclText`. Menu id `menu_correct_station_facts`
+(10026) beside Run Verification Checks in `uMenu`; dispatched in `MainUnit`.
+Refused while the log is read-only. The rules, the write and the announce are
+not here (log-database). Not run on screen yet (BENCH_QUEUE); `InputCombo` was
+checked in the local `C:\Lazarus` only.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

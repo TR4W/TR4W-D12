@@ -2981,6 +2981,7 @@ const
   menu_run_verification_checks          = 10023;  // Tools -> Run Verification Checks
   menu_open_log                         = 10024;  // File -> Open Log..., issue 218
   menu_setup_wizard                     = 10025;  // Tools -> Setup Wizard...
+  menu_correct_station_facts            = 10026;  // Tools -> Correct Station Facts..., issue 223
   (* TOOLS -> COMMANDS (issue 87 step 0): one item per call-window command.
     uMenu.CALL_WINDOW_COMMANDS pairs each id with the word the call window
     accepts, and MainUnit.CheckCommandInCallsignWindow dispatches on the id, so

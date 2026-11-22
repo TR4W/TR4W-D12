@@ -188,6 +188,17 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-22 -- TOOLS > CORRECT STATION FACTS: A WRONG MY ZONE FIXED ON QSOs ALREADY LOGGED (issue 223; log-database, lcl-ui, integrations, multi-op-network)
+
+Built in an edit-only session: the store and its transaction are unit-tested (`uTestLogStore`), the dialog and what follows the commit (rescore, UDP, server, the edit events) are NOT. Use a COPY of a real log with Club Log and/or WRL configured (a test logbook), and a CQ WW log -- NOT EUHFC/KVP: there MY ZONE is the licence year, which is `year_sent` and is not in this tool; the CQ zone column there holds MY CALL's CTY zone.
+
+- [ ] **CQ WW, wrong MY ZONE, every QSO.** Log 10 QSOs with MY ZONE = 4 (you are in 5), let Club Log / WRL deliver them. Tools > Correct Station Facts..., CQ zone, 5, record 1. EXPECT: the question says it CHANGES ALL PRIOR CONTACTS, names 10 QSOs, says "4" now, says the log is backed up first, and Cancel is the default (Enter and Esc both cancel). Answer Change: EXPECT `settings\backup\<log> before correction <UTC>Z.db` holding the zone-4 log, ONE `STATION CORRECTION:` Info line in tr4w.log (field, old, new, count), the log rescored (points of same-zone QSOs change), and Club Log / WRL each show the 10 contacts REPLACED (not duplicated) with MY_CQ_ZONE 5.
+- [ ] **From record n.** Repeat with record 6: only records 6 on change; the question says "every contact from log record 6 on". Check that the record number matches what the operator would count in the log window (notes and deleted QSOs are counted).
+- [ ] **UDP and the multi-op server.** With UDP contact broadcast on (N1MM-style listener) and a server connected: one `contactreplace` per changed QSO; the server's log carries the edits. With the server DISCONNECTED: connect later and EXPECT the resend (rows are `server_dirty`).
+- [ ] **A multi-op peer's QSOs** in the log (assumed rows): corrected locally, NOT sent from this station (the confirmation says how many).
+- [ ] **A read-only log** (locked log opened read-only): the command refuses with "the contest log is read-only" and asks nothing.
+- [ ] **A large host-state party log** (a second domestic key, e.g. a party with two-county keys): time the announce after the commit -- the second key is replayed per row (O(n^2)); say whether it is acceptable.
+
 ## Added 2026-11-22 -- RESTORING THE LOG FROM A BACKUP: THE ENGINE ONLY (issue 242 stage 1; log-database)
 
 There is NO menu item or button yet: the chooser is stage 2 (lcl-ui), waiting on NY4I's ruling on the UX. The engine is `uLogRestore` (`ListRestoreCandidates`, `RestoreLogFromBackup`) behind `uLogStore.LogStoreRestoreLog`, unit-tested on temporary logs. These items need a real run once stage 2 exists, or a small test harness calls the engine on a copy of a real contest log. Use a COPY, never a live log, and close TR4W first.

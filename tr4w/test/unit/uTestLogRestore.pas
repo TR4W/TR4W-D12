@@ -190,6 +190,10 @@ begin
                                  kind, previous, staged), 'the pre-catch-up backup');
    CheckTrue(kind = rbkBeforeCatchUp, 'is before catch-up');
 
+   CheckTrue(ClassifyRestoreName(LOG, 'W1AW CQWW before correction 2026-11-22 143000Z.db',
+                                 kind, previous, staged), 'the pre-correction backup (issue 223)');
+   CheckTrue(kind = rbkBeforeCorrection, 'is before correction');
+
    CheckTrue(ClassifyRestoreName(LOG, 'W1AW CQWW before schema 10 to 13.db',
                                  kind, previous, staged), 'the pre-upgrade backup');
    CheckTrue(kind = rbkBeforeUpgrade, 'is before upgrade');

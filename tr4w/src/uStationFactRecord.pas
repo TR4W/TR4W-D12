@@ -141,6 +141,61 @@ function EditedStationFactRefusal(const aShown, aTyped: TQsoMyFacts): string;
   a fact the same way. Translated (uAppStrings). *)
 function StationFactCaption(aFact: TStationFact): string;
 
+const
+   (* WHICH STATION FACTS THE TOOLS-MENU CORRECTION MAY SET ON EVERY LOGGED QSO
+     (issue 223, NY4I 2026-11-22: "only the my_* station facts", never the
+     contact's own data). One row per TStationFact, so a fact added to the
+     enumeration does not compile until someone decides.
+
+     NOT BULK-CORRECTABLE, AND WHY:
+        sfPark         a POTA entry logs several parks per contact (the park
+                       queue writes one leg per park), so one value over every
+                       row would erase the n-fer legs.
+        sfLicenseYear  year_sent is an INTEGER with its own rule and its own
+                       correction (Preferences, uLicenseYearChange), and a peer's
+                       row is never ours (SentYearSourceOf).
+     And never offered at all, because they are not TStationFacts: my_call
+     (the identity the exports sign with; issue 223 rules it out), my_county,
+     my_country and my_continent (worked out from CTY.DAT or the county file,
+     never typed), my_source, my_sent_unit and my_rover_places.
+
+     Rows whose station is PER PLACE (a rover's my_rover_qth, an in-state
+     party's my_sent_unit) are skipped by the repository for every fact --
+     see TLogRepository.PlanStationValueCorrection. *)
+   STATION_FACT_BULK_CORRECTABLE: array[TStationFact] of boolean = (
+      (* sfState *)       True,
+      (* sfSection *)     True,
+      (* sfZone *)        True,
+      (* sfItuZone *)     True,
+      (* sfGrid *)        True,
+      (* sfName *)        True,
+      (* sfFdClass *)     True,
+      (* sfCheck *)       True,
+      (* sfPrec *)        True,
+      (* sfPark *)        False,
+      (* sfIota *)        True,
+      (* sfPostalCode *)  True,
+      (* sfFocNumber *)   True,
+      (* sfLicenseYear *) False);
+
+(* IS aFact's COLUMN AN INTEGER ZONE (my_cq_zone, my_itu_zone)? Every other
+  bulk-correctable fact is TEXT. *)
+function StationFactColumnIsZone(aFact: TStationFact): boolean;
+
+(* MAY aValue BE WRITTEN AS aFact ON EVERY LOGGED QSO? '' when it may, else
+  the reason, in the operator's words (translated). Refused: a fact outside
+  STATION_FACT_BULK_CORRECTABLE, an empty value (a correction states a
+  value; "none" is not one), a zone of 0, and anything the Station page's
+  own rule refuses (uStationFieldCheck.StationFieldProblem -- the one rule,
+  so the two cannot disagree). *)
+function StationFactBulkProblem(aFact: TStationFact; const aValue: string): string;
+
+(* THE TEXT THE COLUMN STORES FOR aValue: a zone as its decimal number
+  ('05' -> '5'), any other fact trimmed and UTF8Encoded
+  (RecordStationFactAsTyped's form). Call only after StationFactBulkProblem
+  answered ''. *)
+function StationFactBulkColumnText(aFact: TStationFact; const aValue: string): AnsiString;
+
 implementation
 
 uses
@@ -166,6 +221,77 @@ begin
       sfFocNumber:   Result := SEditQSOMyFocNumber;
       sfLicenseYear: Result := SStationFactLicenseYear;
    end;
+end;
+
+function StationFactColumnIsZone(aFact: TStationFact): boolean;
+begin
+   Result := (aFact = sfZone) or (aFact = sfItuZone);
+end;
+
+(* A zone's digits as a number; StationFieldProblem has already said they are
+  at most two digits, so nothing here can overflow. -1 for anything else. *)
+function ZoneDigitsValue(const aText: string): integer;
+var
+   i: integer;
+begin
+   Result := -1;
+   if (aText = '') or (Length(aText) > 2) then
+      begin
+      Exit;
+      end;
+   Result := 0;
+   for i := 1 to Length(aText) do
+      begin
+      if (aText[i] < '0') or (aText[i] > '9') then
+         begin
+         Result := -1;
+         Exit;
+         end;
+      Result := Result * 10 + (Ord(aText[i]) - Ord('0'));
+      end;
+end;
+
+function StationFactBulkProblem(aFact: TStationFact; const aValue: string): string;
+var
+   text: string;
+begin
+   (* See the declaration. *)
+   Result := '';
+   if not STATION_FACT_BULK_CORRECTABLE[aFact] then
+      begin
+      Result := UnicodeFormat(SStationCorrectionNotAllowed, [StationFactCaption(aFact)]);
+      Exit;
+      end;
+   text := Trim(aValue);
+   if text = '' then
+      begin
+      Result := SStationCorrectionEmptyValue;
+      Exit;
+      end;
+   Result := StationFieldProblem(StationFactCommand(aFact), text);
+   if Result <> '' then
+      begin
+      Exit;
+      end;
+   (* The Station page's MY ITU ZONE takes 0 ("use CTY.DAT's"); a QSO's row
+      holds 0 as "unknown", which no correction states. *)
+   if StationFactColumnIsZone(aFact) and (ZoneDigitsValue(text) <= 0) then
+      begin
+      Result := SStationCorrectionZoneZero;
+      end;
+end;
+
+function StationFactBulkColumnText(aFact: TStationFact; const aValue: string): AnsiString;
+begin
+   (* See the declaration. *)
+   if StationFactColumnIsZone(aFact) then
+      begin
+      Result := AnsiString(IntToStr(ZoneDigitsValue(Trim(aValue))));
+      end
+   else
+      begin
+      Result := UTF8Encode(Trim(aValue));
+      end;
 end;
 
 (* A zone as the Station page types it: '' for 0, unknown. *)

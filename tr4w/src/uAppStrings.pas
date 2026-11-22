@@ -1638,6 +1638,55 @@ resourcestring
    SEditQSOStationValueRefused  = '%0:s "%1:s" cannot be saved.' + sLineBreak +
                                   sLineBreak + '%2:s';
 
+   (* TOOLS > CORRECT STATION FACTS (issue 223): one station value set on
+     every logged QSO, or from QSO n on (uStationFactRecord.
+     StationFactBulkProblem; uLogStore.LogStoreCorrectStationFacts).
+     %s in SStationCorrectionNotAllowed is the fact's name
+     (StationFactCaption). *)
+   SStationCorrectionNotAllowed = '%s cannot be changed on logged QSOs.';
+   SStationCorrectionEmptyValue = 'Type the value the QSOs should have.';
+   SStationCorrectionZoneZero   = 'A zone of 0 is not a zone.';
+   SStationCorrectionBackupFailed = 'Nothing was changed: the log could not be ' +
+                                    'backed up first. %s';
+   SStationCorrectionFailed     = 'Nothing was changed: the contest log did not ' +
+                                  'take the correction. See tr4w.log.';
+   SStationCorrectionReadOnly   = 'Nothing was changed: the contest log is read-only.';
+   (* The Tools-menu dialog (uCorrectStationFactsDialog). *)
+   SMenuCorrectStationFacts     = 'Correct Station Facts...';
+   SStationCorrectionTitle      = 'Correct station facts on logged QSOs';
+   SStationCorrectionChooseFact = 'Which of your station''s values is wrong on the ' +
+                                  'QSOs already logged?';
+   (* %s the fact's name. *)
+   SStationCorrectionValuePrompt = 'The value the QSOs should have for %s:';
+   SStationCorrectionFromPrompt = 'Change the QSOs from log record number ' +
+                                  '(1 = every QSO in the log):';
+   SStationCorrectionBadFrom    = 'A log record number is a whole number from 1 up.';
+   SStationCorrectionNothing    = 'No logged QSO needs changing.';
+   SStationCorrectionScopeAll   = 'ALL PRIOR CONTACTS in the log';
+   (* %d the first log record number changed. *)
+   SStationCorrectionScopeFrom  = 'every contact from log record %d on';
+   (* %0:s the fact, %1:s the new value, %2:d the QSOs to change, %3:s the
+     scope (SStationCorrectionScopeAll / ...From), %4:s what they hold now,
+     %5:d imported, %6:d never recorded, %7:d per place, %8:d of the %2:d
+     a multi-op peer's. *)
+   SStationCorrectionConfirm    = 'This CHANGES %0:s to "%1:s" on %2:d logged QSO(s): %3:s.' +
+                                  sLineBreak + 'They say now: %4:s.' + sLineBreak +
+                                  sLineBreak +
+                                  'The log is BACKED UP FIRST. Each changed QSO is then ' +
+                                  'sent again as an edit -- to Club Log, WRL and any other ' +
+                                  'external logger, to the multi-op server and as a UDP ' +
+                                  'replace -- and the log is rescored. %8:d of them are a ' +
+                                  'multi-op peer''s: corrected here, sent by that station.' +
+                                  sLineBreak + sLineBreak +
+                                  'Not changed: %5:d imported, %6:d never recorded (they ' +
+                                  'follow your setting: correct it in Preferences too), ' +
+                                  '%7:d per place (a rover or an in-state party).';
+   SStationCorrectionChangeButton = 'Change the QSOs';
+   SStationCorrectionCancelButton = 'Cancel';
+   (* %0:s the fact, %1:s the value, %2:d the QSOs changed, %3:s the backup. *)
+   SStationCorrectionDone       = '%0:s is now "%1:s" on %2:d logged QSO(s).' + sLineBreak +
+                                  'The log as it was is in %3:s';
+
    (* FILE > OPEN LOG... (issue 218, S0; the New Contest dialog since issue
      228). TR4W closes the open contest the way File > Exit does and starts
      again on the chosen log. The title follows the version and ' - ' in the

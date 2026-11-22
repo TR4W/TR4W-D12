@@ -69,6 +69,23 @@ function SaveQSOToEditableLog: boolean;
 // beep have said so. SaveQSOToEditableLog asks it first; the form asks it
 // before "Save changes?", whose Yes could only be refused.
 function EditRefusedByReadOnlyLog: boolean;
+
+(* TOOLS > CORRECT STATION FACTS, AFTER THE STORE COMMITTED (issue 223, NY4I:
+  "each changed row counts as an edit everywhere"). Rescores the log
+  (RescoreLog, so every row's points follow its corrected station), then, for
+  each changed row of OURS (aPeer False), does what an Edit QSO save does
+  after its commit: the qmEdited event (UDP replace, HamScore, a non-durable
+  logger such as DXKeeper; Club Log / WRL were captured inside the store's
+  transaction) -- not for an X-QSO, which no score feed holds -- and
+  NET_EDITEDQSO_ID to the multi-op server (the row is stored server_dirty, so
+  an unconnected station resends it). A peer's row is the peer's to announce.
+
+  The three arrays are the plan's (uLogStore.TStationCorrectionResult.Plan),
+  in step. Call ONLY after LogStoreCorrectStationFacts answered Ok: nothing
+  here may announce what the log did not take. Main thread. *)
+procedure AnnounceStationCorrection(const aRowIds, aRecordIndexes: array of Int64;
+                                    const aPeer: array of boolean);
+
 function CheckSystemTimeRecord(Time: TQSOTime): boolean;
 procedure ShowNote(CE: ContestExchange);
 //procedure ShowSysMonthCal32(show: integer);
@@ -1092,6 +1109,70 @@ begin
   UpdateAllStationsList;
   So2R_Swap := False;
  end;
+
+procedure AnnounceStationCorrection(const aRowIds, aRecordIndexes: array of Int64;
+                                    const aPeer: array of boolean);
+var
+   rec: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   secondKey: integer;
+   i: integer;
+   announced: integer;
+   unread: integer;
+begin
+   (* See the declaration. THE RESCORE FIRST: the bulk write changed only our
+      station's columns, so every announced record must carry the points the
+      corrected station earns -- Edit QSO recalculates before its write; this
+      write did not. *)
+   RescoreLog;
+
+   announced := 0;
+   unread := 0;
+   for i := 0 to High(aRowIds) do
+      begin
+      if aPeer[i] then
+         begin
+         Continue;
+         end;
+      (* The repository's own type is not named here (uLogRepository is not
+         in this unit's uses); LogStoreRepository is nil only when the store
+         was stood down, and then nothing more can be read. *)
+      if LogStoreRepository = nil then
+         begin
+         unread := unread + (Length(aRowIds) - i);
+         Break;
+         end;
+      if not LogStoreRepository.LoadQSO(aRowIds[i], rec) then
+         begin
+         Inc(unread);
+         Continue;
+         end;
+      if not LogStoreRepository.LoadQSOMyFacts(aRowIds[i], facts, sent) then
+         begin
+         facts := NotCapturedMyFacts;
+         sent := '';
+         end;
+      if not StoredQSOIsXQSO(rec) then
+         begin
+         (* As the sheet stood when it was logged -- the same question Edit
+            QSO asks. It replays the log up to the row only for a host-state
+            party with a second domestic key; every other contest answers at
+            once. *)
+         secondKey := AdditionalDomesticMultipliersOfLoggedQSO(aRecordIndexes[i], rec);
+         PostQsoEvent(qmEdited, rec, facts, sent, secondKey,
+                      UDPBroadcaster.Enabled(usContact), True);
+         end;
+      SendRecordToServer(NET_EDITEDQSO_ID, rec);
+      Inc(announced);
+      end;
+
+   if logger <> nil then
+      begin
+      logger.Info('[EditQSO] station correction announced as %d edit(s); %d row(s) ' +
+                  'could not be read back and were not announced', [announced, unread]);
+      end;
+end;
 
 function CheckSystemTimeRecord(Time: TQSOTime): boolean;
 begin

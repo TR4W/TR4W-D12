@@ -21,6 +21,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | the read seam — SQLite only, no source selection | `tr4w/src/uLogSource.pas` |
 | store, search, notes, naming, config | `uLogStore.pas`, `uLogSearch.pas`, `uLogNote.pas`, `uLogNaming.pas`, `uLogConfig.pas` (**the Log4D layout, NOT the config table**). (`uLogCompare.pas` was listed here and was never the store's: it was the multi-op Difference-in-logs dialog's seam, deleted with the dialog in Phase 1, C6.) |
 | which contest-scoped `config` rows are written, and which stored ones are statements | `uLogContestStatements.pas`, a leaf so the rules are unit-tested (`uTestLogContestStatements`) |
+| Tools > Correct Station Facts (issue 223): one my_* value on every logged QSO | whitelist `uStationFactRecord.STATION_FACT_BULK_CORRECTABLE`; plan/apply `uLogRepository`; `uLogStore.LogStoreCorrectStationFacts`; after the commit `uEditQSO.AnnounceStationCorrection`; dialog `src/ui/lcl/uCorrectStationFactsDialog.pas`; tests in `uTestLogStore` |
 | our station as it was for one QSO (the my_* columns, schema 3) | `tr4w/src/domain/uQsoMyFacts.pas`, a leaf (`uTestLogMyFacts`) |
 | import only | `uLogImport.pas`, `uLogBinaryFile.pas` |
 | docs | **`docs/LOG_SCHEMA.md` -- THE SCHEMA AS IT STANDS** (every column and its class, the reader rule, the version history, the add-a-column checklist; keep it current with every schema change), `docs/SQLITE_MIGRATION_TASKS.md` (**read before touching log storage**), `docs/SQLITE_LOG_SCHEMA_PLAN.md` (plan and decision history, not the definition) |
@@ -359,11 +360,12 @@ is. On failure, nothing commits, and `TLogDatabase.Close` rolls back.
   `Transaction.Rollback`. It resyncs the two with a raw `BEGIN` and matches no
   message text. Pinned by `TestABatchSQLiteRollsBackItself...` and
   `TestALogSQLiteRolledBackClosesCleanly`.
-- **The pin covers 21 write paths** (17 until issue 300 added
+- **The pin covers 22 write paths** (17 until issue 300 added
   `BackfillYearSent` and `CorrectSentYear`, 2026-11-13; the fingerprint now
   includes `year_sent`; schema 9 added `BackfillStationFacts`, 2026-11-17,
   and `my_prec`; schema 10 added `BackfillOffContest`, 2026-11-19, and
-  `is_off_contest`). `SetSentExchange` joined it and left
+  `is_off_contest`; issue 223 added `ApplyStationValueCorrection`,
+  2026-11-22). `SetSentExchange` joined it and left
   again the same day (2026-10-17) when its only caller was deleted; the
   fingerprint still includes `exchange_sent`. `UpdateQSOMyFacts` (the Edit
   QSO write of the my_* columns) joined on 2026-10-18, and the fingerprint
@@ -1342,6 +1344,73 @@ must not make the log unreadable.
   demotes. A running WRL worker fails on its own connection by itself.
   `uQTCS` marks a QTC through `LogStoreUpdateQSOAtIndex` with no status-line
   refusal (logged only).
+
+## TOOLS > CORRECT STATION FACTS: ONE my_* VALUE ON EVERY LOGGED QSO (issue 223, 2026-11-22)
+
+NY4I's rulings on issue 223: only our station's my_* facts (never the
+contact's data); the confirmation says it changes ALL PRIOR CONTACTS and the
+log is BACKED UP FIRST; scope all or from record n; every changed row is an
+edit everywhere (Club Log / WRL, the server, UDP); the audit is ONE tr4w.log
+line; a Tools command of its own ending in a rescore. NOT unit-run by the
+author (edit-only session); the session owner builds and runs the gates.
+
+- **The whitelist is `uStationFactRecord.STATION_FACT_BULK_CORRECTABLE`**
+  (`array[TStationFact]`, so a new fact does not compile until decided):
+  state, section, CQ zone, ITU zone, grid, name, FD class, check,
+  precedence, IOTA, postal code, FOC number. NOT: `sfPark` (an n-fer logs
+  one leg per park; one value would erase them), `sfLicenseYear`
+  (`year_sent`, integer, its own correction). Never offered: `my_call`
+  (the identity every export signs; the repository also refuses it),
+  `my_county`/`my_country`/`my_continent` (derived), `my_source`,
+  `my_sent_unit`, `my_rover_places`. The value rule is
+  `StationFactBulkProblem` (empty refused, zone 0 refused, else
+  `uStationFieldCheck.StationFieldProblem`, the Station page's one rule).
+  **On EUHFC/KVP `my_cq_zone` is MY CALL's CTY zone, not the year** (schema
+  7 stage 3): the year is `year_sent` and is not in this tool.
+- **Which rows** (`uLogRepository.TStationValueCorrectionPlan`, one pass in
+  record order, index = `RowIdAtIndex`'s, notes and deleted rows counted):
+  QSO, not deleted, index >= FromIndex; `logged`/`edited`/`stamped` ->
+  changed, `my_source = 'edited'`, `server_dirty = 1`; `assumed` (a peer's
+  QSO stamped with THIS station's values) -> value changed, provenance and
+  `server_dirty` KEPT, never re-delivered from here; `imported` skipped (the
+  file's statement); NULL skipped (follows the session -- fix the setting);
+  `my_rover_qth` or `my_sent_unit` set skipped (per place); already the
+  value -> `Already`. `ApplyStationValueCorrection` writes each planned row
+  by id with `... IS NOT :same` and RAISES if one did not change. The 22nd
+  write path in `TestEveryWriteWaitsForItsCommit`.
+- **The store**: `LogStorePlanStationCorrection` (read only, for the
+  question) and `LogStoreCorrectStationFacts(correction, fromIndex,
+  backupDir)` -> `TStationCorrectionResult` (class, caller frees). Order:
+  value rule, open, `RefuseReadOnly`, `BeginMainWrite`, then a DATED
+  verified backup `<log> before correction <UTC>Z.db`
+  (`uLogBackup.CORRECTION_BACKUP_INFIX`, `LogStoreBackupBefore`, synchronous,
+  never the periodic slot; a failure changes nothing), then plan + apply +
+  `CaptureSavedQso` for each of OUR rows in ONE transaction, COMMIT, and only
+  then `Ok`, the ONE audit line (`STATION CORRECTION: <fact> (<column>)
+  <old values> -> "<new>" on N QSO(s) from record n; not changed: ...;
+  backup ...`) and `LogStoreStartExternalDelivery`. A failure -> `Disable`.
+  `LogBackupBaseName` strips the new infix; the restore lists it
+  (`rbkBeforeCorrection`).
+- **After the commit** (`uEditQSO.AnnounceStationCorrection`, main thread):
+  `RescoreLog` FIRST (the bulk write recalculated no points; Edit QSO does
+  before its write), then per OUR row: `LoadQSO` + `LoadQSOMyFacts`,
+  `PostQsoEvent(qmEdited, ...)` unless X-QSO (UDP replace, HamScore,
+  DXKeeper-style loggers; Club Log / WRL were captured in the transaction),
+  `SendRecordToServer(NET_EDITEDQSO_ID)` (and the row is `server_dirty`, so
+  an offline station resends). The second domestic key is asked per row
+  (`AdditionalDomesticMultipliersOfLoggedQSO`): O(n^2) replay on a
+  host-state party with a second key, instant elsewhere.
+- **The dialog** `src/ui/lcl/uCorrectStationFactsDialog.pas` (no `.lfm`):
+  `InputCombo` (fact), `InputQuery` (value, offered from
+  `Settings.My.Resolved`; first record, 1-based), the plan's count, then
+  `QuestionDlg` with Cancel as default AND Esc. Refused while read-only.
+  Menu id `menu_correct_station_facts` = 10026.
+- **Tests**: `uTestLogStore.TestAStationCorrectionChangesOnlyOurStation`
+  (plan, all rows, a snapshot-table diff of every other column, peer
+  provenance, idempotent second run, from record 50, five refusals, a
+  missing backup folder), `TestAStationCorrectionThatCannotCommitChangesNothing`
+  (the R2 deferred-key trap); `uTestLogRestore` classifies the backup name.
+  NOT unit-covered: `AnnounceStationCorrection` and the dialog.
 
 ## A CHANGE TO A LOGGED QSO IS "SAVED" ONLY WHEN IT IS COMMITTED (issue 349, 2026-11-22)
 

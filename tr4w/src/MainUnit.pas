@@ -875,6 +875,7 @@ uses
   uHamScoreForm,           // CreateTR4WHamScoreWindow
   uVerificationForm,       // ShowVerificationChecks -- Tools menu
   uSetupWizardForm,        // ShowSetupWizard -- Tools menu
+  uCorrectStationFactsDialog, // ShowCorrectStationFacts -- Tools menu, issue 223
   uIntercomForm,           // CreateTR4WIntercomWindow
   uRadioPanelForm,         // CreateTR4WRadioPanelWindow -- both radios
   uNetworkForm,            // CreateTR4WNetworkWindow
@@ -6530,6 +6531,9 @@ begin
       The checks are read-only and the window runs them itself, so there is
       nothing to set up here. *)
     menu_run_verification_checks: ShowVerificationChecks;
+    (* ISSUE 223: one station value on every logged QSO, backed up first and
+      ending in a rescore -- uCorrectStationFactsDialog. *)
+    menu_correct_station_facts: ShowCorrectStationFacts;
     (* THE SETUP WIZARD ON REQUEST -- it opens by itself only on a brand-new
       install (uProgramMain); this is every later time. *)
     menu_setup_wizard: ShowSetupWizard;

@@ -368,6 +368,13 @@ invented text. A `NET_EDITEDQSO` edit changes the QSO's fields and leaves
 the station and the sent exchange as they were. Nothing here changed the
 wire or `uNet`. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12h.
 
+**Tools > Correct Station Facts (issue 223, 2026-11-22) sends one
+`NET_EDITEDQSO_ID` per changed row of OURS, after the commit and the
+rescore** (`uEditQSO.AnnounceStationCorrection`); the rows are stored
+`server_dirty`, so an unconnected station resends them. A peer's (`assumed`)
+row is corrected locally and NOT sent from here. The packet carries no my_*
+column; what the server gains is the rescored record.
+
 **An outgoing `NET_EDITEDQSO_ID` is sent only AFTER the log committed the
 change (issue 349, 2026-11-22)** -- Edit QSO's save, Alt-Y's delete/restore,
 and the QTC mark in `uQTCS`, together with the dispatcher's edited/deleted

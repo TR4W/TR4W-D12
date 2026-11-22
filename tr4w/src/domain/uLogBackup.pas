@@ -120,6 +120,10 @@ const
      adds QSOs (Phase 1, C6): the same shape as the pre-clear one, a different
      purpose, so it is never mistaken for it and never rotates anything. *)
    CATCHUP_BACKUP_INFIX = ' before catch-up ';
+   (* The dated backup taken before Tools > Correct Station Facts rewrites a
+     station value on logged QSOs (issue 223): the same shape again, its own
+     purpose. *)
+   CORRECTION_BACKUP_INFIX = ' before correction ';
    PERIODIC_BACKUP_SUFFIX = ' periodic';
    (* The backup an older log takes before it is upgraded (NY4I, 2026-11-19):
      "<log> before schema <from> to <to>.db". *)
@@ -168,7 +172,8 @@ function BackUpLogBeforeUpgrade(const aLogFile, aBackupDir: string;
   a final ".db" is removed (any case).
 
   NAMES NEVER STACK. Every trailing " before clear <yyyy-mm-dd hhnnss>Z" or
-  " before catch-up <yyyy-mm-dd hhnnss>Z" (those exact shapes) and every
+  " before catch-up <yyyy-mm-dd hhnnss>Z" or " before correction
+  <yyyy-mm-dd hhnnss>Z" (issue 223) (those exact shapes) and every
   trailing " periodic", and every trailing " before schema <n> to <m>" (digits;
   2026-11-19), is removed, in any order and any
   number, so a backup of a log that is itself a backup is named for the log it
@@ -372,6 +377,12 @@ begin
       if EndsInDatedBackupSuffix(Result, CATCHUP_BACKUP_INFIX) then
          begin
          Result := Copy(Result, 1, Length(Result) - Length(CATCHUP_BACKUP_INFIX)
+                                   - Length(CLEAR_BACKUP_STAMP_SHAPE));
+         stripped := True;
+         end;
+      if EndsInDatedBackupSuffix(Result, CORRECTION_BACKUP_INFIX) then
+         begin
+         Result := Copy(Result, 1, Length(Result) - Length(CORRECTION_BACKUP_INFIX)
                                    - Length(CLEAR_BACKUP_STAMP_SHAPE));
          stripped := True;
          end;

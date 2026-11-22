@@ -124,6 +124,15 @@ type
          insert, edit, delete, restore and a peer's edit alike -- and the file
          keeps what it had. *)
       procedure TestAChangeWhoseCommitFailsIsNotReportedSaved;
+      (* ISSUE 223 (2026-11-22): Tools > Correct Station Facts. One value on
+         every eligible row, or from record n on; only our station's columns
+         and the resend flag move (every other column compared with a
+         snapshot); a peer's row keeps its provenance; imported,
+         never-recorded and per-place rows are skipped; a second run changes
+         nothing; a fact outside the whitelist, a bad value, a failed backup
+         and a failed COMMIT each change nothing. *)
+      procedure TestAStationCorrectionChangesOnlyOurStation;
+      procedure TestAStationCorrectionThatCannotCommitChangesNothing;
       (* ISSUES 347/348, PLAN COMMIT 2 (2026-11-22): one operator entry of
          several legs is ONE transaction through LogStoreAppendLiveQSOs --
          a leg refused, a commit refused, a full disk or a held lock leaves
@@ -151,6 +160,7 @@ uses
    uLogNote,   (* SetNoteText -- a NOTE record, as MainUnit's note command makes *)
    uSettingsModel,  (* Settings -- the two passwords the capture must not write *)
    uQsoMyFacts,     (* mfsNotCaptured -- what a note's append records as our station *)
+   uStationFactRecord, (* TStationFactCorrection -- the station correction's argument *)
    sqlite3conn,     (* sofReadWrite -- the lock holder's connection *)
    LOGWIND,         (* LastCQFrequency -- a session-state value to change *)
    LogStuff,        (* Sheet -- DupeAndMultSheet.SaveRestartFile *)
@@ -2289,6 +2299,353 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------------
+  ISSUE 223 -- Tools > Correct Station Facts
+  --------------------------------------------------------------------------- *)
+
+(* RUN aStatements ON THE FILE aDb THROUGH A CONNECTION OF THE TEST'S OWN, in
+  one transaction, and commit. The store must be closed. *)
+procedure ExecOnFile(const aDb: string; const aStatements: array of string);
+var
+   db: TLogDatabase;
+   i: integer;
+begin
+   db := TLogDatabase.Create;
+   try
+      db.Open(aDb);
+      for i := Low(aStatements) to High(aStatements) do
+         begin
+         db.Connection.ExecuteDirect(aStatements[i]);
+         end;
+      db.Transaction.Commit;
+   finally
+      db.Free;
+   end;
+end;
+
+(* A QUERY THAT COUNTS THE ROWS WHERE ANY COLUMN BUT THE THREE A CORRECTION
+  OF my_cq_zone MAY MOVE differs from the snapshot table station_snap. The
+  column list is read from the file, so a column added later is compared
+  too. *)
+function ColumnsChangedSql(const aDb: string): string;
+var
+   db: TLogDatabase;
+   q: TSQLQuery;
+   name: string;
+   cond: string;
+begin
+   cond := '';
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(aDb);
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.Transaction := db.Transaction;
+         q.UsePrimaryKeyAsKey := False;
+         q.SQL.Text := 'SELECT name FROM pragma_table_info(''qso'')';
+         q.Open;
+         while not q.EOF do
+            begin
+            name := q.Fields[0].AsString;
+            if (name <> 'my_cq_zone') and
+               (name <> 'my_source') and
+               (name <> 'server_dirty') then
+               begin
+               if cond <> '' then
+                  begin
+                  cond := cond + ' AND ';
+                  end;
+               cond := cond + 'q."' + name + '" IS s."' + name + '"';
+               end;
+            q.Next;
+            end;
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      db.Free;
+   end;
+   Result := 'SELECT COUNT(id) FROM qso q JOIN station_snap s USING (id) WHERE NOT (' +
+             cond + ')';
+end;
+
+(* A backup the correction wrote, and what TLogBackup may leave beside it. *)
+procedure DeleteCorrectionBackup(const aPath: string);
+const
+   SUFFIXES: array[0..4] of string = ('', '.new', '.bak', '-wal', '-shm');
+var
+   i: integer;
+begin
+   if aPath = '' then
+      begin
+      Exit;
+      end;
+   for i := Low(SUFFIXES) to High(SUFFIXES) do
+      begin
+      if FileExists(aPath + SUFFIXES[i]) then
+         begin
+         DeleteFile(aPath + SUFFIXES[i]);
+         end;
+      end;
+end;
+
+const
+   (* The n-th non-deleted QSO, by row id, as a subquery. *)
+   SQL_NTH_QSO_HEAD = '(SELECT id FROM qso WHERE record_kind = ''QSO'' AND deleted = 0 ' +
+                      'ORDER BY id LIMIT 1 OFFSET ';
+   SQL_QSO_COUNT = 'SELECT COUNT(id) FROM qso WHERE record_kind = ''QSO'' AND deleted = 0';
+   SQL_ZONE_IS = 'SELECT COUNT(id) FROM qso WHERE my_cq_zone = ';
+   (* Every QSO ours, zone 5; then one row of each kind the correction skips
+     or treats apart. *)
+   SQL_SEED_LOGGED = 'UPDATE qso SET my_source = ''logged'', my_cq_zone = 5 ' +
+                     'WHERE record_kind = ''QSO''';
+   CORRECTION_FROM_INDEX = 50;
+
+function SeedRowStatement(const aSet: string; aOffset: integer): string;
+begin
+   Result := 'UPDATE qso SET ' + aSet + ' WHERE id = ' + SQL_NTH_QSO_HEAD +
+             IntToStr(aOffset) + ')';
+end;
+
+function ZoneCorrection(aFact: TStationFact; const aText: string): TStationFactCorrection;
+begin
+   Result.Fact := aFact;
+   Result.OldText := '';
+   Result.NewText := UTF8Encode(aText);
+   Result.Count := 0;
+end;
+
+procedure TLogStoreTests.TestAStationCorrectionChangesOnlyOurStation;
+var
+   res: TStationCorrectionResult;
+   backups: TStringList;
+   qsos, eligible, fromCount: integer;
+   firstBackup: string;
+   i: integer;
+
+   (* A correction that must be refused before anything is touched. *)
+   procedure CheckRefused(aFact: TStationFact; const aText, aWhat: string);
+   var
+      refused: TStationCorrectionResult;
+   begin
+      refused := LogStoreCorrectStationFacts(ZoneCorrection(aFact, aText), 0,
+                                             ScratchBackupDir);
+      try
+         CheckFalse(refused.Ok, aWhat + ': refused');
+         CheckTrue(refused.Reason <> '', aWhat + ': with a reason');
+         CheckEquals('', refused.BackupPath, aWhat + ': before any backup');
+         CheckEquals(0, refused.RowsChanged, aWhat + ': nothing changed');
+      finally
+         refused.Free;
+      end;
+   end;
+
+begin
+   BeginTest('issue 223: a station correction changes only our station''s columns, ' +
+             'all rows or from record n, once');
+
+   PrepareMigration(FIXTURE_SET);
+   backups := TStringList.Create;
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      LogStoreClose;
+
+      ExecOnFile(FDb, [SQL_SEED_LOGGED,
+                       SeedRowStatement('my_source = ''imported''', 0),
+                       SeedRowStatement('my_source = NULL', 1),
+                       SeedRowStatement('my_source = ''assumed''', 2),
+                       SeedRowStatement('my_rover_qth = ''KIN''', 3),
+                       SeedRowStatement('my_source = ''stamped''', 4),
+                       'CREATE TABLE station_snap AS SELECT * FROM qso']);
+      qsos := integer(ScalarFromFile(FDb, SQL_QSO_COUNT));
+      (* Imported, never recorded and per place are skipped; the peer's and
+        the stamped row are corrected. *)
+      eligible := qsos - 3;
+      CheckTrue(eligible > CORRECTION_FROM_INDEX, 'precondition: QSOs to correct');
+
+      (* THE PLAN READS ONLY. *)
+      res := LogStorePlanStationCorrection(ZoneCorrection(sfZone, '14'), 0);
+      try
+         CheckTrue(res.Ok, 'the plan reads the log: ' + res.Reason);
+         CheckEquals(eligible, res.RowsChanged, 'the plan counts every eligible QSO');
+         CheckEquals(1, res.Plan.Imported, 'the imported row is skipped');
+         CheckEquals(1, res.Plan.NotCaptured, 'the never-recorded row is skipped');
+         CheckEquals(1, res.Plan.PerPlace, 'the rover''s row is skipped');
+         CheckEquals(0, res.Plan.Already, 'none holds 14 yet');
+         CheckEquals('"5"', res.OldValues, 'the old value, quoted');
+      finally
+         res.Free;
+      end;
+      LogStoreClose;
+      CheckEquals(0, ScalarFromFile(FDb, SQL_ZONE_IS + '14'), 'the plan wrote nothing');
+
+      (* EVERY ROW. *)
+      res := LogStoreCorrectStationFacts(ZoneCorrection(sfZone, '14'), 0,
+                                         ScratchBackupDir);
+      try
+         CheckTrue(res.Ok, 'the correction commits: ' + res.Reason);
+         CheckEquals(eligible, res.RowsChanged, 'every eligible QSO changed');
+         CheckTrue(FileExists(res.BackupPath), 'a backup was taken first');
+         firstBackup := res.BackupPath;
+         backups.Add(res.BackupPath);
+      finally
+         res.Free;
+      end;
+      LogStoreClose;
+      CheckEquals(0, ScalarFromFile(firstBackup, SQL_ZONE_IS + '14'),
+                  'the backup holds the log as it was before');
+      CheckEquals(qsos,
+                  ScalarFromFile(firstBackup, 'SELECT COUNT(id) FROM qso WHERE ' +
+                                              'record_kind = ''QSO'' AND deleted = 0 ' +
+                                              'AND my_cq_zone = 5'),
+                  'and every QSO in it still says 5');
+      CheckEquals(eligible, ScalarFromFile(FDb, SQL_ZONE_IS + '14'),
+                  'every eligible QSO says 14 now');
+      CheckEquals(eligible - 1,
+                  ScalarFromFile(FDb, 'SELECT COUNT(id) FROM qso WHERE my_cq_zone = 14 ' +
+                                      'AND my_source = ''edited'' AND server_dirty = 1'),
+                  'ours are marked edited and owed to the server');
+      CheckEquals(1,
+                  ScalarFromFile(FDb, 'SELECT COUNT(id) FROM qso WHERE my_cq_zone = 14 ' +
+                                      'AND my_source = ''assumed'''),
+                  'the peer''s row is corrected and keeps its provenance');
+      CheckEquals(0,
+                  ScalarFromFile(FDb, 'SELECT COUNT(id) FROM qso q JOIN station_snap s ' +
+                                      'USING (id) WHERE q.my_source = ''assumed'' AND ' +
+                                      'q.server_dirty IS NOT s.server_dirty'),
+                  'and is not marked owed: it is the peer''s to send');
+      CheckEquals(0, ScalarFromFile(FDb, ColumnsChangedSql(FDb)),
+                  'NO other column of any row changed');
+      CheckEquals(3,
+                  ScalarFromFile(FDb, 'SELECT COUNT(id) FROM qso WHERE record_kind = ''QSO'' ' +
+                                      'AND deleted = 0 AND my_cq_zone = 5'),
+                  'the three skipped rows still say 5');
+
+      (* A SECOND RUN CHANGES NOTHING. *)
+      res := LogStoreCorrectStationFacts(ZoneCorrection(sfZone, '14'), 0,
+                                         ScratchBackupDir);
+      try
+         CheckTrue(res.Ok, 'a second run is not an error: ' + res.Reason);
+         CheckEquals(0, res.RowsChanged, 'a second run changes no row');
+         CheckEquals(eligible, res.Plan.Already, 'every eligible row already holds it');
+         backups.Add(res.BackupPath);
+      finally
+         res.Free;
+      end;
+      LogStoreClose;
+
+      (* FROM RECORD n ON. The index counts every row, as RowIdAtIndex. *)
+      fromCount := integer(ScalarFromFile(FDb,
+         'SELECT COUNT(id) FROM qso WHERE my_cq_zone = 14 AND id >= ' +
+         '(SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET ' +
+         IntToStr(CORRECTION_FROM_INDEX) + ')'));
+      CheckTrue((fromCount > 0) and (fromCount < eligible),
+                'precondition: record n splits the log');
+      res := LogStoreCorrectStationFacts(ZoneCorrection(sfZone, '15'),
+                                         CORRECTION_FROM_INDEX, ScratchBackupDir);
+      try
+         CheckTrue(res.Ok, 'from record n: commits: ' + res.Reason);
+         CheckEquals(fromCount, res.RowsChanged, 'from record n: only the rows from n');
+         backups.Add(res.BackupPath);
+      finally
+         res.Free;
+      end;
+      LogStoreClose;
+      CheckEquals(fromCount, ScalarFromFile(FDb, SQL_ZONE_IS + '15'),
+                  'from record n: the file holds exactly those');
+      CheckEquals(0,
+                  ScalarFromFile(FDb, 'SELECT COUNT(id) FROM qso WHERE my_cq_zone = 15 ' +
+                                      'AND id < (SELECT id FROM qso ORDER BY id LIMIT 1 ' +
+                                      'OFFSET ' + IntToStr(CORRECTION_FROM_INDEX) + ')'),
+                  'from record n: none before it');
+
+      (* REFUSED BEFORE ANYTHING IS TOUCHED. *)
+      CheckRefused(sfPark, 'K-1234', 'a park (not on the whitelist)');
+      CheckRefused(sfLicenseYear, '64', 'the licence year (its own correction)');
+      CheckRefused(sfZone, '41', 'a CQ zone past 40');
+      CheckRefused(sfZone, '', 'an empty value');
+      CheckRefused(sfItuZone, '0', 'an ITU zone of 0');
+
+      (* A BACKUP THAT FAILS CHANGES NOTHING. *)
+      res := LogStoreCorrectStationFacts(ZoneCorrection(sfZone, '16'), 0,
+                                         ScratchBackupDirName + PathDelim + 'missing');
+      try
+         CheckFalse(res.Ok, 'no backup folder: refused');
+         CheckTrue(res.Reason <> '', 'no backup folder: with a reason');
+         CheckEquals(0, res.RowsChanged, 'no backup folder: nothing changed');
+      finally
+         res.Free;
+      end;
+      CheckTrue(LogStoreIsUsable, 'a failed backup leaves the store usable');
+      LogStoreClose;
+      CheckEquals(0, ScalarFromFile(FDb, SQL_ZONE_IS + '16'),
+                  'no backup folder: the file holds no 16');
+      CheckEquals(fromCount, ScalarFromFile(FDb, SQL_ZONE_IS + '15'),
+                  'and nothing earlier moved');
+   finally
+      LogStoreForgetFailureForTests;
+      for i := 0 to backups.Count - 1 do
+         begin
+         DeleteCorrectionBackup(backups[i]);
+         end;
+      backups.Free;
+      Restore;
+   end;
+end;
+
+procedure TLogStoreTests.TestAStationCorrectionThatCannotCommitChangesNothing;
+var
+   res: TStationCorrectionResult;
+   backupPath: string;
+begin
+   BeginTest('issue 223: a station correction whose COMMIT fails changes nothing ' +
+             'and is not reported done');
+
+   PrepareMigration(FIXTURE_SET);
+   backupPath := '';
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      LogStoreClose;
+
+      (* The seed first, then the R2 trap: the update trigger is created after
+        the seed's UPDATE, so only the correction's writes fire it, and the
+        deferred key fails the correction's COMMIT. *)
+      ExecOnFile(FDb, [SQL_SEED_LOGGED,
+                       'CREATE TABLE commit_trap_parent (id INTEGER PRIMARY KEY)',
+                       'CREATE TABLE commit_trap (parent_id INTEGER REFERENCES ' +
+                          'commit_trap_parent(id) DEFERRABLE INITIALLY DEFERRED)',
+                       'CREATE TRIGGER commit_trap_on_update AFTER UPDATE ON qso ' +
+                          'BEGIN INSERT INTO commit_trap (parent_id) VALUES (-1); END']);
+
+      res := LogStoreCorrectStationFacts(ZoneCorrection(sfZone, '14'), 0,
+                                         ScratchBackupDir);
+      try
+         backupPath := res.BackupPath;
+         (* A backup exists only once step 3 finished, so this pins the
+           failure to the COMMIT and not to the reopen. *)
+         CheckTrue((backupPath <> '') and FileExists(backupPath),
+                   'the backup was taken: the failure came at the commit');
+         CheckFalse(res.Ok, 'a commit that fails is not reported done');
+         CheckEquals(0, res.RowsChanged, 'and reports no row changed');
+         CheckTrue(res.Reason <> '', 'with a reason');
+      finally
+         res.Free;
+      end;
+      LogStoreForgetFailureForTests;
+      LogStoreClose;
+      CheckEquals(0, ScalarFromFile(FDb, SQL_ZONE_IS + '14'),
+                  'the file holds none of the correction');
+      CheckEquals(0, ScalarFromFile(FDb, 'SELECT COUNT(id) FROM qso WHERE my_source = ''edited'''),
+                  'and no row was marked edited');
+   finally
+      LogStoreForgetFailureForTests;
+      DeleteCorrectionBackup(backupPath);
+      Restore;
+   end;
+end;
+
 type
    (* ONE OPERATOR ENTRY OF THREE LEGS -- a county line, as it reaches the
      store: one exchange id, one serial, three QSOs. *)
@@ -2632,6 +2989,8 @@ begin
    TestAFreedDiskRecoversWithoutARestart;
    TestAnAppendStoresTheContestsRule;
    TestAChangeWhoseCommitFailsIsNotReportedSaved;
+   TestAStationCorrectionChangesOnlyOurStation;
+   TestAStationCorrectionThatCannotCommitChangesNothing;
    TestALiveEntryIsAllOrNothing;
    TestAFullDiskRefusesTheWholeEntryAndTheRetryWritesOneSet;
    TestALockedLogRefusesTheWholeEntry;

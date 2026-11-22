@@ -107,7 +107,9 @@ uses
 type
    (* WHICH BACKUP A FILE IS, by its name. *)
    TRestoreBackupKind = (rbkPeriodic, rbkBeforeClear, rbkBeforeCatchUp,
-                         rbkBeforeUpgrade);
+                         rbkBeforeUpgrade,
+                         (* Tools > Correct Station Facts (issue 223) *)
+                         rbkBeforeCorrection);
 
    (* WHERE IT WAS FOUND. *)
    TRestoreBackupPlace = (rbpBackupFolder, rbpDestination);
@@ -302,6 +304,12 @@ begin
            (Length(rest) = Length(CATCHUP_BACKUP_INFIX) + Length(CLEAR_BACKUP_STAMP_SHAPE)) then
       begin
       aKind := rbkBeforeCatchUp;
+      Result := True;
+      end
+   else if StartsWithExactly(rest, CORRECTION_BACKUP_INFIX) and
+           (Length(rest) = Length(CORRECTION_BACKUP_INFIX) + Length(CLEAR_BACKUP_STAMP_SHAPE)) then
+      begin
+      aKind := rbkBeforeCorrection;
       Result := True;
       end
    else if StartsWithExactly(rest, SCHEMA_BACKUP_INFIX) and
