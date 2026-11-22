@@ -12825,3 +12825,113 @@ msgstr ""
 #, fuzzy
 msgid "A zone of 0 is not a zone."
 msgstr ""
+
+#: uappstrings.sloggergridcreatelogbook
+#, fuzzy
+msgid "Create logbook..."
+msgstr ""
+
+#: uappstrings.swrlcreatebusy
+#, fuzzy
+msgid "A logbook is already being created for a logger. Wait for it to finish."
+msgstr ""
+
+#: uappstrings.swrlcreatecaption
+#, fuzzy
+msgid "Create World Radio League logbook"
+msgstr ""
+
+#: uappstrings.swrlcreatedone
+#, fuzzy
+msgid "Created logbook \"%s\" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with."
+msgstr ""
+
+#: uappstrings.swrlcreatefailed
+#, fuzzy
+msgid "The logbook was not created: %s"
+msgstr ""
+
+#: uappstrings.swrlcreatekeymissing
+#, fuzzy
+msgid "This logger has no API key available. Enter the key in the logger's editor (unlock the password vault if it is locked) first."
+msgstr ""
+
+#: uappstrings.swrlcreateprompt
+#, fuzzy
+msgid "Name of the new logbook (up to 100 characters). It is made on the World Radio League web site for the account this API key belongs to:"
+msgstr ""
+
+#: uappstrings.swrlcreatereplaceask
+#, fuzzy
+msgid "%s already has a logbook chosen. Create a new logbook and use it instead? Contacts already queued for the old logbook are not moved."
+msgstr ""
+
+#: uappstrings.swrlcreateuncertain
+#, fuzzy
+msgid "World Radio League did not confirm the logbook, so it may have been created. Look at your logbooks on the World Radio League web site (or use Refresh in the logger's editor) before trying again, so you do not make a second one."
+msgstr ""
+
+#: uappstrings.swrlrequestid
+#, fuzzy
+msgid "(request id %s)"
+msgstr ""
+
+#: uappstrings.swrlwhyconflict
+#, fuzzy
+msgid "a logbook with that name may already exist, or World Radio League treated the request as a conflict. Choose the existing logbook in the logger's editor, or use another name."
+msgstr ""
+
+#: uappstrings.swrlwhydown
+#, fuzzy
+msgid "the World Radio League service is not available right now (%s). Try again later."
+msgstr ""
+
+#: uappstrings.swrlwhyip
+#, fuzzy
+msgid "the key is restricted to other IP addresses than this computer's."
+msgstr ""
+
+#: uappstrings.swrlwhykey
+#, fuzzy
+msgid "World Radio League did not accept the API key (it is missing, wrong or revoked). Check the key in the logger's editor."
+msgstr ""
+
+#: uappstrings.swrlwhymembership
+#, fuzzy
+msgid "the key was refused because the account needs a current World Radio League membership."
+msgstr ""
+
+#: uappstrings.swrlwhynamerequired
+#, fuzzy
+msgid "the name is empty."
+msgstr ""
+
+#: uappstrings.swrlwhynametoolong
+#, fuzzy
+msgid "the name is longer than %d characters."
+msgstr ""
+
+#: uappstrings.swrlwhyother
+#, fuzzy
+msgid "the request failed (%s)."
+msgstr ""
+
+#: uappstrings.swrlwhyrate
+#, fuzzy
+msgid "too many requests just now. Wait a minute and try again."
+msgstr ""
+
+#: uappstrings.swrlwhyscope
+#, fuzzy
+msgid "the key is not allowed to create logbooks. Make a key that may write logbooks."
+msgstr ""
+
+#: uappstrings.swrlwhyvalidation
+#, fuzzy
+msgid "World Radio League rejected the request: %s"
+msgstr ""
+
+#: uappstrings.swrlwhyvalidationfield
+#, fuzzy
+msgid "World Radio League rejected the %s: %s"
+msgstr ""

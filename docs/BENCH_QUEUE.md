@@ -7945,3 +7945,24 @@ has no EUHFC or KVP log, so only a real log can show the scoring did not move.
   totals rows show CW Years / Ph Years, one each).
 - [ ] **Mixed network (if a pre-2026-11-22 station is on the net).** A QSO logged here reaches the older station with
   no zone; EXPECT that station NOT to count the year (known; the older build keys its sheet on the zone slot).
+
+
+## Issue 355: the exchange about to be sent, above the call field
+
+- [ ] **Sweepstakes.** Open ARRL SS CW with MY PREC U, MY CHECK 99, MY SECTION CT. EXPECT `#1 U <call> 99 CT` above the call field (columns 17..23 of the entry row), and `#2 ...` after the first QSO is logged.
+- [ ] **CQ WW.** EXPECT `599 <zone>` on CW and `59 <zone>` after switching to SSB.
+- [ ] **A state QSO party.** EXPECT RST and the state or county the contest exports as STX_STRING; a party whose export has no layout shows nothing (the box is hidden).
+- [ ] **Narrow window (ws 13).** EXPECT the font to shrink to fit; the hint shows the whole line if it still clips.
+- [ ] **Auto-send arrow.** CW, run mode, AUTO-SEND CHARACTER COUNT 4 or more: the arrow travels over this box; EXPECT the arrow drawn ON TOP (the box is sent to the back).
+- [ ] **Long translation / long call.** A long call (VE3ABCD/VE9) in Sweepstakes: judge whether six columns is enough, or whether NY4I wants the box moved.
+- [ ] **Station facts.** Change MY PREC in Preferences; EXPECT the box to show it at the next QSO number or band/mode change (not at the save itself -- not wired yet).
+
+## Added 2026-11-22 -- WRL "Create logbook..." (issue 358; integrations)
+
+Built edit-only: the body, the envelope decode and the error words are unit-tested; the request has NEVER been sent to the real service, and the popup, the dialogs and the thread hand-off are not covered.
+
+- [ ] **Create a real logbook on the WRL test account.** Preferences > External logger, a WRL row with a key: right-click shows "Create logbook..." (not on a Club Log or DXKeeper row; greyed with no key). The name box is pre-filled `YYYY <ADIF contest id> <MODE>` for the open contest. OK: the window does not freeze, then a message names the logbook and its id; the new logbook is on the WRL site, with the station call as its default call sign. Save Preferences, restart, and confirm the row delivers to it (edit the row: the Logbook box shows the new name).
+- [ ] **A duplicate name.** Create the same name twice. Say what WRL answers (the code and message) and whether a second logbook appears: the code maps `CONFLICT` and `LOGBOOK_NOT_EMPTY` to "a logbook with that name may already exist" and nothing else is known.
+- [ ] **A row that already has a logbook** asks before replacing it; say whether the wording is right and whether contacts already queued for the old logbook behave as the text says (they are not moved).
+- [ ] **Bad key and no network.** A revoked or wrong key shows the key sentence (no key text anywhere, check `tr4w.log`); unplug the network: the "may have been created, look on the WRL site" sentence, and no second automatic try.
+- [ ] **The suggested name.** For a CW-only, an SSB-only and a mixed contest, say whether CW / SSB / MIXED is right (the modes come from `UsesMode`, and a contest that states nothing reads MIXED); DIGI is the word used for a digital-only contest.

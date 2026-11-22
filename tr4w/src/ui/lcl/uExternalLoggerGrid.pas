@@ -39,7 +39,7 @@ unit uExternalLoggerGrid;
 {$I ..\..\tr4w.inc}
 interface
 uses Classes, SysUtils, Controls, Forms, Grids, Menus, ExtCtrls, Graphics,
-   uExternalLoggerConfig, uExternalLoggerService, uExternalDelivery;
+   uExternalLoggerConfig, uExternalLoggerService, uExternalDelivery, uWRLClient;
 const
    LOGGER_COL_ORDER     = 0;
    LOGGER_COL_NAME      = 1;
@@ -68,7 +68,15 @@ type
       FConfig: TExternalLoggerConfig;
       FPopup: TPopupMenu;
       FEditItem, FSendItem, FUpItem, FDownItem, FRemoveItem: TMenuItem;
-      FOpenSiteItem, FResendItem: TMenuItem;
+      FOpenSiteItem, FResendItem, FCreateLogbookItem: TMenuItem;
+      (* CREATE LOGBOOK (issue 358): the request runs on a worker thread and is
+         read back here from a timer on the main thread, so nothing freezes and
+         nothing touches this grid from another thread. One at a time. FCreateId
+         names the definition the answer belongs to; the answer is applied to it
+         if it is still in the working copy. *)
+      FCreateTicket: IWRLCreateTicket;
+      FCreateTimer: TTimer;
+      FCreateId: string;
       FOnChanged: TNotifyEvent;
       FOnQueryState: TLoggerStateQuery;
       FTimer: TTimer;
@@ -102,6 +110,9 @@ type
       procedure RemoveClick(aSender: TObject);
       procedure OpenSiteClick(aSender: TObject);
       procedure ResendClick(aSender: TObject);
+      procedure CreateLogbookClick(aSender: TObject);
+      procedure CreateLogbookPoll(aSender: TObject);
+      procedure CreateLogbookFinished(const aAnswer: TWRLCreateLogbookResult);
    public
       constructor Create(aOwner: TComponent; const aGrid: TStringGrid); reintroduce;
       destructor Destroy; override;
@@ -132,6 +143,7 @@ function ExternalLoggerStateColour(aState: TExternalLoggerState): TColor;
 implementation
 uses Dialogs, LCLType, LCLIntf, uAppStrings, uExternalLoggersForm,
    uExternalLoggerActions, uLogStore, utils_text,  (* issue 356: resend, open site *)
+   uWRLLogbookSuggest,   (* issue 358: the new logbook's default name and call *)
    uLCLFormHelpers;   (* Restore/SaveGridColumnWidth(s) -- issue 234; FillGridFromColumn *)
 
 const
@@ -310,6 +322,11 @@ begin
    FRemoveItem := AddItem(SLoggerGridRemove, RemoveClick);
    FOpenSiteItem := AddItem(SLoggerGridOpenSite, OpenSiteClick);
    FResendItem := AddItem(SLoggerGridResend, ResendClick);
+   FCreateLogbookItem := AddItem(SLoggerGridCreateLogbook, CreateLogbookClick);
+   FCreateTimer := TTimer.Create(Self);
+   FCreateTimer.Enabled := False;
+   FCreateTimer.Interval := 200;
+   FCreateTimer.OnTimer := CreateLogbookPoll;
    FGrid.PopupMenu := FPopup;
 end;
 
@@ -317,6 +334,10 @@ destructor TExternalLoggerGrid.Destroy;
 begin
    (* A queued reselect must not outlive the grid. *)
    FTimer.Enabled := False;
+   (* A create still running finishes into a ticket nobody reads; nothing here
+      waits for it. *)
+   FCreateTimer.Enabled := False;
+   FCreateTicket := nil;
    Application.RemoveAsyncCalls(Self);
    inherited Destroy;
 end;
@@ -760,6 +781,11 @@ begin
       the reason, rather than greyed without one. *)
    FOpenSiteItem.Enabled := known and (SiteUrlOf(FConfig.Find(id)) <> '');
    FResendItem.Enabled := known;
+   (* Create logbook: a World Radio League row only; enabled when the row has an
+      API key to ask with and no create is already running. *)
+   FCreateLogbookItem.Visible := known and (FConfig.Find(id).ProviderId = 'WRL');
+   FCreateLogbookItem.Enabled := FCreateLogbookItem.Visible and
+      (FConfig.Find(id).ApiKey <> '') and (FCreateTicket = nil);
 end;
 
 function TExternalLoggerGrid.SiteUrlOf(const aDefinition: TExternalLoggerDefinition): string;
@@ -883,6 +909,117 @@ begin
    finally
       tally.Free;
    end;
+end;
+
+(* CREATE LOGBOOK (issue 358). Name first (InputQuery, defaulted from the open
+   contest and editable), then the request on a worker thread; the answer is
+   read by CreateLogbookPoll on this thread. A logbook is made at WRL and cannot
+   be unmade here, so a definition that already has one asks before it is
+   replaced -- the Logbook is part of the queue's destination, and contacts
+   already queued for the old one are not moved. The key is only handed to the
+   worker and never shown or logged. *)
+procedure TExternalLoggerGrid.CreateLogbookClick(aSender: TObject);
+var
+   definition: TExternalLoggerDefinition;
+   logbookName: AnsiString;
+begin
+   definition := FConfig.Find(SelectedId);
+   if (definition = nil) or (definition.ProviderId <> 'WRL') then
+      begin
+      Exit;
+      end;
+   if FCreateTicket <> nil then
+      begin
+      MessageDlg(UTF8Encode(SWRLCreateBusy), mtInformation, [mbOK], 0);
+      Exit;
+      end;
+   if definition.ApiKey = '' then
+      begin
+      MessageDlg(UTF8Encode(SWRLCreateKeyMissing), mtWarning, [mbOK], 0);
+      Exit;
+      end;
+   if definition.Logbook <> '' then
+      begin
+      if MessageDlg(UTF8Encode(UnicodeFormat(SWRLCreateReplaceAsk, [definition.Name])),
+         mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+         begin
+         Exit;
+         end;
+      end;
+   logbookName := UTF8Encode(SuggestedWRLLogbookName);
+   if not InputQuery(UTF8Encode(SWRLCreateCaption), UTF8Encode(SWRLCreatePrompt),
+      logbookName) then
+      begin
+      Exit;
+      end;
+   FCreateId := definition.Id;
+   FCreateTicket := StartWRLCreateLogbook(definition.ApiKey, UTF8Decode(logbookName),
+      SuggestedWRLCallSign, definition.Account, definition.Name,
+      definition.VerifyServer);
+   FCreateTimer.Enabled := True;
+end;
+
+procedure TExternalLoggerGrid.CreateLogbookPoll(aSender: TObject);
+var
+   answer: TWRLCreateLogbookResult;
+begin
+   if (FCreateTicket = nil) or (not FCreateTicket.Finished) then
+      begin
+      Exit;
+      end;
+   answer := FCreateTicket.Answer;
+   FCreateTicket := nil;
+   FCreateTimer.Enabled := False;
+   CreateLogbookFinished(answer);
+end;
+
+(* The answer, on the main thread. A success is stored in the Preferences
+   WORKING COPY the way the editor's Logbook choice is (Logbook = the id,
+   LogbookName = the name, Account only when it was empty), and the owner is
+   told through OnChanged; Save writes it. A changed logbook is a changed
+   connection setting (SettingsStamp), so a running logger keeps its old one
+   until TR4W restarts, which the text says. If the definition is gone from the
+   working copy (removed meanwhile) the logbook still exists at WRL: its name
+   and id are shown so nothing is lost. *)
+procedure TExternalLoggerGrid.CreateLogbookFinished(const aAnswer: TWRLCreateLogbookResult);
+var
+   definition: TExternalLoggerDefinition;
+   loggerName: string;
+begin
+   definition := nil;
+   if FConfig <> nil then
+      begin
+      definition := FConfig.Find(FCreateId);
+      end;
+   if definition <> nil then
+      begin
+      loggerName := definition.Name;
+      end
+   else
+      begin
+      loggerName := '';
+      end;
+   if aAnswer.Ok then
+      begin
+      if definition <> nil then
+         begin
+         definition.Logbook := aAnswer.LogbookId;
+         definition.LogbookName := aAnswer.Name;
+         if (definition.Account = '') and (aAnswer.AccountId <> '') then
+            begin
+            definition.Account := aAnswer.AccountId;
+            end;
+         Changed;
+         Refresh(definition.Id);
+         end;
+      MessageDlg(UTF8Encode(UnicodeFormat(SWRLCreateDone,
+         [aAnswer.Name, aAnswer.LogbookId, loggerName])), mtInformation, [mbOK], 0);
+      end
+   else
+      begin
+      MessageDlg(UTF8Encode(UnicodeFormat(SWRLCreateFailed,
+         [WRLCreateLogbookText(aAnswer)])), mtWarning, [mbOK], 0);
+      end;
 end;
 
 procedure TExternalLoggerGrid.EditClick(aSender: TObject);

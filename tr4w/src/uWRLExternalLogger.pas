@@ -119,9 +119,10 @@ begin
    aFields.AddChoice(LF_LOGBOOK, LF_LOGBOOK_NAME, SLoggerFieldWRLLogbook,
       LoadWRLLogbookChoices);
    aFields.AddVerifyServer;
-   (* The id of the account and of the logbook are never fields. TR4W does not
-      create logbooks: the operator makes one on the WRL website or app and
-      picks it here. *)
+   (* The id of the account and of the logbook are never fields. The operator
+      picks a logbook here; a NEW one is made from the logger row's right-click
+      'Create logbook...' (issue 358, uExternalLoggerGrid), never from this
+      editor (issue 231 removed the old setup dialog). *)
 end;
 initialization
    RegisterExternalLogger('WRL', 'World Radio League', CreateWRL, DeclareWRLFields);

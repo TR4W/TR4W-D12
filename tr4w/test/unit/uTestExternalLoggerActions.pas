@@ -12,8 +12,8 @@ unit uTestExternalLoggerActions;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, uExternalLoggerActions, uExternalLoggerConfig,
-   uJSON, uKeychain;
+   SysUtils, fpjson, uTR4WTestFramework, uExternalLoggerActions, uExternalLoggerConfig,
+   uJSON, uKeychain, uWRLClient;
 
 type
    TExternalLoggerActionsTests = class(TTestCase)
@@ -31,6 +31,9 @@ type
       procedure Test_DefaultAndEffectiveSiteUrl;
       procedure Test_SiteUrlRoundTripsAndOldFilesLoadEmpty;
       procedure Test_WRLLogbookName;
+      procedure Test_WRLCreateLogbookBody;
+      procedure Test_WRLDecodeCreateLogbook;
+      procedure Test_WRLCreateLogbookText;
    public
       procedure RunAllTests; override;
    end;
@@ -231,6 +234,161 @@ begin
    CheckEquals('2026 CQ-WPX-CW CW', WRLDefaultLogbookName(2026, '  CQ-WPX-CW ', ['CW']));
 end;
 
+(* ISSUE 358: POST /logbooks. The body, the envelope decode and the words the
+   operator reads, all pure: no network, no thread. *)
+procedure TExternalLoggerActionsTests.Test_WRLCreateLogbookBody;
+var
+   body, code: string;
+   json: TJSONData;
+   i: integer;
+   longName: string;
+begin
+   BeginTest('Create logbook body: the name and the station call, nothing else');
+   CheckTrue(WRLCreateLogbookBody('2026 CQ-WW-SSB SSB', 'K1ABC', body, code));
+   json := GetJSON(UTF8Encode(body));
+   try
+      CheckEquals(2, json.Count, 'only name and defaultCallSign');
+      CheckEquals('2026 CQ-WW-SSB SSB', UTF8Decode(TJSONObject(json).Get('name', '')));
+      CheckEquals('K1ABC', UTF8Decode(TJSONObject(json).Get('defaultCallSign', '')));
+   finally
+      json.Free;
+   end;
+   BeginTest('Create logbook body: no call, or one over 20 characters, is left out');
+   CheckTrue(WRLCreateLogbookBody('Name', '', body, code));
+   CheckEquals(0, Pos('defaultCallSign', body));
+   CheckTrue(WRLCreateLogbookBody('Name', '123456789012345678901', body, code));
+   CheckEquals(0, Pos('defaultCallSign', body));
+   CheckTrue(WRLCreateLogbookBody('Name', '12345678901234567890', body, code));
+   CheckTrue(Pos('defaultCallSign', body) > 0, 'exactly 20 is allowed');
+   BeginTest('Create logbook body: quotes, a backslash and accents survive the JSON');
+   CheckTrue(WRLCreateLogbookBody('A "B" \ C' + #$00E9, 'K1ABC', body, code));
+   json := GetJSON(UTF8Encode(body));
+   try
+      CheckEquals('A "B" \ C' + #$00E9, UTF8Decode(TJSONObject(json).Get('name', '')));
+   finally
+      json.Free;
+   end;
+   BeginTest('Create logbook body: the name is trimmed and capped at 100');
+   CheckTrue(WRLCreateLogbookBody('  x  ', '', body, code));
+   json := GetJSON(UTF8Encode(body));
+   try
+      CheckEquals('x', UTF8Decode(TJSONObject(json).Get('name', '')));
+   finally
+      json.Free;
+   end;
+   longName := '';
+   for i := 1 to 100 do
+      begin
+      longName := longName + 'n';
+      end;
+   CheckTrue(WRLCreateLogbookBody(longName, '', body, code), '100 is allowed');
+   CheckFalse(WRLCreateLogbookBody(longName + 'n', '', body, code), '101 is refused');
+   CheckEquals('NAME_TOO_LONG', code);
+   CheckEquals('', body, 'nothing to send');
+   CheckFalse(WRLCreateLogbookBody('   ', 'K1ABC', body, code));
+   CheckEquals('NAME_REQUIRED', code);
+end;
+
+procedure TExternalLoggerActionsTests.Test_WRLDecodeCreateLogbook;
+const
+   KEY = 'wrl_live_secretkey';
+   ID = '3f2c1a9e-0b1d-4c55-9a7e-1234567890ab';
+var
+   r: TWRLCreateLogbookResult;
+begin
+   BeginTest('Create logbook decode: a 201 with data.id is a success');
+   r := WRLDecodeCreateLogbook(201, '{"data":{"id":"' + ID + '","name":"2026 X CW",' +
+      '"description":null,"defaultCallSign":"K1ABC","isLocked":null,' +
+      '"createdAt":"2026-11-22T00:00:00Z","updatedAt":null},"meta":null,"error":null}', KEY);
+   CheckTrue(r.Ok);
+   CheckFalse(r.Uncertain);
+   CheckEquals(ID, r.LogbookId);
+   CheckEquals('2026 X CW', r.Name);
+   CheckEquals(201, r.Status);
+   BeginTest('Create logbook decode: a validation error carries code, field, hint and request id');
+   r := WRLDecodeCreateLogbook(400, '{"data":null,"error":{"code":"VALIDATION_ERROR",' +
+      '"message":"name is too long","field":"name","hint":"Use 100 or fewer.",' +
+      '"requestId":"req_123"}}', KEY);
+   CheckFalse(r.Ok);
+   CheckFalse(r.Uncertain, 'a 4xx never created anything');
+   CheckEquals('VALIDATION_ERROR', r.ErrorCode);
+   CheckEquals('name is too long', r.ErrorMessage);
+   CheckEquals('name', r.ErrorField);
+   CheckEquals('Use 100 or fewer.', r.ErrorHint);
+   CheckEquals('req_123', r.RequestId);
+   BeginTest('Create logbook decode: branch on the code, key problems and conflicts');
+   r := WRLDecodeCreateLogbook(401, '{"data":null,"error":{"code":"INVALID_KEY","message":"x"}}', KEY);
+   CheckEquals('INVALID_KEY', r.ErrorCode);
+   r := WRLDecodeCreateLogbook(409, '{"data":null,"error":{"code":"CONFLICT","message":"x"}}', KEY);
+   CheckEquals('CONFLICT', r.ErrorCode);
+   CheckFalse(r.Uncertain);
+   r := WRLDecodeCreateLogbook(401, '{"data":null,"error":null}', KEY);
+   CheckEquals('HTTP_401', r.ErrorCode, 'no error object: the status names it');
+   r := WRLDecodeCreateLogbook(429, '{"data":null,"error":{"message":"slow down"}}', KEY);
+   CheckEquals('RATE_LIMITED', r.ErrorCode, 'a 429 with no code is still rate limiting');
+   BeginTest('Create logbook decode: what may have been created is Uncertain');
+   r := WRLDecodeCreateLogbook(500, '{"data":null,"error":{"code":"INTERNAL_ERROR","message":"x"}}', KEY);
+   CheckTrue(r.Uncertain, '5xx');
+   r := WRLDecodeCreateLogbook(201, 'this is not json', KEY);
+   CheckFalse(r.Ok);
+   CheckTrue(r.Uncertain, 'a 2xx we cannot read');
+   CheckEquals('INVALID_RESPONSE', r.ErrorCode);
+   r := WRLDecodeCreateLogbook(201, '{"data":{"name":"x"},"meta":null,"error":null}', KEY);
+   CheckFalse(r.Ok);
+   CheckTrue(r.Uncertain, 'a 2xx with no data.id');
+   CheckEquals('MISSING_LOGBOOK_ID', r.ErrorCode);
+   r := WRLDecodeCreateLogbook(201, '{"data":{"id":"a/../b"},"meta":null,"error":null}', KEY);
+   CheckFalse(r.Ok, 'an id that is not a UUID is never stored');
+   CheckEquals('INVALID_LOGBOOK_ID', r.ErrorCode);
+   r := WRLDecodeCreateLogbook(400, 'plain text, not json', KEY);
+   CheckEquals('INVALID_RESPONSE', r.ErrorCode);
+   CheckFalse(r.Uncertain);
+   r := WRLDecodeCreateLogbook(201, '[1,2]', KEY);
+   CheckEquals('INVALID_RESPONSE', r.ErrorCode, 'not an envelope');
+   BeginTest('Create logbook decode: a server text that echoes the key is dropped');
+   r := WRLDecodeCreateLogbook(400, '{"data":null,"error":{"code":"VALIDATION_ERROR",' +
+      '"message":"bad ' + KEY + '","hint":"' + KEY + '"}}', KEY);
+   CheckEquals('', r.ErrorMessage);
+   CheckEquals('', r.ErrorHint);
+end;
+
+procedure TExternalLoggerActionsTests.Test_WRLCreateLogbookText;
+var
+   r: TWRLCreateLogbookResult;
+   a, b: string;
+begin
+   BeginTest('Create logbook text: each family of code reads differently, never the key');
+   r := Default(TWRLCreateLogbookResult);
+   r.ErrorCode := 'INVALID_KEY';
+   a := WRLCreateLogbookText(r);
+   CheckTrue(a <> '');
+   r.ErrorCode := 'KEY_REVOKED';
+   CheckEquals(a, WRLCreateLogbookText(r), 'the key problems share one answer');
+   r.ErrorCode := 'CONFLICT';
+   b := WRLCreateLogbookText(r);
+   CheckTrue(b <> a);
+   r.ErrorCode := 'LOGBOOK_NOT_EMPTY';
+   CheckEquals(b, WRLCreateLogbookText(r), 'a name that already exists');
+   r.ErrorCode := 'RATE_LIMITED';
+   CheckTrue(WRLCreateLogbookText(r) <> b);
+   r.ErrorCode := 'VALIDATION_ERROR';
+   r.ErrorField := 'defaultCallSign';
+   r.ErrorMessage := 'too long';
+   CheckTrue(Pos('defaultCallSign', WRLCreateLogbookText(r)) > 0, 'the field is named');
+   r.ErrorHint := 'Shorten it.';
+   CheckTrue(Pos('Shorten it.', WRLCreateLogbookText(r)) > 0, 'the hint is shown');
+   r.RequestId := 'req_9';
+   CheckTrue(Pos('req_9', WRLCreateLogbookText(r)) > 0, 'the request id is shown');
+   BeginTest('Create logbook text: an uncertain answer says look before trying again');
+   r := Default(TWRLCreateLogbookResult);
+   r.Uncertain := True;
+   r.ErrorCode := 'DELIVERY_UNCONFIRMED';
+   CheckTrue(WRLCreateLogbookText(r) <> '');
+   r.ErrorCode := 'SOMETHING_NEW';
+   r.Uncertain := False;
+   CheckTrue(Pos('SOMETHING_NEW', WRLCreateLogbookText(r)) > 0, 'an unknown code is shown');
+end;
+
 procedure TExternalLoggerActionsTests.RunAllTests;
 begin
    Test_NoRowIsCreatedInBothModes;
@@ -246,6 +404,9 @@ begin
    Test_DefaultAndEffectiveSiteUrl;
    Test_SiteUrlRoundTripsAndOldFilesLoadEmpty;
    Test_WRLLogbookName;
+   Test_WRLCreateLogbookBody;
+   Test_WRLDecodeCreateLogbook;
+   Test_WRLCreateLogbookText;
 end;
 
 end.

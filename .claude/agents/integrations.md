@@ -336,10 +336,19 @@ key's uid. **The editor writes that account only when the operator picks or the 
 changes** -- a hand-typed or migrated account is part of `DestinationFingerprint`, so
 refreshing a list must not move the queue. `LogbookName` is display only and OUT of the
 fingerprint (pinned with a literal `DeliveryId`). **There is no WRL setup dialog and
-no provider setup action (issue 231, NY4I): TR4W does not create WRL logbooks**; the
-operator uses the WRL website or app, and the editor's own load/Refresh validates the
-key. Do not restore `uWRLSetupForm`, `WRLSetupAction` or `TWRLClient.CreateLogbook`.
-A provider declaring more than `EXTERNAL_LOGGER_MAX_FIELDS` rows fails a test. Pinned
+no provider setup action in the EDITOR (issue 231, NY4I)**; the editor's own
+load/Refresh validates the key. Do not restore `uWRLSetupForm` or `WRLSetupAction`.
+**A logbook is created from the logger row's right-click "Create logbook..." (issue 358,
+2026-11-22, NY4I posted the API on the issue):** `TWRLClient.CreateLogbook` is back, a NEW
+shape (`POST /v1/logbooks`, body `name` + `defaultCallSign` only, id from `data.id`,
+errors branched on `error.code`), pure decode `WRLDecodeCreateLogbook`, off-main-thread
+through `StartWRLCreateLogbook` (a ticket polled by the grid's timer, `uUrlTest`'s shape).
+An unreadable 2xx, a 5xx or a lost answer is UNCERTAIN: never retried, the operator is told
+to look at the WRL site first (a second POST may make a second logbook). The id is stored in
+the Preferences WORKING COPY (`Logbook`, `LogbookName`, `Account` when empty); Logbook is in
+the fingerprint and stamp, so a replaced logbook asks first and a running logger keeps its
+old one until restart. The default name is `uWRLLogbookSuggest`. Never run against the real
+service by an agent (BENCH_QUEUE). A provider declaring more than `EXTERNAL_LOGGER_MAX_FIELDS` rows fails a test. Pinned
 in `uTestExternalLoggerFields`.
 
 **THE EDITOR'S ROWS ARE ANCHORED LEFT AND TOP ONLY, AND THE EYE ANCHORS TO ITS EDIT

@@ -71,6 +71,35 @@ resourcestring
    SLoggerResendWhyUnsupported = 'it has no delivery queue to resend into.';
    SLoggerResendWhyNoLog  = 'no writable contest log is open.';
    SLoggerResendWhyFailed = 'the log could not be updated (see tr4w.log). Nothing was changed.';
+   (* CREATE LOGBOOK (issue 358): the WRL logger row's popup item and its dialogs.
+      %s is the logger's name, the logbook's name, or the logbook's id as marked. *)
+   SLoggerGridCreateLogbook = 'Create logbook...';
+   SWRLCreateCaption      = 'Create World Radio League logbook';
+   SWRLCreatePrompt       = 'Name of the new logbook (up to 100 characters). It is made on the World Radio League web site for the account this API key belongs to:';
+   SWRLCreateReplaceAsk   = '%s already has a logbook chosen. Create a new logbook and use it instead? Contacts already queued for the old logbook are not moved.';
+   SWRLCreateKeyMissing   = 'This logger has no API key available. Enter the key in the logger''s editor (unlock the password vault if it is locked) first.';
+   SWRLCreateBusy         = 'A logbook is already being created for a logger. Wait for it to finish.';
+   (* logbook name, logbook id, logger name. *)
+   SWRLCreateDone         = 'Created logbook "%s" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with.';
+   SWRLCreateFailed       = 'The logbook was not created: %s';
+   SWRLCreateUncertain    = 'World Radio League did not confirm the logbook, so it may have been created. Look at your logbooks on the World Radio League web site (or use Refresh in the logger''s editor) before trying again, so you do not make a second one.';
+   SWRLWhyNameRequired    = 'the name is empty.';
+   (* %d is 100. *)
+   SWRLWhyNameTooLong     = 'the name is longer than %d characters.';
+   SWRLWhyKey             = 'World Radio League did not accept the API key (it is missing, wrong or revoked). Check the key in the logger''s editor.';
+   SWRLWhyMembership      = 'the key was refused because the account needs a current World Radio League membership.';
+   SWRLWhyScope           = 'the key is not allowed to create logbooks. Make a key that may write logbooks.';
+   SWRLWhyIp              = 'the key is restricted to other IP addresses than this computer''s.';
+   SWRLWhyConflict        = 'a logbook with that name may already exist, or World Radio League treated the request as a conflict. Choose the existing logbook in the logger''s editor, or use another name.';
+   (* field name, WRL's message. *)
+   SWRLWhyValidationField = 'World Radio League rejected the %s: %s';
+   SWRLWhyValidation      = 'World Radio League rejected the request: %s';
+   SWRLWhyRate            = 'too many requests just now. Wait a minute and try again.';
+   (* WRL's error code. *)
+   SWRLWhyDown            = 'the World Radio League service is not available right now (%s). Try again later.';
+   SWRLWhyOther           = 'the request failed (%s).';
+   (* World Radio League's request id, for a support request. *)
+   SWRLRequestId          = '(request id %s)';
    SLoggerGridHint        = 'Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences to apply Enabled and Order now; a new logger, or changed connection settings, applies after a restart.';
    SLoggerGridChanged     = 'Logger definitions changed. Save Preferences to apply Enabled and Order now; connection changes apply after a restart.';
    (* After a save (issue 233). %d is how many loggers still wait for a restart. *)
