@@ -93,6 +93,8 @@ uses
    uTestLogGridStyle    in 'uTestLogGridStyle.pas',
    uScoreCellStyle      in '..\..\src\uScoreCellStyle.pas',
    uTestScoreCellStyle  in 'uTestScoreCellStyle.pas',
+   uTotalsModeText      in '..\..\src\uTotalsModeText.pas',
+   uTestTotalsModeText  in 'uTestTotalsModeText.pas',
    uEntryStatus        in '..\..\src\uEntryStatus.pas',
    uTestEntryStatus     in 'uTestEntryStatus.pas',
    uRadioPanelState     in '..\..\src\uRadioPanelState.pas',
@@ -1174,7 +1176,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestSplitReassert   in 'uTestSplitReassert.pas',
    uTestTXInhibit       in 'uTestTXInhibit.pas',
    uTestTXInhibitAlert  in 'uTestTXInhibitAlert.pas',
-   uK4DisplayReport     in '..\..\src\radioFactory\uK4DisplayReport.pas',
+   uTestRadioKeepAlive  in 'uTestRadioKeepAlive.pas',
+   uK4DisplayReport    in '..\..\src\radioFactory\uK4DisplayReport.pas',
    uTestK4DisplayReport in 'uTestK4DisplayReport.pas',
    uTestSpectrumRadioState in 'uTestSpectrumRadioState.pas',
    uTestK4SpectrumCrop  in 'uTestK4SpectrumCrop.pas';
@@ -1488,6 +1491,7 @@ begin
    RegisterSuite(TRemMultWorkStateTests.Create('RemMultWorkState'));
    RegisterSuite(TLogGridStyleTests.Create('LogGridStyle'));
    RegisterSuite(TScoreCellStyleTests.Create('ScoreCellStyle'));
+   RegisterSuite(TTotalsModeTextTests.Create('TotalsModeText'));
    RegisterSuite(TEntryStatusTests.Create('EntryStatus'));
    RegisterSuite(TRadioPanelStateTests.Create('RadioPanelState'));
    RegisterSuite(TSelfSpotTests.Create('SelfSpot'));
@@ -1557,6 +1561,7 @@ begin
    RegisterSuite(TSplitReassertTests.Create('SplitReassert'));
    RegisterSuite(TTXInhibitTests.Create('TXInhibit'));
    RegisterSuite(TTXInhibitAlertTests.Create('TXInhibitAlert'));
+   RegisterSuite(TRadioKeepAliveTests.Create('RadioKeepAlive'));
    RegisterSuite(TK4DisplayReportTests.Create('K4DisplayReport'));
    RegisterSuite(TSpectrumRadioStateTests.Create('SpectrumRadioState'));
    RegisterSuite(TK4SpectrumCropTests.Create('K4SpectrumCrop'));

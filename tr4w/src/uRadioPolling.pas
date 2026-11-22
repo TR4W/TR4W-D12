@@ -533,6 +533,18 @@ begin
                handshakeStuckSinceTick := 0;  // operational, or this radio doesn't recycle on stuck
                end;
 
+            (* KEEP-ALIVE AND SILENCE (issue 6).  Every radio is asked; only one
+              that declares a keep-alive interval or a silence limit does
+              anything, and the policy is the radio's (MaintainKeepAlive).
+              True means the radio found its link silent and dropped it: loop,
+              exactly as the stuck-handshake drop above does, so the
+              disconnected branch reconnects through the existing back-off. *)
+            if ro.MaintainKeepAlive then
+               begin
+               Sleep(100);
+               Continue;
+               end;
+
             (* THE LINK IS UP -- and for this radio's own definition of up, which
               is what makes the credentials provably accepted.  Gated on
               IsOperational: see the note on linkWasUp. *)

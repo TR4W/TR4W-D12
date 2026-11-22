@@ -49,10 +49,11 @@ uses
   entries the compiler cannot check against what they point at.
 
   IT HAD ALREADY DRIFTED, which is the argument rather than tidiness. The
-  table lists TAIL END %s MESSAGE, and that command's CFGCA row is COMMENTED
-  OUT -- so the editor offers a message the config vocabulary no longer has.
-  Two tables naming the same nine things, and they disagree. Naming the
-  globals directly means the compiler checks every one.
+  table listed TAIL END %s MESSAGE, and that command's CFGCA row was
+  COMMENTED OUT -- so the editor offered a message the config vocabulary no
+  longer had. Two tables naming the same nine things, and they disagreed.
+  Naming the globals directly means the compiler checks every one. (The
+  tail-end row itself was removed 2026-11-22, issue 60.)
 
   AND IT IS WHAT BLOCKS Str40 FROM BECOMING string. MessagePointer is
   ^ShortString; changing the globals' type with this table in place would
@@ -62,7 +63,9 @@ procedure DisplaymessagesList(mt: MesWindowType; MessageMode: ModeType);
 procedure EditMessage;
 
 const
-  NumberOfOtherMessages      = 9;
+  (* Eight since 2026-11-22: the ninth row, TAIL END %s MESSAGE, went with
+    the tail-end feature (issue 60; the names are in uCFG.RETIRED_COMMANDS). *)
+  NumberOfOtherMessages      = 8;
   NumberOfOtherShortMessages = 4;
 
 (* The command NAME is still a table -- it is data, and a format string with
@@ -116,7 +119,6 @@ begin
       5: Result := 'QUICK QSL %s MESSAGE';
       6: Result := 'REPEAT S&P %s EXCHANGE';
       7: Result := 'S&P %s EXCHANGE';
-      8: Result := 'TAIL END %s MESSAGE';
    else
       Result := '';
    end;
@@ -136,7 +138,6 @@ begin
          5: Result := UTF8Encode(Settings.Messages.QuickQslSsb);
          6: Result := UTF8Encode(Settings.Messages.RepeatSpExchangeSsb);
          7: Result := UTF8Encode(Settings.Messages.SpExchangeSsb);
-         8: Result := TailEndPhoneMessage;
          end;
       end
    else
@@ -150,7 +151,6 @@ begin
          5: Result := UTF8Encode(Settings.Messages.QuickQslCw1);
          6: Result := UTF8Encode(Settings.Messages.RepeatSpExchangeCw);
          7: Result := UTF8Encode(Settings.Messages.SpExchangeCw);
-         8: Result := TailEndMessage;
          end;
       end;
 end;

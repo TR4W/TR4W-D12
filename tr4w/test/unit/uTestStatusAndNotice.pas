@@ -1307,26 +1307,20 @@ begin
 
       (* THE QSO IS LOGGED, then LogContact's post-log step. *)
       LogOnTheSheets('PJ4K', Band20);
-      RefreshNeedsAfterLoggedQSO('PJ4K', True, False);
+      RefreshNeedsAfterLoggedQSO('PJ4K', True);
 
       CheckEquals('', Reads(qsoNeed20), 'after the 20 m QSO, PJ4K is no longer needed on 20 m');
       CheckEquals('', Reads(multNeed20), 'after the 20 m QSO, PJ4 is no longer a mult on 20 m');
       CheckEquals('40', Reads(qsoNeed40), 'and PJ4K is still a needed QSO on 40 m');
       CheckEquals('40', Reads(multNeed40), 'and PJ4 is still a needed mult on 40 m');
 
-      (* TAIL-ENDING: the strips show the NEXT call, DL1ABC, when PJ4K's 40 m
-        QSO is logged. They must keep showing DL1ABC. *)
+      (* The operator moves on to the next call, DL1ABC. (A tail-ending case
+        stood here until the feature was withdrawn, 2026-11-22, issue 60.) *)
       ShowNeedsForCall('DL1ABC');
-      LogOnTheSheets('PJ4K', Band40);
-      RefreshNeedsAfterLoggedQSO('PJ4K', True, True);
-      CheckTrue(Pos('DL1ABC', string(TR4WMainForm.pnlQSONeedsHeader.Caption)) > 0,
-                'tail-ending: the QSO strip still names the next call');
-      CheckEquals('40', Reads(qsoNeed40),
-                  'tail-ending: the next call''s 40 m is still shown needed');
 
-      (* A PEER'S QSO: the same, for the call this operator is looking at. *)
+      (* A PEER'S QSO: the strips keep the call this operator is looking at. *)
       LogOnTheSheets('PJ4K', Band40);
-      RefreshNeedsAfterLoggedQSO('PJ4K', False, False);
+      RefreshNeedsAfterLoggedQSO('PJ4K', False);
       CheckTrue(Pos('DL1ABC', string(TR4WMainForm.pnlMultNeedsHeader.Caption)) > 0,
                 'a peer''s QSO: the Mult strip still names this operator''s call');
    finally
@@ -1751,7 +1745,7 @@ begin
       (* WHAT LogContact REMEMBERS FOR W7ST, and its post-log step. *)
       CallsignsList.AddIniitialExchange('W7ST', '18 UT');
       TR4WMainForm.pnlMultNeedsHeader.Caption := '';
-      RefreshNeedsAfterLoggedQSO('W7ST', True, False);
+      RefreshNeedsAfterLoggedQSO('W7ST', True);
       header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
       CheckTrue(Pos('UT', header) > 0, 'the header names the section: ' + header);
       CheckTrue(Pos('18', header) = 0, 'the header holds no check: ' + header);
@@ -2200,7 +2194,7 @@ var
       Sheet.SetMultFlags(qso);
       Sheet.AddQSOToSheets(@qso, True);
       AddQSOToDupeSheets(qso, False);
-      RefreshNeedsAfterLoggedQSO('K1ABC', True, False);
+      RefreshNeedsAfterLoggedQSO('K1ABC', True);
       shown := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
       CheckTrue(Pos('K1ABC', shown) > 0, aName + ' K1ABC logged: the header names the call: ' + shown);
       ShowNeedsForCall('K1ABC');
@@ -2330,7 +2324,7 @@ begin
       CheckEquals('20', Trim(string(multNeed20.Caption)), 'before the QSO, WcF is needed on 20 m');
       LogIt(rx);
       TR4WMainForm.pnlMultNeedsHeader.Caption := '';
-      RefreshNeedsAfterLoggedQSO('W1AW', True, False);
+      RefreshNeedsAfterLoggedQSO('W1AW', True);
       CheckTrue(Pos('WCF', string(TR4WMainForm.pnlMultNeedsHeader.Caption)) > 0,
                 'after the QSO the header still names WCF');
       CheckEquals('', Trim(string(multNeed20.Caption)), 'after the QSO, WcF is worked: the cell is empty');
@@ -2398,7 +2392,7 @@ begin
       rx.Mode := CW;
       ActiveContest(Contest).ScoreQSO(rx);
       LogIt(rx);
-      RefreshNeedsAfterLoggedQSO('OK1W', True, False);
+      RefreshNeedsAfterLoggedQSO('OK1W', True);
       CheckEquals('', Trim(string(multNeed20.Caption)), 'MWC OK1W logged: W is worked on 20 m');
       ShowNeedsForCall('OK5W');
       CheckEquals('', Trim(string(multNeed20.Caption)), 'MWC OK5W typed: its W is worked on 20 m');
@@ -2541,7 +2535,7 @@ begin
 
       (* WORKED ON 40 m CW WITH HIS ISLAND. *)
       LogIsland('GM0GAV', Band40, '599 12 EU5');
-      RefreshNeedsAfterLoggedQSO('GM0GAV', True, False);
+      RefreshNeedsAfterLoggedQSO('GM0GAV', True);
       header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
       CheckTrue(Pos('EU-005', header) > 0, 'logged on 40: the header names EU-005: ' + header);
       CheckEquals('', Trim(string(multNeed40.Caption)), 'logged on 40: EU-005 is worked on 40 m CW');
@@ -2557,7 +2551,7 @@ begin
 
       (* AND LOGGED ON 20 m: the strip takes 20 out. *)
       LogIsland('GM0GAV', Band20, '12 EU5');
-      RefreshNeedsAfterLoggedQSO('GM0GAV', True, False);
+      RefreshNeedsAfterLoggedQSO('GM0GAV', True);
       header := string(TR4WMainForm.pnlMultNeedsHeader.Caption);
       CheckTrue(Pos('EU-005', header) > 0, 'logged on 20: the header names EU-005: ' + header);
       CheckEquals('', Trim(string(multNeed20.Caption)), 'logged on 20: EU-005 is worked on 20 m CW');

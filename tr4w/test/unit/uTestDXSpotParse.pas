@@ -27,7 +27,7 @@ unit uTestDXSpotParse;
 interface
 
 uses
-   SysUtils, uTR4WTestFramework, VC, uDXSpotParse;
+   SysUtils, uTR4WTestFramework, VC, uDXSpotParse, uSpotAge;
 
 type
    TDXSpotParseTests = class(TTestCase)
@@ -136,6 +136,16 @@ type
       procedure Test_CommentDisplay_Squeezed;
       procedure Test_CommentDisplay_EmptyShowsNothing;
       procedure Test_CommentDisplay_FromARealSpotRecord;
+
+      // SH/DX reply lines (issue 69)
+      procedure Test_SHDX_ModernLine;
+      procedure Test_SHDX_ClusterSoftwareLinesOf1999;
+      procedure Test_SHDX_EveryMonthAndTheYearEnd;
+      procedure Test_SHDX_LongCommentKeepsItsEnd;
+      procedure Test_SHDX_NoSpotterStillDecodes;
+      procedure Test_SHDX_Refusals;
+      procedure Test_SHDX_NotALiveSpotAndViceVersa;
+      procedure Test_SHDX_StaleAndFutureStamps;
 
    public
       procedure RunAllTests; override;
@@ -1238,8 +1248,212 @@ begin
    CheckFalse(SpotIsDigital(s), 'an SSB spot');
 end;
 
+{ ---- SH/DX reply lines (issue 69) ----------------------------------------- }
+
+const
+   // NY4I's own capture (issue 69, 2026-11-05).
+   SHDX_MODERN = '  7050.3  W4EDE       05-Nov-2026 0131Z  CW 13 dB 30 WPM CQ       NFL <W8WTS-#>';
+   // The reply examples recorded in trdos\logpack.pas (AR-Cluster / DXSpider).
+   SHDX_QSX    = '3503.0   V47BY       16-Nov-1999 0559Z  QSX 3506.4                 V4 <VE2ZP>';
+   SHDX_RTTY   = '14084.3  ZD7MY       16-Nov-1999 0555Z  RTTY. 569 in Toronto,On   ZD7 <VA3NA>';
+   SHDX_VHF    = '144200.0  WB9TFS     14-Nov-1999 0508Z  EM72 > EM55                 K <N4LGY>';
+
+function SHDXWhen(aYear, aMonth, aDay, aHour, aMinute: integer): TDateTime;
+begin
+   Result := EncodeDate(aYear, aMonth, aDay) + EncodeTime(aHour, aMinute, 0, 0);
+end;
+
+// Equal to the second -- the decoder adds minutes/1440 to a date.
+function SHDXSameInstant(const a, b: TDateTime): boolean;
+begin
+   Result := Abs(a - b) < 0.5 / 86400;
+end;
+
+procedure TDXSpotParseTests.Test_SHDX_ModernLine;
+var
+   spot: TSpotRecord;
+   when: TDateTime;
+begin
+   BeginTest('Test_SHDX_ModernLine');
+   CheckTrue(ParseSHDXLine(SHDX_MODERN, spot, when), 'the reply line decodes');
+   CheckEquals(7050300, spot.FFrequency, 'frequency in Hz');
+   CheckEquals('W4EDE', string(spot.FCall), 'the DX call');
+   CheckEquals('W8WTS-#', string(spot.FSourceCall), 'the spotter, brackets removed');
+   CheckEquals('7050.3', CStr(spot.FFreqString), 'the frequency text');
+   CheckEquals('CW 13 dB 30 WPM CQ       NFL', string(SpotNotesText(spot)),
+               'the comment, with its section at the end');
+   CheckTrue(SHDXSameInstant(when, SHDXWhen(2026, 11, 5, 1, 31)),
+             'the spot''s OWN date and time, UTC');
+end;
+
+procedure TDXSpotParseTests.Test_SHDX_ClusterSoftwareLinesOf1999;
+var
+   spot: TSpotRecord;
+   when: TDateTime;
+begin
+   BeginTest('Test_SHDX_ClusterSoftwareLinesOf1999');
+   CheckTrue(ParseSHDXLine(SHDX_QSX, spot, when), 'QSX line decodes');
+   CheckEquals(3503000, spot.FFrequency, 'frequency');
+   CheckEquals('V47BY', string(spot.FCall), 'call');
+   CheckEquals('VE2ZP', string(spot.FSourceCall), 'spotter');
+   CheckEquals(3506400, spot.FQSXFrequency, 'the QSX hint is read as on a live spot');
+   CheckTrue(SHDXSameInstant(when, SHDXWhen(1999, 11, 16, 5, 59)), 'its own time');
+
+   CheckTrue(ParseSHDXLine(SHDX_RTTY, spot, when), 'RTTY line decodes');
+   CheckEquals(14084300, spot.FFrequency, 'frequency');
+   CheckEquals('ZD7MY', string(spot.FCall), 'call');
+   CheckEquals('RTTY. 569 in Toronto,On   ZD7', string(SpotNotesText(spot)), 'comment');
+   CheckEquals('VA3NA', string(spot.FSourceCall), 'spotter');
+
+   CheckTrue(ParseSHDXLine(SHDX_VHF, spot, when), 'VHF line decodes');
+   CheckEquals(144200000, spot.FFrequency, 'a six-digit kHz frequency');
+   CheckEquals('WB9TFS', string(spot.FCall), 'call');
+   CheckEquals(0, spot.FQSXFrequency, 'grid squares are not a split');
+end;
+
+procedure TDXSpotParseTests.Test_SHDX_EveryMonthAndTheYearEnd;
+const
+   MONTHS: array[1..12] of string = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec');
+var
+   spot: TSpotRecord;
+   when: TDateTime;
+   m: integer;
+begin
+   BeginTest('Test_SHDX_EveryMonthAndTheYearEnd');
+   for m := 1 to 12 do
+      begin
+      CheckTrue(ParseSHDXLine('14195.0  JA1ABC  1-' + MONTHS[m] + '-2026 1234Z  <W1AW>',
+                              spot, when), MONTHS[m] + ' decodes');
+      CheckTrue(SHDXSameInstant(when, SHDXWhen(2026, m, 1, 12, 34)),
+                MONTHS[m] + ' is month ' + IntToStr(m));
+      end;
+   CheckTrue(ParseSHDXLine('14195.0  JA1ABC  21-NOV-2026 1234Z  x <W1AW>', spot, when),
+             'upper-case month');
+   CheckTrue(ParseSHDXLine('14195.0  JA1ABC  21-nov-2026 1234Z  x <W1AW>', spot, when),
+             'lower-case month');
+
+   // The year is in the line, so the turn of the year needs no guessing.
+   CheckTrue(ParseSHDXLine('14195.0  JA1ABC  31-Dec-2026 2359Z  <W1AW>', spot, when),
+             '31 December');
+   CheckTrue(SHDXSameInstant(when, SHDXWhen(2026, 12, 31, 23, 59)), '31 Dec 2026 23:59');
+   CheckTrue(ParseSHDXLine('14195.0  JA1ABC  01-Jan-2027 0000Z  <W1AW>', spot, when),
+             '1 January');
+   CheckTrue(SHDXSameInstant(when, SHDXWhen(2027, 1, 1, 0, 0)), '1 Jan 2027 00:00');
+   CheckTrue(ParseSHDXLine('14195.0  JA1ABC  29-Feb-2028 0000Z  <W1AW>', spot, when),
+             'a leap day');
+end;
+
+procedure TDXSpotParseTests.Test_SHDX_LongCommentKeepsItsEnd;
+var
+   spot: TSpotRecord;
+   when: TDateTime;
+begin
+   BeginTest('Test_SHDX_LongCommentKeepsItsEnd');
+   CheckTrue(ParseSHDXLine('14195.0  W1AW  21-Nov-2026 1234Z  ' +
+                           'ABCDEFGHIJ ABCDEFGHIJ ABCDEFGHIJ ABCDEFGHIJ NFL <K1ABC>',
+                           spot, when), 'decodes');
+   CheckEquals('GHIJ ABCDEFGHIJ ABCDEFGHIJ NFL', string(SpotNotesText(spot)),
+               'the last 30 characters -- the section survives');
+end;
+
+procedure TDXSpotParseTests.Test_SHDX_NoSpotterStillDecodes;
+var
+   spot: TSpotRecord;
+   when: TDateTime;
+begin
+   BeginTest('Test_SHDX_NoSpotterStillDecodes');
+   CheckTrue(ParseSHDXLine('14195.0  W1AW  21-Nov-2026 1234Z  CQ TEST', spot, when),
+             'a line with no <spotter>');
+   CheckEquals('', string(spot.FSourceCall), 'the spotter is empty');
+   CheckEquals('CQ TEST', string(SpotNotesText(spot)), 'comment');
+   CheckTrue(ParseSHDXLine('14195.0  W1AW  21-Nov-2026 1234Z', spot, when),
+             'no comment either');
+end;
+
+procedure TDXSpotParseTests.Test_SHDX_Refusals;
+var
+   spot: TSpotRecord;
+   when: TDateTime;
+begin
+   BeginTest('Test_SHDX_Refusals');
+   CheckFalse(ParseSHDXLine('', spot, when), 'empty');
+   CheckTrue(when = 0, 'and the stamp is zero');
+   CheckFalse(ParseSHDXLine('SH/DX 50', spot, when), 'the command echo');
+   CheckFalse(ParseSHDXLine('No spots', spot, when), 'a node answer');
+   CheckFalse(ParseSHDXLine('14195.0  W1AW', spot, when), 'cut off after the call');
+   CheckFalse(ParseSHDXLine('14195.0  W1AW  21-Nov-2026', spot, when), 'no time');
+   CheckFalse(ParseSHDXLine('14195.0  W1AW  21-Nov-26 1234Z  x', spot, when),
+              'a two-digit year is a format not verified');
+   CheckFalse(ParseSHDXLine('14195.0  W1AW  21-11-2026 1234Z  x', spot, when),
+              'a numeric month is a format not verified');
+   CheckFalse(ParseSHDXLine('14195.0  W1AW  21-Xyz-2026 1234Z  x', spot, when),
+              'not a month');
+   CheckFalse(ParseSHDXLine('14195.0  W1AW  30-Feb-2026 1234Z  x', spot, when),
+              'no such day');
+   CheckFalse(ParseSHDXLine('14195.0  W1AW  21-Nov-2026 2460Z  x', spot, when),
+              'no such time');
+   CheckFalse(ParseSHDXLine('14195.0  W1AW  21-Nov-2026 1234  x', spot, when),
+              'no Z');
+   CheckFalse(ParseSHDXLine('14195.0  !!!!  21-Nov-2026 1234Z  x', spot, when),
+              'not a callsign');
+   CheckFalse(ParseSHDXLine('abc.d  W1AW  21-Nov-2026 1234Z  x', spot, when),
+              'not a frequency');
+   CheckFalse(ParseSHDXLine('1.2.3  W1AW  21-Nov-2026 1234Z  x', spot, when),
+              'two points in a frequency');
+   CheckFalse(ParseSHDXLine('9999999.0  W1AW  21-Nov-2026 1234Z  x', spot, when),
+              'an absurd frequency');
+end;
+
+procedure TDXSpotParseTests.Test_SHDX_NotALiveSpotAndViceVersa;
+var
+   spot: TSpotRecord;
+   when: TDateTime;
+begin
+   BeginTest('Test_SHDX_NotALiveSpotAndViceVersa');
+   // A live "DX de" line is not a reply line, and the reply layout still is
+   // not a live spot (uTestSpotCommentMultiplier pins the second).
+   CheckFalse(ParseSHDXLine(PLAIN, spot, when), 'a live spot is not an SH/DX line');
+   CheckFalse(ParseDXSpotLine(SHDX_MODERN, spot), 'a reply line is not a live spot');
+end;
+
+procedure TDXSpotParseTests.Test_SHDX_StaleAndFutureStamps;
+var
+   now_: TDateTime;
+begin
+   BeginTest('Test_SHDX_StaleAndFutureStamps');
+   now_ := SHDXWhen(2026, 11, 22, 12, 0);
+   CheckTrue(HistorySpotIsLive(SHDXWhen(2026, 11, 22, 11, 30), now_, 60),
+             '30 minutes old, decay 60');
+   CheckTrue(HistorySpotIsLive(SHDXWhen(2026, 11, 22, 11, 1), now_, 60),
+             '59 minutes old, decay 60');
+   CheckFalse(HistorySpotIsLive(SHDXWhen(2026, 11, 22, 11, 0), now_, 60),
+              'exactly the decay time is expired, as the band map ages it');
+   CheckTrue(HistorySpotIsLive(SHDXWhen(2026, 11, 22, 11, 0), now_, 61),
+             'the same spot with a longer decay');
+   CheckFalse(HistorySpotIsLive(SHDXWhen(2026, 11, 21, 12, 0), now_, 60),
+              'yesterday');
+   CheckFalse(HistorySpotIsLive(SHDXWhen(2026, 11, 22, 12, 0), now_, 0),
+              'decay zero keeps nothing');
+   CheckTrue(HistorySpotIsLive(SHDXWhen(2026, 11, 22, 12, 5), now_, 60),
+             'five minutes ahead is clock skew, age zero');
+   CheckFalse(HistorySpotIsLive(SHDXWhen(2026, 11, 22, 14, 0), now_, 60),
+              'two hours ahead is refused, not given a long life');
+   CheckFalse(HistorySpotIsLive(SHDXWhen(2026, 11, 23, 12, 0), now_, 60000),
+              'a day ahead is refused whatever the decay');
+end;
+
 procedure TDXSpotParseTests.RunAllTests;
 begin
+   Test_SHDX_ModernLine;
+   Test_SHDX_ClusterSoftwareLinesOf1999;
+   Test_SHDX_EveryMonthAndTheYearEnd;
+   Test_SHDX_LongCommentKeepsItsEnd;
+   Test_SHDX_NoSpotterStillDecodes;
+   Test_SHDX_Refusals;
+   Test_SHDX_NotALiveSpotAndViceVersa;
+   Test_SHDX_StaleAndFutureStamps;
+
    Test_CommentDisplay_Squeezed;
    Test_CommentDisplay_EmptyShowsNothing;
    Test_CommentDisplay_FromARealSpotRecord;

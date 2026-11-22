@@ -1403,6 +1403,7 @@ type
       FActiveBandColor: string;
       FOtherBandColor: string;
       FVfoMarkerColor: string;
+      FClickGoesToExchange: boolean;
       procedure SetSplitMode(aValue: BandMapSplitModeType);
       procedure SetWorkedMultColor(const aValue: string);
       procedure SetWorkedMultLimit(aValue: TBandMapWorkedMultLimit);
@@ -1537,6 +1538,17 @@ type
       property ItemWidth: TBandMapItemWidth read FItemWidth write FItemWidth;
       // Was BandMapSize in VC.pas.
       property Size: TBandMapSize read FSize write FSize;
+      (* BAND MAP CLICK GOES TO EXCHANGE (issue 185, NY4I 2026-11-22: "an
+        option under BAND MAP"; option A). When True, tuning to a spot that
+        puts its call in the call window -- a band map double-click,
+        NEXTBANDMAP, any uBandmap.TuneRadioToSpot caller -- leaves the cursor
+        in the EXCHANGE window. Focus only: the exchange is NOT filled (that
+        is option B, open with issue 202). DEFAULT FALSE, which is D7's
+        behaviour: the cursor stays in the call window. The decision is
+        uBandmap.SpotTuneFocusesExchange. No setter: read at each tune.
+        Last in the group so existing members keep their order in the file. *)
+      property ClickGoesToExchange: boolean
+         read FClickGoesToExchange write FClickGoesToExchange;
    end;
 
    (*
@@ -2114,6 +2126,7 @@ type
       FCompleteCallsignMask: string;
       FCallsignUpdateEnable: boolean;
       FInsertMode: boolean;
+      FEnforceValidCallsign: boolean;
       procedure SetInsertMode(aValue: boolean);
    public
       constructor Create;
@@ -2180,6 +2193,17 @@ type
         Alt-menu toggle had to go the long way round through
         InvertBooleanCommand to get the panel repainted at all. *)
       property InsertMode: boolean read FInsertMode write SetInsertMode;
+      (* ENFORCE VALID CALLSIGN (issue 180, NY4I 2026-11-15): when True, a
+        QSO whose call's BASE (the longest part around any '/', so W1AW/P,
+        VE3/W1AW and the county-line NY4I/PIN all pass) is not a DXCC entity
+        in CTY.DAT is refused at logging, with a status-line message and no
+        beep (MainUnit.ParametersOkay, through
+        uCallSignRoutines.EnforcedCallIsRefused). DEFAULT FALSE: with it off
+        nothing is asked and no QSO changes. A station preference, not a
+        contest's. Aliased: the derived name would be CALL WINDOW ENFORCE
+        VALID CALLSIGN. *)
+      property EnforceValidCallsign: boolean
+         read FEnforceValidCallsign write FEnforceValidCallsign;
    end;
 
    (*
@@ -5021,6 +5045,7 @@ begin
      logwind.pas initialised them individually. *)
    FAllBands         := False;
    FAllModes         := False;
+   FClickGoesToExchange := False;   // issue 185: D7's behaviour by default
    FCallWindowEnable := True;
    FDisplayCQ        := True;
    FDisplayGhz       := False;
@@ -5961,6 +5986,8 @@ begin
      operator turn it on. *)
    FCallsignUpdateEnable := True;
    FInsertMode        := True;   // logstuff's declaration
+   (* Off: NY4I, issue 180 -- an option, and the default changes nothing. *)
+   FEnforceValidCallsign := False;
 end;
 
 procedure TCallWindowSettings.SetInsertMode(aValue: boolean);
@@ -6844,6 +6871,9 @@ begin
    Alias('SPACE BAR DUPE CHECK ENABLE',  'CallWindow.SpaceBarDupeCheck');
    Alias('PARTIAL CALL ENABLE',          'CallWindow.PartialCallEnable');
    Alias('WILDCARD PARTIALS',            'CallWindow.WildcardPartials');
+   (* Issue 180: the name NY4I's issue uses, not CALL WINDOW ENFORCE VALID
+     CALLSIGN. *)
+   Alias('ENFORCE VALID CALLSIGN',       'CallWindow.EnforceValidCallsign');
 
    Alias('TWO RADIO MODE',           'So2r.TwoRadioMode');
    Alias('QSY INACTIVE RADIO',       'So2r.QsyInactiveRadio');

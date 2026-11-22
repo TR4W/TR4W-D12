@@ -227,6 +227,24 @@ its stop unconditionally fails there by name. A byte-frame stop builds its
 frame and hands it over (`TYaesuBinary.Frame5`, `TFlexAPI.FlexCmdLine`) rather
 than growing a second send path.
 
+**A NETWORK LINK'S LIVENESS IS A DECLARED TRAIT, NOT SOCKET STATE ALONE**
+(issue 6, 2026-11-22, NOT bench-tested). `TRadioCapabilities` carries
+`KeepAliveIntervalMs` and `LinkSilenceLimitMs` (fields, 0 = off, so a
+wholesale `Flags :=` cannot wipe them). The poller ticks
+`ro.MaintainKeepAlive` for every radio in its connected branch; the base acts
+only on the two numbers: silence (nothing received, stamped in
+`UpdateLastValidResponse`, restarted in `ResetPerLinkState`) past the limit ->
+WARN + `Disconnect` + the normal reconnect back-off; else the virtual
+`SendKeepAlive` when due. Arithmetic is the pure `KeepAliveDue` /
+`LinkSilenceExceeded` (a "heard" stamp later than the clock read is NOT
+silence -- cross-thread race). **Only `TFlexAPI` declares it** (`ping` every
+1 s after the H line, 10 s limit), pinned over the whole registry by
+`uTestRadioKeepAlive`. A radio that declares a silence limit MUST call
+`UpdateLastValidResponse` on every frame. `keepalive disable` is still sent
+(NY4I: switch to `enable` only after a bench); `ping` is spelled from
+AetherSDR, not Flex docs. `TFlexAPI.NextSeq` is `InterlockedIncrement` now
+(three threads send).
+
 **A QUESTION ASKED AT CONNECT BELONGS IN THE DRIVER'S `Connect`, NOT IN A UI
 PATH.** The K4's spectrum socket connects before its CAT link, so `#SPN;` sent
 from `StartSpectrum` was dropped at every start; it is in `TK4Radio.Connect`

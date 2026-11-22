@@ -81,7 +81,6 @@ These are soft-configured defaults (user can change):
 - `,` comma — PossibleCallLeftKey
 - `;` semicolon — PossibleCallAcceptKey
 - `.` period — PossibleCallRightKey
-- `]` right bracket — TailEndKey
 - `-` dash — SwitchRadioKey (in call window)
 
 ---

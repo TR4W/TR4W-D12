@@ -34,6 +34,22 @@ function UTCNow: TDateTime;
   age zero. }
 function AgeSeconds(const aStamp, aNow: TDateTime): integer;
 
+(* IS A SPOT THAT CARRIES ITS OWN DATE AND TIME (an SH/DX reply line, issue 69)
+  STILL WORTH SHOWING. aStamp is the spot's own UTC time; the spot is live when
+  it is younger than aDecayMinutes (BAND MAP DECAY TIME, MINUTES, compared in
+  seconds as the band map's ageing does), so a reply is shown exactly as long
+  as a live spot of the same time would have been.
+
+  A stamp more than HISTORY_FUTURE_TOLERANCE_MINUTES AHEAD of aNow is refused,
+  not clamped to age zero: a clock that wrong, or a mis-read date, would
+  otherwise give a spot an unlimited life. A smaller lead is ordinary skew
+  between the node's clock and ours and is age zero (AgeSeconds). *)
+function HistorySpotIsLive(const aStamp, aNow: TDateTime;
+                           aDecayMinutes: integer): boolean;
+
+const
+   HISTORY_FUTURE_TOLERANCE_MINUTES = 60;
+
 implementation
 
 (* THE SAME INSTANT, WITHOUT ASKING WINDOWS FOR IT.
@@ -62,6 +78,17 @@ begin
       Exit;
       end;
    Result := Round(SecondSpan(aNow, aStamp));
+end;
+
+function HistorySpotIsLive(const aStamp, aNow: TDateTime;
+                           aDecayMinutes: integer): boolean;
+begin
+   if aStamp > aNow + HISTORY_FUTURE_TOLERANCE_MINUTES / (24 * 60) then
+      begin
+      Result := False;
+      Exit;
+      end;
+   Result := AgeSeconds(aStamp, aNow) < aDecayMinutes * 60;
 end;
 
 end.

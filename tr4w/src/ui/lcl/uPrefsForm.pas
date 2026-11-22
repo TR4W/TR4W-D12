@@ -1811,6 +1811,9 @@ begin
    aTable.Place('files.ctrlj.callsignUpdateEnable',       NAV_ENTRY, SPrefsGroupTyping);
    aTable.Place('appearance.ctrlj.completeCallsignMask',  NAV_ENTRY, SPrefsGroupTyping);
    aTable.Place('operating.ctrlj.logFrequencyEnable',     NAV_ENTRY, SPrefsGroupWhatIsLogged);
+   (* Issue 180: ENFORCE VALID CALLSIGN decides whether a QSO is logged at
+     all, so it sits with what a QSO records. *)
+   aTable.Place('operating.enforceValidCallsign',         NAV_ENTRY, SPrefsGroupWhatIsLogged);
    aTable.Place('operating.ctrlj.autoTimeIncrement',      NAV_ENTRY, SPrefsGroupHandLog);
    aTable.Place('operating.ctrlj.incrementTimeEnable',    NAV_ENTRY, SPrefsGroupHandLog);
 
@@ -1836,6 +1839,9 @@ begin
    aTable.Place('bandmap.workedMultColor',                NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('bandmap.workedMultLimit',                NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('operating.ctrlj.qzbRandomOffsetEnable',  NAV_BANDMAPWINDOW, SPrefsGroupSpotTuning);
+   (* Issue 185: where the cursor goes after tuning to a spot. NY4I: "an
+     option under BAND MAP"; the Band Map page itself has no room left. *)
+   aTable.Place('bandmap.clickGoesToExchange',            NAV_BANDMAPWINDOW, SPrefsGroupSpotTuning);
 
    (* Appearance > Colors: the band map's colour roles (issue 59, NY4I
      2026-11-15), in a block under the main window's grid. *)

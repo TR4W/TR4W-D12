@@ -2924,3 +2924,13 @@ msgctxt "TC_HELP_USE_CALL_HISTORY_FILE"
 msgid "When TRUE, TR4W reads a call history file when the contest is opened and uses it to fill in a station's exchange from the call. The file is CALL HISTORY FILENAME, or the contest's own default when that is blank; a contest that takes nothing from a call history file reads none. A change takes effect the next time the contest is opened."
 msgstr "Quando TRUETR4W lê um histórico de chamadas quando o concurso é aberto e o usa para preencher a troca de uma estação da chamada. O arquivo é chamado de história FILENAME, ou o próprio padrão do concurso quando está em branco, um concurso que não pega nada de um arquivo de histórico de chamadas não lê nada. Uma mudança fará efeito na próxima vez que o concurso for aberto."
 
+#. Config command: BAND MAP CLICK GOES TO EXCHANGE   (default: FALSE)
+msgctxt "TC_HELP_BAND_MAP_CLICK_GOES_TO_EXCHANGE"
+msgid "TRUE leaves the cursor in the exchange window after tuning to a band map spot puts its call in the call window. The exchange is not filled in. Default FALSE, which keeps the cursor in the call window."
+msgstr ""
+
+#. Config command: ENFORCE VALID CALLSIGN   (default: FALSE)
+msgctxt "TC_HELP_ENFORCE_VALID_CALLSIGN"
+msgid "TRUE refuses to log a QSO whose base call (the longest part around any /, so W1AW/P, VE3/W1AW and NY4I/PIN all count as W1AW or NY4I) is not a DXCC entity in the country file. The QSO is not logged, the call and exchange stay as typed, and the reason is shown on the status line. No check is made when no country file is loaded. Default FALSE."
+msgstr ""
+

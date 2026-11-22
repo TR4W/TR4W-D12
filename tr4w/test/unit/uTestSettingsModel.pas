@@ -470,7 +470,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(317, names.Count,
+         CheckEquals(319, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -545,7 +545,9 @@ begin
                      + ' the same day -- the window height decides the log'
                      + ' pane (NY4I); 317 since WINDOW SIZE was retired the'
                      + ' same day -- the window width decides the text scale'
-                     + ' (plan stage e6)');
+                     + ' (plan stage e6); 319 with ENFORCE VALID CALLSIGN'
+                     + ' (issue 180) and BAND MAP CLICK GOES TO EXCHANGE'
+                     + ' (issue 185), new, no CFGCA row, 2026-11-22');
       finally
          names.Free;
       end;
@@ -937,6 +939,14 @@ begin
    (* Withdrawn 2026-11-21 (plan stage e6): the main window's text scale
      follows its width and is saved with the window layout. *)
    CheckTrue(CommandIsRetired('WINDOW SIZE'), 'WINDOW SIZE');
+   (* Withdrawn 2026-11-22 (issue 60, NY4I deferring to N4AF): the tail-end
+     key never worked here or in D7. These four WERE commented out in CFGCA,
+     not csRem -- the one deliberate exception to the rule pinned just below,
+     made by that ruling so an old .cfg stops raising the dialog. *)
+   CheckTrue(CommandIsRetired('TAIL END CW MESSAGE'), 'TAIL END CW MESSAGE');
+   CheckTrue(CommandIsRetired('TAIL END KEY'), 'TAIL END KEY');
+   CheckTrue(CommandIsRetired('TAIL END MESSAGE'), 'TAIL END MESSAGE');
+   CheckTrue(CommandIsRetired('TAIL END SSB MESSAGE'), 'TAIL END SSB MESSAGE');
 
    (* NOT K1EA NETWORK ENABLE, and the first draft of this test asserted that
      it was -- which is the distinction worth keeping.
@@ -994,8 +1004,9 @@ begin
      SERIAL PORTS. 105 since the same day, when NY4I confirmed the six
      parallel-port names retired: LPT1/2/3 BASE ADDRESS, RELAY CONTROL PORT,
      STEREO CONTROL PORT and USE CONTROL PORT. 106 later that day: ROW COUNT.
-     107 the same day: WINDOW SIZE. *)
-   CheckTrue(RetiredCommandCount >= 107, 'the retired list has not shrunk');
+     107 the same day: WINDOW SIZE. 111 since 2026-11-22: the four TAIL END
+     names (issue 60). *)
+   CheckTrue(RetiredCommandCount >= 111, 'the retired list has not shrunk');
 end;
 
 (* ---------------------------------------------------------------------
@@ -1835,6 +1846,7 @@ const
       + '"BAND MAP ALL MODES",'
       + '"BAND MAP CALL WINDOW ENABLE",'
       + '"BAND MAP CENTER ON RADIO",'
+      + '"BAND MAP CLICK GOES TO EXCHANGE",'
       + '"BAND MAP DECAY TIME",'
       + '"BAND MAP DISPLAY CQ",'
       + '"BAND MAP DISPLAY GHZ",'
@@ -1916,6 +1928,7 @@ const
       + '"DVK LOCALIZED MESSAGES ENABLE",'
       + '"DVK PATH",'
       + '"DVK RECORDER",'
+      + '"ENFORCE VALID CALLSIGN",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
       + '"EXCHANGE MEMORY ENABLE",'
       + '"EXTERNAL LOGGER",'

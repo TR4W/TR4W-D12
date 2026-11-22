@@ -242,6 +242,18 @@ function MenuItemById(const aId: word): TMenuItem;
 { The top-level popup at this position -- uNet enables and disables the whole
   Network menu, which it addressed by POSITION and not by id. }
 function TopLevelMenuItem(const aIndex: integer): TMenuItem;
+
+(* THE ALT-K CAPTION FOR A MODE (issue 23, NY4I option A). Alt-K runs
+  LogCW.ToggleCW, which toggles CW in CW mode and the VOICE KEYER in every
+  other mode (Phone, Digital, FM), as D7 did. The caption says which, so the
+  operator can see what the key will flip. The test is aMode = CW, exactly
+  ToggleCW's own; change one and the other changes with it. Pure. *)
+function ToggleKeyerMenuCaption(const aMode: ModeType): string;
+
+(* Put ToggleKeyerMenuCaption(aMode) on the built Alt-K item. Does nothing
+  before the menu is built. Main thread only: it assigns a caption. Called by
+  LOGWIND.DisplayBandMode, the one place the displayed mode changes. *)
+procedure RefreshToggleKeyerMenuCaption(const aMode: ModeType);
 const
   // GONE 2026-08-17: menu_messages no longer owns Alt+P.  NY4I -- "menu alt p
   // should be alt-p" -- moved that keystroke to 10317 menu_alt_p, whose caption
@@ -954,6 +966,29 @@ begin
       (aIndex < GMainMenu.Items.Count) then
       begin
       Result := GMainMenu.Items[aIndex];
+      end;
+end;
+
+function ToggleKeyerMenuCaption(const aMode: ModeType): string;
+begin
+   if aMode = CW then
+      begin
+      Result := RC_KILLCW;
+      end
+   else
+      begin
+      Result := SMenuToggleVoiceKeyer;
+      end;
+end;
+
+procedure RefreshToggleKeyerMenuCaption(const aMode: ModeType);
+var
+   item: TMenuItem;
+begin
+   item := MenuItemById(menu_alt_killcw);
+   if item <> nil then
+      begin
+      item.Caption := TCaption(ToggleKeyerMenuCaption(aMode));
       end;
 end;
 

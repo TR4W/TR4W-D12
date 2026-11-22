@@ -129,6 +129,34 @@ function LineAsksForLogin(const Line: AnsiString): boolean;
 // with today's date from the UTC global to get a comparable timestamp.
 function ParseDXSpotTimeUTC(const Line: AnsiString; out MinuteOfDay: integer): boolean;
 
+(* DECODE ONE LINE OF AN SH/DX REPLY (issue 69). The node answers SH/DX with a
+  HISTORY of spots in a layout of their own -- no "DX de", the frequency first,
+  and a FULL date and time where a live spot has only HHMM:
+
+     0123456789012345678901234567890123456789012345678901234567890123456789
+       7050.3  W4EDE       05-Nov-2026 0131Z  CW 13 dB 30 WPM CQ       NFL <W8WTS-#>
+     14084.3  ZD7MY       16-Nov-1999 0555Z  RTTY. 569 in Toronto,On   ZD7 <VA3NA>
+     3503.0   V47BY       16-Nov-1999 0559Z  QSX 3506.4                V4 <VE2ZP>
+
+  WHAT IS VERIFIED, and all that is accepted: the first line is NY4I's own
+  capture (issue 69, 2026-11-05); the others are the reply examples in
+  trdos\logpack.pas (AR-Cluster and DXSpider nodes, 1999), which have the same
+  five fields. So: frequency in kHz, call, DD-Mon-YYYY (English month, three
+  letters, either case), HHMMZ, the comment, and the spotter in <angle
+  brackets> last. FIELDS ARE TOKENS, not columns -- the nodes pad them
+  differently (the 1999 lines pad to a different width). No other date format
+  is accepted: a line with a two-digit year or a numeric month is refused, as
+  is anything that does not have all four leading fields.
+
+  Fills what ParseDXSpotLine fills (FFrequency, FFreqString, FCall, FSourceCall,
+  FNotes, FQSXFrequency; FBand/FMode NoBand/NoMode) and returns the spot's OWN
+  time in SpotUTC. The comment is kept from its END when it is longer than the
+  30 characters FNotes holds, because the section the cluster appends sits on
+  the last column (contrast the live decoder, which keeps the first 30).
+  SpotUTC is 0 when the line is refused. *)
+function ParseSHDXLine(const Line: AnsiString; out Spot: TSpotRecord;
+                       out SpotUTC: TDateTime): boolean;
+
 // Read a split / QSX hint out of a spot's COMMENT field.
 //
 // Returns True and the DX station's receive frequency in Hz when the comment
@@ -1224,6 +1252,255 @@ begin
                     Ord(LineBuf[DX + 71]) - $30) * 60 +
                   ((Ord(LineBuf[DX + 72]) - $30) * 10 +
                     Ord(LineBuf[DX + 73]) - $30);
+end;
+
+(* ===========================================================================
+  SH/DX reply lines. See ParseSHDXLine in the interface for the format and for
+  which samples it is verified against. *)
+
+const
+   // Three letters per month, so a month's number is its position in this text.
+   SHDX_MONTHS = 'JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC';
+
+// The next blank-delimited word of Line from P, and P moved past it.
+function SHDXNextToken(const Line: AnsiString; var P: integer): AnsiString;
+var
+   start: integer;
+begin
+   while (P <= Length(Line)) and (Line[P] in [' ', #9]) do
+      begin
+      Inc(P);
+      end;
+   start := P;
+   while (P <= Length(Line)) and (not (Line[P] in [' ', #9])) do
+      begin
+      Inc(P);
+      end;
+   Result := Copy(Line, start, P - start);
+end;
+
+// Digits and nothing else, as a number. Hand-read rather than Val: the digits
+// are few and the RTL conversions are not range-checked on Win64.
+function SHDXDigits(const Text: AnsiString; out Value: integer): boolean;
+var
+   i: integer;
+begin
+   Value := 0;
+   Result := Text <> '';
+   for i := 1 to Length(Text) do
+      begin
+      if not (Text[i] in ['0'..'9']) then
+         begin
+         Result := False;
+         Exit;
+         end;
+      Value := Value * 10 + (Ord(Text[i]) - Ord('0'));
+      end;
+end;
+
+// "7050.3" (kHz) as Hz. The same 1,300,000 kHz ceiling ParseDXSpotLine
+// applies; up to three decimals are read, the rest ignored.
+function SHDXFrequencyHz(const Token: AnsiString; out Hz: integer): boolean;
+var
+   i: integer;
+   whole: integer;
+   frac: integer;
+   fracDigits: integer;
+   seenPoint: boolean;
+begin
+   Result := False;
+   Hz := 0;
+   whole := 0;
+   frac := 0;
+   fracDigits := 0;
+   seenPoint := False;
+   for i := 1 to Length(Token) do
+      begin
+      if Token[i] = '.' then
+         begin
+         if seenPoint then
+            begin
+            Exit;
+            end;
+         seenPoint := True;
+         end
+      else if Token[i] in ['0'..'9'] then
+         begin
+         if seenPoint then
+            begin
+            if fracDigits < 3 then
+               begin
+               frac := frac * 10 + (Ord(Token[i]) - Ord('0'));
+               Inc(fracDigits);
+               end;
+            end
+         else
+            begin
+            whole := whole * 10 + (Ord(Token[i]) - Ord('0'));
+            if whole > 1300000 then
+               begin
+               Exit;
+               end;
+            end;
+         end
+      else
+         begin
+         Exit;
+         end;
+      end;
+   while fracDigits < 3 do
+      begin
+      frac := frac * 10;
+      Inc(fracDigits);
+      end;
+   Hz := whole * 1000 + frac;
+   Result := Hz > 0;
+end;
+
+// "05-Nov-2026" (or "5-Nov-2026"), the month in English whatever the locale.
+function SHDXDate(const Token: AnsiString; out Day: TDateTime): boolean;
+var
+   len: integer;
+   dayNumber: integer;
+   yearNumber: integer;
+   monthAt: integer;
+begin
+   Result := False;
+   Day := 0;
+   len := Length(Token);
+   if (len < 10) or (len > 11) or
+      (Token[len - 4] <> '-') or (Token[len - 8] <> '-') then
+      begin
+      Exit;
+      end;
+   if not SHDXDigits(Copy(Token, 1, len - 9), dayNumber) then
+      begin
+      Exit;
+      end;
+   if not SHDXDigits(Copy(Token, len - 3, 4), yearNumber) then
+      begin
+      Exit;
+      end;
+   monthAt := Pos(UpperCase(string(Copy(Token, len - 7, 3))), SHDX_MONTHS);
+   if (monthAt = 0) or ((monthAt - 1) mod 3 <> 0) then
+      begin
+      Exit;
+      end;
+   Result := TryEncodeDate(yearNumber, (monthAt - 1) div 3 + 1, dayNumber, Day);
+end;
+
+// "0131Z" as minutes since midnight.
+function SHDXTime(const Token: AnsiString; out MinuteOfDay: integer): boolean;
+var
+   hhmm: integer;
+begin
+   Result := False;
+   MinuteOfDay := 0;
+   if (Length(Token) <> 5) or (not (Token[5] in ['Z', 'z'])) then
+      begin
+      Exit;
+      end;
+   if not SHDXDigits(Copy(Token, 1, 4), hhmm) then
+      begin
+      Exit;
+      end;
+   if (hhmm div 100 > 23) or (hhmm mod 100 > 59) then
+      begin
+      Exit;
+      end;
+   MinuteOfDay := (hhmm div 100) * 60 + (hhmm mod 100);
+   Result := True;
+end;
+
+function ParseSHDXLine(const Line: AnsiString; out Spot: TSpotRecord;
+                       out SpotUTC: TDateTime): boolean;
+var
+   p: integer;
+   hz: integer;
+   minuteOfDay: integer;
+   tokenFreq: AnsiString;
+   tokenCall: AnsiString;
+   tokenDate: AnsiString;
+   tokenTime: AnsiString;
+   day: TDateTime;
+   rest: AnsiString;
+   spotter: AnsiString;
+   lt: integer;
+   QSXHz: integer;
+   planBand: BandType;
+   planMode: ModeType;
+begin
+   Result := False;
+   SpotUTC := 0;
+   // Value types only: Default() clears them, so no FillChar (Count-LiveMove).
+   Spot := Default(TSpotRecord);
+   Spot.FBand := NoBand;
+   Spot.FMode := NoMode;
+
+   // The four leading fields, cheapest refusal first: a console line that is
+   // not a reply (a banner, "SH/DX 50", a live spot) fails on the first.
+   p := 1;
+   tokenFreq := SHDXNextToken(Line, p);
+   if not SHDXFrequencyHz(tokenFreq, hz) then
+      begin
+      Exit;
+      end;
+   tokenCall := SHDXNextToken(Line, p);
+   tokenDate := SHDXNextToken(Line, p);
+   tokenTime := SHDXNextToken(Line, p);
+   if (not SHDXDate(tokenDate, day)) or
+      (not SHDXTime(tokenTime, minuteOfDay)) then
+      begin
+      Exit;
+      end;
+   if not IsAGoodCall(tokenCall) then
+      begin
+      Exit;
+      end;
+
+   // The rest is the comment, then the spotter in angle brackets.
+   rest := TrimRight(Copy(Line, p, Length(Line)));
+   spotter := '';
+   if (rest <> '') and (rest[Length(rest)] = '>') then
+      begin
+      lt := Length(rest);
+      while (lt > 0) and (rest[lt] <> '<') do
+         begin
+         Dec(lt);
+         end;
+      if lt > 0 then
+         begin
+         spotter := Copy(rest, lt + 1, Length(rest) - lt - 1);
+         rest := TrimRight(Copy(rest, 1, lt - 1));
+         end;
+      end;
+   rest := TrimLeft(rest);
+
+   Spot.FFrequency := hz;
+   SetCharBuffer(Spot.FFreqString, string(tokenFreq));
+   // Explicit casts: AnsiString into a ShortString narrows, and the build
+   // counts the implicit form.
+   Spot.FCall := CallString(tokenCall);
+   Spot.FSourceCall := CallString(spotter);
+
+   planBand := NoBand;
+   planMode := NoMode;
+   CalculateBandMode(Cardinal(Spot.FFrequency), planBand, planMode);
+   if ParseSplitHint(rest, Spot.FFrequency, planMode, QSXHz) then
+      begin
+      Spot.FQSXFrequency := QSXHz;
+      end;
+
+   // FNotes holds 30 characters; keep the END of a longer comment (see the
+   // interface), whole words not being a concern for a section at the end.
+   if Length(rest) > 30 then
+      begin
+      rest := TrimLeft(Copy(rest, Length(rest) - 29, 30));
+      end;
+   SetCharBuffer(Spot.FNotes, string(rest));
+
+   SpotUTC := day + minuteOfDay / (24 * 60);
+   Result := True;
 end;
 
 (* ===========================================================================

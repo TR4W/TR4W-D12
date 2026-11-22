@@ -852,7 +852,8 @@ var
     - The thirteen names that resolved to nothing (COPY FILES, CQ MENU, DISPLAY
       REFRESH, DVK PORT, HOUR OFFSET, ICOM COMMAND PAUSE, INPUT CONFIG FILE,
       MULTIPLIER ITEM WIDTH, PADDLE PORT, the four TAIL END names) and
-      CONNECTION COMMAND left.
+      CONNECTION COMMAND left. (The four TAIL END names were then withdrawn
+      outright, 2026-11-22, issue 60: they are in RETIRED_COMMANDS.)
     - The contest-wide settings that affect scoring, the log or Cabrillo were
       ADDED (QSO POINTS .., MULT BY .., QSO BY .., QTC .., TEN MINUTE RULE ..).
     - NOT shared, on purpose: the contest's messages (QSL, QSO BEFORE, CALL OK
@@ -1085,7 +1086,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..106] of string = (
+   RETIRED_COMMANDS: array[0..110] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -1247,7 +1248,26 @@ const
         first start; uMainLayout.WS_FIRST_RUN does that now. Its property,
         Preferences spin box, caption and help went with it, and it left
         uRadioConfigApply.MIGRATED_COMMANDS. *)
-      'WINDOW SIZE'
+      'WINDOW SIZE',
+      (* RETIRED 2026-11-22 (issue 60; NY4I: "I defer to Howie so yes" --
+        N4AF had not heard the tail-end key used in twenty years). The
+        tail-end key never worked in this program or in D7: the only code
+        that set TailEnding was OperateContest, the DOS main loop, which
+        nothing called, and n4af commented the four CFGCA rows out in 4.41.5.
+
+        A DELIBERATE EXCEPTION TO "A COMMENTED-OUT ROW IS NOT A csRem ROW"
+        (see K1EA NETWORK ENABLE in uTestSettingsModel). These four were
+        commented out, so CheckCommand refused them and an old file naming one
+        raised the invalid-statement dialog -- the golden corpus's Winter
+        Field Day .cfg carries TAIL END CW MESSAGE. NY4I's ruling withdraws the
+        feature, so they are accepted and ignored like every other withdrawn
+        name. No property, caption or help ever carried them; the Alt-P "TAIL
+        END %s MESSAGE" row, the TailEnding flag and its dead reads went the
+        same day. They left SHARED_WITH_PEERS on 2026-11-19 (issue 315). *)
+      'TAIL END CW MESSAGE',
+      'TAIL END KEY',
+      'TAIL END MESSAGE',
+      'TAIL END SSB MESSAGE'
       );
 
 function RetiredCommandCount: integer;

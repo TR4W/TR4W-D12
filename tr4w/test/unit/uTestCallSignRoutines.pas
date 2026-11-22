@@ -49,6 +49,8 @@ type
       procedure Test_RussianStationOblast;
       procedure Test_SimilarCall;
       procedure Test_StandardCallFormat;
+      procedure Test_LongestCallPart;
+      procedure Test_EnforcedCallIsRefused;
    end;
 
 implementation
@@ -372,6 +374,54 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
+// ENFORCE VALID CALLSIGN (issue 180): the base call is the longest part
+// around any '/', and the decision is pure. The country file's half is in
+// uTestCTYDAT, against the real CTY.DAT.
+// ---------------------------------------------------------------------------
+procedure TCallSignRoutinesTests.Test_LongestCallPart;
+begin
+   BeginTest('LongestCallPart: the base call around any /');
+   CheckEquals('W1AW',  LongestCallPart('W1AW'),       'no slash');
+   CheckEquals('W1AW',  LongestCallPart('W1AW/P'),     'portable suffix');
+   CheckEquals('W1AW',  LongestCallPart('VE3/W1AW'),   'country prefix');
+   CheckEquals('W1AW',  LongestCallPart('W1AW/3'),     'call-area suffix');
+   CheckEquals('W1AW',  LongestCallPart('W1AW/QRP'),   'a 3-letter suffix is NOT the base (RootCall says QRP)');
+   CheckEquals('NY4I',  LongestCallPart('NY4I/PIN'),   'county line: the call, not the county');
+   CheckEquals('G4ABC', LongestCallPart('K/G4ABC/P'),  'two slashes');
+   CheckEquals('W1AW',  LongestCallPart('w1aw/p'),     'upper-cased');
+   CheckEquals('KH6',   LongestCallPart('KH6/K1A'),    'a tie keeps the FIRST part');
+   CheckEquals('',      LongestCallPart(''),           'empty');
+   CheckEquals('',      LongestCallPart('/'),          'only a slash');
+end;
+
+(* A fake country file: only W1AW and G4ABC are entities. *)
+function FakeIsAnEntity(const aCall: string): boolean;
+begin
+   Result := (aCall = 'W1AW') or (aCall = 'G4ABC') or (aCall = 'NY4I');
+end;
+
+procedure TCallSignRoutinesTests.Test_EnforcedCallIsRefused;
+begin
+   BeginTest('EnforcedCallIsRefused: the pure decision');
+   (* OFF: nothing is refused, whatever the call -- the default changes nothing. *)
+   CheckFalse(EnforcedCallIsRefused(False, 'QQQ', True, FakeIsAnEntity), 'off: QQQ passes');
+   (* ON: the base call decides. *)
+   CheckFalse(EnforcedCallIsRefused(True, 'W1AW', True, FakeIsAnEntity), 'W1AW');
+   CheckFalse(EnforcedCallIsRefused(True, 'W1AW/P', True, FakeIsAnEntity), 'W1AW/P');
+   CheckFalse(EnforcedCallIsRefused(True, 'VE3/W1AW', True, FakeIsAnEntity), 'VE3/W1AW');
+   CheckFalse(EnforcedCallIsRefused(True, 'W1AW/3', True, FakeIsAnEntity), 'W1AW/3');
+   CheckFalse(EnforcedCallIsRefused(True, 'NY4I/PIN', True, FakeIsAnEntity), 'county line NY4I/PIN');
+   CheckFalse(EnforcedCallIsRefused(True, 'K/G4ABC/P', True, FakeIsAnEntity), 'K/G4ABC/P');
+   CheckTrue(EnforcedCallIsRefused(True, 'QQQ', True, FakeIsAnEntity), 'QQQ refused');
+   CheckTrue(EnforcedCallIsRefused(True, 'W1AW/QQQQQ', True, FakeIsAnEntity),
+             'the LONGER part is the base, so a long junk suffix is refused');
+   (* NO COUNTRY FILE: never refused -- a missing file must not stop a contest. *)
+   CheckFalse(EnforcedCallIsRefused(True, 'QQQ', False, FakeIsAnEntity), 'no country file: passes');
+   (* An empty call is the syntax check's business. *)
+   CheckFalse(EnforcedCallIsRefused(True, '', True, FakeIsAnEntity), 'empty call');
+end;
+
+// ---------------------------------------------------------------------------
 // Suite entry point
 // ---------------------------------------------------------------------------
 procedure TCallSignRoutinesTests.RunAllTests;
@@ -393,6 +443,8 @@ begin
    Test_RussianStationOblast;
    Test_SimilarCall;
    Test_StandardCallFormat;
+   Test_LongestCallPart;
+   Test_EnforcedCallIsRefused;
 end;
 
 end.

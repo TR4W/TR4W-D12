@@ -84,14 +84,10 @@ var
     globals written through the config array; they are published properties
     on a contest-scoped group now. See TMessageSettings.
 
-    TAIL END SURVIVES AS A GLOBAL and is the odd pair out. Its three config
-    rows -- TAIL END CW MESSAGE, TAIL END MESSAGE, TAIL END SSB MESSAGE --
-    have been COMMENTED OUT in CFGCA for years, so there was nothing to move
-    out of the array and nothing to give a property name to. Nothing writes
-    either variable; uAltP reads them to show two permanently empty rows. *)
-  TailEndMessage                        : Str40 { = 'R'};
+    TailEndMessage and TailEndPhoneMessage, the tail-end pair, were DELETED
+    2026-11-22 with the feature (issue 60): nothing wrote either, and uAltP
+    read them only to show two permanently empty rows. *)
   PrevNr                                : Str10;   // 4.53.2
-  TailEndPhoneMessage                   : ShortString {= 'TAILEND.WAV'};
 
   AutoCQMemory                          : Char = CHR(112);
   CWMessageCommand                      : CWMessageCommandType {= NoCWCommand};
@@ -1038,12 +1034,6 @@ begin
       //         WriteLn(TempString);
 //    Windows.SetWindowTextA(MessagesValues[119], PAnsiChar(WinAnsi('S&P Exchange  - ' + Settings.Messages.SpExchangeCw)));
 
-      //         ClrEol;
-      //         TempString                                 := ' 9. Tail end msg  - ' + TailEndMessage;
-      //         if length(TempString) > 79 then TempString := Copy(TempString, 1, 78) + '+';
-      //         WriteLn(TempString);
-//    Windows.SetWindowTextA(MessagesValues[120], PAnsiChar(WinAnsi('Tail end msg  - ' + TailEndMessage)));
-
 //    Windows.SetWindowTextA(MessagesValues[121], PAnsiChar(WinAnsi('Short 0       - ' + Settings.Cw.Short0)));
 //    Windows.SetWindowTextA(MessagesValues[122], PAnsiChar(WinAnsi('Short 1       - ' + Settings.Cw.Short1)));
 //    Windows.SetWindowTextA(MessagesValues[123], PAnsiChar(WinAnsi('Short 9       - ' + Settings.Cw.Short9)));
@@ -1812,50 +1802,6 @@ begin
                  end;
             end;
 
-          '9':
-            begin
-              if ActiveMode <> Phone then
-                 begin
-                 TempString                                  := LineInput('Msg = ', TailEndMessage, True, False);
-                 if TempString <> EscapeKey then
-                    begin
-                    TailEndMessage                            := TempString;
-                    AppendConfigFile('TAIL END MESSAGE = ' + TempString);
-                    end;
-                 end
-              else
-                 begin
-                 repeat
-                   TempString                                := LineInput('Msg = ',
-                     TailEndPhoneMessage,
-                     True, True);
-
-                   if TempString[1] = NullKey then
-                     if Settings.Dvk.Enable then
-                        begin
-                        case TempString[2] of
-                          AltW: DVPRecordMessage(TailEndPhoneMessage, False);
-                          AltR: DVPListenMessage(TailEndPhoneMessage, True);
-                        end;
-                        end
-                     else
-                       if ActiveDVKPort <> NoPort then
-                          begin
-                          case TempString[2] of
-                            AltW: DVKRecordMessage(TailEndPhoneMessage);
-                            AltR: DVKLIstenMessage(TailEndPhoneMessage);
-                          end;
-                          end;
-                 until (TempString[1] <> NullKey);
-
-                 if TempString <> EscapeKey then
-                    begin
-                    TailEndPhoneMessage                       := TempString;
-                    AppendConfigFile('TAIL END SSB MESSAGE = ' + TempString);
-                    end;
-                 end;
-            end;
-
           'A':
             if ActiveMode <> Phone then
                begin
@@ -2559,6 +2505,11 @@ begin
    SetSpeed(CodeSpeed);
 end;
 
+(* ALT-K, TOGGLECW AND CWENABLETOGGLE. In CW mode this toggles CW; in EVERY
+  other mode (Phone, Digital, FM) it toggles the VOICE KEYER, as D7 did. NY4I
+  kept that overload (issue 23, option A) and the Alt-K menu caption follows
+  the mode: uMenu.ToggleKeyerMenuCaption tests aMode = CW, the same test as
+  below. Change one and change the other. *)
 procedure ToggleCW(DisplayPrompt: boolean);
 begin
    if ActiveMode = CW then

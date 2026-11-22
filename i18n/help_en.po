@@ -130,6 +130,11 @@ msgctxt "TC_HELP_BAND_MAP_DISPLAY_CQ"
 msgid "When FALSE, CQ entries will not appear in the band map."
 msgstr "When FALSE, CQ entries will not appear in the band map."
 
+#. Config command: BAND MAP CLICK GOES TO EXCHANGE   (default: FALSE)
+msgctxt "TC_HELP_BAND_MAP_CLICK_GOES_TO_EXCHANGE"
+msgid "TRUE leaves the cursor in the exchange window after tuning to a band map spot puts its call in the call window. The exchange is not filled in. Default FALSE, which keeps the cursor in the call window."
+msgstr "TRUE leaves the cursor in the exchange window after tuning to a band map spot puts its call in the call window. The exchange is not filled in. Default FALSE, which keeps the cursor in the call window."
+
 #. Config command: BAND MAP DISPLAY LIMIT   (default: 164)
 msgctxt "TC_HELP_BAND_MAP_DISPLAY_LIMIT"
 msgid "The most spots the band map will show, from 30 to 1000. The map shows the smaller of this and the number that fit in its window, rounded down to an even number and centred on the radio's frequency, so resizing the window re-centres the map on the radio."
@@ -454,6 +459,11 @@ msgstr "This is the program that is run to playback DVK messages form the comput
 msgctxt "TC_HELP_DX_MULTIPLIER"
 msgid "This command determines which type of DX multiplier the program will use."
 msgstr "This command determines which type of DX multiplier the program will use."
+
+#. Config command: ENFORCE VALID CALLSIGN   (default: FALSE)
+msgctxt "TC_HELP_ENFORCE_VALID_CALLSIGN"
+msgid "TRUE refuses to log a QSO whose base call (the longest part around any /, so W1AW/P, VE3/W1AW and NY4I/PIN all count as W1AW or NY4I) is not a DXCC entity in the country file. The QSO is not logged, the call and exchange stay as typed, and the reason is shown on the status line. No check is made when no country file is loaded. Default FALSE."
+msgstr "TRUE refuses to log a QSO whose base call (the longest part around any /, so W1AW/P, VE3/W1AW and NY4I/PIN all count as W1AW or NY4I) is not a DXCC entity in the country file. The QSO is not logged, the call and exchange stay as typed, and the reason is shown on the status line. No check is made when no country file is loaded. Default FALSE."
 
 #. Config command: ESCAPE EXITS SEARCH AND POUNCE   (default: TRUE)
 msgctxt "TC_HELP_ESCAPE_EXITS_SEARCH_AND_POUNCE"

@@ -446,7 +446,7 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # 1182 -> 1176, 2026-11-19: the merge of the day left 1183 (uCFG +2, uContestVermontQP +3,
 # net of small drops elsewhere); those casts are explicit now (UnicodeSameText, AnsiString)
 # and uCFG lost two more the same way. Measured by the full build.
-$NARROW_CEILING = 1172
+$NARROW_CEILING = 1167
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

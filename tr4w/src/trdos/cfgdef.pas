@@ -415,9 +415,6 @@ begin
   //  Config.SwapPaddles := False;
 
   //  TabMode := NormalTabMode;
-  //  TailEndKey := ']';
-  //  TailEndMessage := 'R';
-  //  TailEndPhoneMessage := 'TAILEND.WAV';
   //  TenMinuteRule := NoTenMinuteRule;
   //  TuneDupeCheckEnable := False; {KK1L: 6.73}
   //  TwoRadioState := TwoRadiosDisabled;

@@ -427,6 +427,32 @@ station setting.
   parallel-port write path in `logk1ea` / `tree.Lpt*BaseAddress` were left
   for a separate decision. TUNE WITH DITS and CALL WINDOW SHOW ALL SPOTS are NOT retired (issues 353,
   354: to be implemented).
+- **THE FOUR TAIL END NAMES ARE RETIRED (2026-11-22, issue 60, NY4I
+  deferring to N4AF)**: TAIL END CW MESSAGE / KEY / MESSAGE / SSB MESSAGE.
+  A no-property retirement and a DELIBERATE exception to "commented-out is
+  not csRem": their D7 rows were commented out, so they were REFUSED (the
+  corpus's Winter Field Day `.cfg` raised the refusal path). No caption or
+  help existed (`help_add.py --remove` found 0). The Alt-P row 8, the
+  `TailEnding`/`TailEndKey`/`TailEndCallString`/`TailEndMessage`/
+  `TailEndPhoneMessage` globals, the dead `OperateContest`/`GotExchange`
+  (no caller here or in D7) and `RefreshNeedsAfterLoggedQSO`'s tail-ending
+  parameter went with them.
+- **TWO NEW STATION SETTINGS, BOTH DEFAULT OFF (2026-11-22)**:
+  `ENFORCE VALID CALLSIGN` (`CallWindow.EnforceValidCallsign`, aliased;
+  issue 180) refuses a QSO in `MainUnit.ParametersOkay` (Standard mode,
+  right after the `IsAGoodCall` refusal) when the call's base -- the
+  LONGEST part around any '/', `uCallSignRoutines.LongestCallPart`, NOT
+  `RootCall` -- is not a CTY.DAT entity; status-line message, no beep;
+  never refuses with no country file loaded (`EnforcedCallIsRefused`,
+  pure). WSJT-X QSOs reach `ParametersOkay` too, so they are checked when
+  it is on. `BAND MAP CLICK GOES TO EXCHANGE` (`BandMap.ClickGoesToExchange`,
+  derived; issue 185, option A, focus only) moves the cursor to the
+  exchange window after `uBandmap.TuneRadioToSpot` put a call in the call
+  window (`SpotTuneFocusesExchange`, pure; `TuneRadioToSpot` is a function
+  now, answering "call placed"); every caller inherits it, including
+  NEXTBANDMAP and the cluster console's tune. Both placed by
+  `PrefsPlacements` (Entry > What a QSO records; Band Map > Window and
+  tuning > Tuning to a spot).
 - **FREQUENCY POLL RATE MOVED INTO THE RADIO LIBRARY (issue 235 step 3,
   2026-11-06)** -- the worked example of moving a setting into a store, written
   up in `docs/ADDING_A_SETTING.md`. The property, alias, registration and

@@ -475,7 +475,6 @@ var
   ParameterOkayMode: ParameterOkayModeType = Standard;
   PartialCallFileEnable: boolean;
   //  PartialCallMultsEnable                : boolean = True;
-  PreviousQSOReceivedData: ContestExchange;
   //W_L_I  PrinterEnabled: boolean;
   ProcessedMultiMessages: ProcessedMultiMessageBufferType;
 
@@ -531,9 +530,9 @@ var
   StationInformationCall: CallString;
   SwitchRadioKey: Char;
 
-  TailEnding: boolean;
-  TailEndKey: Char = ']';
-  TailEndCallString: CallString;
+  (* TailEnding, TailEndKey and TailEndCallString were DELETED 2026-11-22
+    (issue 60): the tail-end feature was withdrawn, and the one routine that
+    set the flag, OperateContest, had no caller here or in D7. *)
 
   TotalDomesticContacts: integer;
   TotalDXContacts: integer;

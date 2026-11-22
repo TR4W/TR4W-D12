@@ -61,7 +61,9 @@ uses
    (* ContestIdentity(Contest).TotalsDisplay -- what the contest shows
      differently (M9a). *)
    uContestBase,
-   uContestRegistry;
+   uContestRegistry,
+   (* Both modes' multipliers in one cell -- issue 55. *)
+   uTotalsModeText;
    (* uContestSession STOOD HERE for ContestSession.Doing*Mults (M11 S2);
      all four are the contest's answers since M11 S6 part 2
      (LOGEDIT.Doing*Mults). *)
@@ -73,6 +75,15 @@ var
    // the whole main-window unit graph in, which is what made dcc32 die with an
    // internal error on a cold build (see 8e4cafac).
    logger: TLogLogger;
+
+   (* THE MULTIPLIER SLOTS THE TOTALS SHOW, IN ORDER -- issue 55. Chosen once
+     per UpdateTotals2 by ChooseTotalsMultModes and read by both of its
+     passes: the row labels (WriteMultRowLabel) and DisplayBandTotals' values
+     (WriteMultRowValue), whose only caller is UpdateTotals2. One list, so a
+     label and its numbers cannot name different modes. Count 0 when the
+     contest does not count multipliers by mode. *)
+   GMultSlots: array[0..2] of ModeType;
+   GMultSlotCount: integer;
 
 procedure TotalTextOut(s: string; X, Y: integer);
 begin
@@ -90,22 +101,177 @@ begin
 end;
 
 procedure WriteLeftColumnText(Text: string);
-{ string, not PAnsiChar: every caller passes a TC_ constant, and those are
-  resourcestrings now. TotalTextOut below has taken a string all along, so
-  this parameter was converting one to a pointer and straight back. }
+(* string, not PAnsiChar: every caller passes a TC_ constant, and those are
+  resourcestrings now. TotalTextOut above has taken a string all along, so
+  this parameter was converting one to a pointer and straight back. *)
 begin
-  inc(Row);
-  TotalTextOut(Text, 0, Row);
+   inc(Row);
+   TotalTextOut(Text, 0, Row);
 end;
 
 procedure iTotalTextOut(Number: integer);
 var
-  TempText                         : string;
+   TempText: string;
 begin
-  inc(Row);
+   inc(Row);
 
-  if Number = 0 then TempText := '' else TempText := IntToStr(Number);
-  TotalTextOut(TempText, Column, Row);
+   if Number = 0 then
+      begin
+      TempText := '';
+      end
+   else
+      begin
+      TempText := IntToStr(Number);
+      end;
+   TotalTextOut(TempText, Column, Row);
+end;
+
+(* WHICH MULTIPLIER MODES THE TOTALS SHOW -- issue 55, NY4I's option (a).
+
+  The active mode, and every other mode the contest credits that has QSOs,
+  in the QSO rows' order (CW, phone, digital) -- the rule the QSO rows above
+  already use to show a mode. Each is the multiplier sheet's SLOT for that
+  mode (LOGDUPE.MultiplierSheetMode), listed once: the Louisiana QSO Party
+  counts digital multipliers with CW (issue 122), so its digital QSOs add no
+  third number.
+
+  The active mode is always included, so with one slot that slot is
+  MultiplierSheetMode(active mode) -- what the cell showed before this. *)
+procedure ChooseTotalsMultModes(const aActiveMode: ModeType);
+const
+   CANDIDATES: array[0..2] of ModeType = (CW, Phone, Digital);
+var
+   i, j: integer;
+   mode: ModeType;
+   slot: ModeType;
+   listed: boolean;
+begin
+   GMultSlotCount := 0;
+
+   if not Settings.Mult.ByMode then
+      begin
+      Exit;
+      end;
+
+   for i := Low(CANDIDATES) to High(CANDIDATES) do
+      begin
+      mode := CANDIDATES[i];
+      if (mode = aActiveMode) or
+         ((QTotals[AllBands, mode] > 0) and
+          ContestCreditsModeKey(ContestIdentity(Contest), mode)) then
+         begin
+         slot := MultiplierSheetMode(mode);
+
+         listed := False;
+         for j := 0 to GMultSlotCount - 1 do
+            begin
+            if GMultSlots[j] = slot then
+               begin
+               listed := True;
+               end;
+            end;
+
+         if not listed then
+            begin
+            GMultSlots[GMultSlotCount] := slot;
+            Inc(GMultSlotCount);
+            end;
+         end;
+      end;
+end;
+
+(* The tag a slot is shown under: uTotalsModeText's. *)
+function MultSlotTag(const aSlot: ModeType): string;
+begin
+   case aSlot of
+      CW:
+         begin
+         Result := TOTALS_TAG_CW;
+         end;
+      Phone:
+         begin
+         Result := TOTALS_TAG_PHONE;
+         end;
+   else
+      begin
+      Result := TOTALS_TAG_DIGITAL;
+      end;
+   end;
+end;
+
+(* THE LABEL OF ONE MULTIPLIER ROW. Not by mode: the all-modes caption, as
+  before. By mode with ONE slot: the CW or phone caption, as before -- and
+  for a digital slot 'Dig' and the shared word, where before NO label was
+  written and the numbers below slid up a row. By mode with several slots:
+  'CW/Ph Dom' (uTotalsModeText.TotalsByModeCaption). *)
+procedure WriteMultRowLabel(const aCWCaption, aPhoneCaption, aAllModesCaption: string);
+var
+   tags: array of string;
+   i: integer;
+begin
+   if not Settings.Mult.ByMode then
+      begin
+      WriteLeftColumnText(aAllModesCaption);
+      Exit;
+      end;
+
+   if GMultSlotCount = 0 then
+      begin
+      (* No CW, phone or digital active mode: no label, as before. *)
+      Exit;
+      end;
+
+   if GMultSlotCount = 1 then
+      begin
+      if GMultSlots[0] = CW then
+         begin
+         WriteLeftColumnText(aCWCaption);
+         end
+      else if GMultSlots[0] = Phone then
+         begin
+         WriteLeftColumnText(aPhoneCaption);
+         end
+      else
+         begin
+         WriteLeftColumnText(TotalsByModeCaption([MultSlotTag(GMultSlots[0])],
+                                                 aCWCaption, aPhoneCaption,
+                                                 aAllModesCaption));
+         end;
+      Exit;
+      end;
+
+   SetLength(tags, GMultSlotCount);
+   for i := 0 to GMultSlotCount - 1 do
+      begin
+      tags[i] := MultSlotTag(GMultSlots[i]);
+      end;
+   WriteLeftColumnText(TotalsByModeCaption(tags, aCWCaption, aPhoneCaption,
+                                           aAllModesCaption));
+end;
+
+(* THE NUMBERS OF ONE MULTIPLIER ROW IN Band's column. With one slot (or not
+  by mode) exactly what the cell always showed: aSheetMode's count, blank for
+  0. With several: every slot's count in one cell, '12/6'. *)
+procedure WriteMultRowValue(const aBand: BandType; const aSheetMode: ModeType;
+                            const aKind: RemainingMultiplierType);
+var
+   counts: array of integer;
+   i: integer;
+begin
+   if (not Settings.Mult.ByMode) or (GMultSlotCount <= 1) then
+      begin
+      iTotalTextOut(mo.MTotals[aBand, aSheetMode, aKind]);
+      Exit;
+      end;
+
+   SetLength(counts, GMultSlotCount);
+   for i := 0 to GMultSlotCount - 1 do
+      begin
+      counts[i] := mo.MTotals[aBand, GMultSlots[i], aKind];
+      end;
+
+   inc(Row);
+   TotalTextOut(TotalsModeCountsText(counts), Column, Row);
 end;
 
 procedure DisplayBandTotals(Band: BandType);
@@ -215,7 +381,7 @@ begin
     else
       iTotalTextOut(MTotals[Band, Both].NumberDomesticMults);
 }
-         iTotalTextOut(mo.MTotals[Band, TempMode, rmDomestic]);
+     WriteMultRowValue(Band, TempMode, rmDomestic);
      end;
 
   if (DoingDXMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable {and (ActiveDXMult <> NoCountDXMults)} then
@@ -226,7 +392,7 @@ begin
     else
       iTotalTextOut(MTotals[Band, Both].NumberDXMults);
 }
-         iTotalTextOut(mo.MTotals[Band, TempMode, rmDX]);
+     WriteMultRowValue(Band, TempMode, rmDX);
      end;
 
   if (DoingPrefixMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
@@ -237,12 +403,12 @@ begin
     else
       iTotalTextOut(MTotals[Band, Both].NumberPrefixMults);
 }
-         iTotalTextOut(mo.MTotals[Band, TempMode, rmPrefix]);
+     WriteMultRowValue(Band, TempMode, rmPrefix);
      end;
 
   if (DoingZoneMults) and (Settings.Mult.ByBand or (Band = AllBands)) and MultDisplayEnable then
      begin
-     iTotalTextOut(mo.MTotals[Band, TempMode, rmZone]);
+     WriteMultRowValue(Band, TempMode, rmZone);
      end;
 
 end;
@@ -276,6 +442,10 @@ begin
   Column := 0;
   ClearTotals(0);
   QTotals := QSOTotals;
+
+  (* Which modes' multipliers this pass shows -- issue 55. After QTotals,
+    which it reads; before both passes, which read it. *)
+  ChooseTotalsMultModes(ActiveMode);
 
 //  Sheet.MultSheetTotals(MTotals);
 
@@ -325,43 +495,18 @@ begin
      WriteLeftColumnText(TC_QSOS);
      end;
   skip:
+  (* EACH MULTIPLIER ROW'S LABEL NAMES THE MODES ITS CELLS SHOW (issue 55):
+    WriteMultRowLabel, from the list DisplayBandTotals reads too. *)
   if DoingDomesticMults then
      begin
-     if Settings.Mult.ByMode then
-        begin
-        if ActiveMode = CW then
-           begin
-           WriteLeftColumnText(display.DomesticMultsCaptionCW);
-           end;
-        if ActiveMode = Phone then
-           begin
-           WriteLeftColumnText(display.DomesticMultsCaptionPhone);
-           end;
-        end
-     else
-        begin
-        WriteLeftColumnText(display.DomesticMultsCaption);
-        end;
+     WriteMultRowLabel(display.DomesticMultsCaptionCW,
+                       display.DomesticMultsCaptionPhone,
+                       display.DomesticMultsCaption);
      end;
 
   if DoingDXMults {and (ActiveDXMult <> NoCountDXMults)} then
      begin
-     if Settings.Mult.ByMode then
-        begin
-        if ActiveMode = CW then
-           begin
-           WriteLeftColumnText('CW DX');
-           end;
-        if ActiveMode = Phone then
-           begin
-           WriteLeftColumnText('Ph DX');
-           end;
-        end
-     else
-        begin
-        WriteLeftColumnText(TC_DXMULTS);
-        end;
-
+     WriteMultRowLabel('CW DX', 'Ph DX', TC_DXMULTS);
      end;
 
   (* THE PREFIX ROW'S LABEL IS THE CONTEST'S (issue 277, 2026-11-11): it said
@@ -369,42 +514,18 @@ begin
     callsign. *)
   if DoingPrefixMults then
      begin
-     if Settings.Mult.ByMode then
-        begin
-        if ActiveMode = CW then
-           begin
-           WriteLeftColumnText(display.PrefixMultsCaptionCW);
-           end;
-        if ActiveMode = Phone then
-           begin
-           WriteLeftColumnText(display.PrefixMultsCaptionPhone);
-           end;
-        end
-     else
-        begin
-        WriteLeftColumnText(display.PrefixMultsCaption);
-        end;
+     WriteMultRowLabel(display.PrefixMultsCaptionCW,
+                       display.PrefixMultsCaptionPhone,
+                       display.PrefixMultsCaption);
      end;
 
   (* THE ZONE ROW'S LABEL IS THE CONTEST'S TOO (2026-11-11): the European HF
     Championship's and KVP's "zone" is the year of first license. *)
   if DoingZoneMults then
      begin
-     if Settings.Mult.ByMode then
-        begin
-        if ActiveMode = CW then
-           begin
-           WriteLeftColumnText(display.ZoneMultsCaptionCW);
-           end;
-        if ActiveMode = Phone then
-           begin
-           WriteLeftColumnText(display.ZoneMultsCaptionPhone);
-           end;
-        end
-     else
-        begin
-        WriteLeftColumnText(display.ZoneMultsCaption);
-        end;
+     WriteMultRowLabel(display.ZoneMultsCaptionCW,
+                       display.ZoneMultsCaptionPhone,
+                       display.ZoneMultsCaption);
    //    WriteLeftColumnText('CW-Ratio');
    //    WriteLeftColumnText('PH-Ratio');
      end;

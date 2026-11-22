@@ -270,6 +270,10 @@ begin
                          RS_OPERATING_ESCAPEEXITSSAP);
    RegisterModelSetting( 'operating.leaveCursorInCall',       'LEAVE CURSOR IN CALL WINDOW',
                          RS_OPERATING_LEAVECURSORINCALL);
+   (* Issue 180 (2026-11-22). Placed on Operating > Entry by
+     uPrefsForm.PrefsPlacements. *)
+   RegisterModelSetting( 'operating.enforceValidCallsign',    'ENFORCE VALID CALLSIGN',
+                         RS_OPERATING_ENFORCEVALIDCALLSIGN);
    RegisterModelSetting( 'operating.logWithSingleEnter',      'LOG WITH SINGLE ENTER',
                          RS_OPERATING_LOGWITHSINGLEENTER);
    RegisterModelSetting( 'operating.spaceBarDupeCheck',       'SPACE BAR DUPE CHECK ENABLE',
@@ -359,6 +363,10 @@ begin
                          RS_SCP_NAMEFLAG);
    RegisterModelSetting( 'bandmap.callWindowShowAllSpots',    'CALL WINDOW SHOW ALL SPOTS',
                          RS_BANDMAP_CALLWINDOWSHOWALLSPOTS);
+   (* Issue 185 (2026-11-22). Placed on Band Map > Window and tuning by
+     uPrefsForm.PrefsPlacements. *)
+   RegisterModelSetting( 'bandmap.clickGoesToExchange',       'BAND MAP CLICK GOES TO EXCHANGE',
+                         RS_BANDMAP_CLICKGOESTOEXCHANGE);
    RegisterModelSetting( 'bandmap.swapPacketSpotRadios',      'SWAP PACKET SPOT RADIOS',
                          RS_BANDMAP_SWAPPACKETSPOTRADIOS);
    (* ISSUE 12: the colour of a spot whose multiplier is already worked but whose

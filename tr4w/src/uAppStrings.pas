@@ -1569,6 +1569,12 @@ resourcestring
    SRadioPanelActive = 'Active';
    SRadioPanelActiveName = 'Active radio';
 
+   (* ENFORCE VALID CALLSIGN (issue 180): the QSO is refused because the
+     call's base -- the longest part around any '/' -- is not a DXCC entity in
+     the country file. %s is the call as typed. On the status line, no beep
+     (NY4I: nobody hears a beep in headphones). *)
+   SCallNotAKnownEntity = '%s is not logged: its base call is not in the country file';
+
    (* WHY A DOUBLE CLICK ON THE LOG OPENED NO EDIT QSO WINDOW -- on the status
      line, because it said nothing at all (2026-11-18). *)
    SEditQSONoQSOSelected = 'No QSO selected.';
@@ -1808,6 +1814,13 @@ resourcestring
    SCmdMenuWWV           = 'WWV - ask the cluster for SH/WWV';
    SCmdMenuPREF          = 'PREF - Preferences';
    SCmdMenuROVER         = 'ROVER - where this station is roving';
+   (* What the call window's CWON command says once CW is on. *)
+   SCallWindowCWOn       = 'CW On';
+
+   (* ALT-K OUTSIDE CW MODE (issue 23, NY4I option A): the key toggles the
+     voice keyer in Phone, Digital and FM, as it did in D7, so its menu item
+     says so. In CW mode the item keeps RC_KILLCW ('Toggle CW'). *)
+   SMenuToggleVoiceKeyer = 'Toggle Voice Keyer';
 
    (* ROVING (issues 133 and 87): where a roving station operates now. A unit
      is one of the contest's own places -- a county, a Hawaii district. *)

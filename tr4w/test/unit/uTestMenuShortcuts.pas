@@ -47,6 +47,8 @@ type
       procedure Test_TheCaptionIsJustTheCaption;
       procedure Test_MenuCommandExistsFindsAndMisses;
       procedure Test_EveryCallWindowCommandHasOneMenuItem;
+      procedure Test_AltKCaptionFollowsTheMode;
+      procedure Test_AltKMenuItemTakesTheModeCaption;
    public
       procedure RunAllTests; override;
    end;
@@ -624,6 +626,55 @@ begin
    CheckEquals('', CallWindowCommandOfMenu(menu_setup_wizard), 'nor is another menu id');
 end;
 
+(* ALT-K SAYS WHAT IT TOGGLES (issue 23, NY4I option A). LogCW.ToggleCW flips
+  CW in CW mode and the voice keyer in every other mode, so every member of
+  ModeType is asked -- a mode added later is covered without editing this. *)
+procedure TMenuShortcutTests.Test_AltKCaptionFollowsTheMode;
+var
+   m: ModeType;
+begin
+   BeginTest('Test_AltKCaptionFollowsTheMode');
+
+   for m := Low(ModeType) to High(ModeType) do
+      begin
+      if m = CW then
+         begin
+         CheckEquals('Toggle CW', ToggleKeyerMenuCaption(m),
+                     'CW mode: Alt-K toggles CW');
+         end
+      else
+         begin
+         CheckEquals('Toggle Voice Keyer', ToggleKeyerMenuCaption(m),
+                     'mode ' + IntToStr(Ord(m)) + ': Alt-K toggles the voice keyer');
+         end;
+      end;
+end;
+
+(* AND THE BUILT ITEM TAKES IT. The menu is shared by the whole run, so the
+  CW caption is put back at the end. *)
+procedure TMenuShortcutTests.Test_AltKMenuItemTakesTheModeCaption;
+var
+   item: TMenuItem;
+begin
+   BeginTest('Test_AltKMenuItemTakesTheModeCaption');
+
+   item := BuiltMenuItem(menu_alt_killcw);
+   CheckTrue(item <> nil, 'Alt-K has a menu item');
+   if item = nil then
+      begin
+      Exit;
+      end;
+
+   RefreshToggleKeyerMenuCaption(Phone);
+   CheckEquals('Toggle Voice Keyer', string(item.Caption), 'Phone');
+
+   RefreshToggleKeyerMenuCaption(Digital);
+   CheckEquals('Toggle Voice Keyer', string(item.Caption), 'Digital');
+
+   RefreshToggleKeyerMenuCaption(CW);
+   CheckEquals('Toggle CW', string(item.Caption), 'back to CW');
+end;
+
 procedure TMenuShortcutTests.RunAllTests;
 begin
    Test_TheSplitIsWhatItSaysItIs;
@@ -637,6 +688,8 @@ begin
    Test_TheCaptionIsJustTheCaption;
    Test_MenuCommandExistsFindsAndMisses;
    Test_EveryCallWindowCommandHasOneMenuItem;
+   Test_AltKCaptionFollowsTheMode;
+   Test_AltKMenuItemTakesTheModeCaption;
 end;
 
 initialization

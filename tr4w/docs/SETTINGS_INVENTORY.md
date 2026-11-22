@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (306)
+## Settings that have moved (308)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -69,6 +69,7 @@ comes last, a word run together.
 | `BAND MAP ALL MODES` |  | global | `Settings.BandMap.AllModes` | boolean |  |
 | `BAND MAP CALL WINDOW ENABLE` |  | global | `Settings.BandMap.CallWindowEnable` | boolean |  |
 | `BAND MAP CENTER ON RADIO` |  | global | `Settings.BandMap.CenterOnRadio` | boolean |  |
+| `BAND MAP CLICK GOES TO EXCHANGE` |  | global | `Settings.BandMap.ClickGoesToExchange` | boolean |  |
 | `BAND MAP DECAY TIME` |  | global | `Settings.BandMap.DecayTime` | TBandMapDecayTime |  |
 | `BAND MAP DISPLAY CQ` |  | global | `Settings.BandMap.DisplayCQ` | boolean |  |
 | `BAND MAP DISPLAY GHZ` |  | global | `Settings.BandMap.DisplayGhz` | boolean |  |
@@ -147,6 +148,7 @@ comes last, a word run together.
 | `DVK LOCALIZED MESSAGES ENABLE` |  | global | `Settings.Dvk.LocalizedMessagesEnable` | boolean |  |
 | `DVK PATH` |  | global | `Settings.Dvk.Path` | string |  |
 | `DVK RECORDER` |  | global | `Settings.Dvk.Recorder` | string |  |
+| `ENFORCE VALID CALLSIGN` |  | global | `Settings.CallWindow.EnforceValidCallsign` | boolean |  |
 | `ESCAPE EXITS SEARCH AND POUNCE` |  | global | `Settings.Cq.EscapeExitsSearchAndPounce` | boolean |  |
 | `EXCHANGE MEMORY ENABLE` |  | **CONTEST** | `Settings.Contest.ExchangeMemoryEnable` | boolean |  |
 | `EXTERNAL LOGGER` |  | global | `Settings.ExternalLogger.LoggerType` | string |  |
@@ -371,7 +373,7 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-317 command names.
+319 command names.
 
 Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
 

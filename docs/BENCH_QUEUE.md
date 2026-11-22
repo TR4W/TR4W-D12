@@ -188,6 +188,28 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-22 -- THE FLEX (SMARTSDR API) PINGS, AND TR4W DROPS A SILENT LINK (issue 6; radio-factory)
+
+The SmartSDR API driver (Radio Control Port = TCP 4992) now sends `ping` once a second after the radio's `H` line, and the base drops the link after 10 s with NOTHING received, then reconnects through the normal back-off. `keepalive disable` is STILL sent, so the radio never drops TR4W. Nothing here has touched a radio: the spelling `ping` comes from AetherSDR (a third-party client), not from Flex's documentation. Unit-pinned in `uTestRadioKeepAlive`. Set `DEBUG LOG LEVEL = TRACE` to see `[FlexAPI TX] C<n>|ping` and the reply.
+
+- [ ] **The radio answers the ping with keepalive disabled:** connect, idle on one frequency for a minute. `tr4w.log` shows a `ping` about once a second and an `R<n>|0|` reply to each. An `R<n>|<non-zero>|` (logged as `Command error response`) still counts as traffic, but report it: it means the spelling or the state is wrong.
+- [ ] **Pull the Ethernet cable from the radio (or power it off) with TR4W connected:** within about 10 s the log says `has sent nothing for ... treating the link as down and reconnecting`, the radio panel goes to the alert colour and the frequency blanks. Put the cable back: it reconnects on its own and the frequency returns. Before this change the radio stayed "connected" with a frozen frequency.
+- [ ] **No false drops:** an hour of normal operating, including a SmartSDR GUI connecting and disconnecting as a second Multi-Flex client, gives NO `treating the link as down` line. AetherSDR grants a 5 s grace while a Multi-Flex client connects because ping replies can stall; if a drop appears at that moment, report it.
+- [ ] **Only after all three pass, and as a separate decision:** whether to switch `keepalive disable` to `keepalive enable`.
+
+---
+
+## Added 2026-11-22 -- THE TOTALS SHOW BOTH MODES' MULTIPLIERS IN ONE CELL (issue 55, NY4I's option (a); lcl-ui, contest-scoring)
+
+Where a contest counts multipliers BY MODE (ARRL 10 Meter and most QSO parties), the totals grid used to show only the ACTIVE mode's multipliers (`Ph Dom`, `Ph DX`). Now each multiplier row shows every mode that is active or has QSOs, in the QSO rows' order: label `CW/Ph Dom`, cell `12/6` (CW first). A zero beside a count is written (`0/6`); all zeros are blank, as one zero always was. With ONE such mode the row is exactly as before (`CW Dom` / `Ph Dom`, one number). One deliberate change: with DIGITAL the active mode, a by-mode contest used to write NO multiplier label (the numbers slid up a row); it now says `Dig Dom` -- or `CW Dom` in the Louisiana QSO Party, which counts digital multipliers with CW. Contests that do not count multipliers by mode are untouched. Rules: `uTotalsModeText` (unit tested, including a measured fit of `123/456` in the All column at the smallest WINDOW SIZE); which modes: `uTotal.ChooseTotalsMultModes`.
+
+- [ ] **ARRL 10, both modes worked:** log a few CW and SSB QSOs with new domestic and DX multipliers on each. The four rows read `CW - ` / `SSB QSOs` / `CW/Ph Dom` / `CW/Ph DX`, the All column `n/m` with CW first, and the numbers match the multiplier windows for each mode. Switch the radio between CW and SSB: the labels and numbers do NOT change with the active mode.
+- [ ] **ARRL 10, one mode only:** a fresh log on CW: the rows read `CW Dom` / `CW DX` and one number each, as before. Switch to SSB with no SSB QSO yet: `CW/Ph Dom` `n/0`.
+- [ ] **Narrow window:** shrink the main window to its narrowest (the smallest scale). `CW/Ph Dom` and a two- or three-digit pair are whole, not clipped. If a cell had to shrink its font, `tr4w.log` says so (`had to shrink to fit`) -- note which and by how much. Repeat at FONT SIZE 2 and with 150% Windows scaling.
+- [ ] **A QSO party that counts by band AND mode** (a by-band one, if any is open): the pair appears in each band column, the narrowest cells. Is `12/6` readable there at the smallest scale?
+- [ ] **A digital QSO in ARRL 10** (if one is ever logged; the contest does not exclude digital today): a third number appears, `CW/Ph/Dig Dom` `n/m/k`. Say if that is wanted.
+- [ ] **Linux / macOS:** the substituted font is wider than Arial; check the narrow-window case there.
+
 ## Added 2026-11-22 -- THE LOG GRID: BOLD CALLSIGNS, RIGHT-ALIGNED NUMBERS, SOFT VERTICAL RULES (UI refresh proposal, "Band strip and log grid"; lcl-ui)
 
 Every log grid (the main log, the B4 list, View/Edit Log, Log Search) changed in four ways, all in `uLogGrid`. The callsign column is BOLD (other columns, and every heading, keep the window's font weight); the column is measured in the bold font too, so it may be a few pixels wider than before. The serials (QsS, QsR), the QSO POINTS and the FREQUENCY are right-aligned, heading and value alike (points and frequency were centred). Column order, headings and the row height are unchanged. **A finding, not a softening:** before this, a data row drew NO grid lines at all -- the paint never reached the LCL's line drawing -- so SHOW GRIDLINES only ever affected the heading row. With SHOW GRIDLINES on (and always in View/Edit Log and Log Search, whose grids keep the option), each data row now has a 1 px VERTICAL rule in a colour derived from the window colour (`LogSoftRuleColor`: a light grey on white, a dark grey on a dark window). Horizontal lines on data rows are still absent, as they were. The rules are `uLogGrid`'s `LogSoftRuleColor`, `LogCellFontStyle`, `LogColumnAlignment` and `LogRowColors`, unit tested in `uTestLogGridStyle`.

@@ -172,6 +172,38 @@ function IsAUSPrefix(const Call: string): boolean;
 // this look like a well-formed US call" -- so the ambiguity does not bite yet.
 function IsAGoodUSCall(const Call: string): boolean;
 function ValidCallCharacter(CallChar: Char): boolean;
+
+(* ENFORCE VALID CALLSIGN (issue 180, NY4I 2026-11-15/22).
+
+  THE BASE CALL IS THE LONGEST PART AROUND ANY '/', the first on a tie:
+  W1AW/P, VE3/W1AW, W1AW/3, NY4I/PIN (a county line) and K/G4ABC/P give
+  W1AW, W1AW, W1AW, NY4I and G4ABC. NOT RootCall: that answers the part
+  AFTER the '/' whenever it has three characters or more, so NY4I/PIN would
+  be checked as PIN. Upper-cased and trimmed of spaces; '' for ''. *)
+function LongestCallPart(const aCall: string): string;
+
+type
+   (* Does this text resolve to a DXCC entity? The program passes
+     CallIsACountryFileEntity; a test passes its own. *)
+   TCallIsAnEntity = function(const aCall: string): boolean;
+
+(* THE DECISION, PURE: refuse the QSO when the operator turned the check on,
+  the country file is loaded, and the call's base call (LongestCallPart) is
+  not an entity. With the check off it answers False and asks nothing, so
+  the default changes no QSO. With NO COUNTRY FILE it answers False too:
+  refusing every QSO for a missing file would stop a contest, and the
+  missing file is reported where it is loaded. *)
+function EnforcedCallIsRefused(aEnforce: boolean; const aCall: string;
+                               aCountryFileLoaded: boolean;
+                               aIsAnEntity: TCallIsAnEntity): boolean;
+
+(* The country file's answer: True when CTY.DAT places the text in an
+  entity (uCTYDAT.ctyGetCountry is not UNKNOWN_COUNTRY). *)
+function CallIsACountryFileEntity(const aCall: string): boolean;
+
+(* True once CTY.DAT has been loaded with at least one entity. *)
+function CountryFileIsLoaded: boolean;
+
 implementation
 uses uCTYDAT;
 function ARRLSectionCountry(CountryID: string): boolean;
@@ -838,6 +870,74 @@ end;
 function ValidCallCharacter(CallChar: Char): boolean;
 begin
   Result := CallChar in ['/', '0'..'9', 'A'..'Z'];
+end;
+
+function LongestCallPart(const aCall: string): string;
+var
+   i: integer;
+   part: string;
+   c: Char;
+begin
+   Result := '';
+   part := '';
+   for i := 1 to Length(aCall) + 1 do
+      begin
+      if (i > Length(aCall)) or (aCall[i] = '/') then
+         begin
+         (* Strictly longer, so the FIRST of two equal parts is kept. *)
+         if Length(part) > Length(Result) then
+            begin
+            Result := part;
+            end;
+         part := '';
+         end
+      else
+         begin
+         c := aCall[i];
+         if (c >= 'a') and (c <= 'z') then
+            begin
+            c := Char(Ord(c) - 32);
+            end;
+         if c <> ' ' then
+            begin
+            part := part + c;
+            end;
+         end;
+      end;
+end;
+
+function EnforcedCallIsRefused(aEnforce: boolean; const aCall: string;
+                               aCountryFileLoaded: boolean;
+                               aIsAnEntity: TCallIsAnEntity): boolean;
+var
+   base: string;
+begin
+   Result := False;
+   if not aEnforce then
+      begin
+      Exit;
+      end;
+   if not aCountryFileLoaded then
+      begin
+      Exit;
+      end;
+   base := LongestCallPart(aCall);
+   (* An empty call is the syntax check's to refuse, not this one's. *)
+   if base = '' then
+      begin
+      Exit;
+      end;
+   Result := not aIsAnEntity(base);
+end;
+
+function CallIsACountryFileEntity(const aCall: string): boolean;
+begin
+   Result := ctyGetCountry(aCall) <> UNKNOWN_COUNTRY;
+end;
+
+function CountryFileIsLoaded: boolean;
+begin
+   Result := CTY.ctyNumberCountries > 0;
 end;
 
 function InSameFederalOkrug(const aMyCall: string; const aHisCall: string): boolean;

@@ -960,7 +960,9 @@ uses
   uContestBase,
   uAppStrings,
   (* mtCodeSpeedDisplay -- the readout a worker thread asks for (issue #108). *)
-  uMainThreadWork;
+  uMainThreadWork,
+  (* RefreshToggleKeyerMenuCaption -- Alt-K says what it toggles (issue 23). *)
+  uMenu;
 
 
 function DEPlusMyCall: Str160;
@@ -1250,6 +1252,10 @@ begin
 
   TR4WMainForm.pnlBandMode.Caption := SysUtils.Format(TWO_STRINGS,
                                         [BandStringsArray[Band], ModeStringArray[Mode]]);
+
+  (* ALT-K FOLLOWS THE MODE (issue 23): 'Toggle CW' in CW, 'Toggle Voice
+    Keyer' otherwise, because that is what LogCW.ToggleCW flips. *)
+  RefreshToggleKeyerMenuCaption(Mode);
 
   if Settings.Mult.ByBand then MultBand := ActiveBand else MultBand := AllBands;
   (* The multiplier sheet's mode key -- LOGDUPE's one statement of it, which

@@ -339,6 +339,19 @@ the gate and that ran `SendFunctionKeyMessage` on every phone Enter, which
 clears `SwitchNext`/`Switch`/`InactiveRigCallingCQ`. Issue 66's actual ask --
 a separate S&P CALL message settable to a radio command -- is NOT built.
 
+**Decided — Alt-K / `TOGGLECW` / `CWENABLETOGGLE` toggle the VOICE KEYER
+outside CW mode** (issue 23, NY4I option A, 2026-11-22). All three go through
+`LogCW.ToggleCW`: `ActiveMode = CW` toggles CW through `SetCWState`; every
+other mode (Phone, Digital, FM) flips `Settings.Dvk.Enable`, as in D7. Kept for
+muscle memory; do not split it into a `TOGGLEDVK` without a new ruling. The
+Alt-K menu caption follows the mode -- `uMenu.ToggleKeyerMenuCaption` (pure,
+same `= CW` test; change both together), applied by
+`RefreshToggleKeyerMenuCaption` from `LOGWIND.DisplayBandMode`, pinned by
+`uTestMenuShortcuts.Test_AltKCaptionFollowsTheMode`. The call-window `CWON` /
+`CWOFF` are CW-only and call `SetCWState` (issue 324). Known lag: the SO2R
+Ctrl-A path (`logsubs1`) changes `ActiveMode` without `DisplayBandMode`, so the
+caption can trail while sending on the inactive radio.
+
 **Decided — do not re-propose:** Yaesu CW-by-CAT is out of scope. Yaesu's
 `KY <n>;` plays a preset memory slot, not free text, so it cannot serve contest CW.
 

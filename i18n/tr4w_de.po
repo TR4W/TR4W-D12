@@ -12649,3 +12649,28 @@ msgstr ""
 #, fuzzy
 msgid "Active radio"
 msgstr ""
+
+#: usettingscaptions.rs_operating_enforcevalidcallsign
+#, fuzzy
+msgid "Refuse a QSO whose call is not in the country file"
+msgstr ""
+
+#: usettingscaptions.rs_bandmap_clickgoestoexchange
+#, fuzzy
+msgid "After tuning to a spot, put the cursor in the exchange window"
+msgstr ""
+
+#: uappstrings.scallnotaknownentity
+#, fuzzy
+msgid "%s is not logged: its base call is not in the country file"
+msgstr ""
+
+#: uappstrings.scallwindowcwon
+#, fuzzy
+msgid "CW On"
+msgstr ""
+
+#: uappstrings.smenutogglevoicekeyer
+#, fuzzy
+msgid "Toggle Voice Keyer"
+msgstr ""

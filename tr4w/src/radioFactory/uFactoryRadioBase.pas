@@ -274,12 +274,53 @@ Type
       // command -- and HamLib agrees independently (rigctl -m 3070 -u reports
       // "Can get XIT: N", where an IC-7850 reports Y).
       HasXIT: boolean;
+
+      (* KEEP-ALIVE AND SILENCE DETECTION ON A NETWORK LINK (issue 6).
+
+        Two FIELDS, not Flags members, for the same reason as HasXIT and
+        CWFrame: they are numbers, and a field survives a DefineCapabilities
+        that assigns Flags wholesale.  The instance memory is zeroed, so 0 --
+        "this radio declares no keep-alive" -- is every radio's default, and a
+        radio opts in by stating them in its own constructor.
+
+        KeepAliveIntervalMs: how often the base asks the radio to send its
+          keep-alive (the virtual SendKeepAlive).  0 = never.
+        LinkSilenceLimitMs: how long the link may be silent -- nothing at all
+          received -- before the base drops it and the polling thread's
+          reconnect-with-backoff takes over.  0 = never.
+
+        WHY: network liveness is otherwise socket state only.  A radio that
+        loses power or its cable sends no TCP FIN, so the socket stays "open"
+        and TR4W shows a dead radio as connected for as long as TCP cares to
+        wait.  A keep-alive the radio answers turns that into silence, and the
+        silence is what is detected.  See TFactoryRadioBase.MaintainKeepAlive.
+
+        A base never asks which radio it is: it guards on these two numbers.
+        Pinned by uTestRadioKeepAlive over the whole registry. *)
+      KeepAliveIntervalMs: cardinal;
+      LinkSilenceLimitMs: cardinal;
    end;
 
 // Declare a radio's prosign spellings, for use in its constructor.  Reads as
 // CWProsigns(' ', '%', '_', '>', '[') at each declaration -- half space, SN,
 // AR, SK, BT, in the order they appear in TR4W's own notation.
 function CWProsigns(const halfSpace, sn, ar, sk, bt: string): TCWProsignSet;
+
+(* THE KEEP-ALIVE ARITHMETIC, PURE (issue 6).  Ticks are GetTickCount64
+  values; nothing here reads a clock, so the tests can state any instant.
+
+  KeepAliveDue: an interval of 0 is never due; a keep-alive never sent
+  (lastSentTick = 0) is due at once; otherwise due when a whole interval has
+  passed.  A lastSentTick AFTER nowTick is not due -- QWord subtraction
+  would otherwise wrap to an enormous elapsed time.
+
+  LinkSilenceExceeded: a limit of 0 never trips.  The link is silent when
+  MORE than limitMs has passed since anything was heard.  A lastHeardTick
+  AFTER nowTick is NOT silence: the reading thread stamps it, and it can do so
+  between the polling thread reading the clock and asking this -- without the
+  guard the subtraction wraps and a radio that has just spoken is dropped. *)
+function KeepAliveDue(nowTick, lastSentTick: QWord; intervalMs: cardinal): Boolean;
+function LinkSilenceExceeded(nowTick, lastHeardTick: QWord; limitMs: cardinal): Boolean;
 
 Type TSimpleEventProc = procedure(const aStrParam:string) of object;
 Type PBoolean = ^Boolean;  // Pointer to Boolean type
@@ -401,6 +442,15 @@ Type TFactoryRadioBase = class(TObject)
       FTXInhibitReason: TTXInhibitReason;
       FTXInhibitLock: TCriticalSection;
       FTXInhibitRefusalLogged: boolean;   // the undeclared-ON error, once per radio
+
+      (* KEEP-ALIVE CLOCKS (issue 6) -- see MaintainKeepAlive.
+        FLastHeardTick is WRITTEN on the reading thread (UpdateLastValidResponse)
+        and READ on the polling thread; an aligned QWord load/store is atomic on
+        every target this tree builds (x86_64 Windows/Linux, aarch64 macOS --
+        all 64-bit), and a stale read costs one tick of lateness.
+        FKeepAliveSentTick belongs to the polling thread alone. *)
+      FLastHeardTick: QWord;
+      FKeepAliveSentTick: QWord;
 
       function GetRadioPort: integer;
       procedure SetRadioPort(Value: Integer);
@@ -680,6 +730,17 @@ Type TFactoryRadioBase = class(TObject)
         driver whose Connect does not call inherited (it owns its transport)
         calls this instead, so the list is never repeated per driver. *)
       procedure ResetPerLinkState;
+
+      (* SEND THIS RADIO'S KEEP-ALIVE (issue 6).  Called by MaintainKeepAlive
+        every FCapabilities.KeepAliveIntervalMs, on the POLLING thread, and only
+        for a radio that declared that interval.  The base sends nothing: a
+        radio that states an interval states what to send by overriding this.
+        An override may decline (the Flex sends nothing before its handshake). *)
+      procedure SendKeepAlive; virtual;
+
+      (* MaintainKeepAlive with the clock passed in, so a test can state the
+        instant.  Everything MaintainKeepAlive does is here. *)
+      function MaintainKeepAliveAt(nowTick: QWord): boolean;
 
 
    public
@@ -1136,6 +1197,27 @@ Type TFactoryRadioBase = class(TObject)
         is bounded by its own timeout.  A class with its own transport may
         override; the override must obey the same rules. *)
       procedure InterruptLink; virtual;
+
+      (* KEEP-ALIVE AND SILENCE DETECTION FOR A CONNECTED LINK (issue 6).
+        Ticked by the polling thread on every pass through its connected
+        branch, for every radio; a radio that declares neither
+        FCapabilities.KeepAliveIntervalMs nor .LinkSilenceLimitMs costs two
+        comparisons and nothing happens.
+
+        Silence first: if nothing at all has been heard for MORE than
+        LinkSilenceLimitMs since the last frame (or since Connect, which resets
+        the clock), the link is dead whatever the socket says -- it logs a
+        WARN, calls Disconnect and answers True.  Disconnect is the drop the
+        stuck-handshake detector already uses: it closes the socket and joins
+        the reading thread, so the next pass takes the disconnected branch and
+        the existing reconnect-with-backoff builds a fresh link and reader.
+        Otherwise, when a keep-alive is due, it calls SendKeepAlive and
+        answers False.
+
+        TR4W-SIDE ONLY.  Nothing here asks the radio to police the client: the
+        Flex still sends `keepalive disable`, so a stalled poller can never
+        make the RADIO drop TR4W mid-contest.  See uRadioFlexAPI. *)
+      function MaintainKeepAlive: boolean;
       property IsTransmitting: boolean read GetIsTransmitting;
       property IsReceiving: boolean read GetIsReceiving;
       property IsConnected: boolean read GetIsConnected;
@@ -1471,6 +1553,9 @@ begin
    FTXInhibitRefusalLogged := False;
    Disconnecting := False;
    FLastValidResponse := Now;  // Initialize to current time
+   // Issue 6: the silence clock starts now too; Connect restarts it.
+   FLastHeardTick := GetTickCount64;
+   FKeepAliveSentTick := 0;
    FPollAwaitingReply := False;
    FPollSentTick := 0;
    FPollHeardReply := False;
@@ -1700,6 +1785,42 @@ begin
    Result.AR        := ar;
    Result.SK        := sk;
    Result.BT        := bt;
+end;
+
+function KeepAliveDue(nowTick, lastSentTick: QWord; intervalMs: cardinal): Boolean;
+begin
+   if intervalMs = 0 then
+      begin
+      Result := False;
+      end
+   else if lastSentTick = 0 then
+      begin
+      Result := True;
+      end
+   else if lastSentTick > nowTick then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := (nowTick - lastSentTick) >= QWord(intervalMs);
+      end;
+end;
+
+function LinkSilenceExceeded(nowTick, lastHeardTick: QWord; limitMs: cardinal): Boolean;
+begin
+   if limitMs = 0 then
+      begin
+      Result := False;
+      end
+   else if lastHeardTick > nowTick then
+      begin
+      Result := False;
+      end
+   else
+      begin
+      Result := (nowTick - lastHeardTick) > QWord(limitMs);
+      end;
 end;
 
 procedure TFactoryRadioBase.PollRadioState;
@@ -2506,6 +2627,8 @@ end;
 procedure TFactoryRadioBase.UpdateLastValidResponse;
 begin
    FLastValidResponse := Now;
+   // Issue 6: the silence clock MaintainKeepAlive reads.
+   FLastHeardTick := GetTickCount64;
    // The radio is TALKING.  That does not mean the poll is answered -- see
    // PollOutstanding, which waits for it to stop.  Note the gate is NOT
    // cleared here: doing that was the bug.
@@ -2700,6 +2823,67 @@ begin
      reports the condition asks again once connected (the K4 does, in its
      Connect), so the gap is one round trip. *)
    Self.SetTXInhibited(False, '');
+
+   (* AND ON SILENCE (issue 6).  The silence that dropped the last link is
+     not this link's: without the restart, the first MaintainKeepAlive after a
+     reconnect would see the outage and drop the new link at once, for ever.
+     The keep-alive is due at once on the new link (0 = never sent). *)
+   Self.FLastHeardTick := GetTickCount64;
+   Self.FKeepAliveSentTick := 0;
+end;
+
+procedure TFactoryRadioBase.SendKeepAlive;
+begin
+   (* Nothing: see the declaration.  Reached only by a radio that declared a
+     KeepAliveIntervalMs and did not say what to send -- a driver defect, so
+     it is said at DEBUG rather than silently ignored, without a log line a
+     second at a louder level. *)
+   logger.Debug('[SendKeepAlive] %s declares a keep-alive interval but sends nothing',
+                [Self.radioModel]);
+end;
+
+function TFactoryRadioBase.MaintainKeepAliveAt(nowTick: QWord): boolean;
+begin
+   Result := False;
+   if (FCapabilities.KeepAliveIntervalMs = 0) and
+      (FCapabilities.LinkSilenceLimitMs = 0) then
+      begin
+      Exit;
+      end;
+   if Disconnecting then
+      begin
+      Exit;      // already going down; the reconnect path owns it
+      end;
+
+   if LinkSilenceExceeded(nowTick, FLastHeardTick, FCapabilities.LinkSilenceLimitMs) then
+      begin
+      logger.Warn('[MaintainKeepAlive] %s has sent nothing for %d ms (limit %d ms) -- ' +
+                  'treating the link as down and reconnecting',
+                  [Self.radioModel, Int64(nowTick - FLastHeardTick),
+                   Int64(FCapabilities.LinkSilenceLimitMs)]);
+      try
+         Self.Disconnect;
+      except
+         on E: Exception do
+            begin
+            logger.Error('[MaintainKeepAlive] Disconnect raised: %s - %s',
+                         [E.ClassName, E.Message]);
+            end;
+      end;
+      Result := True;
+      Exit;
+      end;
+
+   if KeepAliveDue(nowTick, FKeepAliveSentTick, FCapabilities.KeepAliveIntervalMs) then
+      begin
+      FKeepAliveSentTick := nowTick;
+      Self.SendKeepAlive;
+      end;
+end;
+
+function TFactoryRadioBase.MaintainKeepAlive: boolean;
+begin
+   Result := MaintainKeepAliveAt(GetTickCount64);
 end;
 
 procedure TFactoryRadioBase.NoteCWSpeedFromRadio(aSpeed: integer);

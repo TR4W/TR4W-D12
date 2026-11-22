@@ -538,7 +538,6 @@ begin
       RadioTwoKeyerOutputPort := NoPort;
     end;
   }
-//  TailEnding := False;
 
   {Before restart.bin load}
   Move(DefaultFreqMemory, FreqMemory, SizeOf(TFreqMemoryType));

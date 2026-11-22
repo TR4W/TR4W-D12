@@ -56,6 +56,8 @@ type
       procedure Test_AFileWithTheOldRowCountMemberStillLoads;
       procedure Test_TheRowCountCommandIsRetired;
       procedure Test_TheWindowSizeCommandIsRetired;
+      procedure Test_TheTailEndCommandsAreRetired;
+      procedure Test_TheTwoNewEntrySettings;
       procedure Test_BuildingTheSettingsObjectDoesNotLeak;
    public
       procedure RunAllTests; override;
@@ -65,7 +67,8 @@ implementation
 
 uses
    SysUtils, uJSON, uKeychain, uSettingsModel, uCFG,
-   uRadioConfigStore, uRadioConfigApply, uTR4WConfigFile;
+   uRadioConfigStore, uRadioConfigApply, uTR4WConfigFile,
+   uBandmap;   (* SpotTuneFocusesExchange, issue 185 *)
 
 (* The JSON escape for a NUL, built from two literals so that no editor or
   tool on the way to this file can turn the six characters into the byte. *)
@@ -625,6 +628,80 @@ begin
    CheckTrue(CheckCommand('WINDOW SIZE', '10', False), 'an old line is accepted');
 end;
 
+(* ISSUE 60: the four TAIL END names, withdrawn 2026-11-22. Before this
+  CheckCommand REFUSED them (their CFGCA rows were commented out), so the
+  corpus's Winter Field Day .cfg line "TAIL END CW MESSAGE=TU \" took the
+  invalid-statement path. *)
+procedure TSettingsFreshInstallTests.Test_TheTailEndCommandsAreRetired;
+const
+   NAMES: array[0..3] of string = ('TAIL END CW MESSAGE', 'TAIL END KEY',
+      'TAIL END MESSAGE', 'TAIL END SSB MESSAGE');
+   VALUES: array[0..3] of string = ('TU \', ']', 'R', 'TAILEND.WAV');
+var
+   i: integer;
+begin
+   BeginTest('the TAIL END names are withdrawn: accepted, owned by nothing');
+   for i := Low(NAMES) to High(NAMES) do
+      begin
+      CheckTrue(CommandIsRetired(NAMES[i]), NAMES[i] + ' is retired');
+      CheckFalse(Settings.OwnsCommand(NAMES[i]), NAMES[i] + ': no property answers to it');
+      CheckFalse(CommandIsSharedWithPeers(NAMES[i]), NAMES[i] + ' is not shared');
+      CheckTrue(CheckCommand(NAMES[i], VALUES[i], False), NAMES[i] + ': an old line is accepted');
+      end;
+end;
+
+(* ISSUES 180 AND 185: two new station settings, both OFF by default (so the
+  default changes no QSO and no focus), set by name, and written and read
+  back by the settings file. *)
+procedure TSettingsFreshInstallTests.Test_TheTwoNewEntrySettings;
+var
+   a, b: TR4WSettings;
+   obj: TJSONObject;
+   value: string;
+begin
+   BeginTest('ENFORCE VALID CALLSIGN and BAND MAP CLICK GOES TO EXCHANGE');
+   InstallTestKeychain;
+   a := TR4WSettings.Create;
+   b := TR4WSettings.Create;
+   try
+      CheckFalse(a.CallWindow.EnforceValidCallsign, 'ENFORCE VALID CALLSIGN defaults off');
+      CheckFalse(a.BandMap.ClickGoesToExchange, 'BAND MAP CLICK GOES TO EXCHANGE defaults off');
+      CheckTrue(a.OwnsCommand('ENFORCE VALID CALLSIGN'), 'ENFORCE VALID CALLSIGN is a setting');
+      CheckFalse(a.OwnsCommand('CALL WINDOW ENFORCE VALID CALLSIGN'), 'the derived name is aliased away');
+      CheckTrue(a.OwnsCommand('BAND MAP CLICK GOES TO EXCHANGE'), 'BAND MAP CLICK GOES TO EXCHANGE is a setting');
+      CheckFalse(CommandIsSharedWithPeers('ENFORCE VALID CALLSIGN'), 'not shared: an operator preference');
+      CheckFalse(CommandIsSharedWithPeers('BAND MAP CLICK GOES TO EXCHANGE'), 'not shared: an operator preference');
+
+      CheckTrue(a.TrySetByCommand('ENFORCE VALID CALLSIGN', 'TRUE'), 'set by name');
+      CheckTrue(a.TrySetByCommand('BAND MAP CLICK GOES TO EXCHANGE', 'TRUE'), 'set by name');
+      CheckTrue(a.CallWindow.EnforceValidCallsign, 'the property took it');
+      CheckTrue(a.BandMap.ClickGoesToExchange, 'the property took it');
+      CheckTrue(a.TryGetByCommand('ENFORCE VALID CALLSIGN', value), 'read by name');
+      CheckTrue(UnicodeSameText('TRUE', value), 'reads TRUE (got ' + value + ')');
+
+      obj := a.ToJSON;
+      try
+         CheckTrue(obj.FindPath('CallWindow.EnforceValidCallsign') <> nil, 'written to the settings file');
+         CheckTrue(obj.FindPath('BandMap.ClickGoesToExchange') <> nil, 'written to the settings file');
+         b.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckTrue(b.CallWindow.EnforceValidCallsign, 'ENFORCE VALID CALLSIGN read back');
+      CheckTrue(b.BandMap.ClickGoesToExchange, 'BAND MAP CLICK GOES TO EXCHANGE read back');
+   finally
+      b.Free;
+      a.Free;
+   end;
+
+   (* uBandmap's pure decision: the exchange only with the option on AND the
+     call placed in the call window. *)
+   CheckFalse(SpotTuneFocusesExchange(False, True), 'off: the call window, as D7');
+   CheckFalse(SpotTuneFocusesExchange(True, False), 'on, but no call placed (a CQ/NEW marker, the inactive radio): the call window');
+   CheckTrue(SpotTuneFocusesExchange(True, True), 'on and the call placed: the exchange window');
+   CheckFalse(SpotTuneFocusesExchange(False, False), 'off and nothing placed');
+end;
+
 (* ---------------------------------------------------------------------
   THE SETTINGS OBJECT FREES WHAT IT BUILDS.
   --------------------------------------------------------------------- *)
@@ -677,6 +754,8 @@ begin
    Test_AFileWithTheOldRowCountMemberStillLoads;
    Test_TheRowCountCommandIsRetired;
    Test_TheWindowSizeCommandIsRetired;
+   Test_TheTailEndCommandsAreRetired;
+   Test_TheTwoNewEntrySettings;
    Test_BuildingTheSettingsObjectDoesNotLeak;
 end;
 

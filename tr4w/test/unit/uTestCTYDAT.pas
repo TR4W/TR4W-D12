@@ -61,6 +61,7 @@ type
       procedure Test_SouthAfrica_ZS6;
       procedure Test_Zones_W1_England_Japan;
       procedure Test_UnknownCountryIndex;
+      procedure Test_EnforcedCallAgainstTheRealCountryFile;
 
       (* THE CHARACTERISATION NET.
 
@@ -110,7 +111,8 @@ type
 implementation
 
 uses
-   SysUtils, VC, uCTYDAT, utils_text;
+   SysUtils, VC, uCTYDAT, utils_text,
+   uCallSignRoutines;   (* ENFORCE VALID CALLSIGN's country-file half, issue 180 *)
 
 // ---------------------------------------------------------------------------
 // Load helper -- loads the shipped cty.dat once, relative to the test EXE.
@@ -256,6 +258,28 @@ begin
                'UNKNOWN_COUNTRY -> UnknownContinent');
    CheckEquals('', Trim(ctyGetCountryIdByIndex(UNKNOWN_COUNTRY)),
                'UNKNOWN_COUNTRY -> empty DXCC id');
+end;
+
+(* ENFORCE VALID CALLSIGN (issue 180) against the REAL CTY.DAT: the forms an
+  operator logs every weekend pass on their base call, and calls in no
+  allocated block are refused. Asserted, not assumed: if CTY.DAT ever
+  resolves QQQ this fails and says so. *)
+procedure TCTYDATTests.Test_EnforcedCallAgainstTheRealCountryFile;
+begin
+   BeginTest('Test_EnforcedCallAgainstTheRealCountryFile');
+   EnsureCtyLoaded;
+   CheckTrue(CountryFileIsLoaded, 'the country file is loaded');
+   CheckFalse(EnforcedCallIsRefused(True, 'W1AW', CountryFileIsLoaded, CallIsACountryFileEntity), 'W1AW');
+   CheckFalse(EnforcedCallIsRefused(True, 'W1AW/P', CountryFileIsLoaded, CallIsACountryFileEntity), 'W1AW/P');
+   CheckFalse(EnforcedCallIsRefused(True, 'VE3/W1AW', CountryFileIsLoaded, CallIsACountryFileEntity), 'VE3/W1AW');
+   CheckFalse(EnforcedCallIsRefused(True, 'W1AW/3', CountryFileIsLoaded, CallIsACountryFileEntity), 'W1AW/3');
+   CheckFalse(EnforcedCallIsRefused(True, 'NY4I/PIN', CountryFileIsLoaded, CallIsACountryFileEntity), 'county line NY4I/PIN');
+   CheckFalse(EnforcedCallIsRefused(True, 'K/G4ABC/P', CountryFileIsLoaded, CallIsACountryFileEntity), 'K/G4ABC/P');
+   CheckFalse(EnforcedCallIsRefused(True, 'JA1ABC', CountryFileIsLoaded, CallIsACountryFileEntity), 'JA1ABC');
+   CheckTrue(EnforcedCallIsRefused(True, 'QQQ', CountryFileIsLoaded, CallIsACountryFileEntity), 'QQQ refused');
+   CheckTrue(EnforcedCallIsRefused(True, 'QQ1ABC', CountryFileIsLoaded, CallIsACountryFileEntity), 'QQ1ABC refused');
+   (* And off asks nothing. *)
+   CheckFalse(EnforcedCallIsRefused(False, 'QQQ', CountryFileIsLoaded, CallIsACountryFileEntity), 'off: QQQ passes');
 end;
 
 // ---------------------------------------------------------------------------
@@ -1073,6 +1097,7 @@ begin
    Test_SouthAfrica_ZS6;
    Test_Zones_W1_England_Japan;
    Test_UnknownCountryIndex;
+   Test_EnforcedCallAgainstTheRealCountryFile;
 
    Test_Rule_USCallAreasShareOneCountry;
    Test_Rule_CanadianDistrictsChangeZone;

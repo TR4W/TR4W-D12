@@ -17,7 +17,10 @@ unit uRadioFlexAPI;
     - TCP to port 4992, CRLF-terminated lines.
     - Radio initiates: sends V (version), H (client handle), M (message) before client speaks.
     - Client sends subscriptions once the H line is received.
-    - All state is pushed unsolicited; no polling required.
+    - All state is pushed unsolicited; no state polling.  The one thing sent
+      on a clock is the keep-alive `ping` (issue 6), which exists so that a
+      radio that has died without closing TCP is noticed -- see
+      FLEX_PING_COMMAND and TFactoryRadioBase.MaintainKeepAlive.
     - Commands:  C<seq>|<command>CRLF
     - Responses: R<seq>|<result>|<data>   (result=0 is OK)
     - Status:    S<handle>|<type> key=value...
@@ -37,6 +40,35 @@ interface
 
 uses
    uFactoryRadioBase, uRadioBand, StrUtils, SysUtils, Log4D, uCWFraming;
+
+const
+   (* THE KEEP-ALIVE (issue 6) -- TR4W-SIDE DETECTION ONLY.
+
+     `ping` is sent as an ordinary command (C<seq>|ping) once a second after
+     the handshake; the radio answers R<seq>|0|..., and ANY line received
+     restarts the silence clock.  After FLEX_LINK_SILENCE_LIMIT_MS of nothing,
+     the base drops the link and the poller reconnects with back-off.
+
+     PROVENANCE, AND WHAT IS NOT VERIFIED.  The spelling `ping`, the 1 s
+     cadence and `keepalive enable` are taken from AetherSDR
+     (c:\projects\AetherSDR, src/models/RadioModel.cpp: sendCmd("ping") on a
+     1000 ms timer, force-disconnect after PING_MISS_DISCONNECT = 5 misses,
+     15 on a poor link, plus a 5 s grace while a Multi-Flex client connects).
+     That is a third-party SmartSDR client, NOT Flex's own documentation, and
+     no Flex has been on the bench for this: whether the radio answers `ping`
+     while `keepalive disable` is in force is docs/BENCH_QUEUE.md's question.
+
+     10 s, NOT AetherSDR's 5: a false drop here costs a reconnect and a full
+     resubscribe in the middle of a contest, and the clock is any traffic, so
+     the radio's own status pushes count too.  10 s sits between AetherSDR's
+     normal (5) and poor-link (15) thresholds.
+
+     `keepalive disable` IS STILL SENT (NY4I agreed, issue 6): with it enabled
+     the RADIO drops a client whose pings stop, so any stall in TR4W's poller
+     would become a disconnect mid-contest.  Switch only after a bench. *)
+   FLEX_PING_COMMAND          = 'ping';
+   FLEX_PING_INTERVAL_MS      = 1000;
+   FLEX_LINK_SILENCE_LIMIT_MS = 10000;
 
 type TFlexAPI = class(TFactoryRadioBase)
    private
@@ -72,6 +104,8 @@ type TFlexAPI = class(TFactoryRadioBase)
 
    protected
       function  GetIsOperational: boolean; override;
+      // Issue 6: `ping`, once the handshake is done (polling thread).
+      procedure SendKeepAlive; override;
 
    public
       constructor Create;
@@ -147,6 +181,23 @@ begin
    // characters the KY path uses, which is what the legacy code did for FLEX on
    // both transports.
    FCapabilities.CWFrame := CWFrameRule(0, False);
+   // ---- Keep-alive and silence detection (issue 6) ---------------------------
+   // See FLEX_PING_COMMAND.  The base acts on these; it never asks the model.
+   FCapabilities.KeepAliveIntervalMs := FLEX_PING_INTERVAL_MS;
+   FCapabilities.LinkSilenceLimitMs  := FLEX_LINK_SILENCE_LIMIT_MS;
+end;
+
+procedure TFlexAPI.SendKeepAlive;
+begin
+   (* Not before the H line: the radio speaks first (V, H), and a command
+     ahead of the handshake is not what the protocol expects.  The silence
+     clock still runs, so a radio that never completes the handshake is
+     dropped and retried too. *)
+   if not FHandshakeDone then
+      begin
+      Exit;
+      end;
+   SendFlexCmd(FLEX_PING_COMMAND);
 end;
 
 function TFlexAPI.Connect: integer;
@@ -225,10 +276,13 @@ end;
 
 function TFlexAPI.NextSeq: integer;
 begin
-   // NOTE: Called only from the main (UI) thread via SendFlexCmd.
-   // If SendFlexCmd is ever called from the reading thread, add a lock here.
-   Inc(FCmdSeq);
-   Result := FCmdSeq;
+   (* THREE THREADS ASK FOR A SEQUENCE NUMBER: the main thread (operator
+     commands), the reading thread (SendSubscriptions, on the H line) and the
+     polling thread (the issue-6 ping).  The old comment said "main thread
+     only", which had stopped being true when the subscriptions moved to the
+     H line.  An atomic increment, so two commands can never share a number.
+     Connect's reset to 0 runs on the polling thread before the link is up. *)
+   Result := InterlockedIncrement(FCmdSeq);
 end;
 
 function TFlexAPI.FlexCmdLine(const cmd: string): string;
@@ -278,8 +332,9 @@ begin
    //   info / meter list — not used by TR4W
    SendFlexCmd('sub slice all');
    SendFlexCmd('sub tx all');
-   // keepalive disable: radio will not enforce a ping timeout.
-   // See issue #856 for future improvement to keepalive enable + ping.
+   // keepalive disable: radio will not enforce a ping timeout.  TR4W pings
+   // anyway and detects silence itself (issue 6, FLEX_PING_COMMAND); switching
+   // to `keepalive enable` waits for a bench.
    SendFlexCmd('keepalive disable');
 end;
 

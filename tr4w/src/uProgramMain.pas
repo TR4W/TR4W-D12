@@ -238,6 +238,7 @@ uses
   uSpotAge,
   uRemMultWorkState,
   uScoreCellStyle,
+  uTotalsModeText,
   uEntryStatus,
   uRadioPanelState,
   uContestDates,

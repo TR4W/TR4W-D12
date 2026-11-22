@@ -22,12 +22,15 @@ Learn a small set of commands in a practice contest before adding more. These bi
 | **Alt+D** | Dupe check. |
 | **Alt+P** | Open Fkeys. |
 | **Alt+S** | CW speed. |
+| **Alt+K** | In CW mode, turn CW sending off or on. In Phone, Digital and FM modes, turn the voice keyer (DVK) off or on instead. The menu item reads **Toggle CW** or **Toggle Voice Keyer** to match the current mode. |
 | **Ctrl+U** | View packet spots. |
 | **Ctrl+Y** | Refresh band map. |
 | **Ctrl+T** | Repeat the saved POTA park exchange for another callsign. |
 | **Ctrl+Enter** | Log QSO without CW. |
 
 Ctrl+Enter is a logging action: check the call and exchange before using it. Function-key messages depend on your configuration; review their contents before transmitting.
+
+The function-key commands `TOGGLECW` and `CWENABLETOGGLE` behave the same way as Alt+K: they toggle CW in CW mode and the voice keyer in any other mode. The call-window commands `CWON` and `CWOFF` act on CW only, whatever the mode.
 
 ## Focus and menu shortcuts
 

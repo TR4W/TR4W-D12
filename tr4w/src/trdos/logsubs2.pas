@@ -250,12 +250,11 @@ function LogEntry(var RXData: ContestExchange; MyComputer: boolean;
   #100. LogContact calls it after the dupe and multiplier sheets are updated,
   so the band just worked drops out of "QSO needs" and "Mult needs" for that
   call. Nothing is refreshed for a peer's QSO (aMyComputer False: the strips
-  show what THIS operator is working) or while tail-ending (the strips
-  already show the NEXT call, and the logged call must not replace it).
+  show what THIS operator is working). The tail-ending case went with the
+  feature, 2026-11-22 (issue 60): nothing could ever set it.
   Public so a test can reach it without a database. *)
 procedure RefreshNeedsAfterLoggedQSO(const aCall: CallString;
-                                     aMyComputer: boolean;
-                                     aTailEnding: boolean);
+                                     aMyComputer: boolean);
 procedure SwapMultDisplay;
 procedure DeleteLastContact;
 //procedure MoveEditableLogIntoLogFile;
@@ -265,7 +264,6 @@ function SearchAndPounce: boolean;
 function FoundCommand(var SendString: Str160): boolean;
 procedure ShowPartialCallMults(const WindowString: CallString);
 procedure DupeCheckOnInactiveRadio(Tune: boolean);
-function GotExchange: boolean;
 procedure ProcessExchangeFunctionKey(ExtendedKey: Char);
 procedure ExitProgram(Ask: boolean);
 (* True when the radio's polling thread has STOPPED; False when the wait ran
@@ -1715,10 +1713,9 @@ begin
 end;
 
 procedure RefreshNeedsAfterLoggedQSO(const aCall: CallString;
-                                     aMyComputer: boolean;
-                                     aTailEnding: boolean);
+                                     aMyComputer: boolean);
 begin
-   if (not aMyComputer) or aTailEnding then
+   if not aMyComputer then
       begin
       Exit;
       end;
@@ -1957,7 +1954,6 @@ begin
      UpdateTenMinuteDate(rxData.band,rxData.Mode);
      end;
   //  if not DDX(VerifyContact) then RXData.QSOPoints := 0;
-     //  if not TailEnding then RemoveWindow(PossibleCallWindow);
   //  if Trace then Write('@');
   (* THE CONTEST, FETCHED ONCE PER QSO for the mobile rewrite and the two
     grid-square rover tests below -- M11 S6. The rewrite asked
@@ -2236,14 +2232,13 @@ begin
      over the view, and nothing is decided here about any bonus. *)
     //  if Trace then Write('&');
   if MyComputer then
-    if not TailEnding then
-       begin
-             UpdateStationStatus(RXData.Callsign, -1);
-       end;
+     begin
+     UpdateStationStatus(RXData.Callsign, -1);
+     end;
   (* AFTER THE SHEETS ABOVE HAVE THE QSO -- issue #100. This is where D7 left
     a commented-out ShowStationInformation; see RefreshNeedsAfterLoggedQSO
     for the two cases it leaves alone. *)
-  RefreshNeedsAfterLoggedQSO(RXData.Callsign, MyComputer, TailEnding);
+  RefreshNeedsAfterLoggedQSO(RXData.Callsign, MyComputer);
   if ContestHasDomesticMultiplier(contestRules) and                               // Gav 4.44.8   uncommented section
     (Settings.Mult.ByBand or Settings.Mult.ByMode) and
     (RXData.DomesticQTH <> '') then
@@ -2921,334 +2916,11 @@ begin
           end; { of case }
   until False;
 end;
-function GotExchange: boolean;
-{ This function takes care of putting up the exchange menu and operator
-  I/O until an exchange is entered or an escape to quit.  A true response
-  means that a good exchange has been found.  If the big + key is used to
-  enter the exchange instead of a return, the flag QuickQSL is set true. }
-label
-  ControlEnterCommand1, ControlEnterCommand2;
-
-begin
-  //    OpMode := CQOpMode;
-  GotExchange := False;
-  QuickQSL := NoQuickQSLKey;
-  //    TailEnding  := False;
-  LookingForCQExchange := True;
-  //   if ReminderPostedCount = 0 then
-  QuickDisplay(TC_ENTEREXCHANGEPRESSENTERLOGESCAPEAB);
-  if ActiveMode = CW then
-     begin
-     PutUpExchangeMenu;
-     end;
-  //  if K1EANetworkEnable then DisplayMultiMessages;
-     //    SaveSetAndClearActiveWindow (ExchangeWindow);
-  if ExchangeWindowString = '' then
-     begin
-     {
-    if ReadInLog then
-      ExchangeWindowString := ReadInLogExchange
-    else
-    begin
-      tSetExchWindInitExchangeEntry;
-    end;
-}
-     end;
-  {KK1L: 6.73 I want to add a space in front of the InitialExchange for K9PG. I do this in InitialExchangeEntry.}
-  {GetRidOfPrecedingSpaces (ExchangeWindowString);}
-//  DDX(SendExchange);
-  if DualingCQState = WaitingForCallsignInput then
-     begin
-     DualingCQState := DualSendingExchange;
-     end;
-  //{WLI}    IF Settings.Log.WithSingleEnter THEN
-  begin
-    if ParametersOkay(CallWindowString,
-      ExchangeWindowString,
-      ActiveBand,
-      ActiveMode,
-      ActiveRadioPtr.LastDisplayedFreq {LastDisplayedFreq[ActiveRadio]},
-      ReceivedData) then
-       begin
-       GotExchange := True;
-         //            RemoveWindow (ExchangeWindow);
-       LookingForCQExchange := False;
-       Exit;
-       end;
-  end;
-  { We are now ready to accept input.  The CQ EXCHANGE is being sent,
-    all of the windows are setup and we are ready to go }
-  if (ActiveMode = CW) and Settings.Cq.AlwaysCallBlind then
-     begin
-     SendExchangeKeyWhenCWHasStopped := F7;
-     end;
-end;
-procedure OperateContest;
-var
-//MTotals                               : MultTotalArrayType;
-  TempKey                               : AnsiChar;
-  RememberInactiveCQ                    : boolean;
-  RememberTime                          : QWord {TimeRecord};   // GetTickCount64
-  begin
-//  ReadInConfigFile('');
-  if Settings.SayHi.Enable then
-     begin
-     DisplayNamePercentage({TotalNamesSent + VisibleLog.NumberNamesSentInEditableLog, TotalContacts});
-     end;
-  DisplayRadio(ActiveRadio);
-  DisplayTotalScore {(TotalScore)};
-  ClearContestExchange(ReceivedData);
-  SetUpToSendOnActiveRadio;
-  repeat
-    SeventyThreeMessageSent := False;
-    ExchangeHasBeenSent := False;
-//wli    LogBadQSOString := '';
-    if TailEnding then
-       begin
-       PreviousQSOReceivedData := ReceivedData;
-       CallsignICameBackTo := TailEndCallString;
-       CallWindowString := TailEndCallString;
-         //wli            ClrScr;
-       Write(CallWindowString);
-       ClearContestExchange(ReceivedData);
-       ExchangeWindowString := '';
-       end
-    else
-       begin
-       //      Sheet.MultSheetTotals(MTotals);
-             UpdateTotals2;
-             if ReceivedData.DomesticMult or ReceivedData.DXMult or ReceivedData.ZoneMult then
-                begin
-                VisibleLog.ShowRemainingMultipliers;
-                end;
-             if ReceivedData.DomesticMult then
-                begin
-                VisibleLog.DisplayGridMap(ActiveBand, ActiveMode);
-                end;
-             ClearContestExchange(ReceivedData);
-             GetInitialCall;
-             WindowDupeCheckCall := CallsignICameBackTo;
-       end;
-    if (ActiveMode = CW) and (not TailEnding) and (not CallAlreadySent) then
-       begin
-       if Settings.Message.Enable and not BeSilent then
-         if not (DebugFlag and (Config.CWTone = 0)) then
-            begin
-            AddStringToBuffer(CallsignICameBackTo, Config.CWTone);
-            end;
-       CallAlreadySent := True;
-       end;
-//    if (ActiveMode = Digital) and (not CallAlreadySent) then
-//      StartRTTYTransmission(CallsignICameBackTo + ' ');
-    if DualingCQState = DualSendingCQ then
-       begin
-       //wli            SwapRadios;
-     DualingCQState := DualSendingExchange;
-       end;
-    {??????? ??????  ??????????? ? returnCQopMode}
-    if Settings.AutoDupe.EnableCq and
-      VisibleLog.CallIsADupe(CallsignICameBackTo, ActiveBand, ActiveMode) then
-       begin
-        //            if ReminderPostedCount = 0 then
-//      QuickDisplay(CallsignICameBackTo + ' is a dupe!!');
-      if Settings.Operating.DupeCheckSound <> DupeCheckNoSound then
-         begin
-         DoABeep(ThreeHarmonics);
-         end;
-      ShowName(CallsignICameBackTo);
-      DisplayCountryName(CallsignICameBackTo);
-      DisplayUserInfo(CallsignICameBackTo);
-      if ActiveMode = CW then
-         begin
-         if Settings.Qtc.Enable then
-            begin
-            DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)));
-            if NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)) < 10 then
-               begin
-               if Settings.Qtc.Enable and (MyContinent = Europe) then
-                  begin
-                  AddStringToBuffer(' B4 ', Config.CWTone);
-                            //wli                            WAEQTC (CallWindowString);
-                  end
-               else
-                 if Settings.Message.Enable and not BeSilent then
-                           //wli                                SendCrypticMessage (Settings.Messages.QsoBeforeCw);
-               end
-            else
-              if Settings.Message.Enable and not BeSilent then
-                      //wli                            SendCrypticMessage (Settings.Messages.QsoBeforeCw);
-            end
-         else
-           if Settings.Message.Enable and not BeSilent then
-                 //wli                        SendCrypticMessage (Settings.Messages.QsoBeforeCw);
-             if DualingCQState <> NoDualingCQs then
-                begin
-                DualingCQState := SendingDupeMessage;
-                end;
-         end;
-      if ActiveMode = Digital then
-         begin
-         FinishRTTYTransmission(UTF8Encode(Settings.Messages.QsoBeforeCw));
-         end;
-      if ActiveMode = Phone then
-         begin
-         //wli                SendCrypticMessage (Settings.Messages.QsoBeforeSsb);
-     Write(' DUPE!!');
-     EscapeDeletedCallEntry := CallWindowString;
-     CallWindowString := '';
-     if Settings.Qtc.Enable then
-        begin
-        DisplayQTCNumber(NumberQTCsThisStation(StandardCallFormat(CallWindowString, False)))
-        end
-     else
-        begin
-        MarkTime(RememberTime);
-        repeat
-          UpdateTimeAndRateDisplays(True, True);
-          Packet.CheckPacket;
-        until ElaspedSec100(RememberTime) >= 30;
-              //wli                    ClrScr;
-        end;
-         end;
-      if Settings.DupeSheet.AutoDisplayQso then
-         begin
-         ShowPreviousDupeQSOs(CallsignICameBackTo, ActiveBand, ActiveMode);
- //        EditableLogDisplayed := True;
-         end;
-      if TailEnding then
-         begin
-         //        ReceivedData.ceSearchAndPounce := False;
-     LogContact(PreviousQSOReceivedData, True);
-     TailEnding := False;
-         end;
-      (* Not for General QSO, a log -- ShowsContestStatus, M9b. *)
-      if ContestIdentity(Contest).ShowsContestStatus then
-         begin
-         VisibleLog.ShowMultiplierStatus(CallsignICameBackTo);
-         VisibleLog.ShowQSOStatus(CallsignICameBackTo);
-         end;
-      DisplayUserInfo(CallsignICameBackTo);
-      DisplayBeamHeading(CallsignICameBackTo, '');
-    end
-    else { not a dupe or not AutoDupeEnable }
-       begin
-       if Settings.Message.Enable and not BeSilent then
-         if not (DebugFlag and (Config.CWTone = 0)) then
-             //wli                    AddOnCQExchange;
-            begin
-            ShowName(CallsignICameBackTo);
-            end;
-       DisplayGridSquareStatus(CallsignICameBackTo);
-       DisplayUserInfo(CallsignICameBackTo);
-       DisplayBeamHeading(CallsignICameBackTo, '');
-       DisplayCountryName(CallsignICameBackTo);
-       if Settings.Qtc.Enable then
-          begin
-          DisplayQTCNumber(NumberQTCsThisStation(CallWindowString));
-          end;
-       (* Not for General QSO, a log -- ShowsContestStatus, M9b. *)
-       if ContestIdentity(Contest).ShowsContestStatus then
-          begin
-          VisibleLog.ShowMultiplierStatus(CallWindowString);
-          VisibleLog.ShowQSOStatus(CallWindowString);
-          end;
-       VisibleLog.DoPossibleCalls(CallWindowString);
-       if TailEnding then
-          begin
-          //        ReceivedData.ceSearchAndPounce := False;
-      LogContact(PreviousQSOReceivedData, True);
-      TailEnding := False;
-          end;
- //      if K5KA.ModeEnabled then DupeCheckOnInactiveRadio(False);
-       if GotExchange then
-          begin
-          if TailEnding then
-             begin
-             TailEndCallString := '';
-                   //wli                    SendCorrectCallIfNeeded;
-         //    if Settings.Message.Enable then AddStringToBuffer(TailEndMessage + ' ', Config.CWTone);
-             repeat
-               repeat until NewKeyPressed;
-               TempKey := AnsiChar(UpCase(NewReadKey));
-               if TempKey <> CarriageReturn then
-                 if ValidCallCharacter(Char(TempKey)) or (TempKey = '?') then
-                    begin
-                    if Settings.Message.Enable then
-                       begin
-                       AddStringToBuffer(TempKey, Config.CWTone);
-                       end;
-                    TailEndCallString := TailEndCallString + TempKey;
-                    end;
-             until TempKey = CarriageReturn;
-             if TailEndCallString = '' then
-                begin
-                TailEnding := False;
-                        //            ReceivedData.ceSearchAndPounce := False;
-                LogContact(ReceivedData, True);
-                end;
-             end
-          else
-             begin
-             if ActiveMode = CW then
-                begin
-                RememberInactiveCQ := InactiveRigCallingCQ;
-                        //wli                        SendCorrectCallIfNeeded;
-                if not (DebugFlag and (Config.CWTone = 0)) then
-                   begin
-                   if Settings.Message.Enable and not (BeSilent or TailEnding) then
-                     if QuickQSL <> NoQuickQSLKey then
-                        begin
-                        if QuickQSL = QuickKey1 then
-                                      //wli                                        SendCrypticMessage (Settings.Messages.QuickQslCw1)
-                        else
-                                      //wli                                        SendCrypticMessage (Settings.Messages.QuickQslCw2);
-                        end
-                     else
-                       if ExchangeInformation.Age then
-                          begin
-                          if ReceivedData.Age = {'00'} 0 then
-                             begin
-                             Send88Message
-                             end
-                          else
-                                        //wli                                            Send73Message;
-                          end
-                       else
-                                   //wli                                        Send73Message;
-                          begin
-                          InactiveRigCallingCQ := RememberInactiveCQ;
-                          end;
-                   end;
-                end
-             else
-               if Settings.Message.Enable and not BeSilent then
-                  begin
-                  if QuickQSL <> NoQuickQSLKey then
-                            //wli                                SendCrypticMessage (Settings.Messages.QuickQslSsb)
-                  else
-                            //                                Send73Message;
-                  end;
-             if DualingCQState = DualGettingExchange then
-                begin
-                DualingCQState := DualSendingQSL;
-                end;
-             BeSilent := False;
-             if not TailEnding then
-                begin
-                //            ReceivedData.ceSearchAndPounce := False;
-        LogContact(ReceivedData, True);
-                end;
-             end;
-          end
-       else
-         if Settings.Cw.SpeedFromDatabase and (RememberCWSpeed > 0) then
-            begin
-            SetSpeed(RememberCWSpeed);
-            RememberCWSpeed := 0;
-            end;
-       end;
-  until False;
-end;
+(* GotExchange AND OperateContest -- the DOS main loop and its exchange
+  prompt -- WERE DELETED 2026-11-22 (issue 60). Nothing called
+  OperateContest, here or in D7, and GotExchange's one caller was
+  OperateContest; the loop was the only code that ever set TailEnding, so the
+  tail-end key could not work in a Windows TR4W. *)
 (* ONE RECORD -- notes and QTC records (AddRecordToLogAndSendToNetwork, the
   network arm). The operator's QSOs go through LogContact's submission, which
   calls tAddQSOsToLog itself (issue 347). *)

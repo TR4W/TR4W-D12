@@ -75,7 +75,22 @@ const
       (Menu: Ord(WBE); Text: 'WARC band')
       );
   }
-procedure TuneRadioToSpot(Spot: TSpotRecord; Radio: RadioType);
+(* Tunes to the spot and, unless the spot is a CQ/NEW marker or goes to the
+  inactive radio, puts its call in the call window. TRUE when it put the call
+  there -- the one case BAND MAP CLICK GOES TO EXCHANGE acts on (issue 185).
+  A caller that does not care ignores the result. *)
+function TuneRadioToSpot(Spot: TSpotRecord; Radio: RadioType): boolean;
+
+(* ISSUE 185, PURE: the cursor goes to the EXCHANGE window after a spot tune
+  only when the operator turned BAND MAP CLICK GOES TO EXCHANGE on AND the
+  tune put the spot's call in the call window. Otherwise it stays in the call
+  window, which is D7's behaviour and the default. *)
+function SpotTuneFocusesExchange(aOptionOn, aCallPlaced: boolean): boolean;
+
+(* Puts the cursor where SpotTuneFocusesExchange says, for this setting:
+  the exchange window, or the call window. aCallPlaced is TuneRadioToSpot's
+  answer. *)
+procedure FocusEntryAfterSpotTune(aCallPlaced: boolean);
 
 var
   // WHAT IS LEFT.  Everything else that stood here -- the list box and status bar
@@ -132,7 +147,24 @@ begin
   BroadcastLookupForCall(CallWindowString);
 end;
 
-procedure TuneRadioToSpot(Spot: TSpotRecord; Radio: RadioType);
+function SpotTuneFocusesExchange(aOptionOn, aCallPlaced: boolean): boolean;
+begin
+   Result := aOptionOn and aCallPlaced;
+end;
+
+procedure FocusEntryAfterSpotTune(aCallPlaced: boolean);
+begin
+   if SpotTuneFocusesExchange(Settings.BandMap.ClickGoesToExchange, aCallPlaced) then
+      begin
+      tExchangeWindowSetFocus;
+      end
+   else
+      begin
+      tCallWindowSetFocus;
+      end;
+end;
+
+function TuneRadioToSpot(Spot: TSpotRecord; Radio: RadioType): boolean;
 var
   EntryBand: BandType;
   EntryMode: ModeType;
@@ -141,6 +173,7 @@ var
 const
   MAX_QZB_OFFSET = 30;
 begin
+  Result := False;
   QZBOffset := 0; // 4.92.4
   if (OpMode = SearchAndPounceOpMode) then
      begin
@@ -266,8 +299,9 @@ begin
        begin
        PutCallToCallWindow(Spot.FCall);
        ShowClickedSpotInformation(Spot);
+       Result := True;
        end;
-  
+
 
   if not Settings.Qso.ByMode then
      begin
@@ -278,6 +312,13 @@ begin
     VisibleLog.CallIsADupe(CallWindowString, EntryBand, EntryMode)
     ));
 
+  (* ISSUE 185: the call window was focused above, before the call went in;
+    with BAND MAP CLICK GOES TO EXCHANGE on, the cursor moves on to the
+    exchange window. Focus only -- the exchange is not filled (option A). *)
+  if SpotTuneFocusesExchange(Settings.BandMap.ClickGoesToExchange, Result) then
+     begin
+     tExchangeWindowSetFocus;
+     end;
 end;
 end.
 

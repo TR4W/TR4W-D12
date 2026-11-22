@@ -1019,7 +1019,9 @@ end;
 procedure TfrmBandMap.SpotsDblClick(Sender: TObject);
 var
    spot: TSpotRecord;
+   callPlaced: boolean;
 begin
+   callPlaced := False;
    if not SelectedSpot(spot) then
       begin
       Exit;
@@ -1033,16 +1035,21 @@ begin
       ClearAltD;
       DupeInfoCall := spot.FCall;
       DupeCheckOnInactiveRadio(True);
+      (* The inactive radio: the operator stays in CQ on this one, so the
+        cursor stays in the call window whatever the option says -- callPlaced
+        is left False. *)
       TuneRadioToSpot(spot, InActiveRadio);
       SetOpMode(CQOpMode);
       end
    else
       begin
-      TuneRadioToSpot(spot, ActiveRadio);
+      callPlaced := TuneRadioToSpot(spot, ActiveRadio);
       end;
 
-   // Focus returns to the callsign window, as it did from LBN_DBLCLK.
-   tCallWindowSetFocus;
+   (* Focus returns to the callsign window, as it did from LBN_DBLCLK --
+     unless BAND MAP CLICK GOES TO EXCHANGE is on and the call went in
+     (issue 185). One decision, uBandmap's, so this does not undo it. *)
+   FocusEntryAfterSpotTune(callPlaced);
 end;
 
 { ON THE FORM, NOT ONLY ON THE GRID.

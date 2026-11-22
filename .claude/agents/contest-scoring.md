@@ -1059,9 +1059,9 @@ never the AltName) -- a change to the keying is a change to both readers.
 `mo` by `LOGEDIT.ShowNeedsForCall` -- the needs half of
 `ShowStationInformation`, ONE routine; do not copy its body. **`LogContact`
 asks it again** after the sheets have the QSO, through
-`LOGSUBS2.RefreshNeedsAfterLoggedQSO(call, MyComputer, TailEnding)`, which
-does nothing for a peer's QSO or while tail-ending (the strips already show
-the NEXT call). Until then nothing did: the post-log `ShowStationInformation`
+`LOGSUBS2.RefreshNeedsAfterLoggedQSO(call, MyComputer)`, which
+does nothing for a peer's QSO. (Its tail-ending parameter went with the
+tail-end feature, 2026-11-22, issue 60: `TailEnding` is deleted.) Until then nothing did: the post-log `ShowStationInformation`
 in `TryLogContact` met the `StationInformationCall` latch, which D7 e569269f
 (4.91.1, 2020) moved to be cleared only AFTER it, so the strips showed the
 bands from before the QSO. That dead call is deleted. **Do not move the latch

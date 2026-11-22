@@ -2329,34 +2329,33 @@ begin
         end;
      BeSilent := False;
 
-     if not TailEnding then
+     (* AN "if not TailEnding" STOOD AROUND THIS until 2026-11-22 (issue 60):
+       nothing could set the flag, so the block always ran. *)
+     // ReceivedData.ceSearchAndPounce := False;
+     (* NOT SAVED (2026-11-18, a full disk): the call and the exchange
+        stay as typed, and the status line keeps the reason TryLogContact
+        left on it -- nothing below runs. *)
+     TryLogContact;
+     if QSOSaveRefused then
         begin
-        // ReceivedData.ceSearchAndPounce := False;
-        (* NOT SAVED (2026-11-18, a full disk): the call and the exchange
-           stay as typed, and the status line keeps the reason TryLogContact
-           left on it -- nothing below runs. *)
-        TryLogContact;
-        if QSOSaveRefused then
-           begin
-           Exit;
-           end;
-        ShowStationInformation(ReceivedData.Callsign);
-        UpdateTotals2;
-
-        //{WLI}
-
-        EscapeDeletedCallEntry := CallWindowString;
-        tCleareCallWindow;
-        tCleareExchangeWindow;
-        tCallWindowSetFocus;
-        // sendmessage(CallWindowHandle,wm_setfocus,0,0);
-        // CallWindow . SetFocus;
-        if OnDeckCall <> '' then // 4.102.4
-           begin
-           PutCallToCallWindow(OnDeckCall);
-           end;
         Exit;
         end;
+     ShowStationInformation(ReceivedData.Callsign);
+     UpdateTotals2;
+
+     //{WLI}
+
+     EscapeDeletedCallEntry := CallWindowString;
+     tCleareCallWindow;
+     tCleareExchangeWindow;
+     tCallWindowSetFocus;
+     // sendmessage(CallWindowHandle,wm_setfocus,0,0);
+     // CallWindow . SetFocus;
+     if OnDeckCall <> '' then // 4.102.4
+        begin
+        PutCallToCallWindow(OnDeckCall);
+        end;
+     Exit;
      end
   else
      begin
@@ -8374,6 +8373,23 @@ begin
      Exit;
      end;
 
+  (* ENFORCE VALID CALLSIGN (issue 180, NY4I): off by default. When on, the
+    call's BASE -- the longest part around any '/' -- must be a DXCC entity
+    in CTY.DAT, or the QSO is refused here: the message on the status line,
+    NO beep (nobody hears one in headphones), and the entry stays as typed
+    because ParametersOkay returns False. Not asked in QSLAndLog mode above,
+    which logs whatever it is given, the same as the syntax check. *)
+  if EnforcedCallIsRefused(Settings.CallWindow.EnforceValidCallsign,
+                           string(RData.Callsign),
+                           CountryFileIsLoaded,
+                           CallIsACountryFileEntity) then
+     begin
+     logger.Info('[ParametersOkay] %s refused: ENFORCE VALID CALLSIGN, base call %s is not in the country file',
+                 [string(RData.Callsign), LongestCallPart(string(RData.Callsign))]);
+     QuickDisplay(UnicodeFormat(SCallNotAKnownEntity, [string(RData.Callsign)]));
+     Exit;
+     end;
+
   RData.Band := Band;
   RData.Mode := Mode;
   if RData.ExtMode = eNoMode then
@@ -11118,7 +11134,7 @@ begin
     menu_cmd_cwon:
       begin
       SetCWState(True, False);
-      QuickDisplay('CW On');
+      QuickDisplay(SCallWindowCWOn);
       end;
     menu_cmd_exit: ProcessMenu(menu_exit);
     menu_cmd_note: ProcessMenu(menu_ctrl_note);

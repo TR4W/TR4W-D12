@@ -206,11 +206,6 @@ begin
           begin
             QSONumber := NextSerialToSend;  // Issue #954
 
-            if TailEnding then
-               begin
-               inc(QSONumber);
-               end;
-
             if Settings.Operating.AutoQsoNumberDecrement then
               //              if (ActiveWindow = CallWindow) and
 //              if tr4w_CallWindowActive and

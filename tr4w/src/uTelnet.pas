@@ -94,6 +94,13 @@ procedure AddStringToTelnetConsole(p: string; c: TelnetStringType);
 procedure ReportTelnetTrouble(const aReason: string);
 procedure EnableTelnetToolbatButtons(b: boolean);
 procedure ProcessTelnetLine(const Line: AnsiString);
+(* ONE LINE OF AN SH/DX REPLY (issue 69): True when the line is one. With
+  InListBox it only decodes into TempSpot (the console double-click, which
+  tunes whatever the operator clicked, however old). Otherwise the spot is
+  band-mapped from ITS OWN date and time unless it is already older than BAND
+  MAP DECAY TIME. See uDXSpotParse.ParseSHDXLine. *)
+function ProcessSHDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
+  TelnetStringType): boolean;
 function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 (* THE "YOU ARE SPOTTED" NOTICE, NAMING THE SPOTTER (issue 68): where the
@@ -794,6 +801,11 @@ begin
         begin
         TuneRadioToSpot(TempSpot, RadioOne);
         end;
+     end
+  else if ProcessSHDX(TelnetLine, True, StringType) then
+     begin
+     // A line of an SH/DX reply (issue 69) tunes like a spot's own line.
+     TuneRadioToSpot(TempSpot, RadioOne);
      end;
 end;
 
@@ -1787,6 +1799,12 @@ begin
   if Copy(Line, 1, 6) = 'DX de ' then
      begin
      AddedSpot := ProcessDX(Line, False, StringType);
+     end
+  else
+     begin
+     // An SH/DX reply line (issue 69). Not "AddedSpot": that gates the AUTOSPOT
+     // tuning test code, and a history is not a spot that just arrived.
+     ProcessSHDX(Line, False, StringType);
      end;
 
   // The wire->display edge: one decode, here, of one complete line.
@@ -1835,37 +1853,12 @@ begin
 
 end;
 
-// Decode ONE complete cluster line and apply it to the running program.
-//
-// The DECODE half now lives in uDXSpotParse: it is a pure function of the line,
-// so it links into the unit-test EXE and is pinned there (uTestDXSpotParse).
-// What is left here is everything that needs the running program and therefore
-// cannot -- the log (dupe and multiplier), the spot list, the alert list box,
-// the display and the clock.  That mixture is exactly why the decoder had no
-// test for as long as the two halves shared a function.
-function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
-  TelnetStringType): boolean;
-var
-  ct: TDateTime;   { now, UTC -- see the stamping block below }
-  { Held across the SendMessageA below -- see the note there. }
-  alertCall: AnsiString;
+(* THE LOG'S OPINION OF A DECODED SPOT, shared by a live spot (ProcessDX) and
+  a line of an SH/DX reply (ProcessSHDX) so the two cannot drift: the band and
+  mode, the dupe flag, and the multiplier / worked-multiplier flags, all on
+  TempSpot, and the console colour they imply in Stringtype. *)
+procedure ClassifyTempSpot(var Stringtype: TelnetStringType);
 begin
-  Result := False;
-  Stringtype := tstReceived;
-
-  if not ParseDXSpotLine(Line, TempSpot) then
-     begin
-     Exit;
-     end;
-
-  // The telnet window's list box wants the decoded fields only: no log lookup,
-  // no band map, no alerting.  This was a `goto 1` past the whole apply half.
-  if InListBox then
-     begin
-     Result := True;
-     Exit;
-     end;
-
   GetBandMapBandModeFromFrequency(TempSpot.FFrequency, TempSpot.FBand,
     TempSpot.FMode);
 
@@ -1905,6 +1898,99 @@ begin
      begin
      TempSpot.FWorkedMult := False;
      end;
+end;
+
+function ProcessSHDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
+  TelnetStringType): boolean;
+var
+  SpotUTC: TDateTime;
+  Now_: TDateTime;
+  Existing: integer;
+begin
+  Result := False;
+  Stringtype := tstReceived;
+
+  if not ParseSHDXLine(Line, TempSpot, SpotUTC) then
+     begin
+     Exit;
+     end;
+  Result := True;
+
+  // The console double-click: the decoded fields only, however old the spot.
+  if InListBox then
+     begin
+     Exit;
+     end;
+
+  // AGED FROM ITS OWN TIME, NOT FROM ARRIVAL (NY4I, issue 69, 2026-11-22). A
+  // reply carries a full UTC date and time, so the HHMM objection that makes a
+  // live spot age from arrival does not apply; stamped at arrival, a history of
+  // fifty spots hours old would all look fresh. A spot already older than BAND
+  // MAP DECAY TIME is not loaded at all. The line is still shown, and still
+  // double-clickable: Result stays True.
+  Now_ := UTCNow;
+  if not HistorySpotIsLive(SpotUTC, Now_, Settings.BandMap.DecayTime) then
+     begin
+     Exit;
+     end;
+
+  ClassifyTempSpot(Stringtype);
+
+  TempSpot.FSysTime := SpotUTC;
+  TempSpot.FAgeSeconds := SpotAgeSeconds(TempSpot);
+
+  // A reply lists newest first, but the store keeps ONE spot per frequency and
+  // a later add REPLACES it: do not let an older reply entry overwrite a newer
+  // spot (live, or a newer line of this same reply) already on that frequency.
+  if SpotsList.FindSpot(TempSpot, Existing) then
+     begin
+     if SpotsList.Get(Existing).FSysTime >= SpotUTC then
+        begin
+        Exit;
+        end;
+     end;
+
+  // No "spotted by another station" notice, no alert-list beep: those are for
+  // a spot made just now. And SendToNetwork False: the other stations were
+  // sent these when they were live, and a reply must not be shared again.
+  if not TempSpot.FDupe then
+     begin
+     SpotsList.AddSpot(TempSpot, False);
+     end;
+end;
+
+// Decode ONE complete cluster line and apply it to the running program.
+//
+// The DECODE half now lives in uDXSpotParse: it is a pure function of the line,
+// so it links into the unit-test EXE and is pinned there (uTestDXSpotParse).
+// What is left here is everything that needs the running program and therefore
+// cannot -- the log (dupe and multiplier), the spot list, the alert list box,
+// the display and the clock.  That mixture is exactly why the decoder had no
+// test for as long as the two halves shared a function.
+function ProcessDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
+  TelnetStringType): boolean;
+var
+  ct: TDateTime;   { now, UTC -- see the stamping block below }
+  { Held across the SendMessageA below -- see the note there. }
+  alertCall: AnsiString;
+begin
+  Result := False;
+  Stringtype := tstReceived;
+
+  if not ParseDXSpotLine(Line, TempSpot) then
+     begin
+     Exit;
+     end;
+
+  // The telnet window's list box wants the decoded fields only: no log lookup,
+  // no band map, no alerting.  This was a `goto 1` past the whole apply half.
+  if InListBox then
+     begin
+     Result := True;
+     Exit;
+     end;
+
+  ClassifyTempSpot(Stringtype);
 
   // WHEN IT ARRIVED, NOT WHEN THE SPOTTER SAYS IT WAS MADE.
   //

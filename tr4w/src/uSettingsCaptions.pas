@@ -91,6 +91,7 @@ resourcestring
    RS_OPERATING_AUTORETURNTOCQ                = 'Return to CQ mode after logging';
    RS_OPERATING_ESCAPEEXITSSAP                = 'Escape leaves search and pounce';
    RS_OPERATING_LEAVECURSORINCALL             = 'Leave the cursor in the call window';
+   RS_OPERATING_ENFORCEVALIDCALLSIGN          = 'Refuse a QSO whose call is not in the country file';
    RS_OPERATING_LOGWITHSINGLEENTER            = 'Log with a single Enter';
    RS_OPERATING_SPACEBARDUPECHECK             = 'Space bar performs a dupe check';
    RS_OPERATING_CONFIRMEDITCHANGES            = 'Confirm before saving an edited QSO';
@@ -114,6 +115,7 @@ resourcestring
    RS_SCP_WILDCARDPARTIALS                    = 'Allow wildcards in a partial';
    RS_SCP_NAMEFLAG                            = 'Flag a station whose name is known';
    RS_BANDMAP_CALLWINDOWSHOWALLSPOTS          = 'Show every spot in the call window';
+   RS_BANDMAP_CLICKGOESTOEXCHANGE             = 'After tuning to a spot, put the cursor in the exchange window';
    RS_BANDMAP_SWAPPACKETSPOTRADIOS            = 'Send spots to the other radio';
    RS_BANDMAP_WORKEDMULTCOLOR                 = 'Color of the M on a spot whose multiplier wants a backup';
    RS_BANDMAP_WORKEDMULTLIMIT                 = 'Workings of a multiplier before its spot shows no M';

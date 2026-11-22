@@ -944,6 +944,24 @@ Abutting cells each draw a frame, so the line between them is 2 px. This
 mechanism was rejected on the Mac in 2026-09 with a fixed colour (`uElementPanel`'s
 bevel note), and the verdict on this one is on `BENCH_QUEUE.md`.
 
+## Multipliers by mode share one totals cell (issue 55, NY4I's option (a), 2026-11-22)
+
+The totals grid stays four rows. Where `Settings.Mult.ByMode`, each multiplier
+row shows every mode that is ACTIVE or has QSOs and is credited
+(`ContestCreditsModeKey`), in the QSO rows' order (CW, phone, digital), folded by
+the sheet's slot (`MultiplierSheetMode`; Louisiana's digital is CW):
+`CW/Ph Dom` over `12/6`. **One list serves both passes**:
+`uTotal.ChooseTotalsMultModes` fills it in `UpdateTotals2`, and
+`WriteMultRowLabel` / `WriteMultRowValue` read it, so a label and its numbers
+cannot name different modes (`DisplayBandTotals`' only caller is
+`UpdateTotals2`; a second caller must call `ChooseTotalsMultModes` first). The
+wording is the leaf `uTotalsModeText` (unit tested): one mode is exactly the old
+cell, a zero beside a count is written, all zeros are blank, and the label joins
+the tags in front of the word the contest's `CW x` / `Ph x` captions share, else
+the contest's all-modes caption. **Do not add a fit rule**: the cell's own
+`FitCaption` shrinks and logs; `uTestTotalsModeText` measures `123/456` in the
+All column at `WS_MIN` through a real `TElementPanel`.
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.
