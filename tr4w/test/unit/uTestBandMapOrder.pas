@@ -42,6 +42,8 @@ type
       procedure Test_TextSize_RowAndColumnNeverShrinkBelowTheSettings;
       procedure Test_TextSize_GrowsWithTheText;
       procedure Test_TextSize_Step;
+      procedure Test_FollowsRadio_ModeChangeAtSameFrequency;
+      procedure Test_AClusterSpotOn14240IsBand20Phone;
    public
       procedure RunAllTests; override;
    end;
@@ -49,6 +51,8 @@ type
 implementation
 
 uses
+   VC,
+   logwind,   (* GetBandMapBandModeFromFrequency, BandMapModeCutoffFrequency *)
    uBandMapOrder;
 
 procedure TBandMapOrderTests.Test_AngularDistance_WrapsAtNorth;
@@ -406,8 +410,51 @@ begin
    CheckEquals(0, SteppedBandMapSize(0, 0, -4, 12), 'no step is no change');
 end;
 
+procedure TBandMapOrderTests.Test_FollowsRadio_ModeChangeAtSameFrequency;
+begin
+   BeginTest('Test_FollowsRadio_ModeChangeAtSameFrequency');
+   (* The K4 sequence of 2026-11-22: frequency first, mode a poll later. *)
+   CheckTrue(BandMapFollowsRadio(0, 14230000, 14230000, True),
+             'no frequency move, mode differs: follow');
+   CheckTrue(BandMapFollowsRadio(30000, 14230000, 18097000, False),
+             'frequency moved to a new place: follow');
+   CheckFalse(BandMapFollowsRadio(0, 14230000, 14230000, False),
+              'nothing changed: do not follow');
+   CheckFalse(BandMapFollowsRadio(30000, 14230000, 14230000, False),
+              'moved but already at the cursor: do not follow');
+   CheckFalse(BandMapFollowsRadio(30000, 0, 14230000, True),
+              'a radio that reports no frequency never moves the map');
+end;
+
+(* A CLUSTER SPOT AT 14240.0 IS 20 m PHONE (NY4I, 2026-11-22: the radio was on
+  14.230 SSB and no spot showed). The spot's mode comes from its FREQUENCY
+  alone, so with the band map on 20 m Phone the filter must pass it. *)
+procedure TBandMapOrderTests.Test_AClusterSpotOn14240IsBand20Phone;
+var
+   savedCutoff: LongInt;
+   band: BandType;
+   mode: ModeType;
+begin
+   BeginTest('Test_AClusterSpotOn14240IsBand20Phone');
+   savedCutoff := BandMapModeCutoffFrequency[Band20];
+   BandMapModeCutoffFrequency[Band20] := 14100000;
+   try
+      band := NoBand;
+      mode := NoMode;
+      GetBandMapBandModeFromFrequency(14240000, band, mode);
+      CheckEquals(Ord(Band20), Ord(band), '14240.0 is on 20 m');
+      CheckEquals(Ord(Phone), Ord(mode), '14240.0 is above the 14100 cutoff: Phone');
+      GetBandMapBandModeFromFrequency(14025000, band, mode);
+      CheckEquals(Ord(CW), Ord(mode), '14025.0 is below the cutoff: CW');
+   finally
+      BandMapModeCutoffFrequency[Band20] := savedCutoff;
+   end;
+end;
+
 procedure TBandMapOrderTests.RunAllTests;
 begin
+   Test_AClusterSpotOn14240IsBand20Phone;
+   Test_FollowsRadio_ModeChangeAtSameFrequency;
    Test_AngularDistance_WrapsAtNorth;
    Test_AngularDistance_NeverPastHalfTurn;
    Test_AngularDistance_OutOfRangeInputs;

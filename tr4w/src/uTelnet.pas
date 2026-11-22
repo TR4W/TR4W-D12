@@ -1900,6 +1900,20 @@ begin
      end;
 end;
 
+(* The outcome word for a [Spot] Debug line: a dupe is shown on the console but
+  never stored. *)
+function SpotOutcomeText(aDupe: boolean): string;
+begin
+  if aDupe then
+     begin
+     Result := 'REFUSED(dupe)';
+     end
+  else
+     begin
+     Result := 'ACCEPTED';
+     end;
+end;
+
 function ProcessSHDX(const Line: AnsiString; InListBox: boolean; var Stringtype:
   TelnetStringType): boolean;
 var
@@ -1931,6 +1945,11 @@ begin
   Now_ := UTCNow;
   if not HistorySpotIsLive(SpotUTC, Now_, Settings.BandMap.DecayTime) then
      begin
+     // Debug, and only after a successful parse: a banner or prompt never
+     // reaches here, so the log is not flooded.
+     logger.Debug('[Spot] REFUSED sh/dx %s %s: age %d s is not under BAND MAP DECAY TIME %d min (or is in the future)',
+        [string(TempSpot.FCall), string(TempSpot.FFreqString),
+         AgeSeconds(SpotUTC, Now_), Settings.BandMap.DecayTime]);
      Exit;
      end;
 
@@ -1946,6 +1965,8 @@ begin
      begin
      if SpotsList.Get(Existing).FSysTime >= SpotUTC then
         begin
+        logger.Debug('[Spot] REFUSED sh/dx %s %s: a newer spot is already on that frequency',
+           [string(TempSpot.FCall), string(TempSpot.FFreqString)]);
         Exit;
         end;
      end;
@@ -1957,6 +1978,10 @@ begin
      begin
      SpotsList.AddSpot(TempSpot, False);
      end;
+  logger.Debug('[Spot] %s sh/dx %s %d Hz band=%d mode=%d age=%d s (map band=%d mode=%d)',
+     [SpotOutcomeText(TempSpot.FDupe), string(TempSpot.FCall),
+      TempSpot.FFrequency, Ord(TempSpot.FBand), Ord(TempSpot.FMode),
+      TempSpot.FAgeSeconds, Ord(BandMapBand), Ord(BandMapMode)]);
 end;
 
 // Decode ONE complete cluster line and apply it to the running program.
@@ -2026,6 +2051,10 @@ begin
      begin
      SpotsList.AddSpot(TempSpot, True);
      end;
+  logger.Debug('[Spot] %s live %s %d Hz band=%d mode=%d (map band=%d mode=%d)',
+     [SpotOutcomeText(TempSpot.FDupe), string(TempSpot.FCall),
+      TempSpot.FFrequency, Ord(TempSpot.FBand), Ord(TempSpot.FMode),
+      Ord(BandMapBand), Ord(BandMapMode)]);
 
   (* THE Win32 BOUNDARY THAT WAS HERE IS GONE, not fixed a second time.
 

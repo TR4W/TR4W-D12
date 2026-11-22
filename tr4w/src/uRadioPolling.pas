@@ -44,6 +44,7 @@ uses
    MainUnit,
    SysUtils,
    LogWind,
+   uBandMapOrder,   (* BandMapFollowsRadio *)
    LogStuff,
    LogK1EA,
    IdUDPClient, // ny4i 4.44.9
@@ -1358,8 +1359,11 @@ begin
          RequestMainThreadJob(mtBandModeDisplay);
          end;
 
-      if ((dif > 0) and ((rig.FilteredStatus.Freq <> BandMapCursorFrequency)
-         or (BandMapMode <> ActiveMode)) and (rig.FilteredStatus.Freq <> 0)) then
+      (* A mode change at an unchanged frequency follows too -- see
+        uBandMapOrder.BandMapFollowsRadio (NY4I, 2026-11-22). *)
+      if BandMapFollowsRadio(dif, rig.FilteredStatus.Freq,
+                             BandMapCursorFrequency,
+                             BandMapMode <> ActiveMode) then
          // Gav 4.47.4 #015
          begin
          (* The call window is the main thread's (issue #108): publish the
@@ -1367,8 +1371,7 @@ begin
          InterlockedExchange(gCallOnFrequencyHz, rig.FilteredStatus.Freq);
          RequestMainThreadJob(mtBandMapCallOnFrequency);
          BandMapCursorFrequency := rig.FilteredStatus.Freq;
-         BandMapBand := ActiveBand;
-         BandMapMode := ActiveMode;
+         SetBandMapBandMode(ActiveBand, ActiveMode, 'active radio poll');
          SpotsList.RequestRepaint; // the VFO moved -- a VIEW change, not a list change; coalesced via the 250ms timer � avoids flash on every VFO poll
          end;
       end
@@ -1409,8 +1412,8 @@ begin
          (rig.FilteredStatus.Freq <> 0) then
          // Gav 4.47.4 #015
          begin
-         BandmapBand := rig.FilteredStatus.Band;
-         BandMapMode := rig.FilteredStatus.Mode;
+         SetBandMapBandMode(rig.FilteredStatus.Band, rig.FilteredStatus.Mode,
+                            'inactive radio poll');
          VisibleDupeSheetChanged := True;
          BandMapCursorFrequency := rig.FilteredStatus.Freq;
          SpotsList.RequestRepaint; // the VFO moved -- a VIEW change, not a list change; coalesced via the 250ms timer � avoids flash on every VFO poll

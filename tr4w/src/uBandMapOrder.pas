@@ -140,6 +140,21 @@ function BandMapColumnWidth(const aItemWidth, aSize: integer): integer;
 (* One step of the Text size menu: aSize + aDelta held inside aMin..aMax. *)
 function SteppedBandMapSize(const aSize, aDelta, aMin, aMax: integer): integer;
 
+(* SHOULD THE BAND MAP'S BAND AND MODE BE RE-TAKEN FROM THE ACTIVE RADIO NOW
+  (uRadioPolling, once per poll). aFreqDelta is the move since the last poll,
+  aRadioFreq the radio's frequency, aCursor the frequency the map last followed,
+  aMapModeDiffers whether the map's mode is not the active mode.
+
+  A MODE CHANGE AT THE SAME FREQUENCY MUST COUNT. The gate used to be
+  "the frequency moved" for both arms, and a K4 that reports the new
+  frequency (still in its old mode) and then the new mode a poll later
+  left the map on the old mode for good: the window said 20SSB, the map
+  said Digital, and every 20 m phone spot failed the mode filter
+  (NY4I, 2026-11-22, log 12:38:42 band 7->3 mode 1->1, then 12:38:43 mode
+  1->2 at the same 14230000). No frequency, no follow. *)
+function BandMapFollowsRadio(const aFreqDelta, aRadioFreq, aCursor: integer;
+                             const aMapModeDiffers: boolean): boolean;
+
 implementation
 
 uses
@@ -358,6 +373,14 @@ begin
       begin
       Result := aMin;
       end;
+end;
+
+function BandMapFollowsRadio(const aFreqDelta, aRadioFreq, aCursor: integer;
+                             const aMapModeDiffers: boolean): boolean;
+begin
+   Result := (aRadioFreq <> 0) and
+             (((aFreqDelta > 0) and (aRadioFreq <> aCursor)) or
+              aMapModeDiffers);
 end;
 
 end.
