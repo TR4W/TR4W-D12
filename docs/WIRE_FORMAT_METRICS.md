@@ -49,6 +49,34 @@ times for JSON full, JSON omit and TLV. So "omit blanks, checksum the record"
 works as NY4I proposed, and the checksum is what separates *nothing to say* from
 *lost*.
 
+## The receiver in another language, on another machine (Python)
+
+`tr4w/test/bench/wire_check.py` is an **independent receiver**: it knows the
+canonical rule from the comment at the top of the file, not from the Pascal
+code. Run `bench_wire_formats.exe <corpus> 1 <outdir>` to write the frames
+(length-prefixed files plus `fields.json`), then `python wire_check.py <outdir>`.
+Nothing is sent over a network; this is step 1 of two, and the server's real
+framing is not involved.
+
+Same 1,855 frames, decode plus checksum recompute, microseconds per record:
+
+| format     | Windows PC, Python 3.12 | Raspberry Pi 400, Python 3.11 (aarch64) |
+| ---------- | ----------------------: | --------------------------------------: |
+| JSON full  |                    24.5 |                                   122.1 |
+| JSON omit  |                    19.9 |                                    96.6 |
+| TLV        |                    16.4 |                                    72.0 |
+
+- **The checksum agrees across languages and machines**: every frame verified
+  (0 failures) in all three formats on both, and 152,016 of 152,016 dropped
+  fields (3 formats x 50,672) were detected. Pascal and Python build the same
+  canonical stream.
+- **In Python the formats are closer than in Pascal** (TLV 72 us versus JSON omit
+  97 us on the Pi, where Pascal was 6 versus 23). The checksum itself is a
+  Python loop over all 69 fields and is the same cost for every format, so it
+  dominates TLV. A server that cared would compute the CRC incrementally or in C.
+- **The Pi is about 4-5x slower than the PC.** At ~100 us a record a burst of
+  300 QSOs decodes in ~30 ms on a Pi 400. Speed still does not decide this.
+
 ## What this does and does not say
 
 - JSON that omits blanks is **larger than today's binary** (116%); only TLV

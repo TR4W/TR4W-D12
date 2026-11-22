@@ -86,6 +86,7 @@ type
 
 var
    gFreq: Int64 = 0;
+   gOutDir: string = '';   (* where RunSet writes frames; '' = nowhere *)
    aTotJF: Int64 = 0;   (* total full-JSON bytes, across sets *)
 
 (* THE CLOCK, as bench_callsign and bench_enter_latency: QueryPerformanceCounter
@@ -445,6 +446,57 @@ begin
    end;
 end;
 
+(* One frame: a 4-byte little-endian length, then the bytes. *)
+procedure WriteFrame(aStream: TStream; const aData; aLen: integer);
+var
+   len: LongWord;
+begin
+   len := LongWord(aLen);
+   aStream.WriteBuffer(len, 4);
+   aStream.WriteBuffer(aData, aLen);
+end;
+
+procedure WriteFrameText(aStream: TStream; const aText: string);
+var
+   u: UTF8String;
+begin
+   u := UTF8Encode(aText);
+   WriteFrame(aStream, u[1], Length(u));
+end;
+
+(* The field list, in tag order, for the receiver: [{"name":..,"num":..}, ...]
+  Tag i is the i-th entry (1-based). A zero record gives every name. *)
+procedure WriteFieldList(const aPath: string);
+var
+   z: ContestExchange;
+   c: TFieldCollector;
+   a: TJSONArray;
+   o: TJSONObject;
+   i: integer;
+   sl: TStringList;
+begin
+   FillChar(z, SizeOf(ContestExchange), 0);
+   c := TFieldCollector.Create;
+   a := TJSONArray.Create;
+   sl := TStringList.Create;
+   try
+      EmitFields(z, c);
+      for i := 1 to c.Count do
+         begin
+         o := TJSONObject.Create;
+         o.Add('name', c.Name[i]);
+         o.Add('num', c.IsNum[i]);
+         a.Add(o);
+         end;
+      sl.Text := a.AsJSON;
+      sl.SaveToFile(aPath);
+   finally
+      sl.Free;
+      a.Free;
+      c.Free;
+   end;
+end;
+
 procedure RunSet(const aName, aDb: string; aRepeat: integer;
                  var aTotQ, aTotJ, aTotT: Int64; var aTotTrials, aTotCaught, aTotBad: Int64);
 var
@@ -454,6 +506,7 @@ var
    recs: array of ContestExchange;
    n, i, pass, f: integer;
    c: TFieldCollector;
+   fJF, fJ, fT: TFileStream;
    buf, buf2: TByteBuf;
    js: string;
    tl: integer;
@@ -503,7 +556,16 @@ begin
    end;
 
    c := TFieldCollector.Create;
+   fJF := nil;
+   fJ := nil;
+   fT := nil;
    try
+      if gOutDir <> '' then
+         begin
+         fJF := TFileStream.Create(gOutDir + PathDelim + aName + '.jsonfull', fmCreate);
+         fJ := TFileStream.Create(gOutDir + PathDelim + aName + '.jsonomit', fmCreate);
+         fT := TFileStream.Create(gOutDir + PathDelim + aName + '.tlv', fmCreate);
+         end;
       sumJ := 0;
       sumJF := 0;
       sumT := 0;
@@ -527,6 +589,12 @@ begin
          inc(sumJ, Length(js));
          inc(sumJF, Length(jf));
          inc(sumT, tl);
+         if fT <> nil then
+            begin
+            WriteFrameText(fJF, jf);
+            WriteFrameText(fJ, js);
+            WriteFrame(fT, buf2[0], tl);
+            end;
 
          DecodeJson(jf, c, vals, sent);
          if (sent <> crcFull) or (RecordCrc(vals, c.Count, 0, buf) <> crcFull) then
@@ -666,6 +734,9 @@ begin
       inc(aTotCaught, caught);
       inc(aTotBad, bad);
    finally
+      fJF.Free;
+      fJ.Free;
+      fT.Free;
       c.Free;
    end;
 end;
@@ -696,6 +767,15 @@ begin
    if ParamCount >= 2 then
       begin
       repeatCount := StrToIntDef(ParamStr(2), 3);
+      end;
+   (* Third argument: a folder to write the encoded frames into, for
+     wire_check.py (a receiver in another language). Empty: write nothing. *)
+   gOutDir := '';
+   if ParamCount >= 3 then
+      begin
+      gOutDir := ExpandFileName(ParamStr(3));
+      ForceDirectories(gOutDir);
+      WriteFieldList(gOutDir + PathDelim + 'fields.json');
       end;
 
    WriteLn('bench_wire_formats: corpus ', corpusDir, ', ', repeatCount, ' timing passes');
