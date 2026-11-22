@@ -15,7 +15,7 @@ touches `settings-config` (WINDOW SIZE), `i18n` (a retired setting's caption),
 2. The minimum log is **3 rows** (b3). It is the window's MinHeight since e5:
    `MAIN_LOG_MINIMUM_ROWS = 3`, with the start layout `MAIN_LOG_START_ROWS =
    5` kept as a separate constant.
-3. ws stays **13..27** (`uMainLayout.WS_MIN` / `WS_MAX`).
+3. ws was **13..27**; WS_MAX raised to 43 on 2026-11-21 so a wide window scales up (revert if unwanted) (`uMainLayout.WS_MIN` / `WS_MAX`).
 4. **Container bands (e5) come BEFORE scaling (e4).**
 
 **So the order is: e0, e1, e2, then e5 (with e3 folded into it), e4, e6.**

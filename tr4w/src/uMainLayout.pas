@@ -48,9 +48,9 @@ uses
    VC;
 
 const
-   (* THE SCALE RANGE: WindowSize 1..15, plus 12. NY4I kept it (2026-11-21). *)
+   (* THE SCALE RANGE: WindowSize 1..15, plus 12, up to 43 so a wide window scales up (NY4I, 2026-11-21: "at least lets see it"). *)
    WS_MIN = 13;
-   WS_MAX = 27;
+   WS_MAX = 43;
 
    (* The width of the layout, in ws. *)
    LAYOUT_COLUMNS = 46;
