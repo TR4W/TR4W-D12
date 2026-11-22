@@ -129,6 +129,11 @@ of the step-1 copy; the step-2 listener port has not been tested.
 5. **Edits are complete snapshots** (reset, then overlay), never a patch. An
    absent field means blank, not "unchanged" -- otherwise an operator clearing a
    field would be lost.
-6. **Open:** which fields are REQUIRED (absence is an error, not a default);
-   how the server rebuilds its flat record, if it keeps one, from named fields;
-   the checksum's per-record role versus today's whole-log CRC32.
+6. **No required-field list on the wire.** The client we control decides what
+   goes on the wire, and the rule that matters (no contact is logged without a
+   callsign) is enforced where the contact is logged. This is not a population
+   of arbitrary senders: the version gate admits only our own clients, and the
+   checksum proves what arrived is what was sent. A server-side required-field
+   check would be a second copy of the logging rule, free to drift from it.
+7. **Open:** how the server rebuilds its flat record, if it keeps one, from
+   named fields; the checksum's per-record role versus today's whole-log CRC32.
