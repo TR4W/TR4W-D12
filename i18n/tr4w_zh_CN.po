@@ -11808,3 +11808,8 @@ msgstr ""
 #, fuzzy
 msgid "Last log backup FAILED: retried every %d min. See tr4w.log."
 msgstr ""
+
+#: uappstrings.slogchangenotsaved
+#, fuzzy
+msgid "NOT SAVED -- the contest log did not take this change. See tr4w.log."
+msgstr ""

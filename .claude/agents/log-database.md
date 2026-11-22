@@ -1287,6 +1287,58 @@ must not make the log unreadable.
   `uQTCS` marks a QTC through `LogStoreUpdateQSOAtIndex` with no status-line
   refusal (logged only).
 
+## A CHANGE TO A LOGGED QSO IS "SAVED" ONLY WHEN IT IS COMMITTED (issue 349, 2026-11-22)
+
+`docs/QSO_LOG_INTEGRITY_REVIEW.md` finding 3. Edit QSO and Alt-Y called
+store PROCEDURES that answered nothing, and posted to the external loggers,
+UDP, HamScore and the multi-op server BEFORE the write.
+
+- **`LogStoreUpdateNewestQSO` and both `LogStoreUpdateQSOAtIndex` overloads
+  are FUNCTIONS now**: True only after `Commit` returned, with the intended
+  row changed (`TLogRepository.UpdateQSO`'s `RowsAffected > 0` on the
+  primary key, and `UpdateQSOMyFacts`'s when facts are written). Every other
+  ending is False: disabled, read-only, no row at that position or an empty
+  log, a failed write or COMMIT (`Disable` as before). Callers that ignore
+  the answer still compile (Delphi mode); none of the OPERATOR paths does.
+- **An UPDATE that changed no row is rolled back** (`AbandonUnchangedUpdate`
+  -> `RollBackAfterBusy`): the statement began a write transaction, and it
+  must not sit holding the lock until the next `BeginMainWrite` commits it.
+  `LogStoreUpdateQSOBySessionIds` does the same when no row matches.
+- **`LogStoreUpdateQSOBySessionIds` answered True when its COMMIT raised**
+  (the result was the match, assigned before `Commit`) -- the R2 defect
+  again. True is assigned after the commit now.
+- **Callers, classified.** OPERATOR: `uEditQSO.SaveQSOToEditableLog` reads
+  what the event carries (station, sent exchange, second domestic key)
+  BEFORE the write, writes, and only on True posts `PostQsoEvent`, sends
+  `NET_EDITEDQSO_ID`, rescores; False shows `LogStoreChangeNotSavedText`,
+  beeps, and returns False so the form stays open with its fields.
+  `logsubs2.DeleteLastContact` (Alt-Y) writes first; only on True flips
+  `tLastLogEntryIsDeleted`, posts, sends, reloads and shows the message.
+  BULK/PEER: `uQTCS` sends the QTC mark to the server only after a True and
+  logs a False; `uNet.FindAndUpdateQSOInLog` already rescored only on True;
+  the rescore (`LogStoreUpdateQSOsByRowId`) already returned a checked
+  boolean.
+- **`LogStoreChangeNotSavedText`** (`SLogChangeNotSaved`) is the status line
+  for a change; `LogStoreNotSavedText` keeps "NOT LOGGED ... do not clear
+  the entry" for a new QSO. One body, `NotSavedTextOr`, for the read-only
+  lines of both.
+- **No busy retry on an update** (an append tries `LOG_WRITE_ATTEMPTS`
+  times). `BeginMainWrite` removes the stale-snapshot cause; a busy update is
+  refused through `Disable`'s busy branch and the edit window stays open for
+  another Save.
+- **Pins**: `uTestLogStore.TestAChangeWhoseCommitFailsIsNotReportedSaved`
+  (the R2 deferred-foreign-key COMMIT trap on `qso`, AFTER INSERT and AFTER
+  UPDATE, added after the migration because the v11 rebuild refuses a
+  trigger on `qso`; insert, edit, delete, restore and a peer's edit each
+  answer False and the file is unchanged). `max_page_count` is NOT a usable
+  injection for an update: an in-place rewrite needs no new page.
+  `uTestAutomaticXQSO.Test_AChangeIsAnnouncedOnlyAfterItsCommit` reads both
+  operator paths for the order.
+- **Not done**: Alt-Y rewrites `NewestRowId` and does not check that it is
+  the row `LogSourceReadFromEnd(1)` returned (both on the main thread, so no
+  interleaving is known). The rollback of an unchanged update, like any
+  commit, closes the datasets on the transaction.
+
 ## A TAKEN NEW-CONTEST LOG NAME GETS A NUMBER, NEVER AN OVERWRITE (issue 276, 2026-11-11)
 
 NY4I: an automatic numeric suffix, and never offer to overwrite. CW Open runs

@@ -79,6 +79,9 @@ type
       (* 2026-11-18: a QSO the log would not take keeps the entry and the
          status line's reason (read from the source). *)
       procedure Test_ARefusedSaveKeepsTheEntryAndItsReason;
+      (* Issue 349 (2026-11-22): Edit QSO's save and Alt-Y announce a change
+         only after the log has committed it (read from the source). *)
+      procedure Test_AChangeIsAnnouncedOnlyAfterItsCommit;
       (* 2026-11-18: ARRL Sweepstakes CW and Phone each credit only their own
          mode (sponsor rule 2.4); NY4I saw CW QSOs scored in SS Phone. *)
       procedure Test_SweepstakesCreditsOnlyItsOwnMode;
@@ -824,6 +827,56 @@ begin
              'and leaves before the several-QTH loop');
 end;
 
+(* ISSUE 349 (2026-11-22): AN EDIT, A DELETE OR A RESTORE IS ANNOUNCED ONLY
+   AFTER THE LOG HAS COMMITTED IT. Edit QSO's save and Alt-Y posted to the
+   external loggers, UDP and HamScore, and sent the change to the multi-op
+   server, BEFORE the store's write -- which answered nothing -- and Alt-Y
+   flipped its delete state first too. Neither can be driven headless, so this
+   READS them: the write is asked first, its answer is acted on, and a False
+   leaves before anything is said to anyone. uTestLogStore pins the store's
+   answer itself. *)
+procedure TAutomaticXQSOTests.Test_AChangeIsAnnouncedOnlyAfterItsCommit;
+var
+   text, body: string;
+   p, e, w, x: integer;
+begin
+   BeginTest('Test_AChangeIsAnnouncedOnlyAfterItsCommit');
+
+   (* UEDITQSO.SaveQSOToEditableLog. *)
+   text := SourceText('uEditQSO.pas');
+   p := Pos('function SaveQSOToEditableLog: boolean;' + sLineBreak + 'label', text);
+   CheckTrue(p > 0, 'SaveQSOToEditableLog is found');
+   e := PosEx('function CheckSystemTimeRecord(', text, p);
+   CheckTrue(e > p, 'and its end');
+   body := Copy(text, p, e - p);
+   w := Pos('saved := LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData', body);
+   CheckTrue(w > 0, 'the edit''s write is asked, and its answer kept');
+   x := PosEx('if not saved then', body, w);
+   CheckTrue(x > w, 'the answer is acted on');
+   CheckTrue(PosEx('Result := False;', body, x) < PosEx('Exit;', body, x),
+             'a refused write answers False, so the window stays open');
+   CheckTrue(Pos('LogStoreChangeNotSavedText', body) > x, 'and says why');
+   CheckTrue(x < Pos('PostQsoEvent(', body), 'before any UDP, logger or HamScore notice');
+   CheckTrue(x < Pos('SendRecordToServer(', body), 'and before the server is told');
+   CheckTrue(x < Pos('RescoreLog;', body), 'and before the rescore');
+
+   (* LOGSUBS2.DeleteLastContact (Alt-Y). *)
+   text := SourceText('trdos' + PathDelim + 'logsubs2.pas');
+   p := Pos('procedure DeleteLastContact;' + sLineBreak + 'var', text);
+   CheckTrue(p > 0, 'DeleteLastContact is found');
+   e := PosEx('function WaitForPollingThreadFlag(', text, p);
+   CheckTrue(e > p, 'and its end');
+   body := Copy(text, p, e - p);
+   w := Pos('if not LogStoreUpdateNewestQSO(TempRXData) then', body);
+   CheckTrue(w > 0, 'Alt-Y asks the write and acts on its answer');
+   CheckTrue(Pos('LogStoreChangeNotSavedText', body) > w, 'a refusal says why');
+   CheckTrue(w < Pos('InvertBoolean(tLastLogEntryIsDeleted);', body),
+             'the delete state flips only after the commit');
+   CheckTrue(w < Pos('PostQsoEvent(', body), 'and the notices go only after it');
+   CheckTrue(w < Pos('SendRecordToServer(', body), 'and the server is told only after it');
+   CheckTrue(w < Pos('ShowMessage(p);', body), 'and so is the operator');
+end;
+
 (* LOG SCHEMA 10 -- THE READERS READ THE STORED RULE (NY4I, 2026-11-19).
 
   A CW QSO is logged under CQ WW SSB's rule: stamped off-contest, and every
@@ -993,6 +1046,7 @@ end;
 procedure TAutomaticXQSOTests.RunAllTests;
 begin
    Test_ARefusedSaveKeepsTheEntryAndItsReason;
+   Test_AChangeIsAnnouncedOnlyAfterItsCommit;
    Test_ASharedSerialAdvancesTheNextByOne;
    Test_TheMultiCountyDrainKeepsOneSerial;
    Test_TheContestsRuleMakesAnXQSO;

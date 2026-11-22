@@ -328,6 +328,15 @@ invented text. A `NET_EDITEDQSO` edit changes the QSO's fields and leaves
 the station and the sent exchange as they were. Nothing here changed the
 wire or `uNet`. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` section 12h.
 
+**An outgoing `NET_EDITEDQSO_ID` is sent only AFTER the log committed the
+change (issue 349, 2026-11-22)** -- Edit QSO's save, Alt-Y's delete/restore,
+and the QTC mark in `uQTCS`, together with the dispatcher's edited/deleted
+events (`PostQsoEvent`). They used to go before a store write that answered
+nothing. And an INCOMING edit's `FindAndUpdateQSOInLog` True now means
+COMMITTED: `LogStoreUpdateQSOBySessionIds` answered True when its commit
+raised, and now also rolls back an UPDATE that matched no row. Detail:
+`log-database.md`, "A CHANGE TO A LOGGED QSO".
+
 ## Worker threads and the log-compare record (pointer audit P1/P2, 2026-10-16)
 
 `uNet.ConnectThread` and `uGetServerLog.CatchUpThread` (it was `RunSyncThread`)

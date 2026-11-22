@@ -379,10 +379,21 @@ begin
            The three sites that legitimately mean "the newest" all seek
            FILE_END; this one never did. *)
         TempRXData.ceNeedSendToServerAE := True;
-        LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData);
-        if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
+        (* THE SERVER HEARS OF THE MARK ONLY ONCE IT IS IN THE LOG (issue
+           349). A mark the log did not take is logged (the store has said
+           why) and not sent; the QTC itself has gone, so the scan goes on. *)
+        if LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData) then
            begin
-           Sleep(50);
+           if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
+              begin
+              Sleep(50);
+              end;
+           end
+        else
+           begin
+           logger.Warn('[QTC] the "sent in a QTC" mark on record %d (%s) was ' +
+                       'NOT saved; not sent to the server',
+                       [RecordIndex, string(TempRXData.Callsign)]);
            end;
         if SignedQSOs = QTCWasSend then
            begin

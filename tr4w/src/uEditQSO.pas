@@ -586,6 +586,8 @@ var
   editedMyFacts: TQsoMyFacts;
   storedFacts: TQsoMyFacts;
   storedSent: AnsiString;
+  editedSecondKey: integer;
+  saved: boolean;
 begin
   Result := True;
 
@@ -940,6 +942,98 @@ begin
      The operator's flag above is never written from it. *)
   StampOffContest(EditableQSORXData);
 
+  (* WHAT THE EDIT EVENT CARRIES IS READ NOW, BEFORE THE WRITE, and the event
+     is posted only AFTER THE COMMIT (issue 349). This posted to the external
+     loggers, UDP and HamScore, and sent the edit to the multi-op server,
+     before the store was asked -- and the store answered nothing, so a write
+     that failed was announced everywhere as made. The reads stay here so the
+     event is exactly what it was: the stored station and sent exchange as
+     the row holds them, and the multiplier sheet as it stood. *)
+  editedSecondKey := 0;
+  if (not EditableQSORXData.ceQSO_Deleted) and (not EditableQSORXData.ceXQSO) then
+     begin
+     (* THE EDITED QSO DESCRIBES THE STATION IT RECORDED, not today's settings
+       (issue 95; Q13: an edit changes only what was edited). Our station is
+       what the save will leave -- the recorded one, or the operator's own
+       correction -- and the sent exchange is the row's exchange_sent. *)
+     LogSourceReadStationAtIndex(IndexInMap, storedFacts, storedSent);
+     (* ITS SECOND DOMESTIC KEY (issue #318) as the sheet stood when it was
+        logged: the rows before it replayed, then the record as edited. *)
+     editedSecondKey := AdditionalDomesticMultipliersOfLoggedQSO(IndexInMap, EditableQSORxData);
+     end;
+
+  (* THE `if not OpenLogFile then Exit` THAT STOOD HERE DISCARDED EVERY EDIT.
+
+    OpenLogFile is CreateFileA(TR4W_LOG_FILENAME, ..., OPEN_EXISTING) -- it
+    opens the BINARY .TRW. This build does not create one, so on any contest
+    started under it the call returned False and this routine RETURNED, before
+    SendRecordToServer and before LogStoreUpdateQSOAtIndex. Nothing was written
+    and nothing was said: the dialog closed as though it had saved.
+
+    FOUND FROM A BENCH REPORT, not from a test (NY4I, 2026-09-02): X-QSO would
+    not stick. It was never about X-QSO -- no field of any edited QSO was ever
+    saved, and X-QSO is simply the one he tried. The directory listing is what
+    gave it away: a .db, a -wal, a -shm and NO .TRW.
+
+    IT WAS A GATE ON A FILE THIS ROUTINE NO LONGER USES. The seek-and-write it
+    once guarded was removed when the store moved (see the note below); the
+    guard outlived the code it guarded, which is the failure mode of a check
+    kept "just in case" after its subject is gone.
+
+    AND IT LEAKED. On a station that still HAD a .TRW the call succeeded, set
+    the global LogHandle, and nothing here ever closed it -- a handle per edit.
+
+    THE LogSourceClose THAT FOLLOWED IT IS GONE TOO. It closed a source this
+    routine never opened: LoadQSOIntoEditForm opens and closes its own around
+    the read (uEditQSO.pas:169-179), so this was unbalanced in the other
+    direction. LogStoreUpdateQSOAtIndex opens what it needs. *)
+
+  (* THE ROW IS STORED DIRTY, so the server hears of the edit even when no
+     link is up now: the flag is cleared when the packet reaches the socket
+     (uNet.SettleServerProgress). Set before the write, which stores it. *)
+  EditableQSORXData.ceNeedSendToServerAE := True;
+
+  (* NO DIVISION ANY MORE, AND THAT DIVISION WAS A BUG.
+
+     This read `IndexInMap div SizeOf(ContestExchange)` to turn a byte offset
+     back into a record position. SizeOfTLogHeader and SizeOf(ContestExchange)
+     are BOTH 376 bytes, so the offset of record k is (k + 1) * 376 and the
+     division returned k + 1: every edit updated the row AFTER the one the
+     operator was editing. Both stores held a QSO the operator never touched,
+     and the one they did edit kept its old values.
+
+     IndexInMap is the record index itself now, so there is nothing to
+     convert. *)
+  (* OUR STATION IS WRITTEN ONLY WHEN THE OPERATOR CHANGED IT, marked
+    edited, with the QSO, in one transaction. Left alone, the row keeps
+    exactly what it had, its source included: an edit changes only what was
+    edited (Q13). *)
+  editedMyFacts := MyFactsAsSaved;
+  if MyFactsNeedWriting(editedMyFacts) then
+     begin
+     saved := LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData, editedMyFacts);
+     end
+  else
+     begin
+     saved := LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
+     end;
+
+  (* NOT COMMITTED: NOTHING IS SAID TO ANYONE, AND THE WINDOW STAYS OPEN with
+     the operator's changes in it (issue 349). The store has logged why, and
+     a failure that made the log read-only or stood it down has had its one
+     modal; the status line says it again, as a refused QSO does. False keeps
+     the form open (btnSaveClick, HandleCloseQuery). *)
+  if not saved then
+     begin
+     QuickDisplay(LogStoreChangeNotSavedText);
+     DoABeep(Warning);
+     logger.Warn('[EditQSO] the edit to record %d was NOT saved; nothing was ' +
+                 'sent to the network, the external loggers, UDP or HamScore',
+                 [IndexInMap]);
+     Result := False;
+     Exit;
+     end;
+
   // Deleted QSOs send a contactdelete only.
   // Edited (non-deleted) QSOs send a contactreplace so consumers update in place.
   if EditableQSORXData.ceQSO_Deleted then
@@ -970,71 +1064,15 @@ begin
      // separate connections (DXKeeper reads one command per connection), and
      // the re-log is sent only if the delete succeeds.
      // Issue #783 -- HamScore RTC: send <contactreplace> next cycle.
-     (* THE EDITED QSO DESCRIBES THE STATION IT RECORDED, not today's settings
-       (issue 95; Q13: an edit changes only what was edited). Our station is
-       what the save will leave -- the recorded one, or the operator's own
-       correction -- and the sent exchange is the row's exchange_sent. *)
-     LogSourceReadStationAtIndex(IndexInMap, storedFacts, storedSent);
-     (* ITS SECOND DOMESTIC KEY (issue #318) as the sheet stood when it was
-        logged: the rows before it replayed, then the record as edited. *)
+     (* The station, sent exchange and second key were read before the
+        write, above. *)
      PostQsoEvent(qmEdited, EditableQSORxData, MyFactsAsSaved, storedSent,
-                  AdditionalDomesticMultipliersOfLoggedQSO(IndexInMap, EditableQSORxData),
-                  UDPBroadcaster.Enabled(usContact), True);
+                  editedSecondKey, UDPBroadcaster.Enabled(usContact), True);
      end;
 
-  (* THE `if not OpenLogFile then Exit` THAT STOOD HERE DISCARDED EVERY EDIT.
-
-    OpenLogFile is CreateFileA(TR4W_LOG_FILENAME, ..., OPEN_EXISTING) -- it
-    opens the BINARY .TRW. This build does not create one, so on any contest
-    started under it the call returned False and this routine RETURNED, before
-    SendRecordToServer and before LogStoreUpdateQSOAtIndex. Nothing was written
-    and nothing was said: the dialog closed as though it had saved.
-
-    FOUND FROM A BENCH REPORT, not from a test (NY4I, 2026-09-02): X-QSO would
-    not stick. It was never about X-QSO -- no field of any edited QSO was ever
-    saved, and X-QSO is simply the one he tried. The directory listing is what
-    gave it away: a .db, a -wal, a -shm and NO .TRW.
-
-    IT WAS A GATE ON A FILE THIS ROUTINE NO LONGER USES. The seek-and-write it
-    once guarded was removed when the store moved (see the note below); the
-    guard outlived the code it guarded, which is the failure mode of a check
-    kept "just in case" after its subject is gone.
-
-    AND IT LEAKED. On a station that still HAD a .TRW the call succeeded, set
-    the global LogHandle, and nothing here ever closed it -- a handle per edit.
-
-    THE LogSourceClose THAT FOLLOWED IT IS GONE TOO. It closed a source this
-    routine never opened: LoadQSOIntoEditForm opens and closes its own around
-    the read (uEditQSO.pas:169-179), so this was unbalanced in the other
-    direction. LogStoreUpdateQSOAtIndex opens what it needs. *)
-
-  EditableQSORXData.ceNeedSendToServerAE := True;
+  (* THE SERVER HEARS OF THE EDIT ONLY ONCE IT IS IN THE LOG (issue 349). *)
   SendRecordToServer(NET_EDITEDQSO_ID, EditableQSORXData);
 
-  (* NO DIVISION ANY MORE, AND THAT DIVISION WAS A BUG.
-
-     This read `IndexInMap div SizeOf(ContestExchange)` to turn a byte offset
-     back into a record position. SizeOfTLogHeader and SizeOf(ContestExchange)
-     are BOTH 376 bytes, so the offset of record k is (k + 1) * 376 and the
-     division returned k + 1: every edit updated the row AFTER the one the
-     operator was editing. Both stores held a QSO the operator never touched,
-     and the one they did edit kept its old values.
-
-     IndexInMap is the record index itself now, so there is nothing to
-     convert. *)
-  (* OUR STATION IS WRITTEN ONLY WHEN THE OPERATOR CHANGED IT, marked
-    edited, with the QSO, in one transaction. Left alone, the row keeps
-    exactly what it had, its source included: an edit changes only what was
-    edited (Q13). *)
-  editedMyFacts := MyFactsAsSaved;
-  if MyFactsNeedWriting(editedMyFacts) then
-     begin
-     LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData, editedMyFacts);
-     end
-  else
-     begin
-     LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData);
-     end;
   (* THE LOG EDIT WINDOW REFRESHES ITSELF NOW.
 
     This deleted a row out of the old Win32 dialog's listview and re-inserted

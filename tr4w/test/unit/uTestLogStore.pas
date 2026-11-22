@@ -120,6 +120,10 @@ type
          judged by THIS log's contest whatever byte the record carried; a
          .TRW migration is marked for the one-shot stamp. *)
       procedure TestAnAppendStoresTheContestsRule;
+      (* ISSUE 349 (2026-11-22): a write whose COMMIT fails answers False --
+         insert, edit, delete, restore and a peer's edit alike -- and the file
+         keeps what it had. *)
+      procedure TestAChangeWhoseCommitFailsIsNotReportedSaved;
       (* A raw connection on FDb holding the write lock, and its release. *)
       function HoldWriteLock: TObject;
       procedure ReleaseWriteLock(var aHolder: TObject);
@@ -2138,6 +2142,145 @@ begin
    end;
 end;
 
+(* ISSUE 349: THE STORE ANSWERS "SAVED" ONLY FOR A COMMITTED CHANGE, AND THE
+  SAME FIRST-WRITE FAILURE IS RUN AGAINST EVERY KIND OF CHANGE.
+
+  Edit QSO and Alt-Y used procedures that answered nothing, so a rewrite that
+  failed was announced as made; a peer's edit assigned its answer before the
+  COMMIT, so a commit that raised still answered True. Here the failure is
+  the COMMIT ITSELF -- the R2 trap (uTestOperatorCQMemory): triggers on qso
+  insert a row breaking a DEFERRED foreign key, which SQLite checks only at
+  commit. So each write is made inside its transaction and the commit
+  refuses it. The triggers are added after the migration (the schema-11
+  rebuild refuses a qso with a trigger) and before the store reopens, so its
+  statements are prepared with them.
+
+  For each of insert (an append), edit and delete (Edit QSO's rewrite by
+  position), restore (Alt-Y's rewrite of the newest row) and a peer's edit
+  (by network key): False, and the file through a connection of the test's
+  own still holds what it held. The commit failure stands the store down, as
+  every such failure does; the reset in between is the test's. Before the
+  trap, the same calls on a sound log answer True, and a position that names
+  no row answers False with the store still usable. *)
+procedure TLogStoreTests.TestAChangeWhoseCommitFailsIsNotReportedSaved;
+const
+   PEER_ID1 = 7;
+   PEER_ID2 = 424242;
+   SQL_NEWEST_DELETED = 'SELECT deleted FROM qso ORDER BY id DESC LIMIT 1';
+   SQL_FIRST_DELETED  = 'SELECT deleted FROM qso ORDER BY id LIMIT 1';
+var
+   binary: TStringList;
+   last, seed, rec: ContestExchange;
+   db: TLogDatabase;
+   total: integer;
+begin
+   BeginTest('issue 349: a change whose commit fails is NOT reported saved -- ' +
+             'insert, edit, delete, restore and a peer''s edit');
+
+   PrepareMigration(FIXTURE_SET);
+   binary := TStringList.Create;
+   try
+      ReadBinaryLog(binary, last);
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      (* SEEDS, ON A SOUND LOG: a peer's QSO with a network key, then deleted
+        through Alt-Y's rewrite -- both reported saved, because both commit. *)
+      seed := last;
+      seed.ceRecordKind := rkQSO;
+      seed.Callsign := 'N0PEER';
+      seed.id := 'test-349-peer';
+      seed.ceQSOID1 := PEER_ID1;
+      seed.ceQSOID2 := PEER_ID2;
+      seed.ceQSO_Deleted := False;
+      CheckTrue(LogStoreAppendQSO(seed), 'seed: the peer''s QSO is logged');
+      seed.ceQSO_Deleted := True;
+      CheckTrue(LogStoreUpdateNewestQSO(seed),
+                'a delete of the newest QSO that commits answers True');
+
+      (* A POSITION THAT NAMES NO ROW: nothing written, False, store usable. *)
+      rec := last;
+      CheckFalse(LogStoreUpdateQSOAtIndex(1000000, rec),
+                 'a rewrite of a position past the end answers False');
+      CheckTrue(LogStoreIsUsable, 'and the store stays usable');
+      LogStoreClose;
+
+      CheckEquals(1, ScalarFromFile(FDb, SQL_NEWEST_DELETED),
+                  'on disk: the committed delete is there');
+      CheckEquals(0, ScalarFromFile(FDb, SQL_FIRST_DELETED),
+                  'precondition: the first QSO is not deleted');
+      total := integer(ScalarFromFile(FDb, SQL_ALL_ROWS));
+
+      (* THE TRAP. *)
+      db := TLogDatabase.Create;
+      try
+         db.Open(FDb);
+         db.Connection.ExecuteDirect('CREATE TABLE commit_trap_parent (id INTEGER PRIMARY KEY)');
+         db.Connection.ExecuteDirect(
+            'CREATE TABLE commit_trap (parent_id INTEGER REFERENCES ' +
+            'commit_trap_parent(id) DEFERRABLE INITIALLY DEFERRED)');
+         db.Connection.ExecuteDirect(
+            'CREATE TRIGGER commit_trap_on_insert AFTER INSERT ON qso ' +
+            'BEGIN INSERT INTO commit_trap (parent_id) VALUES (-1); END');
+         db.Connection.ExecuteDirect(
+            'CREATE TRIGGER commit_trap_on_update AFTER UPDATE ON qso ' +
+            'BEGIN INSERT INTO commit_trap (parent_id) VALUES (-1); END');
+         db.Transaction.Commit;
+      finally
+         db.Free;
+      end;
+
+      (* INSERT. *)
+      CheckTrue(LogStoreEnsureOpen, 'insert: the store reopens the trapped log');
+      rec := last;
+      rec.Callsign := NEW_CALL;
+      rec.id := 'test-349-insert';
+      CheckFalse(LogStoreAppendQSO(rec), 'insert: a commit that fails answers False');
+      LogStoreForgetFailureForTests;
+      CheckEquals(total, ScalarFromFile(FDb, SQL_ALL_ROWS), 'insert: no row on disk');
+
+      (* EDIT -- Edit QSO's rewrite by position. *)
+      CheckTrue(LogStoreEnsureOpen, 'edit: the store reopens');
+      CheckTrue(LogSourceReadAtIndex(1, rec), 'edit: the QSO reads by its index');
+      rec.Callsign := 'N0EDIT';
+      CheckFalse(LogStoreUpdateQSOAtIndex(1, rec), 'edit: a commit that fails answers False');
+      LogStoreForgetFailureForTests;
+      CheckEquals(0, ScalarFromFile(FDb, 'SELECT COUNT(*) FROM qso WHERE callsign = ''N0EDIT'''),
+                  'edit: the file does not hold the edit');
+
+      (* DELETE -- Edit QSO's deleted box. *)
+      CheckTrue(LogStoreEnsureOpen, 'delete: the store reopens');
+      CheckTrue(LogSourceReadAtIndex(0, rec), 'delete: the QSO reads by its index');
+      rec.ceQSO_Deleted := True;
+      CheckFalse(LogStoreUpdateQSOAtIndex(0, rec), 'delete: a commit that fails answers False');
+      LogStoreForgetFailureForTests;
+      CheckEquals(0, ScalarFromFile(FDb, SQL_FIRST_DELETED),
+                  'delete: the file still holds the QSO undeleted');
+
+      (* RESTORE -- Alt-Y on the deleted newest QSO. *)
+      CheckTrue(LogStoreEnsureOpen, 'restore: the store reopens');
+      seed.ceQSO_Deleted := False;
+      CheckFalse(LogStoreUpdateNewestQSO(seed), 'restore: a commit that fails answers False');
+      LogStoreForgetFailureForTests;
+      CheckEquals(1, ScalarFromFile(FDb, SQL_NEWEST_DELETED),
+                  'restore: the file still holds the QSO deleted');
+
+      (* A PEER'S EDIT -- by network key. It answered True here before. *)
+      CheckTrue(LogStoreEnsureOpen, 'peer: the store reopens');
+      seed.Callsign := 'N0PEERX';
+      CheckFalse(LogStoreUpdateQSOBySessionIds(seed),
+                 'a peer''s edit whose commit fails answers False');
+      LogStoreForgetFailureForTests;
+      CheckEquals(0, ScalarFromFile(FDb, 'SELECT COUNT(*) FROM qso WHERE callsign = ''N0PEERX'''),
+                  'peer: the file does not hold the edit');
+      CheckEquals(total, ScalarFromFile(FDb, SQL_ALL_ROWS), 'and no change added a row');
+   finally
+      (* A commit failure disables the store; every later suite needs it. *)
+      LogStoreForgetFailureForTests;
+      binary.Free;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -2168,6 +2311,7 @@ begin
    TestADamagedLogStillStandsTheStoreDown;
    TestAFreedDiskRecoversWithoutARestart;
    TestAnAppendStoresTheContestsRule;
+   TestAChangeWhoseCommitFailsIsNotReportedSaved;
 end;
 
 end.

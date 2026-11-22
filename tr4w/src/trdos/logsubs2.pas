@@ -682,34 +682,28 @@ begin
      LogSourceClose;
      Exit;
      end;
+  (* THE TOGGLE IS WRITTEN FIRST, AND EVERYTHING ELSE WAITS FOR ITS COMMIT
+     (issue 349). This flipped tLastLogEntryIsDeleted, told the external
+     loggers, UDP and HamScore, and sent the server the change, and then asked
+     the store -- which answered nothing. A rewrite that failed was announced
+     everywhere, the "you have deleted" message said so, and the toggle state
+     no longer matched the log. *)
+  restoredFacts := NotCapturedMyFacts;
+  restoredSent := '';
   if tLastLogEntryIsDeleted then
      begin
-
      TempRXData.ceQSO_Deleted := False;
      p := TC_YOUHAVERESTOREDTHELASTDELETED;
-     // Issue #920 -- mirror restoration to HamScore as a (re-)contactinfo
-     // so the server sees the QSO come back with the same ID.
      (* A STORED QSO COMING BACK: it describes the station it recorded, not
-       today's settings (issue 95, Q13). It is the newest row. *)
+       today's settings (issue 95, Q13). It is the newest row. Read before
+       the write; the rewrite does not touch our station's columns. *)
      LogSourceReadNewestStation(restoredFacts, restoredSent);
-     (* NOT ON THE SHEET: the LoadinLog after its delete took it off, so the
-        sheet as it stands IS the sheet as it stood (issue #318). *)
-     PostQsoEvent(qmNew, TempRXData, restoredFacts, restoredSent,
-                  AdditionalDomesticMultipliersBeforeSheet(ActiveContest(Contest), TempRXData),
-                  UDPBroadcaster.Enabled(usContact), True);
      end
   else
      begin
      TempRXData.ceQSO_Deleted := True;
      p := TC_YOUHAVEDELETEDTHELASTLOGENTRY;
-     // Issue #920 -- mirror the deletion to HamScore via <contactdelete>.
-     // Previously only LogContact had a HamScore hook; ALT-Y deletes
-     // dropped silently from the server's view.
-     restoredFacts := NotCapturedMyFacts;
-     PostQsoEvent(qmDeleted, TempRXData, restoredFacts, '', 0,
-                  UDPBroadcaster.Enabled(usContact), True);
      end;
-  InvertBoolean(tLastLogEntryIsDeleted);
   (* Rewrites the newest row. The seek-and-write it replaces addressed the same
      record as "the last SizeOf(ContestExchange) bytes of the file". *)
   (* THE SERVER HAS TO HEAR OF THE DELETE (or the undelete), and the log says so
@@ -718,7 +712,39 @@ begin
     no link the row simply stays dirty and goes when one comes. It was sent
     AFTER the rewrite and the flag never set, so a delete made offline was lost. *)
   TempRXData.ceNeedSendToServerAE := True;
-  LogStoreUpdateNewestQSO(TempRXData);
+  if not LogStoreUpdateNewestQSO(TempRXData) then
+     begin
+     (* NOT COMMITTED: nothing toggled, nothing sent, no "deleted" message.
+        The store has logged why (and a failure that made the log read-only
+        or stood it down has had its one modal). *)
+     LogSourceClose;
+     QuickDisplay(AnsiString(LogStoreChangeNotSavedText));
+     DoABeep(Warning);
+     logger.Warn('[DeleteLastContact] the delete or restore of %s was NOT saved; ' +
+                 'nothing was sent', [string(TempRXData.Callsign)]);
+     Exit;
+     end;
+
+  InvertBoolean(tLastLogEntryIsDeleted);
+  if not TempRXData.ceQSO_Deleted then
+     begin
+     // Issue #920 -- mirror restoration to HamScore as a (re-)contactinfo
+     // so the server sees the QSO come back with the same ID.
+     (* NOT ON THE SHEET: the LoadinLog after its delete took it off, and the
+        LoadinLog below has not run, so the sheet as it stands IS the sheet as
+        it stood (issue #318). *)
+     PostQsoEvent(qmNew, TempRXData, restoredFacts, restoredSent,
+                  AdditionalDomesticMultipliersBeforeSheet(ActiveContest(Contest), TempRXData),
+                  UDPBroadcaster.Enabled(usContact), True);
+     end
+  else
+     begin
+     // Issue #920 -- mirror the deletion to HamScore via <contactdelete>.
+     // Previously only LogContact had a HamScore hook; ALT-Y deletes
+     // dropped silently from the server's view.
+     PostQsoEvent(qmDeleted, TempRXData, restoredFacts, '', 0,
+                  UDPBroadcaster.Enabled(usContact), True);
+     end;
   SendRecordToServer(NET_EDITEDQSO_ID, TempRXData);
   LogSourceClose;
   LoadinLog;

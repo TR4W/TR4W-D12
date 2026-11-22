@@ -1532,6 +1532,11 @@ resourcestring
      where -- a small free does not work (NY4I, 16 KB). %d megabytes, %s the
      drive or folder, as SLogReadOnlyFixDiskFull. ONE LINE: keep it short. *)
    SLogReadOnlyNotSavedDiskFull = 'Log is read-only (disk full): free %d MB on %s, then Enter.';
+   (* THE STATUS LINE WHEN A CHANGE TO A LOGGED QSO -- an Edit QSO save, an
+     Alt-Y delete or restore -- was not committed and the log is NOT
+     read-only (issue 349): a write or a commit failed, or the row was not
+     there. Nothing was sent anywhere. ONE LINE: keep it short. *)
+   SLogChangeNotSaved = 'NOT SAVED -- the contest log did not take this change. See tr4w.log.';
 
    (* WHY A DOUBLE CLICK ON THE LOG OPENED NO EDIT QSO WINDOW -- on the status
      line, because it said nothing at all (2026-11-18). *)

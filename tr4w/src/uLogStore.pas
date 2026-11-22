@@ -98,19 +98,29 @@ function LogStoreCurrentMyFacts: TQsoMyFacts;
 (* Rewrites the log's newest row -- the three sites that used to seek back one
   record in the binary log (DeleteLastContact, uNet.UpdateRec,
   uQTCS.SetSendedQSOs).  Writes even when this call migrated the log: the .TRW
-  never holds the rewrite.  Never raises. *)
-procedure LogStoreUpdateNewestQSO(const aQso: ContestExchange);
+  never holds the rewrite.  Never raises.
+
+  TRUE ONLY WHEN THE REWRITE IS COMMITTED (issue 349, 2026-11-22): the row
+  was found, the UPDATE changed it, and the COMMIT returned. False for every
+  other ending -- a read-only or disabled store, an empty log, a write or a
+  commit that failed (Disable has then said so and rolled back). It was a
+  procedure, so Alt-Y told the network and the operator "deleted" whatever
+  happened. A caller that tells anyone of the change does so after a True. *)
+function LogStoreUpdateNewestQSO(const aQso: ContestExchange): boolean;
 
 (* Rewrites the row matching a record's POSITION in the binary log -- what the
-  QSO editor does with a byte offset.  Never raises. *)
-procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange); overload;
+  QSO editor does with a byte offset.  Never raises.  True only when the
+  rewrite is committed -- see LogStoreUpdateNewestQSO; a position that names
+  no row is False. *)
+function LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange): boolean; overload;
 
 (* THE SAME, AND OUR STATION FOR THAT QSO WITH IT -- Edit QSO when the operator
   changed one of the my_* values (NY4I, ruling B). Both writes are ONE
   transaction: one commit, or neither. aFacts.Source is written as given;
-  the editor passes mfsEdited. Never raises. *)
-procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
-                                   const aFacts: TQsoMyFacts); overload;
+  the editor passes mfsEdited. Never raises. True only when both are
+  committed. *)
+function LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                                  const aFacts: TQsoMyFacts): boolean; overload;
 
 (* OUR STATION AS RECORDED for the QSO at a record position -- what Edit QSO
   shows. NotCapturedMyFacts for a row written before schema 3. False, with
@@ -423,6 +433,12 @@ function LogStoreJournalIsWal: boolean;
   is read-only it says so and why ("Log is read-only (disk full): not
   saved."); otherwise it is the general "NOT LOGGED" line. *)
 function LogStoreNotSavedText: string;
+
+(* THE SAME FOR A CHANGE TO A QSO ALREADY LOGGED -- an Edit QSO save, an
+  Alt-Y delete or restore (issue 349). The read-only lines are the same;
+  otherwise it is SLogChangeNotSaved, because "NOT LOGGED ... do not clear the
+  entry" is about a new QSO in the entry window. *)
+function LogStoreChangeNotSavedText: string;
 
 const
    (* HOW MUCH A FULL DISK IS ASKED TO FREE, in MB (2026-11-18). NY4I freed
@@ -1028,7 +1044,9 @@ begin
       end;
 end;
 
-function LogStoreNotSavedText: string;
+(* THE ONE BODY OF THE TWO "NOT SAVED" LINES: the read-only reason when the
+  log is read-only, else aOtherwise. *)
+function NotSavedTextOr(const aOtherwise: string): string;
 begin
    if LogStoreIsReadOnly and (GReadOnlyCause = lrcDiskFull) then
       begin
@@ -1043,8 +1061,18 @@ begin
       end
    else
       begin
-      Result := SQsoNotLogged;
+      Result := aOtherwise;
       end;
+end;
+
+function LogStoreNotSavedText: string;
+begin
+   Result := NotSavedTextOr(SQsoNotLogged);
+end;
+
+function LogStoreChangeNotSavedText: string;
+begin
+   Result := NotSavedTextOr(SLogChangeNotSaved);
 end;
 
 (* A READ-ONLY SESSION REFUSES EVERY WRITE, AND SAYS SO. True when the write
@@ -3409,11 +3437,29 @@ begin
    Result := GLastAppendedMyFacts;
 end;
 
-procedure LogStoreUpdateNewestQSO(const aQso: ContestExchange);
+(* AN UPDATE THAT CHANGED NO ROW SAVED NOTHING, and is not committed as if it
+  had (issue 349). Its statement began a transaction -- ExecuteKeptWrite does,
+  and SQLite takes the write lock for an UPDATE whether or not a row matches
+  -- so it is rolled back here rather than left holding the lock until the
+  next write commits it. RollBackAfterBusy is the store's one rollback that
+  never raises. Said in tr4w.log; the caller says it to the operator. *)
+procedure AbandonUnchangedUpdate(const aWhat: string; aRowId: Int64);
+begin
+   RollBackAfterBusy;
+   if logger <> nil then
+      begin
+      logger.Warn('[LogStore] %s: row %d was NOT changed (no such row) -- ' +
+                  'rolled back, NOT saved', [aWhat, aRowId]);
+      end;
+end;
+
+function LogStoreUpdateNewestQSO(const aQso: ContestExchange): boolean;
 var
    rowId: Int64;
    rebuilt: boolean;
 begin
+   (* FALSE UNTIL A COMMIT SAYS OTHERWISE -- AppendQSOOnce's rule. *)
+   Result := False;
    if GDisabled then
       begin
       Exit;
@@ -3440,21 +3486,37 @@ begin
       rowId := GRepository.NewestRowId;
       if rowId <= 0 then
          begin
-         (* Nothing to rewrite. Not an error: DeleteLastContact on an empty log
-           is a no-op in the binary world too. *)
+         (* Nothing to rewrite, so nothing was saved: False. Not an error in
+           itself -- but every caller has just read a newest QSO, so an empty
+           log here means the log changed under it, and "saved" would be
+           false. *)
+         if logger <> nil then
+            begin
+            logger.Warn('[LogStore] the log holds no row: the rewrite of the ' +
+                        'newest QSO was NOT saved');
+            end;
          Exit;
          end;
 
-      GRepository.UpdateQSO(rowId, aQso);
+      (* THE INTENDED ROW CHANGED, or nothing is committed (issue 349). *)
+      if not GRepository.UpdateQSO(rowId, aQso) then
+         begin
+         AbandonUnchangedUpdate('rewriting the newest QSO', rowId);
+         Exit;
+         end;
       if externalLogger <> nil then
          begin
          externalLogger.CaptureSavedQso(GDatabase, GRepository, rowId, False);
          end;
       GRepository.Commit;
+
+      (* AND ONLY NOW. *)
+      Result := True;
       LogStoreStartExternalDelivery;
    except
       on E: Exception do
          begin
+         Result := False;
          Disable('rewriting the newest QSO', E);
          end;
    end;
@@ -3462,12 +3524,14 @@ end;
 
 (* THE ONE BODY OF BOTH LogStoreUpdateQSOAtIndex OVERLOADS. aWriteFacts says
   whether aFacts is written too, in the same transaction. *)
-procedure UpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
-                           aWriteFacts: boolean; const aFacts: TQsoMyFacts);
+function UpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                          aWriteFacts: boolean; const aFacts: TQsoMyFacts): boolean;
 var
    rowId: Int64;
    rebuilt: boolean;
 begin
+   (* FALSE UNTIL A COMMIT SAYS OTHERWISE -- AppendQSOOnce's rule. *)
+   Result := False;
    if GDisabled then
       begin
       Exit;
@@ -3520,34 +3584,48 @@ begin
          Exit;
          end;
 
-      GRepository.UpdateQSO(rowId, aQso);
+      (* THE INTENDED ROW CHANGED, or nothing is committed (issue 349) --
+        both writes, since they are one transaction. *)
+      if not GRepository.UpdateQSO(rowId, aQso) then
+         begin
+         AbandonUnchangedUpdate('rewriting a QSO by position', rowId);
+         Exit;
+         end;
       if aWriteFacts then
          begin
-         GRepository.UpdateQSOMyFacts(rowId, aFacts);
+         if not GRepository.UpdateQSOMyFacts(rowId, aFacts) then
+            begin
+            AbandonUnchangedUpdate('rewriting our station for a QSO', rowId);
+            Exit;
+            end;
          end;
       if externalLogger <> nil then
          begin
          externalLogger.CaptureSavedQso(GDatabase, GRepository, rowId, False);
          end;
       GRepository.Commit;
+
+      (* AND ONLY NOW. *)
+      Result := True;
       LogStoreStartExternalDelivery;
    except
       on E: Exception do
          begin
+         Result := False;
          Disable('rewriting a QSO by position', E);
          end;
    end;
 end;
 
-procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange);
+function LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange): boolean;
 begin
-   UpdateQSOAtIndex(aRecordIndex, aQso, False, NotCapturedMyFacts);
+   Result := UpdateQSOAtIndex(aRecordIndex, aQso, False, NotCapturedMyFacts);
 end;
 
-procedure LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
-                                   const aFacts: TQsoMyFacts);
+function LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchange;
+                                  const aFacts: TQsoMyFacts): boolean;
 begin
-   UpdateQSOAtIndex(aRecordIndex, aQso, True, aFacts);
+   Result := UpdateQSOAtIndex(aRecordIndex, aQso, True, aFacts);
 end;
 
 function LogStoreReadMyFactsAtIndex(aRecordIndex: Int64;
@@ -3778,15 +3856,27 @@ begin
       stamped.ceContest := GRepository.LogContest;
       StampOffContest(stamped);
       (* False when the pair is unset or matches nothing, and that is not an
-        error -- it means this station has no such QSO. *)
-      Result := GRepository.UpdateQSOBySessionIds(stamped.ceQSOID1, stamped.ceQSOID2, stamped);
-      if Result then
+        error -- it means this station has no such QSO. Nothing changed, so
+        nothing is committed, and the transaction the UPDATE began is rolled
+        back rather than left holding the write lock (issue 349).
+
+        TRUE ONLY AFTER THE COMMIT (issue 349): this assigned the match to
+        Result before Commit, so a commit that raised still answered True and
+        the caller rescored on an edit the log never took -- the R2 defect
+        of the message table, here. *)
+      if GRepository.UpdateQSOBySessionIds(stamped.ceQSOID1, stamped.ceQSOID2, stamped) then
          begin
          GRepository.Commit;
+         Result := True;
+         end
+      else
+         begin
+         RollBackAfterBusy;
          end;
    except
       on E: Exception do
          begin
+         Result := False;
          Disable('rewriting a QSO by its network key', E);
          end;
    end;
