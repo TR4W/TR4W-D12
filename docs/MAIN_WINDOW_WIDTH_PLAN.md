@@ -714,6 +714,11 @@ layout is what replaces it.
 
 ### e6. Retire WINDOW SIZE (settings-config, i18n)
 
+**Done 2026-11-21.** The first-run seed is `uMainLayout.WS_FIRST_RUN` (17, the old
+default); a pre-e4 layout's saved width still decides its scale through
+ArmScaling. The band map no longer reads the main scale at all (BAND MAP SIZE),
+and Log Search reads the live `ws`, so c1's coupling question is moot for this step.
+
 - Add it to RETIRED_COMMANDS and remove the Preferences row and placement.
 - Mark the catalogue entries obsolete.
 - Add a migration read of the old value for one release (c2).

@@ -55,6 +55,7 @@ type
       procedure Test_TheCountryInformationAndSerialPortsCommandsAreRetired;
       procedure Test_AFileWithTheOldRowCountMemberStillLoads;
       procedure Test_TheRowCountCommandIsRetired;
+      procedure Test_TheWindowSizeCommandIsRetired;
       procedure Test_BuildingTheSettingsObjectDoesNotLeak;
    public
       procedure RunAllTests; override;
@@ -558,7 +559,12 @@ end;
   Settings.MainWindow.RowCount had become only the log pane's starting
   height; the main window's height decides it now. MainWindow is a live
   group, so an old file carries one member no property owns inside a group
-  that still loads -- and WindowSize, its neighbour, must still arrive.
+  that still loads -- and ShowGridlines, its neighbour, must still arrive.
+
+  WINDOW SIZE IS RETIRED TOO (2026-11-21, plan stage e6): the main window's
+  text scale follows its width and is saved with the window layout, so
+  MainWindow.WindowSize is a second member no property owns. The same
+  fixture carries both.
   --------------------------------------------------------------------- *)
 
 procedure TSettingsFreshInstallTests.Test_AFileWithTheOldRowCountMemberStillLoads;
@@ -567,11 +573,12 @@ var
    obj: TJSONObject;
    written: TJSONObject;
 begin
-   BeginTest('a tr4w.json that still carries MainWindow.RowCount loads');
+   BeginTest('a tr4w.json that still carries MainWindow.RowCount and WindowSize loads');
    InstallTestKeychain;
    s := TR4WSettings.Create;
    try
-      obj := ParseObject('{"MainWindow":{"RowCount":12,"WindowSize":9},'
+      obj := ParseObject('{"MainWindow":{"RowCount":12,"WindowSize":9,'
+                         + '"ShowGridlines":true},'
                          + '"Computer":{"Id":"H"}}');
       CheckTrue(obj <> nil, 'the fixture must parse');
       try
@@ -580,14 +587,16 @@ begin
          obj.Free;
       end;
       CheckTrue(s.Computer.Id = 'H', 'the rest of the file loaded');
-      CheckEquals(9, s.MainWindow.WindowSize,
-                  'the surviving member of the MainWindow group loaded');
+      CheckTrue(s.MainWindow.ShowGridlines,
+                'the surviving member of the MainWindow group loaded');
 
       written := s.ToJSON;
       try
          CheckTrue(written.FindPath('MainWindow') <> nil, 'the MainWindow group is still written');
          CheckTrue(written.FindPath('MainWindow.RowCount') = nil,
-                   'but without the retired member');
+                   'but without the retired RowCount');
+         CheckTrue(written.FindPath('MainWindow.WindowSize') = nil,
+                   'and without the retired WindowSize');
       finally
          written.Free;
       end;
@@ -604,6 +613,16 @@ begin
    (* ACCEPTED, so an old .cfg line does not raise LogCfg's modal "invalid
      statement in config file". *)
    CheckTrue(CheckCommand('ROW COUNT', '12', False), 'an old line is accepted');
+end;
+
+procedure TSettingsFreshInstallTests.Test_TheWindowSizeCommandIsRetired;
+begin
+   BeginTest('WINDOW SIZE is withdrawn: accepted, owned by nothing');
+   CheckTrue(CommandIsRetired('WINDOW SIZE'), 'WINDOW SIZE');
+   CheckFalse(Settings.OwnsCommand('WINDOW SIZE'), 'no property answers to it');
+   (* ACCEPTED, so an old .cfg line -- or the corpus fixture's bucket entry --
+     does not raise LogCfg's modal "invalid statement in config file". *)
+   CheckTrue(CheckCommand('WINDOW SIZE', '10', False), 'an old line is accepted');
 end;
 
 (* ---------------------------------------------------------------------
@@ -657,6 +676,7 @@ begin
    Test_TheCountryInformationAndSerialPortsCommandsAreRetired;
    Test_AFileWithTheOldRowCountMemberStillLoads;
    Test_TheRowCountCommandIsRetired;
+   Test_TheWindowSizeCommandIsRetired;
    Test_BuildingTheSettingsObjectDoesNotLeak;
 end;
 

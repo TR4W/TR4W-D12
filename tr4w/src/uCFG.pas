@@ -270,8 +270,6 @@ const
    AUTO_SEND_CHARACTER_COUNT_ARRAY: array[0..06] of integer = (0, 1, 2, 3, 4, 5,
       6);
    AUTO_QSL_INTERVAL: array[0..06] of integer = (0, 1, 2, 3, 4, 5, 6);
-   WINDOW_SIZE_ARRAY: array[0..14] of integer = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-      11, 12, 13, 14, 15);
    CW_SPEED_INCREMENT: array[1..10] of integer = (1, 2, 3, 4, 5, 6, 7, 8, 9,
       10);
    MULT_REPORT_MINIMUM_BANDS_ARRAY: array[0..02] of integer = (2, 3, 4);
@@ -1087,7 +1085,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..105] of string = (
+   RETIRED_COMMANDS: array[0..106] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -1241,7 +1239,15 @@ const
         it now, restored from the saved window position. Its property,
         Preferences row, caption and help went with it, and it left
         uRadioConfigApply.MIGRATED_COMMANDS. *)
-      'ROW COUNT'
+      'ROW COUNT',
+      (* RETIRED 2026-11-21 (plan stage e6, NY4I approved).
+        Settings.MainWindow.WindowSize was the main window's text scale
+        (ws = WINDOW SIZE + 12). Since e4 the scale follows the window's
+        width and is saved with the window layout, so this only seeded a
+        first start; uMainLayout.WS_FIRST_RUN does that now. Its property,
+        Preferences spin box, caption and help went with it, and it left
+        uRadioConfigApply.MIGRATED_COMMANDS. *)
+      'WINDOW SIZE'
       );
 
 function RetiredCommandCount: integer;

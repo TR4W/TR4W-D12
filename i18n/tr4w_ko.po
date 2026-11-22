@@ -4941,9 +4941,8 @@ msgstr "메인 창"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "글꼴은 메인 대회 창에 적용됩니다. 다음 TR4W가 시작됩니다."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "이 설정 메뉴의 외관 항목에 있었다. 그 창은 ROW COUNT와 WINDOW 크기가 여기에 가입하면됩니다."
 #: tprefsform.lblappearmenunote.caption
@@ -8409,9 +8408,8 @@ msgstr "사용자 정보 Shown"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "창 크기"
+#~ msgid "Main window text size"
+#~ msgstr "창 크기"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

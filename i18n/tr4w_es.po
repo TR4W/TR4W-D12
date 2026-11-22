@@ -4326,9 +4326,8 @@ msgstr "Ventana principal"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "La fuente se aplica a la ventana principal del concurso. Los tres tienen efecto cuando el TR4W comienza."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -7471,9 +7470,8 @@ msgstr "Información del usuario Shown"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Ventana tamaño"
+#~ msgid "Main window text size"
+#~ msgstr "Ventana tamaño"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

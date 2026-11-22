@@ -4259,9 +4259,8 @@ msgstr "Pääikkuna"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "Kirjasin koskee pääkilpailun ikkunaa. Kaikki kolme tulevat voimaan, kun TR4W alkaa."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Nämä olivat asetusvalikossa. Tuo ikkuna katoaa, kun ROW COUNT ja WINDOW KOKO liittyvät heihin täällä."
 #: tprefsform.lblappearmenunote.caption
@@ -7718,9 +7717,8 @@ msgstr "Käyttäjätiedot näytetään"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Ikkunan koko"
+#~ msgid "Main window text size"
+#~ msgstr "Ikkunan koko"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

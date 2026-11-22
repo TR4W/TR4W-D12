@@ -4577,9 +4577,8 @@ msgstr "Hlavní okno"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "Písmo se vztahuje na hlavní okno soutěže. Všechny tři nabudou účinku, až začne TR4W."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -7933,9 +7932,8 @@ msgstr "User Info zobrazeno"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Velikost okna"
+#~ msgid "Main window text size"
+#~ msgstr "Velikost okna"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

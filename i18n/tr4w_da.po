@@ -4251,9 +4251,8 @@ msgstr "Hovedvindue"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "Skrifttypen gælder for hovedkonkurrencens vindue. Alle tre får virkning, når TR4W starter næste gang."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -7707,9 +7706,8 @@ msgstr "Brugerinfo vist"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Vinduesstørrelse"
+#~ msgid "Main window text size"
+#~ msgstr "Vinduesstørrelse"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

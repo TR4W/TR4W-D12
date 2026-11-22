@@ -36,7 +36,7 @@ RegisterModelSetting('bandmap.spotAgeLimit', 'SPOT AGE LIMIT',
 - its key prefix, for the pages generated from a prefix (`contest.` lands on
   Contest, `advanced.` on Advanced; `appearance.layout.` generated a block on
   Appearance until 2026-11-21, when its last row, WINDOW SIZE, became a designed
-  up/down box);
+  up/down box -- and WINDOW SIZE was retired the same day, plan stage e6);
 - a line in `uPrefsForm.PrefsPlacements` that places the key on a page by name.
 
 **There is no catch-all page any more.** "More settings" was removed by issue 235,

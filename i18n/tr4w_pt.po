@@ -4972,9 +4972,8 @@ msgstr "Janela principal"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "A fonte aplica- se à janela principal do concurso. Todos os três fazem efeito quando TR4W começa a seguir."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Estes estavam no item Aparência do menu Configurações. Essa janela desaparece uma vez que o ROW COUND e o tamanho da janela se juntam a eles aqui."
 #: tprefsform.lblappearmenunote.caption
@@ -8466,9 +8465,8 @@ msgstr "Informação do Utilizador Mostrada"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Tamanho da Janela"
+#~ msgid "Main window text size"
+#~ msgstr "Tamanho da Janela"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

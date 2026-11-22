@@ -161,9 +161,9 @@ type
         (cfAppearance) -- the Ctrl-J grid filtered to one cfFunc -- reached from
         the Appearance menu item.
 
-        ROW COUNT and WINDOW SIZE are NOT here: both are ckArray rows whose
-        target is an ArrayRecordArray entry rather than crAddress, which is a
-        different move. REMINDER is not a scalar setting at all. The menu item
+        ROW COUNT and WINDOW SIZE are NOT here: both were ckArray rows whose
+        target was an ArrayRecordArray entry rather than crAddress, which was a
+        different move (both are retired since 2026-11-21). REMINDER is not a scalar setting at all. The menu item
         cannot go until all three are dealt with. }
 
       (* AUDIO -- GONE FROM HERE, 2026-09-13.

@@ -3,8 +3,10 @@ unit uMainLayout;
 (* THE MAIN WINDOW'S GEOMETRY, AS ARITHMETIC AND NOTHING ELSE.
 
   Every rectangle the main window's controls take is a function of the scale
-  step ws, 13..27, which since plan stage e4 follows the window's width
-  (ScaleForClient; WINDOW SIZE + 12 only seeds it). Those functions lived
+  step ws, WS_MIN..WS_MAX, which since plan stage e4 follows the window's
+  width (ScaleForClient) and is saved with the window layout; a first start
+  with none saved begins at WS_FIRST_RUN (WINDOW SIZE, which seeded it until
+  then, was retired at e6). Those functions lived
   inline in MainUnit.CreateMainWindow and uMainGrids.PositionMainGrids, where
   no test could reach them and only the default scale was ever checked (Lint-
   FormOverlap reads the .lfm, which shows ws 17).
@@ -48,9 +50,20 @@ uses
    VC;
 
 const
-   (* THE SCALE RANGE: WindowSize 1..15, plus 12, up to 43 so a wide window scales up (NY4I, 2026-11-21: "at least lets see it"). *)
+   (* THE SCALE RANGE: 13 (the retired WINDOW SIZE 1, plus 12) up to 43 so a
+     wide window scales up (NY4I, 2026-11-21: "at least lets see it"). *)
    WS_MIN = 13;
    WS_MAX = 43;
+
+   (* THE SCALE A FIRST START OPENS AT -- no window layout, or one that
+     states no scale (plan stage e6, 2026-11-21). 17 is what every earlier
+     fresh install opened at: WINDOW SIZE's default 5, plus 12, so the
+     first-run window is LayoutWidth(17) = 782 px of client, as before. The
+     designed .lfm is drawn at this scale too (tools/gen_main_elements.py).
+     A layout saved with a width but no scale (before e4) still lands at its
+     old size: ArmScaling judges the restored client once, via
+     ScaleForClient. *)
+   WS_FIRST_RUN = 17;
 
    (* The width of the layout, in ws. *)
    LAYOUT_COLUMNS = 46;

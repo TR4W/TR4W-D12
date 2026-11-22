@@ -4561,8 +4561,7 @@ msgstr ""
 
 # 2026-11-01: English reworded by the Preferences restart audit; msgid updated (the entry was empty, so there was no draft to clear).
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblappearmenunote.caption
@@ -7848,9 +7847,8 @@ msgstr ""
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr ""
+#~ msgid "Main window text size"
+#~ msgstr ""
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

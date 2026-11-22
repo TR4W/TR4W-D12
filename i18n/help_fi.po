@@ -589,7 +589,7 @@ msgstr "Arvot: Integer (WPM). Se ohjaa CW-nopeutta, jolla Farnsworthin vaikutus 
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
+msgid "A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; the main window's text size follows the width of the window, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "Säädä joitakin kirjasinkokoja alaspäin nollaan ja jopa 2:een. Tämä voi vaikuttaa muihin ikkunoihin, kuten bandmap (Katso Band Map Kokoasetus)"
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -787,7 +787,7 @@ msgstr "Asemasi oma puhelumerkki, joka muistetaan kilpailusta kilpailuun. Uusi K
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
+msgid "The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is not set in the dialog: it follows the width of the main window, plus FONT SIZE. Takes effect when TR4W next starts."
 msgstr "Komento määrittää pääohjelman ikkunassa olevien tietojen näyttämiseen käytettävän kirjasimen nimen."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -1965,12 +1965,6 @@ msgstr "Arvo: kokonaisluku alueella (0-250) * 10 mSecs. Määrittele kuinka kaua
 msgctxt "TC_HELP_WK_WEIGHT"
 msgid "Value: integer in the range of 10 - 90%. This command allows a proportional amount to be either added or subtracted from the length of all dits and dahs sent. A value of 50 selects no weighting adjustment. Values less than 50 reduce weighting and values greater than 50 increase weighting. Note that weighting does not affect sending speed because any increase in keyed time is subtracted from spacing time. Reduction in weighting results in a thinner sounding keying while increased weighting results in a heavier sound. Since weighting tracks speed, a given weighting will sound the same at all speeds."
 msgstr "Arvo: kokonaisluku alueella 10 - 90%. Tämän komennon avulla voidaan joko lisätä tai vähentää suhteellinen määrä kaikkien dittien ja dahien pituudesta. Arvo 50 ei vaadi painotusta. Alle 50-vuotiaat arvot pienentävät painotusta ja lisäävät painotusta yli 50 prosentilla. Huomaa, että painotus ei vaikuta lähetysnopeuteen, koska näppäimistön ajan lisäys vähennetään väliajasta. Painotuksen vähentäminen johtaa ohuempaan näppäilyyn, kun taas suurempi painotus johtaa raskaampaan ääneen. Koska radan nopeus painotetaan, tietty painotus kuulostaa samalta kaikilla nopeuksilla."
-
-#. Config command: WINDOW SIZE   (default: 5)
-#, fuzzy
-msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
-msgstr "Suhteellinen suhde 1-15, joka määrittää pääohjelman ikkunan koon."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)
 #, fuzzy

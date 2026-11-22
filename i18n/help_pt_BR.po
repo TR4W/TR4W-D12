@@ -589,7 +589,7 @@ msgstr "Valores: Integer (WPM). Controla a velocidade CW na qual o efeito Farnsw
 #. Config command: FONT SIZE   (default: 2)
 #, fuzzy
 msgctxt "TC_HELP_FONT_SIZE"
-msgid "A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; Main window text size (WINDOW SIZE) sets the size, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
+msgid "A small step added to the main window's text: 0, 1 or 2 (default 2). It is not a point size; the main window's text size follows the width of the window, and this adds 0 to 2 pixels on top of it. It also sizes the text of the MMTTY window. Takes effect when TR4W next starts."
 msgstr "Ajuste alguns tamanhos de letra para '0' e '2'. Isso pode afetar outras janelas, como mapa de banda."
 
 #. Config command: FOOT SWITCH MODE   (default: DISABLED)
@@ -787,7 +787,7 @@ msgstr "O próprio sinal de sua estação, lembrado do concurso ao concurso. O d
 #. Config command: MAIN FONT   (default: Arial)
 #, fuzzy
 msgctxt "TC_HELP_MAIN_FONT"
-msgid "The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is set by Main window text size (WINDOW SIZE) and FONT SIZE, not in the dialog. Takes effect when TR4W next starts."
+msgid "The typeface of the main contest window (default Arial). In Preferences > Appearance, Choose... opens the font dialog, where you pick the typeface and whether it is bold (BOLD FONT). The text size is not set in the dialog: it follows the width of the main window, plus FONT SIZE. Takes effect when TR4W next starts."
 msgstr "O comando especifica o nome da fonte a ser usada ao exibir a informação na janela principal do programa."
 
 #. Config command: MESSAGE ENABLE   (default: TRUE)
@@ -1965,12 +1965,6 @@ msgstr "Valor: inteiro na faixa de 0 a 250 * 10 mSecs. Defina quanto tempo o tra
 msgctxt "TC_HELP_WK_WEIGHT"
 msgid "Value: integer in the range of 10 - 90%. This command allows a proportional amount to be either added or subtracted from the length of all dits and dahs sent. A value of 50 selects no weighting adjustment. Values less than 50 reduce weighting and values greater than 50 increase weighting. Note that weighting does not affect sending speed because any increase in keyed time is subtracted from spacing time. Reduction in weighting results in a thinner sounding keying while increased weighting results in a heavier sound. Since weighting tracks speed, a given weighting will sound the same at all speeds."
 msgstr "Valor: inteiro na faixa de 10 - 90%. Este comando permite que uma quantidade proporcional seja adicionada ou subtraída do comprimento de todas as coisas enviadas. Um valor de 50 seleciona nenhum ajuste de ponderação. Valores inferiores a 50 reduzem a ponderação e valores maiores que 50 aumentam a ponderação. Note que a ponderação não afeta a velocidade de envio porque qualquer aumento no tempo chaveado é subtraído do tempo de espaçamento. A redução da ponderação resulta em um tom mais fino enquanto o aumento da ponderação resulta em um som mais pesado. Uma vez que a velocidade das faixas de ponderação, uma determinada ponderação soará a mesma em todas as velocidades."
-
-#. Config command: WINDOW SIZE   (default: 5)
-#, fuzzy
-msgctxt "TC_HELP_WINDOW_SIZE"
-msgid "Main window text size, 1 to 15 (default 5). The main window is laid out from this size, so a larger value makes its text, and the whole window, larger. FONT SIZE adds a small step on top. Takes effect when TR4W next starts."
-msgstr "A relação relativa de 1 a 15, que determina o tamanho da janela principal do programa."
 
 #. Config command: WSJT-X BROADCAST PORT   (default: 2237)
 #, fuzzy

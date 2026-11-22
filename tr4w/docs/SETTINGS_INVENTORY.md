@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (307)
+## Settings that have moved (306)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -342,7 +342,6 @@ comes last, a word run together.
 | `WARC BAND ENABLE` |  | **CONTEST** | `Settings.Bands.WarcEnabled` | boolean |  |
 | `WEIGHT` |  | global | `Settings.Cw.Weight` | double |  |
 | `WILDCARD PARTIALS` |  | global | `Settings.CallWindow.WildcardPartials` | boolean |  |
-| `WINDOW SIZE` |  | global | `Settings.MainWindow.WindowSize` | TMainWindowSize |  |
 | `WSJT-X BROADCAST PORT` |  | global | `Settings.Wsjtx.BroadcastPort` | TWsjtxPort |  |
 | `WSJT-X ENABLED` |  | global | `Settings.Wsjtx.Enabled` | boolean |  |
 | `WSJT-X MULTICAST GROUP` |  | global | `Settings.Wsjtx.MulticastGroup` | string |  |
@@ -372,7 +371,7 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-318 command names.
+317 command names.
 
 Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
 

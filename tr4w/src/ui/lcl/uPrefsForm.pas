@@ -520,7 +520,6 @@ type
       lblAppearHeading: TLabel;
       lblMainFont: TLabel;
       lblFontSize: TLabel;
-      lblWindowSize: TLabel;
       lblAppearHint: TLabel;
       lblBackupHeading: TLabel;
       lblBackupEvery: TLabel;
@@ -536,12 +535,12 @@ type
       edtNetComputerID: TEdit;
       (* THE APPEARANCE PAGE'S FONT (2026-11-21): a read-only summary whose
         own Font holds the chosen face and weight, a button that opens the
-        LCL's TFontDialog, and two up/down boxes for FONT SIZE (a 0..2 step)
-        and WINDOW SIZE (Main window text size, 1..15). *)
+        LCL's TFontDialog, and an up/down box for FONT SIZE (a 0..2 step).
+        WINDOW SIZE's box went when it was retired (plan stage e6): the main
+        window's text scale follows its width. *)
       edtFontFace: TEdit;
       btnChooseFont: TButton;
       spnFontSize: TSpinEdit;
-      spnWindowSize: TSpinEdit;
       edtBackupEvery: TEdit;
       edtBackupFile: TEdit;
       chkNetAutoSync: TCheckBox;
@@ -1666,7 +1665,6 @@ uses
    uExternalLoggerFactory, // ApplyExternalLoggerConfiguration (issue 233)
    uSettingsModel,      // Settings.AllowedValuesForCommand -- the level list
    uAppStrings,         (* SBackupDestinationDialogTitle -- the folder chooser *)
-   uSettingsCaptions,   (* RS_APPEARANCE_LAYOUT_WINDOWSIZE -- the text size label *)
    uHTTPDownload,      (* IsPlainHttpUrl -- the HamScore URL's plain-http note *)
    uUrlTestButton,      (* TUrlTester -- the Test buttons beside the scoring URLs *)
    uCallHistory,        (* CallHistoryNameToStore -- the call history file's Browse *)
@@ -2326,13 +2324,9 @@ begin
    lblCWKeyersPointer.Caption := SPrefsCWKeyersPointer;
    lblKeyersCWPointer.Caption := SPrefsKeyersCWPointer;
    ApplyMainCallsignCaptions;
-   (* THE APPEARANCE PAGE (2026-11-21). WINDOW SIZE's label is the setting's
-     own caption, so Preferences and its search say "Main window text size"
-     from one string; the .lfm holds a placeholder. NumbersOnly is not
-     published by TSpinEdit, so it is set here (see uAutoCQForm). *)
-   lblWindowSize.Caption     := RS_APPEARANCE_LAYOUT_WINDOWSIZE;
-   spnFontSize.NumbersOnly   := True;
-   spnWindowSize.NumbersOnly := True;
+   (* THE APPEARANCE PAGE (2026-11-21). NumbersOnly is not published by
+     TSpinEdit, so it is set here (see uAutoCQForm). *)
+   spnFontSize.NumbersOnly := True;
 
    // In code as well as in the resource: losing these is invisible -- the form
    // still opens and still looks right, having silently stopped registering its
@@ -3926,9 +3920,10 @@ begin
    AddBandPlanRow(host);
 
    (* NO GENERATED BLOCK ON APPEARANCE ANY MORE (2026-11-21). It held ROW COUNT
-     and WINDOW SIZE under a 'Layout' heading; ROW COUNT is retired and WINDOW
-     SIZE is a designed up/down box (spnWindowSize), so the 'appearance.layout.'
-     prefix has no generated rows and BuildGeneratedBlock had no other caller. *)
+     and WINDOW SIZE under a 'Layout' heading; both are retired since (WINDOW
+     SIZE at plan stage e6, after a spell as a designed up/down box), so the
+     'appearance.layout.' prefix has no rows and BuildGeneratedBlock had no
+     other caller. *)
 
    total := total + BuildColorsSection;
 
@@ -5244,7 +5239,6 @@ begin
    AddHandWiredToSearchIndex(aN, 'BOLD FONT',                         edtFontFace);
    AddHandWiredToSearchIndex(aN, 'MAIN FONT',                         edtFontFace);
    AddHandWiredToSearchIndex(aN, 'FONT SIZE',                         spnFontSize);
-   AddHandWiredToSearchIndex(aN, 'WINDOW SIZE',                       spnWindowSize);
 
    // --- layBackup ---
    AddHandWiredToSearchIndex(aN, 'BACKUP LOG FREQUENCY',              edtBackupEvery);
@@ -8591,8 +8585,7 @@ begin
    chkNetUseTailcat.Checked := CommandBool('SERVER USE TAILCAT');
 
    ShowChosenFont(CommandText('MAIN FONT'), CommandBool('BOLD FONT'));
-   LoadSpinFromCommand(spnFontSize,   'FONT SIZE');
-   LoadSpinFromCommand(spnWindowSize, 'WINDOW SIZE');
+   LoadSpinFromCommand(spnFontSize, 'FONT SIZE');
 
    edtBackupEvery.Text := FStore.CommandValue('BACKUP LOG FREQUENCY',
                              CFGCommandValueAsString('BACKUP LOG FREQUENCY'));
@@ -8629,8 +8622,7 @@ begin
      put it -- the box's text is only its description. *)
    ApplyIfChanged('MAIN FONT', edtFontFace.Font.Name);
    SetCommandBool('BOLD FONT', fsBold in edtFontFace.Font.Style);
-   ApplyIfChanged('FONT SIZE',   IntToStr(spnFontSize.Value));
-   ApplyIfChanged('WINDOW SIZE', IntToStr(spnWindowSize.Value));
+   ApplyIfChanged('FONT SIZE', IntToStr(spnFontSize.Value));
 
    ApplyIfChanged('BACKUP LOG FREQUENCY', Trim(edtBackupEvery.Text));
    (* A CHANGED FOLDER IS PROBED AT ONCE, off this thread: the property's
@@ -8689,8 +8681,8 @@ begin
 end;
 
 (* AN UP/DOWN BOX FROM ITS COMMAND, CLAMPED TO THE BOX'S OWN LIMITS. The
-  .lfm's MinValue and MaxValue are the setting's range (TMainFontSize 0..2,
-  TMainWindowSize 1..15), so a value outside it -- a hand-edited tr4w.json --
+  .lfm's MinValue and MaxValue are the setting's range (TMainFontSize 0..2),
+  so a value outside it -- a hand-edited tr4w.json --
   shows as the nearest legal one, and the save writes that. A value that is
   not a number keeps the box's designed value and says so. *)
 procedure TPrefsForm.LoadSpinFromCommand(const aSpin: TSpinEdit; const aCommand: string);

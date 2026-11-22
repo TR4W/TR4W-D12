@@ -470,7 +470,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(318, names.Count,
+         CheckEquals(317, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -543,7 +543,9 @@ begin
                      + ' were retired -- nothing read either, here or in D7'
                      + ' (NY4I), 2026-11-21; 318 since ROW COUNT was retired'
                      + ' the same day -- the window height decides the log'
-                     + ' pane (NY4I)');
+                     + ' pane (NY4I); 317 since WINDOW SIZE was retired the'
+                     + ' same day -- the window width decides the text scale'
+                     + ' (plan stage e6)');
       finally
          names.Free;
       end;
@@ -932,6 +934,9 @@ begin
    (* Withdrawn 2026-11-21 (NY4I): only the log pane's starting height was
      left of it, and the main window's height decides that. *)
    CheckTrue(CommandIsRetired('ROW COUNT'), 'ROW COUNT');
+   (* Withdrawn 2026-11-21 (plan stage e6): the main window's text scale
+     follows its width and is saved with the window layout. *)
+   CheckTrue(CommandIsRetired('WINDOW SIZE'), 'WINDOW SIZE');
 
    (* NOT K1EA NETWORK ENABLE, and the first draft of this test asserted that
      it was -- which is the distinction worth keeping.
@@ -988,8 +993,9 @@ begin
      SERVER PORT. 99 since 2026-11-21: COUNTRY INFORMATION FILE and SHOW ALL
      SERIAL PORTS. 105 since the same day, when NY4I confirmed the six
      parallel-port names retired: LPT1/2/3 BASE ADDRESS, RELAY CONTROL PORT,
-     STEREO CONTROL PORT and USE CONTROL PORT. 106 later that day: ROW COUNT. *)
-   CheckTrue(RetiredCommandCount >= 106, 'the retired list has not shrunk');
+     STEREO CONTROL PORT and USE CONTROL PORT. 106 later that day: ROW COUNT.
+     107 the same day: WINDOW SIZE. *)
+   CheckTrue(RetiredCommandCount >= 107, 'the retired list has not shrunk');
 end;
 
 (* ---------------------------------------------------------------------
@@ -2098,7 +2104,6 @@ const
       + '"WARC BAND ENABLE",'
       + 'WEIGHT,'
       + '"WILDCARD PARTIALS",'
-      + '"WINDOW SIZE",'
       + '"WSJT-X BROADCAST PORT",'
       + '"WSJT-X ENABLED",'
       + '"WSJT-X MULTICAST GROUP",'
@@ -2502,7 +2507,7 @@ begin
      made with SCP MINIMUM LETTERS, which has the same shape and is the
      sharper example anyway: its refused values sit INSIDE the subrange.
 
-     A CONTIGUOUS RANGE WOULD NOT TEST THIS. WINDOW SIZE (1..15) and AUTO QSL
+     A CONTIGUOUS RANGE WOULD NOT TEST THIS. LEADING ZEROS (0..3) and AUTO QSL
      INTERVAL (0..6) are ranges, so the subrange alone would refuse for them
      and the registration would prove nothing.
    *)

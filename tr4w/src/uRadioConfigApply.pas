@@ -455,8 +455,9 @@ const
      SERIAL PORTS left on 2026-11-21 for the same reason, and so did the six
      parallel-port names NY4I confirmed retired that day: LPT1/2/3 BASE
      ADDRESS, RELAY CONTROL PORT, STEREO CONTROL PORT and USE CONTROL
-     PORT. ROW COUNT left later the same day, when it was retired. *)
-   MIGRATED_COMMANDS: array[0..231] of string =
+     PORT. ROW COUNT left later the same day, when it was retired, and so
+     did WINDOW SIZE (plan stage e6). *)
+   MIGRATED_COMMANDS: array[0..230] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
@@ -726,7 +727,6 @@ const
       'AUTO QSL INTERVAL',
       'MULT REPORT MINIMUM BANDS',
       'AUTO SEND CHARACTER COUNT',
-      'WINDOW SIZE',
       'MP3 RECORDER BITRATE',
       // Migrated 2026-08-21.
       'START SENDING NOW KEY'

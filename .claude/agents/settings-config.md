@@ -415,7 +415,10 @@ station setting.
   PARALLEL-PORT NAMES ARE RETIRED TOO (2026-11-21, confirmed by NY4I: "all
   retired")**: LPT1/2/3 BASE ADDRESS, RELAY CONTROL PORT, STEREO CONTROL PORT
   and USE CONTROL PORT. No property carried them; they are in
-  `RETIRED_COMMANDS` (105 names) and out of `MIGRATED_COMMANDS` (233). Before
+  `RETIRED_COMMANDS` and out of `MIGRATED_COMMANDS` (ROW COUNT and WINDOW
+  SIZE followed the same day; WINDOW SIZE's first-run seed is
+  `uMainLayout.WS_FIRST_RUN`, plan stage e6 -- measure the list lengths, do
+  not trust a count here). Before
   that, no `CheckCommand` arm accepted them, so an old file naming one raised
   the modal. Their `RS_HARDWARE_CTRLJ_*` captions, the dead
   `TC_SHOW_ALL_SERIAL_PORTS` / `TC_RELAYCONTROLPORTPADDLEPORT` strings and the

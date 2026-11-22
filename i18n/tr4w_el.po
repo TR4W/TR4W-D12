@@ -4259,9 +4259,8 @@ msgstr "Κύριο παράθυρο"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "Η γραμματοσειρά εφαρμόζεται στο κύριο παράθυρο του διαγωνισμού. Και οι τρεις ενεργοποιούνται όταν αρχίσει το TR4W."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Αυτά ήταν στο αντικείμενο εμφάνισης του μενού Settings. Αυτό το παράθυρο θα φύγει μόλις έρθει ο ROW COUNT και η WINDOW ΜΕΓΕΘΟΣ."
 #: tprefsform.lblappearmenunote.caption
@@ -7708,9 +7707,8 @@ msgstr "Εμφάνιση πληροφοριών χρήστη"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Μέγεθος παραθύρου"
+#~ msgid "Main window text size"
+#~ msgstr "Μέγεθος παραθύρου"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

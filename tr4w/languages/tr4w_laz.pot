@@ -1859,7 +1859,7 @@ msgid "Main window"
 msgstr ""
 
 #: tprefsform.lblappearhint.caption
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
 msgstr ""
 
 #: tprefsform.lblaudioheading.caption
@@ -3139,10 +3139,6 @@ msgstr ""
 
 #: usettingscaptions.rs_appearance_ctrlj_userinfoshown
 msgid "User Info Shown"
-msgstr ""
-
-#: usettingscaptions.rs_appearance_layout_windowsize
-msgid "Main window text size"
 msgstr ""
 
 #: usettingscaptions.rs_appearance_noborder

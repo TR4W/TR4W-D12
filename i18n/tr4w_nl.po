@@ -4945,9 +4945,8 @@ msgstr "Hoofdvenster"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "Het lettertype is van toepassing op het hoofdvenster. Alle drie worden van kracht wanneer TR4W de volgende start."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Deze stonden in het menu Instellingen. Dat raam gaat weg zodra ROW COUNT en WINDOW SITE zich hier bij hen voegen."
 #: tprefsform.lblappearmenunote.caption
@@ -8423,9 +8422,8 @@ msgstr "Gebruikersinformatie getoond"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Venstergrootte"
+#~ msgid "Main window text size"
+#~ msgstr "Venstergrootte"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

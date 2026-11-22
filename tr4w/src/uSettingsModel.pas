@@ -373,13 +373,12 @@ type
    TCwDitDahRatio          = 3..6;    // was DITDAHRATIO_ARRAY
    TCwLeadingZeros         = 0..3;    // was LEADING_ZEROS_ARRAY
    TAutoSendCharacterCount = 0..6;    // was AUTO_SEND_CHARACTER_COUNT_ARRAY
-   (* THE MAIN WINDOW'S TEXT SIZE, a ckArray row whose allow-list was the
-     range (1..15). Its twin, ROW COUNT (5..15), was retired 2026-11-21: the
-     log pane's height is the window's height now. *)
+   (* THE MAIN WINDOW'S TWO SIZES, ROW COUNT (5..15) and WINDOW SIZE (1..15),
+     were both retired 2026-11-21: the log pane's height is the window's
+     height, and the text scale follows the window's width (plan stage e6). *)
    TCwTone                 = 0..65535;          // was CW TONE's crMin/crMax
    TCwFarnsworthSpeed      = 0..99;            // was FARNSWORTH SPEED's
    TCwCodeSpeed            = 0..99;            // was CODE SPEED's
-   TMainWindowSize         = 1..15;   // was WINDOW_SIZE_ARRAY
    TAutoQslInterval        = 0..6;    // was AUTO_QSL_INTERVAL
    (*
      AND THE TWO ALLOW-LISTS THAT ARE NOT RANGES KEEP A PLAIN integer.
@@ -583,7 +582,6 @@ type
       FNoCaption: boolean;
       FNoColumnHeader: boolean;
       FShowGridlines: boolean;
-      FWindowSize: TMainWindowSize;
       FRateDisplay: RateDisplayType;
       FHourDisplay: HourDisplayType;
       FUserInfoShown: UserInfoType;
@@ -621,15 +619,14 @@ type
         window position (MainUnit.MAIN_LOG_FIRST_RUN_ROWS on a first run). An
         old tr4w.json member is skipped by the de-streamer and dropped by the
         next save; the command name is in uCFG.RETIRED_COMMANDS. *)
-      (* Was the global WindowSize in VC.pas. Preferences calls it "Main
-        window text size" (2026-11-21).
-
-        IT IS A SCALE STEP, NOT A PIXEL SIZE. `ws := WindowSize + 12` is the
-        font size every element on the main window is measured in, so this
-        one number sets how large the whole window draws.
-
-        WINDOW SIZE, aliased -- the derived name would say it twice. *)
-      property WindowSize: TMainWindowSize read FWindowSize write FWindowSize;
+      (* WINDOW SIZE (WindowSize, the global WindowSize in VC.pas) WAS RETIRED
+        2026-11-21 (plan stage e6). `ws := WindowSize + 12` was the main
+        window's text scale; since e4 the scale follows the window's width
+        (uMainLayout.ScaleForClient) and is saved with the window layout
+        ('scale' in the windows section), so this had become only the seed of
+        a first start -- uMainLayout.WS_FIRST_RUN now. An old tr4w.json member
+        is skipped by the de-streamer and dropped by the next save; the
+        command name is in uCFG.RETIRED_COMMANDS. *)
       (* Was the global RateDisplay in logwind -- WHAT THE RATE BOX COUNTS:
         QSOs, QSO points, or QSOs on the current band.
 
@@ -5598,7 +5595,6 @@ begin
    inherited Create;
    (* The values VC.pas' declarations carried. The four booleans keep the
      False the field initialiser gives them, which is also what they had. *)
-   FWindowSize := 5;
    // logwind's declaration commented its default as QSOs, and zero is it.
    FRateDisplay := QSOs;
    FHourDisplay := ThisHour;
@@ -6725,8 +6721,6 @@ begin
    Alias('KEYPAD CW MEMORIES',             'Cw.KeypadMemories');
    Alias('LEADING ZEROS',                  'Cw.LeadingZeros');
 
-   (* The main window's text size: WINDOW SIZE would derive as MAIN WINDOW
-     WINDOW SIZE. *)
    (* The QSL message's own interval; the derived name would put MESSAGE in
      front of a command an operator has typed for years. *)
    (* THE TWO COUNTRY-LIST OVERLAYS. No property path produces either: the
@@ -6774,7 +6768,6 @@ begin
    Alias('TEN MINUTE RULE', 'Operating.TenMinuteRule');
    Alias('DISTANCE MODE', 'Log.DistanceMode');
    Alias('REMAINING MULT DISPLAY MODE', 'RemainingMults.DisplayMode');
-   Alias('WINDOW SIZE', 'MainWindow.WindowSize');
    Alias('SEND COMPLETE FOUR LETTER CALL', 'Cw.SendCompleteFourLetterCall');
    Alias('TUNE WITH DITS',                 'Cw.TuneWithDits');
 

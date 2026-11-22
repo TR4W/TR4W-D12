@@ -500,7 +500,7 @@ procedure FrmSetFocus;
 procedure tAltE;
 procedure SetWindowSize;
 (* The scale globals -- ws, ws2, MainWindowChildsWidth -- for aWS.
-  SetWindowSize is this at the setting's scale. *)
+  SetWindowSize is this at the starting scale, MainWindowScale. *)
 procedure ApplyMainWindowScale(const aWS: integer);
 function OpenLogFile: boolean;
 function tSetFilePointer(lDistanceToMove: LONGINT; aOrigin: Longint): Int64;
@@ -9690,10 +9690,14 @@ end;
 
 (* THE SCALE THE MAIN WINDOW STARTS AT (plan stage e4, section c2): the one it
   was saved at, when the window layout states one inside WS_MIN..WS_MAX;
-  otherwise WINDOW SIZE + 12, which until e4 was the only scale there was --
-  so a layout saved by an older TR4W, whose width was pinned to that scale,
-  starts where it was. ArmScaling then judges the restored client once.
-  WINDOW SIZE is retired later (e6); until then it only seeds this. *)
+  otherwise uMainLayout.WS_FIRST_RUN. ArmScaling then judges the restored
+  client once, so a layout saved by an older TR4W -- a width but no scale --
+  still opens at the scale that width holds.
+
+  WINDOW SIZE + 12 was the fallback until WINDOW SIZE was retired (e6,
+  2026-11-21). WS_FIRST_RUN is that setting's default scale, so a fresh
+  install opens exactly as before; what is not carried over is a non-default
+  WINDOW SIZE in a file with no saved window layout at all. *)
 function MainWindowScale: integer;
 begin
    if (SavedMainWindowScale >= uMainLayout.WS_MIN) and
@@ -9703,7 +9707,7 @@ begin
       end
    else
       begin
-      Result := Settings.MainWindow.WindowSize + 12;
+      Result := uMainLayout.WS_FIRST_RUN;
       end;
 end;
 
@@ -9767,9 +9771,9 @@ begin
   //col10 := col9 + 4 * ws;
   //col11 := col10 + 2 * ws {50};
 
-  (* FROM aWS, NOT FROM THE SETTING: this was MainWindowLayoutWidth, which
-    reads Settings.MainWindow.WindowSize, and a layout at another scale must
-    not be given the setting's width. The same number at startup. *)
+  (* FROM aWS, NOT FROM THE STARTING SCALE: this was MainWindowLayoutWidth,
+    which answers for MainWindowScale, and a layout at another scale must not
+    be given that width. The same number at startup. *)
   MainWindowChildsWidth := LayoutWidth(ws);
 
   (* MainWindowWidth (ChildsWidth + 7) and FKButtonWidth (4 * ws - 3) were

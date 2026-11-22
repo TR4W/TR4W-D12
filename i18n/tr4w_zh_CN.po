@@ -5741,9 +5741,8 @@ msgstr "主窗口"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "字体适用于主竞赛窗口. 三者在TR4W下一个开始时生效."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "这些是设置菜单的外观项目 。 一旦WINDOW SIZE和他们一起进来 窗户就会消失."
 #: tprefsform.lblappearmenunote.caption
@@ -7268,9 +7267,8 @@ msgstr "用户信息显示"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "窗口大小"
+#~ msgid "Main window text size"
+#~ msgstr "窗口大小"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

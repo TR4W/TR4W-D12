@@ -581,7 +581,7 @@ end;
 
   ColumnsArray[].Width IS A COUNT IN `ws` UNITS, NOT CHARACTERS AND NOT PIXELS.
   CreateEditableLog set each column to Width * ws -- ws being the main window's
-  scale unit, Settings.MainWindow.WindowSize + 12 -- and that is the whole rule. There was no
+  scale unit (WINDOW SIZE + 12 then; the window's width since plan stage e4) -- and that is the whole rule. There was no
   redistribution of leftover width.
 
   GETTING THIS WRONG IS WHAT MADE THE GRID LOOK NOTHING LIKE THE PROGRAM. The
@@ -651,7 +651,7 @@ end;
 
   ColumnsArray[].Width IS A COUNT IN `ws` UNITS, NOT CHARACTERS AND NOT PIXELS.
   CreateEditableLog set each column to Width * ws -- ws being the main window's
-  scale unit, Settings.MainWindow.WindowSize + 12 -- and that is the whole rule. There was no
+  scale unit (WINDOW SIZE + 12 then; the window's width since plan stage e4) -- and that is the whole rule. There was no
   redistribution of leftover width.
 
   GETTING THIS WRONG IS WHAT MADE THE GRID LOOK NOTHING LIKE THE PROGRAM. The

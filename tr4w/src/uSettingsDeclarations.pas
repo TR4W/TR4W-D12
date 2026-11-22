@@ -787,7 +787,7 @@ begin
    RegisterModelSetting( 'cw.ctrlj.tuneAltDEnable',           'TUNE ALT-D ENABLE',
                           RS_CW_CTRLJ_TUNEALTDENABLE);
 
-   // --- Appearance (12) -------------------------------
+   // --- Appearance (11) -------------------------------
    // customCaret was here until 2026-08-18; the CFG row is csRem now and
    // retired rows are not registered (cf. AUTO ALT-D ENABLE, BACKCOPY ENABLE).
    RegisterModelSetting( 'appearance.ctrlj.beepEnable',       'BEEP ENABLE',
@@ -818,11 +818,9 @@ begin
                           RS_APPEARANCE_CTRLJ_SHOWTYPEDCALLSIGN);
    RegisterModelSetting( 'appearance.ctrlj.userInfoShown',    'USER INFO SHOWN',
                           RS_APPEARANCE_CTRLJ_USERINFOSHOWN);
-   (* True: needs a restart -- the main window is laid out from it once, in
-     CreateMainWindow. Preferences edits it on the designed Appearance page
-     (spnWindowSize), hand-wired, not through a generated row. *)
-   RegisterModelSetting( 'appearance.layout.windowSize',       'WINDOW SIZE',
-                          RS_APPEARANCE_LAYOUT_WINDOWSIZE, True);
+   (* WINDOW SIZE ('appearance.layout.windowSize') was removed 2026-11-21
+     (plan stage e6): the main window's text scale follows its width and is
+     saved with the window layout. The name is in uCFG.RETIRED_COMMANDS. *)
 
    (* --- Hardware (1) -------------------------------------------------
 

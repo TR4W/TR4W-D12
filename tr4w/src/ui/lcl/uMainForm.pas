@@ -1623,8 +1623,8 @@ begin
 
      It was the layout's, never the file's, while Constraints pinned it. A
      file written then holds exactly that pinned Width, so an upgrade restores
-     the window it had. A saved width narrower than MinWidth -- a WINDOW SIZE
-     raised since it was saved -- is widened here rather than handed to the
+     the window it had. A saved width narrower than MinWidth -- a starting
+     scale wider than the saved width -- is widened here rather than handed to the
      LCL to refuse, so this rect and the window agree. *)
    if (aSaved.Right - aSaved.Left) > 0 then
       begin

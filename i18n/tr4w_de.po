@@ -4625,9 +4625,8 @@ msgstr "Hauptfenster"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "Die Schriftart gilt für das Hauptwettbewerbsfenster. Alle drei wirken, wenn TR4W das nächste Mal startet."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -8007,9 +8006,8 @@ msgstr "User Infos werden angezeigt"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Fenstergröße"
+#~ msgid "Main window text size"
+#~ msgstr "Fenstergröße"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

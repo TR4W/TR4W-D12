@@ -4254,9 +4254,8 @@ msgstr "Huvudfönstret"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
-#, fuzzy
-msgid "The font applies to the main contest window.  All three take effect when TR4W next starts."
-msgstr "Typsnittet gäller för huvudtävlingsfönstret. Alla tre träder i kraft när TR4W börjar."
+msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
+msgstr ""
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -7710,9 +7709,8 @@ msgstr "Användarinfo Visad"
 
 #: usettingscaptions.rs_appearance_layout_windowsize
 #, fuzzy
-#| msgid "Window Size"
-msgid "Main window text size"
-msgstr "Fönsterstorlek"
+#~ msgid "Main window text size"
+#~ msgstr "Fönsterstorlek"
 
 #: usettingscaptions.rs_audio_dvk_path
 #, fuzzy

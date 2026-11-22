@@ -3262,32 +3262,13 @@ object PrefsForm: TPrefsForm
         TabOrder = 2
         Value = 2
       end
-      object lblWindowSize: TLabel
-        Left = 12
-        Height = 17
-        Top = 106
-        Width = 160
-        AutoSize = False
-        Caption = '(assigned at run time)'
-        FocusControl = spnWindowSize
-      end
-      object spnWindowSize: TSpinEdit
-        Left = 180
-        Height = 22
-        Top = 102
-        Width = 60
-        MaxValue = 15
-        MinValue = 1
-        TabOrder = 3
-        Value = 5
-      end
       object lblAppearHint: TLabel
         Left = 12
         Height = 34
-        Top = 134
+        Top = 102
         Width = 620
         AutoSize = False
-        Caption = 'The font applies to the main contest window.  All three take effect when TR4W next starts.'
+        Caption = 'The font applies to the main contest window.  Both take effect when TR4W next starts.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
