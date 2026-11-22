@@ -135,5 +135,21 @@ of the step-1 copy; the step-2 listener port has not been tested.
    of arbitrary senders: the version gate admits only our own clients, and the
    checksum proves what arrived is what was sent. A server-side required-field
    check would be a second copy of the logging rule, free to drift from it.
-7. **Open:** how the server rebuilds its flat record, if it keeps one, from
-   named fields; the checksum's per-record role versus today's whole-log CRC32.
+7. **The server's log moves to its own SQLite database at the same time as the
+   wire change** (issue 341). That removes the old flat-record question: the
+   server stores the named fields it receives as columns, as Unicode text, and
+   the 376-byte `SERVERLOG.TRW`, its whole-log CRC32 and the hardcoded
+   `CE_*_OFFSET` constants in `tr4wserver.py` all go. The per-record checksum
+   is then the integrity check for each QSO as it arrives.
+8. **Open (design, for the 341 plan):**
+   - Wire field names are the bench's provisional short names (`pfx`, `rcs`).
+     Making them the client's SQLite COLUMN names (`rcvd_year`, `year_sent`, ...)
+     would make the server's mapping the identity and make drift visible; the
+     checksum's field order and set would be defined once, against the schema.
+   - The client's `qso` table also carries the station's own facts (`my_*`
+     columns, `TQsoMyFacts`), which `ContestExchange` does not. Whether the QSO
+     message carries them, so the server's table matches the client's, is a
+     decision for that plan.
+   - How a station catches up from the server's log now that there is no
+     whole-log CRC32 to compare. The per-record identity is `(ceQSOID1, ceQSOID2)`
+     and the row's `guid`; `uNetCatchUp` is where the current design lives.
