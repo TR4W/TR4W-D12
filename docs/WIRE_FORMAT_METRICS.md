@@ -21,7 +21,76 @@ JSON and TLV both end with the record checksum (JSON member `k`, TLV tag 0): a
 CRC-32 over the **full** record, every field in a fixed order, blanks included,
 so it is identical whether or not the sender omitted blanks.
 
-## Result (1,855 QSOs, 13 logs; 3 timing passes; Windows x86_64)
+## FINAL MEASUREMENT: the whole row, 89 columns (2026-11-22)
+
+Once the wire became the QSO as an event, the bench was rebuilt to take its
+field list from the `qso` table (`PRAGMA table_info`, minus the local-only
+columns) and its values from the rows themselves, and omission became "equals
+the column's default" so a NULL and a real 0 stay distinct. **The tables further
+down measured a hand list of 69 record fields and are superseded by this one.**
+(The bench reads the table with a raw `SELECT`; that is an interim exception and
+is replaced by the repository's own column list in stage W1 of the plan.)
+
+Same 1,855 corpus QSOs, 89 wire fields, 29.1 non-default fields per QSO on
+average:
+
+| format                      | avg bytes / QSO | vs the old 376-byte record |
+| --------------------------- | --------------: | -------------------------: |
+| JSON, every field named     |          1,844.6 |                       491% |
+| **JSON, defaults omitted**  |        **680.7** |                   **181%** |
+| TLV (considered, rejected)  |            241.6 |                        64% |
+
+Time per QSO, microseconds (encode = checksum + build; decode = parse + checksum):
+
+| format       | encode (PC, Pascal) | decode (PC, Pascal) | decode, Python, PC | Pi 400 | Pi 5 |
+| ------------ | ------------------: | ------------------: | -----------------: | -----: | ---: |
+| JSON full    |                51.3 |               154.7 |               34.3 |  163.8 | 71.1 |
+| JSON omit    |                20.7 |                58.4 |               25.2 |  122.5 | 50.5 |
+| TLV          |                 5.6 |                 8.2 |               22.6 |   98.3 | 44.2 |
+
+- **Omitting defaults still cuts JSON by 63%** and its time by more than half.
+  At a station's worst case (1,200 QSOs an hour) the slowest decode is 164 us on
+  a Pi 400: a negligible load. Size and extensibility decide this, not speed.
+- **Integrity.** Every non-default field of every QSO treated as lost changes the
+  checksum: **53,937 of 53,937** (Pascal) and **161,856 of 161,856** (Python, all
+  three formats). The round trip is EXACT, every field equal after decode, in all
+  three formats: 0 failures. Python verifies every Pascal frame on the PC, the
+  Pi 400 and the Pi 5.
+- **The non-ASCII pin** (`unicode_synthetic.*`, 7 rows) verifies in both.
+
+### A DATA FINDING THE BENCH MADE (not fixed here)
+
+**3,229 TEXT values in the corpus logs hold a literal NUL character**, in
+`computer_id` and `rcvd_precedence`: the old record's `AnsiChar` "none" (`#0`)
+stored as a one-character string where NULL was meant. TLV carries a NUL
+faithfully; the JSON parser does not, so the first JSON round trip failed on it.
+The sender must treat NUL as blank (the bench strips it and counts it), and the
+**writer** should store NULL: `uLogRepository`'s binding of those `AnsiChar`
+fields is where to look. It is unknown whether live-logged QSOs do this or only
+the migrated fixtures do; no live log was read.
+
+### What posting a QSO costs the main thread today
+
+`bench_post_cost.lpr`, the real `TNetSendQueue` plus the other caller-thread
+work of `PostQsoPacket` (two 384-byte copies; the framing guard, `NetPacketKind`
+and `NetIsConnected` are untimed and are a few nanoseconds). Microseconds per
+post; for scale, the commit itself is **p50 0.60 ms, p99 2.4 ms** in the
+issue-350 bench (WAL journal, `synchronous = 2`):
+
+| link                  | paced (1 per 3 ms) p50 / p99 / max | burst p50 / p99 / max  |
+| --------------------- | ---------------------------------: | ---------------------: |
+| fast                  |                   9.2 / 95.5 / 711 |         0.6 / 4.5 / 55 |
+| slow (5 ms a write)   |                   5.6 / 92.2 / 704 |         0.3 / 6.4 / 46 |
+| stalled (250 ms)      |                  6.6 / 118 / 138   |         0.4 / 0.9 / 21 |
+
+The caller does NOT feel a slow or stalled link (the queue grows, the post does
+not slow), and the post is about 1-1.5% of the commit at p50. It is not zero: a
+few microseconds, and a worst case near 0.7 ms comparable to the commit's p99.
+The paced rows cost more than the bursts because the worker is waking and
+contending for the lock between posts. NY4I's requirement (below) removes even
+this.
+
+## Superseded: the 69-field record measurement (1,855 QSOs, 13 logs; 3 timing passes; Windows x86_64)
 
 | format     | avg bytes / QSO | vs binary | encode us/rec | decode us/rec |
 | ---------- | --------------: | --------: | ------------: | ------------: |
@@ -166,6 +235,16 @@ of the step-1 copy; the step-2 listener port has not been tested.
    - **The bench measured 69 record fields, so its sizes understate this.** The
      `qso` table has well over 100 columns. The numbers need re-measuring with
      the field list taken from the query's own columns, not a hand list.
+   - **THE MAIN-THREAD RULE (NY4I): multi-op networking adds no time to logging
+     a QSO.** The main thread commits the row to SQLite and does ONE non-blocking
+     signal (an event, or the row id onto a lock-free queue) and nothing else for
+     the network. A sender thread reads the committed row on its OWN connection
+     (the log is WAL: a reader does not block the writer), builds the frame,
+     checksums it and writes it, then marks the row sent. Today the post itself
+     is on the main thread (a few microseconds; see above). The `qso` table is
+     already the outbox: `sent_to_server`, `server_dirty` and
+     `UNSENT_TO_SERVER_WHERE`. To prove the rule: commit-to-ready time unchanged
+     with the link up versus down.
    - How a station catches up from the server's log now that there is no
      whole-log CRC32 to compare. The per-record identity is `(ceQSOID1, ceQSOID2)`
      and the row's `guid`; `uNetCatchUp` is where the current design lives.

@@ -1,5 +1,11 @@
 # tr4wserver: should the centralised log move to SQLite? (issue 341)
 
+> **SUPERSEDED IN PART, 2026-11-22: read section 13 first.** NY4I's rulings of
+> that day (issue 300) overturn this note's BLOB-per-record store, its
+> byte-exact `SERVERLOG.TRW` stream and its D1/D2/D3/D5 recommendations. Sections
+> 1-12 are kept as the record of what was read and why; where they disagree with
+> section 13, section 13 governs.
+
 Design note, 2026-11-19. **Nothing here is built.** It answers the open questions
 in issue TR4W/TR4W-D12 #341 from what was read, says what was only inferred, and
 recommends a phased plan. NY4I's rulings are listed at the end; none is assumed.
@@ -592,3 +598,98 @@ Each with a recommendation. None is assumed.
 - TR4WServerPy does not apply the clear-dupesheet and clear-mults messages to its
   log, which the in-tree server does.
 - Clear-all-logs (8230) truncates with no backup, in both servers.
+
+---
+
+## 13. The 2026-11-22 rulings: the wire changes and the server log is rebuilt (issues 300 and 341)
+
+NY4I approved this design on 2026-11-22. The evidence and the measurements are
+in [`WIRE_FORMAT_METRICS.md`](WIRE_FORMAT_METRICS.md); this section is the plan.
+
+### 13.1 What is decided
+
+1. **The wire carries the QSO as an event**: the `qso` table's columns, by
+   column name, including the station facts captured when the QSO was logged
+   (`my_*`), minus the local bookkeeping (`id`, `session_id`, `session_seq`,
+   `sent_to_server`, `server_dirty`, `sent_udp`, `udp_dirty`; `notes`,
+   `rcvd_extra` and `qso_set_id` still need a ruling). The 376-byte
+   `ContestExchange` is NOT the wire any more.
+2. **JSON, a field omitted when it equals its column's default, plus a record
+   checksum.** Omission is "equals the default", never "is zero": a nullable
+   column's NULL and its 0 stay distinct. Absent means the default, never
+   "unchanged"; an edit is a complete snapshot. CRC-32 over every column in
+   schema order as tag + 2-byte byte-length + UTF-8 value, defaults included, so
+   it is the same whether or not a sender omitted anything.
+3. **The wire is UTF-8.** Every sender converts from its own native strings.
+   A NUL is never sent (the writer stores NULL, and the sender treats a NUL as
+   blank).
+4. **No backward compatibility.** The protocol version is the schema version; a
+   server refuses and REPORTS a client of a different version, and the client
+   reports it to the operator (what the operator sees today has not been
+   checked). The old 1040/1050/1055 QSO messages are deleted.
+5. **No required-field list on the wire**; the client refuses to log a QSO with
+   no callsign.
+6. **The server's log is its own SQLite database**, named columns, Unicode
+   text. `SERVERLOG.TRW`, its whole-log CRC32, the byte-exact sync stream and
+   Python's `CE_*_OFFSET` constants are retired. **This overturns section 1
+   items 1 and 2 and D1, D3 and D5.**
+7. **THE MAIN-THREAD RULE: multi-op networking adds no time to logging a QSO.**
+   After the commit the main thread does one non-blocking signal and nothing else
+   for the network; a sender thread reads the committed row on its own connection
+   and sends it. The table is already the outbox (`sent_to_server`,
+   `server_dirty`). Measured today: the post is a few microseconds on the main
+   thread against a 0.6 ms commit; the new design removes it.
+8. **Every part of the design reads the schema through the repository**, not
+   through its own SQL: the wire's column set (name, kind, default, on-wire or
+   not) is defined ONCE beside `TQsoColumn`, with a test that pins it to the
+   `CREATE TABLE`.
+
+### 13.2 Three code bases change together
+
+The Pascal client (`tr4w`), the in-tree Pascal `tr4wserver`, and the Python
+`TR4WServerPy`. With no compatibility there is no mixed fleet, but the three must
+move in one coordinated release, and `netprobe` is how each is proven against the
+others.
+
+### 13.3 Stages
+
+Each stage is green on its own and leaves the program working. The unit tests, the
+lints and the quick build gate each commit; the corpus, the contest matrix and the
+checked run are run once per batch.
+
+| stage | what | exit criterion |
+| ----- | ---- | -------------- |
+| **W1: the codec** (client; no behaviour change) | The wire column table beside `TQsoColumn` (name, kind, default, on-wire) with a test pinning it to the schema; a repository method that returns a row's wire values by column; a leaf unit with the canonical stream, CRC-32 and JSON encode/decode, UTF-8, NUL to blank; a golden-vector file read by BOTH the Pascal unit tests and `wire_check.py`; `bench_wire_formats` switched to the repository's list. | unit tests pass; Python verifies the Pascal vectors; the bench's numbers reproduce; the raw `SELECT` is gone from the bench |
+| **W2: the server store** | The server's SQLite database with the wire's columns, in BOTH servers (Pascal: lift the connection layer out of `uLogDatabase` into a shared unit; Python: standard-library `sqlite3`). `netprobe` row-level cases replace the byte oracle of P0 for the new store. | both servers store and return identical rows for the same input; a server killed mid-run restarts holding every acknowledged QSO |
+| **W3: protocol 5** | New QSO / edit / offline messages carrying an id AND a length (so the framing is no longer a fixed-size table); HELLO protocol 5; the version gate refuses and reports, on the server's log AND to the operator on the client; the old messages deleted. The client posts from the committed row, still from the main thread. | `netprobe --case all` green against both servers; a protocol-4 client is refused with a message the operator sees |
+| **W4: the outbox sender** | The main thread signals; a sender thread reads the committed row and sends it, using the existing `sent_to_server` / `server_dirty` marking; the writer queue stays. | `bench_enter_latency` with the link up versus down: commit-to-ready unchanged; a link that drops mid-contest resends every owed row |
+| **W5: catch-up and retirement** | Catch-up by per-row identity (`(ceQSOID1, ceQSOID2)` and the row's `guid`) in place of the whole-log CRC32; `SERVERLOG.TRW`, the sync-port stream and the `CE_*` offsets deleted; Clear-all-logs backs up first (D9). | a station joins late and receives the log; both servers; the old code paths are gone, not dormant |
+
+### 13.4 Tests and benches
+
+- **Golden vectors** shared by Pascal and Python: rows with NULL, 0, defaults,
+  NUL, non-ASCII, a 510-byte value, a character outside the BMP, the string
+  `"0"`. Both implementations must produce byte-identical canonical streams and
+  checksums.
+- **Dropped-field and exact round-trip** tests, over the corpus, as the bench
+  does today.
+- **The main-thread rule**: `bench_enter_latency`, link up versus down.
+- **The schema pin**: a test that fails when a column is added to the table and
+  not classified (on-wire or local), so the wire cannot drift from the schema.
+
+### 13.5 Risks and open questions
+
+- **The 376-byte stream was the rollback.** With the byte-exact sync stream gone
+  there is no free rollback; the exporter (`--export-trw`) is the interchange and
+  a real backup before the first run on a live station is the mitigation.
+- **Defaults are defined in the `CREATE TABLE` text.** The wire table repeats
+  them; the schema pin test is what keeps the two equal.
+- **NUL in TEXT columns** (3,229 values in the corpus): the writer's
+  `AnsiChar` binding should store NULL; unknown whether live logging does this.
+- Open rulings: `notes`, `rcvd_extra`, `qso_set_id` on or off the wire; what the
+  operator sees today on a version refusal; how W2's Pascal server shares the
+  connection layer (section 5 of this note still applies to the lift).
+- Phases P0 and P1 of section 9 (byte oracle, store seam) are described there as
+  built; their status in the tree was not re-checked for this section. The store
+  seam (`uServerLogStore`) is still the right interface; the byte oracle is the
+  thing W5 retires.

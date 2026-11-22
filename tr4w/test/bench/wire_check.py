@@ -4,11 +4,11 @@ bench_wire_formats.exe <corpus> 3 <outdir> writes, per corpus log, three files
 of length-prefixed frames (4-byte little-endian length, then the payload):
 
    <set>.jsonfull   JSON, every field named
-   <set>.jsonomit   JSON, blank and zero fields omitted
+   <set>.jsonomit   JSON, fields equal to their column's default omitted
    <set>.tlv        tag byte, 2-byte length, UTF-8 value; tag 0 is the checksum
 
-plus fields.json: the field names in TAG ORDER (tag i is entry i, 1-based) and
-whether each is numeric.
+plus fields.json: the qso table's columns in TAG ORDER (tag i is entry i,
+1-based), whether each is numeric, and its default.
 
 THIS IS AN INDEPENDENT RECEIVER. It never sees the Pascal code: it decodes each
 frame, fills every missing field with blank, rebuilds the canonical stream from
@@ -19,7 +19,10 @@ point of running it in another language (and on another machine).
 
 THE CANONICAL RULE: for every field i = 1..N in order, with blanks included:
    byte(i), 2-byte little-endian BYTE length, the value's UTF-8 bytes
-where a numeric 0 and an empty string are both the empty value. (The wire is
+where NULL and an empty string are both the empty value, and a number is its
+decimal digits (so a numeric 0 is "0", NOT empty: a nullable column's NULL and
+its 0 stay different). A field the sender OMITTED takes its column's default
+(fields.json "def"; "" for none). (The wire is
 UTF-8: every sender converts from its own native strings. A TLV frame is
 tag byte, 2-byte length, UTF-8 value; tag 0 is the 4-byte checksum.)
 
@@ -42,11 +45,17 @@ import time
 import zlib
 
 
+# Each field's DEFAULT as canonical text ('' for NULL), index 1..N; set by main()
+# from fields.json. A field a sender omitted takes its default; a field treated
+# as lost in the dropped-field test reverts to it.
+DEFS = [""]
+
+
 def canon_crc(vals, skip=0):
    """CRC-32 of the canonical stream. vals[0] is unused (tags start at 1)."""
    parts = []
    for i in range(1, len(vals)):
-      v = "" if i == skip else vals[i]
+      v = DEFS[i] if i == skip else vals[i]
       b = v.encode("utf-8")
       parts.append(bytes((i, len(b) & 0xFF, len(b) >> 8)))
       parts.append(b)
@@ -67,22 +76,25 @@ def read_frames(path):
 
 
 def decode_json(frame, names, nums):
-   """Returns (vals, stated_crc). A missing member stays blank."""
+   """Returns (vals, stated_crc). A missing member takes its default; a JSON
+   null is the empty value (a NULL)."""
    obj = json.loads(frame.decode("utf-8"))
    stated = int(obj.pop("k"), 16)
-   vals = [""] * (len(names) + 1)
+   vals = list(DEFS)
    for idx, name in enumerate(names, start=1):
       if name in obj:
          v = obj[name]
-         if nums[idx - 1]:
-            vals[idx] = "" if v == 0 else str(v)
+         if v is None:
+            vals[idx] = ""
+         elif nums[idx - 1]:
+            vals[idx] = str(v)
          else:
             vals[idx] = v
    return vals, stated
 
 
 def decode_tlv(frame, count):
-   vals = [""] * (count + 1)
+   vals = list(DEFS)
    stated = 0
    p = 0
    while p < len(frame):
@@ -109,7 +121,7 @@ def check(frames, decode):
       if full != stated:
          bad += 1
       for i in range(1, len(vals)):
-         if vals[i] != "":
+         if vals[i] != DEFS[i]:
             trials += 1
             if canon_crc(vals, skip=i) != full:
                caught += 1
@@ -139,6 +151,7 @@ def main():
    names = [e["name"] for e in fields]
    nums = [e["num"] for e in fields]
    count = len(names)
+   DEFS[:] = [""] + [e["def"] for e in fields]
 
    formats = [
       ("jsonfull", lambda fr: decode_json(fr, names, nums)),
