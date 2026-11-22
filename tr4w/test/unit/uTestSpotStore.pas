@@ -56,6 +56,7 @@ type
       procedure Test_ResetTimesAndDupes;
       procedure Test_UpdateDupeStatusMatchesCallBandMode;
       procedure Test_MutatorsRaiseTheRepaintToken;
+      procedure Test_NextForBandMode_FindsFromStartAndNeverPastTheEnd;
    public
       procedure RunAllTests; override;
    end;
@@ -502,6 +503,35 @@ begin
    Empty;
 end;
 
+(* ISSUE 202: the search behind NEXTBANDMAP. Spots are kept in frequency
+  order: K1AAA and K1BBB are 20 CW, K1CCC is 15 CW. *)
+procedure TSpotStoreTests.Test_NextForBandMode_FindsFromStartAndNeverPastTheEnd;
+begin
+   Empty;
+   CheckEquals(-1, SpotsList.IndexOfNextForBandMode(0, Band160, CW),
+      'an empty store has no match, and Count = 0 is not an index to read');
+   Put(BASE_FREQ + 1000, 'K1AAA', Band20);
+   Put(BASE_FREQ + 2000, 'K1BBB', Band20);
+   Put(BASE_FREQ + 3000, 'K1CCC', Band15);
+   CheckEquals(0, SpotsList.IndexOfNextForBandMode(0, Band20, CW), 'first 20 CW');
+   CheckEquals(1, SpotsList.IndexOfNextForBandMode(1, Band20, CW),
+      'from the index itself, so a caller advances by passing match + 1');
+   CheckEquals(-1, SpotsList.IndexOfNextForBandMode(2, Band20, CW),
+      'no 20 CW from index 2 on');
+   CheckEquals(2, SpotsList.IndexOfNextForBandMode(-5, Band15, CW),
+      'a negative start scans from 0');
+   CheckEquals(-1, SpotsList.IndexOfNextForBandMode(0, Band20, Phone),
+      'the mode must match as well');
+   (* THE DEFECT: the old loop ran to Count, where Get answers the all-zero
+     record -- Band160, CW. Next on 160 CW with no 160 spot "matched" it and
+     put an empty call in the call box. *)
+   CheckEquals(-1, SpotsList.IndexOfNextForBandMode(0, Band160, CW),
+      '160 CW with no 160 spot: no match, not the all-zero record past the end');
+   CheckEquals(-1, SpotsList.IndexOfNextForBandMode(3, Band15, CW),
+      'a start past the last index finds nothing');
+   Empty;
+end;
+
 procedure TSpotStoreTests.RunAllTests;
 var
    so2r: boolean;
@@ -541,6 +571,7 @@ begin
       Test_ResetTimesAndDupes;
       Test_UpdateDupeStatusMatchesCallBandMode;
       Test_MutatorsRaiseTheRepaintToken;
+      Test_NextForBandMode_FindsFromStartAndNeverPastTheEnd;
    finally
       Empty;
       if so2r then

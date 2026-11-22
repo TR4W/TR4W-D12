@@ -528,7 +528,9 @@ implementation
 
 uses
    SysUtils,        (* Format *)
-   uTR4WStrings,    (* TC_TOOMANYCOUNTIES *)
+   uTR4WStrings,    (* was TC_TOOMANYCOUNTIES, now said by uContestBase.
+                       CountyLineCountAllowed (issue 85); kept so this
+                       unit's name resolution is unchanged *)
    uAppStrings,     (* SExchangeOutOfStateWorksHostOnly *)
    uAppPaths,       (* ShippedDomFilePath -- the party's county file *)
    uDomFileKeys,    (* DomFileKeyTargets, DomFileKeyNames, DOM_EXTENSION *)
@@ -884,24 +886,11 @@ end;
 
 function TContestStateQSOPartyBase.ValidateQTHCount(aCount: integer;
                                         out aErrorMessage: string): boolean;
-var
-   maxCounties: integer;
 begin
-   aErrorMessage := '';
-   maxCounties := GetCountyLineCountiesMax;
-
-   if maxCounties = CountyLineCountiesUnlimited then
-      begin
-      Result := True;
-      Exit;
-      end;
-
-   Result := (aCount <= 1) or (aCount <= maxCounties);
-
-   if not Result then
-      begin
-      aErrorMessage := Format(TC_TOOMANYCOUNTIES, [maxCounties]);
-      end;
+   (* uContestBase.CountyLineCountAllowed is the one statement of the rule
+      (issue 85): CountyLineCountiesUnlimited is High(integer), which it
+      accepts for any count. *)
+   Result := CountyLineCountAllowed(aCount, GetCountyLineCountiesMax, aErrorMessage);
 end;
 
 

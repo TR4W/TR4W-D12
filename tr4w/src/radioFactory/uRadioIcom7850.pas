@@ -74,6 +74,8 @@ begin
      deliver it is SpectrumAvailable's question, and it answers no on a serial
      link until someone has watched the divided path work. }
    DeclareScopeGeometry(689, 200);
+   // PTT by CAT: "Yes" in the TR4W Feature to Radio Feature Matrix (issue 36).
+   FCapabilities.PTTByCAT := pbcConfirmed;
 end;
 
 

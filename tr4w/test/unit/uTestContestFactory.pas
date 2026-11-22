@@ -135,6 +135,7 @@ type
       procedure Test_M7bBatch2ScoringEdges;
       procedure Test_UA4WAsksForMyCQZone;
       procedure Test_RSGB18AsksTheSheetReadOnly;
+      procedure Test_RSGB18CountsAStationOncePerMode;
    public
       procedure RunAllTests; override;
    end;
@@ -4271,6 +4272,49 @@ begin
       end;
 end;
 
+(* RSGB 1.8 MHz: A STATION MAY BE WORKED ON CW AND AGAIN ON SSB -- issue 58,
+   the sponsor's rule 6 ("In the February event, stations may be worked on
+   both SSB and CW for QSO points"). QSO BY MODE, so the dupe sheet keeps the
+   two apart; NOT mult by mode (the bonus is "regardless of mode"), and the
+   same points on either mode. *)
+procedure TContestFactoryTests.Test_RSGB18CountsAStationOncePerMode;
+var
+   obj: TContestBase;
+
+   function Score(aMode: ModeType): integer;
+   var
+      qso: ContestExchange;
+   begin
+      qso := Default(ContestExchange);
+      qso.Band := Band160;
+      qso.Mode := aMode;
+      qso.Callsign := 'G3ABC';
+      qso.QSOPoints := 99;
+      obj.ScoreQSO(qso);
+      Result := qso.QSOPoints;
+   end;
+
+begin
+   BeginTest('Test_RSGB18CountsAStationOncePerMode');
+   CheckTrue(ContestIdentity(RSGB18).QSOByMode, 'a QSO counts once per mode');
+   CheckFalse(ContestIdentity(RSGB18).MultByMode, 'the bonus is regardless of mode');
+   CheckTrue(cfCountsDomesticCountries in ContestIdentity(RSGB18).Flags,
+             'its other flag is unchanged');
+
+   obj := MakeContest(RSGB18);
+   CheckTrue(obj <> nil, 'RSGB 1.8 has no registered class');
+   if obj = nil then
+      begin
+      Exit;
+      end;
+   try
+      CheckEquals(2, Score(CW), 'CW: 2');
+      CheckEquals(2, Score(Phone), 'SSB: the same 2');
+   finally
+      obj.Free;
+      end;
+end;
+
 procedure TContestFactoryTests.RunAllTests;
 begin
    Test_EveryRegisteredContestConstructs;
@@ -4334,6 +4378,7 @@ begin
    Test_M7bBatch2ScoringEdges;
    Test_UA4WAsksForMyCQZone;
    Test_RSGB18AsksTheSheetReadOnly;
+   Test_RSGB18CountsAStationOncePerMode;
 end;
 
 end.

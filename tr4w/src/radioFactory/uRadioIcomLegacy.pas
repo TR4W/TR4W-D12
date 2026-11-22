@@ -166,6 +166,10 @@ begin
   inherited Create;
   RadioAddress := $70;
   radioModel := 'Icom IC-7000';
+  // PTT by CAT: "Yes" in the TR4W Feature to Radio Feature Matrix (issue 36).
+  // Declared HERE, on the IC-7000 alone -- never on TIcomLegacyRadio: the three
+  // IC-706 models share that base and the matrix does not confirm them.
+  FCapabilities.PTTByCAT := pbcConfirmed;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

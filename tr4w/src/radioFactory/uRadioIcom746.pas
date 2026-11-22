@@ -57,6 +57,11 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWSpeedSync];
+   // PTT by CAT: "No" for the IC-746 in the TR4W Feature to Radio Feature
+   // Matrix (issue 36) -- KNOWN ABSENT, and the operator is told at set-up.
+   // The IC-746PRO is a different radio and a different unit; the matrix does
+   // not list it, so it stays not confirmed.
+   FCapabilities.PTTByCAT := pbcKnownAbsent;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

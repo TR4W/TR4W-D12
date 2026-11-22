@@ -1,0 +1,111 @@
+/* -- Mods for Custom Google Fonts -- */
+
+@import url(https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,300italic,700);
+
+h1,h2,h3,h4,h5,h6,h7,
+#sitetitle .title,
+#sitetitle .description,
+#topnav,
+#catnav,
+#commentform input#submit,
+.archive-tabs a,
+.archive-tabs a:link,
+.archive-tabs a:visited,
+a.more-link,
+a.more-link:link,
+a.more-link:visited,
+.widget.sidetabs ul.tabs li a,
+#footer .footurl,
+p.email-form .subbutton,
+#searchform #submitbutton,
+p.email-form .sub,
+#searchform #searchfield,
+.featured.wide.pages .flexslide-custom-controls li a,
+#footnav {
+	font-family:'Open Sans Condensed',arial,helvetica,sans-serif;
+	font-weight:bold;
+	}
+
+.featured.wide.pages .flexslide-custom-controls li a {
+	font-size:11px;
+	text-transform:uppercase;
+	}
+
+#sitetitle .title {
+	font-size:30px;
+	line-height:30px;
+	}
+
+#sitetitle .description {
+	font-size:13px;
+	}
+
+#commentform input#submit,
+.archive-tabs a,
+.archive-tabs a:link,
+.archive-tabs a:visited,
+a.more-link,
+a.more-link:link,
+a.more-link:visited,
+p.email-form .subbutton,
+#searchform #submitbutton,
+p.email-form .sub,
+#searchform #searchfield {
+	font-size:11px;
+	text-transform:uppercase;
+	}
+
+.widget.sidetabs ul.tabs li a, 
+.widget.sidetabs ul.tabs li a:link, 
+.widget.sidetabs ul.tabs li a:visited  {
+	font-size:9pt;
+	font-weight:bold;
+	}
+
+h2.feature-title,
+h3.widgettitle,
+h2.feat-title,
+h1.archive-title {
+	letter-spacing:0;
+	line-height:1.5em;
+	margin:0;
+	padding:5px 15px;
+	background:#fff url(images/catnav-bg.png) bottom left repeat-x;
+	font-size:13px;
+	}
+
+h3.widgettitle {
+	padding:5px 9px;
+	}
+
+#footer-widgets h3.widgettitle, 
+#alt-home-bottom h3.widgettitle,
+.controls-container h2 {
+	font-size:13px;
+	}
+
+#topnav {
+	font-size:12px;
+	}
+
+#topnav ul li.rss-content,
+#topnav ul li.rss-comments {
+	background-position: 10px 6px;
+	}
+
+#catnav {
+	font-size:11px;
+	text-transform:uppercase;
+	}
+
+#footer .footurl a  {
+	font-weight:bold;
+	color:#fff;
+	font-size:16px;
+	}
+
+#footnav ul a, 
+#footnav ul a:link, 
+#footnav ul a:visited {
+	font-size: 12px;
+	}

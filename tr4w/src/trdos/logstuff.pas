@@ -7888,6 +7888,9 @@ begin
   session.CallWindowHasCall := CallWindowString <> '';
   session.AbandonEntry := @ParseSessionAbandonEntry;
   session.MarkRefusedWord := @ParseSessionMarkRefusedWord;
+  (* LOGDUPE's, the lookup typed entry runs -- IN7QPNE's county line asks
+    it which party a queued county belongs to (issue 85). *)
+  session.ResolveDomesticQTH := @DomesticQTHAndKeyOf;
 
   Result := contestRules.ParseReceivedExchange(string(ExchangeString),
                                                session, RData, refusal);

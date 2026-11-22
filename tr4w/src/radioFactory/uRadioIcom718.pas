@@ -80,6 +80,12 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWSpeedSync];
+   // PTT by CAT: "No" in the TR4W Feature to Radio Feature Matrix (issue 36).
+   // KNOWN ABSENT, not merely unconfirmed -- the operator is told at set-up.
+   // Declared here, after inherited Create, so DefineCapabilities (which runs
+   // inside it) cannot overwrite it; it is a field, so it survives Flags := []
+   // in any case.
+   FCapabilities.PTTByCAT := pbcKnownAbsent;
 end;
 
 procedure TIcom718Radio.DefineCapabilities;

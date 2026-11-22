@@ -426,8 +426,8 @@ cannot see it:
   differently from its enum name. Five do (`IC910H`, `FTX-1`, `TRX-MANAGER`,
   `HAMLIB-ANY`, `NONE`). A new radio never needs it.
 
-One pin you **do** still owe, because it is the factory's own invariant and it
-guards a silent failure:
+Pins you **do** still owe, because they are the factory's own invariants and
+guard silent failures:
 
 - **a row in `ID_CW_PINS`** (`uTestCWFraming.pas`) if the radio declares
   `rcCWByCAT`. Without one its `maxLen` is an uninitialised zero — "no limit" —
@@ -435,6 +435,13 @@ guards a silent failure:
   accepts 24. `Test_EveryKeyingRadioIsPinned` walks id-only radios as well as
   enum ones, so a missing row fails the build. It caught TCI the day it was
   written.
+- **its display name in ONE of the three PTT-by-CAT lists** in
+  `uTestRadioPTTByCAT.pas` (issue 36), for every radio. Confirmed or known
+  absent only on evidence (the wiki "TR4W Feature to Radio Feature Matrix" or a
+  bench), declared as `FCapabilities.PTTByCAT := pbcConfirmed` /
+  `pbcKnownAbsent` in the model's OWN constructor; otherwise the
+  "not confirmed" list and nothing in the constructor. A radio in no list fails
+  the build by name -- on purpose, so the classification is a decision.
 
 And one gap to know about rather than trip over: `CREDENTIALED_NETWORK_RADIOS` /
 `OPEN_NETWORK_RADIOS` in `uTestRegistryTaxonomy.pas` are enum lists, so the

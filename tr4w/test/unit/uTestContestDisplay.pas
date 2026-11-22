@@ -1343,6 +1343,15 @@ begin
          CheckEquals('CW Clubs', d.PrefixMultsCaptionCW, who + ' on CW');
          CheckEquals('Ph Clubs', d.PrefixMultsCaptionPhone, who + ' on phone');
          end
+      (* WRT, THE WEEKLY RTTY TEST (issue 25): "Each unique call (once per
+        session) is a multiplier" -- the CW Open's rule, so its row says
+        CALLS too. *)
+      else if ContestId(HandleOf(identities[k])) = 'WRT' then
+         begin
+         CheckEquals(STotalsCallsignMults, d.PrefixMultsCaption, who + ': callsign multipliers');
+         CheckEquals('CW Calls', d.PrefixMultsCaptionCW, who + ' on CW');
+         CheckEquals('Ph Calls', d.PrefixMultsCaptionPhone, who + ' on phone');
+         end
       else if c <> CWOPEN then
          begin
          CheckEquals(TC_PREFIX, d.PrefixMultsCaption, who + ' prefix label');
@@ -2016,6 +2025,12 @@ begin
       begin
       c := ArmMemberOf(identities[k]);
       q := CanonicalQSO(HandleOf(identities[k]));
+      (* WRT, THE WEEKLY RTTY TEST (issue 25), has the name-and-QTH exchange of
+        CW Ops: it has no legacy arm of its own, so it is named by id. *)
+      if ContestId(HandleOf(identities[k])) = 'WRT' then
+         begin
+         c := CWOPS;
+         end;
       case c of
          CQWPXCW, CQWPXSSB, DARCWAEDCCW:
             begin

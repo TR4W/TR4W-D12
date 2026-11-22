@@ -245,6 +245,28 @@ silence -- cross-thread race). **Only `TFlexAPI` declares it** (`ping` every
 AetherSDR, not Flex docs. `TFlexAPI.NextSeq` is `InterlockedIncrement` now
 (three threads send).
 
+**PTT BY CAT IS THREE-STATE KNOWLEDGE, BECAUSE "NOT LISTED" IS NOT "LACKS"**
+(issue 36, 2026-11-22, NOT bench-tested). `TRadioCapabilities.PTTByCAT:
+TPTTByCATKnowledge` = `pbcNotConfirmed` (ordinal 0, the zeroed default) /
+`pbcConfirmed` / `pbcKnownAbsent` -- ONE FIELD, not two `Flags` members: it
+cannot say both, and a wholesale `Flags :=` (the IC-718's `Flags := []`)
+cannot wipe it. Members re-exported through `uRadioRegistry` like `rcCWByCAT`.
+**Declared in each MODEL's constructor only** -- the IC-7000 in
+`TIcom7000Radio.Create`, never on `TIcomLegacyRadio` (the 706s are not
+confirmed). Source: NY4I's wiki "TR4W Feature to Radio Feature Matrix", PTT
+column: Yes = K4, K3, KX3, TS-590, IC-9700/7610/7300/7851/7850/7100/9100/
+7000/7200/7600/7700/756/756PRO/756PROII/756PROIII/7800; No = IC-746 (NOT the
+746PRO) and IC-718; everything else not confirmed. **The program only REPORTS,
+never refuses**: `LogRadio.ReportPTTByCATKnowledge`, called from
+`AdoptFactoryObject` (main thread, every construction site), asks the pure
+`PTTByCATReportFor(knowledge, Settings.Ptt.ViaCommands)`: not confirmed -> one
+Info line, known absent -> WARN + `QuickDisplayError(SRadioPTTByCATNotSupported)`;
+once per session per (display name + state). NOT at key-up:
+`tPTTVIACATForRadio` runs on WSJT-X/TCI threads. A HamLib-driven radio is
+`THamLibDirect`, so it reports "not confirmed" whatever the model.
+**`uTestRadioPTTByCAT` walks the whole registry and fails on any radio in no
+list** -- a new driver must be classified on purpose, and a stale pin fails too.
+
 **A QUESTION ASKED AT CONNECT BELONGS IN THE DRIVER'S `Connect`, NOT IN A UI
 PATH.** The K4's spectrum socket connects before its CAT link, so `#SPN;` sent
 from `StartSpectrum` was dropped at every start; it is in `TK4Radio.Connect`

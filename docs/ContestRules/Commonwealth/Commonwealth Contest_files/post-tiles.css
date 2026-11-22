@@ -1,0 +1,350 @@
+/* Admin CSS */
+#color-picker-example {
+	float: left;
+	border: 1px solid #c3c3c3;
+	padding: 15px 15px 20px;
+	border-radius: 10px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	background-color: #f8f8f8;
+	-moz-box-shadow: inset 0px 0px 10px rgba(0,0,0,0.1);
+	-webkit-box-shadow: inset 0px 0px 10px rgba(0,0,0,0.1);
+	box-shadow: inset 0px 0px 10px rgba(0,0,0,0.1);
+	margin: 10px 0 10px 10px;
+}
+
+#tc-footer {
+	margin-top: 15px;
+	color: #7b7b7b;
+	margin-bottom: -10px;
+	font-size: 11px;
+}
+
+#color-container {
+	min-width: 690px;
+	overflow: auto;
+	border: 1px solid #d9d9d9;
+	border-radius: 10px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	padding-right: 15px;
+}
+#example-post {
+	display: block;
+	padding: 10px;
+	color: #ffffff;
+	width: 155px;
+	height: 155px;
+	margin-top: 10px;
+	margin-left: 10px;
+	line-height: 15px;
+	background-color: #afe2f8;
+}
+#example-tile {	
+	text-transform: uppercase; 
+	font: normal normal 28px;
+	margin-bottom: 10px;
+} 
+#category-list {
+	float: left;
+	margin-left: 20px;
+	overflow: auto;
+}
+#category-list li {
+	padding: 5px 10px;
+	margin-bottom: 0;
+}
+.tc-note {
+	padding: 8px;
+	border-radius: 10px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	background-color: #fffdeb;
+	margin-top: 10px;
+	font-size: 12px;
+	border: 1px solid #edd500;
+	clear: both;
+}
+#donate-box {
+	font-size: 11px;
+	padding: 10px;
+	background-color: #f7f7f7;
+	border: 1px solid #e0e0e0;border-radius: 10px;
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	margin: 10px 0 0;
+	color: #707070;
+}
+
+#donate-box h3 {
+	margin: 0;
+	font-size: 16px;
+}
+
+#donate-box form {
+	text-align: center;
+	float: right;
+}
+
+.category-key-list-item {
+	overflow: auto;
+	margin-bottom: 0;
+	border-top: 1px solid #dbdbdb;
+	margin-top: 0;
+	padding: 10px;
+}
+#category-list ul li:nth-child(odd) {
+	background-color: #f7f7f7;
+}
+.small-input {
+	width: 95px;
+}
+#animation-style {
+	width: 96px;
+}
+#submit-button {
+	padding-top: 10px;
+	border-top: 1px solid #dbdbdb;
+	padding-bottom: 10px;
+}
+.category-key-radio {
+	float: left;
+	padding-top: 7px;
+	padding-right: 20px;
+}
+
+.category-key-admin {
+	float: left;
+}
+
+#category-list ul li hr {
+	clear: both;
+	border-top: 1px dashed #c9c9c9;
+}
+
+/* End Admin CSS */
+
+
+
+
+/* Frontend CSS */
+#post-tiles-container {
+	padding-top: 15px;
+}
+ul#post-tiles {
+	margin: 0;
+	padding: 0 10px 10px;
+	overflow: auto;
+}
+
+ul#post-tiles li {
+	margin: 0 5px 5px 0;
+	padding: 0;
+	list-style: none;
+	float: left;
+	overflow: hidden;
+}
+ul#post-tiles li a {
+	display: block;
+	padding: 10px;
+	color: #ffffff;
+/*	width: 155px;
+	height: 155px;*/
+	position: relative;
+	z-index: 100;
+	margin-top: 0px;
+	font-weight: normal;
+	font-style: normal;
+	text-decoration: none;
+	font-variant: normal;
+	text-transform: none;
+	font-size: 13px;
+	line-height: 16px;
+}
+
+ul#post-tiles li.news-image a{
+	margin-top: -178px;
+	margin-left: -170px;
+	-moz-box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+	-webkit-box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+	box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+}
+
+ul#post-tiles li a h3{
+	margin: 0 0 10px;
+	text-transform: uppercase;
+	font-size: 14px;
+	color: #ffffff;
+	line-height: 17px;
+	letter-spacing: 0;
+} 
+ul#post-tiles li a p {
+	margin: 0;
+	color: #ffffff;
+	font-size: 11px;
+	line-height: 15px;
+}
+
+ul#post-tiles li a:hover {
+	background: url(plus.png) no-repeat 100% 100%;
+}
+#category-key {
+	overflow: auto;
+	padding-right: 0;
+	padding-left: 0;
+	padding-bottom: 14px;
+}
+#category-key a{
+	display: block;
+	float: left;
+	padding: 5px 10px;
+	color: #ffffff;
+	margin-right: 5px;
+	font-size: 12px;
+}
+#category-all {
+	border: 1px solid #b1b1b1;
+	color: #888888 !important;
+	padding: 4px 10px !important;
+}
+li.featured-image.up a {
+	top: 100%;
+}
+li.featured-image.down a {
+	bottom: 105%;
+}
+li.featured-image.left a {
+	right: 105%;
+}
+li.featured-image.right a {
+	left: 105%;
+}
+li.featured-image.fade a {
+	left: 105%;
+	display: none;
+}
+li.featured-image a{
+	background: url(plus.png) no-repeat 100% 100%;
+	-moz-box-shadow: 0 0 10px rgba(0, 0, 0, 0.62);
+	-webkit-box-shadow: 0 0 10px rgba(0, 0, 0, 0.62);
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.62);
+}
+/* @group Pagination */
+.posttiles-pagination {
+	display: block;
+	overflow: auto;
+	padding-bottom: 14px;
+}
+
+.posttiles-pagination a {
+	display: block;
+	float: left;
+	display: block;
+	float: left;
+	padding: 4px 10px;
+	margin-right: 5px;
+	font-size: 12px;
+	border: 1px solid #b1b1b1;
+	color: #888888;
+}
+.posttiles-pagination a {
+	
+}
+.posttiles-pagination span {
+	display: block;
+	float: left;
+	display: block;
+	float: left;
+	padding: 4px 10px;
+	margin-right: 5px;
+	font-size: 12px;
+	border: 1px solid #d3d3d3;
+	color: #d3d3d3;
+}
+
+/* @end */
+
+/* Add retina display plus icon */
+@media screen and (-webkit-min-device-pixel-ratio: 2), 
+screen and (max-moz-device-pixel-ratio: 2){
+	li.featured-image a {
+		background: url(plus@2x.png) no-repeat 100% 100%;
+		background-size: 33px 33px;
+	}
+	ul#post-tiles li a:hover {
+		background: url(plus@2x.png) no-repeat 100% 100%;
+		background-size: 33px 33px;
+	}
+}
+
+/* Responsive Code */
+ul#post-tiles.responsive li a, ul#post-tiles.responsive-mobile li a {
+	width: 90%;
+	height: 90%;
+	padding: 5% 5% 5% 5%;
+	position: relative;
+}
+div#category-key.responsive {
+	padding: 1%;
+}
+/* Larger Screens */
+@media only screen and (min-width: 1200px) and (max-width: 1600px){
+	html, body {
+		height: 100%;
+	}
+	ul#post-tiles.responsive {
+		padding: 1% 0 1% 1%;
+		margin-right: -1%;
+		margin-left: 0;
+	}
+	ul#post-tiles.responsive li {
+		width: 19%;
+		margin: 0 1% 1% 0;
+	}
+}
+/* Large Screens */
+@media only screen and (min-width: 800px) and (max-width: 1200px) {
+	html, body {
+		height: 100%;
+	}
+	ul#post-tiles.responsive {
+		padding: 1% 0 1% 1%;
+		margin-right: -1%;
+		margin-left: 0;
+	}
+	ul#post-tiles.responsive li {
+		width: 24%;
+		margin: 0 1% 1% 0;
+	}
+}
+/* Small screens */
+@media only screen and (min-width: 501px) and (max-width: 799px){
+	ul#post-tiles.responsive {
+		padding: 1% 0 1% 1%;
+		margin-left: 0;
+	}
+	ul#post-tiles.responsive li {
+		width: 49%;
+		margin: 0 1% 1% 0;
+	}
+	ul#post-tiles.responsive li a {
+		height: 84%;
+		padding-bottom: 16px;
+	}
+}
+/* Tiny screens */
+@media only screen and (min-width: 0px) and (max-width: 500px) {
+	ul#post-tiles.responsive {
+		padding: 1%;
+		margin-left: 0;
+	}
+	ul#post-tiles.responsive li {
+		width: 100%;
+		margin: 0 1% 1% 0;
+	}
+	ul#post-tiles.responsive li a {
+		height: 84%;
+		padding-bottom: 12px;
+	}
+}
+/* End Frontend CSS */

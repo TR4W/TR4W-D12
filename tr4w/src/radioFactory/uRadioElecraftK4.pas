@@ -233,6 +233,8 @@ begin
    // is deliberately NOT a TElecraftSerial -- it is a network+serial radio with
    // an AI push model (see this unit's header).
    FCapabilities.CWFrame := CWFrameRule(22, True);
+   // PTT by CAT: "Yes" in the TR4W Feature to Radio Feature Matrix (issue 36).
+   FCapabilities.PTTByCAT := pbcConfirmed;
 end;
 
 function TK4Radio.SpectrumAvailable: Boolean;

@@ -272,9 +272,18 @@ begin
    Result := CabrilloReceivedRSTQSONumberQTH(aMy, aQso, aCtx);
 end;
 
+(* QSO BY MODE -- issue 58 (2026-11-22), the sponsor's rule 6: "In the
+   February event, stations may be worked on both SSB and CW for QSO points"
+   (docs/ContestRules/RSGB-160). So a station worked on CW is not a dupe on
+   SSB. NOT MULT BY MODE: the 5-point bonus is "for the first contact with
+   every UK&CD District and ... DXCC Country ... regardless of mode", which
+   CalculateQSOPoints already asks of the sheet's both-mode row; the points
+   are the same on every mode. The November event is CW only, so the flag
+   changes nothing there. That November refuses SSB is NOT stated: one class
+   serves both events and UsesMode sees no date -- reported on the issue. *)
 function TContestRSGB18.GetFlags: TContestFlags;
 begin
-   Result := [cfCountsDomesticCountries];
+   Result := [cfCountsDomesticCountries, cfQSOByMode];
 end;
 
 function TContestRSGB18.GetIsUSQSOParty: boolean;

@@ -862,6 +862,7 @@ implementation
 
 
 uses
+   uAppStrings,        // SRadioPTTByCATNotSupported (issue 36); no name in it clashes here
    uSettingsModel,     // Settings -- the settings that have left CFGCA
    LogK1EA,
    LogWind,
@@ -1710,6 +1711,95 @@ begin
    Result := PortKindOf(Self.tKeyerPortName, Self.tKeyerPort);
 end;
 
+(* PTT BY CAT: SAY ONCE WHAT IS KNOWN ABOUT THIS RADIO (issue 36).
+
+  NY4I's ruling ("Agree with recommend"): when the operator has asked for PTT
+  by CAT, a radio that is NOT CONFIRMED to take it gets one log line, and a
+  radio KNOWN TO LACK it gets a notice on the main window.  A confirmed radio
+  gets nothing.  What kind of report is due is the pure
+  uFactoryRadioBase.PTTByCATReportFor; the knowledge is the radio's own
+  declaration, never a model test here.
+
+  NOTHING IS REFUSED OR CHANGED.  tPTTVIACATForRadio still sends the command;
+  this only tells the operator what the feature matrix says.
+
+  ONCE PER SESSION PER RADIO.  A radio is REBUILT on every Reset Radio Ports and
+  every profile save, so without the memory the notice would repeat on each.
+  The key is the registry's display name PLUS the knowledge, so the same model
+  driven through HamLib (whose generic driver knows nothing, so "not
+  confirmed") and then natively (perhaps "known absent") still reports the
+  second time.  Two slots holding the same model report once.
+
+  MAIN THREAD ONLY, which is why this is called at SET-UP and not at key-up:
+  AdoptFactoryObject runs from SetUpRadioInterface, which startup,
+  ApplyProfile and ResetRadioPorts drive on the main thread.  tPTTVIACATForRadio
+  is also called from the WSJT-X and TCI server threads, and the unlocked
+  memory below would race there. *)
+var
+   PTTByCATReported: string = '';   // '|<display name>=<knowledge>|' per radio reported
+
+procedure ReportPTTByCATKnowledge(rig: RadioPtr);
+var
+   ro: TFactoryRadioBase;
+   knowledge: TPTTByCATKnowledge;
+   report: TPTTByCATReport;
+   modelName: string;
+   key: string;
+begin
+   ro := rig^.tFactoryObject;
+   if ro = nil then
+      begin
+      Exit;
+      end;
+   knowledge := ro.Capabilities.PTTByCAT;
+   report := PTTByCATReportFor(knowledge, Settings.Ptt.ViaCommands);
+   if report = pbrNothing then
+      begin
+      Exit;
+      end;
+
+   (* The registry's name for the model the operator chose -- not radioModel,
+     which a family base may leave as a placeholder ('Icom (legacy CI-V)') and
+     which a HamLib driver does not know. *)
+   modelName := '';
+   if rig^.RadioId <> '' then
+      begin
+      modelName := uRadioRegistry.DisplayNameId(rig^.RadioId);
+      end;
+   if (modelName = '') or (modelName = 'Unknown') then
+      begin
+      modelName := ro.radioModel;
+      end;
+
+   key := '|' + modelName + '=' + PTTByCATKnowledgeText(knowledge) + '|';
+   if Pos(key, PTTByCATReported) > 0 then
+      begin
+      Exit;
+      end;
+   PTTByCATReported := PTTByCATReported + key;
+
+   case report of
+      pbrNothing:
+         begin
+         (* Returned above; stated so the case names every value. *)
+         end;
+      pbrLogOnly:
+         begin
+         logger.Info('[%s] PTT via CAT is enabled but not confirmed for %s',
+                     [rig^.RadioName, modelName]);
+         end;
+      pbrNotice:
+         begin
+         logger.Warn('[%s] PTT via CAT is enabled but %s is known NOT to support it -- ' +
+                     'the command is still sent; telling the operator',
+                     [rig^.RadioName, modelName]);
+         (* The same channel, beep included, as the other radio set-up
+           problems (SetRadioConfigurationStatus). *)
+         QuickDisplayError(UnicodeFormat(SRadioPTTByCATNotSupported, [modelName]));
+         end;
+   end;
+end;
+
 procedure RadioObject.AdoptFactoryObject;
 begin
    // Five construction sites (HamLib, serial x2, network x2) all need the same
@@ -1744,6 +1834,10 @@ begin
      every call today.  Empty until the store supplies one; see
      docs/PORT_IDENTITY_PLAN.md step 1. *)
    Self.tFactoryObject.serialPortName := Self.tCATPortName;
+
+   (* PTT by CAT (issue 36): HERE because Adopt is the one routine every
+     construction site passes through, on the main thread, before Connect. *)
+   ReportPTTByCATKnowledge(@Self);
 end;
 
 (* HOW LONG THE POLLING THREAD GETS TO STOP before its radio is leaked rather

@@ -1,0 +1,135 @@
+﻿Dear friends! We are happy to invite you for participation in Russian 160 m DX Contest (RU3AX memorial) which will be held on December 19 from 17.00 to 20.59 UTC, 2025.
+Some important changes have been introduced into the rules of the contest:
+
+1. QSO points will be scored in proportion to the distance between the stations which is of crucial importance for contacts made on the Topband.
+To provide this the exchange numbers now will include the first 4 characters of the QTH-locator. In the opinion of the contest committee this is the fairest way of scoring the QSO points to satisfy all the participants.
+2. The participants will compete in 3 different groups according to their location including a separate group for the participants from other World (outside of Russia).
+3. The contest will be divided into two tours each lasting two hours which will provide more dynamism to the operation. Within each of the two hour tours the participants will have time to operate in both CQ and S&P modes.
+4. Our new contest director now is Maxim Deev, R2BFL.
+For now you still have some time before the contest to check your RX and TX antennas while the sponsors are getting ready with the awards. You should remember that for many 160 meter band enthusiasts from ex. USSR countries it was one of the first contests , to bring up several generations of topbanders.
+
+We are waiting for you at 17.00 Z on December 19, 2025.
+We are sure you`ll have lots of fun! We invite all of you to take part in the contest and to remember our good friend Boris Grigorievich Stepanov to honor his memory.
+
+Boris, RU3AX
+One of the most famous and respected radio amateurs in ex USSR, Russia and Hamradio World.
+RUSSIAN 160m DX Contest - RU3AX Memorial RULES'25
+Russian 160m DX Contest - RU3AX Memorial is sponsored by the "Radio"
+Magazine, TopBand DX Club, and Russian Contest Club.
+GENERAL RULES
+1. Contest Times, Bands and Modes
+RUSSIAN 160 METER DX CONTEST takes place from
+17.00 UTC to 20.59 UTC, December 19th, 2025
+on 1.8 MHz amateur band ONLY.
+Modes: CW and SSB.
+
+The Contest is held in two rounds:
+The 1st round from 17:00 to 18:59 UTC
+The 2nd round from 19:00 to 20:59 UTC
+2. Entry Categories:
+• Single Operator - MIX (CW & SSB) – High Power
+• Single Operator - MIX (CW & SSB) – Low Power
+• Single Operator - CW – High Power
+• Single Operator - CW – Low Power
+• Single Operator - SSB – High Power
+• Single Operator - SSB – Low Power
+• Multi Opetator single TX – MIX (CW & SSB)
+2.1 Results are scored separately by locations, as follows:
+- European Russia (EU RUS)
+- Asian Russia (AS RUS)
+- ASIA &OCEANIA (AS & OC)
+- Rest of the WORLD (WORLD)
+3. General Terms
+3.1 TXs and RXs shall be located within a circle area of 500 m in diameter.
+All antennas shall be physically connected to TXs/RXs in use by entrant(s).
+3.1.1 It is allowed to use only open DX announcement networks in the
+Contest.
+3.1.2 Use of any IP networks for remote reception and/or transmission,
+including WEB stations, is prohibited.
+3.2 There are no mode change limits. Only one transmitted signal is
+allowed at any given time of the contest.
+3.3 All MIX category entrants are allowed to contact one and the same
+station both in CW and SSB, and in both rounds as well. Thus, it is possible
+to make total 4 QSOs with the same station, - CW+SSB in each round.
+3.4 Self-spotting is allowed in SSB for self-identification.
+
+4. Contest Exchange
+All participants send RS(T) + Four character grid square (QTH locator)
+Example: 599 KO85
+
+5. Scoring
+5.1 QSO points depend on the distance between participants, which is
+defined as the distance between the centers of their grid squares (QTH
+locators). Minimum number of QSO points is 10. Thereafter, one point is
+added for each 500 km.
+For example: QSO at distance up to 500 km is 10 points, from 500 to 1000
+km - 11 points, from 1000 to 1500 km – 12 points, from 1500 to 2000 km – 13
+points, etc.
+5.2 SSB points are multiplied by factor 2.
+
+6. Dupes
+6.1 Dupes are QSOs made in the same mode and in the same round. They
+are scored 0 points, if the first QSO between these stations was already
+counted. If the first contact was not counted, the dupe QSO will be counted
+then.
+6.2. Dupes are not penalized; there is no need to mark them somehow.
+Participants are strongly recommended not to delete dupes from the log.
+6.3. Again, dupe QSOs in different rounds and different modes are allowed.
+
+7. Multipliers
+7.1 Multiplier is number of territories (DXCC + WAE) plus Russian Oblasts
+number. Separate Russian Oblasts are Franz Joseph (R1FJ) and Russian
+stations in Antarctica (R1AN).
+7.2 Kaliningrad stations (UA2F) count two mults, - as DXCC and Oblast.
+7.3 Mults are counted separately for CW и SSB, and then summarized.
+7.4 One multiplier counts only once, regardless of rounds.
+
+8. Final Score
+Final score is product of summary points by total multiplier.
+
+9. General Log Requirements
+9.1 Logs shall be in Cabrillo format only.
+9.2 Log file shall be named as YOURCALL.log or YOURCALL.cbr.
+Example: UA4AA.log.
+9.3 Log shall uploaded at http://ua9qcq.ru/submit_log.php or it shall
+be sent as attachment to rusdx160@gmail.com
+9.4 Subject line shall be your call.
+9.5 Time shall be in UTC.
+9.6 Both Contest exchanges are mandatory in the log.
+9.7 All participants shall indicate QTH Locator in GRID-LOCATOR line (6
+digits).
+9.7 Log headlines shall indicate your entry category and complete post
+address to mail awards and trophies.
+
+10. Logs Deadline
+10.1 Logs shall be sent within 15 days after the Contest completion (till
+January 3, 2026, inclusive).
+11. Awards and Trophies
+11.1 Special trophies are sponsored for all categories top winners (provided
+there is any for an entry category). 2nd and 3rd place winners can download
+their memorable certificates from Contest web site.
+11.2 All participants (excluding CHECKLOG) are awarded with electronic
+memorable certificates provided that they made and confirmed at least 50
+QSOs. Certificates are available to download from Contest web site.
+
+12. Information support and judging
+12.1 Answers to any questions regarding the “Russian 160 meter DX
+Contest” can be obtained by e-mail: rusdx160@gmail.com
+12.2 The Сontest scoring is completely software based. Participants shall
+comply with the letter and spirit of these Rules. Violations of the Rules or
+unethical and unsportsmanlike behavior may result in Check Log or
+disqualification at the discretion of the Judging Committee.
+
+12.3 Penalties
+Penalties are scored as x2 QSO point value. Penalty for a QSO are
+scored for:
+- incorrect logged call;
+- incorrect logged exchange.
+QSO is not counted, and no penalty is applied for:
+- time discrepancy (excluding systematic) exceeds 3 minutes;
+- mode discrepancy (excluding systematic);
+A participant is moved to the Check Log in case his result after logs check
+is 75% less compared with the applied result.
+
+12.4 Decisions of Contest Committee are final.
+Official website: www.topband.ru

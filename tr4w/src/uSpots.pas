@@ -174,6 +174,14 @@ type
     // frequencies.  Linear over at most a thousand entries and only ever called
     // from an operator action.
     function IndexOfSpot(const aSpot: TSpotRecord): integer;
+    (* NEXT BAND MAP ENTRY'S SEARCH (issue 202): the index of the first spot at
+      or after aStart whose band and mode are aBand and aMode, or -1. The scan
+      stops at Count - 1; NextBandMapEntry once ran one past it and matched the
+      all-zero record Get answers for an index outside the list (Band160, CW),
+      so Next on 160 CW with nothing further blanked the call box. A negative
+      aStart scans from 0. Read-only; main thread. *)
+    function IndexOfNextForBandMode(aStart: integer; aBand: BandType;
+                                    aMode: ModeType): integer;
     property RepaintToken: cardinal read FRepaintToken;
   end;
 
@@ -836,6 +844,26 @@ end;
 procedure TDXSpotsList.MarkPainted;
 begin
   FPaintedToken := FRepaintToken;
+end;
+
+function TDXSpotsList.IndexOfNextForBandMode(aStart: integer; aBand: BandType;
+                                             aMode: ModeType): integer;
+var
+  i: integer;
+begin
+  Result := -1;
+  if aStart < 0 then
+     begin
+     aStart := 0;
+     end;
+  for i := aStart to FList.Count - 1 do
+     begin
+     if (FList[i].FBand = aBand) and (FList[i].FMode = aMode) then
+        begin
+        Result := i;
+        Exit;
+        end;
+     end;
 end;
 
 function TDXSpotsList.IndexOfSpot(const aSpot: TSpotRecord): integer;

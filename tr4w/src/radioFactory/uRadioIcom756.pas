@@ -53,6 +53,8 @@ begin
    inherited Create;
    RadioAddress := $50;
    radioModel := 'Icom IC-756';
+   // PTT by CAT: "Yes" in the TR4W Feature to Radio Feature Matrix (issue 36).
+   FCapabilities.PTTByCAT := pbcConfirmed;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

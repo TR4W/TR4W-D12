@@ -62,6 +62,7 @@ type
       procedure Test_EachPartyScoresItsOwnQSOs;
       procedure Test_AnEntrantInAPartyClaimsItsOwnParty;
       procedure Test_AContestScoredAsOneHasNoParts;
+      procedure Test_ACountyLineIsOnePartysWithinItsMaximum;
    end;
 
 implementation
@@ -72,6 +73,10 @@ uses
                         every unit below wins a shared name. *)
    VC, uContestBase, uContestRegistry,
    uContestIN7QPNE, uDomFileKeys, uAppStrings,
+   (* TC_TOOMANYCOUNTIES -- a party's county-line refusal (issue 85). *)
+   uTR4WStrings,
+   (* The county-line queue the stub format fills (issue 85). *)
+   uPendingCounties,
    uTestContestObjects,
    uTestExchangeParserStub,
    (* RoverDupeAnswers -- the dupe path LogContact takes (#88 round 3). *)
@@ -201,18 +206,78 @@ var
    GShapeAccepts: boolean;
    GDomesticKeys: string;
 
-function StubParseShape(const aHelper: string; const aText: string;
-                        var aExch: ContestExchange): boolean;
-begin
-   aExch.QTHString := ShortString(GShapeSetsQTH);
-   aExch.DomesticQTH := ShortString(GShapeSetsQTH);
-   aExch.DomMultQTH := ShortString(GShapeSetsQTH);
-   Result := GShapeAccepts;
-end;
-
 function StubIsDomesticQTH(const aQTH: string): boolean;
 begin
    Result := Pos(',' + UpperCase(aQTH) + ',', ',' + GDomesticKeys + ',') > 0;
+end;
+
+(* THE ONE ALIAS THE STUB TABLE KNOWS: TOLCT, a Connecticut planning region's
+   other spelling, is in7qpne_cty.dom's CTCap. Every other key it knows is its
+   own left side. *)
+const
+   STUB_ALIAS = 'TOLCT';
+   STUB_ALIAS_COUNTY = 'CTCap';
+
+function StubResolveDomesticQTH(const aQTH: string;
+                                out aDomesticQTH: string;
+                                out aMultiplier: string): boolean;
+begin
+   aDomesticQTH := '';
+   aMultiplier := '';
+   if UpperCase(aQTH) = STUB_ALIAS then
+      begin
+      aDomesticQTH := STUB_ALIAS_COUNTY;
+      aMultiplier := STUB_ALIAS_COUNTY;
+      Result := True;
+      Exit;
+      end;
+
+   Result := StubIsDomesticQTH(aQTH);
+   if Result then
+      begin
+      aDomesticQTH := aQTH;
+      aMultiplier := aQTH;
+      end;
+end;
+
+(* A COUNTY LINE AS LOGSTUFF.ApplyFirstQTHAndQueueRest LEAVES IT (issue 85):
+   the queue cleared first, the first QTH on the record, every further one
+   the table knows queued as typed, and a word it does not know dropped. A
+   single QTH (no '/') is the stub as it always was. *)
+function StubParseShape(const aHelper: string; const aText: string;
+                        var aExch: ContestExchange): boolean;
+var
+   words: TStringList;
+   first: string;
+   i: integer;
+   resolved: string;
+   multiplier: string;
+begin
+   ClearPendingCounties;
+   words := TStringList.Create;
+   try
+      words.Delimiter := '/';
+      words.StrictDelimiter := True;
+      words.DelimitedText := GShapeSetsQTH;
+      first := '';
+      if words.Count > 0 then
+         begin
+         first := words[0];
+         end;
+      aExch.QTHString := ShortString(first);
+      aExch.DomesticQTH := ShortString(first);
+      aExch.DomMultQTH := ShortString(first);
+      for i := 1 to words.Count - 1 do
+         begin
+         if StubResolveDomesticQTH(words[i], resolved, multiplier) then
+            begin
+            QueuePendingCounty(words[i]);
+            end;
+         end;
+   finally
+      words.Free;
+   end;
+   Result := GShapeAccepts;
 end;
 
 function Session: TReceivedExchangeSession;
@@ -221,6 +286,7 @@ begin
    Result.Parsers := StubExchangeParsers(@StubParseShape);
    Result.IsDomesticQTH := @StubIsDomesticQTH;
    Result.CallWindowHasCall := True;
+   Result.ResolveDomesticQTH := @StubResolveDomesticQTH;
 end;
 
 function ParseAs(const aStation: TStationContext; const aQTH: string;
@@ -924,6 +990,99 @@ begin
    end;
 end;
 
+(* A COUNTY LINE IS ONE PARTY'S, WITHIN THAT PARTY'S OWN MAXIMUM -- issue 85
+   (Q82). NY4I, 2026-11-22: a rover cannot be on a line between two parties.
+   Each party's limit is its own class's ValidateQTHCount: Indiana 2,
+   Delaware 2, the 7QP 4, New England none stated. A refused line leaves
+   nothing queued for TryLogContact. *)
+procedure TContestIN7QPNETests.Test_ACountyLineIsOnePartysWithinItsMaximum;
+var
+   msg: string;
+   exch: ContestExchange;
+   sevenPartyAlone: TContestBase;
+
+   procedure Accepts(const aStation: TStationContext; const aLine: string;
+                     aQueued: integer; const aWhat: string);
+   begin
+      CheckTrue(ParseAs(aStation, aLine, msg, exch), aWhat + ': taken');
+      CheckEquals('', msg, aWhat + ': nothing said');
+      CheckEquals(aQueued, PendingCountiesCount, aWhat + ': the rest queued');
+   end;
+
+   procedure Refuses(const aStation: TStationContext; const aLine: string;
+                     const aMessage: string; const aWhat: string);
+   begin
+      CheckFalse(ParseAs(aStation, aLine, msg, exch), aWhat + ': refused');
+      CheckEquals(aMessage, msg, aWhat + ': the reason');
+      CheckEquals(0, PendingCountiesCount, aWhat + ': nothing left queued');
+   end;
+
+begin
+   BeginTest('Test_ACountyLineIsOnePartysWithinItsMaximum');
+   GShapeAccepts := True;
+   GDomesticKeys := 'INADA,INALL,INBAR,AZAPH,AZCHS,AZCNO,AZGHM,AZGLA,UTRIC,IDBEA,' +
+                    'MEAND,CTCAP,NHBEL,NDE,KDE,SDE';
+   try
+      (* INDIANA: two. *)
+      Accepts(OutOfArea, 'INADA/INALL', 1, 'Indiana at its limit');
+      Refuses(OutOfArea, 'INADA/INALL/INBAR', Format(TC_TOOMANYCOUNTIES, [2]),
+              'Indiana over its limit');
+
+      (* DELAWARE: two. *)
+      Accepts(OutOfArea, 'NDE/KDE', 1, 'Delaware at its limit');
+      Refuses(OutOfArea, 'NDE/KDE/SDE', Format(TC_TOOMANYCOUNTIES, [2]),
+              'Delaware over its limit');
+
+      (* THE 7QP: four, and a line may cross its own states. *)
+      Accepts(OutOfArea, 'AZAPH/AZCHS/AZCNO/AZGHM', 3, '7QP at its limit');
+      Refuses(OutOfArea, 'AZAPH/AZCHS/AZCNO/AZGHM/AZGLA', Format(TC_TOOMANYCOUNTIES, [4]),
+              '7QP over its limit');
+      Accepts(OutOfArea, 'UTRIC/IDBEA', 1, '7QP across two of its states (the sponsor''s example)');
+
+      (* NEW ENGLAND: no maximum stated, so none is applied. *)
+      Accepts(OutOfArea, 'MEAND/CTCAP/NHBEL', 2, 'New England, three counties');
+
+      (* TWO PARTIES ON ONE LINE: refused, whichever comes first. *)
+      Refuses(OutOfArea, 'INADA/AZAPH', Format(SExchangeCountyLineOneParty, ['INADA', 'AZAPH']),
+              'Indiana and the 7QP');
+      Refuses(OutOfArea, 'NDE/MEAND', Format(SExchangeCountyLineOneParty, ['NDE', 'MEAND']),
+              'Delaware and New England');
+      Refuses(OutOfArea, 'MEAND/INADA/INALL', Format(SExchangeCountyLineOneParty, ['MEAND', 'INADA']),
+              'New England then Indiana');
+
+      (* AN ALIAS IS ROUTED BY THE COUNTY THE TABLE RESOLVES IT TO. *)
+      Accepts(OutOfArea, 'CTCAP/' + STUB_ALIAS, 1, 'an alias of a New England county');
+      Refuses(OutOfArea, 'INADA/' + STUB_ALIAS, Format(SExchangeCountyLineOneParty, ['INADA', STUB_ALIAS]),
+              'an alias of another party''s county');
+
+      (* AN UNKNOWN COUNTY never reaches the queue (the format drops it), so
+         it is not counted and the line stands as one county. *)
+      Accepts(OutOfArea, 'INADA/INXYZ', 0, 'an unknown county is dropped');
+      Accepts(OutOfArea, 'INADA/INALL/INXYZ', 1, 'an unknown county does not count toward the limit');
+
+      (* AN IN-AREA ENTRANT'S LINE WITH A STATE ON IT: a state is no county of
+         any party. *)
+      GDomesticKeys := GDomesticKeys + ',FL';
+      Refuses(Entrant('KDE', True), 'INADA/FL', Format(SExchangeCountyLineOneParty, ['INADA', 'FL']),
+              'a county and a state');
+      Accepts(Entrant('KDE', True), 'FL', 0, 'a state alone is still worked');
+   finally
+      ClearPendingCounties;
+   end;
+
+   (* THE 7QP STATES ITS FOUR ON ITS OWN, for its own contest too. *)
+   (* THE VARIABLE IS NOT CALLED sevenQP: Pascal is case-blind and that is the
+      contest constant SEVENQP, which it would hide. *)
+   sevenPartyAlone := Make(SEVENQP);
+   try
+      CheckTrue(sevenPartyAlone.ValidateQTHCount(4, msg), 'the 7QP alone: four counties');
+      CheckFalse(sevenPartyAlone.ValidateQTHCount(5, msg), 'the 7QP alone: five are refused');
+      CheckEquals(Format(TC_TOOMANYCOUNTIES, [4]), msg, 'the 7QP alone: the reason');
+   finally
+      sevenPartyAlone.Free;
+   end;
+end;
+
 procedure TContestIN7QPNETests.RunAllTests;
 begin
    Test_IN7QPNEIsACompositeOnTheBase;
@@ -940,6 +1099,7 @@ begin
    Test_EachPartyScoresItsOwnQSOs;
    Test_AnEntrantInAPartyClaimsItsOwnParty;
    Test_AContestScoredAsOneHasNoParts;
+   Test_ACountyLineIsOnePartysWithinItsMaximum;
 end;
 
 end.

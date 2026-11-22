@@ -1,0 +1,232 @@
+﻿Rules
+The organizer of contest is the Russian Digital Radio Club. The Russian contest on radio short waves communications Russian WW Digital Contest by using the RTTY and BPSK63 modes is conducted according to the present Rules annually to first week-end of October. We invite all fans of digital modes to take part in contest from 12.00 UTC on Saturday 4th October till 11:59 UTC on Sunday 5th October, 2025. Types of modulation: RTTY45, BPSK63.
+
+The repeated contacts are permitted on different bands and different modes providing that a contact will be made not earlier than in 3 minutes. The output power should not exceed the resolved power according to the radioamateur license of the participant. The outpout QRP power should not exceed 5 watts. The operator may change the bands no more than 10 times within calendar hour (with zero on 59-th minute of each hour). Only one transmitted signal is permitted at any time. Bands: 160 m, 80 m, 40 m, 20 m, 15 m, 10 m. A separate category for the Russia and foreign participants. QSO's by a principle ALL TO ALL. All logs must be sent no later than 5 days after the contest.
+
+Date and Time:
+
+12th RUS-WW-DIGI 2025: 12:00 UTC 04.10.2025 - 11:59 UTC 05.10.2025
+13th RUS-WW-DIGI 2026: 12:00 UTC 03.10.2026 - 11:59 UTC 04.10.2026
+14th RUS-WW-DIGI 2027: 12:00 UTC 02.10.2027 - 11:59 UTC 02.10.2027
+
+Bands: 
+Contest participants are allowed to work on 160 meters (1.8 MHz), 80 meters (3.5 MHz), 40 meters (7 MHz), 20 meters (14 MHz), 15 meters (21 MHz) and 10 meters (28 MHz). RDRC recommends the following frequencies: 1.840 - 1.843 MHz, 3.582 - 3.599, 7.040 - 7.050 MHz, 14.072 - 14.110 MHz, 21.072 - 21.110 MHz, 28.072 - 28.125 MHz.
+
+Categories:
+MULTI-ONE - Multi-Operator, Single Transmitter, All Bands - Club stations and SES stations:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+MULTI-ONE JUNIOR - Multi-Operator Junior: each participant younger than 20 years, Single Transmitter, All Bands - Club stations and SES stations:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+SINGLE-OP ALL HIGH - Single-Operator, All Bands, High power - the output power should not exceed the resolved power according to the radioamateur license of the participant:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+SINGLE-OP JUNIOR - Single-Operator Junior: each participant younger than 20 years:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+SINGLE-OP 160M-80M-40M - Single-Operator; 160, 80 and 40м:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+SINGLE-OP 20M-15M-10M - Single-Operator; 20, 15 and 10м:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+SINGLE-OP ALL QRP - Single-Operator, All Bands, QRP - the output power should not exceed 5 watts:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+SINGLE-OP RTTY - Single-Operator, All Bands, RTTY:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+SINGLE-OP BPSK - Single-Operator, All Bands, BPSK:
+- World - only continents, all the countries except for Russia,
+- European Russia,
+- Asiatic Russia;
+
+Note:
+
+1.The participants can be declared only one subgroup.
+
+2. SOQRP - is necessary to indicate in your call /QRP
+
+Note MOAB: Two - ten operators with their personal or SWL callsigns can form a team. Each participant in subgroup MULTI-ONE will be awarded a certificate for participation in the contest.
+
+Note to air monitoring: Observers and participants of the contest can assist the Contest Committee in terms of monitoring and recording of air possible violations. 
+ 
+Number Exchange:
+Participants from Russia, and also the foreign radioamateurs who are being in territory of Russia, should send RS,RST(Q) plus 2-letter abbreviation of Russian Area (oblast) Code (example for Moscow region – 599 MA). The list of Russia areas and their symbols look in the appendix on this page (in the end of the text of rules position). Participants from other countries and territories of the world (except for Russia), should send RS,RST(Q) plus QSO number, starting 001 (example - 599 001). The numeration on bands is current.General call - "CQ RUSTEST".
+
+The repeated contacts are permitted on different bands and different modes providing that a contact will be made not earlier than in 3 minutes. The contact with correspondent who has not sent the report can be accepted if the callsign of the correspondent can be met not less than in three different reports.
+
+Points:
+Each contact between stations on 20, 15 and 10 m is worth:
+- inside the country - 1 point;
+- with other country - 3 points;
+- with other continents - 5 points;
+- with QRP-stations - 5 points.
+The points on 160, 80 and 40 m are doubled.
+
+Multiplier:
+The multiplier are the countries according to the list of DXCC and Russian areas on each mode and each band.
+
+Scoring:
+The final score is the result of the total points multiplied by the sum of multipliers.
+
+
+
+Cabrillo Examples
+
+
+Examples head for Cabrillo format logs:
+
+SINGLE-OP ALL HIGH (Cabrillo 3.0 format):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA
+CATEGORY-OPERATOR: SINGLE-OP
+CATEGORY-BAND: ALL
+CATEGORY-MODE: MIXED
+CATEGORY-POWER: HIGH
+LOCATION: CB01
+GRID-LOCATOR: MO05QD
+NAME: Ivan Ivanov
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru
+
+SINGLE-OP JUNIOR (формат Cabrillo 3.0):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA
+CATEGORY-OPERATOR: SINGLE-OP
+CATEGORY-OVERLAY: JUNIOR
+LOCATION: CB01
+GRID-LOCATOR: MO05RD
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru
+
+MULTI-ONE (формат Cabrillo 3.0):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA
+CATEGORY-OPERATOR: MULTI-OP
+CATEGORY-TRANSMITTER: ONE
+OPERATORS: UA8AAA UA8BBB
+LOCATION: CB01
+GRID-LOCATOR: MO05QD
+NAME: Ivan Ivanov
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru
+
+MULTI-ONE JUNIOR (формат Cabrillo 3.0):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA
+CATEGORY-OPERATOR: MULTI-OP
+CATEGORY-TRANSMITTER: ONE
+CATEGORY-OVERLAY: JUNIOR
+OPERATORS: UA8AAA UA8BBB
+LOCATION: CB01
+GRID-LOCATOR: MO05RD
+NAME: Ivan Ivanov
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru
+
+SINGLE-OP 160M-80M-40M (формат Cabrillo 3.0):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA
+CATEGORY-OPERATOR: SINGLE-OP
+CATEGORY-BAND: 160M-80M-40M
+LOCATION: CB01
+GRID-LOCATOR: MO05QD
+NAME: Ivan Ivanov
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru
+
+SINGLE-OP 20M-15M-10M (формат Cabrillo 3.0):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA
+CATEGORY-OPERATOR: SINGLE-OP
+CATEGORY-BAND: 20M-15M-10M
+LOCATION: CB01
+GRID-LOCATOR: MO05RD
+NAME: Ivan Ivanov
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru
+
+SINGLE-OP ALL QRP (формат Cabrillo 3.0):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA/QRP
+CATEGORY-OPERATOR: SINGLE-OP
+CATEGORY-BAND: ALL
+CATEGORY-MODE: MIXED
+CATEGORY-POWER: QRP
+LOCATION: CB01
+GRID-LOCATOR: MO05QD
+NAME: Ivan Ivanov
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru
+
+SINGLE-OP ALL RTTY (формат Cabrillo 3.0):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA
+CATEGORY-OPERATOR: SINGLE-OP
+CATEGORY-BAND: ALL
+CATEGORY-MODE: RTTY
+CATEGORY-POWER: HIGH
+LOCATION: CB01
+GRID-LOCATOR: MO05QD
+NAME: Ivan Ivanov
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru
+
+SINGLE-OP ALL BPSK (формат Cabrillo 3.0):
+START-OF-LOG: 3.0
+CONTEST: RUS-WW-DIGI
+CALLSIGN: UA8AAA
+CATEGORY-OPERATOR: SINGLE-OP
+CATEGORY-BAND: ALL
+CATEGORY-MODE: BPSK
+CATEGORY-POWER: HIGH
+LOCATION: CB01
+GRID-LOCATOR: MO05QD
+NAME: Ivan Ivanov
+ADDRESS: ul. Lenina 17-1
+ADDRESS-CITY: Chelaybinsk
+ADDRESS-POSTALCODE: 454111
+ADDRESS-COUNTRY: Russia
+EMAIL: ua8aaa(AT)yandex.ru

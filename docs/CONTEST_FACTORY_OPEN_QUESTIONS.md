@@ -2356,7 +2356,14 @@ closes it; anything else reopens it.
   7QP four. TR4W checks the COUNT before it knows the counties, so IN7QPNE
   allows any number, as it always did. Teach the check which party the
   counties are in, or leave it? *Recommended: leave it until a line between
-  two parties is real.*
+  two parties is real.* **Built 2026-11-22 (issue 85):** NY4I, on the issue:
+  *"No, a rover cannot operate from across a state line for two counties."*
+  A line whose counties route to two parties is refused; otherwise that
+  party's own maximum applies (IN 2, DE 2, 7QP 4, New England none stated).
+  The 7QP's 4 is now enforced for the 7QP alone too (`TContestSevenQP.
+  ValidateQTHCount`), from ADDING_A_CONTEST's worksheet value: the 7QP rules
+  text in docs/ContestRules states no maximum, so it awaits NY4I's
+  confirmation (Q40); removing that one override reverts it.
   **Answer:** (NY4I, 2026-10-15) *"leave it but note it as a future item to
   fix (an issue is fine too for these future items)."* Left as it is; tracked
   as issue #85 (https://github.com/TR4W/TR4W-D12/issues/85). From now on, a

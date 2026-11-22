@@ -500,7 +500,9 @@ uses
    uContestGagarinCup in '..\..\src\contestFactory\uContestGagarinCup.pas',
    uContestHADX in '..\..\src\contestFactory\uContestHADX.pas',
    uContestYUDX in '..\..\src\contestFactory\uContestYUDX.pas',
+   uContestWRT in '..\..\src\contestFactory\uContestWRT.pas',
    uContestURCDXRTTY in '..\..\src\contestFactory\uContestURCDXRTTY.pas',
+   uContestRusWWDigi in '..\..\src\contestFactory\uContestRusWWDigi.pas',
    uContestGeorgiaQP in '..\..\src\contestFactory\uContestGeorgiaQP.pas',
    uContestHelvetia in '..\..\src\contestFactory\uContestHelvetia.pas',
    uContestJIDXCW in '..\..\src\contestFactory\uContestJIDXCW.pas',
@@ -966,9 +968,13 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Nebraska QSO Party, a new contest, and the New England rename
       with its legacy name (design Q105, 2026-10-16). *)
    uTestContestNebraskaQP in 'uTestContestNebraskaQP.pas',
+   (* WRT, the Weekly RTTY Test, a new contest registered by its id
+      (issue 25, 2026-11-22). *)
+   uTestContestWRT in 'uTestContestWRT.pas',
    (* The URC DX RTTY Contest, the first real contest registered by its id
       (Q138, 2026-10-22). *)
    uTestContestURCDXRTTY in 'uTestContestURCDXRTTY.pas',
+   uTestContestRusWWDigi in 'uTestContestRusWWDigi.pas',
    (* The Georgia QSO Party, a new contest registered by its id
       (2026-10-23). *)
    uTestContestGeorgiaQP in 'uTestContestGeorgiaQP.pas',
@@ -1177,6 +1183,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestTXInhibit       in 'uTestTXInhibit.pas',
    uTestTXInhibitAlert  in 'uTestTXInhibitAlert.pas',
    uTestRadioKeepAlive  in 'uTestRadioKeepAlive.pas',
+   uTestRadioPTTByCAT   in 'uTestRadioPTTByCAT.pas',
    uK4DisplayReport    in '..\..\src\radioFactory\uK4DisplayReport.pas',
    uTestK4DisplayReport in 'uTestK4DisplayReport.pas',
    uTestSpectrumRadioState in 'uTestSpectrumRadioState.pas',
@@ -1280,7 +1287,9 @@ begin
    RegisterSuite(TDXCCEntitiesTests.Create('DXCCEntities'));
    RegisterSuite(TContestDelawareQPTests.Create('ContestDelawareQP'));
    RegisterSuite(TContestNebraskaQPTests.Create('ContestNebraskaQP'));
+   RegisterSuite(TContestWRTTests.Create('ContestWRT'));
    RegisterSuite(TContestURCDXRTTYTests.Create('ContestURCDXRTTY'));
+   RegisterSuite(TContestRusWWDigiTests.Create('ContestRusWWDigi'));
    RegisterSuite(TContestGeorgiaQPTests.Create('ContestGeorgiaQP'));
    RegisterSuite(TContestNorthDakotaQPTests.Create('ContestNorthDakotaQP'));
    RegisterSuite(TContestOklahomaQPTests.Create('ContestOklahomaQP'));
@@ -1562,6 +1571,7 @@ begin
    RegisterSuite(TTXInhibitTests.Create('TXInhibit'));
    RegisterSuite(TTXInhibitAlertTests.Create('TXInhibitAlert'));
    RegisterSuite(TRadioKeepAliveTests.Create('RadioKeepAlive'));
+   RegisterSuite(TRadioPTTByCATTests.Create('RadioPTTByCAT'));
    RegisterSuite(TK4DisplayReportTests.Create('K4DisplayReport'));
    RegisterSuite(TSpectrumRadioStateTests.Create('SpectrumRadioState'));
    RegisterSuite(TK4SpectrumCropTests.Create('K4SpectrumCrop'));

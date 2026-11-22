@@ -87,10 +87,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     the union of the four   a band question asked with no QSO (UsesBand: the
                             dupe sheet and the need-multiplier hint) --
                             2026-10-16; it credited every band before
-    cannot, with today's    the
-    seams                   county-line count (asked with a number, no QTH),
-                            the session's by-band / by-mode / VHF traits, and
-                            WHICH multiplier a QTH counts as (the session's
+    after the party's       a county line (issue 85, 2026-11-22): every
+    parse                   county in one party, within that party's own
+                            ValidateQTHCount -- CountyLineStaysInParty
+    cannot, with today's    the session's by-band / by-mode / VHF traits, and
+    seams                   WHICH multiplier a QTH counts as (the session's
                             one domestic table)
 
   ---------------------------------------------------------------------------
@@ -174,6 +175,12 @@ type
       (* The component for aParty, handed this object's station with
          InHostState saying whether the entrant is in THAT party. *)
       function PartyContest(aParty: TIN7QPNEParty): TContestBase;
+
+      (* THE COUNTY-LINE RULE, after the judging party's parse -- issue 85;
+         see the implementation. *)
+      function CountyLineStaysInParty(const aSession: TReceivedExchangeSession;
+                                      const aExch: ContestExchange;
+                                      out aErrorMessage: string): boolean;
    protected
       (* THE WHOLE ContestsArray ROW, STATED HERE -- the M9a rule for
          identity, and Test_MovedRowValuesStillMatchTheArray holds the rest
@@ -328,7 +335,10 @@ uses
    uADIFExchange,
    SysUtils,
    uAppStrings,      (* SExchangeOutOfStateWorksHostOnly, SNewContestIN7QPNECountyOrState,
-                        SNewContestIN7QPNEInsideAParty *)
+                        SNewContestIN7QPNEInsideAParty, SExchangeCountyLineOneParty *)
+   (* PendingCountiesCount, PendingCountyAt, ClearPendingCounties -- the
+      county-line rule (issue 85). *)
+   uPendingCounties,
    uContestRegistry;
 
 (* True when aWord is one of the blank-separated words of aList. *)
@@ -731,6 +741,106 @@ begin
       partySession.ExchangeFormatOf := Self;
       end;
    Result := PartyContest(party).ParseReceivedExchange(aText, partySession, aExch, aErrorMessage);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   Result := CountyLineStaysInParty(aSession, aExch, aErrorMessage);
+end;
+
+(* A COUNTY LINE IS ONE PARTY'S, WITHIN THAT PARTY'S MAXIMUM -- issue 85
+   (Q82), NY4I 2026-11-22: "a rover cannot operate from across a state line
+   for two counties" -- read, with the agent's question on the issue, as a
+   line whose counties are in DIFFERENT PARTIES. A line inside one party may
+   still cross its own states (the 7QP's "UTRIC/IDBEA").
+
+   ASKED AFTER THE JUDGING PARTY'S PARSE, which ran the format last: the first
+   county is on the record (aExch.DomesticQTH, as the table resolved it) and
+   every further one is in uPendingCounties, as typed, for TryLogContact to
+   drain. The queue is READ HERE, a global the format has just filled on the
+   main thread -- the one place the composite sees the list LOGSTUFF hands
+   other contests only as a count (ValidateQTHCount). An unknown word never
+   reaches the queue (the format drops it with a warning), so it is not
+   counted.
+
+   Every queued county is resolved through the session's table when it has
+   the service (an alias, ANDME or TOLCT, is a county whose party only the
+   table's left side says) and routed by IN7QPNEPartyOfQTH. A county of
+   another party, or a word that is no county of any (a state or a province
+   on an in-state entrant's line), refuses the whole line. Otherwise the
+   count goes to THAT party's own ValidateQTHCount -- Indiana 2, Delaware 2,
+   the 7QP 4, New England no stated maximum -- whose refusal is the usual
+   "too many counties". A refused line clears the queue, as LOGSTUFF's own
+   count refusal leaves nothing queued. *)
+function TContestIN7QPNE.CountyLineStaysInParty(const aSession: TReceivedExchangeSession;
+                                               const aExch: ContestExchange;
+                                               out aErrorMessage: string): boolean;
+var
+   i: integer;
+   typed: string;
+   resolved: string;
+   multiplier: string;
+   lineParty: TIN7QPNEParty;
+   countyParty: TIN7QPNEParty;
+begin
+   aErrorMessage := '';
+   Result := True;
+   if PendingCountiesCount = 0 then
+      begin
+      Exit;
+      end;
+
+   if not IN7QPNEPartyOfQTH(string(aExch.DomesticQTH), lineParty) then
+      begin
+      (* No resolved county on the record (a test's stub format writes none):
+         the first county as typed. *)
+      if not IN7QPNEPartyOfQTH(string(aExch.QTHString), lineParty) then
+         begin
+         Result := False;
+         aErrorMessage := UnicodeFormat(SExchangeCountyLineOneParty,
+                                        [string(aExch.QTHString), PendingCountyAt(0)]);
+         ClearPendingCounties;
+         Exit;
+         end;
+      end;
+
+   for i := 0 to PendingCountiesCount - 1 do
+      begin
+      typed := PendingCountyAt(i);
+      resolved := typed;
+      if Assigned(aSession.ResolveDomesticQTH) then
+         begin
+         if aSession.ResolveDomesticQTH(typed, resolved, multiplier) then
+            begin
+            if resolved = '' then
+               begin
+               resolved := typed;
+               end;
+            end
+         else
+            begin
+            resolved := typed;
+            end;
+         end;
+
+      if (not IN7QPNEPartyOfQTH(resolved, countyParty)) or
+         (countyParty <> lineParty) then
+         begin
+         Result := False;
+         aErrorMessage := UnicodeFormat(SExchangeCountyLineOneParty,
+                                        [string(aExch.QTHString), typed]);
+         ClearPendingCounties;
+         Exit;
+         end;
+      end;
+
+   Result := PartyContest(lineParty).ValidateQTHCount(1 + PendingCountiesCount,
+                                                      aErrorMessage);
+   if not Result then
+      begin
+      ClearPendingCounties;
+      end;
 end;
 
 function TContestIN7QPNE.GetDisplayName: string;

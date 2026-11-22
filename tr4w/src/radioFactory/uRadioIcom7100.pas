@@ -72,6 +72,9 @@ begin
    // A fact about THIS MODEL, not about Icoms -- $21 $02 is the XIT setting on
    // most of the family, and they go on using it.
    FCapabilities.HasXIT := False;
+
+   // PTT by CAT: "Yes" in the TR4W Feature to Radio Feature Matrix (issue 36).
+   FCapabilities.PTTByCAT := pbcConfirmed;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

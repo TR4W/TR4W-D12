@@ -1188,7 +1188,17 @@ the target shape, the M-step migration order and the open questions.
   the combined file's keys -- it is the one the session loads. No score
   posting: `PermittedOperatingAids`, and since 8.2r `uHamScore` asks it too
   (`ContestPermitsScorePosting` -- it asked nothing before, so WRTC's rule
-  never reached HamScore; Q83).
+  never reached HamScore; Q83). **A county line is ONE party's (issue 85,
+  2026-11-22, NY4I: "a rover cannot operate from across a state line for
+  two counties")**: after the judging party's parse, `CountyLineStaysInParty`
+  routes the first county (record) and every queued one (`uPendingCounties.
+  PendingCountyAt`, aliases through the session's new
+  `TReceivedExchangeSession.ResolveDomesticQTH` -- nil = no service, typed
+  text; only IN7QPNE reads it), refuses a two-party line
+  (`SExchangeCountyLineOneParty`) and asks THAT party's `ValidateQTHCount`.
+  The 7QP states its 4 itself (`uContestBase.CountyLineCountAllowed`, the one
+  county-line rule the party base also calls) -- from the ADDING_A_CONTEST
+  worksheet, NOT in the sponsor text on file: NY4I to confirm (Q40).
 - **A contest tells the display and the reports what to show, as DATA the
   UI renders** (M9a, 2026-10-02, design §8.2m; `ADDING_A_CONTEST.md` B2 "Display
   and reports"). No class touches a form, a

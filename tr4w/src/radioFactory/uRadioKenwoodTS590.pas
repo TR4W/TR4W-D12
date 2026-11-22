@@ -49,6 +49,10 @@ begin
    // RADIO can do; the operator's config setting says what they WANT.  Both
    // are required -- a user can enable CW-by-CAT on a radio that cannot do it.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync, rcPlayDVK];
+   // PTT by CAT: "Yes" for the TS-590S in the TR4W Feature to Radio Feature
+   // Matrix (issue 36).  The other Kenwoods are blank there and stay
+   // not confirmed.
+   FCapabilities.PTTByCAT := pbcConfirmed;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

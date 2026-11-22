@@ -239,6 +239,33 @@ Type
       BT: string;          // '='
    end;
 
+   (* WHAT IS KNOWN ABOUT KEYING THIS RADIO WITH A CAT COMMAND (issue 36).
+
+     THREE STATES, BECAUSE "NOT LISTED" IS NOT "LACKS".  The source is NY4I's
+     wiki page "TR4W Feature to Radio Feature Matrix": a "Yes" there is
+     pbcConfirmed, a "No" is pbcKnownAbsent, and a blank or a radio the page
+     does not list stays pbcNotConfirmed -- nobody has checked, which is a
+     different statement from "it cannot".
+
+     ONE ENUM FIELD, NOT TWO Flags MEMBERS, for two reasons.  A pair of flags
+     can say both "confirmed" and "absent" at once; one field cannot.  And a
+     field survives a DefineCapabilities that assigns Flags wholesale -- the
+     trap that wiped all fourteen keying Icoms' CW framing once (see HasXIT).
+
+     Ordinal 0 is pbcNotConfirmed ON PURPOSE: the instance memory is zeroed, so
+     every radio that says nothing is "not confirmed", never "confirmed".
+
+     WHAT THE RADIO IS KNOWN TO DO, not what TR4W does with it -- the same split
+     as rcCWByCAT.  Nothing refuses or changes PTT on this answer; the program
+     only reports it (LogRadio, at radio set-up).  Declared in each MODEL's own
+     constructor, never on a family base, and pinned over the whole registry by
+     uTestRadioPTTByCAT. *)
+   TPTTByCATKnowledge = (
+      pbcNotConfirmed,   // nobody has checked -- the default for every radio
+      pbcConfirmed,      // the feature matrix says Yes
+      pbcKnownAbsent     // the feature matrix says No
+   );
+
    TRadioCapabilities = record
       Flags: TRadioCapabilitySet;  // boolean traits
       CWSpeedMin: integer;         // CW keyer wpm range (ranged traits a set can't hold; default 6..48)
@@ -299,6 +326,10 @@ Type
         Pinned by uTestRadioKeepAlive over the whole registry. *)
       KeepAliveIntervalMs: cardinal;
       LinkSilenceLimitMs: cardinal;
+
+      (* Can this radio be keyed by a CAT command?  See TPTTByCATKnowledge.  A
+        field for the same reason as the two above. *)
+      PTTByCAT: TPTTByCATKnowledge;
    end;
 
 // Declare a radio's prosign spellings, for use in its constructor.  Reads as
@@ -321,6 +352,24 @@ function CWProsigns(const halfSpace, sn, ar, sk, bt: string): TCWProsignSet;
   guard the subtraction wraps and a radio that has just spoken is dropped. *)
 function KeepAliveDue(nowTick, lastSentTick: QWord; intervalMs: cardinal): Boolean;
 function LinkSilenceExceeded(nowTick, lastHeardTick: QWord; limitMs: cardinal): Boolean;
+
+(* WHAT TO TELL THE OPERATOR ABOUT PTT BY CAT, PURE (issue 36).  NY4I's ruling:
+  a radio that is NOT CONFIRMED gets one log line, and only a radio KNOWN TO
+  LACK it gets a notice the operator sees.  Nothing at all when the operator
+  has not asked for PTT by CAT, and nothing for a confirmed radio.  The caller
+  (LogRadio, at radio set-up) owns "once per session"; this answers only what
+  kind of report is due. *)
+type
+   TPTTByCATReport = (
+      pbrNothing,       // the setting is off, or the radio is confirmed
+      pbrLogOnly,       // not confirmed: one log line
+      pbrNotice         // known absent: a notice on the main window
+   );
+
+function PTTByCATReportFor(knowledge: TPTTByCATKnowledge; viaCommands: Boolean): TPTTByCATReport;
+
+// 'confirmed' / 'known absent' / 'not confirmed' -- for the log and the dump.
+function PTTByCATKnowledgeText(knowledge: TPTTByCATKnowledge): string;
 
 Type TSimpleEventProc = procedure(const aStrParam:string) of object;
 Type PBoolean = ^Boolean;  // Pointer to Boolean type
@@ -1821,6 +1870,47 @@ begin
       begin
       Result := (nowTick - lastHeardTick) > QWord(limitMs);
       end;
+end;
+
+function PTTByCATReportFor(knowledge: TPTTByCATKnowledge; viaCommands: Boolean): TPTTByCATReport;
+begin
+   Result := pbrNothing;
+   if not viaCommands then
+      begin
+      Exit;
+      end;
+   case knowledge of
+      pbcNotConfirmed:
+         begin
+         Result := pbrLogOnly;
+         end;
+      pbcKnownAbsent:
+         begin
+         Result := pbrNotice;
+         end;
+      pbcConfirmed:
+         begin
+         Result := pbrNothing;
+         end;
+   end;
+end;
+
+function PTTByCATKnowledgeText(knowledge: TPTTByCATKnowledge): string;
+begin
+   case knowledge of
+      pbcConfirmed:
+         begin
+         Result := 'confirmed';
+         end;
+      pbcKnownAbsent:
+         begin
+         Result := 'known absent';
+         end;
+   else
+      begin
+      Result := 'not confirmed';
+      end;
+   end;
 end;
 
 procedure TFactoryRadioBase.PollRadioState;
@@ -3344,6 +3434,7 @@ begin
                  // log what this radio actually keys for one of them.
                  CWProsign('<').text]);
       end;
+   Result := Result + ' [PTT by CAT: ' + PTTByCATKnowledgeText(FCapabilities.PTTByCAT) + ']';
 end;
 
 // ---- Per-radio state setters: one place owns where each flag is stored. ----

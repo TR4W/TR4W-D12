@@ -52,6 +52,12 @@ function HasPendingCounties: Boolean;
 // Number of counties currently in the queue.
 function PendingCountiesCount: Integer;
 
+(* THE QUEUED COUNTY AT aIndex (0 = the next to be dequeued), as typed; ''
+  when aIndex is outside the queue. READ-ONLY -- issue 85: the IN7QPNE
+  composite routes every county of a line to its party before the line is
+  logged, and must not disturb what TryLogContact will drain. *)
+function PendingCountyAt(aIndex: Integer): string;
+
 // Discard all queued counties.  Called by the parser at the start of every
 // exchange parse so the queue always reflects the current entry.
 procedure ClearPendingCounties;
@@ -97,6 +103,20 @@ begin
   else
      begin
      Result := 0;
+     end;
+end;
+
+function PendingCountyAt(aIndex: Integer): string;
+begin
+  if (not Assigned(FPendingCounties)) or
+     (aIndex < 0)                     or
+     (aIndex >= FPendingCounties.Count) then
+     begin
+     Result := '';
+     end
+  else
+     begin
+     Result := FPendingCounties[aIndex];
      end;
 end;
 

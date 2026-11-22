@@ -3115,7 +3115,7 @@ begin
   // scrolled.  Get() is indexed against FList, so FList is what to count.
   CC := SpotsList.Count;
     if CC = 0 then Exit;
-     if Settings.So2r.TwoRadioMode and Settings.So2r.QsyInactiveRadio then
+     if Settings.So2r.QsyInactiveRadio then
         begin
         Band := InactiveRadioptr.BandMemory
         end
@@ -3127,57 +3127,43 @@ begin
 
 
 
-if (K = -1) or (k > CC) then
-   begin
-   k := 0;
-   end;
-    for j := k to CC do      // loop thru bm entries looking for match to band and mode
-       begin
-       CC := SpotsList.Count;
-        Spot := SpotsList.Get(j);                                       // get current spot
-     //   GetBandMapBandModeFromFrequency(TempSpot.FFrequency, TempSpot.FBand, TempSpot.FMode);
-        CallWindowString := Spot.FCall;
-        SetOpMode(SEARCHAndPOUNCEOpMode);
-        logger.info('[NEXTBM] CALL = '+ SPOT.FCALL);
-        logger.info('Freq = ' + IntToStr(Spot.ffrequency));
-        if (Spot.FBand =  InactiveRadioptr.BandMemory) and (Spot.FMode = ActiveMode) and (Settings.So2r.QsyInactiveRadio) then
-           begin
-           logger.Info('Enter NextBandMap INACTIVE-Radio: ' + spot.fcall );
-           LOGGER.INFO('Freq = ' + IntToStr(Spot.ffrequency));
-           PutCallToCallWindow(OnDeckCall);
-           TuneRadioToSpot(Spotslist.Get(k), InActiveRadio);
-           inc(k);
-           break;
-           end
-         else
-        if (Spot.FBand = ActiveRadioptr.BandMemory) and (Spot.FMode = ActiveMode) then
-        if not (Settings.So2r.QsyInactiveRadio) then
-           begin
-           logger.info('[NEXTBM-Active] CALL = '+ SPOT.FCALL);
-           LOGGER.INFO('Freq = ' + IntToStr(Spot.ffrequency));
-           PutCallToCallWindow(CallWindowString);
-           TuneRadioToSpot(Spotslist.Get(j), ActiveRadio);
-           inc(k);
-           break;
-           end ;
-
-
-         if j = k then
-            begin
-            inc(k);
-            end;
-
-            if k > CC then
-               begin
-               k := 0;
-               CC := SpotsList.Count;
-               end;
-       end;     // end loop
-           if k > CC-1 then
-              begin
-              k := 0;
-              CC := SpotsList.Count;
-              end;
+   (* THE SEARCH IS THE STORE'S (issue 202): the first spot from k on whose
+     band is the one being worked and whose mode is the active mode. It stops
+     at Count - 1. This loop once ran to Count, where Get answers an all-zero
+     record (Band160, CW), so on 160 CW with nothing further the "match" put
+     an EMPTY call in the call box. It also assigned CallWindowString :=
+     Spot.FCall for EVERY spot it passed, leaving the global on whatever it
+     scanned last while the call box showed something else. Now only the
+     matched spot is acted on, and TuneRadioToSpot -- which clears the exchange
+     box, then puts the call in -- is the only writer of the call. *)
+   if (k < 0) or (k >= CC) then
+      begin
+      k := 0;
+      end;
+   j := SpotsList.IndexOfNextForBandMode(k, Band, ActiveMode);
+   if j < 0 then
+      begin
+      k := 0;
+      Exit;
+      end;
+   Spot := SpotsList.Get(j);
+   logger.info('[NEXTBM] CALL = ' + Spot.FCall + ' Freq = ' + IntToStr(Spot.FFrequency));
+   if Settings.So2r.QsyInactiveRadio then
+      begin
+      logger.Info('Enter NextBandMap INACTIVE-Radio: ' + Spot.FCall);
+      PutCallToCallWindow(OnDeckCall);
+      TuneRadioToSpot(Spot, InActiveRadio);
+      end
+   else
+      begin
+      logger.info('[NEXTBM-Active] CALL = ' + Spot.FCall);
+      TuneRadioToSpot(Spot, ActiveRadio);
+      end;
+   k := j + 1;
+   if k >= SpotsList.Count then
+      begin
+      k := 0;
+      end;
 
 end;     // end procedure
 

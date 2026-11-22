@@ -1,0 +1,403 @@
+/* -- place to add your own style modifications without touching the original styles -- */
+
+/* [ Category Navigation Adjustments to get rid of white shadow and all upper case - from Solostream Forum] */
+#catnav, #catnav a { text-shadow:none; }
+#catnav {text-transform: none;}
+
+/* -- Darken top border of catnav to separate from logo a bit better */
+/* #catnav {border-top-color: #d7d7d7;} */
+
+/* ---------[ Footer Navigation Adjustments - emailed from Solostream]--------- */
+/* added code to get rid of white shadow and uppercase as above */
+
+#footnav ul a,
+#footnav ul a:link,
+#footnav ul a:visited {
+	color: #ffffff;
+	text-transform: none; text-shadow:none;
+	}
+
+#footnav ul a:hover,
+#footnav ul a:active {
+	color: #f04249; 
+	text-transform: none; text-shadow:none;
+	}
+
+
+/* ---------[ Top Navigation Adjustments - using the Solostream email but applying to topnav ]--------- */
+/* added code to get rid of white shadow and uppercase as above */
+
+#topnav ul a,
+#topnav ul a:link,
+#topnav ul a:visited {
+	text-transform: none; text-shadow:none;
+	}
+
+#topnav ul a:hover,
+#topnav ul a:active {
+	text-transform: none; text-shadow:none;
+	}
+
+/*----CHANGES FOR MARKETING PROPOSAL BY 051 DIGITAL DECEMBER 2012 -----*/
+
+/* ----- Tightens up banner - logo real estate ----- */
+#header {
+/*margin: 2px auto 0;*/
+margin-top: 10px;
+}
+
+#head-content {
+  margin:0 auto;
+  /*padding:10;*/
+border: 1px solid #ebebeb;
+padding:5px;
+}
+
+/* ----- Trim padding and margin about main page content -----*/
+#wrap {
+    width: 96%;
+    max-width:960px;
+    margin: 0 auto;
+    padding: 0;
+    }
+
+/* ----- Match footer widgets and main page width ----- */
+#footer-widgets {
+width: 96%;
+    max-width:960px;
+    margin: 0 auto;
+padding: 0px;
+}
+
+/* ----- Match footer and main page width ----- */
+#footer {
+    width: 96%;
+    max-width:960px;
+    margin: 0 auto;
+    padding-top: 8px;
+padding-bottom: 8px;
+padding-left 0px;
+padding-right 0px;
+    }
+
+/* ----- trim top banner ad box to pull away from right edge when using text in the box ----- */
+#head-banner468 {
+padding: 8px;
+}
+
+/* ----- add small gap between header and catnav bar -----*/
+#catnav {
+margin-top: 3px;
+}
+
+/* ----- close up featured slider on home page to catnav -----*/
+html body.home div.outer-wrap div#wrap div.featured {
+margin-top: 10px;
+}
+
+/* ----- close up static content div to catnav ----- */
+html body.page div.outer-wrap div#wrap div#page.clearfix {
+padding-top: 10px;
+padding-bottom: 10px;
+}
+
+/* ----- close up posts content div to catnav -----*/
+html body.single div.outer-wrap div#wrap div#page.clearfix {
+padding-top: 10px;
+padding-bottom: 10px;
+}
+
+/* -----close up archive content div to catnav -----*/
+html body.archive div.outer-wrap div#wrap div#page.clearfix {
+padding-top: 10px;
+padding-bottom: 10px;
+}
+
+/* -----pad alt home widget 1 on left to match footer indent----- */
+html body.home div.outer-wrap div#wrap div#page.clearfix div#alt-home-bottom.clearfix div.home-widget-1 {
+padding-left: 8px;
+}
+
+/* static content footer widget1 left margin */
+html body.page div.outer-wrap div#footer-widgets.maincontent div.limit div.footer-widget1 {
+margin-left: 8px;
+}
+
+/* static content footer widget 4 right margin */
+html body.page div.outer-wrap div#footer-widgets.maincontent div.limit div.footer-widget4 {
+margin-right: 8px;
+}
+
+/* posts footer widget1 left margin */
+html body.single div.outer-wrap div#footer-widgets.maincontent div.limit div.footer-widget1 {
+margin-left: 8px;
+}
+
+/* posts footer widget 4 right margin */
+html body.single div.outer-wrap div#footer-widgets.maincontent div.limit div.footer-widget4 {
+margin-right: 8px;
+}
+
+/* -----archive posts footer widget1 left margin -----*/
+html body.archive div.outer-wrap div#footer-widgets.maincontent div.limit div.footer-widget1 {
+margin-left: 8px;
+}
+
+/* -----archive posts footer widget 4 right margin -----*/
+html body.archive div.outer-wrap div#footer-widgets.maincontent div.limit div.footer-widget4 {
+margin-right: 8px;
+}
+
+/* -----change home page slider padding, match for all pages used in the slider ----- */
+
+html body.home div.outer-wrap div#wrap div.featured div.container div#featured-pages.flexslider ul.slides li#feature-page-1 div.slide-container {
+padding-left: 12px;
+padding-right: 10px;
+}
+
+html body.home div.outer-wrap div#wrap div.featured div.container div#featured-pages.flexslider ul.slides li#feature-page-2 div.slide-container {
+padding-left: 12px;
+padding-right: 10px;
+}
+
+html body.home div.outer-wrap div#wrap div.featured div.container div#featured-pages.flexslider ul.slides li#feature-page-3 div.slide-container {
+padding-left: 12px;
+padding-right: 10px;
+}
+
+html body.home div.outer-wrap div#wrap div.featured div.container div#featured-pages.flexslider ul.slides li#feature-page-4 div.slide-container {
+padding-left: 12px;
+padding-right: 10px;
+}
+
+html body.home div.outer-wrap div#wrap div.featured div.container div#featured-pages.flexslider ul.slides li#feature-page-5 div.slide-container {
+padding-left: 12px;
+padding-right: 10px;
+}
+
+/* ---------[ Featured Slider Adjustments from Solostream Forum]--------- */
+
+.flexslide-custom-controls li a {
+	color:#47469c !important;
+	}
+
+.flexslide-custom-controls li a.active,
+.flexslide-custom-controls li a:hover {
+	color:#f04249 !important;
+	}
+
+/* -----text size and border for RSGB survey advert - beta site only -----*/
+/* ***EXCLUDED***
+#wrap div.banner728-container div.banner728 {
+font-size: 16pt;
+padding-top: 8px;
+padding-bottom: 8px;
+border: 1px solid #f04249;
+}
+ ***END OF EXCLUDED SECTION*** */
+
+/*----- change home page footer widget title style-----*/
+div#page.clearfix div.widget-wrap h3.widgettitle,
+div#page.clearfix div.widget-wrap h3.widgettitle a,
+div#page.clearfix div.widget-wrap h3.widgettitle a:link,
+div#page.clearfix div.widget-wrap h3.widgettitle a:visited {
+color: #47469c;
+font-size: 12pt;
+font-weight: 600;
+}
+
+div#page.clearfix div.widget-wrap h3.widgettitle a:hover,
+div#page.clearfix div.widget-wrap h3.widgettitle a:active {
+color: #f04249;
+}
+
+/*-----change footer title styles-----*/
+div#footer-widgets.maincontent div.widget-wrap h3.widgettitle {
+font-size: 11pt;
+font-weight: 500;
+}
+
+/* ---------[ Continue Reading Button Adjustments ]--------- */
+
+a.more-link, 
+a.more-link:link, 
+a.more-link:visited  {
+    text-shadow: none;
+    letter-spacing:1px;
+    text-transform: none;
+    font-size: 12pt;
+    font-weight: 500;
+    }
+
+/* ---------[ Search Button Adjustments ]--------- */
+
+#searchform #submitbutton {
+letter-spacing:1px;
+text-shadow: none;
+font-family:verdana,geneva,sans-serif;
+text-transform: capitalize;  
+font-size: 12px;
+    padding: 6px 8px;
+    margin: 0;
+    border: 0;
+    cursor:pointer;
+    display:inline;
+    }
+
+/* ---------[ Change visited link colour ]--------- */
+
+/*PSL #content a:visited  { color:#7978B7 !important; } */
+#content a { color:#cc0000 !important; text-decoration: underline; } 
+#content a:hover  { color:#f04249 !important; }
+#content a.more-link:visited  { color:#FFFFFF !important; background-color: #7978B7 !important;}
+#content a.more-link:hover  { color:#f04249 !important; background-color: #7978B7 !important;}
+#contentright a:visited  { color:#7978B7 !important; }
+#contentright a:hover  { color:#f04249 !important; }
+
+
+/* ---------[ Change Latest Custom Post Type widget link font ]--------- */
+h4.tm_lcptu_post_title {font-size: 10pt;}
+
+/*-----Events manager full calendar adjustments-----*/
+
+table.em-calendar.fullcalendar {
+   width: 99%;
+}
+
+.eventless, .eventless-pre, .eventless-post, .eventless-today,
+.eventful, .eventful-pre, .eventful-post, .eventful-today {
+   font-size: 8pt;
+   font-weight: bold;
+}
+
+.fullcalendar ul {
+   margin-left: 16px;
+   padding: 0;
+}
+
+.fullcalendar ul li {
+   list-style-type: disc;
+   background-image: none;
+   padding: 0;
+}
+.fullcalendar ul li li {
+   font-weight: normal;
+   margin-left: 0;
+}
+
+/*-----Events manager WP Full Calendar adjustments-----*/
+
+@media all {
+   #wpfc-calendar-wrapper .fc-header-title h2 {
+      font-size: 200% !important;
+   }
+
+   #wpfc-calendar-wrapper .fc-event-title {
+      color: #000 !important;
+   }
+}
+
+/*-----Events manager search form adjustments to search boxes-----*/
+.em-events-search-form {
+    font-size: 10pt;
+    padding-top: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+}
+
+.em-events-search-text {
+    font-size: 10pt;
+    margin-top: 10px;
+    margin-right: 12px;
+    width: 328px;
+}
+
+.em-events-search-dates {
+    font-size: 10pt;
+    margin-top: 10px;
+    margin-right: 12px;
+}
+
+.em-date-input-loc {
+    width: 80px;
+}
+
+.em-events-search-category,
+.em-events-search-region,
+.em-events-search-state {
+    font-size: 10pt;
+    margin-top: 10px;
+    margin-right: 12px;
+    width: 158px;
+}
+
+.em-events-search-submit {
+    letter-spacing: 1px;
+    text-shadow: none;
+    font-family: verdana,geneva,sans-serif;
+    font-weight: bold;
+    padding: 4px 8px;
+    border: 0;
+    margin-top: 10px;
+    width: 164px;
+}
+
+.em-events-search-submit:hover {
+    color: #7978B7;
+}
+
+/*-----FA Lite slider read more button customisation-----*/
+#content a.FA_read_more,
+#content a.FA_read_more:link,
+#content a.FA_read_more:visited {
+    text-shadow: none;
+    text-transform: none;
+    font-size: 12pt;
+    font-weight: 500;
+    padding: 6px 8px;
+    line-height: 2em;
+    color: #FFFFFF !important;
+    font-style: normal !important;
+    background-color: #47469c !important;
+    border-radius: 3px 3px 3px !important;
+}
+
+/*-----Post Tile adjustments-----*/
+ul#post-tiles li a h3 {
+    text-shadow: none;
+    text-transform: none;
+    font-size: 12pt;
+    font-weight: 500;
+    color: #000000;
+}
+
+@media only screen and (min-width: 900px) {
+    ul#post-tiles.responsive li {
+        width: 32%;
+        margin: 0 1% 1% 0;
+    }
+}
+
+@media only screen and (min-width: 800px) and (max-width: 899px) {
+    ul#post-tiles.responsive li {
+        width: 48%;
+        margin: 0 1% 1% 0;
+    }
+}
+
+/*-----Events Site Forms adjustments-----*/
+#em-wrapper input[type="checkbox"] {
+    -webkit-appearance: checkbox;
+    box-sizing: border-box;
+}
+
+/*-----Smart Archives adjustments-----*/
+#smart-archives-fancy ul.tabs li {
+    background-image: none !important;
+}
+
+/*-----Breadcrumb adjustments-----*/
+p#breadcrumbs {
+    font-size:10pt;
+    font-style:italic;
+}

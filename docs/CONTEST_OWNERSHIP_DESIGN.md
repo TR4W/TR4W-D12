@@ -3470,7 +3470,7 @@ scoring a party 0 in silence.
 | `CountsAsMultiplier` | **per QSO** -- the judging party's answer on the judging party's bands (`ContestCreditsBand(component, ...)` -- the composite's own `UsesBand` cannot route, so this is the only place a party's bands reach the multipliers); False for no party |
 | `ParseReceivedExchange` | **per QSO** -- the session's shape parses (that finds the county); no party refuses; otherwise the judging party parses from the record as it arrived. The shape runs twice on success, safe because every shape clears the county-line queue first |
 | `UsesBand` (dupe sheet, need-multiplier hint) | **cannot delegate** -- asked with a band and no QSO. The composite credits every band; a Delaware WARC QSO is on the dupe sheet and the hint (harmless: dupes are per call, band and mode) |
-| `ValidateQTHCount` (county lines) | **cannot delegate** -- asked with a count and no QTH. The composite allows any number (IN and DE say 2, 7QP 4, unenforced before too) -- Q82 |
+| `ValidateQTHCount` (county lines) | **after the party's parse** since issue 85 (2026-11-22): LOGSTUFF still asks the composite with a count (any number), and `CountyLineStaysInParty` then routes every county of the line (the first from the record, the rest from `uPendingCounties`, aliases through `TReceivedExchangeSession.ResolveDomesticQTH`), refuses a line of two parties (`SExchangeCountyLineOneParty`; NY4I: "a rover cannot operate from across a state line for two counties"), and asks THAT party's `ValidateQTHCount` -- IN 2, DE 2, 7QP 4 (now stated on its class, `uContestBase.CountyLineCountAllowed`), NE none -- Q82 |
 | `MarksDupes`, the dupe key | composite's own; all four parties mark dupes per band per mode, as the row does, so the one session rule IS each party's |
 | `MultByBand`, `MultByMode`, `VHFBandsEnabled`, zone mode, domestic countries | **cannot delegate** -- one session value. The row's kept: multipliers once per contest, no VHF. Delaware differs (per band, VHF on) -- Q79 |
 | which multiplier a QTH counts AS | **cannot delegate** -- the session's one domestic table names it. Each county is its own multiplier; an in-area entrant's states, provinces and one `dx` count too. The parties' own files differ (7QP in state maps its counties to their state) -- Q80; the multiplier KEY is Q4/M10 |
@@ -5139,7 +5139,8 @@ this document before the rewrite, **old Qn** from `QSO_POINT_METHOD_DESIGN.md`.
   - **Q82** County lines: Indiana and Delaware allow two, 7QP four. The
     county-line check is asked with a count and no county, so the composite
     cannot route it and allows any number (as before). Pass the counties'
-    party to the check, or leave it?
+    party to the check, or leave it? **Built 2026-11-22 (issue 85)**: see the
+    `ValidateQTHCount` row of the IN7QPNE table.
   - **Q83** The HamScore uploader now asks the contest whether it may post,
     so WRTC stops posting to HamScore too (its rule already said no live
     score posting; only the post-scores window obeyed it). Confirm WRTC.

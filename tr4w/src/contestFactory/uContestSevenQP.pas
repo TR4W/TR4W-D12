@@ -50,8 +50,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   parsed by the session's shape with no party rule. Whether a multi-state
   party wants a base of its own is a design question recorded in the
   design doc (M7b), not answered here. Its county-line maximum is 4 by the
-  sponsor's rule (ADDING_A_CONTEST.md's worksheet) and is NOT enforced --
-  nothing enforced it before.
+  sponsor's rule (ADDING_A_CONTEST.md's worksheet), ENFORCED SINCE ISSUE 85
+  (2026-11-22) through ValidateQTHCount -- for this contest alone and for the
+  IN7QPNE composite, which asks the party a county line belongs to. A line
+  may cross the 7th area's state lines ("UTRIC/IDBEA", the sponsor's own
+  example).
 
   SCORING: 3 on CW, 4 on digital (Q85, the sponsor's), 2 otherwise. It was
   TwoPhoneThreeCW -- digital 2 -- until 2026-10-17.
@@ -192,6 +195,10 @@ type
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
+      (* A COUNTY LINE OF AT MOST FOUR COUNTIES -- issue 85, through the one
+         rule uContestBase.CountyLineCountAllowed. See the header. *)
+      function ValidateQTHCount(aCount: integer;
+                                out aErrorMessage: string): boolean; override;
    public
       (* THE WORKED STATION'S ADIF STATE -- see TContestBase.ADIFCountyState
          and ADIFWorkedStationState (Q76/Q89, NY4I 2026-10-16). A county key
@@ -574,6 +581,14 @@ end;
 function TContestSevenQP.UsesDomesticFile: boolean;
 begin
    Result := True;
+end;
+
+(* FOUR COUNTIES -- the sponsor's maximum (see the header), stated as the
+   party base states every party's: CountyLineCountAllowed. *)
+function TContestSevenQP.ValidateQTHCount(aCount: integer;
+                                          out aErrorMessage: string): boolean;
+begin
+   Result := CountyLineCountAllowed(aCount, 4, aErrorMessage);
 end;
 
 (* A CALL'S /SUFFIX THAT THE DOMESTIC TABLE KNOWS IS A ROVER'S COUNTY, at

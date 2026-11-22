@@ -59,6 +59,8 @@ begin
    // DVK voice recorder, and the base's MemoryKeyer drives a K3 by emulating
    // front-panel MSG/REC buttons (SWT21/31/35/39) this radio does not have.
    FCapabilities.Flags := FCapabilities.Flags + [rcCWByCAT, rcCWSpeedSync];
+   // PTT by CAT: "Yes" in the TR4W Feature to Radio Feature Matrix (issue 36).
+   FCapabilities.PTTByCAT := pbcConfirmed;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

@@ -1,0 +1,103 @@
+﻿Rule changes for 2026:
+1. Self-spotting is permitted for Assisted entries.
+2. Remote operation of a station is permitted.
+3. Entries may be Single Operator or Multi-Operator
+
+ 
+1. Objective	To achieve a good score by working stations as quickly and accurately as possible. These contests are a great opportunity to test a 160m station for its ability to work both UK and DX stations. There is often the possibility to work both Far Eastern and North American stations during the three hours of each contest.
+
+2. Date & Time	First 1.8 MHz contest: Saturday 14 February 2026: 2000-2300 UTC: CW & SSB
+
+Second 1.8 MHz contest: Saturday 21 November 2026: 2000-2300 UTC: CW only
+
+QSOs will not be accepted at or past the end time
+
+3. Frequencies and Power	1810-1850 kHz, CW
+1840-1900 kHz, SSB
+Maximum legal power
+
+Only one signal may be transmitted at any one time
+
+
+4. Entrants and Sections	(a) There are 12 sections - all QSOs count for points and bonuses:
+UK&CD :	 Unassisted
+CW only
+February and November
+UK&CD :	 Assisted	CW only	February and November
+Non-UK&CD :
+ Unassisted	CW only	February and November
+Non-UK&CD :	 Assisted	CW only	February and November
+UK&CD :	 Unassisted	SSB only	February only
+UK&CD :	 Assisted	SSB only
+February only
+Non-UK&CD :	 Unassisted	SSB only
+February only
+Non-UK&CD :	 Assisted	SSB only
+February only
+UK&CD :	 Unassisted	CW+SSB
+February only
+UK&CD :	 Assisted	CW+SSB
+February only
+Non-UK&CD :	 Unassisted	CW+SSB
+February only
+Non-UK&CD :	 Assisted	CW+SSB
+February only
+
+(b) Single Operator or multi-operator entries are permitted
+
+(c) UK&CD entrants must be RSGB members
+
+(d) Special Contest Calls may be used
+(e) Operation must be from a single Station location where all transmitters, receivers, and antennas are located within a circle of a radius no greater than 500m
+
+(f) Remote receivers outside the Station location are not permitted
+
+(g) Remote operation of a station is permitted.
+(h) A remotely operated station must obey all station licence, operator licence, and category conditions. The callsign used must be one issued or permitted by the Regulatory Authority of the remote station location.
+
+(i) The address of the operator must be included in the 'Address of Operator when operating Remote from Station Address' box on the Station Information Page and the address of the remote station must be included in the Cabrillo header 'ADDRESS:' box.
+
+(j) Assisted entries may spot their own station on the DX cluster. Self-spots may be made when first soliciting QSOs on a new frequency and thereafter no more frequently than every 10 minutes.
+
+
+5. Exchange	RST plus Serial Number starting at 1 and incrementing by 1; entrants will not be penalised if their sent serial numbers are logged slightly out of sequence.
+
+Please log any exchange that you are sent to the best capability of your logging facility; if you are not sent an exchange, log a zero
+
+UK&CD entrants also send their 2-character District Code.
+
+6. Scoring	Each QSO scores 2 points.  Non-UK&CD stations can work each other for points and bonuses. In the February event, stations may be worked on both SSB and CW for QSO points.
+
+A Bonus of 5 points is scored for the first contact with every UK&CD District and for the first contact with every DXCC Country (entity) outside the UK&CD, regardless of mode.
+
+The final score is QSO points + Bonus points.
+
+7. Log Submission
+        and Adjudication	Submit in Cabrillo format here by 23:59:59 UTC on the day following the end of the contest. View the correct Cabrillo format for this contest.  If the robot finds format errors, it will reject the log and ask for resubmission of a corrected logfile. 
+Second and subsequent log uploads may be subject to analysis of any changes that have been made.
+
+If you have difficulties preparing or uploading your Cabrillo logfile, please contact the contest adjudicator to ask for assistance, before the submission deadline.
+
+Adjudicated results will be online and will include online logfiles for all entrants.
+
+Errors will incur penalties as outlined in the RSGB HF Adjudication Principles. This penalty will be the loss of an additional 2 QSO points.
+
+The use of CAT Control to log the correct frequency and mode is highly recommended - you will lose QSO points for frequency and mode errors.
+
+8. Results and Awards	There will be separate tables of results for UK&CD and non-UK&CD entrants.
+Awards for RSGB HF Contests are shown here. The trophies for these contests are for UK&CD entrants.
+
+Winners of awards will be indicated in the results tables complete with downloadable certificates.
+
+A certificate may also be downloaded by all entrants showing their position in their entry section.
+
+For UK&CD entrants their score from these contests contribute to the RSGB HF Championship.
+
+9. Supplementary Rules	
+(a)	 	Any infringement considered to be outside the spirit of the contest may result in QSOs being disallowed, the entry being reclassified as a Checklog, or the entry being disqualified.
+(b)	 	Call signs logged must be the same as those exchanged over the air by the entrants during the QSO. Correction of logged call signs and exchanges after the contest, by use of any database, recordings, email or other methods, is not allowed.
+(c)	 	All requests for contacts, responses to calls, and copying of call signs and contest exchanges must be accomplished during the contest period using the mode and frequencies of the contest.
+(d)	 	You must send your callsign at least every 3rd QSO and no less often than once a minute.
+(e)	 	Proof of contact e.g. an MP3 audio recording, may be required as part of the adjudication process.
+(f)	 	UK&CD entrants are required to use a Regional Secondary Locator (RSL) where it is necessary to clarify the entity from which they are operating. Stations operating from England may optionally use the RSL “E”. If no RSL is used e.g. M0HDG, G6XX or GB4ABC, the station will be assumed to be in England. The use of a misleading RSL will disqualify the entry.
+(g)	 	UK&CD entrants may append their call sign with one of the following: /A (Alternative Address), /P (Temporary Location), /M (Mobile) or /MM (Maritime Mobile) and this will comprise part of the call with which they enter. Other suffixes used by UK&CD stations, whether or not they are entrants, will be removed in adjudication and need not be logged.

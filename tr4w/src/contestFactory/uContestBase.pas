@@ -900,7 +900,14 @@ type
 
       MarkRefusedWord names the word a class's refusal is about (nil: no
       caret service; a class asks Assigned first). RTC's serial-0 refusal is
-      its first reader (2026-10-23). *)
+      its first reader (2026-10-23).
+
+      ResolveDomesticQTH is the session's domestic table's answer for a word
+      (LOGDUPE.DomesticQTHAndKeyOf, the lookup typed entry runs; the ADIF
+      import's TADIFImportSession carries the same one). nil: no service, so
+      a reader takes the word as typed. IN7QPNE's county-line rule is its
+      first reader (issue 85): a queued county may be typed as an alias
+      (ANDME, TOLCT), and only the table knows which party's county it is. *)
    TReceivedExchangeSession = record
       Parsers: TExchangeParsers;
       ExchangeFormatOf: TContestBase;
@@ -909,6 +916,7 @@ type
       CallWindowHasCall: boolean;
       AbandonEntry: TEntryAbandon;
       MarkRefusedWord: TRefusedWordMark;
+      ResolveDomesticQTH: TDomesticQTHResolve;
    end;
 
    (* A LIST OF IDENTIFIERS A CONTEST ANSWERS TO -- see FormerADIFContestIds. *)
@@ -4011,8 +4019,9 @@ type
          Spring hit exactly that.
 
          VIRTUAL, so a contest that does have a limit can state one.
-         TContestStateQSOPartyBase is the only overrider today and the only
-         place a county-line limit exists.
+         TContestStateQSOPartyBase and, since issue 85, the 7QP (four) are
+         the overriders; both say it through CountyLineCountAllowed. The
+         IN7QPNE composite asks the party a county line belongs to.
 
          IT TAKES AN INTEGER AND NEVER A LIST, and that is the design rule
          rather than a convenience: a contest that was handed the QTHs would be
@@ -4370,6 +4379,19 @@ function ContestLoggedQSORefusal(aContest: TContestBase;
 function HostAreaRuleCredits(aEntrantInHostArea: boolean;
                              const aWorkedQTH: string;
                              aIsHostQTH: TDomesticQTHTest): boolean;
+
+(* MAY ONE ON-AIR EXCHANGE NAME aCount COUNTIES, WHEN THE RULES ALLOW AT MOST
+   aMaxCounties? -- THE ONE STATEMENT OF A COUNTY-LINE MAXIMUM (issue 85,
+   2026-11-22). Lifted from TContestStateQSOPartyBase.ValidateQTHCount when the
+   7QP, which sits on TContestBase, became its second user.
+
+   One QTH always passes: zero means "no county LINE", not "no county" -- every
+   domestic exchange names one. More than one passes up to aMaxCounties, so a
+   maximum of High(integer) (the party base's CountyLineCountiesUnlimited)
+   accepts any number. A refusal says TC_TOOMANYCOUNTIES with the maximum. *)
+function CountyLineCountAllowed(aCount: integer;
+                                aMaxCounties: integer;
+                                out aErrorMessage: string): boolean;
 
 (* IS THIS DOMESTIC MULTIPLIER A PARTY'S "DX"? -- THE ONE TEST, Q84 (NY4I,
    2026-10-15: "ignore case") and Q49 (2026-10-16).
@@ -5411,6 +5433,18 @@ begin
       inheriting something. A limit has to be stated to exist. *)
    aErrorMessage := '';
    Result := True;
+end;
+
+function CountyLineCountAllowed(aCount: integer;
+                                aMaxCounties: integer;
+                                out aErrorMessage: string): boolean;
+begin
+   aErrorMessage := '';
+   Result := (aCount <= 1) or (aCount <= aMaxCounties);
+   if not Result then
+      begin
+      aErrorMessage := Format(TC_TOOMANYCOUNTIES, [aMaxCounties]);
+      end;
 end;
 
 function ContestCreditsBand(aContest: TContestBase; aBand: BandType): boolean;

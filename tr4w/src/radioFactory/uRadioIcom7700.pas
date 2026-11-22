@@ -104,6 +104,8 @@ begin
 
      If someone shows this rig answering $27 $00, the change is two lines:
      rcSpectrum above and a DeclareScopeGeometry with the measured numbers. *)
+   // PTT by CAT: "Yes" in the TR4W Feature to Radio Feature Matrix (issue 36).
+   FCapabilities.PTTByCAT := pbcConfirmed;
 end;
 
 // NAMED unit-level constructors, not anonymous functions.  None of these

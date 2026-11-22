@@ -1,0 +1,117 @@
+[Author]
+AuthorName=Tim Shoppa
+Callsign=N3QE
+Email=tshoppa@gmail.com
+[File]
+Revision =1.0.2
+LastUpdate =2024-01-04
+Description =Weekly RTTY Test
+
+[Contest]
+Name =WRT
+DisplayName =Weekly RTTY Test
+CabrilloName =WRT
+Mode =RTTY
+DupeType =2
+Multiplier1Name =CallSign
+Multiplier2Name =
+Multiplier3Name =
+Period =
+PointsPerContact =1 
+
+PointsMultByBand = 
+PointsMultByMode = 
+PointsMultByContinent = 
+PointsMultByCountry = 
+PointsMultByCategory =
+
+PointMultAtTimeLocal = 
+PointMultAtTimeGMT = 
+
+PowerMult = 
+
+ZoneType = 
+MultSqlString = CallSign
+MultSqlString2 = 
+MultSqlString3 = 
+MultWindowType = 
+
+IsMultPer = 4
+IsMult1Per = 
+IsMult2Per = 
+IsMult3Per = 
+
+DoNotCountMeAsMult = 
+DoNotCountMeAsMult2 = 
+DoNotCountMeAsMult3 = 
+
+CountMultOnlyFor = 
+CountMultOnlyFor2 =
+CountMultOnlyFor3 =
+CountMultOnlyForSec =
+CountMultOnlyForSec2 = 
+CountMultOnlyForSec3 =
+
+ShowMyCountryStations =
+ShowWarcBands =
+
+MultiplierBands =
+CQZoneMultContest =
+NumMults = 1
+BonusPoints = 
+BonusPoints2 = 
+
+DoNotCountMultOnlyFor =
+DoNotCountMultOnlyFor2 = 
+DoNotCountMultOnlyFor3 = 
+
+QsoErrorString = Any_not_Empty
+EntryWindowInfo = NameText, 700, Exchange1Text, 450
+FrameText = Name QTH
+LogInfo = opname, 800, Exchange1, 500, Points, 350, IsMultiplier1, 350
+DefaultContestExchange =Name State
+
+CabrilloVersion =3.0
+CabrilloFormat = 99
+OverlayCategory = 
+
+CabrilloString =SentExchPart1, 10, SentExchPart2, 10, CallSign, 13, Name, 10, Exchange1, 4
+GenericPrintString =
+GenericPrintStringHeader =Date     Time   Freq   Mode MyCall       Sent                 Call            Rcvd Exchange        Points  S/P Ctry
+
+IsWorkable = Any
+SpecialInstructions = Report Score to 3830
+
+DupeSqlString = 
+StartOfContest =
+EndOfContest =
+MinimumOffTime =
+UsesWAECountries = 
+QsoNumbersByBand = 
+SetSentTimeForContact =
+
+ScoreSummaryMultNames = Cll
+WebAddress = https://radiosport.world/mst.html
+DigitalModeSqlString =
+MultipleSessions = 
+ResetMultsEverySession = 
+ResetSNEverySession =
+
+MultMult =  
+MultMult2 = 
+MultMult3 = 
+
+SingleOpCountableBandChange =
+MultiOpCountableBandChange =
+CountBandOrModeChange =
+SOBandChangeCountMax =
+MOBandChangeCountMax =
+CountBandChangesPerContest =
+CountBandChangesPerPeriod =
+SOBandChangeTimerDuration =
+MOBandChangeTimerDuration =
+
+DupeQSOMinutesAgo =
+
+UsesLASTEXCHmacro =
+

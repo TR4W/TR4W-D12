@@ -188,6 +188,19 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-22 -- PTT BY CAT: "NOT CONFIRMED" IS LOGGED, "NOT SUPPORTED" IS SHOWN (issue 36; radio-factory)
+
+Each radio now carries what the wiki "TR4W Feature to Radio Feature Matrix" says about PTT by CAT: confirmed (K4, K3, KX3, TS-590 and sixteen Icoms), known absent (IC-746 and IC-718), or not confirmed (everything else). Nothing is refused: the PTT command is still sent exactly as before. With "Key the transmitter with a CAT command" ON, a not-confirmed radio gets one `PTT via CAT is enabled but not confirmed for <radio>` line in `tr4w.log`, and a known-absent radio gets a notice on the main window, with a beep. Each radio is reported once per session. Unit-pinned in `uTestRadioPTTByCAT`.
+
+- [ ] **IC-746 or IC-718 (or the IC-746 chosen with no radio attached), PTT via CAT on:** at startup the notice line reads `Icom IC-746: PTT via CAT is not supported by this radio...`, and `tr4w.log` has the matching WARN. Press Reset Radio Ports: NO second notice.
+- [ ] **A not-confirmed radio (for example a TS-480, an FT-991 or an IC-7300MK2), PTT via CAT on:** no notice; `tr4w.log` has exactly one `not confirmed for` line per session.
+- [ ] **A confirmed radio (K4, K3, IC-7300...):** neither a notice nor a log line, and PTT by CAT still keys the radio.
+- [ ] **PTT via CAT off:** nothing for any radio.
+- [ ] **IC-7000 keys by CAT** (`$1C $00 $01`). The matrix says Yes and it is declared confirmed, but `uRadioIcomLegacy`'s header says the family's `$1C` TX-status READ NAKs. If the set NAKs too, it moves to known absent.
+- [ ] **If a "not confirmed" radio keys correctly by CAT on the bench**, report the model: it moves to the confirmed list (its own constructor, plus `uTestRadioPTTByCAT`) and the wiki matrix should get a Yes.
+
+---
+
 ## Added 2026-11-22 -- THE FLEX (SMARTSDR API) PINGS, AND TR4W DROPS A SILENT LINK (issue 6; radio-factory)
 
 The SmartSDR API driver (Radio Control Port = TCP 4992) now sends `ping` once a second after the radio's `H` line, and the base drops the link after 10 s with NOTHING received, then reconnects through the normal back-off. `keepalive disable` is STILL sent, so the radio never drops TR4W. Nothing here has touched a radio: the spelling `ping` comes from AetherSDR (a third-party client), not from Flex's documentation. Unit-pinned in `uTestRadioKeepAlive`. Set `DEBUG LOG LEVEL = TRACE` to see `[FlexAPI TX] C<n>|ping` and the reply.

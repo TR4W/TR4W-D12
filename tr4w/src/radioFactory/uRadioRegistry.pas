@@ -135,6 +135,12 @@ const
    // above describes -- the same trap, eight months later, which is the argument
    // for the block rather than for 25 edited headers.
    rcSpectrum           = uFactoryRadioBase.rcSpectrum;
+   // PTT by CAT (issue 36) is a three-state FIELD, not a Flags member, but it
+   // is declared in the same Icom model units that use only this unit -- so
+   // its members are re-exported here for the same E2003 reason.
+   pbcNotConfirmed      = uFactoryRadioBase.pbcNotConfirmed;
+   pbcConfirmed         = uFactoryRadioBase.pbcConfirmed;
+   pbcKnownAbsent       = uFactoryRadioBase.pbcKnownAbsent;
 
 // Reads as SerialParams(4800, 8, PARITY_NONE, 2) at each registration.
 function SerialParams(baud: Integer; dataBits, parity, stopBits: Byte): TSerialParams;

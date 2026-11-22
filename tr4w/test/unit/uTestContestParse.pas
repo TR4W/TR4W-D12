@@ -190,6 +190,7 @@ begin
    Result.CallWindowHasCall := aLive;
    Result.AbandonEntry := @StubAbandonEntry;
    Result.MarkRefusedWord := nil;
+   Result.ResolveDomesticQTH := nil;
 end;
 
 function NewExch(const aCall, aCountry: string): ContestExchange;

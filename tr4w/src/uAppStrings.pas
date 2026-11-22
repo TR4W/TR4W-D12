@@ -747,6 +747,12 @@ resourcestring
      error like we would with an invalid county".  %s is the host state. *)
    SExchangeOutOfStateWorksHostOnly = 'Out of state: work %s stations only';
 
+   (* A COUNTY LINE OF THE IN7QPNE COMPOSITE WHOSE COUNTIES ARE NOT ALL OF ONE
+     PARTY -- issue 85. NY4I, 2026-11-22: "a rover cannot operate from across
+     a state line for two counties" (of two parties). %s and %s are the first
+     county and the first one that is not in its party, as typed. *)
+   SExchangeCountyLineOneParty = 'County line %s/%s: the counties must be in one QSO party';
+
    (* A WORD OF AN RST-AND-GRID EXCHANGE THAT IS NEITHER -- Q115, NY4I
      2026-10-18. The parser used to drop such a word silently, so '599 FN3'
      logged a QSO with no grid. %s is the word as typed. *)
@@ -2062,6 +2068,11 @@ resourcestring
    SSelfSpotNoLink            = 'Self-spot refused: neither the DX cluster nor the network is connected. Nothing sent.';
    SSelfSpotTooSoon           = 'Self-spot refused: the last one was sent less than %d minutes ago. Nothing sent.';
    SSelfSpotNotMoved          = 'Self-spot refused: the VFO has not moved %d Hz since the last self-spot. Nothing sent.';
+
+   (* PTT BY CAT (issue 36).  %s is the radio's model name.  Shown once per
+     session for a radio the feature matrix says CANNOT be keyed by a CAT
+     command; nothing is refused -- the command is still sent. *)
+   SRadioPTTByCATNotSupported = '%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off "Key the transmitter with a CAT command".';
 
 implementation
 

@@ -13143,3 +13143,13 @@ msgstr ""
 #, fuzzy
 msgid "Toggle Voice Keyer"
 msgstr ""
+
+#: uappstrings.sexchangecountylineoneparty
+#, fuzzy
+msgid "County line %s/%s: the counties must be in one QSO party"
+msgstr ""
+
+#: uappstrings.sradiopttbycatnotsupported
+#, fuzzy
+msgid "%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off \"Key the transmitter with a CAT command\"."
+msgstr ""
