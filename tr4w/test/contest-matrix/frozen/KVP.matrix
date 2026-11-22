@@ -109,26 +109,26 @@ QSO: 14250 PH 2026-01-15 1215 K0AAA   59  00     KH6ABC         59  31
 QSO:  3530 CW 2026-01-15 1216 K0AAA   599 00     W1AW           599 00           
 QSO: 14250 PH 2026-01-15 1217 K0AAA   59  00     G3ABC          59  00           
 == import
-imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
-imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 zone=5 year=5 exch=59 05 operator=K0AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
-imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 zone=5 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
-imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 zone=5 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
-imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 zone=5 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
-imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 zone=5 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
-imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 zone=4 year=4 exch=59 04 operator=K0AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
-imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 zone=6 year=6 exch=599 06 operator=K0AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
-imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 zone=14 year=14 exch=599 14 operator=K0AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
-imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 zone=14 year=14 exch=59 14 operator=K0AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
-imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 zone=25 year=25 exch=599 25 operator=K0AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
-imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 zone=11 year=11 exch=59 11 operator=K0AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
-imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 zone=30 year=30 exch=599 30 operator=K0AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
-imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 zone=38 year=38 exch=59 38 operator=K0AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
-imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 zone=31 year=31 exch=59 31 operator=K0AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
-imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 zone=0 year=0 exch=599 00 operator=K0AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
-imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 zone=0 year=0 exch=59 00 operator=K0AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
+imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
+imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 year=5 exch=59 05 operator=K0AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
+imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
+imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
+imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
+imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 year=5 exch=599 05 operator=K0AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
+imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 year=4 exch=59 04 operator=K0AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
+imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 year=6 exch=599 06 operator=K0AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
+imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 year=14 exch=599 14 operator=K0AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
+imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 year=14 exch=59 14 operator=K0AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
+imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 year=25 exch=599 25 operator=K0AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
+imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 year=11 exch=59 11 operator=K0AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
+imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 year=30 exch=599 30 operator=K0AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
+imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 year=38 exch=59 38 operator=K0AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
+imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 year=31 exch=59 31 operator=K0AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
+imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 year=0 exch=599 00 operator=K0AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
+imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 year=0 exch=59 00 operator=K0AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
 imp srx.rst+alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=K0AAA cty=K/8/NorthAmerica/W1
 imp srx.alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=CT operator=K0AAA cty=K/8/NorthAmerica/W1
-imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=8 year=8 exch=599 8 operator=K0AAA cty=K/8/NorthAmerica/W1
+imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 year=8 exch=599 8 operator=K0AAA cty=K/8/NorthAmerica/W1
 imp srx.number.phone | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121800 rst.sent=59 rst.rcvd=59 nr.rcvd=123 exch=59 123 operator=K0AAA cty=K/8/NorthAmerica/W1
 imp srx.none | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=CT operator=K0AAA cty=K/8/NorthAmerica/W1
 imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=CT exch=2A CT class=2A operator=K0AAA cty=K/8/NorthAmerica/W1
@@ -157,7 +157,7 @@ imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rs
 imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 exch=JOE 45 name=JOE operator=K0AAA cty=K/8/NorthAmerica/W1
 imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=JOE PA name=JOE operator=K0AAA cty=K/8/NorthAmerica/W1
 imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 FL operator=K0AAA cty=K/8/NorthAmerica/K4
-imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 zone=45 year=45 exch=599 45 operator=K0AAA cty=DL/28/Europe/DL1
+imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 year=45 exch=599 45 operator=K0AAA cty=DL/28/Europe/DL1
 imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=K0AAA cty=K/8/NorthAmerica/W1
 imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=K0XYZ cty=K/8/NorthAmerica/W1
 imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=K0AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
@@ -179,8 +179,8 @@ parse state.serial W1AW Band20/CW "CT 123" | ok=FALSE err="Improper license year
 parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=FALSE err="Improper license year!!" token="" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K1
-parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=5 cty=K/8/NorthAmerica/W1
-parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=599 5 cty=K/8/NorthAmerica/W1
+parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=5 cty=K/8/NorthAmerica/W1
+parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=599 5 cty=K/8/NorthAmerica/W1
 parse zone.state W1AW Band20/CW "599 5 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse society W1AW Band20/CW "ARRL" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rst.society W1AW Band20/CW "599 ARRL" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
@@ -191,7 +191,7 @@ parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=FALSE err="Improper li
 parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse power.letters W1AW Band20/CW "599 KW" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse power.number W1AW Band20/CW "599 100" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=45 year=45 exch=599 45 cty=K/8/NorthAmerica/W1
+parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=45 exch=599 45 cty=K/8/NorthAmerica/W1
 parse grid W1AW Band20/CW "FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rst.grid W1AW Band20/CW "599 FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse serial.grid W1AW Band20/CW "599 123 FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
@@ -221,16 +221,16 @@ parse ve.province VE3ABC Band15/Phone "59 ON" | ok=FALSE err="Improper license y
 parse ve0.serial VE0ABC Band20/CW "599 123" | ok=FALSE err="Improper license year!!" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=VE/9/NorthAmerica/VE0
 parse dx.dx DL1ABC Band40/CW "599 DX" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
 parse dx.serial DL1ABC Band40/CW "599 001" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=14 year=14 exch=599 14 cty=DL/28/Europe/DL1
+parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=14 exch=599 14 cty=DL/28/Europe/DL1
 parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
 parse uk.serial.only G3ABC Band20/CW "123" | ok=FALSE err="No license year found!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
 parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=FALSE err="Improper license year!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
-parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=13 year=13 exch=599 13 cty=JA/45/Asia/JA1
+parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=13 exch=599 13 cty=JA/45/Asia/JA1
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="Improper license year!!" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
-parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=75 year=75 exch=599 75 cty=F/27/Europe/F5
+parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=75 exch=599 75 cty=F/27/Europe/F5
 == keys
 exchange.fields = RST Zone
 zones.max = 100
@@ -469,26 +469,26 @@ QSO: 14250 PH 2026-01-15 1215 VE3AAA  59  00     KH6ABC         59  31
 QSO:  3530 CW 2026-01-15 1216 VE3AAA  599 00     W1AW           599 00           
 QSO: 14250 PH 2026-01-15 1217 VE3AAA  59  00     G3ABC          59  00           
 == import
-imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
-imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 zone=5 year=5 exch=59 05 operator=VE3AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
-imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 zone=5 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
-imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 zone=5 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
-imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 zone=5 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
-imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 zone=5 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
-imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 zone=4 year=4 exch=59 04 operator=VE3AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
-imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 zone=6 year=6 exch=599 06 operator=VE3AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
-imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 zone=14 year=14 exch=599 14 operator=VE3AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
-imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 zone=14 year=14 exch=59 14 operator=VE3AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
-imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 zone=25 year=25 exch=599 25 operator=VE3AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
-imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 zone=11 year=11 exch=59 11 operator=VE3AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
-imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 zone=30 year=30 exch=599 30 operator=VE3AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
-imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 zone=38 year=38 exch=59 38 operator=VE3AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
-imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 zone=31 year=31 exch=59 31 operator=VE3AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
-imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 zone=0 year=0 exch=599 00 operator=VE3AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
-imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 zone=0 year=0 exch=59 00 operator=VE3AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
+imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
+imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 year=5 exch=59 05 operator=VE3AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
+imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
+imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
+imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
+imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 year=5 exch=599 05 operator=VE3AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
+imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 year=4 exch=59 04 operator=VE3AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
+imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 year=6 exch=599 06 operator=VE3AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
+imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 year=14 exch=599 14 operator=VE3AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
+imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 year=14 exch=59 14 operator=VE3AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
+imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 year=25 exch=599 25 operator=VE3AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
+imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 year=11 exch=59 11 operator=VE3AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
+imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 year=30 exch=599 30 operator=VE3AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
+imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 year=38 exch=59 38 operator=VE3AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
+imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 year=31 exch=59 31 operator=VE3AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
+imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 year=0 exch=599 00 operator=VE3AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
+imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 year=0 exch=59 00 operator=VE3AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
 imp srx.rst+alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp srx.alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=CT operator=VE3AAA cty=K/8/NorthAmerica/W1
-imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=8 year=8 exch=599 8 operator=VE3AAA cty=K/8/NorthAmerica/W1
+imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 year=8 exch=599 8 operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp srx.number.phone | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121800 rst.sent=59 rst.rcvd=59 nr.rcvd=123 exch=59 123 operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp srx.none | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=CT operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=CT exch=2A CT class=2A operator=VE3AAA cty=K/8/NorthAmerica/W1
@@ -517,7 +517,7 @@ imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rs
 imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 exch=JOE 45 name=JOE operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=JOE PA name=JOE operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 FL operator=VE3AAA cty=K/8/NorthAmerica/K4
-imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 zone=45 year=45 exch=599 45 operator=VE3AAA cty=DL/28/Europe/DL1
+imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 year=45 exch=599 45 operator=VE3AAA cty=DL/28/Europe/DL1
 imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=VE3AAA cty=K/8/NorthAmerica/W1
 imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=K0XYZ cty=K/8/NorthAmerica/W1
 imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=VE3AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
@@ -539,8 +539,8 @@ parse state.serial W1AW Band20/CW "CT 123" | ok=FALSE err="Improper license year
 parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=FALSE err="Improper license year!!" token="" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K1
-parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=5 cty=K/8/NorthAmerica/W1
-parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=599 5 cty=K/8/NorthAmerica/W1
+parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=5 cty=K/8/NorthAmerica/W1
+parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=599 5 cty=K/8/NorthAmerica/W1
 parse zone.state W1AW Band20/CW "599 5 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse society W1AW Band20/CW "ARRL" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rst.society W1AW Band20/CW "599 ARRL" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
@@ -551,7 +551,7 @@ parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=FALSE err="Improper li
 parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse power.letters W1AW Band20/CW "599 KW" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse power.number W1AW Band20/CW "599 100" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=45 year=45 exch=599 45 cty=K/8/NorthAmerica/W1
+parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=45 exch=599 45 cty=K/8/NorthAmerica/W1
 parse grid W1AW Band20/CW "FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rst.grid W1AW Band20/CW "599 FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse serial.grid W1AW Band20/CW "599 123 FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
@@ -581,16 +581,16 @@ parse ve.province VE3ABC Band15/Phone "59 ON" | ok=FALSE err="Improper license y
 parse ve0.serial VE0ABC Band20/CW "599 123" | ok=FALSE err="Improper license year!!" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=VE/9/NorthAmerica/VE0
 parse dx.dx DL1ABC Band40/CW "599 DX" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
 parse dx.serial DL1ABC Band40/CW "599 001" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=14 year=14 exch=599 14 cty=DL/28/Europe/DL1
+parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=14 exch=599 14 cty=DL/28/Europe/DL1
 parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
 parse uk.serial.only G3ABC Band20/CW "123" | ok=FALSE err="No license year found!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
 parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=FALSE err="Improper license year!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
-parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=13 year=13 exch=599 13 cty=JA/45/Asia/JA1
+parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=13 exch=599 13 cty=JA/45/Asia/JA1
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="Improper license year!!" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
-parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=75 year=75 exch=599 75 cty=F/27/Europe/F5
+parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=75 exch=599 75 cty=F/27/Europe/F5
 == keys
 exchange.fields = RST Zone
 zones.max = 100
@@ -827,26 +827,26 @@ QSO: 14250 PH 2026-01-15 1215 DL1AAA  59  00     KH6ABC         59  31
 QSO:  3530 CW 2026-01-15 1216 DL1AAA  599 00     W1AW           599 00           
 QSO: 14250 PH 2026-01-15 1217 DL1AAA  59  00     G3ABC          59  00           
 == import
-imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
-imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 zone=5 year=5 exch=59 05 operator=DL1AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
-imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 zone=5 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
-imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 zone=5 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
-imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 zone=5 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
-imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 zone=5 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
-imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 zone=4 year=4 exch=59 04 operator=DL1AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
-imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 zone=6 year=6 exch=599 06 operator=DL1AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
-imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 zone=14 year=14 exch=599 14 operator=DL1AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
-imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 zone=14 year=14 exch=59 14 operator=DL1AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
-imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 zone=25 year=25 exch=599 25 operator=DL1AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
-imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 zone=11 year=11 exch=59 11 operator=DL1AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
-imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 zone=30 year=30 exch=599 30 operator=DL1AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
-imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 zone=38 year=38 exch=59 38 operator=DL1AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
-imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 zone=31 year=31 exch=59 31 operator=DL1AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
-imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 zone=0 year=0 exch=599 00 operator=DL1AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
-imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 zone=0 year=0 exch=59 00 operator=DL1AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
+imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000001 cty=K/8/NorthAmerica/W1
+imp export.02 | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 120200 rst.sent=59 rst.rcvd=59 nr.sent=2 year=5 exch=59 05 operator=DL1AAA id=00000000000000000000000000000002 cty=K/8/NorthAmerica/W1
+imp export.03 | parsed=TRUE call=W1AW band=Band2 mode=Phone/eFM freq=146520000 time=260115 120300 rst.sent=599 rst.rcvd=599 nr.sent=3 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000003 cty=K/8/NorthAmerica/W1
+imp export.04 | parsed=TRUE call=W1AW band=Band40 mode=Digital/eRTTY freq=7080000 time=260115 120400 rst.sent=599 rst.rcvd=599 nr.sent=4 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000004 cty=K/8/NorthAmerica/W1
+imp export.05 | parsed=TRUE call=W1AW band=Band20 mode=Digital/eFT8 freq=14074000 time=260115 120500 rst.sent=599 rst.rcvd=599 nr.sent=5 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000005 cty=K/8/NorthAmerica/W1
+imp export.06 | parsed=TRUE call=K4ABC band=Band160 mode=CW/eCW freq=1830000 time=260115 120600 rst.sent=599 rst.rcvd=599 nr.sent=6 year=5 exch=599 05 operator=DL1AAA id=00000000000000000000000000000006 cty=K/8/NorthAmerica/K4
+imp export.07 | parsed=TRUE call=VE3ABC band=Band15 mode=Phone/eUSB freq=21300000 time=260115 120700 rst.sent=59 rst.rcvd=59 nr.sent=7 year=4 exch=59 04 operator=DL1AAA id=00000000000000000000000000000007 cty=VE/9/NorthAmerica/VE3
+imp export.08 | parsed=TRUE call=XE1ABC band=Band10 mode=CW/eCW freq=28025000 time=260115 120800 rst.sent=599 rst.rcvd=599 nr.sent=8 year=6 exch=599 06 operator=DL1AAA id=00000000000000000000000000000008 cty=XE/10/NorthAmerica/XE1
+imp export.09 | parsed=TRUE call=G3ABC band=Band30 mode=CW/eCW freq=10110000 time=260115 120900 rst.sent=599 rst.rcvd=599 nr.sent=9 year=14 exch=599 14 operator=DL1AAA id=00000000000000000000000000000009 cty=G/27/Europe/G3
+imp export.10 | parsed=TRUE call=DL1ABC band=Band40 mode=Phone/eLSB freq=7150000 time=260115 121000 rst.sent=59 rst.rcvd=59 nr.sent=10 year=14 exch=59 14 operator=DL1AAA id=00000000000000000000000000000010 cty=DL/28/Europe/DL1
+imp export.11 | parsed=TRUE call=JA1ABC band=Band15 mode=CW/eCW freq=21025000 time=260115 121100 rst.sent=599 rst.rcvd=599 nr.sent=11 year=25 exch=599 25 operator=DL1AAA id=00000000000000000000000000000011 cty=JA/45/Asia/JA1
+imp export.12 | parsed=TRUE call=PY2ABC band=Band6 mode=Phone/eUSB freq=50150000 time=260115 121200 rst.sent=59 rst.rcvd=59 nr.sent=12 year=11 exch=59 11 operator=DL1AAA id=00000000000000000000000000000012 cty=PY/15/SouthAmerica/PY2
+imp export.13 | parsed=TRUE call=VK2ABC band=Band20 mode=CW/eCW freq=14025000 time=260115 121300 rst.sent=599 rst.rcvd=599 nr.sent=13 year=30 exch=599 30 operator=DL1AAA id=00000000000000000000000000000013 cty=VK/59/Oceania/VK2
+imp export.14 | parsed=TRUE call=ZS6ABC band=Band10 mode=Phone/eUSB freq=28400000 time=260115 121400 rst.sent=59 rst.rcvd=59 nr.sent=14 year=38 exch=59 38 operator=DL1AAA id=00000000000000000000000000000014 cty=ZS/57/Africa/ZS6
+imp export.15 | parsed=TRUE call=KH6ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121500 rst.sent=59 rst.rcvd=59 nr.sent=15 year=31 exch=59 31 operator=DL1AAA id=00000000000000000000000000000015 cty=KH6/61/Oceania/KH6
+imp export.16 | parsed=TRUE call=W1AW band=Band80 mode=CW/eCW freq=3530000 time=260115 121600 rst.sent=599 rst.rcvd=599 nr.sent=16 year=0 exch=599 00 operator=DL1AAA id=00000000000000000000000000000016 cty=K/8/NorthAmerica/W1
+imp export.17 | parsed=TRUE call=G3ABC band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121700 rst.sent=59 rst.rcvd=59 nr.sent=17 year=0 exch=59 00 operator=DL1AAA id=00000000000000000000000000000017 cty=G/27/Europe/G3
 imp srx.rst+alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp srx.alpha | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=CT operator=DL1AAA cty=K/8/NorthAmerica/W1
-imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 zone=8 year=8 exch=599 8 operator=DL1AAA cty=K/8/NorthAmerica/W1
+imp srx.rst+number | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 year=8 exch=599 8 operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp srx.number.phone | parsed=TRUE call=W1AW band=Band20 mode=Phone/eUSB freq=14250000 time=260115 121800 rst.sent=59 rst.rcvd=59 nr.rcvd=123 exch=59 123 operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp srx.none | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=CT operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp section.arrl_sect | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=CT exch=2A CT class=2A operator=DL1AAA cty=K/8/NorthAmerica/W1
@@ -875,7 +875,7 @@ imp fields | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rs
 imp name+age | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 qth=45 exch=JOE 45 name=JOE operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp name+state | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=JOE PA name=JOE operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp rtty.us | parsed=TRUE call=K4ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 FL operator=DL1AAA cty=K/8/NorthAmerica/K4
-imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 zone=45 year=45 exch=599 45 operator=DL1AAA cty=DL/28/Europe/DL1
+imp rtty.dx | parsed=TRUE call=DL1ABC band=Band40 mode=Digital/eRTTY time=260115 121800 rst.sent=599 rst.rcvd=599 nr.rcvd=45 year=45 exch=599 45 operator=DL1AAA cty=DL/28/Europe/DL1
 imp no-contest-id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=DL1AAA cty=K/8/NorthAmerica/W1
 imp operator | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 exch=599 CT operator=K0XYZ cty=K/8/NorthAmerica/W1
 imp xqso+id | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW time=260115 121800 rst.sent=599 rst.rcvd=599 operator=DL1AAA id=0123456789ABCDEF0123456789ABCDEF xqso=TRUE cty=K/8/NorthAmerica/W1
@@ -897,8 +897,8 @@ parse state.serial W1AW Band20/CW "CT 123" | ok=FALSE err="Improper license year
 parse phone.rs.state W1AW Band20/Phone "59 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=Phone/eNoMode freq=14250000 rst.sent=59 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse extra.fields W1AW Band20/CW "599 123 CT XYZ 45" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse call.in.exchange W1AW Band20/CW "599 CT K1ABC" | ok=FALSE err="Improper license year!!" token="" pending="" call=K1ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/K1
-parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=5 cty=K/8/NorthAmerica/W1
-parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=5 year=5 exch=599 5 cty=K/8/NorthAmerica/W1
+parse zone W1AW Band20/CW "5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=5 cty=K/8/NorthAmerica/W1
+parse rst.zone W1AW Band20/CW "599 5" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=5 exch=599 5 cty=K/8/NorthAmerica/W1
 parse zone.state W1AW Band20/CW "599 5 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse society W1AW Band20/CW "ARRL" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rst.society W1AW Band20/CW "599 ARRL" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
@@ -909,7 +909,7 @@ parse name.state.tenten W1AW Band20/CW "JOE CT 1234" | ok=FALSE err="Improper li
 parse name.age.state W1AW Band20/CW "JOE 10 CT" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse power.letters W1AW Band20/CW "599 KW" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse power.number W1AW Band20/CW "599 100" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=45 year=45 exch=599 45 cty=K/8/NorthAmerica/W1
+parse age W1AW Band20/CW "599 45" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=45 exch=599 45 cty=K/8/NorthAmerica/W1
 parse grid W1AW Band20/CW "FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse rst.grid W1AW Band20/CW "599 FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse serial.grid W1AW Band20/CW "599 123 FN31" | ok=FALSE err="Improper license year!!" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
@@ -939,16 +939,16 @@ parse ve.province VE3ABC Band15/Phone "59 ON" | ok=FALSE err="Improper license y
 parse ve0.serial VE0ABC Band20/CW "599 123" | ok=FALSE err="Improper license year!!" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=VE/9/NorthAmerica/VE0
 parse dx.dx DL1ABC Band40/CW "599 DX" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
 parse dx.serial DL1ABC Band40/CW "599 001" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
-parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=14 year=14 exch=599 14 cty=DL/28/Europe/DL1
+parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=14 exch=599 14 cty=DL/28/Europe/DL1
 parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="Improper license year!!" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 nr.sent=1 cty=DL/28/Europe/DL1
 parse uk.serial.only G3ABC Band20/CW "123" | ok=FALSE err="No license year found!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
 parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=FALSE err="Improper license year!!" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=G/27/Europe/G3
-parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=13 year=13 exch=599 13 cty=JA/45/Asia/JA1
+parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=13 exch=599 13 cty=JA/45/Asia/JA1
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="Improper license year!!" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=UA/29/Europe/UA3
 parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="Improper license year!!" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=PY/15/SouthAmerica/PY2
-parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 zone=75 year=75 exch=599 75 cty=F/27/Europe/F5
+parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 year=75 exch=599 75 cty=F/27/Europe/F5
 == keys
 exchange.fields = RST Zone
 zones.max = 100

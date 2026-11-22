@@ -65,8 +65,10 @@ function IndyLinkIsOpen(conn: TIdTCPConnection): boolean;
 (* Make the client's IOHandler if it has none.  aOnStatus is forwarded because
   Indy hands OnStatus only to an implicit handler (IdTCPClient.pas:293); nil
   leaves it unset.  Does nothing when a handler already exists, so it is safe
-  to call before every Connect. *)
-procedure IndyLinkOwnHandler(client: TIdTCPClient; aOnStatus: TIdStatusEvent);
+  to call before every Connect.  Takes TIdTCPClientCustom so an HTTP client
+  (TIdHTTP descends from it, not from TIdTCPClient) gets the same protection
+  -- the FLRig driver's link. *)
+procedure IndyLinkOwnHandler(client: TIdTCPClientCustom; aOnStatus: TIdStatusEvent);
 
 implementation
 
@@ -102,7 +104,7 @@ begin
              sockHandler.BindingAllocated;
 end;
 
-procedure IndyLinkOwnHandler(client: TIdTCPClient; aOnStatus: TIdStatusEvent);
+procedure IndyLinkOwnHandler(client: TIdTCPClientCustom; aOnStatus: TIdStatusEvent);
 var
    ownedHandler: TIdIOHandler;
 begin

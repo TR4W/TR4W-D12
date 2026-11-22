@@ -59,7 +59,7 @@ type
                            aVersion: integer);
    protected
       procedure Test_TheRuleIsTheContestsOwnAnswer;
-      procedure Test_StoreLicenceYearWritesTheSlotAndTheField;
+      procedure Test_StoreLicenceYearWritesOnlyTheField;
       procedure Test_TheRepositoryKeepsAYearAndNoYearApart;
       procedure Test_AnEUHFCLogCarriesItsYearsAcrossTheMigration;
       procedure Test_AZoneContestsLogGetsNoYear;
@@ -71,7 +71,7 @@ type
       procedure Test_ExactlyTheYearContestsStateAKind;
       procedure Test_TheParserTakesTheKindsDigitsAndRange;
       procedure Test_TheYearIsReadFromItsField;
-      procedure Test_EditQSOSavesTheYearAndTheZoneTogether;
+      procedure Test_EditQSOSavesTheYearField;
       procedure Test_AnImportedADIFRecordTakesItsYear;
       procedure Test_TheRememberedExchangeReadsTheField;
       procedure Test_ASchema6LogIsReCarriedFromTheZone;
@@ -278,25 +278,29 @@ begin
    CheckFalse(ContestKeepsYearInZoneSlot(NoContest), 'no contest keeps no year');
 end;
 
-(* STAGE 1 WRITES BOTH, so the zone slot the multiplier sheet counts and the
-  field never disagree; since stage 2 the readers read the field. 0 is a
-  year. *)
-procedure TLogReceivedYearTests.Test_StoreLicenceYearWritesTheSlotAndTheField;
+(* STAGE 4 (2026-11-22) WRITES THE FIELD ONLY -- NY4I on issue 281: "we
+  should not reuse fields especially named as something else like Zone." The
+  zone slot is left exactly as it was, whatever it held. 0 is a year. *)
+procedure TLogReceivedYearTests.Test_StoreLicenceYearWritesOnlyTheField;
 var
    rec: ContestExchange;
 begin
-   BeginTest('StoreLicenceYear writes the zone slot and the year field');
+   BeginTest('StoreLicenceYear writes the year field and never the zone slot');
    rec := MakeRow(1, 255);
    CheckFalse(rec.RcvdYearKnown, 'a new record has no year');
    StoreLicenceYear(rec, 85);
-   CheckEquals(85, rec.Zone, 'the zone slot holds it, as before');
+   CheckEquals(DUMMYZONE, integer(rec.Zone), 'the zone slot is left as it was');
    CheckTrue(rec.RcvdYearKnown, 'the field says there is a year');
    CheckEquals(85, rec.RcvdYear, 'and holds it');
    CheckEquals(85, LicenceYearOf(rec), 'LicenceYearOf reads it');
    StoreLicenceYear(rec, 0);
    CheckTrue(rec.RcvdYearKnown, '00 is a year');
    CheckEquals(0, rec.RcvdYear, 'held as 0');
-   CheckEquals(0, rec.Zone, 'in the slot as 0');
+   CheckEquals(DUMMYZONE, integer(rec.Zone), 'and still not in the slot');
+   rec.Zone := 14;
+   StoreLicenceYear(rec, 85);
+   CheckEquals(14, integer(rec.Zone), 'a value already in the slot is not overwritten');
+   CheckEquals(85, LicenceYearOf(rec), 'and the field wins over it');
 end;
 
 (* A YEAR, NO YEAR AND THE YEAR 00 ARE THREE DIFFERENT ROWS: NULL, 0, 85 --
@@ -701,7 +705,7 @@ begin
    try
       CheckTrue(Parse('599 1987', rykFourDigitYear, CW), 'four-digit: 599 1987');
       CheckEquals(1987, LicenceYearOf(rx), 'the year 1987');
-      CheckEquals(DUMMYZONE, integer(rx.Zone), 'which the zone slot cannot hold: no zone');
+      CheckEquals(DUMMYZONE, integer(rx.Zone), 'the zone slot untouched (stage 4)');
       CheckTrue(Parse('1987', rykFourDigitYear, CW), 'four-digit: bare');
       CheckEquals(1987, LicenceYearOf(rx), 'bare, 1987');
       CheckTrue(Parse('1987 579', rykFourDigitYear, CW), 'four-digit: the year, then a CW RST');
@@ -720,7 +724,7 @@ begin
 
       CheckTrue(Parse('599 45', rykYearsLicensed, CW), 'a count: 599 45');
       CheckEquals(45, LicenceYearOf(rx), '45 years');
-      CheckEquals(45, integer(rx.Zone), 'in the zone slot too, for the sheet');
+      CheckEquals(DUMMYZONE, integer(rx.Zone), 'and NOT in the zone slot (stage 4)');
       CheckTrue(Parse('0', rykYearsLicensed, CW), 'a count of 0');
       CheckEquals(0, LicenceYearOf(rx), '0 years');
       CheckFalse(Parse('599 100', rykYearsLicensed, CW), 'a count of 100');
@@ -740,8 +744,9 @@ end;
 (* THE YEAR IS READ FROM ITS FIELD -- TryLicenceYearOf / LicenceYearOf. The
   zone slot answers ONLY for a record that never carried the field (Known
   False) and holds a zone -- exactly what the migration and the .TRW import
-  would have copied. StoreLicenceYear writes the field and, for a value the
-  zone sheet can count, the slot; ClearLicenceYear clears both. *)
+  would have copied. StoreLicenceYear writes the field only (stage 4);
+  ClearLicenceYear clears the field and sets the slot to DUMMYZONE, so the
+  fallback cannot read an old record's year back. *)
 procedure TLogReceivedYearTests.Test_TheYearIsReadFromItsField;
 var
    rec: ContestExchange;
@@ -767,34 +772,35 @@ begin
    StoreLicenceYear(rec, 1987);
    CheckTrue(rec.RcvdYearKnown, 'a four-digit year is a year');
    CheckEquals(1987, LicenceYearOf(rec), 'held in the field');
-   CheckEquals(DUMMYZONE, integer(rec.Zone), 'and no zone the sheet would misread');
+   CheckEquals(33, integer(rec.Zone), 'and the zone slot is not written (stage 4)');
 
    StoreLicenceYear(rec, 0);
-   CheckEquals(0, integer(rec.Zone), 'the year 00 in the slot as 0');
+   CheckEquals(0, LicenceYearOf(rec), 'the year 00 from the field, not the slot''s 33');
    ClearLicenceYear(rec);
    CheckFalse(rec.RcvdYearKnown, 'cleared: no year');
    CheckEquals(DUMMYZONE, integer(rec.Zone), 'cleared: no zone');
    CheckEquals(NO_RECEIVED_YEAR, LicenceYearOf(rec), 'and nothing to read');
 end;
 
-(* EDIT QSO SAVES THE YEAR AND THE ZONE TOGETHER -- the stage-1 defect: the
-  year box was saved into the zone slot alone, and the record went back to the
-  log with its OLD rcvd_year. ApplyEditedReceivedYear is the save's one
+(* EDIT QSO SAVES THE YEAR FIELD -- the stage-1 defect: the year box was saved
+  into the zone slot alone, and the record went back to the log with its OLD
+  rcvd_year. Since stage 4 the zone slot is not written at all; the sheet
+  reads the field. ApplyEditedReceivedYear is the save's one
   statement; uEditQSO is read to show it is the one the dialog calls (its
   controls need a running form). *)
-procedure TLogReceivedYearTests.Test_EditQSOSavesTheYearAndTheZoneTogether;
+procedure TLogReceivedYearTests.Test_EditQSOSavesTheYearField;
 var
    rec: ContestExchange;
    lines: TStringList;
    text: string;
 begin
-   BeginTest('Edit QSO saves the received year and the zone slot together');
+   BeginTest('Edit QSO saves the received year to its field');
    rec := MakeRow(1, 255);
    StoreLicenceYear(rec, 85);
 
    CheckTrue(ApplyEditedReceivedYear(rykTwoDigitYear, '84', rec), '84 is saved');
    CheckEquals(84, integer(rec.RcvdYear), 'the field is 84');
-   CheckEquals(84, integer(rec.Zone), 'and so is the zone slot');
+   CheckEquals(DUMMYZONE, integer(rec.Zone), 'and the zone slot is not written (stage 4)');
    CheckTrue(ApplyEditedReceivedYear(rykTwoDigitYear, ' 05 ', rec), '05 is saved');
    CheckEquals(5, LicenceYearOf(rec), 'as 5');
    CheckTrue(ApplyEditedReceivedYear(rykTwoDigitYear, '', rec), 'an empty box is saved');
@@ -806,7 +812,7 @@ begin
    CheckFalse(ApplyEditedReceivedYear(rykTwoDigitYear, '8A', rec), '8A is refused');
    CheckFalse(ApplyEditedReceivedYear(rykTwoDigitYear, '100', rec), '100 is refused');
    CheckEquals(85, integer(rec.RcvdYear), 'a refusal leaves the field');
-   CheckEquals(85, integer(rec.Zone), 'and the zone slot');
+   CheckEquals(DUMMYZONE, integer(rec.Zone), 'and the zone slot as it was');
 
    CheckTrue(ApplyEditedReceivedYear(rykFourDigitYear, '1987', rec), 'four-digit: 1987');
    CheckEquals(1987, LicenceYearOf(rec), 'is 1987');
@@ -863,7 +869,7 @@ begin
    CheckTrue(Imported(Tag('CONTEST_ID', euhfcId) + Tag('SRX_STRING', '599 85')), 'EUHFC 599 85');
    CheckTrue(rx.RcvdYearKnown, 'has a year');
    CheckEquals(85, integer(rx.RcvdYear), 'from SRX_STRING');
-   CheckEquals(85, integer(rx.Zone), 'and the zone slot the sheet counts');
+   CheckEquals(DUMMYZONE, integer(rx.Zone), 'and NOT the zone slot (stage 4)');
 
    CheckTrue(Imported(Tag('CONTEST_ID', euhfcId) + Tag('SRX_STRING', '599 05')), 'EUHFC 599 05');
    CheckEquals(5, LicenceYearOf(rx), '05');
@@ -964,7 +970,7 @@ end;
 procedure TLogReceivedYearTests.RunAllTests;
 begin
    Test_TheRuleIsTheContestsOwnAnswer;
-   Test_StoreLicenceYearWritesTheSlotAndTheField;
+   Test_StoreLicenceYearWritesOnlyTheField;
    Test_TheRepositoryKeepsAYearAndNoYearApart;
    Test_AnEUHFCLogCarriesItsYearsAcrossTheMigration;
    Test_AZoneContestsLogGetsNoYear;
@@ -975,7 +981,7 @@ begin
    Test_ExactlyTheYearContestsStateAKind;
    Test_TheParserTakesTheKindsDigitsAndRange;
    Test_TheYearIsReadFromItsField;
-   Test_EditQSOSavesTheYearAndTheZoneTogether;
+   Test_EditQSOSavesTheYearField;
    Test_AnImportedADIFRecordTakesItsYear;
    Test_TheRememberedExchangeReadsTheField;
    Test_ASchema6LogIsReCarriedFromTheZone;

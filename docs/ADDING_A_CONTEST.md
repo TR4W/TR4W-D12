@@ -525,12 +525,15 @@ Stating it is the whole job; the rest follows from the kind:
 The year lives in `ContestExchange.RcvdYear` / `RcvdYearKnown` (column
 `rcvd_year`; NULL is no year, 0 is a year). Read it with `TryLicenceYearOf` /
 `LicenceYearOf`, write it with `StoreLicenceYear` or `ClearLicenceYear` --
-never the zone slot. Until stage 4 of #298, `StoreLicenceYear` also writes the
-zone slot for the multiplier sheet, and only a value the sheet can hold
-(0..99): **a four-digit contest would get no multiplier until the sheet moves to
-the field**, so it is not buildable yet (display and export are ready for it
-since stage 3; a years-licensed contest's heading would read "Year" -- state
-your own `GetZoneColumnHeading` then). Today a year contest must also answer
+never the zone slot. Since stage 4 of #298 (2026-11-22) `StoreLicenceYear`
+writes the field ONLY, and the multiplier sheet keys on it through
+`uContestBase.ContestZoneMultiplierKey` (the year, when it is a cell of the
+contest's `ZoneMultiplierCount`). The sheet is still mo's numbered zone table,
+so **a four-digit contest still gets no multiplier** (no cell of a hundred holds
+1985) and is not buildable yet without a year sheet of its own (display and
+export are ready for it since stage 3; a years-licensed contest's heading would
+read "Year" -- state your own `GetZoneColumnHeading` then). Today a year
+contest must also answer
 `GetMyZoneIsAStationZone` False (its MY ZONE is the SENT year);
 `uTestLogReceivedYear.Test_ExactlyTheYearContestsStateAKind` walks the
 registry and fails if the two disagree.

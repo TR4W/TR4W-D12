@@ -18,13 +18,15 @@ unit uRadioHamLibOnly;
 {$I ..\tr4w.inc}
 
 {
-  Registrations for the HAMLIB-ONLY radios -- the seven models with no native
-  TR4W driver, driven through THamLibDirect: the software bridges (FLRig,
-  TRX-Manager, Expert TCI, N3FJP ACLog, and the "any HamLib rig" entry) plus
+  Registrations for the HAMLIB-ONLY radios -- the models with no native
+  TR4W driver, driven through THamLibDirect: the software bridges
+  (TRX-Manager, Expert TCI, N3FJP ACLog, and the "any HamLib rig" entry) plus
   two real rigs whose only driver is a HamLib backend (FT-736R, FT-757GXII).
+  FLRig was one until 2026-11-22; it now has a native XML-RPC driver
+  (uRadioFLRig) and registers there.
 
   WHY ONE UNIT AND NOT ONE PER MODEL.  The "one unit per radio" rule exists so
-  every radio with a CLASS has a home a developer can copy.  These seven share
+  every radio with a CLASS has a home a developer can copy.  These models share
   ONE class (THamLibDirect) and differ only in registration DATA -- a display
   name and a default hamlib rig_model.  A model that later grows a native
   driver moves OUT of this unit into its own (exactly how the Orion left the
@@ -60,7 +62,7 @@ uses uFactoryRadioBase, uRadioHamLibDirect, VC, uRadioRegistry;
 
 implementation
 
-// One closure body shared by all seven registrations: a THamLibDirect
+// One closure body shared by every registration here: a THamLibDirect
 // preconfigured with the model's default hamlib rig_model.  The display name
 // is taken from the model's own registration (this runs at CreateInstance
 // time, after registration) -- deliberately NOT a string literal here, so the
@@ -76,11 +78,6 @@ end;
 // NAMED unit-level constructors, not anonymous functions.  None of these
 // captured anything, so the anonymous form bought nothing and cost a
 // closure-capable compiler; TRadioCtor is a plain procedure pointer now.
-function CreateFlrig: TFactoryRadioBase;
-begin
-   Result := MakeHamLibRadio(FLRIG, 4);
-end;
-
 function CreateTrxmanager: TFactoryRadioBase;
 begin
    Result := MakeHamLibRadio(TRXMANAGER, 5);
@@ -113,10 +110,8 @@ end;
 
 initialization
    // Software bridges (TCP links to other programs; hamlib "dummy" backend family).
-   RegisterHamLibOnlyRadio(FLRIG,
-      CreateFlrig,
-      'FLRig (HamLib bridge)', 4,
-      SerialParams(57600, 8, PARITY_NONE, 2));
+   // FLRig LEFT this unit 2026-11-22 (issue 5): it has a native XML-RPC driver,
+   // uRadioFLRig, which registers the FLRIG member itself.
    RegisterHamLibOnlyRadio(TRXMANAGER,
       CreateTrxmanager,
       'TRX-Manager (HamLib bridge)', 5,

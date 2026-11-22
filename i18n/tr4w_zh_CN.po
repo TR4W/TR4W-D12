@@ -11879,3 +11879,58 @@ msgstr ""
 #, fuzzy
 msgid "%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off \"Key the transmitter with a CAT command\"."
 msgstr ""
+
+#: usettingscaptions.rs_wsjtx_n1mmlistenerenabled
+#, fuzzy
+msgid "Accept QSOs from JTDX and JTAlert (N1MM log listener)"
+msgstr ""
+
+#: usettingscaptions.rs_wsjtx_n1mmlistenaddress
+#, fuzzy
+msgid "Address the N1MM log listener binds to"
+msgstr ""
+
+#: uappstrings.sprefsgroupn1mmlistener
+#, fuzzy
+msgid "N1MM log listener (JTDX, JTAlert)"
+msgstr ""
+
+#: uappstrings.snetstationmissing
+#, fuzzy
+msgid "Missing"
+msgstr ""
+
+#: uappstrings.spassneedsname
+#, fuzzy
+msgid "A {PASS} word needs a station or a band, for example {PASS B} or {PASS 14000}. The message was not sent."
+msgstr ""
+
+#: uappstrings.spassnotaband
+#, fuzzy
+msgid "{PASS %0:s} is not a band. Use a band in kHz, for example 14000. The message was not sent."
+msgstr ""
+
+#: uappstrings.spassbandempty
+#, fuzzy
+msgid "No other station is on the %0:s kHz band, so {PASS %0:s} cannot be filled in. The message was not sent."
+msgstr ""
+
+#: uappstrings.spassstationabsent
+#, fuzzy
+msgid "Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent."
+msgstr ""
+
+#: uappstrings.spassstationisus
+#, fuzzy
+msgid "{PASS %0:s} names this computer. Name another position. The message was not sent."
+msgstr ""
+
+#: uappstrings.spassnofrequency
+#, fuzzy
+msgid "Station %0:s is on the network but has not reported a frequency yet. The message was not sent."
+msgstr ""
+
+#: uappstrings.spassnothingpassed
+#, fuzzy
+msgid "{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent."
+msgstr ""

@@ -470,7 +470,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(319, names.Count,
+         CheckEquals(321, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -547,7 +547,9 @@ begin
                      + ' same day -- the window width decides the text scale'
                      + ' (plan stage e6); 319 with ENFORCE VALID CALLSIGN'
                      + ' (issue 180) and BAND MAP CLICK GOES TO EXCHANGE'
-                     + ' (issue 185), new, no CFGCA row, 2026-11-22');
+                     + ' (issue 185), new, no CFGCA row, 2026-11-22; 321 with'
+                     + ' ENABLE N1MM LOG LISTENER and N1MM LISTEN ADDRESS'
+                     + ' (new, no CFGCA row, issue 45), 2026-11-22');
       finally
          names.Free;
       end;
@@ -1928,6 +1930,7 @@ const
       + '"DVK LOCALIZED MESSAGES ENABLE",'
       + '"DVK PATH",'
       + '"DVK RECORDER",'
+      + '"ENABLE N1MM LOG LISTENER",'
       + '"ENFORCE VALID CALLSIGN",'
       + '"ESCAPE EXITS SEARCH AND POUNCE",'
       + '"EXCHANGE MEMORY ENABLE",'
@@ -2005,6 +2008,7 @@ const
       + '"MY SECTION",'
       + '"MY STATE",'
       + '"MY ZONE",'
+      + '"N1MM LISTEN ADDRESS",'
       + '"NAME FLAG ENABLE",'
       + '"NET STATUS UPDATE INTERVAL",'
       + '"NETWORK AUTO CONNECT",'

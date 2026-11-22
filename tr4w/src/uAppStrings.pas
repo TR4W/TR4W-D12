@@ -1351,6 +1351,8 @@ resourcestring
      (issue 59), under the main window's grid. *)
    SPrefsGroupBandMapColors = 'Band map colors';
    SPrefsGroupSpotTuning = 'Tuning to a spot';
+   (* The WSJT-X / JTDX page's block for the N1MM log listener (issue 45). *)
+   SPrefsGroupN1MMListener = 'N1MM log listener (JTDX, JTAlert)';
    (* ~~SPrefsGroupRadioPolling~~ -- gone with its one row: FREQUENCY POLL
      RATE is a field of each radio definition now (issue 235 step 3). *)
    (* MAIN CALLSIGN: the station's own call, remembered for New Contest; not
@@ -1762,6 +1764,18 @@ resourcestring
       not know: the word is skipped and nothing of it is sent. %0:s is the
       word, without its braces. *)
    SMessageUnknownWordSkipped = 'The message names {%0:s}, which TR4W does not know. It was skipped and not sent.';
+   (* The network pass words ({PASS B}, {PASS 14000}, {LASTPASSEDFREQ}): a
+      message that cannot be filled in is NOT SENT, and these say why.
+      %0:s is the word's argument as written (the station or band) and, for
+      the two that name the station, its computer id. *)
+   SNetStationMissing = 'Missing';
+   SPassNeedsName ='A {PASS} word needs a station or a band, for example {PASS B} or {PASS 14000}. The message was not sent.';
+   SPassNotABand = '{PASS %0:s} is not a band. Use a band in kHz, for example 14000. The message was not sent.';
+   SPassBandEmpty = 'No other station is on the %0:s kHz band, so {PASS %0:s} cannot be filled in. The message was not sent.';
+   SPassStationAbsent = 'Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent.';
+   SPassStationIsUs = '{PASS %0:s} names this computer. Name another position. The message was not sent.';
+   SPassNoFrequency = 'Station %0:s is on the network but has not reported a frequency yet. The message was not sent.';
+   SPassNothingPassed = '{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent.';
    (* On the status line when a shared setting is too long for the network:
       %0:s is the setting's name, %1:d its length, %2:d the limit. The setting
       is still changed on this station. *)

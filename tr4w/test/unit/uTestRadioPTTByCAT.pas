@@ -83,9 +83,12 @@ const
       '|Yaesu FT-950|Yaesu FT-990|Yaesu FT-991|Yaesu FTDX-10|Yaesu FTDX-101' +
       '|Yaesu FTDX-3000|Yaesu FTDX-5000|Yaesu FTDX-9000|Yaesu FTX-1F' +
       '|Flex 6000+|TCI (ExpertSDR / Thetis / AetherSDR)|DXLab Commander' +
+      // FLRig (issue 5): rig.set_ptt exists, but the matrix does not list
+      // FLRig and nobody has keyed a rig through it from TR4W -- not confirmed.
+      '|FLRig (XML-RPC)' +
       // HamLib-only entries (uRadioHamLibOnly): the driver is the generic
       // THamLibDirect, which knows nothing about the rig behind it.
-      '|FLRig (HamLib bridge)|TRX-Manager (HamLib bridge)' +
+      '|TRX-Manager (HamLib bridge)' +
       '|Expert TCI (HamLib bridge)|N3FJP ACLog (HamLib bridge)' +
       '|HamLib (any supported rig)|Yaesu FT-736R (via HamLib)' +
       '|Yaesu FT-757GXII (via HamLib)|';

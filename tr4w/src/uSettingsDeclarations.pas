@@ -351,6 +351,12 @@ begin
      names; the HTTP layer reads it through FindSetting. *)
    RegisterModelSetting( 'network.httpTransport',             'NETWORK HTTP TRANSPORT',
                          RS_NETWORK_HTTPTRANSPORT);
+   (* Issue 45 (2026-11-22). Placed on the WSJT-X / JTDX page by
+     uPrefsForm.PrefsPlacements. *)
+   RegisterModelSetting( 'wsjtx.n1mmListenerEnabled',         'ENABLE N1MM LOG LISTENER',
+                         RS_WSJTX_N1MMLISTENERENABLED);
+   RegisterModelSetting( 'wsjtx.n1mmListenAddress',           'N1MM LISTEN ADDRESS',
+                         RS_WSJTX_N1MMLISTENADDRESS);
 
    { Super Check Partial, band map and log files, 2026-08-15. }
    RegisterModelSetting( 'scp.possibleCalls',                 'POSSIBLE CALLS',

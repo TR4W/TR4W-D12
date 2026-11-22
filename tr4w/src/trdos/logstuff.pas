@@ -6258,14 +6258,15 @@ end;
   names a YEAR, not a zone (2026-11-11; a lone '599' said 'Improper zone
   number!!' in contests that have no zone): SExchangeNoLicenseYear for an
   entry with no year in it (LicenceYearEntryHasNoYear), else
-  SExchangeImproperLicenseYear. The year is stored in the zone slot --
-  uContestBase.StoreLicenceYear.
+  SExchangeImproperLicenseYear. The year is stored through
+  uContestBase.StoreLicenceYear -- its own field since issue 298.
 
   ISSUE 298 STAGE 2 (2026-11-12): THE CONTEST'S KIND decides the digits and
   the range (ReadRSTAndNumberOfDigits, uContestBase.ReceivedYearRange): a
   two-digit year or a count reads exactly as above; a four-digit year reads
   four digits, 1900 to the QSO's own year. StoreLicenceYear writes the year's
-  own field and, for a value the sheet can count, the zone slot. *)
+  own field and nothing else (stage 4, 2026-11-22: the zone slot is left as
+  it was; the multiplier sheet keys on the field). *)
 
 (* AN ENTRY WITH NO YEAR IN IT: nothing typed, or one word with the shape of
   the mode's RS(T) (IsAnRSTWord -- '599' on CW and RTTY). On Phone a lone

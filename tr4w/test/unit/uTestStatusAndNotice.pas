@@ -2625,7 +2625,10 @@ var
       ExchangeErrorMessage := '';
       CheckTrue(ParametersOkay(CallString(aCall), Str40(aTyped), Band20, CW, 14025000, qso),
                 'EUHFC ' + aCall + ' "' + aTyped + '" is accepted: ' + string(ExchangeErrorMessage));
-      CheckEquals(aYear, integer(qso.Zone), 'EUHFC "' + aTyped + '": the year is the zone field');
+      (* The year's own field since issue 298; stage 4 stopped copying it
+         into the zone slot. *)
+      CheckTrue(qso.RcvdYearKnown, 'EUHFC "' + aTyped + '": a year is received');
+      CheckEquals(aYear, integer(qso.RcvdYear), 'EUHFC "' + aTyped + '": the year is the year field');
       qso.ceRecordKind := rkQSO;
       CallsignsList.AddIniitialExchange(aCall, GetInitialExchangeStringFromContestExchange(qso));
       CheckEquals(IntToStr(aYear), Trim(CallsignsList.GetIniitialExchange(aCall)),

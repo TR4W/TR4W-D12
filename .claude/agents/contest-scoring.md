@@ -909,9 +909,25 @@ parser takes the CONTEST'S STATED KIND (`ProcessRSTAndLicenceYearExchange(
 text, aKind, rx)`; the shared reader is now `ReadRSTAndNumberOfDigits` with
 the kind's digit count, `ReadRSTAndOneOrTwoDigitNumber` its 1..2 wrapper for
 the zone parser); readers read the field (`TryLicenceYearOf`, and LOGDUPE's
-remembered exchange gives `RcvdYear` when known); `StoreLicenceYear` still
-writes the zone slot too, so the zone SHEET still counts the year until stage
-4. **So does CQ
+remembered exchange gives `RcvdYear` when known). **STAGE 4 (2026-11-22;
+NY4I on #281: "we should not reuse fields especially named as something else
+like Zone"): `StoreLicenceYear` writes the FIELD ONLY.** The zone-kind sheet
+key is ONE answer, `uContestBase.ContestZoneMultiplierKey(contest, qso, key)`
+-- the received year (`TryLicenceYearOf`, 0..ZoneMultiplierCount-1) for a
+contest whose `ReceivedYearKind <> rykNone`, else the zone slot -- asked by
+LOGDUPE's `MultiplierKindsCredited`, `SetMultFlags`, `AddQSOToSheets` (the
+loader's trusted `ZoneMult` flag marks the KEY's cell) and
+`CountWorkedMultipliers`, and by PostUnit's zone-totals report. **Never key
+mo's zone table on `RXData.Zone` directly again.** The sheet is still mo's
+numbered zone table and the per-QSO flag still `ZoneMult`/`mult_zone` (a
+year kind and column of its own is a schema decision, not taken). A new row's
+`rcvd_zone` is NULL for these contests. `ClearLicenceYear` still sets the
+slot to DUMMYZONE and `TryLicenceYearOf` keeps its zone-slot fallback: the
+server-log catch-up stores a pre-field peer's record with `rcvd_year` NULL.
+Mixed versions: a pre-stage-4 station keys its sheet on `Zone` and counts no
+year for a record from a stage-4 station. Pinned by
+`uTestLicenceYearEntry.Test_TheSheetKeyIsTheYearFieldNotTheZoneSlot` /
+`Test_StoredRecordsCountTheirYearOnLoadAndRescore`. **So does CQ
 WW RTTY's `ProcessRSTZoneAndPossibleDomesticQTHExchange` (issue 274,
 2026-11-11, NY4I's rulings)**: it parses into locals and writes `Zone`,
 `QTHString`, `DomesticQTH` and `DomMultQTH` only once accepted (the domestic

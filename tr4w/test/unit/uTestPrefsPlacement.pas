@@ -198,6 +198,7 @@ begin
                 (page = NAV_NETWORK)       or
                 (page = NAV_AUDIO)         or
                 (page = NAV_TWORADIO)      or
+                (page = NAV_WSJTX)         or
                 (page = NAV_BANDS)         or
                 (page = NAV_COLORS)        or
                 (page = NAV_CONTEST)       or

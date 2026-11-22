@@ -1843,6 +1843,11 @@ begin
      option under BAND MAP"; the Band Map page itself has no room left. *)
    aTable.Place('bandmap.clickGoesToExchange',            NAV_BANDMAPWINDOW, SPrefsGroupSpotTuning);
 
+   (* Issue 45: the N1MM log listener, a block under the WSJT-X / JTDX page's
+     designed controls. *)
+   aTable.Place('wsjtx.n1mmListenerEnabled',              NAV_WSJTX, SPrefsGroupN1MMListener);
+   aTable.Place('wsjtx.n1mmListenAddress',                NAV_WSJTX, SPrefsGroupN1MMListener);
+
    (* Appearance > Colors: the band map's colour roles (issue 59, NY4I
      2026-11-15), in a block under the main window's grid. *)
    aTable.Place('bandmap.selectionColor',                 NAV_COLORS, SPrefsGroupBandMapColors);
@@ -3917,6 +3922,7 @@ begin
    total := total + BuildPlacedBlock(layNetwork,  lblNetHint,              NAV_NETWORK,  host);
    total := total + BuildPlacedBlock(layAudio,    cardDVK,                 NAV_AUDIO,    host);
    total := total + BuildPlacedBlock(layTwoRadio, lblTwoRadioHint,         NAV_TWORADIO, host);
+   total := total + BuildPlacedBlock(layWSJTX,    lblWSJTXTCIHint,         NAV_WSJTX,    host);
 
    (* THE BAND PLAN'S EDIT... BUTTON, under the band and mode rows on the
      Bands page -- the page the proposal gave it.  It is the only route into

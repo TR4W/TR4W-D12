@@ -186,7 +186,7 @@ begin
 
    StoreLicenceYear(q, 1985);
    CheckEquals('1985', ReceivedYearTextOf(rykFourDigitYear, q), 'a four-digit year: four digits');
-   CheckEquals(DUMMYZONE, q.Zone, 'and the zone slot cannot hold it');
+   CheckEquals(14, q.Zone, 'and the zone slot is never written (issue 298 stage 4)');
    CheckTrue(TryReceivedZoneOrYear(rykFourDigitYear, q, v), 'the four-digit year is a value');
    CheckEquals(1985, v, 'from the field, not the slot');
 
@@ -224,6 +224,7 @@ var
    rules: TContestBase;
    probe: TFourDigitYearProbe;
    q: ContestExchange;
+   oldShape: ContestExchange;
    my: TMyStationExchange;
    ctx: TCabrilloQSOContext;
    who, adif, failure: string;
@@ -239,7 +240,14 @@ begin
          begin
          q := YearQSO(ContestHandleOf(YEAR_CONTESTS[i]), 0);
          StoreLicenceYear(q, YEARS[j]);
-         CheckEquals(CabrilloReceivedRSTZone(my, q, ctx),
+         (* THE ORACLE IS THE OLD COLUMN: the zone helper over the record AS
+            THE DUAL WRITE LEFT IT, the year in the zone slot. Since issue 298
+            stage 4 StoreLicenceYear writes the field only, so the slot is set
+            here, on a copy, for the helper alone -- the column under test
+            still reads q, whose slot is 0. *)
+         oldShape := q;
+         oldShape.Zone := Byte(YEARS[j]);
+         CheckEquals(CabrilloReceivedRSTZone(my, oldShape, ctx),
                      rules.FormatCabrilloReceivedExchange(my, q, ctx),
                      who + IntToStr(YEARS[j]) + ' prints byte for byte what the zone helper printed');
          end;

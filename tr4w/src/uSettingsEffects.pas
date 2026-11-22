@@ -136,6 +136,7 @@ uses
    uColumnHeaders, // ApplyColumnHeadersToOpenWindows -- NO COLUMN HEADER
    MainUnit,       // wsjtx -- the server object these three act on
    uStateBridge,   // RefreshWSJTXIndicator -- the main window's box
+   uN1MMLogListener,   // N1MMLogListenerApply -- the N1MM log listener (issue 45)
    uBackupCopyService; (* BackupCopyDestinationChanged -- the new folder is
                          probed *)
 
@@ -232,6 +233,14 @@ const
    WSJTX_ENABLED         = 'Wsjtx.Enabled';
    WSJTX_SEND_HIGHLIGHTS = 'Wsjtx.SendHighlights';
    WSJTX_MULTICAST_GROUP = 'Wsjtx.MulticastGroup';
+
+   (* THE N1MM LOG LISTENER (issue 45), in the WSJT-X group because the page that
+     edits it is that one. Exact paths, for the reason above: the group's other
+     settings must not restart it. Both re-run the same Apply, which touches
+     nothing when the answer has not changed -- a Preferences save re-applies
+     every setting and must not drop a connected sender. *)
+   N1MM_LISTENER_ENABLED = 'Wsjtx.N1mmListenerEnabled';
+   N1MM_LISTEN_ADDRESS   = 'Wsjtx.N1mmListenAddress';
 
    (* THE LOG GRID'S LINES, crP: 3. An exact path: NO BORDER and NO CAPTION
      are read when a window is BUILT, so matching the group would call a
@@ -612,6 +621,12 @@ begin
          begin
          wsjtx.JoinMulticastGroup(Settings.Wsjtx.MulticastGroup);
          end;
+      end;
+
+   if UnicodeSameText(aPath, N1MM_LISTENER_ENABLED) or
+      UnicodeSameText(aPath, N1MM_LISTEN_ADDRESS) then
+      begin
+      N1MMLogListenerApply;
       end;
 
    if UnicodeSameText(aPath, AUTO_QSO_NUMBER_DECREMENT) then

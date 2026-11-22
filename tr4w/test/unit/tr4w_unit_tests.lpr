@@ -210,6 +210,9 @@ uses
    uTestN1MMMode        in 'uTestN1MMMode.pas',
    uN1MMLogEnvelope     in '..\..\src\uN1MMLogEnvelope.pas',
    uTestN1MMLogEnvelope in 'uTestN1MMLogEnvelope.pas',
+   uInboundQso          in '..\..\src\uInboundQso.pas',
+   uN1MMLogListener     in '..\..\src\uN1MMLogListener.pas',
+   uTestN1MMLogListener in 'uTestN1MMLogListener.pas',
    uTestUDPContactXml   in 'uTestUDPContactXml.pas',
    uTestUDPDatagrams    in 'uTestUDPDatagrams.pas',
    uTestUtilsFile       in 'uTestUtilsFile.pas',
@@ -660,6 +663,7 @@ uses
    uTestRadioTCI        in 'uTestRadioTCI.pas',
    uTestDXLabCommanderProtocol in 'uTestDXLabCommanderProtocol.pas',
    uTestRadioDXLabCommander in 'uTestRadioDXLabCommander.pas',
+   uTestFLRigXmlRpc in 'uTestFLRigXmlRpc.pas',
    uTestSerialParams    in 'uTestSerialParams.pas',
    uTestComPortEnumerator in 'uTestComPortEnumerator.pas',
    uTestPortAddress in 'uTestPortAddress.pas',
@@ -767,6 +771,7 @@ uses
    uNewContestHostArea  in '..\..\src\uNewContestHostArea.pas',
    uRoverState          in '..\..\src\uRoverState.pas',
    uMessageText         in '..\..\src\uMessageText.pas',
+   uNetPass             in '..\..\src\uNetPass.pas',
    uRoverSession        in '..\..\src\uRoverSession.pas',
    uNewContestHome      in '..\..\src\uNewContestHome.pas',
    uDomInclude          in '..\..\src\uDomInclude.pas',
@@ -858,6 +863,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestNewContestHostArea in 'uTestNewContestHostArea.pas',
    uTestRoverState      in 'uTestRoverState.pas',
    uTestMessageText     in 'uTestMessageText.pas',
+   uTestNetPass         in 'uTestNetPass.pas',
    uTestNewContestHome  in 'uTestNewContestHome.pas',
    (* Design 7.12: a station fact is a default a contest may override. *)
    uTestStationFactOverrides in 'uTestStationFactOverrides.pas',
@@ -1160,6 +1166,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uRadioTCI            in '..\..\src\radioFactory\uRadioTCI.pas',
    uDXLabCommanderProtocol in '..\..\src\radioFactory\uDXLabCommanderProtocol.pas',
    uRadioDXLabCommander in '..\..\src\radioFactory\uRadioDXLabCommander.pas',
+   uFLRigXmlRpc in '..\..\src\radioFactory\uFLRigXmlRpc.pas',
+   uRadioFLRig in '..\..\src\radioFactory\uRadioFLRig.pas',
    uRadioKenwoodTS890   in '..\..\src\radioFactory\uRadioKenwoodTS890.pas',
    uRadioKenwoodTS990   in '..\..\src\radioFactory\uRadioKenwoodTS990.pas',
    uRadioKenwoodTS570   in '..\..\src\radioFactory\uRadioKenwoodTS570.pas',
@@ -1224,6 +1232,7 @@ begin
    RegisterSuite(TNetSendQueueTests.Create('NetSendQueue'));
    RegisterSuite(TN1MMModeTests.Create('N1MMMode'));
    RegisterSuite(TN1MMLogEnvelopeTests.Create('N1MMLogEnvelope'));
+   RegisterSuite(TN1MMLogListenerTests.Create('N1MMLogListener'));
    RegisterSuite(TServerLogHealthTests.Create('ServerLogHealth'));
    RegisterSuite(TServerLogStoreTests.Create('ServerLogStore'));
    RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
@@ -1418,6 +1427,7 @@ begin
    RegisterSuite(TRadioTCITests.Create('RadioTCI'));
    RegisterSuite(TDXLabCommanderProtocolTests.Create('DXLabCommanderProtocol'));
    RegisterSuite(TRadioDXLabCommanderTests.Create('RadioDXLabCommander'));
+   RegisterSuite(TFLRigXmlRpcTests.Create('FLRigXmlRpc'));
    RegisterSuite(TSerialParamsTests.Create('SerialParams'));
    RegisterSuite(TRadioSupportsCapsTests.Create('RadioSupportsCaps'));
    RegisterSuite(TRadioSocketProbeTests.Create('RadioSocketProbe'));
@@ -1537,6 +1547,7 @@ begin
    RegisterSuite(TNewContestHostAreaTests.Create('NewContestHostArea'));
    RegisterSuite(TRoverStateTests.Create('RoverState'));
    RegisterSuite(TMessageTextTests.Create('MessageText'));
+   RegisterSuite(TNetPassTests.Create('NetPass'));
    RegisterSuite(TNewContestHomeTests.Create('NewContestHome'));
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TStationValueKeptTests.Create('StationValueKept'));

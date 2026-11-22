@@ -42,8 +42,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   carries a CQ-exchange line naming this contest, and it is COMMENTED
   OUT; nothing is read from it. FCONTEST has no arm for it.
 
-  THE LICENCE YEAR IS ITS OWN EXCHANGE FIELD, STORED IN THE ZONE SLOT
-  (2026-11-11). Rules 5 and 6 (docs/ContestRules/euhfc_rules_latest.md): RS
+  THE LICENCE YEAR IS ITS OWN EXCHANGE FIELD, RcvdYear / rcvd_year (issue
+  298; the zone slot carried it from 2026-11-11 until stage 4, 2026-11-22,
+  below). Rules 5 and 6 (docs/ContestRules/euhfc_rules_latest.md): RS
   on SSB / RST on CW plus the two-digit year of the operator's first-ever
   licence, 00..99; the multipliers are the different two-digit values, once
   per band regardless of mode (GetFlags: cfMultByBand, no cfMultByMode).
@@ -53,26 +54,33 @@ http://www.gnu.org/licenses/gpl-3.0.txt
       was accepted only because FoundContest set ITU zone mode here (no
       cfCQZoneMode), so the 40-CQ-zone limit never ran; it no longer asks the
       zone mode at all.
-    - STORAGE: ContestExchange.Zone (rcvd_zone) and ZoneMult (mult_zone),
-      through uContestBase.LicenceYearOf / StoreLicenceYear -- the encoding
-      is the contract; no column, stored value or export byte changed.
-      SINCE ISSUE 298 the year is a field of its own (RcvdYear, rcvd_year);
+    - STORAGE: until issue 298, ContestExchange.Zone (rcvd_zone) and
+      ZoneMult (mult_zone), through uContestBase.LicenceYearOf /
+      StoreLicenceYear. SINCE ISSUE 298 the year is a field of its own
+      (RcvdYear, rcvd_year), and the per-QSO "new multiplier" flag is still
+      ZoneMult (mult_zone);
       stage 2 (2026-11-12) gave the class its stated kind,
       GetReceivedYearKind = rykTwoDigitYear, and the readers read the field.
-      StoreLicenceYear still writes the zone slot for the multiplier sheet.
+      STAGE 4 (2026-11-22): StoreLicenceYear writes the field ONLY, and the
+      sheet keys on uContestBase.ContestZoneMultiplierKey, which answers the
+      received year for a contest that states a year kind. NY4I on issue 281:
+      "we should not reuse fields especially named as something else like
+      Zone." A new row's rcvd_zone is NULL.
       Stage 3 (2026-11-12) moved display and export to the field: the
       received Cabrillo column is CabrilloReceivedRSTYear, and the grid,
       Edit QSO, SRX_STRING, the canonical exchange, the totals row and the
       column heading follow the stated kind from the base.
-    - MULTIPLIER: the zone sheet, a hundred "zones" numbered from zero
-      (ZoneMultiplierCount 100, NumbersZonesFromZero, HasZoneMultiplier);
-      ZoneMultiplierZones is the base's zmzNotCQOrITU, so the hint never
-      offers a CTY zone and ADIF writes no CQZ/ITUZ tag.
+    - MULTIPLIER: mo's numbered zone table, a hundred cells numbered from
+      zero (ZoneMultiplierCount 100, NumbersZonesFromZero, HasZoneMultiplier),
+      keyed on the received YEAR field since stage 4; ZoneMultiplierZones is
+      the base's zmzNotCQOrITU, so the hint never offers a CTY zone and ADIF
+      writes no CQZ/ITUZ tag.
     - SENT: MY LICENSE YEAR holds the operator's year (the New Contest
       prompt; issue 298 -- it was MY ZONE until then), read through the
       stated kind: two digits (TContestBase.SentZoneText).
-  A field and a multiplier kind of its own would be a schema change (a
-  column, or the 376-byte record the wire and server log carry) -- not taken.
+  A multiplier KIND of the year's own (rmYear, a mult_year column for the
+  per-QSO flag, which is still ZoneMult / mult_zone) would be a schema
+  change -- not taken.
   The ITU zone mode stays: it is what CTY.DAT gives a logged call, and
   changing it would change the stored cty zone of new rows.
 

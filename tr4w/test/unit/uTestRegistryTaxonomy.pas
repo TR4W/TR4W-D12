@@ -76,6 +76,12 @@ const
    // (FT736R left this list the same day: once registered as
    // 'Yaesu FT-736R (via HamLib)' it AGREES with the retired set again.)
    KnownYaesuDivergences: InterfacedRadioTypeSet = [FT100, FT757GXII];
+   // Knowing divergences from the retired HamLibONLYRadios set: models that
+   // have since gained a NATIVE driver and so are no longer HamLib-only.
+   // - FLRIG: uRadioFLRig, the XML-RPC driver (issue 5, 2026-11-22).  It keeps
+   //   HamLib id 4 on its registration, pinned below, so "Drive through
+   //   HamLib" still reaches the bridge.
+   KnownHamLibOnlyDivergences: InterfacedRadioTypeSet = [FLRIG];
 
 procedure TRegistryTaxonomyTests.Test_IsHamLibOnly_MatchesRetiredSet;
 var
@@ -92,6 +98,16 @@ begin
          if IsHamLibOnly(m) then
             begin
             wrong := wrong + 'NoInterfacedRadio reported HamLib-only; ';
+            end;
+         Continue;
+         end;
+      if m in KnownHamLibOnlyDivergences then
+         begin
+         // Native now: it must NOT read HamLib-only, and it must still be
+         // registered -- otherwise the divergence would hide a lost radio.
+         if IsHamLibOnly(m) or (not IsRegistered(m)) then
+            begin
+            wrong := wrong + Format('%s: expected native and registered; ', [RadioTypeToken(m)]);
             end;
          Continue;
          end;
@@ -209,7 +225,7 @@ const
    { Network-capable and deliberately WITHOUT credentials. Named rather than
      merely absent, so "nobody looked at this one" cannot masquerade as "this one
      does not authenticate". }
-   OPEN_NETWORK_RADIOS: array[0..1] of InterfacedRadioType = (K4, FLEX);
+   OPEN_NETWORK_RADIOS: array[0..2] of InterfacedRadioType = (K4, FLEX, FLRIG);
 
 function InSet(model: InterfacedRadioType;
                const list: array of InterfacedRadioType): boolean;

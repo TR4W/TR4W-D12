@@ -53,6 +53,12 @@ const
    (* The two TOKENS -- keyed in place by the CW sender. *)
    MESSAGE_TOKEN_ROVERCALL = 'ROVERCALL';
    MESSAGE_TOKEN_ROVERQTH = 'ROVERQTH';
+   (* The network pass tokens, N1MM's spellings (issue 71, NY4I 2026-11-22):
+     {PASS NAME} and {PASS 14000} (the argument follows a SPACE, not '=', and
+     is kept in aArgument) and {LASTPASSEDFREQ}. Keyed in place, like the
+     rover tokens -- uNetPass expands them. *)
+   MESSAGE_TOKEN_PASS = 'PASS';
+   MESSAGE_TOKEN_LASTPASSEDFREQ = 'LASTPASSEDFREQ';
 
    (* The old bookends, and the old inactive-radio byte. *)
    MESSAGE_OLD_COMMAND_START = #3;
@@ -200,6 +206,26 @@ begin
       begin
       aInactiveRadio := True;
       Delete(body, 1, 1);
+      end;
+
+   (* {PASS NAME}: the word PASS, a space, then what it names. A bare {PASS}
+     is not a token (it names nothing) and falls through to unknown. *)
+   if (not aInactiveRadio) and (Length(body) > 5) and
+      (UpperCase(Copy(body, 1, 5)) = MESSAGE_TOKEN_PASS + ' ') and
+      (Trim(Copy(body, 6, Length(body))) <> '') then
+      begin
+      aName := MESSAGE_TOKEN_PASS;
+      aArgument := Trim(Copy(body, 6, Length(body)));
+      aHasArgument := True;
+      Result := mwToken;
+      Exit;
+      end;
+
+   if (not aInactiveRadio) and (UpperCase(body) = MESSAGE_TOKEN_LASTPASSEDFREQ) then
+      begin
+      aName := MESSAGE_TOKEN_LASTPASSEDFREQ;
+      Result := mwToken;
+      Exit;
       end;
 
    eqAt := Pos('=', body);

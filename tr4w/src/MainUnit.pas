@@ -908,7 +908,8 @@ uses
                         column widths ride the layout autosave (issue 234) *)
   uAltDragMove,      // EnableAltDragMove -- NO CAPTION's way to move a window
   uWSJTXState,       // the state the WSJT-X indicator paints from
-  uRadioState,       // TXInhibitAlert -- the PTT indicator's alert (issue #97)
+  uN1MMLogListener,  // N1MMLogListenerShutdown -- issue 45
+  uRadioState,      // TXInhibitAlert -- the PTT indicator's alert (issue #97)
   uTXInhibitAlert,   // PTTIndicatorRole -- what the PTT indicator means
   uTXInhibitView,    // NoteTransmitStarting / NoteTransmitEnded -- trigger 1
   uLogNote,          // NoteText / SetNoteText -- a note's text, spelled once
@@ -4480,6 +4481,10 @@ begin
      wsjtx.Stop;
      FreeAndNil(wsjtx);
      end;
+
+  (* The N1MM log listener (issue 45): its sockets close and any record still
+    queued is logged (Stop's drain), so this stays before the log closes. *)
+  N1MMLogListenerShutdown;
 
   // Before the radios go away.  Stop detaches the polling hook first, so the
   // poll loop cannot enter a server that is tearing its sessions down, and

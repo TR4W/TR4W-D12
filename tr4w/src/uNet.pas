@@ -280,6 +280,23 @@ function NetWindowCaption: string;
   message. A no-op while there is no window. *)
 procedure DisplayAllClients;
 
+(* THE PASS WORDS OF A MESSAGE ({PASS B}, {PASS 14000}, {LASTPASSEDFREQ} --
+  issue 71), filled in from the stations this link holds in StatusArray.
+  True: aMessage is ready to key (a message with no pass word is not touched).
+  False: a word could not be filled in; the operator has been told why, the
+  missing station is marked red in the Network window, and the caller must
+  send NOTHING. Main thread, like every sender of a message. *)
+function ExpandNetPassWords(var aMessage: Str160): boolean;
+
+(* The station the last refused pass word named, shown red in the Network
+  window until that station is heard again; #0 when none. *)
+function PassMissingStation: AnsiChar;
+
+(* The station id (1..26) shown on row aRow (0-based) of the Network window,
+  or 0. The rows are in the order the stations were first heard, which is NOT
+  the id order. *)
+function NetClientIdAtRow(aRow: integer): integer;
+
 (* EVERY CONTEST TRAVELS THIS LINK -- network protocol 2, 2026-10-27 (NY4I: "ALL
   contests must work on the network, including those registered by id").
 
@@ -589,7 +606,15 @@ uses
    uConfigValues,
    uHostResolve,   { TryResolveHost -- a .local name through the C library, issue 148 }
    uTailcatForwarder,   { TTailcatLogLevel -- the tunnel's log lines, issue 293 }
-   uNetTunnel;     { the Tailcat tunnel SERVER USE TAILCAT asks for, issue 293 }
+   uNetTunnel,     { the Tailcat tunnel SERVER USE TAILCAT asks for, issue 293 }
+   uNetPass;       { the pass words of a message, issue 71 }
+
+var
+  (* The station the last refused pass word named (red in the Network window)
+    and the frequency the last {PASS} produced ({LASTPASSEDFREQ}). Main
+    thread only. *)
+  GPassMissingId                        : AnsiChar = #0;
+  GLastPassedFreqHz                     : Int64 = 0;
 
 { THE ID THE SERVER REFUSED, in the ordinal form the wire uses, or #0.
 
@@ -955,6 +980,16 @@ var
                     end;
                  StatusArray[ClientID] := StationStPtr^;
                  DisplayClientStatus(ClientID);
+                 (* HEARD AGAIN: a station a pass word found missing is back,
+                   so its red mark goes (issue 71). *)
+                 if GPassMissingId = StationStPtr^.ssComputerID then
+                    begin
+                    GPassMissingId := #0;
+                    if TR4WNetworkForm <> nil then
+                       begin
+                       TR4WNetworkForm.lvClients.Invalidate;
+                       end;
+                    end;
 
                  end;
             end;
@@ -2361,6 +2396,125 @@ begin
             end;
          end;
       end;
+end;
+
+function PassMissingStation: AnsiChar;
+begin
+   Result := GPassMissingId;
+end;
+
+function NetClientIdAtRow(aRow: integer): integer;
+var
+   id: integer;
+begin
+   Result := 0;
+   for id := Low(PosInClientsList) to High(PosInClientsList) do
+      begin
+      if (PosInClientsList[id] > 0) and (PosInClientsList[id] - 1 = aRow) then
+         begin
+         Result := id;
+         Exit;
+         end;
+      end;
+end;
+
+(* A PASS WORD'S STATION IS MISSING: remember it so the Network window paints
+  its row red (a refusal must not be a silent drop, NY4I), and say so in the
+  row itself when the station has one -- a station that left keeps its blanked
+  row. A station never heard has no row; the notice names it. *)
+procedure MarkPassStationMissing(aId: AnsiChar);
+var
+   id: integer;
+   row: integer;
+begin
+   GPassMissingId := aId;
+   if aId in ['A'..'Z'] then
+      begin
+      id := Ord(aId) - Ord('A') + 1;
+      row := PosInClientsList[id] - 1;
+      if row >= 0 then
+         begin
+         SetClientCell(row, 0, SNetStationMissing);
+         SetClientCell(row, 1, string(aId));
+         end;
+      end;
+   if TR4WNetworkForm <> nil then
+      begin
+      TR4WNetworkForm.lvClients.Invalidate;
+      end;
+end;
+
+function PassRefusalText(aFailure: TPassFailure; aMissingId: AnsiChar;
+                         const aWord: AnsiString): string;
+var
+   who: string;
+begin
+   who := string(aWord);
+   if aMissingId <> #0 then
+      begin
+      who := string(aMissingId);
+      end;
+   case aFailure of
+      pfNeedsName:    Result := SPassNeedsName;
+      pfNotAPassBand: Result := UnicodeFormat(SPassNotABand, [string(aWord)]);
+      pfBandEmpty:    Result := UnicodeFormat(SPassBandEmpty, [string(aWord)]);
+      pfStationAbsent: Result := UnicodeFormat(SPassStationAbsent, [who]);
+      pfStationIsUs:  Result := UnicodeFormat(SPassStationIsUs, [string(aWord)]);
+      pfNoFrequency:  Result := UnicodeFormat(SPassNoFrequency, [who]);
+      pfNothingPassed: Result := SPassNothingPassed;
+   else
+      Result := '';
+   end;
+end;
+
+function ExpandNetPassWords(var aMessage: Str160): boolean;
+var
+   peers: TPassPeers;
+   i, n: integer;
+   expanded, theWord: AnsiString;
+   failure: TPassFailure;
+   missingId: AnsiChar;
+   k: integer;
+begin
+   Result := True;
+   if not MayHavePassWord(AnsiString(aMessage)) then
+      begin
+      Exit;
+      end;
+
+   SetLength(peers, High(StatusArray) - Low(StatusArray) + 1);
+   n := 0;
+   for i := Low(StatusArray) to High(StatusArray) do
+      begin
+      peers[n].Id := StatusArray[i].ssComputerID;
+      peers[n].FreqHz := StatusArray[i].ssFreq;
+      peers[n].Name := '';
+      for k := Low(StatusArray[i].ssName) to High(StatusArray[i].ssName) do
+         begin
+         if StatusArray[i].ssName[k] = #0 then
+            begin
+            Break;
+            end;
+         peers[n].Name := peers[n].Name + StatusArray[i].ssName[k];
+         end;
+      Inc(n);
+      end;
+
+   if ExpandPassTokens(AnsiString(aMessage), peers, Settings.Computer.Id,
+                       GLastPassedFreqHz, expanded, failure, missingId, theWord) then
+      begin
+      aMessage := ShortString(expanded);
+      Exit;
+      end;
+
+   Result := False;
+   logger.Warn('[Net] pass word refused (%d), station %s: the message was not sent',
+               [Ord(failure), string(missingId)]);
+   if missingId <> #0 then
+      begin
+      MarkPassStationMissing(missingId);
+      end;
+   QuickDisplayError(PassRefusalText(failure, missingId, theWord));
 end;
 
 function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;

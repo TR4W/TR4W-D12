@@ -4128,14 +4128,17 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
         1;
       var
         LowestZone: integer;
+        zoneRules: TContestBase;
+        zoneKey: integer;
       begin
       GenerateZoneMultiplierTotals := False;
       CountryMultTotals := Default( CountryMultiplierArray );
       (* ZONE 0 IS A ZONE WHERE THE CONTEST NUMBERS FROM ZERO (issue 274 item
         5): the European HF Championship's and KVP's licence year 00. In
         every other contest 0 is "no zone" and is skipped, as it always was. *)
+      zoneRules := ActiveContest( Contest );
       LowestZone := 1;
-      if ContestNumbersZonesFromZero( ActiveContest( Contest ) ) then
+      if ContestNumbersZonesFromZero( zoneRules ) then
          begin
          LowestZone := 0;
          end;
@@ -4151,19 +4154,22 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
          if GoodLookingQSO then
             begin
             // inc(TotalLogQSOs);
-            if ( TempRXData.Zone >= LowestZone ) and ( TempRXData.Zone <= 100 ) then
+            (* THE SHEET'S KEY (issue 298 stage 4): the received year in a
+              year contest, the zone slot elsewhere -- the cell LOGDUPE marks. *)
+            if ContestZoneMultiplierKey( zoneRules, TempRXData, zoneKey ) and
+               ( zoneKey >= LowestZone ) and ( zoneKey <= 100 ) then
                begin
                if TempRXData.ZoneMult then
-                 if CountryMultTotals[ TempRXData.Band, TempRXData.Zone ]
-                    .TotalQSOs = 0 then
-                    begin
-                    CountryMultTotals[ TempRXData.Band, TempRXData.Zone ].FirstCall
-                       := TempRXData.Callsign;
-                    end;
+                  begin
+                  if CountryMultTotals[ TempRXData.Band, zoneKey ].TotalQSOs = 0 then
+                     begin
+                     CountryMultTotals[ TempRXData.Band, zoneKey ].FirstCall
+                        := TempRXData.Callsign;
+                     end;
+                  end;
 
                // if TempRXData.QTH.Country >= 0 then
-               inc( CountryMultTotals[ TempRXData.Band, TempRXData.Zone ]
-                  .TotalQSOs );
+               inc( CountryMultTotals[ TempRXData.Band, zoneKey ].TotalQSOs );
                end;
             end;
          goto 1;

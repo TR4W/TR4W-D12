@@ -765,10 +765,10 @@ begin
   {Zone}
 
   (* OR THE RECEIVED YEAR, in a contest that receives one (issue 298, stage 2):
-    saved through StoreLicenceYear, so the year field and the zone slot the
-    sheet counts change together -- stage 1 saved a new zone beside the OLD
-    year. A year the contest's kind refuses is refused here, as a bad call is:
-    nothing is written and the form stays open. *)
+    saved through StoreLicenceYear, the year field's one writer, which the
+    multiplier sheet reads since stage 4 (ContestZoneMultiplierKey) -- the
+    zone slot is not written. A year the contest's kind refuses is refused
+    here, as a bad call is: nothing is written and the form stays open. *)
   if ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind <> rykNone then
      begin
      if not ApplyEditedReceivedYear(ContestIdentity(EditableQSORXData.ceContest).ReceivedYearKind,

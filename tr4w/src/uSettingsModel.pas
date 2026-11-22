@@ -534,6 +534,8 @@ type
       FSendHighlights: boolean;
       FBroadcastPort: TWsjtxPort;
       FMulticastGroup: string;
+      FN1mmListenerEnabled: boolean;
+      FN1mmListenAddress: string;
    public
       constructor Create;
    published
@@ -560,6 +562,17 @@ type
         ordinary unicast, which is the usual case. *)
       property MulticastGroup: string
          read FMulticastGroup write FMulticastGroup;
+      (* THE N1MM LOG LISTENER (issue 45, 2026-11-22): JTDX and JTAlert log a QSO
+        by sending N1MM's "Log" envelope (TCP 52001, UDP 2333). OFF unless the
+        operator turns it on, and it binds ONLY the address below, 127.0.0.1 by
+        default -- a LAN address is an explicit change. Both apply live
+        (uSettingsEffects). They live in this group because the page that edits
+        them is the WSJT-X / JTDX one; the command names are the ones NY4I
+        specified, so both carry an Alias. *)
+      property N1mmListenerEnabled: boolean
+         read FN1mmListenerEnabled write FN1mmListenerEnabled;
+      property N1mmListenAddress: string
+         read FN1mmListenAddress write FN1mmListenAddress;
    end;
 
    (*
@@ -5585,6 +5598,8 @@ begin
    FSendHighlights      := True;
    FBroadcastPort       := 2237;
    FMulticastGroup      := '';
+   FN1mmListenerEnabled := False;
+   FN1mmListenAddress   := '127.0.0.1';
 end;
 
 procedure TContestSettings.SetBand(const aValue: string);
@@ -6671,6 +6686,8 @@ begin
    Alias('WSJT-X SEND HIGHLIGHTS',       'Wsjtx.SendHighlights');
    Alias('WSJT-X BROADCAST PORT',        'Wsjtx.BroadcastPort');
    Alias('WSJT-X MULTICAST GROUP',       'Wsjtx.MulticastGroup');
+   Alias('ENABLE N1MM LOG LISTENER',     'Wsjtx.N1mmListenerEnabled');
+   Alias('N1MM LISTEN ADDRESS',          'Wsjtx.N1mmListenAddress');
 
    (* The four main-window appearance flags. Flat names, every one. *)
    Alias('NO BORDER',        'MainWindow.NoBorder');

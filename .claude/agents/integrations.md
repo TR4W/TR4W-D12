@@ -73,6 +73,42 @@ writes `Settings.Ptt.ViaCommands`. That belongs to the radio-status snapshot wor
 never reaches it.** `TWSJTXServer`'s did not, so `FreeAndNil(wsjtx)` leaked the
 sockets until 2026-10-14. Check the keyword on any destructor you add.
 
+## One path turns another program's ADIF into a logged QSO: `uInboundQso` (issue 45, 2026-11-22)
+
+`ParseInboundADIF` (clear, `MainUnit.ParseSessionADIFRecord`, locate the call, DX QTH / prefix) and
+`LogParsedInboundQso` (ExchString fallback, band / frequency defaults, **mode**, `ParametersOkay`,
+`LogContact`, the entry-field reset) are what `uWSJTX.EvaluateLoggedADIF` and the N1MM listener both
+call -- NY4I: a data-source-agnostic parser, one path, a future REST POST makes a third caller. The
+reader behind them is the file import's (`MainUnit.ReadADIFRecord`); only the tail differs.
+Facts that bite: **never `ParseADIFRecord`** (the overlay's `CONTEST_ID` rewrites the log's contest);
+WSJT-X's own work sits BETWEEN the two calls (operator-mismatch warning, `DeriveStateFromWSJTXGrid`)
+and `sCallSentToWindow := ''` after; the unit **clears the entry fields** after a logged QSO (a
+JTAlert-logged QSO wipes what the operator is typing -- the existing WSJT-X behaviour, now shared);
+`InboundQsoMode`: the parsed mode, **Digital + `eData` with a Warn when the record's mode is unknown**
+(WSJT-X used to pass `Digital` always; it only differs for a non-digital record); a dupe is logged
+and flagged, never refused (NY4I: a refusal over UDP only hides a problem).
+
+## The N1MM log listener: JTDX (TCP 52001), JTAlert / WSJT-X (UDP 2333) (issue 45, 2026-11-22)
+
+`uN1MMLogEnvelope` is the framing (pure), `uN1MMLogListener` owns the two Indy servers.
+**OFF by default** (`ENABLE N1MM LOG LISTENER`, `Settings.Wsjtx.N1mmListenerEnabled`), bound to
+`N1MM LISTEN ADDRESS` (`N1mmListenAddress`, default 127.0.0.1; a LAN address is an explicit choice).
+Both live in the WSJT-X settings group because the WSJT-X / JTDX Preferences page edits them (placed
+block, `uPrefsForm.PrefsPlacements`). **Applies LIVE**: `uSettingsEffects` calls
+`N1MMLogListenerApply`, which does nothing when the enabled state and bound address are unchanged
+(every Preferences save re-applies every setting and must not drop a sender); the object is created by
+`N1MMLogListenerStartup` (`uProgramMain`, after the window) and freed by `N1MMLogListenerShutdown`
+(`tr4w_ShutDown`, before the log closes). The handlers run on Indy threads and only copy: ADIF text on
+a locked list, one `Application.QueueAsyncCall` per record, `Evaluate` on the main thread. `Stop`
+(main thread, sockets down) logs every pending record -- **a QSO is never dropped**; the last resort is
+a `LOST QSO` error with the ADIF. Receive-only (nothing is written back). UDP: one datagram is ONE
+envelope; **two envelopes or two records in one datagram are refused and logged** (the stage-1 rule,
+pinned in `uTestN1MMLogListener`). A bind failure goes to the log and `QuickDisplay`, never a dialog,
+and the other transport still runs. `ReuseSocket` is left off on purpose (an N1MM already on 2333
+reports a bind error). **Firewall:** nothing in code; a loopback bind raises no Windows prompt, a LAN
+bind does, and anything on the LAN can then log QSOs into the contest -- say so in the manual. Never
+run against a live contest log without a copy.
+
 ## The local UDP score (`dynamicresults`)
 
 `logsubs2.BuildScoreUDPXml` / `PostScoreToUDP` feed N1MM-style listeners and WRTC's

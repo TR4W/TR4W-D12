@@ -24,7 +24,7 @@ This table is the gate on that decision.
 | Elecraft KX3 | KX3 | - | - |  |
 | Expert TCI (HamLib bridge) | EXPERTTCI | - | - |  |
 | Flex 6000+ | FLEX | 2026-07-29 | NY4I | SERIAL (ZZ CAT): connect, freq/mode, split, VFO B, independent RIT/XIT, 200 ms poll. NETWORK: discovery (VITA-49). CW-by-CAT NOT yet exercised. |
-| FLRig (HamLib bridge) | FLRIG | - | - |  |
+| FLRig (XML-RPC) | FLRIG | - | - | Issue 5, 2026-11-22. Native XML-RPC driver (`uRadioFLRig` + `uFLRigXmlRpc`) replaced the HamLib bridge on the FLRIG entry; "Drive through HamLib" still reaches the bridge (rig_model 4). Tested only against constructed XML-RPC responses (`uTestFLRigXmlRpc`); no FLRig has answered it. The open questions are in `docs/BENCH_QUEUE.md`. |
 | HamLib (any supported rig) | HAMLIBANY | - | - |  |
 | Icom IC-7000 | IC7000 | - | testers | As IC706: split and TX status not readable (BenchProvenDivergences). |
 | Icom IC-705 | IC705 | - | - |  |

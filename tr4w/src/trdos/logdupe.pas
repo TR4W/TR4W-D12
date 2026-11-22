@@ -1156,6 +1156,7 @@ var
   kinds                                 : TMultiplierKinds;
   additionalKey                         : string;
   slotMode                              : ModeType;
+  zoneKey                               : integer;
 begin
 
   if RXData.ceSearchAndPounce then
@@ -1175,6 +1176,10 @@ begin
         122. The QSO's own Mode for every contest but the closed list. *)
      slotMode := MultiplierSlotMode(RXData.Mode);
 
+     (* ONE ActiveContest PER QSO, fetched here (it was below) because the
+        zone kind's key is the contest's since issue 298 stage 4. *)
+     contestRules := ActiveContest(Contest);
+
      if RXData.DomesticMult then
         begin
         //        TempDOMBand := RXData.Band;
@@ -1193,18 +1198,20 @@ begin
         mo.SetPxMult(RXData.Prefix, RXData.Band, slotMode);
         end;
 
-     if RXData.ZoneMult then
+     (* THE STORED FLAG IS TRUSTED, AS EVERY FLAG HERE IS (#137); WHICH CELL
+        IT MARKS is the contest's key -- the received year in the European HF
+        Championship and KVP (issue 298 stage 4), the zone slot elsewhere. *)
+     if RXData.ZoneMult and ContestZoneMultiplierKey(contestRules, RXData^, zoneKey) then
         begin
-        mo.SetZnMult(RXData.Zone, RXData.Band, slotMode);
+        mo.SetZnMult(Word(zoneKey), RXData.Band, slotMode);
         end;
 
      (* THE SECOND DOMESTIC KEY (#317), which has no stored flag and is
         derived here, from the record, every time -- AND THE WORKED COUNTS
         (issue 12), every credited working, not only the first the flags
         above record. HERE because the loader, the rescore and LogContact
-        all reach this routine, each in log order. One ActiveContest and one
-        credit chain per QSO. *)
-     contestRules := ActiveContest(Contest);
+        all reach this routine, each in log order. One ActiveContest (fetched
+        above) and one credit chain per QSO. *)
      credited := CreditedSheetCopy(RXData^);
      kinds := MultiplierKindsCredited(contestRules, credited);
 
@@ -1551,6 +1558,7 @@ var
   MultMode                              : ModeType;
   contestRules                          : TContestBase;
   kinds                                 : TMultiplierKinds;
+  zoneKey                               : integer;
   //CompressedMult                        : FourBytes;
   //DomQTH                                : Str20;
  // c                                     : integer;
@@ -1613,12 +1621,20 @@ begin
 
   if rmZone in kinds then
      begin
-     RXData.ZoneMult := mo.IsZnMult(RXData.Zone, MultiplierSheetBand(rmZone, RXData.Band), MultMode);
+     (* THE SHEET'S KEY IS THE CONTEST'S (issue 298 stage 4): the received
+        year in a year contest, else the zone slot. MultiplierKindsCredited
+        included rmZone only when there is one. *)
+     if ContestZoneMultiplierKey(contestRules, RXData, zoneKey) then
+        begin
+        RXData.ZoneMult := mo.IsZnMult(Word(zoneKey), MultiplierSheetBand(rmZone, RXData.Band), MultMode);
+        end;
      end;
 end;
 
 function MultiplierKindsCredited(aContest: TContestBase;
   const aRX: ContestExchange): TMultiplierKinds;
+var
+  zoneKey: integer;
 begin
   Result := [];
   (* NO MULTIPLIER CREDIT FOR ANY X-QSO -- off-band, off-mode or flagged by
@@ -1665,7 +1681,9 @@ begin
      Include(Result, rmPrefix);
      end;
 
-  if (aRX.Zone <> DUMMYZONE) and ContestHasZoneMultiplier(aContest) and
+  (* THE ZONE KIND'S KEY IS THE CONTEST'S (issue 298 stage 4): a year
+     contest's received year, every other contest's zone slot. *)
+  if ContestZoneMultiplierKey(aContest, aRX, zoneKey) and ContestHasZoneMultiplier(aContest) and
      ContestCountsMultiplier(aContest, aRX, rmZone) then
      begin
      Include(Result, rmZone);
@@ -1927,6 +1945,7 @@ procedure CountWorkedMultipliers(aContest: TContestBase; const aRX: ContestExcha
   aKinds: TMultiplierKinds; const aAdditionalDomesticKey: string);
 var
   slotMode: ModeType;
+  zoneKey: integer;
 begin
   if aRX.ceClearMultSheet or aRX.ceDupe then
      begin
@@ -1963,7 +1982,12 @@ begin
      end;
   if rmZone in aKinds then
      begin
-     mo.CountWorked(rmZone, IntToStr(aRX.Zone), aRX.Band, slotMode);
+     (* The contest's key (issue 298 stage 4) -- the one SetMultFlags and
+        AddQSOToSheets mark; rmZone is in aKinds only when there is one. *)
+     if ContestZoneMultiplierKey(aContest, aRX, zoneKey) then
+        begin
+        mo.CountWorked(rmZone, IntToStr(zoneKey), aRX.Band, slotMode);
+        end;
      end;
 end;
 

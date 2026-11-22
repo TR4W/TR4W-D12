@@ -196,6 +196,7 @@ uses
   , utils_text
   , LogK1EA // for Settings.Ptt.ViaCommands
   , PostUnit
+  , uInboundQso     // ParseInboundADIF / LogParsedInboundQso -- shared (issue 45)
   , uADIF           // ParseADIFFieldsList -- the record's GRIDSQUARE (issue 52)
   , uGridLookup     // StateOfGrid (issue 52)
   , uContestBase    // ContestHasGridFieldMultiplier (M11 S6)
@@ -1444,8 +1445,6 @@ end;
 procedure TWSJTXServer.EvaluateLoggedADIF(const adif: string);
 var
    TempRXData: ContestExchange;
-   tempBand: BandType;
-   tempFreq: integer;
    gridComment: string;
 begin
    gridComment := '';
@@ -1461,12 +1460,12 @@ begin
       Exit;
       end;
 
-   ClearContestExchange(TempRXData);
-
    (* THE OPEN CONTEST'S RECORD: WSJT-X's CONTEST_ID is its overlay's, not
       this log's (the Delaware QSO Party's FT8 arrives as ARRL-FIELD-DAY), so
-      it is not read -- see MainUnit.ParseSessionADIFRecord. *)
-   if ParseSessionADIFRecord(adif, TempRXData) then
+      it is not read -- see MainUnit.ParseSessionADIFRecord.  The parse, the
+      check and the log write are uInboundQso's, shared with the N1MM listener
+      and any other sender (issue 45); what is WSJT-X's own is between them. *)
+   if ParseInboundADIF(adif, TempRXData) then
      // processed a record if true
       begin
       logger.Debug('[uWSJTX] QTHString is %s',[TempRXData.QTHString]);
@@ -1475,95 +1474,16 @@ begin
       // every parsed record regardless of whether the QSO logs.
       WarnIfWSJTXOperatorMismatch(TempRXData.ceOperator,
         CurrentOperator);
-      ctyLocateCall(TempRXData.Callsign, TempRXData.QTH);
 
-      (* The DX QTH, then the prefix, from one contest lookup
-         -- M11 S4 (LOGEDIT.SetDXQTHAndPrefix). *)
-      SetDXQTHAndPrefix(TempRXData);
-
-      //CalculateQSOPoints(TempRXData);
       logger.debug('[uWSJTX] TotalContacts right before update of NumberSent in uWSJTX ADIF UDP message = %d', [TotalContacts]);
-
-      //TempRXData.NumberSent := TotalContacts;
-      //LogContact(TempRXData, true);
 
       (* Issue 52: a state from the grid, only when the grid is in one state
          and the contest takes a state; an ambiguous grid is shown, not filled. *)
       DeriveStateFromWSJTXGrid(adif, TempRXData, gridComment);
 
-      // ParseADIFRecord populates QTHString (state/grid/zone) for most
-      // contests but does not always copy it into ExchString.
-      // ParametersOkay requires a non-empty ExchString to call
-      // ProcessExchange — fall back to QTHString when ExchString is empty.
-      if TempRXData.ExchString = '' then
+      if LogParsedInboundQso(TempRXData, 'WSJT-X') = iqLogged then
          begin
-         TempRXData.ExchString := TempRXData.QTHString;
-         end;
-      if TempRXData.Band <> NoBand then
-         begin
-         tempBand := TempRXData.Band;
-         end
-      else
-         begin
-         tempBand := ActiveBand;
-         end;
-
-      if TempRXData.Frequency <> 0 then
-         begin
-         tempFreq := TempRXData.Frequency;
-         end
-      else
-         begin
-         if ActiveRadioPtr.LastDisplayedFreq = 0 then // No connected radio so use default for band
-            begin
-            (* AnsiString: SysUtils' StrToIntDef takes 8-bit strings, and the band
-              default is an ASCII token, so the conversion is lossless. *)
-            tempFreq := StrToIntDef(AnsiString(tCabrilloFreqString[TempRXData.Band]), 0) * 1000; //14000 in array but needs to be 14000000
-            end
-         else
-            begin
-            tempFreq := ActiveRadioPtr.LastDisplayedFreq;
-            end;
-         end;
-
-      if ParametersOkay(TempRXData.Callsign,
-        {TempRXData.QTHString}TempRXData.ExchString, tempBand,
-        Digital, tempFreq
-        {LastDisplayedFreq[ActiveRadio]}, TempRXData) then
-         begin
-         TempRXData.DomesticQTH := TempRXData.QTHString;
-         // Set these on the record actually being logged
-         // (TempRXData), not ReceivedData -- otherwise the
-         // WSJT-X QSO logs with a blank Computer ID and an
-         // unset S&P flag.
-         TempRXData.ceSearchAndPounce := OpMode =
-           SearchAndPounceOpMode;
-         TempRXData.ceComputerID := Settings.Computer.Id;
-         (* NOT IN THE LOG (2026-11-18: a full disk, or a read-only log):
-           LogContact has said why on the status line, with a beep. Nothing
-           below runs -- no post-QSO window work that would wipe that line,
-           and no "ready for the next QSO". WSJT-X keeps its own record. *)
-         if not LogContact(TempRXData, True) then
-            begin
-            logger.Error('[uWSJTX] WSJT-X QSO with %s was NOT logged -- the log ' +
-                         'would not take it', [string(TempRXData.Callsign)]);
-            Exit;
-            end;
-         (* GetTickCount64, and LCLIntf declares it -- as it did
-           GetTickCount, so this was already portable. The point
-           is the WIDTH: MainUnit writes the same variable with
-           GetTickCount64, and one 32-bit writer is what makes a
-           shared stamp disagree with itself. *)
-         tElapsedTimeFromLastQSO := GetTickCount64;
-         QueueWSJTXUI(wjPostQSO);
-         //ShowStationInformation(@TempRXData.Callsign);
-         ClearContestExchange(TempRXData);
-         CallAlreadySent := False;
-         ExchangeHasBeenSent := False;
-         EditingCallsignSent := False;
-         SeventyThreeMessageSent := False;
-         EscapeDeletedCallEntry := CallWindowString;
-         ReadyForNextQSO;
+         sCallSentToWindow := '';
          (* The QSO log has no comment field, so the candidates of an
             ambiguous grid go to the status line (non-modal) and the log. *)
          if gridComment <> '' then
@@ -1572,11 +1492,6 @@ begin
             QuickDisplay(gridComment);
             end;
          end;
-
-      //tCleareCallWindow;
-
-      //ShowStationInformation(@TempRXData.Callsign);
-      //UpdateWindows;
       end;
 end;
 

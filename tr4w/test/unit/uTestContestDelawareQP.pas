@@ -681,10 +681,16 @@ begin
       uContestFactory.ReleaseActiveContest;
    end;
 
+   (* Issue 45: the call moved from uWSJTX into uInboundQso, the one path WSJT-X
+      and the N1MM listener share. uWSJTX must reach it through
+      ParseInboundADIF, and the reader there is the session's. *)
    text := uTestAutomaticXQSO.SourceText('uWSJTX.pas');
-   CheckTrue(Pos('ParseSessionADIFRecord(adif, TempRXData)', text) > 0,
-             'WSJT-X''s logged QSO is read as the session''s record');
-   CheckEquals(0, Pos('ParseADIFRecord(adif, TempRXData)', text),
+   CheckTrue(Pos('ParseInboundADIF(adif, TempRXData)', text) > 0,
+             'WSJT-X''s logged QSO goes through the shared inbound path');
+   text := uTestAutomaticXQSO.SourceText('uInboundQso.pas');
+   CheckTrue(Pos('ParseSessionADIFRecord(aAdif, aExch)', text) > 0,
+             'which reads it as the session''s record');
+   CheckEquals(0, Pos('ParseADIFRecord(aAdif, aExch)', text),
                'and never through the file import''s reader');
 end;
 

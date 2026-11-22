@@ -4571,7 +4571,31 @@ function ZoneTextSent(aZones: TZoneMultiplierZones;
    TContestBase.NumbersZonesFromZero. nil answers False. *)
 function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
 
-(* THE LICENCE YEAR IS STORED IN THE ZONE SLOT -- 2026-11-11, NY4I's
+(* THE KEY aQso IS COUNTED UNDER ON THE ZONE-KIND MULTIPLIER SHEET -- issue
+   298 stage 4 (2026-11-22). The ONE answer every write and read of mo's zone
+   table for a logged QSO asks: LOGDUPE's MultiplierKindsCredited (whether the
+   kind is credited at all), SetMultFlags (is it new), AddQSOToSheets (mark it)
+   and CountWorkedMultipliers (count it).
+
+      a contest that STATES A RECEIVED YEAR (ReceivedYearKind <> rykNone --
+      the European HF Championship and KVP): the received year,
+      TryLicenceYearOf, when it is a cell of the sheet (0 to
+      ZoneMultiplierCount - 1). The year is its own field (RcvdYear,
+      rcvd_year); the zone slot is NOT read except through TryLicenceYearOf's
+      fallback for a record written before the field existed.
+      every other contest, and nil: the zone slot, when it holds a zone (not
+      DUMMYZONE) -- what the four sites read before.
+
+   NY4I on issue 281: "we should not reuse fields especially named as
+   something else like Zone." The QSO's zone slot no longer carries the year;
+   the SHEET is still mo's numbered zone table (a year contest has no CQ or
+   ITU zone multiplier, so the table holds only years there), and the per-QSO
+   "new multiplier" flag is still ZoneMult / mult_zone. A multiplier kind and
+   column of the year's own is a schema decision, not taken here. *)
+function ContestZoneMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
+                                  out aKey: integer): boolean;
+
+(* THE LICENCE YEAR WAS STORED IN THE ZONE SLOT -- 2026-11-11, NY4I's
    coordinator ruling on the European HF Championship and KVP ("the contract is
    the encoding, not the type"). The year the operator was first licensed,
    00..99, is the received exchange field AND the multiplier in those two
@@ -4589,7 +4613,15 @@ function ContestNumbersZonesFromZero(aContest: TContestBase): boolean;
    TryLicenceYearOf read RcvdYear; StoreLicenceYear STILL WRITES BOTH, because
    the multiplier sheet (SetMultFlags, mo's zone table, mult_zone) and the
    export (stage 3) still read the zone slot. Stage 4 stops the dual write and
-   moves the sheet. *)
+   moves the sheet.
+
+   STAGE 4 (2026-11-22): DONE. StoreLicenceYear writes the field ONLY; the
+   multiplier sheet keys on ContestZoneMultiplierKey, which reads the year
+   field in a year contest. A new record of a year contest leaves its zone
+   slot as it was (DUMMYZONE after a cleared exchange), so rcvd_zone is NULL
+   on its row. ClearLicenceYear still sets the zone slot to DUMMYZONE: the
+   fallback in TryLicenceYearOf would otherwise read an old record's year back
+   from the slot after the operator cleared it. *)
 
 const
    (* "No year" from LicenceYearOf. Never a year: every kind's range is >= 0. *)
@@ -4698,9 +4730,11 @@ function SentYearTextOfFacts(aKind: TReceivedYearKind; const aFacts: TQsoMyFacts
    "A ZERO-FILLED RECORD IS NO YEAR" (VC's note on RcvdYearKnown) HOLDS FOR
    THE FIELD, NOT THROUGH THIS FALLBACK: a FillChar'd record has Zone 0, which
    reads as the year 00 here -- what the zone slot always answered, so nothing
-   regresses. Stage 4 removes the fallback once the catch-up path fills the
-   field (uGetServerLog.MergeServerLog stores such a record with rcvd_year
-   NULL, and no re-carry runs on a log already at 7). *)
+   regresses. STAGE 4 (2026-11-22) KEPT THE FALLBACK: the catch-up path still
+   does not fill the field (uGetServerLog.MergeServerLog stores such a record
+   with rcvd_year NULL, and no re-carry runs on a log already at 7), and the
+   multiplier sheet now reads the year through here (ContestZoneMultiplierKey),
+   so such a record still counts. It goes when that path fills the field. *)
 function TryLicenceYearOf(const aQso: ContestExchange; out aYear: integer): boolean;
 (* The same, NO_RECEIVED_YEAR when there is none. *)
 function LicenceYearOf(const aQso: ContestExchange): integer;
@@ -4727,11 +4761,10 @@ function TryReceivedZoneOrYear(aKind: TReceivedYearKind; const aQso: ContestExch
    of a stated year kind (issue 298, stage 3), each with its own RST text. *)
 function RSTAndReceivedYearText(const aRST: string; aKind: TReceivedYearKind;
                                 const aQso: ContestExchange): string;
-(* THE ONE WRITER of a received year: the field (RcvdYear, RcvdYearKnown) and,
-   while the multiplier sheet still counts the zone slot (until stage 4), the
-   zone slot too -- but only a value the slot's sheet can hold (0..99, a
-   two-digit year or a count). A four-digit year leaves Zone at DUMMYZONE: no
-   contest of that kind exists yet, and its multiplier needs stage 4. *)
+(* THE ONE WRITER of a received year: the field (RcvdYear, RcvdYearKnown) and
+   NOTHING ELSE -- issue 298 stage 4 (2026-11-22). Until then it also copied a
+   0..99 year into the zone slot for the multiplier sheet; the sheet asks
+   ContestZoneMultiplierKey now, and the zone slot is left as it was. *)
 procedure StoreLicenceYear(var aQso: ContestExchange; aYear: integer);
 (* THE ONE WRITER of the year a QSO's sender SENT -- issue 300, protocol 4:
    YearSent and YearSentKnown, the pair the multi-op packet carries. aKnown
@@ -4739,14 +4772,17 @@ procedure StoreLicenceYear(var aQso: ContestExchange; aYear: integer);
    with a year and Known False, or the reverse). *)
 procedure StoreSentLicenceYear(var aQso: ContestExchange; aKnown: boolean;
                                aYear: integer);
-(* No year: the field cleared and the zone slot DUMMYZONE. *)
+(* No year: the field cleared and the zone slot DUMMYZONE -- the slot so that
+   TryLicenceYearOf's fallback cannot read a pre-field record's year back out
+   of it (stage 4 keeps this one write; see the header above). *)
 procedure ClearLicenceYear(var aQso: ContestExchange);
 
 (* EDIT QSO's SAVE OF THE YEAR BOX for a contest of aKind (not rykNone) -- issue
    298, stage 2. Empty: no year (ClearLicenceYear). A year of the kind
    (ReceivedYearFromWord, ceiling the QSO's own year): stored with
-   StoreLicenceYear, so the zone slot and the field never disagree -- stage 1
-   saved a new zone with the OLD rcvd_year. Anything else answers False and
+   StoreLicenceYear, the field's one writer (stage 1 saved a new zone with
+   the OLD rcvd_year; since stage 4 the zone slot is not written). Anything
+   else answers False and
    leaves aQso as it was: the caller refuses the save. *)
 function ApplyEditedReceivedYear(aKind: TReceivedYearKind; const aText: string;
                                  var aQso: ContestExchange): boolean;
@@ -5762,6 +5798,30 @@ begin
       end;
 end;
 
+function ContestZoneMultiplierKey(aContest: TContestBase; const aQso: ContestExchange;
+                                  out aKey: integer): boolean;
+begin
+   (* See the declaration. *)
+   if (aContest <> nil) and (aContest.ReceivedYearKind <> rykNone) then
+      begin
+      (* THE YEAR, when it is a cell of the sheet. A four-digit year kind has
+         no sheet of a hundred cells (no such contest counts one yet), so it
+         answers no key rather than an index past the table. *)
+      Result := TryLicenceYearOf(aQso, aKey) and
+                (aKey >= 0)                   and
+                (aKey < aContest.ZoneMultiplierCount);
+      end
+   else
+      begin
+      aKey := aQso.Zone;
+      Result := aQso.Zone <> DUMMYZONE;
+      end;
+   if not Result then
+      begin
+      aKey := DUMMYZONE;
+      end;
+end;
+
 function ReceivedYearRange(aKind: TReceivedYearKind; aReferenceYear: integer;
                            out aLow, aHigh: integer): boolean;
 begin
@@ -6075,18 +6135,10 @@ end;
 
 procedure StoreLicenceYear(var aQso: ContestExchange; aYear: integer);
 begin
-   (* See the declaration. The field first -- what every reader reads since
-      stage 2 -- then the zone slot the multiplier sheet still counts. *)
+   (* See the declaration. The field only: the multiplier sheet reads it
+      through ContestZoneMultiplierKey since stage 4. *)
    aQso.RcvdYear := Word(aYear);
    aQso.RcvdYearKnown := True;
-   if (aYear >= 0) and (aYear <= 99) then
-      begin
-      aQso.Zone := Byte(aYear);
-      end
-   else
-      begin
-      aQso.Zone := DUMMYZONE;
-      end;
 end;
 
 procedure StoreSentLicenceYear(var aQso: ContestExchange; aKnown: boolean;

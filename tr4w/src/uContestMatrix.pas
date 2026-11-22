@@ -855,8 +855,10 @@ begin
    aRX.Zone := aSpec.Zone;
    (* A CONTEST THAT RECEIVES A YEAR keeps it in the year field, which every
       display and export reads since issue 298 stage 3 -- so the year goes in
-      through its ONE writer, StoreLicenceYear (which still sets the zone slot
-      to the same value for the multiplier sheet, so zone= does not move). *)
+      through its ONE writer, StoreLicenceYear. Since issue 298 stage 4 that
+      writes the field only and the multiplier sheet reads the field; the
+      zone slot keeps aSpec.Zone from the line above, so the score line's
+      zone= does not move. *)
    if ContestIdentity(Contest).ReceivedYearKind <> rykNone then
       begin
       StoreLicenceYear(aRX, aSpec.Zone);

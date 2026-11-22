@@ -59,7 +59,8 @@ uses uTelnet,
   MainUnit,
   FCONTEST,         // SentMyState -- the state sent, design 7.11 (M9a)
   uRoverState,      // RovingCall -- {ROVERCALL}, issues 133 and 87
-  uMessageText;     // MessageWordAt -- the brace words (2026-11-20)
+  uMessageText,     // MessageWordAt -- the brace words (2026-11-20)
+  uNet;             // ExpandNetPassWords -- {PASS B} and friends (issue 71)
 
 procedure SendCrypticDVPString(SendString: ShortString);
 
@@ -158,6 +159,15 @@ begin
      Exit;
      end;
   if length(SendString) = 0 then
+     begin
+     Exit;
+     end;
+  (* THE NETWORK PASS WORDS ({PASS B}, {PASS 14000}, {LASTPASSEDFREQ}) are
+    filled in BEFORE anything is keyed, from the stations the link holds
+    (issue 71). A word that cannot be (a station that is not on the network)
+    refuses the WHOLE message: the operator is told and nothing is sent, never
+    "PLS QSY" with the frequency missing. A message without one is untouched. *)
+  if not ExpandNetPassWords(SendString) then
      begin
      Exit;
      end;
@@ -442,9 +452,12 @@ begin
                  AddStringToBuffer(UTF8Encode(RovingCall(Settings.My.Call)), Config.CWTone);
                  end
               else
-                 begin
-                 AddStringToBuffer(UTF8Encode(SentPlaceNow), Config.CWTone);
-                 end;
+                 if WordName = MESSAGE_TOKEN_ROVERQTH then
+                    begin
+                    AddStringToBuffer(UTF8Encode(SentPlaceNow), Config.CWTone);
+                    end;
+              (* A pass word was filled in before the loop (ExpandNetPassWords);
+                one that reaches here is skipped, never keyed as letters. *)
               CharacterCount := CharacterCount + WordLength - 1;
               end;
 

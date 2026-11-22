@@ -196,9 +196,20 @@ begin
       Exit;
       end;
 
-   row := Item.Index + 1;
+   (* THE STATION ON THIS ROW. Rows are in the order stations were first
+     heard, not in id order, so the id comes from uNet's own table. *)
+   row := NetClientIdAtRow(Item.Index);
    if (row < Low(StatusArray)) or (row > High(StatusArray)) then
       begin
+      Exit;
+      end;
+
+   (* A STATION A PASS WORD FOUND MISSING ({PASS B}, issue 71): red with white
+     text until it is heard again, so a refused message is not a silent drop. *)
+   if PassMissingStation = AnsiChar(Ord('A') + row - 1) then
+      begin
+      Sender.Canvas.Brush.Color := clRed;
+      Sender.Canvas.Font.Color := clWhite;
       Exit;
       end;
 

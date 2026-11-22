@@ -345,8 +345,10 @@ function ContestSplitsRoverCallOnExport(aContest: TContestHandle): boolean;
 
   The contest's own answer, not a list: True when its class STATES A RECEIVED
   YEAR (TContestBase.ReceivedYearKind is not rykNone -- the European HF
-  Championship and KVP, whose zone slot holds the year first licensed, since
-  StoreLicenceYear writes both). False for an unknown handle and for
+  Championship and KVP, whose zone slot held the year first licensed until
+  issue 298 stage 4, 2026-11-22, when StoreLicenceYear stopped writing it --
+  an OLD log's slot still holds it, which is what this carries). False for an
+  unknown handle and for
   NoContest. Repointed at stage 2 (2026-11-12) from "MyZoneIsAStationZone is
   False", the SENT side's question; the two agree for every registered
   contest, which uTestLogReceivedYear walks the registry to pin. *)

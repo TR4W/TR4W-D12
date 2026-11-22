@@ -48,17 +48,22 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   HF Championship's "year licensed" multiplier -- while FCONTEST's
   commented-out line names BranchZones. Which one KVP's rules actually
   want has not been checked against the sponsor; the row's value is
-  transcribed exactly. Since M11 S5 the rule is this class's own --
+  transcribed exactly. CHECKED 2026-11-22 (docs/ContestRules/KVP/rules.md,
+  the ZRS rules): the year of first licence is right -- rule VI, each
+  different two-digit number, per mode. Open from that reading, not built:
+  the year SENT counts as worked (rule VI), 80 m CW/SSB only (rule III), and
+  the rules' Cabrillo example says CONTEST: KV prvenstvo ZRS. Since M11 S5 the rule is this class's own --
   ZoneMultiplierCount (100) and NumbersZonesFromZero (True), which LOGDUPE
   and LOGEDIT read from the session's zone kind until then.
 
   THE YEAR HAS ITS OWN PARSER SINCE 2026-11-11, as the European HF
   Championship's: aParsers.ParseRSTLicenceYear, 00..99, which does not ask
   the CTY zone mode (it was the zone parser, accepted only because this
-  contest runs ITU zone mode). Still STORED in the zone slot
-  (uContestBase.LicenceYearOf / StoreLicenceYear) and counted on the zone
-  sheet: no column, stored value or export byte changed. See
-  uContestEuropeanHFC's header. Since issue 298 stage 2 (2026-11-12) it
+  contest runs ITU zone mode). Stored in its own field (RcvdYear,
+  rcvd_year, through uContestBase.StoreLicenceYear) and, since issue 298
+  stage 4 (2026-11-22), counted on mo's numbered zone table keyed on that
+  field (ContestZoneMultiplierKey) -- the zone slot no longer carries it.
+  See uContestEuropeanHFC's header. Since issue 298 stage 2 (2026-11-12) it
   states its kind, GetReceivedYearKind = rykTwoDigitYear (DXLog's S5KVP.txt:
   "last 2 digits of year of first licence", =0-99), and the readers read the
   year's own field. Stage 3 (2026-11-12): display and export read it too --

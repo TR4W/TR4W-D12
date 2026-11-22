@@ -2760,3 +2760,13 @@ msgctxt "TC_HELP_ENFORCE_VALID_CALLSIGN"
 msgid "TRUE refuses to log a QSO whose base call (the longest part around any /, so W1AW/P, VE3/W1AW and NY4I/PIN all count as W1AW or NY4I) is not a DXCC entity in the country file. The QSO is not logged, the call and exchange stay as typed, and the reason is shown on the status line. No check is made when no country file is loaded. Default FALSE."
 msgstr ""
 
+#. Config command: ENABLE N1MM LOG LISTENER   (default: FALSE)
+msgctxt "TC_HELP_ENABLE_N1MM_LOG_LISTENER"
+msgid "Accept QSOs logged by JTDX (TCP port 52001) or JTAlert and WSJT-X (UDP port 2333), sent in N1MM Logger+'s Log format. Off by default. Anything that can reach the listener can add QSOs to the open contest log."
+msgstr ""
+
+#. Config command: N1MM LISTEN ADDRESS   (default: 127.0.0.1)
+msgctxt "TC_HELP_N1MM_LISTEN_ADDRESS"
+msgid "The address the N1MM log listener binds to. 127.0.0.1 accepts only the same computer; use this computer's LAN address to accept QSOs from another computer. Blank means 127.0.0.1."
+msgstr ""
+

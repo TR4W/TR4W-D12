@@ -478,6 +478,21 @@ the rest is keyed to the end -- never invent an abort; prosigns undeclared
 (literal); `CWFrameRule(0, False, 1.25)`. In SO2R, `EnsureSoleTransmitter`
 cannot silence a Commander radio mid-message.
 
+**FLRIG IS A NATIVE XML-RPC RADIO NOW, NOT A HAMLIB BRIDGE** (issue 5,
+2026-11-22, NOT bench-tested). `uRadioFLRig` + the pure leaf `uFLRigXmlRpc`
+took over the `FLRIG` enum registration (so profiles keyed `FLRIG` load it),
+display name "FLRig (XML-RPC)", `[rlNetwork]`, port 12345, HamLib id 4 kept so
+"Drive through HamLib" still reaches the bridge. The Commander shape, copied
+not shared: no reading thread, a private `TIdHTTP` only the polling thread
+touches (own IOHandler via `IndyLinkOwnHandler`, which now takes
+`TIdTCPClientCustom`), sets queued, un-key owed across a dropped link. Method
+names were read from the `flrig.exe` 2.0.12 string table, types from Hamlib's
+`rigs/dummy/flrig.c` -- verify there before adding one. Mode names come from
+`rig.get_modes`; the table only says what a name means. NOT declared:
+`rcCWByCAT` (`cwio_*` is FLRig's own DTR/RTS keyer), keep-alive, PTT
+confirmed. `rig.get_AB` is logged, not followed. `uTestRegistryTaxonomy`
+carries FLRIG as a known divergence from the retired HamLib-only set.
+
 **`RegisterRadioById`'s id must be a quoted LITERAL.** `Lint-RadioRegistry`
 silently skips a call with fewer than two literals. A constant id once hid
 this radio from the count and from the duplicate-name check.

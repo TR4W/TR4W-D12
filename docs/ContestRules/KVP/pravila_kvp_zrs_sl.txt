@@ -1,0 +1,197 @@
+Source: http://kvp.hamradio.si/pravila.html (sponsor page, Zveza radioamaterjev Slovenije)
+Retrieved: 2026-11-22, via the Internet Archive snapshot of 2025-01-15
+  http://web.archive.org/web/20250115213222/http://kvp.hamradio.si/pravila.html
+  (the live host did not answer on 2026-11-22). Text extracted from the HTML, verbatim, Slovenian.
+
+Pravila za KV prvenstvo ZRS
+
+I. ORGANIZATOR
+
+Organizator tekmovanja je Zveza radioamaterjev Slovenije (ZRS). V tekmovanju lahko sodelujejo slovenski radioamaterji, ki imajo veljavno dovoljenje za uporabo radijske postaje.
+
+II. DATUM IN ČAS
+
+Tekmovanje je vsako leto APRILA (POMLADNI DEL) in NOVEMBRA (JESENSKI DEL), v nedeljo tretjem polnem vikendu, v časovnem terminu od 09:00 do vključno 10:59 po lokalnem času.
+
+III. FREKVENCE IN VRSTA DELA
+
+Tekmovanje poteka na 80-metrskem pasu istočasno v telegrafiji in telefoniji:
+
+3510 – 3600 kHz telegrafija (CW),
+
+3600 – 3775 kHz telefonija (SSB).
+
+V tekmovanju je dovoljeno vzpostavljati zveze samo v navedenih frekvenčnih pasovih. Veljavne so samo zveze v isti vrsti dela (CW - CW in SSB - SSB). Postajam je dovoljeno delati samo CW, samo SSB ali obe vrsti dela, vendar je istočasno dovoljen samo en signal na frekvenčnem pasu. Isto postajo je dovoljeno delati CW in SSB.
+
+IV. IZMENJAVA RAPORTOV
+
+Postaje morajo izmenjati raport, ki je sestavljen iz ocene sprejema po RS(T) sistemu in dvomestnega števila, ki pomeni skrajšano oznako leta prvega operaterskega izpita za osebne postaje oziroma izdaje prvega dovoljenja za delo klubske postaje.
+
+Primera:
+
+OSEBNA POSTAJA, kjer je operater opravil izpit leta 2000, odda raport 599 00 v CW oziroma 59 00 v SSB.
+
+KLUBSKA POSTAJA je dobila prvo dovoljenje za delo leta 1963, zato vsi operaterji na tej postaji oddajo raport 599 63 v C W oziroma 59 63 v SSB načinu dela.
+
+V. TOČKOVANJE
+
+Vsaka kompletna SSB zveza prinaša eno (1) točko, vsaka kompletna CW zveza pa dve (2) točki. Nekompletne in dvojne (ponovljene) zveze ne prinašajo točk.
+
+VI. MNOŽITELJI
+
+Vsako različno dvomestno število iz raporta (skrajšana letnica) predstavlja en množitelj. Vsak različen množitelj se upošteva posebej za vsako vrsto dela (CW in SSB).
+
+Množitelj oddajan v tekmovanju se šteje kot delan množitelj.
+
+VII. REZULTAT
+
+Končni rezultat v tekmovanju (skupno število točk) je vsota točk CW in SSB zvez pomnožena z vsoto množiteljev.
+
+Primer izračuna rezultata za 25 CW in 45 SSB zvez ter 20 množiteljev na CW in 30 na SSB:
+
+25 CW zvez x 2 = 50 točk, 20 CW množiteljev
+
+45 SSB zvez x 1 = 45 točk, 30 SSB množiteljev
+
+skupaj 95 točk x 50 množiteljev
+
+REZULTAT : 4750 točk
+
+VIII. KATEGORIJE
+
+Klubske in osebne postaje lahko konkurirajo v naslednjih kategorijah:
+
+KATEGORIJA »VELIKA MOČ - CW«
+
+KATEGORIJA »VELIKA MOČ - SSB«
+
+KATEGORIJA »VELIKA MOČ - CW/SSB«
+
+To so postaje, ki v tekmovanju uporabljajo oddajnik z močjo, ki je večja od 100W na priključku antene. Postaja lahko konkurira samo v eni od treh kategorij.
+
+KATEGORIJA »MALA MOČ - CW«
+
+KATEGORIJA »MALA MOČ - SSB«
+KATEGORIJA »MALA MOČ - CW/SSB«
+
+To so postaje, ki v tekmovanju uporabljajo oddajnik z močjo, ki je večja od 5 W in manjša ali enaka 100W na priključku antene. Postaja lahko konkurira samo v eni od treh kategorij.
+
+KATEGORIJA »QRP - CW«
+
+KATEGORIJA »QRP - SSB«
+
+KATEGORIJA »QRP - CW/SSB«
+
+To so postaje, ki v tekmovanju uporabljajo oddajnik z močjo, ki ni večja od 5 W na priključku antene. Postaja lahko konkurira samo v eni od treh kategorij.
+Poleg osnovne kategorije lahko postaja sodeluje še v naslednjih kategorijah, če so v poslanem dnevniku navedene (kategorije se ne izključujejo).
+
+KATEGORIJA »NOVINCI«
+
+Postaje, kjer od prve izdane licence niso potekla 3 leta. Na klubski postaji šteje licenca operaterja ne glede na dano številko klubske postaje v tekmovanju, v kolikor dela samo on.
+
+KATEGORIJA »EKIPE«
+
+Ekipo sestavljajo do tri postaje ne glede na članstvo v radioklubu, moč oddajnika ali vrsto dela po pravilih tekmovanja. Ista postaja je lahko v sestavi samo ene ekipe. Skupni rezultat je seštevek rezultatov vseh postaj v ekipi. Obvezna je prijava ekipe pred tekmovanjem na spletni strani ZRS. Veljavna je zadnja poslana prijava, ob prispetju prijave se podatki avtomatsko javno objavijo na spletni strani KVP ZRS.
+
+KATEGORIJA »RADIOKLUBI«
+
+Skupni rezultat radiokluba je seštevek rezultatov vseh klubskih in osebnih postaj, ki so člani tega radiokluba. Tekmovalni dnevniki (klubskih ali osebnih postaj) brez navedenega istega znaka radiokluba, se ne upoštevajo za to kategorijo.
+Postaje so razvrščene v kategorije glede na moč oddajnika (VELIKA MOČ, MALA MOČ, QRP) in vrsto dela (CW, SSB, CW/SSB), v kategoriji RADIOKLUBI, EKIPE in NOVINCI pa na osnovi prijave v tekmovalnem dnevniku.
+
+IX. TEKMOVALNI DNEVNIKI
+
+Dnevnike je potrebno poslati v elektronski obliki v Cabrillo formatu. Zapis kategorije tekmovanja mora imeti eno izmed naslednjih oblik (odvisno od izbrane kategorije):
+
+SINGLE-OP 80M HIGH CW
+
+SINGLE-OP 80M HIGH SSB
+
+SINGLE-OP 80M HIGH MIXED
+
+SINGLE-OP 80M LOW CW
+
+SINGLE-OP 80M LOW SSB
+
+SINGLE-OP 80M LOW MIXED
+
+SINGLE-OP 80M QRP CW
+
+SINGLE-OP 80M QRP SSB
+
+SINGLE-OP 80M QRP MIXED
+
+Na spletni strani ZRS je objavljenih nekaj primerov programov in prevajalnik z navodili za izpolnjevanje dnevnikov. Ime datoteke (dnevnika) mora vsebovati znak uporabljen v tekmovanju in končnico cbr. Primer (s59xxx.cbr). Dnevnik mora vsebovati podatke o zvezah razvrščenih po času (ne po vrsti dela). Navodila so na spletni strani ZRS.
+
+Primer dnevnika:
+
+START-OF-LOG: 2.0
+CREATED-BY: LOG2CBR by S57AD
+CALLSIGN: S59xxx
+CONTEST: KV prvenstvo ZRS
+CATEGORY: SINGLE-OP BOM LOW MIXED
+CATEGORY-OVERLAY: ROOKIE
+CLUB: S59ABC
+CLAIMED-SCORE: 2177
+OPERATORS: S59XXX
+NAME: Franc Verzel
+ADDRESS: Dečkova 57
+ADDRESS: 1000 Ljubljana
+ADDRESS:
+SOAPBOX:
+QSO: 3500 CW 2005-11-20 0800 S59XXX 599 01 S52L 599 02
+QSO: 3500 PH 2005-11-20 0803 S59XXX 59 01 S51BH 59 50
+OSO: 3500 PH 2005-11-20 0804 S59XXX 59 01 S51O 59 76
+END-OF-LOG:
+
+Nepravilno sprejeti klicni znaki, nepravilno sprejeti množitelji, zveza, ki je ni v dnevniku korespondenta, nepravilno označena vrsta dela (CW zveza vpisana kot SSB ali obratno), pomenijo napako in odvzem zveze. Prav tako se odvzamejo vse zveze, ki se v dnevnikih pojavijo le enkrat in jih ni možno preveriti na osnovi prejetega dnevnika (unikatne zveze).
+
+X. NAČIN IN ROK POŠILJANJA DNEVNIKOV
+
+Rok za pošiljanje dnevnikov je najkasneje 5 dni po tekmovanju, na spletni strani tekmovanja prek tekmovalnega robota, ki sprejema dnevnike. Dnevniki se izjemoma sprejmejo tudi na elektronski naslov kvp@hamradio.si.
+
+XI. UGOTOVITEV IN OBJAVA REZULTATOV
+
+Organizator tekmovanja izdela na osnovi pregledanih dnevnikov razvrstitve za vse kategorije. Zmagovalci v posameznih kategorijah so postaje, ekipa in radioklub, ki osvojijo največji rezultat posebej za pomladni in jesenski del.
+Končni zmagovalci za posamezno leto in v posameznih kategorijah so postaje, ekipa in radioklub, ki osvojijo največji končni rezultat, ki je seštevek pomladnega in jesenskega dela.
+V kolikor postaja v pomladanskem in jesenskem delu konkurira v različnih kategorijah, se kot končni rezultat upoštevata oba. Končne rezultate organizator objavi na spletni strani ZRS, vključno s prejetimi dnevniki.
+
+XII. NAGRADE
+
+Na osnovi doseženih rezultatov organizator podeljuje naslednje nagrade:
+
+V KATEGORIJAH »VELIKA MOČ«, »MALA MOČ«, »QRP« (ločeno »CW«, »SSB« in »CW/SSB« - skupaj 9 kategorij) se upošteva sledeče:
+
+1. mesto plaketa in diploma,
+
+2. - 5. mesto diploma
+
+KATEGORIJA"NOVINCI”
+
+1. mesto plaketa in diploma,
+
+2. - 5. mesto diploma.
+
+KATEGORIJA ”EKIPE”
+
+1. mesto plaketa in diploma (za vsako postajo v ekipi),
+
+2. - 5. mesto diploma (za vsako postajo v ekipi)
+
+KATEGORIJA »RADIOKLUBI«
+
+1. mesto plaketa in diploma,
+
+2. - 5. mesto diploma.
+
+Zmagovalec v kategoriji »RADIOKLUBI« je zmagovalec KV prvenstva ZRS za določeno leto in prejme prehodni pokal. V kolikor isti radioklub osvoji pokal trikrat zapored, ga prejme v trajno last.
+
+XIII. KONČNE DOLOČBE
+
+Za ugotovitev in objavo rezultatov lahko organizator tekmovanja imenuje tekmovalno komisijo. Odločitve komisije so dokončne. Pravico tolmačenja in sprememb teh pravil ima organizator tekmovanja.
+
+Pravila je sprejel Upravni odbor ZRS na seji dne 29.01.2013 in začnejo veljati takoj.
+POJASNILA:
+
+V kolikor tekmovalna postaja vodi dnevnik napisan na roke, lahko poleg prepisanega dnevnika v elektronskem formatu v roku za pošiljanje dnevnikov, pošlje sliko tekmovalnega dnevnika na elektronski naslov tekmovanja. Tekmovalna komisija pri tem lahko upošteva napake, ki morebiti nastanejo pri pripisovanju dnevnika in jih ustrezno odpravi.
+
+Skupni rezultat v kategoriji radioklubi je seštevek rezultatov znakov, ki pripadajo radioklubu in znakov, ki so v bazi ZRS navedeni kot člani tega kluba in imajo urejeno članstvo v letu tekmovanja.

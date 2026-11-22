@@ -11,9 +11,11 @@ unit uTestLicenceYearEntry;
    Until today the year went through the ZONE parser and was accepted only
    because FoundContest sets ITU zone mode for these contests, so the 40-CQ-zone
    limit never ran. Now LOGSTUFF.ProcessRSTAndLicenceYearExchange reads the zone
-   parser's words (one shared reader) with no zone rule. The year is still
-   STORED in the zone slot (uContestBase.LicenceYearOf / StoreLicenceYear) and
-   counted on the zone sheet, so no stored value or export byte moves.
+   parser's words (one shared reader) with no zone rule. The year is STORED in
+   its own field (RcvdYear, rcvd_year -- issue 298) through StoreLicenceYear,
+   which since stage 4 (2026-11-22) no longer copies it into the zone slot;
+   mo's numbered zone table counts it, keyed on the field
+   (uContestBase.ContestZoneMultiplierKey). No export byte moves.
 
    What is pinned here: every year 00..99, bare and after the report, on CW and
    Phone; RS against RST; every refusal names a YEAR (SExchangeNoLicenseYear
@@ -49,6 +51,8 @@ type
       procedure Test_BothContestsParseTheYearThroughTheEngine;
       procedure Test_TheYearCountsOncePerBandRegardlessOfMode;
       procedure Test_ExportBytesAreUnchanged;
+      procedure Test_TheSheetKeyIsTheYearFieldNotTheZoneSlot;
+      procedure Test_StoredRecordsCountTheirYearOnLoadAndRescore;
    end;
 
 implementation
@@ -507,6 +511,193 @@ begin
       end;
 end;
 
+(* ISSUE 298 STAGE 4 (2026-11-22): THE SHEET'S KEY IS THE YEAR FIELD.
+   uContestBase.ContestZoneMultiplierKey is the one answer LOGDUPE's four
+   sheet sites ask (credit, new?, mark, count). A year contest answers its
+   received year -- never a value left in the zone slot -- and every other
+   contest its zone slot, exactly as the sites read before. *)
+procedure TLicenceYearEntryTests.Test_TheSheetKeyIsTheYearFieldNotTheZoneSlot;
+var
+   rx: ContestExchange;
+   key: integer;
+   c: ContestType;
+   who: string;
+const
+   YEAR_CONTESTS: array[0..1] of ContestType = (EUROPEANHFC, KVP);
+begin
+   BeginTest('Test_TheSheetKeyIsTheYearFieldNotTheZoneSlot');
+   for c in YEAR_CONTESTS do
+      begin
+      who := string(ContestTypeSA[c]) + ': ';
+
+      rx := Default(ContestExchange);
+      rx.Zone := 14;                       (* a value the slot happens to hold *)
+      StoreLicenceYear(rx, 85);
+      CheckEquals(14, integer(rx.Zone), who + 'StoreLicenceYear leaves the zone slot alone');
+      CheckTrue(ContestZoneMultiplierKey(ContestIdentity(ContestHandleOf(c)), rx, key),
+                who + 'a year is a key');
+      CheckEquals(85, key, who + 'the key is the year, not the slot''s 14');
+
+      StoreLicenceYear(rx, 0);
+      CheckTrue(ContestZoneMultiplierKey(ContestIdentity(ContestHandleOf(c)), rx, key),
+                who + 'year 00 is a key');
+      CheckEquals(0, key, who + 'the cell 0');
+
+      ClearLicenceYear(rx);
+      CheckFalse(ContestZoneMultiplierKey(ContestIdentity(ContestHandleOf(c)), rx, key),
+                 who + 'no year: no key');
+      CheckEquals(DUMMYZONE, key, who + 'answered as DUMMYZONE');
+
+      (* A RECORD FROM BEFORE THE FIELD -- a protocol-2 peer's, caught up from
+         a server log: Known False and the year in the slot. TryLicenceYearOf's
+         fallback still counts it. *)
+      rx := Default(ContestExchange);
+      rx.Zone := 33;
+      CheckTrue(ContestZoneMultiplierKey(ContestIdentity(ContestHandleOf(c)), rx, key),
+                who + 'a pre-field record''s year still keys');
+      CheckEquals(33, key, who + 'from the slot, through the one fallback');
+
+      (* A four-digit year is no cell of a hundred. *)
+      rx := Default(ContestExchange);
+      StoreLicenceYear(rx, 1985);
+      CheckFalse(ContestZoneMultiplierKey(ContestIdentity(ContestHandleOf(c)), rx, key),
+                 who + 'a year past the sheet is no key');
+      end;
+
+   (* A ZONE CONTEST: the zone slot, whatever the year field says. *)
+   rx := Default(ContestExchange);
+   rx.Zone := 14;
+   rx.RcvdYear := 85;
+   rx.RcvdYearKnown := True;
+   CheckTrue(ContestZoneMultiplierKey(ContestIdentity(ContestHandleOf(CQWWCW)), rx, key),
+             'CQ WW: its zone is a key');
+   CheckEquals(14, key, 'CQ WW: the zone, never the year field');
+   rx.Zone := DUMMYZONE;
+   CheckFalse(ContestZoneMultiplierKey(ContestIdentity(ContestHandleOf(CQWWCW)), rx, key),
+              'CQ WW: no zone, no key');
+   rx.Zone := 14;
+   CheckTrue(ContestZoneMultiplierKey(nil, rx, key), 'no contest: the zone slot');
+   CheckEquals(14, key, 'no contest: 14');
+end;
+
+(* A STORED ROW OF A YEAR CONTEST -- rcvd_zone NULL (DUMMYZONE), rcvd_year
+   set, as LOGDUPE sees it on a load or a rescore -- COUNTS ITS YEAR. The
+   loader trusts the stored ZoneMult flag (#137) and marks the cell the key
+   names; the rescore re-derives the flag (SetMultFlags) in log order. KVP
+   counts per band AND mode (cfMultByBand, cfMultByMode), EUHFC per band
+   regardless of mode (rule 6). The worked count (issue 12) follows the
+   same key. *)
+procedure TLicenceYearEntryTests.Test_StoredRecordsCountTheirYearOnLoadAndRescore;
+var
+   savedContest: TContestHandle;
+   savedByBand, savedByMode: boolean;
+   savedList: TCallsignsList;
+   savedQualified: TQualifiedDupeSheet;
+   rx: ContestExchange;
+
+   function Stored(const aCall: string; aYear: integer; aBand: BandType;
+                   aMode: ModeType): ContestExchange;
+   begin
+      Result := Default(ContestExchange);
+      Result.Callsign := ShortString(aCall);
+      Result.Band := aBand;
+      Result.Mode := aMode;
+      Result.Zone := DUMMYZONE;          (* rcvd_zone NULL: no zone *)
+      StoreLicenceYear(Result, aYear);
+   end;
+
+   (* THE RESCORE'S ORDER: the flag against the sheet so far, then the sheet. *)
+   function Rescored(const aCall: string; aYear: integer; aBand: BandType;
+                     aMode: ModeType): ContestExchange;
+   begin
+      Result := Stored(aCall, aYear, aBand, aMode);
+      Sheet.SetMultFlags(Result);
+      Sheet.AddQSOToSheets(@Result, False);
+   end;
+
+   procedure UseContest(aType: ContestType);
+   var
+      h: TContestHandle;
+   begin
+      h := ContestHandleOf(aType);
+      Contest := h;
+      ReleaseActiveContest;
+      Settings.Mult.ByBand := ContestIdentity(h).MultByBand;
+      Settings.Mult.ByMode := ContestIdentity(h).MultByMode;
+      mo.ClearAllMults;
+   end;
+
+begin
+   BeginTest('Test_StoredRecordsCountTheirYearOnLoadAndRescore');
+   CheckTrue(ContestIdentity(ContestHandleOf(KVP)).MultByMode, 'KVP: multipliers by mode');
+   CheckTrue(ContestIdentity(ContestHandleOf(KVP)).MultByBand, 'KVP: and by band');
+
+   savedContest := Contest;
+   savedByBand := Settings.Mult.ByBand;
+   savedByMode := Settings.Mult.ByMode;
+   savedList := CallsignsList;
+   savedQualified := QualifiedDupes;
+   CallsignsList := TCallsignsList.Create;
+   QualifiedDupes := TQualifiedDupeSheet.Create;
+   try
+      (* THE RESCORE, KVP: per band and mode. *)
+      UseContest(KVP);
+      rx := Rescored('S50A', 85, Band80, CW);
+      CheckTrue(rx.ZoneMult, 'KVP 85 on 80 m CW: new');
+      rx := Rescored('S51B', 85, Band80, Phone);
+      CheckTrue(rx.ZoneMult, 'KVP 85 on 80 m Phone: new -- by mode');
+      rx := Rescored('S52C', 85, Band80, CW);
+      CheckFalse(rx.ZoneMult, 'KVP 85 on 80 m CW again: not new');
+      rx := Rescored('S53D', 84, Band80, CW);
+      CheckTrue(rx.ZoneMult, 'KVP 84 on 80 m CW: a different year, new');
+      (* KVP is one band, 80 m (docs/ContestRules/KVP/rules.md, rule III);
+         rule VI: "Vsak razlicen mnozitelj se uposteva posebej za vsako vrsto
+         dela" -- each multiplier counts separately per mode, which is what
+         is pinned. *)
+      CheckEquals(2, Integer(mo.MTotals[Band80, CW, rmZone]), 'KVP: two years on 80 m CW');
+      CheckEquals(1, Integer(mo.MTotals[Band80, Phone, rmZone]), 'KVP: one on 80 m Phone');
+      CheckEquals(2, mo.WorkedCount(rmZone, '85', Band80, CW),
+                  'KVP: 85 worked twice on 80 m CW (issue 12 count keys on the year)');
+      CheckFalse(mo.IsZnMult(85, Band80, CW), 'the cell is the year''s, 85');
+
+      (* THE LOAD, EUHFC: the stored flag is trusted, and marks the YEAR's
+         cell -- the zone slot is DUMMYZONE and would mark nothing. *)
+      UseContest(EUROPEANHFC);
+      rx := Stored('S50A', 84, Band20, CW);
+      rx.ZoneMult := True;
+      Sheet.AddQSOToSheets(@rx, False);
+      CheckFalse(mo.IsZnMult(84, Band20, MultiplierSheetMode(CW)),
+                 'EUHFC load: the stored flag marked year 84 on 20 m');
+      CheckEquals(1, Integer(mo.MTotals[Band20, CW, rmZone]), 'EUHFC load: one year counted');
+
+      (* AND THE RESCORE AFTER IT AGREES: 84 on Phone, same band, is not new. *)
+      rx := Rescored('S51B', 84, Band20, Phone);
+      CheckFalse(rx.ZoneMult, 'EUHFC 84 on 20 m Phone after CW: not new (regardless of mode)');
+      rx := Rescored('S52C', 83, Band20, Phone);
+      CheckTrue(rx.ZoneMult, 'EUHFC 83: a different year, new');
+
+      (* A QSO WITH NO YEAR EARNS NO YEAR MULTIPLIER, and the sheet is not
+         touched at the zone slot. *)
+      rx := Default(ContestExchange);
+      rx.Callsign := 'S59Z';
+      rx.Band := Band15;
+      rx.Mode := CW;
+      ClearLicenceYear(rx);
+      Sheet.SetMultFlags(rx);
+      CheckFalse(rx.ZoneMult, 'EUHFC: no year, no multiplier');
+   finally
+      mo.ClearAllMults;
+      QualifiedDupes.Free;
+      QualifiedDupes := savedQualified;
+      CallsignsList.Free;
+      CallsignsList := savedList;
+      Settings.Mult.ByBand := savedByBand;
+      Settings.Mult.ByMode := savedByMode;
+      Contest := savedContest;
+      ReleaseActiveContest;
+      end;
+end;
+
 procedure TLicenceYearEntryTests.RunAllTests;
 begin
    Test_EveryYearIsAcceptedBareAndAfterTheReport;
@@ -516,6 +707,8 @@ begin
    Test_BothContestsParseTheYearThroughTheEngine;
    Test_TheYearCountsOncePerBandRegardlessOfMode;
    Test_ExportBytesAreUnchanged;
+   Test_TheSheetKeyIsTheYearFieldNotTheZoneSlot;
+   Test_StoredRecordsCountTheirYearOnLoadAndRescore;
 end;
 
 end.

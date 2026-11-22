@@ -331,6 +331,8 @@ uses
   utils_math,
   utils_file,
   uWSJTX,
+  uInboundQso,
+  uN1MMLogListener,
   uHamScore,
   uExchangeBuilder,
   uGridLookup,
@@ -3458,6 +3460,12 @@ begin
       wsjtx.Start;
       end;
    end;
+
+   (* THE N1MM LOG LISTENER (issue 45): the object always exists, and binds its
+     sockets only when ENABLE N1MM LOG LISTENER is on -- so the Preferences box
+     takes effect live.  Here, after the window and the log are up, because a
+     record it receives is logged exactly as a typed QSO is. *)
+   N1MMLogListenerStartup;
 
    // Started AFTER the radios are set up, so the init burst a client gets on
    // connect describes real radios rather than zeroes.  Loopback only: this

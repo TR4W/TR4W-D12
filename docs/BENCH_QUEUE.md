@@ -188,6 +188,24 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-22 -- FLRIG IS A NATIVE RADIO, OVER XML-RPC (issue 5; radio-factory)
+
+The radio type "FLRig (XML-RPC)" (config token `FLRIG`, unchanged, so an existing FLRig profile loads it) now talks to FLRig's XML-RPC server directly instead of through HamLib. Nothing here has touched FLRig: method names were read from the `flrig.exe` 2.0.12 string table, argument and answer types from Hamlib's `rigs/dummy/flrig.c`, and the tests use constructed responses (`uTestFLRigXmlRpc`). Setup: start `C:\radio\flrig-2.0.12\flrig.exe` driving the K4, confirm its XML-RPC server is on (default port 12345), then in TR4W pick "FLRig (XML-RPC)" on the network link with host 127.0.0.1 and port 12345, "Drive through HamLib" UNTICKED. Set `DEBUG LOG LEVEL = TRACE` to see `[FLRig TX]` / `[FLRig RX]`.
+
+- [ ] **Connects.** `tr4w.log` shows `[FLRig] answering at 127.0.0.1:12345, driving "<rig name>"` and `[FLRig] rig modes: ...`. Paste that modes line into the issue: it is the K4's real `rig.get_modes` list, and the write mapping depends on it.
+- [ ] **Capture one real answer of each kind** (TRACE lines): `rig.get_vfoA`, `rig.get_modeA`, `rig.get_ptt`, `rig.get_split`, `rig.get_AB`, `rig.get_modes`. In particular: does `rig.get_vfoA` come back as plain text or as a `<double>`? Both decode; the capture should become a golden test.
+- [ ] **Frequency and mode follow the K4** on VFO A and VFO B, including CW-R and DATA / DATA-R if the K4's list has them.
+- [ ] **Band-map click tunes the K4** (`rig.set_vfoA`), and a mode change sends the K4's own spelling (`rig.set_modeA`).
+- [ ] **Split** from the `-` entry and from a band-map QSX: VFO B gets the TX frequency (`rig.set_vfoB`), split goes on (`rig.set_split 1`), and the split indicator follows `rig.get_split`.
+- [ ] **PTT by CAT** (`rig.set_ptt`): keys and un-keys the K4. Classified NOT CONFIRMED until this passes; if it does, move "FLRig (XML-RPC)" to the confirmed list (constructor plus `uTestRadioPTTByCAT`).
+- [ ] **Un-key after a dropped link:** key by CAT, kill FLRig, un-key in TR4W (nothing happens: no link), restart FLRig. On reconnect the log says `the rig was keyed when the link was lost -- sending rig.set_ptt 0` and the K4 is in receive.
+- [ ] **Connection reuse:** TR4W asks for HTTP/1.1 keep-alive (`hoKeepOrigProtocol`). While connected, run `netstat -an | findstr 12345` twice a few seconds apart: ONE `ESTABLISHED` line that stays is reuse; a growing pile of `TIME_WAIT` lines means FLRig closes after each answer and every poll (seven requests every 250 ms) opens a new connection. Indy reconnects silently in that case, so the log will NOT show it -- report what netstat shows.
+- [ ] **Switch the K4 to VFO B inside FLRig.** The log should say `FLRig reports VFO B active`. TR4W still treats A as the receive VFO; report what the main window showed, so following B can be designed.
+- [ ] **FLRig with no rig connected:** TR4W shows the radio connected but not operational (`rig.get_vfoA` answers 0), and recovers when FLRig reaches the rig.
+- [ ] **CW is NOT offered by CAT** for this radio, on purpose: FLRig's `cwio_*` methods drive FLRig's own DTR/RTS keyer, not the K4's CAT text. If NY4I wants CW through FLRig's cwio, that is a design question (it has no stop method in the 2.0.12 method list).
+
+---
+
 ## Added 2026-11-22 -- PTT BY CAT: "NOT CONFIRMED" IS LOGGED, "NOT SUPPORTED" IS SHOWN (issue 36; radio-factory)
 
 Each radio now carries what the wiki "TR4W Feature to Radio Feature Matrix" says about PTT by CAT: confirmed (K4, K3, KX3, TS-590 and sixteen Icoms), known absent (IC-746 and IC-718), or not confirmed (everything else). Nothing is refused: the PTT command is still sent exactly as before. With "Key the transmitter with a CAT command" ON, a not-confirmed radio gets one `PTT via CAT is enabled but not confirmed for <radio>` line in `tr4w.log`, and a known-absent radio gets a notice on the main window, with a beep. Each radio is reported once per session. Unit-pinned in `uTestRadioPTTByCAT`.
@@ -7892,3 +7910,19 @@ reason while the log is read-only. Fill: ALERT COLOR, black or white text.
 - [ ] **Not built in this pass, for NY4I's judgement on screen**: the "Call" / "Exchange" captions, the shared
   background and the focus outline. No cell beside the fields is free (see uMainLayout.EntryStatusRect), and an
   outline inside a field takes text height (18 px field, 16 px font at ws 13).
+
+## Added 2026-11-22 -- THE EUHFC / KVP YEAR MULTIPLIER IS COUNTED FROM THE YEAR FIELD (issue 298 stage 4)
+
+The received licence year is no longer copied into the zone slot; the multiplier sheet keys on rcvd_year. The corpus
+has no EUHFC or KVP log, so only a real log can show the scoring did not move.
+
+- [ ] **An existing EUHFC log, rescored.** Open a European HF Championship log made before this build, note the
+  totals (QSOs, Years, score), run /RESCORE (or Edit QSO and save one row). EXPECT the same Years count and score.
+- [ ] **New QSOs count their year.** In that log (or a new one) log 599 85 on 20 m CW, 59 85 on 20 m SSB, 599 85 on
+  40 m CW, 599 00 on 20 m CW. EXPECT Years goes up by 3 (85 and 00 on 20 m, 85 on 40 m; the 20 m SSB 85 is not new),
+  the remaining-years window drops 85 and 00 on 20 m, and the new rows' rcvd_zone is NULL in the .db (rcvd_year holds
+  the year).
+- [ ] **KVP counts per mode.** In a KVP log on 80 m: 599 85 CW, then 59 85 SSB. EXPECT both are new multipliers (the
+  totals rows show CW Years / Ph Years, one each).
+- [ ] **Mixed network (if a pre-2026-11-22 station is on the net).** A QSO logged here reaches the older station with
+  no zone; EXPECT that station NOT to count the year (known; the older build keys its sheet on the zone slot).
