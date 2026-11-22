@@ -21,42 +21,70 @@ http://www.gnu.org/licenses/gpl-3.0.txt
 
 (* THE RU3AX MEMORIAL -- THE RUSSIAN 160-METER DX CONTEST.
 
-  The ContestsArray row this class states, verbatim:
+  REBUILT TO THE 2025 RULES (issue 57, 2026-11-22): "RUSSIAN 160m DX Contest
+  - RU3AX Memorial RULES'25", docs/ContestRules/Russian 160/rules russian
+  160.txt, sponsored by the "Radio" Magazine, TopBand DX Club and the Russian
+  Contest Club. The class it replaces was a copy of the Russian DX Contest's
+  (country and continent points, an oblast or serial exchange); every rule
+  below is quoted from the 2025 text, by its number.
 
-   Email: '';  DF: 'russian';  WA7BNM: 202;  QRZRUID: 90;
-   Pxm: NoPrefixMults;  ZnM: NoZoneMults;  AIE: NoInitialExchange;  DM: DomesticFile;  P: 0;
-   AE: RSTDomesticQTHOrQSONumberExchange;  XM: ARRLDXCC;  QP: RussianDXQSOPointMethod;
-   ADIFName: '';  CABName: '';  FriendlyName: 'Russian 160-Meter DX Contest'
+  THE ID, THE NAMES AND THE NUMBERS ARE UNCHANGED, so a log or profile made
+  before keeps opening as this contest: the legacy member RU3AXMEMORIAL, the
+  ADIF id 'RU3AX MEMORIAL', the Cabrillo CONTEST: RADIO-160 (WA7BNM 202,
+  NY4I 2026-10-19), QRZ.RU 90, the domestic file 'russian'.
 
-  THE CABRILLO CONTEST: NAME IS WA7BNM'S RADIO-160 SINCE 2026-10-19 (see
-  GetCabrilloName), not the enum's spelling the paragraph below
-  describes.
+  1. "on 1.8 MHz amateur band ONLY. Modes: CW and SSB." -- UsesBand,
+     UsesMode. "The 1st round from 17:00 to 18:59 UTC / The 2nd round from
+     19:00 to 20:59 UTC" -- RU3AXRoundOf.
 
-  Blank CABName and ADIFName resolve to the enum's spelling, 'RU3AX MEMORIAL'.
+  4. "All participants send RS(T) + Four character grid square (QTH
+     locator) Example: 599 KO85". THE RECEIVED GRID IS QTHString, cut to its
+     four characters; the RST-and/or-grid parser reads it and this class
+     requires the grid (ParseReceivedExchange). Nobody sends an oblast any
+     more -- so THE OBLAST MULTIPLIER COMES FROM THE CALL (rule 7.1 still
+     counts oblasts): DomesticQTH / DomMultQTH carry the Russian station's
+     oblast, from uRussianTerritories.RDXCOblastFromCall, resolved through the
+     russian.dom table; both are empty for anybody else. THE GRID IS NEVER
+     DomesticQTH: SetMultFlags keys the domestic multiplier from it, and every
+     grid would be an "oblast".
 
-  WHY IT HAS A CLASS NOW. M5b (2026-10-02): this contest's initial-exchange
-  rule was a test of ActiveQSOPointMethod in ZoneCont.GetVEInitialExchange --
-  which an operator's QSO POINT METHOD line reached in any contest. A class to
-  hold that rule needed the whole row and the scoring arm with it, because
-  registering a class makes the class this contest's scorer too. Both are
-  transcribed exactly; Test_MovedRowValuesStillMatchTheArray holds the row,
-  and the contest matrix the rest -- every line of its record but
-  `contest.class` is unchanged, which is the proof.
+  5.1 "QSO points depend on the distance between participants, which is
+     defined as the distance between the centers of their grid squares (QTH
+     locators). Minimum number of QSO points is 10. Thereafter, one point is
+     added for each 500 km. For example: QSO at distance up to 500 km is 10
+     points, from 500 to 1000 km - 11 points, from 1000 to 1500 km - 12
+     points" -- RU3AXPointsForDistance: 10 + Trunc(km / 500). The distance is
+     uGridDistance.GridHaversineKm, which measures between the geometric
+     CENTRES of the two four-character squares -- the rule's words; NOT
+     LOGGRID.GetDistanceBetweenGrids, which pads with 'LL' (not the centre).
+     A grid that is not one on either end scores 0 (Q37: a malformed grid is
+     never measured; the ARRL Digi's guard).
+  5.2 "SSB points are multiplied by factor 2."
 
-  A COPY OF THE RUSSIAN DX CONTEST'S CLASS, AND DELIBERATELY SO (design 1.4). They
-  shared one scoring arm, which doubled phone for the RU3AX Memorial by
-  asking `if Contest = RU3AXMEMORIAL` inside it; each contest now states its
-  own rule and that test is not needed by either.
+  6.1 "Dupes are QSOs made in the same mode and in the same round." /
+  6.3 "dupe QSOs in different rounds and different modes are allowed." --
+     cfQSOByMode, and DupeKeyTour names the round. One band, so by band or not
+     is the same thing.
 
-  SCORING, transcribed from RussianDXQSOPointMethod. A Russian station
-  scores 5 for another continent, 3 for another country of its own continent
-  and 2 for its own country. Anybody else scores 10 for a Russian station,
-  then 5, 3 and 2 the same way. A phone QSO scores double -- the line the
-  shared arm asked `if Contest = RU3AXMEMORIAL` for.
-  ITS INITIAL EXCHANGE: a Russian station's oblast, from its call --
-  uCallSignRoutines.RussianStationOblast, the one rule NY4I ruled on Q50
-  (2026-10-15). LOGEDIT's InitialExchangeEntry asks it once nothing else
-  has filled the exchange. *)
+  7.1 "Multiplier is number of territories (DXCC + WAE) plus Russian Oblasts
+     number. Separate Russian Oblasts are Franz Joseph (R1FJ) and Russian
+     stations in Antarctica (R1AN)." -- the DX key is the CTY country on the
+     DXCC + WAE list (CountryMode = CQCountryMode); the oblast as above, with
+     FJ and AN by call (uRussianTerritories).
+  7.2 "Kaliningrad stations (UA2F) count two mults, - as DXCC and Oblast." --
+     falls out: the DX key UA2 and the oblast KA.
+  7.3 "Mults are counted separately for CW and SSB, and then summarized." --
+     cfMultByMode; the sheet's Both column then counts a multiplier once per
+     mode (uMults.IncrementTotals), so the base's sum is the rule's sum.
+  7.4 "One multiplier counts only once, regardless of rounds." -- the sheet
+     is not keyed on the round.
+  8. "Final score is product of summary points by total multiplier." -- the
+     base CombineWithMultipliers.
+
+  NOT MODELLED: 2.1's location groups (EU RUS, AS RUS, AS & OC, WORLD -- the
+  introduction says three groups, 2.1 lists four) are a results grouping,
+  not a scoring rule. 9.7's six-character GRID-LOCATOR header is the station's
+  MY GRID, written by the Cabrillo writer for any contest that has one. *)
 unit uContestRU3AXMemorial;
 
 {$I tr4w.inc}
@@ -66,12 +94,34 @@ interface
 uses
    VC, uContestBase;
 
+const
+   (* Rule 5.1's numbers. *)
+   RU3AX_MINIMUM_POINTS = 10;
+   RU3AX_KM_PER_POINT   = 500;
+
+(* RULE 5.1, AS ARITHMETIC: 10 points, plus one for each whole 500 km of
+   aKm -- 0 to 499.99 km is 10, 500 to 999.99 is 11. A negative distance (none
+   is measured) is the minimum. Pure, so the boundaries are pinned without a
+   station. *)
+function RU3AXPointsForDistance(aKm: Double): integer;
+
+(* RULES 5.1 AND 5.2 FOR ONE QSO: the points between two grids (the first
+   four characters of each are the square; a six-character MY GRID is its
+   square's centre), doubled on SSB (Phone). 0 when either text is not a
+   grid. *)
+function RU3AXQSOPoints(const aMyGrid: string;
+                        const aHisGrid: string;
+                        aMode: ModeType): integer;
+
+(* RULE 1's ROUNDS FROM A UTC TIME: 1 for 17:00-18:59, 2 for 19:00-20:59,
+   0 outside the contest. *)
+function RU3AXRoundOf(aHour: integer; aMinute: integer): integer;
+
 type
    TContestRU3AXMemorial = class(TContestBase)
    protected
       (* PROTECTED, MATCHING THE BASE -- callers use the properties,
-         descendants override the getters. Every getter below states
-         the ContestsArray row quoted above. *)
+         descendants override the getters. *)
       function GetDisplayName: string; override;
       function GetSchedule: string; override;
       function GetCabrilloName: string; override;
@@ -87,7 +137,6 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
-      procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -96,18 +145,37 @@ type
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
                                            const aCtx: TCabrilloQSOContext): string; override;
+      function GetReceivesGridSquareExchange: boolean; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
-      (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
-         TContestBase: ScoreQSO is the one public scoring entry. *)
+      (* RULES 5.1 AND 5.2 -- see the header. Protected, as on TContestBase:
+         ScoreQSO is the one public scoring entry. *)
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
    public
-      (* A RUSSIAN STATION'S OBLAST -- see the header. *)
-      function InitialExchangeFromCall(const aCall: string;
-                                       const aCountryID: string;
-                                       out aExchange: string): boolean; override;
+      (* RULE 1 -- see TContestBase.UsesBand and UsesMode. *)
+      function UsesBand(aBand: BandType): boolean; override;
+      function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+      (* RULE 6.1 -- the round a QSO falls in. See TContestBase.DupeKeyTour. *)
+      function DupeKeyTour(const aQso: ContestExchange): string; override;
+      (* RULE 4 -- the grid is required, and the oblast comes from the call.
+         See the header and TContestBase.ParseReceivedExchange. *)
+      function ParseReceivedExchange(const aText: string;
+                                     const aSession: TReceivedExchangeSession;
+                                     var aExch: ContestExchange;
+                                     out aErrorMessage: string): boolean; override;
+      (* A GRID WORD IS NEVER A CALL -- see TContestBase.MayBeACallsign. *)
+      function MayBeACallsign(const aWord: string): boolean; override;
+      (* THE NEED-MULTIPLIER HINT: a Russian station's oblast from its call --
+         see TContestBase.DomesticMultiplierFromCall. *)
+      function DomesticMultiplierFromCall(const aCall: string;
+                                          const aLookups: TMultiplierHintLookups): string; override;
+      (* AN IMPORTED QSO: the grid is QTHString, the oblast from the call --
+         see TContestBase.ApplyADIFImport. *)
+      procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                const aSession: TADIFImportSession;
+                                var aExch: ContestExchange); override;
    public
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
@@ -115,10 +183,9 @@ type
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
    public
-      (* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's, moved here at
-         M9a. See TContestBase.DescribeNewContestPrompts. *)
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- see
+         TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
-      function DescribeNewContestHome(out aHome: TNewContestHome): boolean; override;
    protected
       (* THE TOTALS WINDOW -- see TContestBase.TotalsDisplay (M9a). *)
       function GetTotalsDisplay: TTotalsDisplay; override;
@@ -138,76 +205,238 @@ type
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
    public
-      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesDomesticQTH
+      (* WHAT THE EXCHANGE CARRIES -- see TContestBase.ExchangeCarriesGridSquare
          and its neighbours (M11 S9d). *)
-      function ExchangeCarriesDomesticQTH: boolean; override;
+      function ExchangeCarriesGridSquare: boolean; override;
+      function ExchangeTextMayHoldGridSquare: boolean; override;
    end;
 
 implementation
 
 uses
+   SysUtils,
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
    uContestRegistry,
-   (* RussianID, RussianStationOblast -- the scoring arm's leaf, and the one
-      oblast rule (Q50). *)
+   (* RussianID -- is the entrant Russian (DescribeSession). *)
    uCallSignRoutines,
+   (* RDXCOblastFromCall -- a station's oblast from its call, FJ and AN by
+      call (rule 7.1). *)
+   uRussianTerritories,
+   (* GridHaversineKm -- rule 5.1's centre-to-centre distance. *)
+   uGridDistance,
+   (* IsGoodLookingGrid -- the Q37 rule: what may be measured. *)
+   uGridShape,
+   (* SExchangeGridRequired -- rule 4's refusal. *)
+   uAppStrings,
    uTR4WStrings;
 
-procedure TContestRU3AXMemorial.CalculateQSOPoints(var aQso: ContestExchange);
-var
-   rxCty: CallString;
-begin
-   rxCty := aQso.QTH.CountryID;
+const
+   (* Rule 1's rounds, in minutes of the UTC day. *)
+   ROUND_ONE_START_MINUTE = 17 * 60;
+   ROUND_MINUTES          = 2 * 60;
+   ROUND_COUNT            = 2;
 
-   if RussianID(Station.MyCountry) then
+(* THE SQUARE OF A GRID TEXT -- its first four characters, upper case. Rule 4
+   sends four; a six-character grid (a MY GRID, rule 9.7) names its square's
+   subsquare, and the square is what the rule measures. *)
+function GridSquareOf(const aGrid: string): string;
+begin
+   Result := UpperCase(Copy(Trim(aGrid), 1, 4));
+end;
+
+function RU3AXPointsForDistance(aKm: Double): integer;
+begin
+   if aKm <= 0.0 then
       begin
-      if aQso.QTH.Continent <> Station.MyContinent then
-         begin
-         aQso.QSOPoints := 5;
-         end
-      else if rxCty <> Station.MyCountry then
-         begin
-         aQso.QSOPoints := 3;
-         end
-      else
-         begin
-         aQso.QSOPoints := 2;
-         end;
-      end
-   else if RussianID(rxCty) then
+      Result := RU3AX_MINIMUM_POINTS;
+      Exit;
+      end;
+   Result := RU3AX_MINIMUM_POINTS + Trunc(aKm / RU3AX_KM_PER_POINT);
+end;
+
+function RU3AXQSOPoints(const aMyGrid: string;
+                        const aHisGrid: string;
+                        aMode: ModeType): integer;
+begin
+   Result := 0;
+   if (not IsGoodLookingGrid(Trim(aMyGrid))) or
+      (not IsGoodLookingGrid(Trim(aHisGrid))) then
       begin
-      aQso.QSOPoints := 10;
-      end
-   else if aQso.QTH.Continent <> Station.MyContinent then
-      begin
-      aQso.QSOPoints := 5;
-      end
-   else if rxCty <> Station.MyCountry then
-      begin
-      aQso.QSOPoints := 3;
-      end
-   else
-      begin
-      aQso.QSOPoints := 2;
+      Exit;
       end;
 
-   if aQso.Mode = Phone then
+   Result := RU3AXPointsForDistance(GridHaversineKm(GridSquareOf(aMyGrid),
+                                                    GridSquareOf(aHisGrid)));
+
+   if aMode = Phone then
       begin
-      aQso.QSOPoints := aQso.QSOPoints * 2;
+      Result := Result * 2;
       end;
 end;
 
-(* Q50 (NY4I, 2026-10-15): the one rule, RussianStationOblast. True for any
-   Russian station, as LOGEDIT's fallback was -- the CTY.DAT country, not
-   'UA' alone as the M5b transcription of ZoneCont's dead arm said. *)
-function TContestRU3AXMemorial.InitialExchangeFromCall(const aCall: string;
-                                                       const aCountryID: string;
-                                                       out aExchange: string): boolean;
+function RU3AXRoundOf(aHour: integer; aMinute: integer): integer;
+var
+   minutes: integer;
 begin
-   Result := RussianID(aCountryID);
-   aExchange := RussianStationOblast(aCall, aCountryID);
+   Result := 0;
+   minutes := aHour * 60 + aMinute - ROUND_ONE_START_MINUTE;
+   if (minutes >= 0) and
+      (minutes < ROUND_MINUTES * ROUND_COUNT) then
+      begin
+      Result := minutes div ROUND_MINUTES + 1;
+      end;
+end;
+
+(* RULES 5.1 AND 5.2. Station.MyGrid is the row's own MY GRID while a logged
+   QSO is scored (ScoreQSO's overlay), else the session's. *)
+procedure TContestRU3AXMemorial.CalculateQSOPoints(var aQso: ContestExchange);
+begin
+   aQso.QSOPoints := RU3AXQSOPoints(Station.MyGrid, string(aQso.QTHString), aQso.Mode);
+end;
+
+function TContestRU3AXMemorial.UsesBand(aBand: BandType): boolean;
+begin
+   (* Rule 1: "on 1.8 MHz amateur band ONLY". *)
+   Result := aBand = Band160;
+end;
+
+function TContestRU3AXMemorial.UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean;
+begin
+   (* Rule 1: "Modes: CW and SSB." *)
+   Result := aMode in [CW, Phone];
+end;
+
+(* Rule 6: a repeat in the other round is a new QSO; the round is read from
+   the QSO's own logged (UTC) time. A QSO outside the four hours has no
+   round, and its key is the call alone. *)
+function TContestRU3AXMemorial.DupeKeyTour(const aQso: ContestExchange): string;
+var
+   roundNumber: integer;
+begin
+   Result := '';
+   roundNumber := RU3AXRoundOf(aQso.tSysTime.qtHour, aQso.tSysTime.qtMinute);
+   if roundNumber > 0 then
+      begin
+      Result := 'ROUND ' + IntToStr(roundNumber);
+      end;
+end;
+
+function TContestRU3AXMemorial.ParseReceivedExchangeFormat(const aText: string;
+                                                           aParsers: TExchangeParsers;
+                                                           var aExch: ContestExchange): boolean;
+begin
+   Result := aParsers.ParseRSTAndOrGrid(aText, aExch);
+end;
+
+(* RULE 4: "RS(T) + Four character grid square". The format's parse (the
+   RST-and/or-grid parser: a word that is neither a grid nor a report is its
+   refusal) runs on a COPY, so a refusal writes nothing into the QSO. The
+   grid is required -- a report alone is refused with SExchangeGridRequired,
+   as the CQ VHF's RequireReceivedGrid says it (that helper tests DomesticQTH,
+   which this class keeps for the oblast, so it is not called). Accepted, the
+   QSO takes the RS(T), the grid's square as QTHString, and the oblast of a
+   Russian call as its domestic QTH and multiplier -- see the header. *)
+function TContestRU3AXMemorial.ParseReceivedExchange(const aText: string;
+                                                     const aSession: TReceivedExchangeSession;
+                                                     var aExch: ContestExchange;
+                                                     out aErrorMessage: string): boolean;
+var
+   parsed: ContestExchange;
+   oblast: string;
+   domesticQTH: string;
+   key: string;
+begin
+   parsed := aExch;
+   Result := inherited ParseReceivedExchange(aText, aSession, parsed, aErrorMessage);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   if not IsGoodLookingGrid(Trim(string(parsed.QTHString))) then
+      begin
+      aErrorMessage := SExchangeGridRequired;
+      Result := False;
+      Exit;
+      end;
+
+   parsed.QTHString := ShortString(GridSquareOf(string(parsed.QTHString)));
+   parsed.DomesticQTH := '';
+   parsed.DomMultQTH := '';
+
+   oblast := RDXCOblastFromCall(string(parsed.Callsign), string(parsed.QTH.CountryID));
+   if oblast <> '' then
+      begin
+      if Assigned(aSession.ResolveDomesticQTH) then
+         begin
+         if aSession.ResolveDomesticQTH(oblast, domesticQTH, key) then
+            begin
+            parsed.DomesticQTH := ShortString(domesticQTH);
+            parsed.DomMultQTH := ShortString(key);
+            end;
+         end
+      else
+         begin
+         (* No table service: the oblast as the call gives it. *)
+         parsed.DomesticQTH := ShortString(oblast);
+         end;
+      end;
+
+   aExch := parsed;
+end;
+
+function TContestRU3AXMemorial.MayBeACallsign(const aWord: string): boolean;
+begin
+   Result := not IsGoodLookingGrid(aWord);
+end;
+
+function TContestRU3AXMemorial.DomesticMultiplierFromCall(const aCall: string;
+                                                          const aLookups: TMultiplierHintLookups): string;
+begin
+   Result := '';
+   if Assigned(aLookups.CountryOfCall) then
+      begin
+      Result := RDXCOblastFromCall(aCall, aLookups.CountryOfCall(aCall));
+      end;
+end;
+
+(* AN IMPORTED QSO -- the base's grid arm would put the grid in DomesticQTH,
+   where the sheet would count it as an oblast. The grid's square is
+   QTHString; the oblast is the call's, resolved through the import's table
+   as typed entry resolves it. aExch.QTH holds the call's CTY.DAT answer
+   (ParseADIFRecord locates the call before the tail). *)
+procedure TContestRU3AXMemorial.ApplyADIFImport(const aTemps: TADIFRecordTemps;
+                                                const aSession: TADIFImportSession;
+                                                var aExch: ContestExchange);
+var
+   oblast: string;
+   domesticQTH: string;
+   key: string;
+begin
+   aExch.QTHString := ShortString(GridSquareOf(aTemps.GridSquare));
+   aExch.ExchString := ShortString(IntToStr(aExch.RSTReceived) + ' ' +
+                                   GridSquareOf(aTemps.GridSquare));
+   aExch.DomesticQTH := '';
+   aExch.DomMultQTH := '';
+   oblast := RDXCOblastFromCall(string(aExch.Callsign), string(aExch.QTH.CountryID));
+   if oblast = '' then
+      begin
+      Exit;
+      end;
+   if Assigned(aSession.ResolveDomesticQTH) then
+      begin
+      if aSession.ResolveDomesticQTH(oblast, domesticQTH, key) then
+         begin
+         aExch.DomesticQTH := ShortString(domesticQTH);
+         aExch.DomMultQTH := ShortString(key);
+         end;
+      end
+   else
+      begin
+      aExch.DomesticQTH := ShortString(oblast);
+      end;
 end;
 
 function TContestRU3AXMemorial.GetDisplayName: string;
@@ -216,7 +445,10 @@ begin
 end;
 
 (* WHEN IT RUNS -- Q99 (docs/CONTEST_SCHEDULES.csv, applied 2026-11-17).
-   CSV row RU3AX MEMORIAL: status unscheduled. UNSCHEDULED: no dated events (inactive or not a contest); NY4I intake 2026-11-17. *)
+   CSV row RU3AX MEMORIAL: status unscheduled. UNSCHEDULED: no dated events
+   (inactive or not a contest); NY4I intake 2026-11-17. The 2025 rules date
+   one event, "17.00 UTC to 20.59 UTC, December 19th, 2025" -- a calendar
+   entry is NY4I's (issue 57 report). *)
 function TContestRU3AXMemorial.GetSchedule: string;
 begin
    Result := 'unscheduled';
@@ -225,18 +457,16 @@ end;
 function TContestRU3AXMemorial.GetCabrilloName: string;
 begin
    (* WA7BNM's Cabrillo name (WA7BNM 202), NY4I 2026-10-19: "do the
-      cabrillo renames". TR4W wrote 'RU3AX MEMORIAL', which the sponsor's log robot
-      accepted neither as the name nor as an alias
-      (docs/UDC_CROSSWALK_FINDINGS.md). Only the Cabrillo CONTEST: line
-      (and the UDP <contestname>) moves: the id, the ADIF id and the
-      display names are their own literals. TR4W reads no Cabrillo
-      CONTEST: value back, so the old name needs no read alias. *)
+      cabrillo renames". TR4W wrote 'RU3AX MEMORIAL', which the sponsor's log
+      robot accepted neither as the name nor as an alias
+      (docs/UDC_CROSSWALK_FINDINGS.md). TR4W reads no Cabrillo CONTEST:
+      value back, so the old name needs no read alias. *)
    Result := 'RADIO-160';
 end;
 
 function TContestRU3AXMemorial.GetADIFContestId: string;
 begin
-   (* The row's ADIFName is blank; export writes the enum's spelling, and import matches it (M1). *)
+   (* The enum's spelling: export writes it, and import matches it (M1). *)
    Result := 'RU3AX MEMORIAL';
 end;
 
@@ -252,11 +482,15 @@ end;
 
 function TContestRU3AXMemorial.GetSubmissionEmail: string;
 begin
+   (* Rule 9.3: "Log shall uploaded at http://ua9qcq.ru/submit_log.php or it
+      shall be sent as attachment to rusdx160@gmail.com". Kept '' as before:
+      whether TR4W should offer that address is NY4I's (issue 57 report). *)
    Result := '';
 end;
 
 function TContestRU3AXMemorial.GetDomesticFileName: string;
 begin
+   (* The oblasts (rule 7.1) -- the table the call's oblast is resolved by. *)
    Result := 'russian';
 end;
 
@@ -272,53 +506,69 @@ end;
 
 function TContestRU3AXMemorial.GetExchangeKind: ExchangeType;
 begin
-   Result := RSTDomesticQTHOrQSONumberExchange;
+   Result := RSTAndOrGridExchange;
 end;
 
 function TContestRU3AXMemorial.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
-   Result := ExchangeFieldsRSTQSONumberQTH;
+   Result := ExchangeFieldsRSTQTH;
 end;
 
-function TContestRU3AXMemorial.ParseReceivedExchangeFormat(const aText: string;
-                                                           aParsers: TExchangeParsers;
-                                                           var aExch: ContestExchange): boolean;
-begin
-   Result := aParsers.ParseRSTDomesticQTHOrQSONumber(aText, aExch);
-end;
-
-procedure TContestRU3AXMemorial.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
-begin
-   aMessages.WriteRSTStateOrQSONumber;
-end;
-
-function TContestRU3AXMemorial.ExchangeCarriesDomesticQTH: boolean;
+function TContestRU3AXMemorial.ExchangeCarriesGridSquare: boolean;
 begin
    Result := True;
+end;
+
+function TContestRU3AXMemorial.ExchangeTextMayHoldGridSquare: boolean;
+begin
+   Result := True;
+end;
+
+function TContestRU3AXMemorial.GetReceivesGridSquareExchange: boolean;
+begin
+   Result := True;
+end;
+
+(* THE SENT GRID IS FOUR CHARACTERS (rule 4), whatever length MY GRID is
+   stated at (rule 9.7 asks six for the header). *)
+function SentFourCharacterGrid(const aMy: TMyStationExchange): TMyStationExchange;
+begin
+   Result := aMy;
+   Result.MyGrid := GridSquareOf(aMy.MyGrid);
 end;
 
 function TContestRU3AXMemorial.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                    const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTStateOrQSONumber(aMy, aQso);
+   Result := ADIFSentRSTGrid(SentFourCharacterGrid(aMy), aQso);
 end;
 
 function TContestRU3AXMemorial.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                        const aQso: ContestExchange;
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTStateOrQSONumber(aMy, aQso, aCtx);
+   Result := CabrilloSentRSTGrid(SentFourCharacterGrid(aMy), aQso, aCtx);
 end;
 
+(* THE RECEIVED COLUMN IS THE GRID. PostUnit hands a contest with a domestic
+   multiplier the DOMESTIC QTH as HisQTH -- here the oblast -- so the context
+   is copied with the grid in its place (the WW Digi's way). *)
 function TContestRU3AXMemorial.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                            const aQso: ContestExchange;
                                                            const aCtx: TCabrilloQSOContext): string;
+var
+   ctx: TCabrilloQSOContext;
 begin
-   Result := CabrilloReceivedRSTQTHOrQSONumber(aMy, aQso, aCtx);
+   ctx := aCtx;
+   ctx.HisQTH := string(aQso.QTHString);
+   Result := CabrilloReceivedRSTQTH(aMy, aQso, ctx);
 end;
 
 function TContestRU3AXMemorial.GetFlags: TContestFlags;
 begin
+   (* cfQSOByMode -- rule 6.1, dupes per mode. cfMultByMode -- rule 7.3,
+      multipliers per mode, summed. cfCountsDomesticCountries -- a Russian
+      station's country is a DXCC multiplier too (7.1, 7.2), as before. *)
    Result := [cfQSOByMode,
               cfMultByMode,
               cfCountsDomesticCountries];
@@ -326,15 +576,13 @@ end;
 
 function TContestRU3AXMemorial.GetIsUSQSOParty: boolean;
 begin
-   (* P: 0 -- not a US state QSO party. *)
    Result := False;
 end;
 
 (* SET-UP -- FCONTEST.FoundContest's arm for this contest, moved here as
-   it stood (M7a, 2026-10-02). See TContestBase.DescribeSession: this
-   writes no global and reads only aStation.
-   The arm named RUSSIANDX, RU3AXMEMORIAL; each of them holds its own
-   copy (design 1.4), so a sponsor changing one changes one. *)
+   it stood (M7a, 2026-10-02). The domestic countries are the stations an
+   oblast is looked for; CE9 for RI1AN (rule 7.1). A non-Russian entrant
+   states no MY STATE for it, as before -- nothing sends one now. *)
 procedure TContestRU3AXMemorial.DescribeSession(const aStation: TStationContext;
                                                 aSession: TSessionDefaults);
 begin
@@ -346,42 +594,22 @@ begin
       end;
 end;
 
-(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE --
-   LogCfg.tSetupExchangeNumbers' arm for it, moved here at M7a. See
-   TContestBase.CQExchangeDefault. *)
+(* THE CQ EXCHANGE THIS CONTEST OFFERS WHEN THE OPERATOR HAS NONE -- rule 4:
+   the report and the four-character grid. *)
 function TContestRU3AXMemorial.CQExchangeDefault(const aStation: TStationContext): string;
 begin
-   Result := ' 5NN # ' + aStation.MyState;
+   Result := ' 5NN ' + GridSquareOf(aStation.MyGrid);
 end;
 
-(* THE NEW CONTEST DIALOG'S PROMPTS -- uNewContest's two
-   `case SelectedContest of` arms for this contest, moved here as they
-   stood (M9a, 2026-10-02): the steps on CHOOSING the contest, then the
-   ones on ticking its "I am in" box. See
-   TContestBase.DescribeNewContestPrompts.
-   The same steps on choosing stood for RDA, RUSSIANDX.
-   The same steps on ticking the box stood for CIS, RUSSIANDX, UKRAINIAN,
-   UNDX.
-   Each contest holds its own copy (design 1.4), so a sponsor
-   changing one changes one. *)
+(* THE NEW CONTEST DIALOG ASKS FOR THE GRID (rule 4), not the oblast: the
+   oblast is no longer sent. *)
 procedure TContestRU3AXMemorial.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.OfferIAmIn(TC_RUSSIA);
-   aPrompts.AskFieldWithCommentWhenInside(TC_ENTERYOUROBLASTID, ncfMyState);
+   aPrompts.AskFieldWithComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
 end;
 
-(* THE BOX'S REGION IS THE DOMESTIC COUNTRIES DescribeSession states --
-   issue 167. The New Contest dialog asks once when MY CALL and the box
-   disagree. *)
-function TContestRU3AXMemorial.DescribeNewContestHome(out aHome: TNewContestHome): boolean;
-begin
-   Result := HomeIsDomesticCountries(aHome);
-end;
-
-(* THE TOTALS WINDOW LABELS THE DOMESTIC MULTIPLIERS AS OBLASTS -- uTotal's
-   arm, moved here at M9a (2026-10-02). It named RUSSIANDX and RU3AXMEMORIAL;
-   each holds its own copy (design 1.4). Per mode the labels are the
-   default ones, as they always were. *)
+(* THE TOTALS WINDOW LABELS THE DOMESTIC MULTIPLIERS AS OBLASTS. Per mode the
+   labels are the default ones. *)
 function TContestRU3AXMemorial.GetTotalsDisplay: TTotalsDisplay;
 begin
    Result := inherited GetTotalsDisplay;
@@ -390,22 +618,20 @@ end;
 
 (* THE HOUR-BY-HOUR REPORT CARRIES NO RUNNING SCORE -- PostUnit.PrintHourTotals
    named this contest among the seven whose score is not points times
-   multipliers hour by hour (M9a, 2026-10-02). Each of the seven holds its own copy (design 1.4). *)
+   multipliers hour by hour (M9a, 2026-10-02). *)
 function TContestRU3AXMemorial.GetReportsRunningScore: boolean;
 begin
    Result := False;
 end;
 
-(* A DX MULTIPLIER AT EVERY STATION -- M11 S4 part 2, 2026-10-14: the trait
-   this class stated (`ARRLDXCC`) until the kind was deleted. *)
 function TContestRU3AXMemorial.HasDXMultiplier: boolean;
 begin
    Result := True;
 end;
 
-(* THE DX MULTIPLIER KEY -- M11 S4, 2026-10-14, moved from LOGDUPE.GetDXQTH.
-   Every country counts: the key is the CTY country -- GetDXQTH's `else`
-   arm, for the session's ARRLDXCC. *)
+(* RULE 7.1's TERRITORIES: the CTY country, on the DXCC + WAE list. The RDXC's
+   remapping of FJL and RI1AN to territories of their own is ITS rule 7.3 and
+   is not taken here; the 2025 RU3AX rules name them as OBLASTS. *)
 function TContestRU3AXMemorial.DXMultiplierKey(const aQso: ContestExchange;
                                                out aKey: DXMultiplierString): boolean;
 begin
@@ -413,17 +639,13 @@ begin
    Result := True;
 end;
 
-(* THE CTY COUNTRY LIST -- M11 S4, 2026-10-14, moved from uSettingsEffects.
-   DXCC only, at every station -- the ARRLDXCC kind was in the ARRL set. *)
+(* RULE 7.1: "territories (DXCC + WAE)" -- CTY.DAT's CQ list, as the RDXC's
+   rule 9 (Q131). It was ARRLCountryMode, DXCC only, since D7. *)
 function TContestRU3AXMemorial.CountryMode: CountryModeType;
 begin
-   Result := ARRLCountryMode;
+   Result := CQCountryMode;
 end;
 
-
-(* THE DOMESTIC QTH IS LOOKED UP IN THIS CONTEST'S DOMESTIC FILE, at every
-   station -- M11 S6 part 1b, 2026-10-14. It was the session's
-   `= DomesticFile` (the trait); see TContestBase.UsesDomesticFile. *)
 function TContestRU3AXMemorial.UsesDomesticFile: boolean;
 begin
    Result := True;

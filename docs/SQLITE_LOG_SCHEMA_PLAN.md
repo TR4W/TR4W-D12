@@ -1859,6 +1859,33 @@ know which file. So this is new design, not a port, and the pieces are:
    integrity check fails is the case that actually helps an operator at 03:00
    in a contest — that is the moment the feature is for.
 
+**STAGE 1 BUILT, 2026-11-22 (issue 242): the engine, no UI.** NY4I ruled
+restore-and-set-aside ("Yes" to A); the chooser waits on his "needs research into
+the best practice to handle an SQLite backup recovery in a UX".
+`src/domain/uLogRestore.pas`:
+- `ListRestoreCandidates(log, BackupDir, BACKUP DESTINATION)` lists the
+  periodic backup and its `.bak`, a kept `.new`, the pre-clear, pre-catch-up and
+  pre-upgrade (numbered too) backups, in both folders, each peeked read-only for
+  its schema, QSO count and newest QSO (`uLogFileFacts.ReadLogQsoFacts`, lifted
+  so the two readers share one query) and checked by `StagedBackupIsSound`;
+  newest QSO first. The copier's outbox is not listed (transient).
+- `RestoreLogFromBackup`: candidate sound and not newer -> copied beside the log
+  to `<log>.restoring` by `TLogBackup.Run` (VACUUM INTO on a read-only
+  connection, verified) -> the copy verified again (same schema, same count,
+  nothing beside it) -> `<log>` and its `-wal`/`-shm`/`-journal` RENAMED to
+  `<log>.damaged-<UTC>Z` + the same suffix (never deleted; any failed rename
+  puts back the ones done) -> nothing left under the log's name (a stray `-wal`
+  would be replayed into the restored file) -> the copy renamed into place.
+  Any failure leaves the log as it was.
+- **Point 3 above changed**: VACUUM INTO, not `TSQLite3Backup.Restore` -- the
+  same verified staging every backup already uses, no new binding.
+- **Delivery state (decision B): option (i), warn only**, recommended and not
+  yet ruled: a backup holding `external_delivery` rows gives a notice; nothing
+  is rewritten.
+- Precondition: nothing in the process has the log open;
+  `uLogStore.LogStoreRestoreLog` refuses while the store has it or a periodic
+  backup runs. Stage 2 restores before any log is opened and relaunches.
+
 **Open, and deliberately not decided here:** whether a restore should attempt to
 MERGE the surviving rows of the damaged log into the restored one. It is
 attractive — GUIDs make "which QSOs does the backup not have" answerable

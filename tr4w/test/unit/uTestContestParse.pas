@@ -746,7 +746,9 @@ begin
       the call as typed. RDA answers too: LOGEDIT's fallback, the rule that
       ran in D7 and here, named it beside the other two. *)
    CheckTrue(GetRussiaOblastID('R1FJL') <> '', 'the control: R1FJL has an oblast to find');
-   for c in [RUSSIANDX, RU3AXMEMORIAL, RDA] do
+   (* RU3AXMEMORIAL left this set with issue 57 (2026-11-22): its 2025
+      exchange is a grid, so no oblast is prefilled. *)
+   for c in [RUSSIANDX, RDA] do
       begin
       CheckTrue(ContestIdentity(c).InitialExchangeFromCall('UA3ABC', 'UA', answer),
                 string(ContestTypeSA[c]) + ': a Russian station has an answer');

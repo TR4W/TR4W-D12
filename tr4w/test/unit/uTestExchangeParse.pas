@@ -86,6 +86,7 @@ uses
    uContestBase,
    uContestIN7QPNE,
    uAppStrings,
+   uGridShape,         (* IsGoodLookingGrid -- code k's grid test *)
    uTR4WStrings,
    uTestContestObjects,
    uTestContestKindPin,
@@ -364,7 +365,7 @@ end;
 
 const
    (* Every code, in the order a row is matched against them. *)
-   ALL_CODES = '.-qdnouazc2rieg';
+   ALL_CODES = '.-qdnouazc2riegk';
 
 (* What code aCode says the program did with row aRow, given the parser a
    plain exchange reaches (aHelper) and the contest's host state.
@@ -385,11 +386,18 @@ const
      e  both parses, then Delaware's out-of-state refusal (IN7QPNE)
      g  the plain parse, then refused when it left no grid in the domestic
         QTH -- the class requires one (Q115: the ARRL VHF runnings, CQ VHF,
-        the Stew Perry) *)
+        the Stew Perry)
+     k  the plain parse ON A COPY, then refused unless it left a grid in
+        QTHString; a refusal writes nothing into the QSO (the RU3AX Memorial,
+        issue 57: 2025 rule 4, "RS(T) + Four character grid square"). No
+        battery row holds a grid, so every row is a refusal; an accepted grid
+        row (the QTH cut to four, the oblast from the call) is not encoded
+        here and names itself if one is ever added *)
 function ExpectedOutcome(aCode: char; const aHelper: string;
                          const aHostState: string; aRow: integer): string;
 var
    exch: ContestExchange;
+   copied: ContestExchange;
    ok: boolean;
    msg: string;
    call: string;
@@ -494,6 +502,24 @@ begin
             begin
             ok := False;
             msg := SExchangeGridRequired;
+            end;
+         end;
+      'k':
+         begin
+         (* The plain parse runs on a copy; exch stays the row's own. *)
+         copied := exch;
+         ok := PinBehaviour(aHelper, RowText(aRow), copied);
+         if ok then
+            begin
+            ok := False;
+            if IsGoodLookingGrid(Trim(string(copied.QTHString))) then
+               begin
+               msg := '<code k pins no accepted grid row>';
+               end
+            else
+               begin
+               msg := SExchangeGridRequired;
+               end;
             end;
          end;
    else
@@ -951,7 +977,7 @@ begin
 
 
 
-      ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, CQVHF, STEWPERRY:
+      ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, CQVHF, STEWPERRY, RU3AXMEMORIAL:
 
          begin
 
@@ -1023,7 +1049,7 @@ begin
 
 
 
-      ARRL10, CIS, HADX, YUDX, HELVETIA, RDA, RUSSIANDX, SPDX, RU3AXMEMORIAL, UNDX,
+      ARRL10, CIS, HADX, YUDX, HELVETIA, RDA, RUSSIANDX, SPDX, UNDX,
 
       KINGOFSPAINCW, KINGOFSPAINSSB, ARRL_RTTY_ROUNDUP:
 
@@ -1347,6 +1373,14 @@ begin
          Result := StringOfChar('g', ROWS);
          end;
 
+      (* RS(T) + A FOUR-CHARACTER GRID, REQUIRED -- issue 57 (2025 rule 4):
+         parsed on a copy, so every battery row (none holds a grid) is
+         refused with nothing written. *)
+      RU3AXMEMORIAL:
+         begin
+         Result := StringOfChar('k', ROWS);
+         end;
+
       ARKTIKA_SPRING:
          begin
          Result := CODES_ARKTIKA;
@@ -1504,7 +1538,7 @@ const
       NEWENGLANDQSO, NCQSOPARTY, NRAUBALTICCW, NRAUBALTICSSB, OHIOQSOPARTY,
       OKDX, PACC, CANADA_WINTER, RDA, RSGB18, RUSSIANDX, SALMONRUN, SPDX,
       TEXASQSOPARTY, TOEC, UBACW, UBASSB, UKRAINECHAMPIONSHIP, UKRAINIAN,
-      DARCXMAS, WAG, WISCONSINQSOPARTY, YODX, RU3AXMEMORIAL, LQP,
+      DARCXMAS, WAG, WISCONSINQSOPARTY, YODX, LQP,
       ARKTIKA_SPRING, UNDX, NYQP, KINGOFSPAINCW, KINGOFSPAINSSB,
       TENNESSEEQSOPARTY, COLORADOQSOPARTY, PCC, DARC10M, CWOPS, CANADA_DAY,
       CQWWRTTY, ARRL_RTTY_ROUNDUP, CQIR, ALRS_UA1DZ_CUP, WINTERFIELDDAY,
@@ -1520,7 +1554,8 @@ const
    CARRIES_GRID_SQUARE_EVERYWHERE = [
       ARRLDIGI, ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, CQVHF, CUPRFCW, CUPRFSSB,
       CUPRFDIG, EUROPEANVHF, TESLA, GRIDLOC, RADIOVHFFD, STEWPERRY,
-      UA4WCHAMPIONSHIP, WWL, OZHCRVHF, MAKROTHEN, BATAVIA_FT8, WWDIGI, RTC];
+      UA4WCHAMPIONSHIP, WWL, OZHCRVHF, MAKROTHEN, BATAVIA_FT8, WWDIGI, RTC,
+      RU3AXMEMORIAL];
 
    SERIAL_FIRST_EVERYWHERE = [CALQSOPARTY, CUPURAL, UKRAINECHAMPIONSHIP,
                               PAQSOPARTY, VAQP];

@@ -368,7 +368,7 @@ begin
       ARI_DX, ARRL10, CIS, HADX, YUDX, HELVETIA, MICHQSOPARTY, MOQSOPARTY,
       NCQSOPARTY, OKDX, PACC, CANADA_WINTER, RDA, RUSSIANDX,
       SOUTHAMERICANWW, SPDX, TOEC, UKRAINIAN, DARCXMAS, WAG,
-      WISCONSINQSOPARTY, YODX, RU3AXMEMORIAL, ARKTIKA_SPRING, UNDX, NYQP,
+      WISCONSINQSOPARTY, YODX, ARKTIKA_SPRING, UNDX, NYQP,
       KINGOFSPAINCW, KINGOFSPAINSSB, TENNESSEEQSOPARTY, PCC, REFCW, REFSSB,
       CQMM, CANADA_DAY, ARRL_RTTY_ROUNDUP, ALRS_UA1DZ_CUP, INQSOPARTY,
       OKOMSSB, BCQP, IN7QPNE, OHIOQSOPARTY:
@@ -394,13 +394,14 @@ begin
    end;
 end;
 
-(* The 18 contests whose exchange word may be a grid, at every station. *)
+(* The 19 contests whose exchange word may be a grid, at every station
+   (RU3AXMEMORIAL since issue 57: the 2025 rules' exchange is a grid). *)
 function PinnedGrid(aContest: ContestType): boolean;
 begin
    Result := aContest in [ARRLDIGI, ARRLVHFJAN, ARRLVHFJUN, ARRLVHFSEP, BWQP,
                           CQVHF, EUROPEANVHF, TESLA, GENERALQSO, POTA,
                           RADIOVHFFD, STEWPERRY, WWL, OZHCRVHF, MAKROTHEN,
-                          BATAVIA_FT8, WWDIGI, RTC];
+                          BATAVIA_FT8, WWDIGI, RTC, RU3AXMEMORIAL];
 end;
 
 (* ---------------------------------------------------------------------

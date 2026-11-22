@@ -14,6 +14,7 @@ You own the contest log. **It is SQLite, and has been since 2026-09-01.**
 | database + pragmas + integrity | `tr4w/src/domain/uLogDatabase.pas` |
 | the watchdog over every SECOND connection (the WRL worker's) | `tr4w/src/domain/uLogConnectionWatch.pas`, a leaf; its timer is in `uWRLExternalLogger.pas`; tests in `test/unit/uTestLogLocking.pas` |
 | backup orchestration (stage, verify, `.bak`, publish) | `tr4w/src/domain/uLogBackup.pas` — `LogStoreBackup` is a thin caller; tests in `test/unit/uTestLogBackup.pas` |
+| restore from a backup, the damaged log set aside (issue 242 stage 1, engine only) | `tr4w/src/domain/uLogRestore.pas`; the program's door `uLogStore.LogStoreRestoreLog`; tests in `test/unit/uTestLogRestore.pas` |
 | the copy to BACKUP DESTINATION (worker thread, file I/O only) | `tr4w/src/domain/uBackupCopier.pas`, glue `tr4w/src/uBackupCopyService.pas`; tests in `test/unit/uTestBackupCopier.pas` |
 | schema | `tr4w/src/domain/uLogSchema.pas` |
 | repository | `tr4w/src/uLogRepository.pas` |
@@ -639,6 +640,60 @@ every edit was lost. Detail: `docs/SQLITE_LOG_SCHEMA_PLAN.md` §12i.
   directly instead: `-Mdelphi -Px86_64 -Twin64 -Sc -B`, the `Get-SearchPaths.ps1`
   Tests list, run from `tr4w/test/unit`. Then copy the runtime DLLs from
   `tr4w/redist/x86_64-win64`.
+
+## RESTORE FROM A BACKUP: THE ENGINE, NO UI (issue 242 stage 1, 2026-11-22)
+
+NY4I: restore and SET THE DAMAGED FILE ASIDE, never delete it; the chooser
+"needs research into the best practice to handle an SQLite backup recovery in a
+UX", so stage 2 (lcl-ui) is not built. Detail: `uLogRestore`'s header and
+`docs/SQLITE_LOG_SCHEMA_PLAN.md` section 11, "7 in full".
+
+- **`ListRestoreCandidates(log, BackupDir, destination[, files])`**: what the
+  backup code writes for THIS log, in `BackupDir` and BACKUP DESTINATION --
+  `<base> periodic.db`, its `.bak`, a kept `.new`, `before clear`/`before
+  catch-up <stamp>Z`, `before schema <n> to <m>` and its numbered repeat
+  (`... 2.db`, which `LogBackupBaseName` does NOT strip, so the classifier
+  strips it for that kind only -- a log may itself be "X 2"). The outbox,
+  `.partial`, `.old`, `.damaged-*` and the log itself are not candidates.
+  Each is peeked (`OpenToPeek`: schema, `ReadLogQsoFacts`, delivery rows) and
+  checked (`StagedBackupIsSound`); sorted newest QSO, file time, path. The
+  name rule is `ClassifyRestoreName`, pure. `CLEAR_BACKUP_STAMP_SHAPE` moved
+  to `uLogBackup`'s interface for it.
+- **`ReadLogQsoFacts` WAS LIFTED out of `uLogFileFacts`** (the New Contest
+  grid's count and newest QSO): one query for both readers. A backup may have
+  no contest row, so the restore cannot call `ReadLogFileFacts`.
+- **`RestoreLogFromBackup(log, candidate, UTCnow[, files])`, the order is the
+  contract**: not the log itself; readable (identity, not newer) and sound;
+  `<log>.restoring` cleared, then written by `TLogBackup.Run` through
+  `TLogFileBackup` (VACUUM INTO, verified -- NOT `TSQLite3Backup`); the copy
+  checked again (sound, same schema, same QSO count, nothing beside it);
+  `<log>` then `-wal`, `-shm`, `-journal` RENAMED to `<log>.damaged-<yyyy-mm-dd-
+  hhnnss>Z` + suffix (DATABASE FIRST; a taken name gets `-2`...); nothing left
+  under the log's name; the copy renamed in. **A rename never targets an
+  existing name**; every failure puts back what moved and clears the staging
+  file. **The damaged log is never opened.**
+- **A `-wal` left under the log's name would be REPLAYED INTO THE RESTORED
+  FILE** on its next open. That is why every sidecar moves and the final
+  rename is refused while one remains.
+- **The precondition: nothing in this process has the log open.** On Windows
+  the rename then fails safely; on Unix it succeeds under the open connection.
+  The leaf cannot see the store, so `LogStoreRestoreLog` refuses while
+  `GDatabase` is that file or `PeriodicBackupInFlight`. NOT checked: the WRL
+  worker's connection -- stage 2 restores from New Contest before any log is
+  open, then relaunches (`uOpenLogRelaunch`).
+- **Delivery state: WARN ONLY** (decision B option (i), recommended, NOT ruled):
+  `DeliveryMayDiffer` + `SLogRestoreDeliveryNotice` when the backup holds an
+  `external_delivery` row. A backup from before the first delivery holds none
+  and does not warn; stage 2 should OR in "a logger is configured".
+- **Reasons are English, like every backup report**; only the notice is a
+  resourcestring. Lists are `TList<string>` (no AnsiString `TStringList`, no
+  narrowing).
+- **Tests (`uTestLogRestore`)**: names, sort, set-aside name; real temp logs:
+  good restore (set-aside byte-identical, sentinel sidecars moved), corrupt,
+  damaged-page and newer-schema candidates refused, EVERY seam rename failing
+  in turn, an exclusive open handle (Windows), the log as its own candidate,
+  the delivery warning, the two-folder list. NOT pinned: the store gate
+  (`LogStoreRestoreLog`), and a rollback whose put-back itself fails.
 
 ## THE MULTI-OP SERVER'S BOOKKEEPING: `sent_to_server`, `server_dirty` (Phase 1, C5, 2026-10-27)
 

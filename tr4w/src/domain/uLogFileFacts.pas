@@ -49,6 +49,9 @@ unit uLogFileFacts;
 
 interface
 
+uses
+   uLogDatabase;   (* TLogDatabase -- ReadLogQsoFacts' parameter *)
+
 type
    (* THE CONTEST ROW'S FACTS, as stored. Times are UTC TDateTimes, 0 when the
      log records none -- never 1 January 1970. *)
@@ -98,12 +101,20 @@ type
   caller owns the result. Never raises. *)
 function ReadLogFileFacts(const aFileName: string; out aWhy: string): TLogFileFacts;
 
+(* HOW MANY QSOs THE LOG ON aDatabase HOLDS, AND THE NEWEST ONE'S TIME (UTC,
+  0 for none) -- the count and the newest QSO of TLogFileFacts above, by the
+  same rule and the same one query. Lifted out (2026-11-22) for the restore
+  chooser's candidates (uLogRestore), which need them of a backup that may have
+  no contest row, so the two readers cannot drift. Raises on a read failure;
+  aDatabase must be open (any open: read-only, peek or write). *)
+procedure ReadLogQsoFacts(aDatabase: TLogDatabase; out aQSOCount: integer;
+                          out aLastQSOTime: TDateTime);
+
 implementation
 
 uses
    SysUtils, DateUtils, db, sqldb,
-   uContestFileKind,
-   uLogDatabase;
+   uContestFileKind;
 
 (* A unix-seconds column, NULL or not positive meaning "not recorded". *)
 function UnixColumn(aField: TField): TDateTime;
@@ -174,6 +185,26 @@ begin
          aFacts.FFirstQSOTime := UnixColumn(q.Fields[0]);
          end;
       q.Close;
+   finally
+      q.Free;
+   end;
+
+   ReadLogQsoFacts(aDatabase, aFacts.FQSOCount, aFacts.FLastQSOTime);
+   Result := True;
+end;
+
+procedure ReadLogQsoFacts(aDatabase: TLogDatabase; out aQSOCount: integer;
+                          out aLastQSOTime: TDateTime);
+var
+   q: TSQLQuery;
+begin
+   aQSOCount := 0;
+   aLastQSOTime := 0;
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := aDatabase.Connection;
+      q.Transaction := aDatabase.Transaction;
+      q.UsePrimaryKeyAsKey := False;
 
       (* THE COUNT AND THE NEWEST, IN ONE PASS -- and NOT INDEXED on purpose.
 
@@ -191,12 +222,10 @@ begin
       q.Open;
       if not q.EOF then
          begin
-         aFacts.FQSOCount := q.Fields[0].AsInteger;
-         aFacts.FLastQSOTime := UnixColumn(q.Fields[1]);
+         aQSOCount := q.Fields[0].AsInteger;
+         aLastQSOTime := UnixColumn(q.Fields[1]);
          end;
       q.Close;
-
-      Result := True;
    finally
       q.Free;
    end;

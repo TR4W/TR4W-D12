@@ -422,9 +422,13 @@ end;
 procedure TContestMultipliersTests.Test_EveryOtherContestImpliesNoMultiplierFromACall;
 const
    (* MINNQSOPARTY since issue 211: an in-state entrant's DX call implies
-      the one DX key -- uTestContestMinnesotaQP pins it. *)
-   STATED: array[0..7] of ContestType = (RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB,
-                                         CUPURAL, RDA, YODX, MWC, MINNQSOPARTY);
+      the one DX key -- uTestContestMinnesotaQP pins it. RU3AXMEMORIAL since
+      issue 57 (2026-11-22): its 2025 exchange is a grid, so a Russian
+      station's oblast multiplier comes from its call (rule 7.1) and the hint
+      says so, as the Russian DX contest's does. *)
+   STATED: array[0..8] of ContestType = (RUSSIANDX, RFCHAMPIONSHIPCW, RFCHAMPIONSHIPSSB,
+                                         CUPURAL, RDA, YODX, MWC, MINNQSOPARTY,
+                                         RU3AXMEMORIAL);
 var
    identities: TContestIdentityList;
    k: integer;

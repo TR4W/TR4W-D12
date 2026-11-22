@@ -1537,6 +1537,14 @@ resourcestring
      minutes between retries (uLogBackup.PERIODIC_BACKUP_RETRY_SEC). ONE
      LINE: keep it short. *)
    SLogBackupStillFailing = 'Last log backup FAILED: retried every %d min. See tr4w.log.';
+   (* AFTER A RESTORE FROM A BACKUP THAT HOLDS EXTERNAL-LOGGER DELIVERY ROWS
+     (issue 242, warn only): uLogRestore.TLogRestoreResult.DeliveryNotice.
+     The caller shows it; nothing is changed. *)
+   SLogRestoreDeliveryNotice =
+      'The restored log''s record of what was sent to external loggers (Club Log, ' +
+      'WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may ' +
+      'already be at those services but are not in this log, and QSOs the backup ' +
+      'had not yet sent will be sent again. Check each service''s log.';
    (* WHY THE LOG IS READ-ONLY, in a few words: the %s of SLogNotSavedReadOnly
      and of SLogReadOnlyNotSaved. *)
    SLogReadOnlyReasonDiskFull = 'disk full';

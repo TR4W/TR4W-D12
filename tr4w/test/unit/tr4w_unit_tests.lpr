@@ -464,6 +464,7 @@ uses
    uContestSACCW in '..\..\src\contestFactory\uContestSACCW.pas',
    uContestSACSSB in '..\..\src\contestFactory\uContestSACSSB.pas',
    uContestLABRE in '..\..\src\contestFactory\uContestLABRE.pas',
+   uRussianTerritories in '..\..\src\contestFactory\uRussianTerritories.pas',
    uContestRussianDX in '..\..\src\contestFactory\uContestRussianDX.pas',
    uContestRU3AXMemorial in '..\..\src\contestFactory\uContestRU3AXMemorial.pas',
    uContestCupRFCW in '..\..\src\contestFactory\uContestCupRFCW.pas',
@@ -845,6 +846,10 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogLocking      in 'uTestLogLocking.pas',
    uLogBackup           in '..\..\src\domain\uLogBackup.pas',
    uTestLogBackup       in 'uTestLogBackup.pas',
+   (* Issue 242 stage 1: restoring the log from a backup, the damaged one
+      set aside. *)
+   uLogRestore          in '..\..\src\domain\uLogRestore.pas',
+   uTestLogRestore      in 'uTestLogRestore.pas',
    uLogBackupWorker     in '..\..\src\domain\uLogBackupWorker.pas',
    uSubmitSequence      in '..\..\src\domain\uSubmitSequence.pas',
    uTestSubmitSequence  in 'uTestSubmitSequence.pas',
@@ -1129,6 +1134,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    (* The Russian DX Contest's 2027 rules and the Popov Youth Cup's SRR 2026
       regulation (Q97, Q131-Q136, built 2026-10-22). *)
    uTestContestRussianRules2026Oct in 'uTestContestRussianRules2026Oct.pas',
+   uTestContestRU3AXMemorial in 'uTestContestRU3AXMemorial.pas',
    (* A QSO party's host-area rule, typed AND scored (Q107, 2026-10-16). *)
    uTestHostAreaRule    in 'uTestHostAreaRule.pas',
    (* A grid contest's exchange requires the grid, and a bad grid word is
@@ -1361,6 +1367,7 @@ begin
    RegisterSuite(TContestRulings2026OctTests.Create('ContestRulings2026Oct'));
    RegisterSuite(TContestReadBoundsTests.Create('ContestReadBounds'));
    RegisterSuite(TContestRussianRules2026OctTests.Create('ContestRussianRules2026Oct'));
+   RegisterSuite(TContestRU3AXMemorialTests.Create('ContestRU3AXMemorial'));
    RegisterSuite(THostAreaRuleTests.Create('HostAreaRule'));
    RegisterSuite(TGridExchangeTests.Create('GridExchange'));
    RegisterSuite(TDomQTHTableReloadTests.Create('DomQTHTableReload'));
@@ -1537,6 +1544,8 @@ begin
    RegisterSuite(TLogLockingTests.Create('LogLocking'));
    RegisterSuite(TLogBackupTests.Create('LogBackup'));
    RegisterSuite(TPeriodicBackupDueTests.Create('PeriodicBackupDue'));
+   RegisterSuite(TLogRestoreNameTests.Create('LogRestoreNames'));
+   RegisterSuite(TLogRestoreTests.Create('LogRestore'));
    RegisterSuite(TBackupCoalescerTests.Create('BackupCoalescer'));
    RegisterSuite(TLogBackupWorkerTests.Create('LogBackupWorker'));
    RegisterSuite(TSubmitSequenceTests.Create('SubmitSequence'));

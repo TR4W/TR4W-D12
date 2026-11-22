@@ -728,7 +728,8 @@ begin
          end;
       RU3AXMEMORIAL:
          begin
-         Result := StepBox(TC_RUSSIA);
+         (* Issue 57 (2025 rules, rule 4): the exchange is the grid. *)
+         Result := StepComment(TC_ENTERYOURFOURDIGITGRIDSQUARE, ncfMyGrid);
          end;
       RUSSIANDX:
          begin
@@ -983,10 +984,6 @@ begin
       RSGB18:
          begin
          Result := StepComment(TC_ENTERYOURDISTRICTABBREVIATION, ncfMyState);
-         end;
-      RU3AXMEMORIAL:
-         begin
-         Result := StepComment(TC_ENTERYOUROBLASTID, ncfMyState);
          end;
       RUSSIANDX:
          begin

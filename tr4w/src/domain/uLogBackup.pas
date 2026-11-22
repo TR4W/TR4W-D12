@@ -125,6 +125,11 @@ const
      "<log> before schema <from> to <to>.db". *)
    SCHEMA_BACKUP_INFIX = ' before schema ';
    SCHEMA_BACKUP_TO = ' to ';
+   (* The stamp's shape in a dated backup's name, one character per position:
+     'd' a digit, anything else itself. uLogStore's FormatDateTime pattern
+     writes exactly this. In the interface since 2026-11-22: the restore's
+     name classifier (uLogRestore) needs its length. *)
+   CLEAR_BACKUP_STAMP_SHAPE = 'dddd-dd-dd ddddddZ';
 
 (* THE NAME OF THE BACKUP AN OLDER LOG TAKES BEFORE IT IS UPGRADED: "<base>
   before schema <aFrom> to <aTo>.db" in aBackupDir, base by
@@ -223,11 +228,6 @@ implementation
 
 uses
    SysUtils, uLogDatabase, uLogNaming;
-
-const
-   (* The stamp's shape, one character per position: 'd' a digit, anything
-     else itself. uLogStore's FormatDateTime pattern writes exactly this. *)
-   CLEAR_BACKUP_STAMP_SHAPE = 'dddd-dd-dd ddddddZ';
 
 (* Does aBase END in aInfix and a stamp, " before clear <stamp>Z" or " before
   catch-up <stamp>Z", the suffixes the dated name rule writes? Exact shape only,

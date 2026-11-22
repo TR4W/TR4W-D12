@@ -188,6 +188,14 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-22 -- RESTORING THE LOG FROM A BACKUP: THE ENGINE ONLY (issue 242 stage 1; log-database)
+
+There is NO menu item or button yet: the chooser is stage 2 (lcl-ui), waiting on NY4I's ruling on the UX. The engine is `uLogRestore` (`ListRestoreCandidates`, `RestoreLogFromBackup`) behind `uLogStore.LogStoreRestoreLog`, unit-tested on temporary logs. These items need a real run once stage 2 exists, or a small test harness calls the engine on a copy of a real contest log. Use a COPY, never a live log, and close TR4W first.
+
+- [ ] **Restore from the periodic backup after deliberately corrupting the log.** Log 20 QSOs with BACKUP LOG FREQUENCY = 5, close TR4W, overwrite a few KB in the middle of the `.db` (not the first 100 bytes). Restore from `settings\backup\<log> periodic.db`. Expect: the log opens with the backup's QSOs (up to the last backup); `<log>.db.damaged-<UTC>Z` holds the corrupted file byte for byte, with its `-wal`/`-shm` beside it under the same name; no `-wal` is left beside the restored log; tr4w.log has `[LogRestore]` lines for every step.
+- [ ] **Restore an OLDER backup** (a `before schema <n> to <m>.db` from an earlier build, or a `before clear` one). Expect: the restore is accepted, the next open upgrades it (and takes its own `before schema` backup first), and the QSO count matches what the backup held.
+- [ ] **External loggers configured (WRL or Club Log)**: restore a backup taken after some QSOs were delivered. Expect the warning (`SLogRestoreDeliveryNotice`) and NO automatic change to what is sent; say whether the wording is right, and whether a backup taken BEFORE the first delivery (no warning today) should warn too.
+
 ## Added 2026-11-22 -- FLRIG IS A NATIVE RADIO, OVER XML-RPC (issue 5; radio-factory)
 
 The radio type "FLRig (XML-RPC)" (config token `FLRIG`, unchanged, so an existing FLRig profile loads it) now talks to FLRig's XML-RPC server directly instead of through HamLib. Nothing here has touched FLRig: method names were read from the `flrig.exe` 2.0.12 string table, argument and answer types from Hamlib's `rigs/dummy/flrig.c`, and the tests use constructed responses (`uTestFLRigXmlRpc`). Setup: start `C:\radio\flrig-2.0.12\flrig.exe` driving the K4, confirm its XML-RPC server is on (default port 12345), then in TR4W pick "FLRig (XML-RPC)" on the network link with host 127.0.0.1 and port 12345, "Drive through HamLib" UNTICKED. Set `DEBUG LOG LEVEL = TRACE` to see `[FLRig TX]` / `[FLRig RX]`.

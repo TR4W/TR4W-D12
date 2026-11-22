@@ -866,11 +866,11 @@ const
        AtUS: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange);
        AtVE: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange);
        AtDX: (Exchange: AgeAndQSONumberExchange; InitialExchange: NoInitialExchange)),
-      (* RU3AXMEMORIAL *)
+      (* RU3AXMEMORIAL -- RS(T) + grid since issue 57 (2025 rules, rule 4). *)
       (Token: 'RU3AX MEMORIAL';
-       AtUS: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange);
-       AtVE: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange);
-       AtDX: (Exchange: RSTDomesticQTHOrQSONumberExchange; InitialExchange: NoInitialExchange)),
+       AtUS: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange);
+       AtVE: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange);
+       AtDX: (Exchange: RSTAndOrGridExchange; InitialExchange: NoInitialExchange)),
       (* LQP *)
       (Token: 'LOCUST QSO PARTY';
        AtUS: (Exchange: NameAndDomesticOrDXQTHExchange; InitialExchange: NameQTHInitialExchange);

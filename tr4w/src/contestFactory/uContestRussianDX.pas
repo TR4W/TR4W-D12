@@ -185,14 +185,15 @@ uses
    (* RussianID, RussianStationOblast -- the scoring arm's leaf, and the one
       oblast rule (Q50). *)
    uCallSignRoutines,
+   (* RULE 7.3'S THREE TERRITORIES -- each its own DXCC territory and its own
+      oblast, each scored as European Russia: TRDXCTerritory, RDXCTerritoryOf,
+      RDXCOblastFromCall and the entity ids. Lifted there verbatim when the
+      RU3AX Memorial became their second user (issue 57, 2026-11-22). *)
+   uRussianTerritories,
    uTR4WStrings,
    SysUtils;
 
 type
-   (* RULE 7.3'S THREE TERRITORIES -- each its own DXCC territory and its own
-      oblast, each scored as European Russia. *)
-   TRDXCTerritory = (rdxcNone, rdxcKaliningrad, rdxcFranzJosefLand, rdxcRussianAntarctica);
-
    (* RULE 7.6 AGAINST RULE 9: the CTY country list is DXCC + WAE (rule 9's
       multiplier), so a WAE-only entity arrives as its own '*' CTY entity --
       but POINTS are by the DXCC list. Each row names a WAE-only entity and
@@ -206,14 +207,6 @@ type
    end;
 
 const
-   (* CTY.DAT's ids for rule 7.3's two non-CTY-entity territories: Franz Josef
-      Land's entity, and Antarctica's -- RI1AN... is "a separate DXCC territory",
-      and Antarctica is the DXCC entity it stands in. Both are already this
-      contest's domestic countries (DescribeSession). *)
-   FRANZ_JOSEF_LAND_ENTITY = 'R1FJ';
-   ANTARCTICA_ENTITY       = 'CE9';
-   KALININGRAD_ENTITY      = 'UA2';
-
    (* The DARC WAE list's entities that are not DXCC entities, as CTY.DAT
       marks them ('*'), with their DXCC parents. *)
    WAE_PARENTS: array[0..5] of TWAEParent = (
@@ -223,37 +216,6 @@ const
       (WAEEntity: '*JW/b'; DXCCCountry: 'JW'; DXCCContinent: Europe),
       (WAEEntity: '*4U1V'; DXCCCountry: 'OE'; DXCCContinent: Europe),
       (WAEEntity: '*TA1';  DXCCCountry: 'TA'; DXCCContinent: Asia));
-
-(* WHICH OF RULE 7.3'S TERRITORIES, IF ANY. The rule names RI1FJ... and RI1AN...
-   by CALL, so the call decides for those two -- whatever CTY.DAT resolves it
-   to. MEASURED 2026-10-22 with the shipped CTY.DAT, in both country modes:
-   RI1FJA, RI1FJL, R1FJL and RI1ANA all resolve to UA (ctyLocateCall rewrites
-   R[B-Z] to RA before its prefix walk, so CTY's RI1F and RI1AN prefixes are
-   never reached); only the exact =RI1ANC/=RI1ANI/=RI1ANY reach CE9.
-   Kaliningrad is a CTY.DAT entity of its own, so the country decides; so
-   does Franz Josef Land's entity for a call CTY.DAT files there. *)
-function RDXCTerritoryOf(const aCall: string; const aCountryID: string): TRDXCTerritory;
-var
-   call: string;
-begin
-   call := UpperCase(Trim(aCall));
-   if Copy(call, 1, 5) = 'RI1AN' then
-      begin
-      Result := rdxcRussianAntarctica;
-      end
-   else if (Copy(call, 1, 5) = 'RI1FJ') or (aCountryID = FRANZ_JOSEF_LAND_ENTITY) then
-      begin
-      Result := rdxcFranzJosefLand;
-      end
-   else if aCountryID = KALININGRAD_ENTITY then
-      begin
-      Result := rdxcKaliningrad;
-      end
-   else
-      begin
-      Result := rdxcNone;
-      end;
-end;
 
 (* THE COUNTRY AND CONTINENT A STATION SCORES AS -- rules 7.3 and 7.6. A
    rule 7.3 territory is European Russia; a WAE-only entity is its DXCC
@@ -286,27 +248,6 @@ begin
          Exit;
          end;
       end;
-end;
-
-(* A STATION'S OBLAST FROM ITS CALL, FOR THIS CONTEST: rule 7.3's FJ and AN,
-   then the one rule (Q50), uCallSignRoutines.RussianStationOblast -- which
-   reads R1FJ's '1F' as St Petersburg and knows nothing of RI1AN. *)
-function RDXCOblastFromCall(const aCall: string; const aCountryID: string): string;
-begin
-   case RDXCTerritoryOf(aCall, aCountryID) of
-      rdxcRussianAntarctica:
-         begin
-         Result := 'AN';
-         end;
-      rdxcFranzJosefLand:
-         begin
-         Result := 'FJ';
-         end;
-   else
-      begin
-      Result := RussianStationOblast(aCall, aCountryID);
-      end;
-   end;
 end;
 
 (* RULES 7.1-7.4 (2027). A Russian station: another continent 5 (Russia of

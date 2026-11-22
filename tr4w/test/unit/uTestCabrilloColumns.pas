@@ -465,7 +465,7 @@ begin
               aSent, aRec);
          end;
       ARI_DX, ARRL10, CIS, HADX, YUDX, HELVETIA, OKDX, CANADA_WINTER, RDA,
-      RUSSIANDX, SPDX, UKRAINIAN, DARCXMAS, WAG, YODX, RU3AXMEMORIAL,
+      RUSSIANDX, SPDX, UKRAINIAN, DARCXMAS, WAG, YODX,
       ARKTIKA_SPRING, UNDX, KINGOFSPAINCW, KINGOFSPAINSSB, REFCW, REFSSB,
       CANADA_DAY, ARRL_RTTY_ROUNDUP, OKOMSSB:
          begin
@@ -624,6 +624,30 @@ begin
                '579 GA     ',
                '579        ',
                '579 GA     '],
+              aSent, aRec);
+         end;
+      RU3AXMEMORIAL:
+         begin
+         (* Issue 57, rule 4 (2025): RS(T) + the FOUR-character grid sent,
+            and the received GRID (QTHString), never the domestic QTH the
+            context carries (the oblast, for this contest). *)
+         Take(aVariant,
+              ['599 EL88   ',
+               '59         ',
+               '599 EL88   ',
+               '599 EL88   ',
+               '599 EL88   ',
+               '599 EL88   ',
+               '599 EL88   ',
+               '599 EL88   '],
+              ['579 GA     ',
+               '58         ',
+               '579 ABCDEFGHIJ',
+               '579 TRC    ',
+               '579 GA     ',
+               '579 GA     ',
+               '579 XY     ',
+               '579        '],
               aSent, aRec);
          end;
       BWQP, GENERALQSO:

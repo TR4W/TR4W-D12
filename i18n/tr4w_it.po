@@ -13133,3 +13133,8 @@ msgstr ""
 #, fuzzy
 msgid "{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent."
 msgstr ""
+
+#: uappstrings.slogrestoredeliverynotice
+#, fuzzy
+msgid "The restored log's record of what was sent to external loggers (Club Log, WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may already be at those services but are not in this log, and QSOs the backup had not yet sent will be sent again. Check each service's log."
+msgstr ""

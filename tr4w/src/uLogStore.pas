@@ -60,7 +60,8 @@ uses
      TStationFactCorrections is the station-value correction's argument. *)
    uStationFactRecord,
    uExternalDelivery, (* TDeliveryStatus -- LogStoreReadDeliveryAtIndex *)
-   uExternalLoggerActions; (* TResendMode, TResendTally -- LogStoreResendToExternalLogger *)
+   uExternalLoggerActions, (* TResendMode, TResendTally -- LogStoreResendToExternalLogger *)
+   uLogRestore;      (* TLogRestoreResult -- LogStoreRestoreLog *)
 
 (* PUT A QSO IN THE LOG, AND SAY WHETHER IT IS ACTUALLY THERE.
 
@@ -831,6 +832,19 @@ function LogStoreBackupBefore(const aInfix, aBackupDir: string;
 function LogStoreBackupBeforeCatchUp(const aBackupDir: string;
    out aPath, aReport: string): boolean;
 
+(* RESTORE aLogFile FROM THE BACKUP aCandidate, SETTING THE OLD LOG ASIDE
+  (issue 242, stage 1) -- uLogRestore.RestoreLogFromBackup behind the one
+  precondition it cannot check itself.
+
+  THE PRECONDITION: nothing in this process has aLogFile open. ENFORCED here
+  for the store and the periodic backup worker: refused (Ok False, the log
+  untouched) while the store's database is aLogFile, or a periodic backup is
+  running. A caller restoring the log it is logging to calls LogStoreClose
+  first. NOT checked: the WRL worker's own connection -- stage 2 restores from
+  the New Contest dialog before any log is opened, and relaunches. Every step
+  is logged. The caller owns the result. Never raises. *)
+function LogStoreRestoreLog(const aLogFile, aCandidate: string): TLogRestoreResult;
+
 (* IS THE CONTEST LOG SOUND? ASKED ON PURPOSE, RATHER THAN ON THE WAY PAST.
 
   The same integrity_check and foreign_key_check the open path runs, exposed
@@ -881,6 +895,9 @@ uses
    (* TLogBackup -- the ORDER of a backup's file operations, which is a leaf so
       the unit tests can hold it. LogStoreBackup supplies the live database. *)
    uLogBackup,
+   (* PeriodicBackupInFlight -- LogStoreRestoreLog refuses while a periodic
+     backup reads the log. *)
+   uPeriodicBackupService,
    (* The canonical sent-exchange builder -- the same one the UDP broadcast
       uses, so the database and the broadcast cannot disagree. *)
    uExchangeBuilder,
@@ -3207,6 +3224,57 @@ function LogStoreBackupBeforeCatchUp(const aBackupDir: string;
    out aPath, aReport: string): boolean;
 begin
    Result := LogStoreBackupBefore(CATCHUP_BACKUP_INFIX, aBackupDir, aPath, aReport);
+end;
+
+function LogStoreRestoreLog(const aLogFile, aCandidate: string): TLogRestoreResult;
+var
+   i: integer;
+begin
+   (* THE PRECONDITION, enforced before anything is touched. On Windows a
+     rename of the open file would fail and leave it as it was; on Unix it
+     would succeed under the open connection, which would then go on writing
+     into the set-aside file. *)
+   if (GDatabase <> nil) and
+      RestoreSameFile(GDatabase.FileName, aLogFile) then
+      begin
+      Result := TLogRestoreResult.Create;
+      Result.RestoredFrom := aCandidate;
+      Result.Fail(UnicodeFormat('%s is open in this session, so it was not ' +
+                                'restored. Close it first. The log was not changed.',
+                                [aLogFile]));
+      end
+   else if PeriodicBackupInFlight then
+      begin
+      Result := TLogRestoreResult.Create;
+      Result.RestoredFrom := aCandidate;
+      Result.Fail('A periodic backup of the log is running, so nothing was ' +
+                  'restored. Try again when it has finished. The log was not changed.');
+      end
+   else
+      begin
+      Result := RestoreLogFromBackup(aLogFile, aCandidate, LocalTimeToUniversal(Now));
+      end;
+
+   if logger <> nil then
+      begin
+      for i := 0 to Result.Steps.Count - 1 do
+         begin
+         logger.Info('[LogRestore] %s', [Result.Steps[i]]);
+         end;
+      if Result.Ok then
+         begin
+         logger.Info('[LogRestore] %s', [Result.Reason]);
+         end
+      else
+         begin
+         logger.Error('[LogRestore] %s NOT restored from %s: %s',
+                      [aLogFile, aCandidate, Result.Reason]);
+         end;
+      if Result.DeliveryMayDiffer then
+         begin
+         logger.Warn('[LogRestore] %s', [Result.DeliveryNotice]);
+         end;
+      end;
 end;
 
 function LogStoreBackupPeriodic(const aBackupDir: string;

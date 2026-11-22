@@ -317,7 +317,7 @@ begin
                      '599   7 ');
          end;
       ARI_DX, ARRL10, CIS, HADX, YUDX, HELVETIA, OKDX, CANADA_WINTER, RDA, RUSSIANDX, SPDX,
-      UKRAINIAN, DARCXMAS, WAG, YODX, RU3AXMEMORIAL, ARKTIKA_SPRING, UNDX, KINGOFSPAINCW,
+      UKRAINIAN, DARCXMAS, WAG, YODX, ARKTIKA_SPRING, UNDX, KINGOFSPAINCW,
       KINGOFSPAINSSB, REFCW, REFSSB, CANADA_DAY, ARRL_RTTY_ROUNDUP, OKOMSSB:
          begin
          Result := Pick(aVariant, '599 FL     ',
@@ -362,6 +362,15 @@ begin
                      '59         ',
                      '599 EL88AA5',
                      '599 EL88AA ');
+         end;
+      RU3AXMEMORIAL:
+         begin
+         (* Issue 57, rule 4 (2025): RS(T) + the FOUR-character grid,
+            whatever length MY GRID is stated at. *)
+         Result := Pick(aVariant, '599 EL88   ',
+                     '59         ',
+                     '599 EL88   ',
+                     '599 EL88   ');
          end;
       BWQP:
          begin

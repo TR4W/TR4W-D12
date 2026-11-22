@@ -36,6 +36,7 @@ https://clublog.org/api/v1 | endpoint | root | uClubLogClient | API base
 https://logbook.qrz.com/api | endpoint | root | uQRZLogbookClient | POST only
 https://api.worldradioleague.com/v1 | endpoint | root | uWRLClient | API base, POST only
 https://www.worldradioleague.com | link | head | uExternalLoggerActions | WRL: the Open web site default, opened in the browser (issue 356; placeholder until NY4I supplies the value)
+http://ua9qcq.ru/submit_log.php | doc | skip | uContestRU3AXMemorial | the Russian 160 m log-submission form, named in the class header only (issue 57)
 https://radiosport.world/wrt.html | doc | skip | uContestWRT | the Weekly RTTY Test rules page, named in the class header only (issue 25)
 https://clublog.org | link | head | uExternalLoggerActions | Club Log: the Open web site default, opened in the browser (issue 356; placeholder until NY4I supplies the value)
 # ---- links: opened in the operator's browser -------------------------------------------------
