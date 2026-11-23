@@ -1836,7 +1836,6 @@ begin
    aTable.Place('bandmap.ctrlj.bandMapItemHeight',        NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('bandmap.ctrlj.bandMapItemWidth',         NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('bandmap.ctrlj.bandMapSplitMode',         NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
-   aTable.Place('bandmap.workedMultColor',                NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('bandmap.workedMultLimit',                NAV_BANDMAPWINDOW, SPrefsGroupBandMapWindow);
    aTable.Place('operating.ctrlj.qzbRandomOffsetEnable',  NAV_BANDMAPWINDOW, SPrefsGroupSpotTuning);
    (* Issue 185: where the cursor goes after tuning to a spot. NY4I: "an
@@ -1853,6 +1852,10 @@ begin
    aTable.Place('bandmap.selectionColor',                 NAV_COLORS, SPrefsGroupBandMapColors);
    aTable.Place('bandmap.dupeColor',                      NAV_COLORS, SPrefsGroupBandMapColors);
    aTable.Place('bandmap.multColor',                      NAV_COLORS, SPrefsGroupBandMapColors);
+   (* NY4I, 2026-11-22: a colour option belongs with the colours, not on the page
+     of the window that uses it. It colours the band map's M, the DX cluster
+     window's line and the remaining-multipliers backup cell. *)
+   aTable.Place('bandmap.workedMultColor',                NAV_COLORS, SPrefsGroupBandMapColors);
    aTable.Place('bandmap.activeBandColor',                NAV_COLORS, SPrefsGroupBandMapColors);
    aTable.Place('bandmap.otherBandColor',                 NAV_COLORS, SPrefsGroupBandMapColors);
    aTable.Place('bandmap.vfoMarkerColor',                 NAV_COLORS, SPrefsGroupBandMapColors);

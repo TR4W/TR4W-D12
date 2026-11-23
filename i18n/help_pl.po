@@ -2500,8 +2500,9 @@ msgid "The color TR4W uses for an alert in the main window: the text of a radio'
 msgstr "Kolor TR4W używa alarmu w głównym oknie: tekst nazwy i częstotliwości radia, podczas gdy radio jest odłączone, a tło wskaźnika PTT, gdy klawisz-up jest hamowany, ponieważ radio nie będzie transmitować. Wybierz z listy kolorów; domyślną wartością jest ALERT."
 
 #. Config command: BAND MAP WORKED MULT COLOR   (default: ORANGE)
+#, fuzzy
 msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_COLOR"
-msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window. The default is ORANGE."
+msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window and for such a multiplier's cell in the remaining multipliers window. The default is ORANGE."
 msgstr "Kolor M na miejscu mapy zespołu, którego mnożnik już pracował, ale mniej niż BAND MAP Worked MULT LIMIT, na telefon, który nie jest dupe. Ten sam kolor jest używany do takiej linii miejsca w oknie klastra DX. Domyślnie jest ORANGE."
 
 #. Config command: BAND MAP WORKED MULT LIMIT   (default: 1)
