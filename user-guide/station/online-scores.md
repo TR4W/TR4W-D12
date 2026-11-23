@@ -2,7 +2,9 @@
 
 The HamScore integration sends live score information and can also send QSO contact data to the configured service. It is separate from exporting a Cabrillo entry and does not submit your contest entry to the sponsor.
 
-1. Open **Ctrl+J** and find **Online scoring**.
+![Online Scoring Preferences page showing the HamScore posting switch, service and account fields, and scoreboard URLs](../assets/v5.1.0/preferences-online-scoring.png)
+
+1. Open **Ctrl+J → Operating → Online Scoring**.
 2. Enable **Post my score while the contest runs**.
 3. Set **Service URL**, **Username**, and **Password** for your service account. An empty username falls back to your configured callsign; an empty password prevents the uploader from starting.
 4. Decide whether to **Include contact information**. QSO uploads require this setting and a contest marked RTC-capable by TR4W. Turning it off suppresses contact log/edit/delete uploads; score posts remain enabled.

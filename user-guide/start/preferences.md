@@ -18,4 +18,6 @@ Contest settings include **QSO settings**, **Modes**, **Initial exchange**, **Mu
 
 The **Station** page shows the open contest's values when it defines its own. When you change such a value, choose **Station default only** or **Also this contest**. Review any separate offer to correct older QSOs. Individual contacts retain the station facts sent when they were logged.
 
+![Station Preferences page showing station information, contest exchange fields, and the remembered callsign for New Contest](../assets/v5.1.0/preferences-station.png)
+
 Hover over a control for help or search the [command reference](../reference/commands/index.md) by its configuration name.

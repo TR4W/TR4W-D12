@@ -10,7 +10,11 @@ One **Enter** saves all linked county-line, multi-park or rover rows in one tran
 
 ## Correct station facts already logged
 
-Use **Tools → Correct Station Facts…** to repair an eligible sent value, such as the wrong CQ zone. Review the affected and skipped row counts before confirming. The confirmation defaults to **Cancel**. TR4W takes a verified backup, applies the change in one transaction, sends edits to connected systems, and rescores. Imported contacts, rows that never recorded that value, and applicable rover rows are skipped. In **Edit QSO**, you can inspect or correct individual station facts.
+Choose **Tools → Correct Station Facts…** and select the station fact to repair, such as the CQ zone.
+
+![Correct station facts dialog with the field selector open, showing State, Section, CQ zone, ITU zone, Grid, and other facts](<../assets/v5.1.0/Update contest facts.png>)
+
+Review the affected and skipped row counts before confirming. The confirmation defaults to **Cancel**. TR4W takes a verified backup, applies the change in one transaction, sends edits to connected systems, and rescores. Imported contacts, rows that never recorded that value, and applicable rover rows are skipped. In **Edit QSO**, you can inspect or correct individual station facts.
 
 ## Restore a verified log snapshot
 

@@ -11,11 +11,13 @@ TR4W creates a verified snapshot of the open contest database. A manual backup w
 
 ## Set an automatic interval
 
-Open **Ctrl+J**, find the backup settings, and set the number of new QSOs between backups. **0** disables the automatic schedule.
+Open **Ctrl+J → Backup**. Set **Back up every** to the number of new QSOs between backups. **0** disables the automatic schedule.
+
+![Backup Preferences page showing the QSO interval and optional Copy to destination](../assets/v5.1.0/preferences-backup.png)
 
 The interval counts newly logged records since the last successful backup. It starts at zero each session. Dupes, X-QSOs, and contacts received from peers count. Notes are excluded. With automatic backups enabled, the next QSO also triggers a backup if the last successful snapshot is at least 30 minutes old or missing. The snapshot runs in the background. A failure keeps the count and delays the next automatic attempt for five minutes.
 
-An optional **BACKUP DESTINATION** adds a background copy; it is not required for local backups.
+Use **Copy to** (the **BACKUP DESTINATION** setting) to add a background copy.
 
 ## Snapshot files
 

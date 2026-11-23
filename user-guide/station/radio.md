@@ -2,7 +2,9 @@
 
 Check the [radio support table](../reference/radios.md) for the driver's registered serial/network connections, discovery support, and setup defaults. For a TCI connection, also read [TCI connections](tci.md).
 
-Open the editor for the intended radio from the radio library in Preferences or from the [setup wizard](../start/first-contest.md#complete-the-initial-station-setup). Confirm **Name** and **Radio type** before entering connection details.
+Open **Ctrl+J → Hardware → Radios**. Choose **Add...**, or select an existing radio and choose **Edit...**. The [setup wizard](../start/first-contest.md#complete-the-initial-station-setup) can open the editor too. Confirm **Name** and **Radio type** before entering connection details.
+
+![Radios Preferences page with the radio library, Add and Edit buttons, and Radio 1 and Radio 2 assignments in the station profile](../assets/v5.1.0/preferences-radios.png)
 
 === "Serial CAT"
 
@@ -34,10 +36,6 @@ Verify PTT by CAT and CW on the intended radio before relying on either. TR4W re
 ## Per-radio polling
 
 In the newer radio editor, **FREQUENCY POLL RATE** is under **Advanced** for each radio. Set it for the selected radio rather than looking for a station-wide value. Check both configured radios after changing profiles or polling settings.
-
-The current Preferences page separates reusable radio definitions from station-profile assignments. This test capture has no radio configured; it illustrates the controls rather than a verified hardware connection.
-
-![Radio library and station-profile assignments](../assets/cwops/preferences.png)
 
 ## Verify the connection
 

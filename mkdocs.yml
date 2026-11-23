@@ -30,6 +30,8 @@ theme:
 plugins:
   - search
   - offline
+extra_css:
+  - assets/stylesheets/operating-guide.css
 markdown_extensions:
   - admonition
   - attr_list
@@ -76,7 +78,7 @@ nav:
       - Contest additions and rule checks: operating/contests.md
       - POTA and park-to-park: operating/pota.md
       - Keyboard essentials: operating/keyboard.md
-      - Colors, sizing, and lost windows: operating/appearance.md
+      - Main window and appearance: operating/appearance.md
       - Radio 1 and Radio 2 windows: operating/radio-windows.md
       - Possible calls and SCP: operating/callsign-assistance.md
       - Band map: operating/bandmap.md

@@ -5,16 +5,16 @@ TR4W retains the manual's separate message banks for running and search-and-poun
 1. Select CW and open **Settings → Program messages**.
 2. Choose **C** for a CQ function key, **E** for an exchange/search-and-pounce function key, or **O** for other messages.
 3. Select the message to edit. Enter the transmitted content in **Message** and a useful button description in **Caption**.
-4. Use **List of commands** to insert a supported command rather than guessing its spelling or control-character encoding.
+4. Open **List of commands**, select a command, and choose **OK** to insert it.
 5. Choose **OK** to apply the message. Test the key in the intended CQ or exchange context with the correct radio and [CW sending backend](cw.md). Function-key memories are captured in the contest database when the log closes; exit normally and reopen the practice log to check persistence. Do not edit the `.db` as though it were an old `.cfg` text file.
 
-Alt+P opens the current message list. The chooser, list and editor below show the CW Open examples programmed through the Windows 5.0.37 GUI-test VM on November 11, 2026. No CW was transmitted. Their CWO exchange is a serial and name; CWT instead calls CQ CWT and exchanges first name plus CWops member number, or first name plus state/province/DX country prefix for non-members.
+**Alt+P** opens the current message list. The screenshots show CW Open practice messages in TR4W 5.1.0 for Windows. CW Open exchanges a serial and name. In CWT, call CQ CWT and exchange your first name plus your CWops member number or, for non-members, your state, province, or DX country prefix.
 
-![Choose the message group](../assets/cwops/message-chooser.png)
+![Choose a CQ, exchange, or other message group](../assets/v5.1.0/message-chooser.png)
 
-![Current message list](../assets/cwops/cq-messages.png)
+![CW Open function-key message list with the CQ memory bank selected](../assets/v5.1.0/cq-messages.png)
 
-![Message editor](../assets/cwops/message-editor.png)
+![Program message editor showing the CW Open CQ message on F1](../assets/v5.1.0/message-editor.png)
 
 ## Start with simple messages
 
@@ -31,6 +31,12 @@ Test each bank separately, including the exchange sent by the normal Enter workf
 ## Message commands
 
 Use braces around a command. The editor upgrades recognized commands saved with the old control-character bookends. A leading `$` inside the braces directs a radio command to the inactive radio.
+
+![List of commands dialog for inserting commands into a function-key message](<../assets/v5.1.0/Function Key Commands.png>)
+
+In a contest that sends a signal report and location, insert `{ROVERQTH}` after the report.
+
+![Program message editor with 5NN followed by the braced ROVERQTH command inserted from List of commands](../assets/v5.1.0/rover-macro.png)
 
 | Message text | Effect |
 | --- | --- |

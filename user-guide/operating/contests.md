@@ -18,6 +18,8 @@ Canadian Prairies is scheduled for the second Saturday in May at 17:00 UTC for 1
 
 Type `ROVER` in the call field and press **Enter**, or choose **Tools → Commands → ROVER**. Select or enter your operating place or places and confirm. The dialog applies the contest's county-line limit. Watch the **ROVER** panel when moving, and use the same dialog to turn roving off.
 
+![Rover dialog with Alachua and Baker checked for a Florida QSO Party county line](../assets/v5.1.0/rover.png)
+
 At a boundary, one contact creates linked rows for the selected places. Dupe checking includes the place you sent from. Set your sent messages with [`{ROVERCALL}` and `{ROVERQTH}`](../station/cw-messages.md#message-commands) where appropriate. Review [the export](../log/export.md#current-export-details) before submitting a rover log.
 
 ## Entering the exchange

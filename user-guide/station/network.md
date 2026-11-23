@@ -11,9 +11,11 @@ TR4W stations connect to TR4WServer to exchange contest activity. This network i
 
 ## Set up a practice network
 
+![Network Preferences page with Server, Port, Password, Tailcat address, and This station fields](../assets/v5.1.0/preferences-network.png)
+
 1. Choose the server computer and run a compatible TR4WServer build for the clients being tested.
-2. On each client, select the same contest and configure **Server address**, **Server port**, and **Server password** in **Preferences → Network**. For a remote server that provides a Tailcat address, follow [Tailcat setup](#tailcat).
-3. Give every station a distinct **COMPUTER ID**. The protocol's station-status display uses station letters; duplicate IDs can confuse status even though transport connections are separate.
+2. On each client, select the same contest and set **Server**, **Port**, and **Password** in **Ctrl+J → Network**. For a remote server that provides a Tailcat address, follow [Tailcat setup](#tailcat).
+3. Give every station a distinct letter in **This station** (the **COMPUTER ID** setting). The station-status display uses these letters to identify stations.
 4. Make the server's main port and its synchronization port reachable. The conventional main port is `1061`; the synchronization port is **main port + 1**, normally `1062`.
 5. Choose **Net → Connect**. Check the Network and Stations displays, log a practice contact, and confirm that the other clients receive the contact and station state.
 6. Test a disconnect/reconnect and a log mismatch before the event. Preserve each station's test log so you can compare what happened.

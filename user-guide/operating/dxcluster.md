@@ -6,13 +6,21 @@ The cluster console shows the node's messages and lets you send commands. Parsed
 
 ## Connect and check reception
 
-1. Open the **Telnet** window from the Windows menu.
+1. Choose **Windows → DX Cluster**.
 2. Use **Configure...** to review the cluster connection, then select the intended node.
 3. Choose **Connect** and follow any login prompts from that node.
 4. Confirm that node messages arrive. Use the command-entry field and **Send** for a command appropriate to the node.
 5. Compare a received spot with the band map. If the console receives it but the map does not show it, review the map filters and spot age.
 
 The form also provides **Disconnect**, **Freeze**, **Clear**, **Commands**, and **SH/50**. Command support and response syntax depend on the cluster node; a button's presence does not make every server understand that command.
+
+![DX Cluster console showing connection controls, the command-entry field, and a feed of simulated 40 m spots](../assets/v5.1.0/dx-cluster.png)
+
+The host selector is at the left below the toolbar. Enter a node command in the field beside it. In the first spot from this local practice feed, **K1ABC** reported **K3LR** on **7012.3 kHz** with the comment **CW CQ PA**. The timestamp at the right is UTC. The [band map example](bandmap.md#find-and-select-a-station) uses the same feed.
+
+**Configure...** opens **Preferences → DX Cluster**. Use **Add...** to enter a host and port, or choose a server from the supplied list.
+
+![DX Cluster Preferences page with the cluster library, server selector, and login and startup fields](../assets/v5.1.0/preferences-dx-cluster.png)
 
 Recognized `SH/DX` history replies can also populate the band map. Their age comes from the UTC time in the reply.
 

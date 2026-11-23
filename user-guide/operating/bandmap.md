@@ -6,17 +6,29 @@ The band map organizes spots by operating frequency so you can find stations to 
 
 Open **Band map** from the Windows menu. Connect a [DX cluster](dxcluster.md) or use another configured spot source. Select a spot to inspect it; double-clicking invokes the tune-to-spot action.
 
+![40 m band map showing frequency and call pairs, with N4ZZ selected and K1TTT outlined as the closest spot to the radio](../assets/v5.1.0/bandmap.png)
+
+Each row shows a frequency in kHz and a spotted callsign. In this practice feed, the blue selection is **N4ZZ** on **7020.0 kHz**. On the bottom line you can read its age, country and beam heading, and the spotting station. The outline around **K1TTT** marks the spot nearest the radio's **7025.0 kHz** frequency.
+
 In a two-radio setup, double-click behavior can target the inactive radio when the corresponding SO2R setting is enabled and both radios have frequency information. The context menu also offers **Send spot to inactive radio**. Verify which radio moves before relying on this during a contest.
 
 Tuning to a spot does not complete or log a contact. Confirm the station's callsign and exchange on the air.
 
 ## Worked-multiplier target
 
+Open **Ctrl+J → Operating → Band Map → Window and tuning** for the **Workings of a multiplier before its spot shows no M** setting.
+
+![Window and tuning Preferences page showing the multiplier target, band map size, and tuning behavior](../assets/v5.1.0/preferences-bandmap-window.png)
+
 **BAND MAP WORKED MULT LIMIT** accepts **1–9**, with **1** as the default. An orange **M** marks a multiplier already worked fewer times than your chosen target. **MULTS ONLY** keeps those spots visible. Sweepstakes counts a section across bands and CQ WW counts the relevant multiplier per band.
 
 A spot needs usable multiplier information, such as a section or state in the cluster comment. Tuning to a spot does not count it as worked; logging the contact changes the count.
 
 ## Control what you see
+
+Open **Ctrl+J → Operating → Band Map** for spot expiry, display limit, and the main filters.
+
+![Band Map Preferences page showing spot expiry, guard band, display limit, and band, mode, and duplicate filters](../assets/v5.1.0/preferences-bandmap.png)
 
 Right-click the map for its display controls:
 

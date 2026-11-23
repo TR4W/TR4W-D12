@@ -4,9 +4,11 @@ SO2R lets you run on one radio while searching for another contact on the other.
 
 ## Commission the station
 
+![Two Radio Mode Preferences page showing the mode switch and the Alt-D, band selection, and inactive radio options](../assets/v5.1.0/preferences-two-radio-mode.png)
+
 1. Configure and test each [radio connection](radio.md) separately. Open both [radio panels](../operating/radio-windows.md) and check frequency, mode, and active-radio indication.
 2. Configure the intended [CW keyer](cw.md) and station switching hardware. Verify which radio is keyed and which audio you hear for each selection. A successful CAT connection does not establish correct transmit routing.
-3. In **Ctrl+J**, enable **TWO RADIO MODE**. The earlier SO2R tips also recommend **ALT-D BUFFER ENABLE** and **TUNE ALT-D ENABLE** for an inactive-radio search workflow; configure these to suit your operation.
+3. Open **Ctrl+J → Operating → Two Radio Mode** and enable **Two radio mode**. The earlier SO2R tips also recommend **ALT-D BUFFER ENABLE** and **TUNE ALT-D ENABLE** for an inactive-radio search workflow; configure these to suit your operation.
 4. Test **Alt+R** to swap radios. Confirm the active highlight and logging band/mode, then swap back.
 5. Rehearse a complete contact on each radio in a practice log before adding automation.
 

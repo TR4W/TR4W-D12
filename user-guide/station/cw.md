@@ -20,11 +20,13 @@ Avoid configuring several methods and assuming they send together. The code repo
 ## Configure and test
 
 1. Select the intended method for your radio and platform.
-2. For an external keyer, review **CW keying device**, **Keyer type**, and **Port**. The WinKeyer panel exposes timing, sidetone, weight, paddle, and speed-pot options.
+2. For an external keyer, open **Ctrl+J → Hardware → CW keyers** and add or edit the device. For a WinKeyer, choose **WINKEYER** for **Keyer type** and select the connected device's **Port**.
 3. For software keying, review the radio's separate keyer-output and RTS/DTR controls. CAT port settings alone do not configure those lines.
 4. Review the function-key text with **Alt+P** before sending it. Use **Alt+S** to review CW speed.
 5. With an appropriate station test setup, check a short message, a longer buffered message, speed changes, and cancellation with **Esc**.
 6. In a two-radio station, verify which output keys and that switching radios does not leave an earlier message transmitting.
+
+![CW keying device editor showing the selected WinKeyer port, keyer mode, sidetone, timing, and paddle options](../assets/v5.1.0/WinKeyer.png)
 
 The CAT path has a specific sole-transmitter interlock because two radios have independent CW buffers. Hardware keyers route a shared keying engine to an output; their switching behavior is different. Test both routing and message cancellation with the actual station hardware.
 

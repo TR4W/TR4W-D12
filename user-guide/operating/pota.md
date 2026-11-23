@@ -4,7 +4,7 @@ Select **POTA** when [starting your contest](../start/first-contest.md). Use a p
 
 ## Set your own park
 
-Open settings with **Ctrl+J** and find **MY PARK**. Set it to the full reference of the park you are activating, for example `US-0663`. This identifies your park in the ADIF export and supplies the country prefix when you enter a digits-only worked-park reference.
+Open **Ctrl+J → Station** and enter your full park reference in **Park** under **Contest exchange**, for example `US-0663`. This identifies your park in the ADIF export and supplies the country prefix when you enter a digits-only worked-park reference. [See the Station Preferences page](../start/preferences.md#contest-pages-and-station-defaults).
 
 Use **Download POTA Parks** in the Tools menu to update the park-name database before operating. The current code resolves the data location for the platform; the older wiki instruction that the download always lives beside the executable should not be assumed for this build.
 

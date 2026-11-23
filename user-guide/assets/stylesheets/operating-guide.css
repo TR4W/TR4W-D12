@@ -1,0 +1,33 @@
+.main-window-key {
+   position: relative;
+   width: fit-content;
+   max-width: 100%;
+   margin: 1em 0;
+}
+
+.main-window-key > p {
+   margin: 0;
+}
+
+.main-window-key img {
+   display: block;
+}
+
+.main-window-key span {
+   position: absolute;
+   left: var(--x);
+   top: var(--y);
+   transform: translate(-50%, -50%);
+   display: grid;
+   place-items: center;
+   width: 1rem;
+   height: 1rem;
+   border-radius: 50%;
+   background: #283593;
+   color: #fff;
+   box-shadow: 0 0 0 1px #fff;
+   font-size: 0.6rem;
+   font-weight: 700;
+   line-height: 1;
+   pointer-events: none;
+}

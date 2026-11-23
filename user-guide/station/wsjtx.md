@@ -2,15 +2,19 @@
 
 WSJT-X performs the digital-mode work. TR4W receives its UDP messages to support contest logging and callsign highlighting.
 
-You can set up WSJT-X in **Tools → Setup Wizard**. The page offers the enable switch, UDP port, callsign highlighting, radio control, and the advanced multicast group. The wizard saves only changed settings, and a Tools-menu run tells you when a restart is needed.
+You can also configure WSJT-X from **Tools → Setup Wizard** during station setup.
 
 ## Match the UDP connection
 
-1. Open a practice contest in TR4W.
-2. In TR4W's settings, confirm **WSJT-X ENABLED** is true and note **WSJT-X BROADCAST PORT**. Its source default is `2237`.
-3. In WSJT-X's **Settings → Reporting**, configure its UDP server destination and port to match your setup. On one computer with ordinary unicast, the destination is the local computer, typically `127.0.0.1`; leave TR4W's multicast group empty.
-4. For a shared multicast setup, use the same multicast group and port in both applications and select the appropriate outgoing interface in WSJT-X. The wiki illustrates `224.0.0.1`.
-5. Enable **Accept UDP requests** in WSJT-X if you want to receive TR4W's highlighting requests. Enable **WSJT-X SEND HIGHLIGHTS** in TR4W.
+In a practice contest, press **Ctrl+J** and select **External Software → WSJT-X**.
+
+![The WSJT-X leaf in TR4W Preferences showing the exchange and highlighting switches, broadcast port, multicast group, and N1MM log listener](../assets/v5.1.0/preferences-wsjtx.png)
+
+1. Check **Exchange data with WSJT-X** and note the **Broadcast port**. The default is `2237`.
+2. In WSJT-X's **Settings → Reporting**, set the UDP server destination and port. For both apps on one computer, the destination is typically `127.0.0.1`. Leave **Multicast group** blank in TR4W.
+3. For a shared multicast setup, match the group and port in both apps and select the outgoing interface in WSJT-X.
+4. For highlighting, check **Send callsign highlighting to WSJT-X** in TR4W and **Accept UDP requests** in WSJT-X.
+5. Save Preferences. Restart TR4W after enabling WSJT-X or changing the broadcast port.
 
 ## Verify both directions
 
@@ -26,11 +30,11 @@ TR4W can fill a missing state from the received grid when the lookup gives a uni
 
 ## Radio control is a separate connection
 
-First verify [TR4W's radio connection](radio.md). To let WSJT-X use that radio, enable **WSJT-X RADIO CONTROL ENABLED** in Preferences or the wizard, restart if prompted, and select **DX Lab Suite Commander** as the rig in WSJT-X. Point it at TR4W's Commander-compatible TCP service, default port `52002`. Test frequency and mode changes with the intended rig. The UDP logging port is separate.
+First verify [TR4W's radio connection](radio.md). On the WSJT-X Preferences page shown above, select **Let WSJT-X control the radio**, save, and restart TR4W. Select **DX Lab Suite Commander** as the rig in WSJT-X and point it at TR4W's Commander-compatible TCP service, default port `52002`. Test frequency and mode changes with the intended rig.
 
 ## Receive N1MM-style log messages
 
-For a program configured to send N1MM Logger+ Log messages, enable **ENABLE N1MM LOG LISTENER** in TR4W Preferences. It is off by default. TR4W listens on UDP `2333` and TCP `52001`. **N1MM LISTEN ADDRESS** defaults to `127.0.0.1`, for senders on the same computer. To receive from another computer, set the listener to this station's LAN address and allow only trusted senders to reach it. Both settings apply when saved. Any sender that can reach the listener can add records to the open contest log.
+On the WSJT-X Preferences page shown above, select **Accept QSOs from JTDX and JTAlert (N1MM log listener)** for a sender configured to forward N1MM Logger+ Log messages. The listener is off by default. TR4W listens on UDP `2333` and TCP `52001`. **Address the N1MM log listener binds to** defaults to `127.0.0.1` for senders on the same computer. To receive from another computer, set the listener to this station's LAN address and allow only trusted senders to reach it. Both settings apply when saved. Any sender that can reach the listener can add records to the open contest log.
 
 Choose one forwarding path per sender. A resent contact can be logged and flagged as a dupe. This listener receives contact records and does not provide WSJT-X highlighting or CAT control.
 

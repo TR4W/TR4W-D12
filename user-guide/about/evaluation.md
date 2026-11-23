@@ -28,4 +28,4 @@ MkDocs turns reviewed Markdown into a navigable site. It does not resolve confli
 
 Complete one first-QSO walkthrough with screenshots, then run the drafted backup/export, POTA, and keyboard procedures with an operator on the target platform. Follow with CW setup and a tested migration/recovery walkthrough. A generated settings index could follow once defaults, scope, and help text have a reliable extraction contract.
 
-The prototype is local only. Publishing to GitHub Pages or the project website can follow a content review; no deployment workflow is enabled here.
+Reviewed updates are published to the [public GitHub Pages preview](https://tr4w.github.io/TR4W-D12/).

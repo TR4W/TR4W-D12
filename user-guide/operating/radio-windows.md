@@ -1,6 +1,10 @@
 # Radio 1 and Radio 2 windows
 
-Open the radio panels from **Windows**. Each panel belongs to a configured radio slot; Radio 2 is not VFO B of Radio 1. The title can include the configured radio name.
+Choose **Windows → Radio 1** or **Windows → Radio 2**. Each panel shows the VFOs and status of its own radio slot. The title can include the configured radio name.
+
+![Live Radio 1 Elecraft K4 panel with VFO A on 14219.30 kHz and VFO B on 14262.28 kHz, both in USB](<../assets/v5.1.0/Radio 1.png>)
+
+This 20 m example shows a connected Elecraft K4. The **Active** label identifies the radio you are operating. Frequency readouts are in kHz, and enabled **RIT**, **XIT**, and **SPLIT** flags appear in yellow.
 
 | Field or indication | Meaning |
 | --- | --- |
@@ -11,12 +15,20 @@ Open the radio panels from **Windows**. Each panel belongs to a configured radio
 | XIT | Yellow when transmit incremental tuning is on. |
 | SPLIT | Yellow when split operation is on. Check which VFO transmits at the radio. |
 | Status text | Status supplied by the radio polling/interface layer. |
-| Light-blue panel background | This is TR4W's active radio. This indicates operating focus, not an assertion that it is transmitting. |
+| **Active** label and panel tint | This radio has operating focus in TR4W. |
 | Spectrum button | Opens this slot's panadapter when the connected radio both supports spectrum and currently makes it available. |
 
 These panels display what the driver reports; a model's registration does not guarantee every field is supported. Compare the panel with the front panel while commissioning a radio. For SO2R, keep both panels visible and verify the active radio before sending or logging. Each spectrum-capable slot has its own panadapter window.
 
 For a frozen frequency or a disconnected interface, use the checks under [Reset Radio Ports](../station/radio.md#reset-radio-ports).
+
+## Spectrum
+
+Click **Spectrum** on the radio panel to view that radio's live spectrum and waterfall when the connected radio supplies spectrum data.
+
+![Live Radio 1 panadapter showing a 173 kHz span, the spectrum trace, the waterfall, and VFO A and B markers](../assets/v5.1.0/Spectrum.png)
+
+The spectrum trace plots signal level by frequency. The waterfall below shows recent activity, and the vertical **A** and **B** markers show the VFO frequencies.
 
 ## Main-window connection status
 

@@ -27,7 +27,9 @@ The exporter filters records through the program's QSO-validity check. Investiga
 3. Confirm the dialog to generate the file, then inspect its header and QSO lines.
 4. Compare the file's exchange and category with the event's submission requirements before submitting it.
 
-The Tools menu also includes **Edit Cabrillo Summary...**. Use the current form's labels; the older manual may describe a different dialog layout.
+You can also open **Station information** from **Tools → Edit Cabrillo Summary...** to review the category and station headers before exporting.
+
+![Cabrillo Station information dialog with entry category, operators, club, and contact fields](<../assets/v5.1.0/Update Cabrillo Fields.png>)
 
 Generating a file does not submit it to the sponsor. Retain the submitted file and the sponsor's receipt when you complete that step.
 

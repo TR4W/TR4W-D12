@@ -20,8 +20,10 @@ This is a native TR4W driver, registered under ID `TCI`, with a network connecti
 
 ## Let another application connect to TR4W
 
+![TCI Server Preferences page showing the enable switch, listening port, network access, and transmit time limit](../assets/v5.1.0/preferences-tci-server.png)
+
 1. Establish and verify the radio's normal connection to TR4W first.
-2. Open the **TCI Server** section in Preferences and select **Enable the TCI server**.
+2. Open **Ctrl+J → TCI Server** and select **Enable the TCI server**.
 3. Set **Port:** to an unused listening port and apply the settings.
 4. In the client application, select its TCI connection and use TR4W's address and the same port.
 5. Check the intended receiver: TR4W maps **Radio 1 to trx 0** and **Radio 2 to trx 1**.

@@ -10,7 +10,9 @@ The older manual distinguishes three related tools:
 | Possible calls | Suggests similar calls. `POSSIBLE CALLS` enables the candidate strip; `POSSIBLE CALL MODE` controls the candidate source/filter. |
 | Super Check Partial (SCP) | Searches the master callsign data for a fragment. `SCP MINIMUM LETTERS` controls automatic activation; `SCP COUNTRY STRING` restricts the countries included. |
 
-Open preferences with **Ctrl+J** and search for those command names. Use the [current command reference](../reference/commands/index.md) for their current storage and accepted settings. In particular, do not assume the old manual's `NAMES` default is the current default: the current settings constructor selects **ALL**.
+Open **Ctrl+J → SCP** to set the matching threshold, choose countries, or change **Possible Call Mode**. The current mode defaults to **ALL**. See the [command reference](../reference/commands/index.md) for setting names and accepted values.
+
+![SCP Preferences page showing the minimum letters and country filter, matching options, and suggested-call keys](../assets/v5.1.0/preferences-scp.png)
 
 ## Contest call history
 

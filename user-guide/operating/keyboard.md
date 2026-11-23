@@ -44,7 +44,7 @@ Choose **Tools → Commands**, or type the complete command in the callsign fiel
 | Query the DX cluster | `WCY` (`SH/WCY`), `WWV` (`SH/WWV`) |
 | Open a tool or exit | `PREF`, `COL` (colors), `CMD` (Windows command prompt), `EXIT` |
 
-Use the [message command syntax](../station/cw-messages.md#message-commands) when programming function keys.
+The [Rover example](contests.md#operate-as-a-rover) shows a dialog opened by a call-window command. Use the [message command syntax](../station/cw-messages.md#message-commands) when programming function keys.
 
 ## Focus and menu shortcuts
 

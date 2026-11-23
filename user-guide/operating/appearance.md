@@ -1,8 +1,39 @@
-# Colors, log rows, and window recovery
+# Main window and appearance
+
+## Read the main window
+
+This Florida QSO Party practice log shows TR4W 5.1.0 after one contact on 40 m CW. The contest determines which columns, totals, and exchange details you see.
+
+<div class="main-window-key" markdown="1">
+[![Open the full-size TR4W main window screenshot](../assets/v5.1.0/main-window.png)](../assets/v5.1.0/main-window.png)
+<span style="--x: 54%; --y: 18%" aria-hidden="true">1</span>
+<span style="--x: 68%; --y: 16%" aria-hidden="true">2</span>
+<span style="--x: 50%; --y: 40%" aria-hidden="true">3</span>
+<span style="--x: 15%; --y: 86.5%" aria-hidden="true">4</span>
+<span style="--x: 28%; --y: 84.5%" aria-hidden="true">5</span>
+<span style="--x: 59%; --y: 81.5%" aria-hidden="true">6</span>
+<span style="--x: 73%; --y: 86.5%" aria-hidden="true">7</span>
+<span style="--x: 8%; --y: 96.5%" aria-hidden="true">8</span>
+</div>
+
+| Area | What to read |
+| --- | --- |
+| **1. Totals and score** | The upper-left table breaks down contacts and multipliers by band. The highlighted heading is the current band. The score is next to the totals. |
+| **2. QSO and multiplier needs** | The upper-right strips show which band and mode combinations still need the displayed station or multiplier, according to the contest rules. Here they refer to W4AFC and Florida. |
+| **3. Editable log** | The center lists saved contacts. The example shows W4AFC on 40 m CW with the received QTH PIN, the points, and the logging operator. |
+| **4. Station and timing** | The lower left shows band and mode, the UTC date and time, radio selection, and CW speed. |
+| **5. Next QSO number** | The large **2** is the next serial TR4W will assign. Contests that exchange a serial can include this number in the sent exchange. |
+| **6. Contact entry** | **599 ALC** is the exchange this station sends. Enter the other station's call in the upper white field and its received exchange in the lower field. |
+| **7. Operating counters** | The lower right shows CQ and search-and-pounce contact counts, rate, and operating indicators. |
+| **8. Connection status** | The bottom strip shows messages from Radio 1, Radio 2, DX Cluster, and Network. Open their windows for connection details. |
+
+See the [radio panels](radio-windows.md), [band map](bandmap.md), [multiplier windows](multipliers.md), and [DX Cluster console](dxcluster.md) for their own controls.
 
 ## Set colors
 
 Open **Settings → Colors**, or **Ctrl+J → Appearance → Colors**. Each row names a screen element. Choose its foreground (text) and background colors from the offered names; the sample shows the combination as you choose it. Apply or save the preferences to use the colors in the operating windows.
+
+![Colors Preferences page showing the main-window color grid, sample text, and band map color selectors](../assets/v5.1.0/preferences-colors.png)
 
 Start with the callsign and exchange fields, editable log, dupe indication, and multiplier indication. Keep text readable against its background. Some status colors deliberately override the normal element color—for example, dupe alerts and the active-radio indication. The Colors page is not a replacement for those status rules. WSJT-X highlighting also uses TR4W's configured dupe and multiplier colors when sending highlights is enabled.
 

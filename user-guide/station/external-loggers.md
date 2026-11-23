@@ -4,6 +4,8 @@ TR4W can send contacts to several named external loggers. Each destination has i
 
 ## Configure destinations
 
+![External Logger Preferences page with the Add button and columns for Order, Logger, Provider, Enabled, and Connection](../assets/v5.1.0/preferences-external-logger.png)
+
 1. Open **Ctrl+J → External Software → External Logger**.
 2. Choose **Add...**, give the destination a useful name, and select its provider. Enter that provider's connection details.
 3. Select **Enabled** for destinations that should send new QSOs. Drag an **Order** cell to change their order. Double-click a row, or right-click and choose **Edit...**, to edit it.

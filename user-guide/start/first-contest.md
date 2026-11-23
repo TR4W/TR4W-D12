@@ -4,11 +4,19 @@ Use a practice log to become familiar with TR4W before entering a live contest.
 
 ## Complete the initial station setup
 
-On the first launch, the **Setup Wizard** guides you through station details. It also offers radio, WinKeyer, DX cluster, external logger, rotator, and WSJT-X setup. Skip optional equipment or services you do not use. To revisit setup later, choose **Tools → Setup Wizard**, or launch TR4W with `--wizard`.
+On the first launch, choose **Yes** when TR4W offers the **Setup Wizard**. On **Your station**, enter your callsign and check the station details.
+
+![Setup Wizard Your station page showing the callsign, grid, section, and derived zones, country, and continent](<../assets/v5.1.0/Wizard First Page.png>)
 
 When the initial setup prompts for your **grid square**, enter the Maidenhead locator for the station's operating location. For example, `FN31` is a four-character locator and `FN31PR` is a six-character locator; use your own location, not these examples. Follow the length requested by the prompt or contest.
 
-Check both your callsign and grid before continuing. You can review or change the grid later in **Ctrl+J** by searching for **MY GRID**. If you operate portable or move the station, check it again for the new location. TR4W uses the station grid for location-based calculations, including headings and distances, and applicable exported station information.
+Check both your callsign and grid before continuing. You can review or change **Grid square** later in **Ctrl+J → Station**. If you operate portable or move the station, check it again for the new location. TR4W uses the station grid for headings, distances, and applicable exported station information. [See the Station Preferences page](preferences.md#contest-pages-and-station-defaults).
+
+Choose **Next** to select any equipment or services you want to configure now. Leave the boxes clear and choose **Create configuration** to finish with station details only.
+
+![Setup Wizard second page listing radio control, WinKeyer, DX cluster, external logger, rotator, and WSJT-X](<../assets/v5.1.0/Wizard Page 2.png>)
+
+To revisit setup later, choose **Tools → Setup Wizard**, or launch TR4W with `--wizard`.
 
 ## Create a contest
 
@@ -16,16 +24,11 @@ Check both your callsign and grid before continuing. You can review or change th
 2. Enter your station callsign in **Callsign**.
 3. Search for part of the event name and select it in **CONTEST**. Turn on **Upcoming contests first** to sort by the next known occurrence. Read the event information and complete the requested operating area, county, category, and sent exchange as applicable.
 4. Choose **OK**.
-5. Check the contest and station information before entering contacts. Configure your [radio](../station/radio.md) if you want frequency and mode information from the rig.
+5. Check the contest and station information before entering contacts. See [what each main window field shows](../operating/appearance.md#read-the-main-window) and configure your [radio](../station/radio.md) if you want frequency and mode information from the rig.
 
 TR4W opens the dupe sheet for a **NON-ASSISTED** entry and the band map for an **ASSISTED** entry, using the contest's `CATEGORY-ASSISTED` value.
 
-The following example shows CW Open setup in the Windows 5.0.37 application. Other contests request different exchange fields.
-
-![CW Open selection and setup](../assets/cwops/new-contest.png)
-
-!!! note "Screen labels"
-    The screenshot shows the 5.0.37 layout. The instructions cover 5.1.0. New contests use a database, and translated builds may label the controls differently.
+![TR4W 5.1.0 contest picker with Upcoming contests first selected, showing UTC start times and setup fields](../assets/v5.1.0/contest-picker.png)
 
 ## Reopen a contest
 

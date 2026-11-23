@@ -4,6 +4,8 @@
 
 ## Change the log level
 
+![Logging Preferences page with the log level selector, Open log file, and subsystem trace options](../assets/v5.1.0/preferences-logging.png)
+
 1. Open Preferences with **Ctrl+J** and select **Logging**.
 2. Choose the required **Log level:**.
 3. Apply/save the change. The running logger updates without a restart. Merely selecting a value marks the form as changed; canceling it does not apply that selection.
