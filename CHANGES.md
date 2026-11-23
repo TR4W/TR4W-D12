@@ -41,6 +41,216 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### 5.1.0 (2026-11-22) - NY4I
+
+#### Read this before upgrading: multi-op protocol 5 (issues #300, #341)
+
+**Protocol 5 is incompatible with every earlier version.** All stations and the server must be on 5.1.0 /
+the new TR4WServerPy. `JudgeProtocol` refuses an older station with a readable message. The server's log
+moved from `SERVERLOG.TRW` to `SERVERLOG.tr4wsrv` (SQLite); the old file is left untouched and is NOT
+imported. QSOs travel as named columns with a checksum (JSON); catch-up downloads what a station missed and
+pushes only QSOs logged at that station; the catch-up notice states the whole count. Also see the
+multiplier-window changes under UI below (worked mult cell, backup-wanted cell, per-mult count, vertical
+grid line, colour setting moved to Appearance > Colors).
+
+#### Wire format and server store (`uWireQso`, `uQsoColumns`, `uServerWireStore`, `uNetFraming`, `uNetCatchUp`, `tr4wserverUnit`, `uServerNet`) - issues #300, #341
+
+- **Stage W1**: `uQsoColumns` (moved out of `uLogRepository`, whose implementation reaches the contest
+  registry and cannot link into the server) holds `QSO_TABLE_COLUMNS` beside `TQsoColumn`: 96 table columns,
+  89 on the wire, pinned to the `CREATE TABLE` by a test. `TLogRepository.ReadWireValues` reads a committed
+  row by id. `uWireQso` is a leaf: canonical UTF-8 byte-length stream, CRC-32 record checksum, JSON
+  encode/decode (defaults omitted, NUL stripped, no required-field list on the wire; the client enforces it
+  at logging). Station facts are not sent: the wire is the record's columns by name, carried as an event
+  (parity with the record).
+- **Stage W2**: `uServerWireStore` holds the server log as the wire's columns by name: a `meta` table plus
+  `qso(seq, 89 wire columns)`, WAL, `synchronous FULL`, `application_id` `'TR4S'`, extension `.tr4wsrv`,
+  identity = guid, insert skips a held identity, update-newest, one-transaction hold/release, clear,
+  clear-flags, snapshot `ReadAll`, and refusal of any file that is not exactly this schema (design 13.6).
+  `Get-SearchPaths` no longer withholds sqlite/fcl-db from the Server target; the installer must ship
+  `sqlite3.dll` beside `tr4wserver.exe` (not checked).
+- **Stage W3a/W3b/W5** (branch `wire-protocol-5`, merged): `uNetFraming` ids 1041/1051/1057 carry a 4-byte
+  length (live cap 60000), receive buffers 131072 (`TF.NetBuffer`), an oversize declaration is its own walk
+  result, the old 1040/1050/1055 are unknown ids. HELLO stays 70 bytes, protocol 5. Every send posts from
+  the committed row (`ReadWireValues` -> `BuildWireMessage`) through the existing `TNetSendQueue`. A bad row
+  is dropped and logged with the link kept; a peer's row is stored with the sender's guid and every wire
+  column verbatim (`my_*` and `my_source` included, replacing ruling D for wire rows); a held guid is
+  ignored; an edit for an unheld guid is stored as new. `SaveWireRow` / `UpdateWireRow` are one dynamic
+  statement from `QsoWireColumns`.
+- **Catch-up**: header frame then framed rows (cap 131072). The contest is compared once; download is
+  insert-only by guid after a dated backup, in one transaction; push and restock send only rows logged here
+  whose guid the server lacks; imports (0/0) are never owed. Notice text states the whole count
+  (`c209d77d7`).
+- **Removed**: `uServerQsoIndex`, `TNetQSOInformation`, the retired id constants, the 376-byte image types,
+  their dead catch-up code, `uServerLogStore` and its tests. The Pascal `tr4wserver` stores through
+  `TServerWireStore` and backs up before Clear-all.
+- **Bench and netprobe**: `tools/netprobe` compares both servers' databases row by row on protocol 5 (the
+  byte oracle is gone). A wire-format metrics bench (binary vs JSON full vs JSON omit-blanks vs TLV, with
+  checksum; Pi 400 and Pi 5 numbers, independent Python receiver) fed the decision; design 13.7 records the
+  W3+W5 contract and the 2026-11-22 rulings. Earlier groundwork: design note 341 and the P0 sync-stream byte
+  oracle / P1 store seam.
+- **Version report**: issue 120 item 4: `uNetHello.JudgeAppVersion` reports a peer on another build once per
+  (station, version) per link (Error line + notice `SPeerOnAnotherVersion`); the server logs one Error per
+  differing HELLO. Nothing is refused on version; `JudgeProtocol` alone decides.
+- **Shared settings** (issue #315): `SHARED_WITH_PEERS` is NY4I's list (contest-wide settings added;
+  `CONTEST`, `MY CONTINENT`, `INITIAL EXCHANGE CURSOR POS`, `CONNECTION COMMAND` and 13 dead names removed).
+  `uNet`'s `NET_PARAMETER` arm ignores `BAND`, `MODE`, `CODE SPEED`, `CW TONE`, `WEIGHT`, `FARNSWORTH *` from
+  a peer (`CommandIsOnePositionsOwn`). No re-send on link-up.
+
+#### Log durability and commit-before-publish (`uLogRepository`, `uLogStore`, `MainUnit`, `uLogBackup`) - issues #347, #348, #349, #350, #351
+
+- **Commit before publish, commits 1-7**: batch row ids and hook, one live append path, sequencing leaf;
+  `LogContact` builds the multi-op packet and dispatcher message before the write and posts them after the
+  commit (a refused save posts nothing and frees the held message); one Enter is one transaction for
+  county-line, multi-park and rover legs, with a session rebuild from the log on refusal; a refused peer QSO
+  is reported; notes and QTC records are sent only after their commit. Release checks are in
+  `docs/BENCH_QUEUE.md`.
+- **Issue 349**: the store's update procedures return a committed outcome; a refused Edit QSO / Alt-Y keeps
+  its window and shows the reason; peer update, dispatcher events and delete/restore wait for the commit.
+- **Issue 350**: periodic backup runs on one worker with its own read-only connection, requests coalesced;
+  pre-clear and pre-upgrade backups stay synchronous. `bench_enter_latency`, 20,000 QSOs: inline backup added
+  101 ms (max 107) to the triggering Enter; hand-over costs 0.005 ms. `Build-Bench.ps1` no longer reports a
+  failed build as built.
+- **Issue 351**: startup logs journal mode, synchronous and SQLite version with warnings; the periodic
+  backup also fires when the last success is 30 minutes old and a failure no longer resets the count; a
+  startup full disk reopens the log read-only and "free space, press Enter" recovers.
+- **Backup before migration** (NY4I ruling 2026-11-19): `TLogDatabase.BeforeMigration`; `Open` peeks the
+  file before WAL touches the header; `BackUpLogBeforeUpgrade` writes `<log> before schema <from> to <to>.db`
+  (never overwrites); a refusing hook refuses the open leaving the file byte-identical.
+  `uTestLogMigrationBackup` (7 tests) over the real schema-10 fixture.
+- **Restore engine** (issue #242 stage 1): `ListRestoreCandidates` / `RestoreLogFromBackup`; no UI yet
+  (stage 2 open).
+- **Tools > Correct Station Facts** (issue #223, closes it): whitelist of `my_*` facts changed in one
+  transaction after a synchronous verified backup, rows marked edited and re-sent as edits, then rescore;
+  new backup kind listed by the restore engine.
+- **Log schema 11** (issue #94): the sixteen never-written qso columns are removed. **Schema 12**
+  (issues #133, #87): each QSO keeps the place a rover sent it from; `my_county` is its real county.
+  **Schema 13**: `my_sent_unit`, an in-state party QSO keeps the host state, and the call is assembled from
+  its parts. Migrations follow the version stamp's one-transaction pattern.
+
+#### UI (`ui/lcl`, `uMainLayout`, `uBandMapForm`, `uSpots`)
+
+- **Main window layout** (plan e0-e6): one re-runnable `LayOutMainWindow` over a pure `uMainLayout`;
+  container bands (`pnlTopBand`, `pnlNeedsBlock`, `pnlBottomBand`, alClient log) replace anchors captured
+  from absolute coordinates; resizable in width and height; `ScaleForClient` picks the text scale from the
+  client width (WS_MAX now 43); the bottom band stretches; log cell padding grows with the font.
+  `gen_main_elements.py` emits the nested tree. `ROW COUNT` and `WINDOW SIZE` retired (first-run scale is
+  `WS_FIRST_RUN`; `RETIRED_COMMANDS` grows). Appearance leaf: font picker, "Main window text size" spin box.
+- **Remaining-multipliers windows** (issue #216 decision A, #357): text written into `Cells` at the rebuild;
+  flat colours from a pure, contrast-checked style function; the worked count from the second working;
+  worked cell is black with white text, unworked plain, backup-wanted orange (the `BAND MAP WORKED MULT
+  COLOR` role); vertical grid lines only. `BAND MAP WORKED MULT COLOR` moved to Appearance > Colors with a
+  tooltip naming the three windows it colours (22 help catalogues, translations kept fuzzy). Super Check
+  Partial and the dupe sheet are `TStringGrid`s that hold their calls in `Cells`.
+- **Not-saved panel**: a persistent high-contrast "QSO not saved" panel in the bottom-band cells, driven only
+  by the save result and log health. Sent exchange above the call field (#355, closes it).
+- **Log grid and band strip**: bold calls, right-aligned numbers, soft vertical rules, shared measuring font;
+  flat band strip with a derived 1 px line (`FlatRule := False` undoes it); radio window "Active" label.
+  Grid focus rectangle is set in code (Linux LCL 3.0 cannot stream it).
+- **Band map**: colour roles on the Colors page (issue #59: `Settings.BandMap` `SelectionColor`, `DupeColor`,
+  `MultColor`, `ActiveBandColor`, `OtherBandColor`, `VfoMarkerColor`; `BandMapRoleColor`; new swatches
+  `SILVER` and `HIGHLIGHT` appended to `tr4wColorsSA`); issue #65: nearest-spot outline and VFO-marker role
+  decided after the band colour; display limit is a ceiling (`BuildVisibleSpots` `aLimit`); right-click Text
+  size and `BAND MAP SIZE` -4..12; minimum size; independent of the main scale (the follow-the-scale
+  commit `adb130e69` was reverted); follows the radio's band and mode together (K4 reports frequency before
+  mode); Next no longer scans past the list (#202a); optional `BAND MAP CLICK GOES TO EXCHANGE` (#185).
+- **Panadapter** (#155): trace, click and markers share one integer bin partition.
+- **Tooltips and headers**: every input control is wired to help text (`Lint-ControlHints` counts the
+  unhinted; `uTestCommandHelp` pins zero registered settings without English help); `NO COLUMN HEADER`
+  (`uColumnHeaders`, `uLogGrid.ShowHeader`) and `SHOW GRIDLINES` apply live through setters (issue #352,
+  bench check open); `uAltDragMove` moves a borderless tool window (Alt+drag, pure LCL via `WindowProc`).
+- **Retired settings**: `COUNTRY INFORMATION FILE`, `SHOW ALL SERIAL PORTS` removed; `LPT1-3 BASE ADDRESS`,
+  `RELAY`, `STEREO`, `USE CONTROL PORT`, the TAIL END commands (#60) and the ERMAK switch (#74) retired.
+- **Commands and rover**: `CheckCommandInCallsignWindow` takes the command as a string; Tools > Commands
+  passes each item's word through `menu_cmd_*` ids (VC.pas 10030..10044), retiring the positional
+  `AnsiIndexText` list (issue #87 step 0). `uRoverState` / `uRoverForm` / ROVER panel (#133, #87).
+  `uCategoryWindow.CategoryOpeningWindow` chooses dupe sheet or band map at contest open (#201).
+- **Preferences**: `edtMainCallsign` is a designed Station row with a windowed `TInputCaption` (#278).
+- **Misc**: Alt-K caption follows the mode (#23); both modes' multipliers share one totals cell (#55);
+  grid-to-state lookup with a 695-entry compiled table (#52); `QSL AND LOG` writes the typed text into
+  `ExchString`, accepted or refused (#274 item 7; the text is stored as `exchange_received`).
+
+#### Messages, self-spot and integrations
+
+- **Message brace words**: `{body}` replaces the `<03>`..`<04>` bookends (any text but a brace, run through
+  the old lookup in `uMessageText`); a leading `$` is the inactive radio (the old Ctrl-A);
+  `UpgradeMessageBookends` converts Ctrl-A, `SPEED+/-` and `ALT-D` bookends; `{ROVERCALL}` / `{ROVERQTH}`.
+  `{PASS station-or-band}`, `{LASTPASSEDFREQ}` (issue #71; `{PASSMSG}` still needs a wire message).
+- **Self-spot** (issue #188): `uSelfSpotRule`/`uSelfSpot` gather inputs and send through
+  `uSendSpot.SendDXSpot`; `SPOTME` row in `uProcessCommand`'s table with a `GCommandNotice` shown after the
+  "executed" line; Control > Self-spot (`menu_self_spot` 10518); `Cluster.AutoSelfSpot` (default off) and
+  `Cluster.SelfSpotInterval` (1..240, default 10) from `OneSecondTick`.
+- **FLRig native driver** (#5, closes it): XML-RPC over Indy HTTP, port 12345, replaces the HamLib bridge
+  entry; **N1MM-style listener** (#45, closes it): UDP 2333 / TCP 52001, off by default, 127.0.0.1, through
+  the shared `uInboundQso` that WSJT-X uses.
+- **PTT by CAT knowledge** (#36, closes it): radios declare confirmed / known absent / not confirmed; pin
+  test classifies every registered radio. **Flex keep-alive** (#6): 1 s ping, 10 s silent link dropped.
+- **WSJT-X**: `MainUnit.ParseSessionADIFRecord` no longer reads `CONTEST_ID` from a WSJT-X QSO (a Field Day
+  overlay record rewrote the log's contest row). FT2 appended as a submode after JTTY (#88, #122).
+- **HTTP**: a POST is never followed across a redirect (#255): `THttpWireRequest.MayFollowRedirects` is
+  False for POST; reported as `hfPostRedirected`. Club Log, WRL and Cloudlog opt in per request with
+  `THttpRequest.RepostOnRedirect` (301/302/307/308, max 3; refuses 303, https to http, other host/port,
+  credentials in the address); pure `uHttpTransport.DecideRepost` serves both transports.
+- **External loggers**: Resend (undelivered / all) and Open web site actions; WRL logbook creation (#358,
+  closes it); issues #356 and #357 stay open with bench items.
+
+#### Contest factory and scoring
+
+- **New contests**: `RUS-WW-DIGI` (#93, closes it) and `WRT` (#25, closes it), registered by id.
+  **RU3AX Memorial** rebuilt to the 2025 rules (#57, closes it); Russian territory helpers moved to
+  `uRussianTerritories`. **Winter Field Day 2027 v3**: bands, modes, score = QSO points
+  (`CombineWithMultipliers`).
+- **State QSO party audit against sponsor rules** (issue #88; NY4I rulings 2026-11-19 and 2026-11-20): AL,
+  AZ, BC, CA, DE, FL, IN, IA, KS, LA, MI, MO, NJ, NY, NC, OH, OK, PA, Salmon Run, TN, TX, VA, WI, 7QP. New
+  helpers `FT_SUBMODES`, `EVERY_SUBMODE`, `TExtendedModeSet`, `DigitalSubmodeAllowed` in `uContestBase`
+  (a class states its allowed digital submodes; anything else is an automatic X-QSO). Matrix records
+  re-frozen only for the contests moved on purpose.
+- **Illinois** (#119): a county QSO no longer also earns IL; ADIF import reports an unmatched `CONTEST_ID`.
+  **Vermont** (#270, #272): club-station multiplier from `vtqp_club_stations.txt` (`YEAR` line, notice on a
+  stale file); `TContestBase.DistinctAdditionalExport*` sends the FT modes to `<log>-ft.adi`.
+- **Rover and county work** (#133, #87, #338): `RoverBoundaryLegs`, the dupe key carries the place sent from,
+  MY CALL while roving, one Cabrillo per activation (Hawaii), the unsplit Cabrillo header is the base call,
+  county names from the party's own county file, `MergeLinkedADIFContacts` / `LinkedCountyTags` write one
+  ADIF record per contact (`USACA_COUNTIES`), the Cabrillo received QTH names no contest (LABRE literal;
+  `PostUnit`'s three contest arms deleted).
+- **Other**: EUHFC and KVP year multiplier from the received-year field (#298 stage 4, #281); RSGB 1.8 once
+  per mode (#58a); county line across parties refused (#85, closes it); `IRTS.DOM` rewritten (#208, closes
+  it); `ENFORCE VALID CALLSIGN` (#180, closes it); SH/DX decoded (#69, closes it); New Contest box names
+  what is sent, ARRL 10 takes CMX (#167); ADIF 3.1.8 JTTY as MFSK/JTTY (#120); `CATEGORY-STATION` is the
+  contest's.
+
+#### Data, call history and paths
+
+- **In-place reload**: TRMASTER snapshot (`TTRMasterSnapshot`, no open handle; `LoadTRMasterSnapshot`
+  checks bounds, `InstallTRMasterSnapshot`, `CD.ReplaceTRMasterFile`) and call history
+  (`TCallHistorySnapshot`, `ReplaceCallHistory`, own `HistoryExchange` layer) swap on the main thread;
+  a failing file changes nothing.
+- **Call history downloads**: ARRL DX, ARRL 160/RTTY/Digital, CWOps, NA Sprint, WFD, many state QSO parties
+  and more name their site files; a partial row prefills what it has; Minnesota and Colorado stated.
+  `lookup_build.py --deploy`, data host constants in one place (`https://tr4w.github.io`), and
+  `Version.TR4W_WEBSITE` as the one website constant.
+- **Read-only install folder** (#165): `uAppPaths` probes the program folder once; refused -> settings, log,
+  contest, backups and downloads move to `%APPDATA%\TR4W` (`ChooseWritableRoot`, `StationStateDir`); a
+  refused settings save is reported and its callers check it; `Count-LiveWrites` ratchet 40.
+- **Lookup diagnostics**: `[Lookup]` debug lines name where a call's name, QTH and exchange came from;
+  startup logs data locations, tiers, redirect state and elevation.
+- **Installer**: `RELEASE_NOTES.txt` shipped via `tools/release_notes_to_txt.py`; dead history shortcut
+  replaced.
+
+#### Build, gates and tooling
+
+- **Ratchets**: narrowing ceiling now 1166 and `Count-LiveMove` 417; `a5196bda9` corrupted three ceiling
+  lines through an `sd` replacement and `bad8fa6d2` fixed them. Keychain registry frees its backends at exit
+  (checked leak ceiling 57 -> 54). LFM lint helpers register `TCheckListBox`. `uMainWindowProc` use order
+  restored (LogSCP / LogDupe after MainUnit).
+- **Hooks** (not user-visible): `aba0eb3ac` makes tests, lints and the corpus ask before they run while
+  compiling the product stays free; the FullBuild ask hook accepts an untracked
+  `.claude/fullbuild-preapproved` file.
+- **i18n**: help catalogues seeded for 15 languages via LibreTranslate (fuzzy), `seed_all.ps1`,
+  `help_add.py`; machine drafts for empty entries in cs, de, el, es, fi, fr.
+- **Docs**: plans for #225 (zone fields), #300/#241 (contest values window), logging review, Florida and
+  other sponsor documents under `docs/ContestRules`, bench-queue items.
+- Version 5.0.45 was never shipped and is folded into this release.
+
 ### Wizard WSJT-X page, K4 discovery addresses (5.0.44) - NY4I
 
 #### Setup wizard WSJT-X page (`ui/lcl/uSetupWizardForm`, `uSetupWizard`, `uAppStrings`) - issue #334

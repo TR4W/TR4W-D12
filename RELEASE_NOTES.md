@@ -46,6 +46,200 @@ user-facing — no file paths or source-level jargon.
 
 ---
 
+## 5.1.x — November 2026
+
+### 5.1.0 (2026-11-22) - NY4I
+
+#### Read this before upgrading: the multi-op network protocol changed
+
+**Multi-op protocol 5 is incompatible with every earlier version.** If you run a multi-op station, every
+station and the server must all be on 5.1.0 (with the new TR4W server). A station on an older version is
+refused with a readable message instead of failing quietly. Single-operator logging is not affected.
+
+- **The server's log is now a SQLite database.** It is named SERVERLOG.tr4wsrv and replaces SERVERLOG.TRW.
+  The old file is left untouched and is NOT imported, so a new network contest starts from an empty server
+  log. Stations keep their own logs and catch the server up as described below.
+- **QSOs travel as named columns with a checksum.** Each QSO is sent field by field with a checksum on the
+  record, so a damaged or cut-off QSO is detected and dropped instead of being stored wrongly.
+- **Catch-up is by QSO identity.** A station that joins or reconnects downloads only what it missed, and
+  pushes only the QSOs that were logged at that station and that the server does not have. Nothing logged
+  by another station is sent back to the server.
+- **The catch-up notice states the whole count**, for example "Sent to the server: 25 QSO(s) -- 20 logged
+  while disconnected, 5 it did not have". It used to report only the 5 when 25 had gone.
+- Related: a station on another build of the same protocol is reported (a notice and a log line), never
+  refused, and a peer's own per-station settings (band, mode, code speed, CW tone, weight, Farnsworth) are
+  no longer taken from a peer, even an older build.
+
+Also new in how the remaining-multipliers windows look (see Usability below): a worked multiplier is a
+black cell with white text, a multiplier that wants a backup is orange, each cell shows how many times a
+multiplier has been worked, and the windows have vertical grid lines only. The colour setting for the
+worked multiplier now lives under Appearance > Colors.
+
+#### Multi-Op / Networking
+
+- The wire protocol, the server log and the catch-up changes above.
+- Settings shared between stations follow a fixed list now: contest-wide settings (QSO points, multiplier
+  options, QTC, ten-minute rule and similar) are shared; the contest name, your continent, the initial
+  cursor position and connection command are not. Nothing is re-sent when the link comes up; a station
+  sends them only on request.
+- A new message token passes to another station or band, and a station name that is not on the network is
+  highlighted red in the Network window.
+
+#### Log Safety and Durability
+
+- A QSO is released to the network, the external loggers and UDP only after it is safely committed to the
+  log. If the save is refused, nothing is sent, the entry stays in the windows so you can try again, and a
+  persistent "QSO not saved" panel shows beside the entry fields.
+- One Enter is one save: the legs of a county-line, multi-park or rover entry are written together or not
+  at all.
+- Edit QSO and the Alt-Y report say "saved" only after the change is really committed. A refused edit
+  keeps its window open and tells you why.
+- The periodic log backup runs in the background and no longer slows the Enter that triggers it (it added
+  about 0.1 second on a 20,000-QSO log).
+- An older log is backed up (verified) before it is upgraded to a newer layout. The original stays as it
+  was if the backup fails.
+- If the disk is full when TR4W starts, the log opens read-only, and freeing space and pressing Enter
+  recovers without a restart. A backup is also taken when the last good one is 30 minutes old.
+- New Tools > Correct Station Facts: fix a wrong MY ZONE (or another station value) on logged QSOs in one
+  step. It takes a verified backup first, re-sends the changed QSOs as edits to Club Log, WRL, other loggers,
+  the multi-op server and UDP, then rescores. Imported QSOs are skipped and counted, and the confirmation
+  defaults to Cancel.
+
+#### Usability
+
+- The main window can be dragged wider as well as taller. The log, the possible-call strip and the status
+  strip take the width, and the text size follows the window width. The bottom band stretches to fill the
+  width and log cell padding grows with the font.
+- The sent exchange is shown above the call field (issue 355).
+- Remaining-multipliers windows: flat, contrast-checked colours; a worked multiplier is a black cell with
+  white text, an unworked one is plain, and a multiplier that wants a backup is orange; the count of times
+  worked shows from the second working; vertical grid lines only, like the log.
+- Log grid: bold callsigns, right-aligned numbers and soft vertical rules. The radio window labels the
+  active radio and draws the active VFO heavier. The band strip is flat, with a bold points total.
+- Preferences: the text size and font controls are simpler (a font picker with a Choose button, a "Main
+  window text size" spin box). ROW COUNT and WINDOW SIZE are retired because the window decides the log
+  height; old settings files still load. COUNTRY INFORMATION FILE, SHOW ALL SERIAL PORTS and the parallel
+  port style names are retired too.
+- Every control in Preferences, the radio and keyer editors, the UDP destinations, external loggers and the
+  setup wizard now has a tooltip. NO COLUMN HEADER now hides the heading row of the log grids and the
+  Network and Stations lists, and SHOW GRIDLINES and NO COLUMN HEADER apply immediately.
+- Alt plus left-drag moves a tool window that has no title bar (NO CAPTION).
+- Tools > Commands runs the call-window commands from a menu as well as from the call box.
+- Opening a contest now shows the dupe sheet for a NON-ASSISTED entry and the band map for an ASSISTED one
+  (from the CATEGORY-ASSISTED setting); the other window is not closed.
+- A ROVER command opens a dialog where you type or pick the place or places you are operating from, up to
+  the contest's county-line limit, or turn roving off.
+- Main Callsign in Preferences is now readable by screen readers (issue 278).
+- The Cabrillo window stays open when the LOCATION value is refused, and the Continent List shows only the
+  bands of the contest.
+
+#### DX Cluster and Band Map
+
+- The band map follows the radio's band and mode together. Before, a K4 that reports frequency before mode
+  could leave the map on Digital while the radio was on SSB, so a 20 m SSB spot was refused.
+- The spot nearest the radio gets a one-pixel outline, and a spot within the guard band of the radio shows
+  its frequency in the VFO marker colour. BAND MAP DISPLAY LIMIT is a ceiling on what fits in the window.
+- Band map colours for selection, dupe, multiplier, active-band frequency, other-band frequency and the VFO
+  marker are on the Colors page (each defaults to today's colour). The worked-multiplier colour is on that
+  page too.
+- Right-click the band map for Text size (Larger, Smaller, Reset). BAND MAP SIZE now runs from -4 to 12.
+  The band map has a minimum size and does not follow the main window scale.
+- Next in the band map no longer scans past the end of the spot list or blanks the call box.
+- Self-spot: a SPOTME command, Control > Self-spot, and an optional automatic self-spot (CLUSTER AUTO SELF
+  SPOT, off by default; interval 1 to 240 minutes, default 10) that sends your call, run frequency and
+  contest name. It stays quiet when the contest, S&P state or link says no.
+- SH/DX reply lines are decoded into the band map, aged from their own UTC stamp.
+- Optional BAND MAP CLICK GOES TO EXCHANGE: a band map click only moves focus (off by default).
+- The panadapter trace, click and markers agree on the same bin, so a click tunes the exact bin under the
+  pointer and the top bin is no longer lost.
+
+#### Radio Control
+
+- A native FLRig driver replaces the HamLib bridge entry for FLRig (port 12345). PTT by CAT is not
+  confirmed and there is no CW through it yet.
+- Each radio is now known to support, lack, or not confirm PTT by CAT; a notice appears for the two radios
+  known to lack it.
+- The Flex API radio is pinged every second and a link silent for 10 seconds is dropped and reconnected.
+
+#### Digital / WSJT-X and Other Programs
+
+- An optional N1MM-style log listener (UDP 2333, TCP 52001, off by default, local machine only) logs QSOs
+  from other programs the way WSJT-X QSOs are logged. Dupes are flagged, not refused.
+- A WSJT-X grid fills the state when the grid is unique and shows the candidates when it is ambiguous.
+- A Field Day record from WSJT-X no longer rewrites your log's contest when its CONTEST_ID differs.
+- FT2 is a new digital submode.
+- ADIF export follows ADIF 3.1.8: JTTY is written as MODE MFSK, SUBMODE JTTY. ADIF from earlier TR4W
+  versions still imports.
+- A county line or a rover's linked rows export as one ADIF record per contact, with the other counties in
+  USACA_COUNTIES.
+- Club Log, WRL and Cloudlog uploads repeat a POST that is answered with a safe redirect; any other
+  redirect of a POST is reported instead of being followed (issue 255).
+- External loggers: Resend QSOs (not yet delivered, or all) and Open web site actions on a logger row, and
+  World Radio League can create a logbook from the logger row (issues 356, 357, 358).
+
+#### Messages and Macros
+
+- In message text, { and } replace the old bookends: a brace body runs exactly as the old bookend form did
+  (for example {SPEED+}, {ALT-D}), a leading $ means the inactive radio, and {ROVERCALL} and {ROVERQTH} are
+  the roving call and place. Existing messages are upgraded automatically.
+- {PASS station-or-band} and {LASTPASSEDFREQ}: pass a message or frequency to another station.
+
+#### Contests
+
+- New: RUS-WW-DIGI and the Weekly RTTY Test (WRT).
+- Russian 160 m (RU3AX Memorial) is rebuilt to the 2025 rules (grid exchange, 10 + 1 point per 500 km,
+  SSB x2, two rounds). Old logs of that contest rescore to 0 because they hold no grid.
+- Winter Field Day follows the 2027 rules: all bands except 12, 17, 30 and 60 m, and the score is the QSO
+  points (the objectives bonus is applied by the entrant at submission).
+- QSO parties audited against the sponsors' rules this cycle (corrections to points, bands, modes,
+  multipliers and exchanges): Alabama, Arizona, British Columbia, California, Delaware, Florida, Indiana,
+  Iowa, Kansas, Louisiana, Michigan, Missouri, New Jersey, New York, North Carolina, Ohio, Oklahoma,
+  Pennsylvania, Salmon Run, Tennessee, Texas, Virginia, Wisconsin and the 7th Area QSO Party. Examples:
+  QSO parties now accept every digital mode except FT8, FT4 and FT2; Indiana and Salmon Run are CW and
+  phone only; FM is refused in Florida, Ohio and the 7QP; New York digital is 3 points with no WARC;
+  Delaware has no +50 bonus; a Virginia mobile or rover scores 3 points in any mode; Illinois no longer
+  scores IL for a county QSO.
+- Florida QSO Party: FQP overlays, Special 1x1 scoring, and mobile and rover legs handled.
+- Vermont: club stations count as a multiplier from a yearly file you supply (vtqp_club_stations.txt with
+  a YEAR line); a notice appears if the file looks like last year's. FT-mode QSOs can go to a separate
+  ADIF file.
+- Rovers: a rover at a boundary logs one QSO per place, linked as one contact; MY CALL while roving is the
+  roving call; the dupe key includes the place you sent from; the ROVER panel is shown; Hawaii writes one
+  Cabrillo per activation. The Cabrillo header CALLSIGN of an unsplit rover file is your base call.
+- County names now come from the party's own county file, so an in-state station writes the county.
+  Arizona, Indiana, Michigan, North Carolina, Virginia, Florida, Tennessee, New York and 7QP county files
+  name their counties.
+- EUHFC and KVP count the year multiplier from the received year field.
+- CQ WW etc.: the New Contest box says what is sent ("I send a state or province"); ARRL 10 takes CMX for
+  Mexico City.
+- QSL AND LOG keeps what you typed in the exchange even when the exchange was refused, and never writes a
+  refused zone.
+- Optional ENFORCE VALID CALLSIGN (off by default): the base call must match a country-file entry.
+- Both modes' multipliers share one totals cell (CW/Ph Dom 12/6).
+- RSGB 1.8 MHz counts a station once per mode. County lines whose counties belong to different parties are
+  refused. An ADIF import reports a CONTEST_ID that no contest answers to.
+- The TAIL END commands are withdrawn. The ERMAK switch is removed.
+
+#### Call History, TRMASTER and Data
+
+- TRMASTER.DTA and call history reload in place after a download, with no restart; a file that does not
+  load changes nothing. A call history row with only some fields prefills what it has.
+- Call history download now names the site files for many more contests (ARRL DX, ARRL RTTY and Digital,
+  CWOps, NA Sprint, many state QSO parties and others).
+- The TRMASTER download goes to the per-user folder when the program folder is not writable.
+
+#### Installation
+
+- Installed under C:\Program Files and run as a standard user: TR4W now keeps its settings, log, backups
+  and downloads under %APPDATA%\TR4W and tells you, instead of failing with "Access is denied". A refused
+  settings save is reported, not raised.
+- The installer ships the release notes and the Start-menu Release notes shortcut works.
+
+#### Translations
+
+- Help tooltips and many new captions are machine-seeded as fuzzy drafts in 15 languages; community review
+  on Weblate corrects them.
+
 ## 5.0.x — November 2026
 
 ### 5.0.44 (2026-11-19) - NY4I
