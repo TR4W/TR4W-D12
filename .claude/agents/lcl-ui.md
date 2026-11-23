@@ -255,9 +255,12 @@ The limit's and colour's setters rebuild the windows (`uSettingsEffects`).
 proposal's "Multiplier and related grids"): the gradient (and its colour indexed
 by the multiplier type's ORDINAL) is gone; `MultsPrepareCanvas` asks
 `uRemMultWorkState.RemainingMultCellStyle` (pure, unit tested with a WCAG
-contrast pin): needed = `clWindowText`, worked = `clGrayText` with no fill
-(the window's text if the grey would not reach 3:1), backup = flat
-WORKED MULT COLOR under black or white, whichever reads. Every colour is
+contrast pin): needed = `clWindowText` on `clWindow`, no fill; worked = a
+flat fill of `clWindowText` under `clWindow` (black under white by default --
+NY4I's ruling 2026-11-22, the pre-refresh black without its fade; a dark
+theme inverts too; `ReadableTextOn` the fill if the pair is below 4.5:1);
+backup = flat WORKED MULT COLOR under black or white, whichever reads. The
+non-HILIGHT modes draw every cell as needed. Every colour is
 `ColorToRGB`-resolved before the leaf sees it -- a system colour is an index,
 not RGB. Weight is an output but normal everywhere (bold may clip a 49-px
 cell; on the bench queue). The band map's mult-flag gradient is a different

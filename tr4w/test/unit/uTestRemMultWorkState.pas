@@ -32,13 +32,16 @@ type
       procedure Test_TheWindowReadsTheSheetsZoneCount;
 
       (* HOW A CELL LOOKS (the UI refresh proposal's "Multiplier and related
-        grids"): flat, no gradient, state carried by contrast. *)
+        grids", and NY4I's ruling of 2026-11-22 on the worked cell): flat, no
+        gradient; needed plain, worked inverted, backup orange. *)
       procedure Test_LuminanceAndContrastAtTheEnds;
       procedure Test_ANeededCellIsTheWindowsOwnText;
-      procedure Test_AWorkedCellIsMutedTextWithNoFill;
-      procedure Test_AMutedColourThatWouldNotReadFallsBackToTheText;
+      procedure Test_AWorkedCellIsTheTextColourUnderTheWindowColour;
+      procedure Test_AWorkedCellInvertsOnADarkWindowToo;
+      procedure Test_AWorkedCellWhoseColoursWouldNotReadGetsReadableText;
       procedure Test_ABackupIsAFlatFillOfTheOperatorsColour;
       procedure Test_EveryPaletteColourGetsReadableBackupText;
+      procedure Test_EveryStateReadsInTheDefaultColours;
       procedure Test_OutsideHiLightEveryCellIsDrawnNeeded;
    public
       procedure RunAllTests; override;
@@ -179,17 +182,17 @@ begin
 end;
 
 const
-   (* THE DEFAULT LOOK, RESOLVED: a white window, black text, and the grey
-     text Windows 10 and 11 report for COLOR_GRAYTEXT (109, 109, 109) --
-     what ColorToRGB(clGrayText) gives the form there. $808080 stands for a
-     lighter theme's grey (gtk2 themes vary). *)
+   (* THE DEFAULT LOOK, RESOLVED: a white window and black text, what
+     ColorToRGB(clWindow) and ColorToRGB(clWindowText) give the form on a
+     default Windows 10 or 11. A dark theme is the pair the other way round,
+     not quite black and white. *)
    DEFAULT_WINDOW = longint($FFFFFF);
    DEFAULT_TEXT = longint($000000);
-   DEFAULT_MUTED = longint($6D6D6D);
-   LIGHTER_MUTED = longint($808080);
-   (* WCAG AA for body text: what the needed text and the backup text must
-     reach. Muted text is held to MIN_MUTED_CONTRAST (3:1) on purpose -- it
-     is meant to read less than the needed text, not to vanish. *)
+   DARK_WINDOW = longint($1E1E1E);
+   DARK_TEXT = longint($F0F0F0);
+   (* WCAG AA for body text: what every state's text must reach on its
+     fill. Stated here, not read from MIN_TEXT_CONTRAST, so a lowered
+     constant fails the tests rather than moving them. *)
    READABLE_CONTRAST = 4.5;
 
 procedure TRemMultWorkStateTests.Test_LuminanceAndContrastAtTheEnds;
@@ -199,7 +202,7 @@ begin
    CheckTrue(Abs(RelativeLuminance(RGB_WHITE) - 1.0) < 0.0001, 'white has luminance 1');
    CheckTrue(Abs(ContrastRatio(RGB_BLACK, RGB_WHITE) - 21.0) < 0.001, 'black on white is 21:1');
    CheckTrue(Abs(ContrastRatio(RGB_WHITE, RGB_BLACK) - 21.0) < 0.001, 'the order does not matter');
-   CheckTrue(Abs(ContrastRatio(DEFAULT_MUTED, DEFAULT_MUTED) - 1.0) < 0.001, 'a colour on itself is 1:1');
+   CheckTrue(Abs(ContrastRatio(DARK_WINDOW, DARK_WINDOW) - 1.0) < 0.001, 'a colour on itself is 1:1');
    (* $00BBGGRR: pure red and pure blue are NOT the same luminance -- green
      and red weigh far more than blue. A swapped byte order would fail it. *)
    CheckTrue(RelativeLuminance(longint($0000FF)) > RelativeLuminance(longint($FF0000)),
@@ -213,7 +216,7 @@ var
    bold: boolean;
 begin
    BeginTest('Test_ANeededCellIsTheWindowsOwnText');
-   RemainingMultCellStyle(rwsNeeded, True, DEFAULT_WINDOW, DEFAULT_TEXT, DEFAULT_MUTED,
+   RemainingMultCellStyle(rwsNeeded, True, DEFAULT_WINDOW, DEFAULT_TEXT,
                           longint($00A5FF), back, fore, bold);
    CheckEquals(DEFAULT_WINDOW, back, 'no fill: the window');
    CheckEquals(DEFAULT_TEXT, fore, 'the window''s own text');
@@ -221,46 +224,60 @@ begin
    CheckTrue(ContrastRatio(fore, back) >= READABLE_CONTRAST, 'needed text reads');
 end;
 
-procedure TRemMultWorkStateTests.Test_AWorkedCellIsMutedTextWithNoFill;
+procedure TRemMultWorkStateTests.Test_AWorkedCellIsTheTextColourUnderTheWindowColour;
 var
    back: longint;
    fore: longint;
    bold: boolean;
-   neededBack: longint;
-   neededFore: longint;
 begin
-   BeginTest('Test_AWorkedCellIsMutedTextWithNoFill');
-   RemainingMultCellStyle(rwsWorked, True, DEFAULT_WINDOW, DEFAULT_TEXT, DEFAULT_MUTED,
+   BeginTest('Test_AWorkedCellIsTheTextColourUnderTheWindowColour');
+   (* NY4I, 2026-11-22: a worked multiplier is a BLACK cell with white text,
+     as before the refresh, but flat. *)
+   RemainingMultCellStyle(rwsWorked, True, DEFAULT_WINDOW, DEFAULT_TEXT,
                           longint($00A5FF), back, fore, bold);
-   CheckEquals(DEFAULT_WINDOW, back, 'no fill: the window, not a gradient');
-   CheckEquals(DEFAULT_MUTED, fore, 'the muted text');
+   CheckEquals(RGB_BLACK, back, 'a black fill: the window''s text colour');
+   CheckEquals(RGB_WHITE, fore, 'white text: the window''s colour');
    CheckFalse(bold, 'normal weight');
-   CheckTrue(ContrastRatio(fore, back) >= MIN_MUTED_CONTRAST, 'muted text still reads');
-
-   RemainingMultCellStyle(rwsNeeded, True, DEFAULT_WINDOW, DEFAULT_TEXT, DEFAULT_MUTED,
-                          longint($00A5FF), neededBack, neededFore, bold);
-   CheckTrue(ContrastRatio(neededFore, neededBack) > ContrastRatio(fore, back),
-             'a needed cell has the stronger foreground');
-
-   RemainingMultCellStyle(rwsWorked, True, DEFAULT_WINDOW, DEFAULT_TEXT, LIGHTER_MUTED,
-                          longint($00A5FF), back, fore, bold);
-   CheckEquals(LIGHTER_MUTED, fore, 'a lighter theme grey is kept');
-   CheckTrue(ContrastRatio(fore, back) >= MIN_MUTED_CONTRAST, 'and still reads');
+   CheckTrue(ContrastRatio(fore, back) >= READABLE_CONTRAST, 'worked text reads');
 end;
 
-procedure TRemMultWorkStateTests.Test_AMutedColourThatWouldNotReadFallsBackToTheText;
+procedure TRemMultWorkStateTests.Test_AWorkedCellInvertsOnADarkWindowToo;
 var
    back: longint;
    fore: longint;
    bold: boolean;
 begin
-   BeginTest('Test_AMutedColourThatWouldNotReadFallsBackToTheText');
-   (* A theme whose grey text is nearly the window: the worked cell must not
-     vanish, so it takes the window's own text. *)
-   RemainingMultCellStyle(rwsWorked, True, DEFAULT_WINDOW, DEFAULT_TEXT, longint($F0F0F0),
+   BeginTest('Test_AWorkedCellInvertsOnADarkWindowToo');
+   (* A dark theme: the fill follows the window's TEXT colour, so a worked
+     cell is light on a dark window -- never a black cell lost in it. *)
+   RemainingMultCellStyle(rwsWorked, True, DARK_WINDOW, DARK_TEXT,
                           longint($00A5FF), back, fore, bold);
-   CheckEquals(DEFAULT_WINDOW, back, 'no fill');
-   CheckEquals(DEFAULT_TEXT, fore, 'the window''s text, not a grey that would not read');
+   CheckEquals(DARK_TEXT, back, 'the dark theme''s light text colour as the fill');
+   CheckEquals(DARK_WINDOW, fore, 'the dark window''s colour as the text');
+   CheckTrue(ContrastRatio(fore, back) >= READABLE_CONTRAST, 'and it reads');
+
+   (* Needed on the same dark window: the window and its text, no fill. *)
+   RemainingMultCellStyle(rwsNeeded, True, DARK_WINDOW, DARK_TEXT,
+                          longint($00A5FF), back, fore, bold);
+   CheckEquals(DARK_WINDOW, back, 'needed, dark: the window');
+   CheckEquals(DARK_TEXT, fore, 'needed, dark: the window''s text');
+end;
+
+procedure TRemMultWorkStateTests.Test_AWorkedCellWhoseColoursWouldNotReadGetsReadableText;
+var
+   back: longint;
+   fore: longint;
+   bold: boolean;
+begin
+   BeginTest('Test_AWorkedCellWhoseColoursWouldNotReadGetsReadableText');
+   (* A theme whose window and text are two near greys: inverted, the window
+     colour would not read on the fill, so the text is black or white,
+     whichever reads on it. The fill is still the text colour. *)
+   RemainingMultCellStyle(rwsWorked, True, longint($808080), longint($909090),
+                          longint($00A5FF), back, fore, bold);
+   CheckEquals(longint($909090), back, 'the fill is still the text colour');
+   CheckEquals(ReadableTextOn(longint($909090)), fore, 'black or white, whichever reads');
+   CheckTrue(ContrastRatio(fore, back) >= READABLE_CONTRAST, 'and it reads');
 end;
 
 procedure TRemMultWorkStateTests.Test_ABackupIsAFlatFillOfTheOperatorsColour;
@@ -272,7 +289,7 @@ begin
    BeginTest('Test_ABackupIsAFlatFillOfTheOperatorsColour');
    (* The default BAND MAP WORKED MULT COLOR, ORANGE: a flat orange cell
      under black text, as the fade's left edge was. *)
-   RemainingMultCellStyle(rwsBackupWanted, True, DEFAULT_WINDOW, DEFAULT_TEXT, DEFAULT_MUTED,
+   RemainingMultCellStyle(rwsBackupWanted, True, DEFAULT_WINDOW, DEFAULT_TEXT,
                           longint(tr4wColorsArray[trOrange]), back, fore, bold);
    CheckEquals(longint(tr4wColorsArray[trOrange]), back, 'the orange, flat');
    CheckEquals(RGB_BLACK, fore, 'black text on orange');
@@ -280,7 +297,7 @@ begin
    CheckTrue(ContrastRatio(fore, back) >= READABLE_CONTRAST, 'the backup text reads');
 
    (* A dark colour the operator picked: white text, not black on blue. *)
-   RemainingMultCellStyle(rwsBackupWanted, True, DEFAULT_WINDOW, DEFAULT_TEXT, DEFAULT_MUTED,
+   RemainingMultCellStyle(rwsBackupWanted, True, DEFAULT_WINDOW, DEFAULT_TEXT,
                           longint(tr4wColorsArray[trBlue]), back, fore, bold);
    CheckEquals(longint(tr4wColorsArray[trBlue]), back, 'the operator''s blue, flat');
    CheckEquals(RGB_WHITE, fore, 'white text on blue');
@@ -303,11 +320,35 @@ begin
          begin
          Continue;
          end;
-      RemainingMultCellStyle(rwsBackupWanted, True, DEFAULT_WINDOW, DEFAULT_TEXT, DEFAULT_MUTED,
+      RemainingMultCellStyle(rwsBackupWanted, True, DEFAULT_WINDOW, DEFAULT_TEXT,
                              longint(tr4wColorsArray[c]), back, fore, bold);
       CheckTrue(ContrastRatio(fore, back) >= READABLE_CONTRAST,
                 'backup text reads on ' + tr4wColorsSA[c]);
       end;
+end;
+
+procedure TRemMultWorkStateTests.Test_EveryStateReadsInTheDefaultColours;
+var
+   state: TRemMultWorkState;
+   back: longint;
+   fore: longint;
+   bold: boolean;
+   backs: array[TRemMultWorkState] of longint;
+begin
+   BeginTest('Test_EveryStateReadsInTheDefaultColours');
+   (* White window, black text, the default orange: every state's text reads
+     on its own fill, and the three states are three different fills. *)
+   for state := Low(TRemMultWorkState) to High(TRemMultWorkState) do
+      begin
+      RemainingMultCellStyle(state, True, DEFAULT_WINDOW, DEFAULT_TEXT,
+                             longint(tr4wColorsArray[trOrange]), back, fore, bold);
+      CheckTrue(ContrastRatio(fore, back) >= READABLE_CONTRAST,
+                StateName(state) + ' text reads on its fill');
+      backs[state] := back;
+      end;
+   CheckTrue(backs[rwsNeeded] <> backs[rwsWorked], 'needed and worked differ');
+   CheckTrue(backs[rwsNeeded] <> backs[rwsBackupWanted], 'needed and backup differ');
+   CheckTrue(backs[rwsWorked] <> backs[rwsBackupWanted], 'worked and backup differ');
 end;
 
 procedure TRemMultWorkStateTests.Test_OutsideHiLightEveryCellIsDrawnNeeded;
@@ -317,11 +358,11 @@ var
    bold: boolean;
 begin
    BeginTest('Test_OutsideHiLightEveryCellIsDrawnNeeded');
-   RemainingMultCellStyle(rwsWorked, False, DEFAULT_WINDOW, DEFAULT_TEXT, DEFAULT_MUTED,
+   RemainingMultCellStyle(rwsWorked, False, DEFAULT_WINDOW, DEFAULT_TEXT,
                           longint($00A5FF), back, fore, bold);
-   CheckEquals(DEFAULT_WINDOW, back, 'worked, ERASE: the window');
+   CheckEquals(DEFAULT_WINDOW, back, 'worked, ERASE: the window, not black');
    CheckEquals(DEFAULT_TEXT, fore, 'worked, ERASE: the window''s text');
-   RemainingMultCellStyle(rwsBackupWanted, False, DEFAULT_WINDOW, DEFAULT_TEXT, DEFAULT_MUTED,
+   RemainingMultCellStyle(rwsBackupWanted, False, DEFAULT_WINDOW, DEFAULT_TEXT,
                           longint($00A5FF), back, fore, bold);
    CheckEquals(DEFAULT_WINDOW, back, 'backup, ERASE: no orange');
    CheckEquals(DEFAULT_TEXT, fore, 'backup, ERASE: the window''s text');
@@ -339,10 +380,12 @@ begin
    Test_TheWindowReadsTheSheetsZoneCount;
    Test_LuminanceAndContrastAtTheEnds;
    Test_ANeededCellIsTheWindowsOwnText;
-   Test_AWorkedCellIsMutedTextWithNoFill;
-   Test_AMutedColourThatWouldNotReadFallsBackToTheText;
+   Test_AWorkedCellIsTheTextColourUnderTheWindowColour;
+   Test_AWorkedCellInvertsOnADarkWindowToo;
+   Test_AWorkedCellWhoseColoursWouldNotReadGetsReadableText;
    Test_ABackupIsAFlatFillOfTheOperatorsColour;
    Test_EveryPaletteColourGetsReadableBackupText;
+   Test_EveryStateReadsInTheDefaultColours;
    Test_OutsideHiLightEveryCellIsDrawnNeeded;
 end;
 

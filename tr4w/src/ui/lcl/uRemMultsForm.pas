@@ -333,13 +333,16 @@ end;
   MULTIPLIER TYPE'S ORDINAL (tr4wColorsArray[tr4wColors(Ord(rmt))]) to white,
   under white text -- a colour nobody chose, and the most visual weight on the
   least useful cell. Now (uRemMultWorkState.RemainingMultCellStyle, unit
-  tested): a needed multiplier is the window's own text, a worked one is
-  muted text with no fill, and a backup wanted (issue 357) is a FLAT fill of
-  BAND MAP WORKED MULT COLOR -- the band map's orange M, the same meaning --
-  with black or white text, whichever reads on the operator's colour.
+  tested): a needed multiplier is the window's own text with no fill, a
+  worked one is a FLAT fill of the window's text colour under the window's
+  colour (black under white by default -- NY4I's ruling of 2026-11-22: the
+  pre-refresh black, without the fade), and a backup wanted (issue 357) is a
+  FLAT fill of BAND MAP WORKED MULT COLOR -- the band map's orange M, the
+  same meaning -- with black or white text, whichever reads on the
+  operator's colour.
 
   Every colour is resolved with ColorToRGB before the leaf sees it: clWindow,
-  clGrayText and a BTNFACE or HIGHLIGHT the operator may have picked are
+  clWindowText and a BTNFACE or HIGHLIGHT the operator may have picked are
   system colours, not RGB values.
 
   A cell past the end (idx < 0) is drawn as an empty needed cell: the window,
@@ -375,7 +378,6 @@ begin
                           Settings.RemainingMults.DisplayMode = HiLight,
                           ColorToRGB(clWindow),
                           ColorToRGB(clWindowText),
-                          ColorToRGB(clGrayText),
                           ColorToRGB(tr4wColorsArray[WorkedMultColor]),
                           backRGB, foreRGB, bold);
 
