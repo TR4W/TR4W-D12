@@ -44,7 +44,7 @@ type
       procedure Test_TheFramerAgreesWithEachRecord;
       procedure Test_TheThreeQSOIdsShareOneSize;
       procedure Test_SpotRecordInsideTheSpotMessage;
-      procedure Test_QSOMessageIsIdPlusExchangePlusTail;
+      procedure Test_TheExchangeRecordIsStillThe376ByteImportRecord;
    end;
 
 implementation
@@ -73,7 +73,6 @@ begin
    CheckWire('TLogFileInformation (1010)',      19,  SizeOf(TLogFileInformation));
    CheckWire('TIntercomMessage (1020)',         84,  SizeOf(TIntercomMessage));
    CheckWire('TNetDXSpot (1030)',               106, SizeOf(TNetDXSpot));
-   CheckWire('TNetQSOInformation (1040/50/55)', 384, SizeOf(TNetQSOInformation));
    CheckWire('TNetSynQSOInformation (1060)',    382, SizeOf(TNetSynQSOInformation));
    CheckWire('NET_TIMESYN_SIZE (1070, removed)', 20, NET_TIMESYN_SIZE);
    CheckWire('TParameterToNetwork (1080)',      514, SizeOf(TParameterToNetwork));
@@ -95,9 +94,9 @@ begin
    CheckWire('NetMessageSize(NETWORKDXSPOT)',  106, NetMessageSize(NET_NETWORKDXSPOT_ID));
    (* PROTOCOL 5: the three QSO ids are variable messages with no fixed size, and
      the retired fixed 384-byte ids are unknown. *)
-   CheckWire('NetMessageSize(retired QSOINFO)',   0, NetMessageSize(NET_QSOINFO_ID));
-   CheckWire('NetMessageSize(retired EDITEDQSO)', 0, NetMessageSize(NET_EDITEDQSO_ID));
-   CheckWire('NetMessageSize(retired OFFLINEQSO)',0, NetMessageSize(NET_OFFLINEQSO_ID));
+   CheckWire('NetMessageSize(retired QSOINFO 1040)',    0, NetMessageSize(1040));
+   CheckWire('NetMessageSize(retired EDITEDQSO 1050)',  0, NetMessageSize(1050));
+   CheckWire('NetMessageSize(retired OFFLINEQSO 1055)', 0, NetMessageSize(1055));
    CheckWire('NetMessageSize(wire QSO)',          0, NetMessageSize(NET_WIRE_QSO_ID));
    CheckWire('NetMessageSize(TAKESERVERQSO)',  382, NetMessageSize(NET_TAKESERVERQSO_ID));
    CheckWire('NetMessageSize(TIMESYN)',        20,  NetMessageSize(NET_TIMESYN_ID));
@@ -132,16 +131,14 @@ begin
                'TNetDXSpot must be the id Word plus exactly one TSpotRecord');
 end;
 
-(* 2 + ContestExchange + a Cardinal computer id + two reserved bytes. The
-  ContestExchange size (376) and the ceContest offset (265) are pinned again in
-  uTestLogBinaryFile; the QSO message is the place that depends on them. *)
-procedure TTestNetWireSizes.Test_QSOMessageIsIdPlusExchangePlusTail;
+(* THE 376-BYTE ContestExchange IS NO LONGER THE WIRE (protocol 5): TNetQSOInformation
+  (id + record + computer id + 2 bytes = 384) was deleted with the three fixed QSO
+  ids. The record stays what the .TRW reader and the station's own code use; its
+  size and the ceContest offset (265) are pinned in uTestLogBinaryFile. This pin
+  keeps the record the size the importer reads. *)
+procedure TTestNetWireSizes.Test_TheExchangeRecordIsStillThe376ByteImportRecord;
 begin
    CheckWire('ContestExchange', 376, SizeOf(ContestExchange));
-   CheckEquals(SizeOf(Word) + SizeOf(ContestExchange) + SizeOf(Cardinal) + 2,
-               SizeOf(TNetQSOInformation),
-               'TNetQSOInformation must be id + ContestExchange + computer id + 2 bytes' +
-               ' (Python derives it as LOG RECORD SIZE + 8)');
 end;
 
 procedure TTestNetWireSizes.RunAllTests;
@@ -150,7 +147,7 @@ begin
    Test_TheFramerAgreesWithEachRecord;
    Test_TheThreeQSOIdsShareOneSize;
    Test_SpotRecordInsideTheSpotMessage;
-   Test_QSOMessageIsIdPlusExchangePlusTail;
+   Test_TheExchangeRecordIsStillThe376ByteImportRecord;
 end;
 
 end.

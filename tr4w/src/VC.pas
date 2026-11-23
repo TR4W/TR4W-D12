@@ -565,13 +565,10 @@ const
   NET_INTERCOMMESSAGE_ID                = 1020;
   NET_NETWORKDXSPOT_ID                  = 1030;
 
-  (* RETIRED with protocol 5 (2026-11-22): 1040, 1050 and 1055 are UNKNOWN ids
-    to uNetFraming now -- logged, dropped, never a frame. The constants stay
-    only so the client's old call sites still COMPILE until they are moved to
-    the three wire ids below; nothing may send or accept these. *)
-  NET_QSOINFO_ID                        = 1040;   (* retired *)
-  NET_EDITEDQSO_ID                      = 1050;   (* retired *)
-  NET_OFFLINEQSO_ID                     = 1055;   (* retired *)
+  (* RETIRED with protocol 5 (2026-11-22) AND DELETED: 1040, 1050 and 1055 (the
+    fixed 384-byte QSO, edit and offline packets) are UNKNOWN ids to uNetFraming
+    now -- logged, dropped, never a frame. Their names are gone; a test that
+    pins them unknown spells the numbers. *)
   (* PROTOCOL 5: a QSO as a variable-length message (uNetFraming). 1056 is
     NET_THIS_QTC_WAS__SEND_ID. *)
   NET_WIRE_QSO_ID                       = 1041;
@@ -2514,20 +2511,10 @@ type
     qsRes4: Byte;
   end;
 
-type
-  TNetQSOInformation = packed record
-    qiID: Word;
-    qiInformation: ContestExchange;
-    qiComputerID: Cardinal;
-    (* THE STATION THAT PUT THIS PACKET ON THE WIRE, as its ordinal 1..26
-      (network protocol 2; it was a reserved byte, always 0). NOT the
-      record's own ceComputerID: an EDIT is sent by whoever edited the QSO,
-      and the QSO may have been logged by a station that has since left. The
-      receiver judges the packet's contest by what THIS station announced in
-      its HELLO. 0 = not stated, and the packet is refused. *)
-    qiSenderID: Byte;
-    qiReservedByte2: Byte;
-  end;
+(* TNetQSOInformation (the fixed 384-byte QSO packet: id, ContestExchange, a tick,
+  the sender's ordinal) was DELETED with protocol 5 (2026-11-22). A QSO is a
+  length-framed JSON row (uNetFraming, uWireQso); the sender is the first byte of
+  its payload. *)
 
 type
 
@@ -2609,9 +2596,6 @@ type
 //type  ContestExchangePtr = ^ContestExchange;
 type
   TStationStatePtr = ^TStationState;
-
-type
-  NetQSOInformationPtr = ^TNetQSOInformation;
 
 type
   TNetSynQSOInformationPtr = ^TNetSynQSOInformation;

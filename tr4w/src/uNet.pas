@@ -40,7 +40,7 @@ uses
   uNetLink,      { TNetLinkState -- what the link is doing, and who is told }
   uNetResend,    { TNetDelivery -- what became of each QSO packet }
   uNetCatchUp,   { TPushPlan -- the QSOs the server lacks, RestockServer }
-  uServerQsoIndex, { the pairs the resend posted on this link }
+  uGuidSet,      { the guids the resend posted on this link }
   utils_file,
   uTotal,
   uSpots,
@@ -115,8 +115,6 @@ procedure ShowServerMessage(ServMess: TServerMessage);
 { ONE CELL of the station list -- see the implementation.  Exported because
   DisplayMessageStatus writes two of the OZCR2008 columns. }
 procedure SetClientCell(const aRow, aCol: integer; const aText: string);
-function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
-//procedure SendEditedQSOToNetwork(var CE: ContestExchange);
 procedure ShowConnectionStatus(Operation: string);
 procedure AddNewClient(ClientID: integer);
 function ConnectThread(aParameter: Pointer): DWORD; stdcall;
@@ -338,12 +336,12 @@ procedure ForgetServerRefusal;
   both ask here first. There is no other receive path -- the server's log sync
   reads no QSO packet in this client.
 
-  THE JUDGEMENT (protocol 2): the packet's sender (aSender, qiSenderID, its
-  ordinal 1..26) announced a contest id in its HELLO; the record is accepted
-  when that id is the id of THIS station's contest, and then stamped with this
-  station's own handle (aRec.ceContest), whatever byte the sender wrote. A
-  sender that has announced nothing is refused too: nothing says what it is
-  running.
+  THE JUDGEMENT (protocol 2, kept in protocol 5): the message's sender (aSender,
+  the sender byte of the wire message, its ordinal 1..26) announced a contest id
+  in its HELLO; the row is accepted when that id is the id of THIS station's
+  contest. A wire row carries no contest at all (design 13.1), so nothing is
+  restamped. A sender that has announced nothing is refused too: nothing says
+  what it is running. aCall is the row's callsign, for the log.
 
   False means REFUSED, and the refusal is REPORTED, not silent:
     the log     one Error line per record (peer, its contest, ours, the call);
@@ -355,10 +353,9 @@ procedure ForgetServerRefusal;
                 A sender that never said HELLO is a log line only.
 
   aDoor names the arm for the log. *)
-function PeerRecordInOurContest(var aRec: ContestExchange; const aSender: integer;
-                                const aDoor: string): boolean;
+function PeerSenderInOurContest(const aSender: integer; const aCall, aDoor: string): boolean;
 
-(* How many operator notices PeerRecordInOurContest has raised since the last
+(* How many operator notices PeerSenderInOurContest has raised since the last
   ForgetPeerContestNotices -- the test's way to read "raised once". *)
 function PeerContestNoticeCount: integer;
 procedure ForgetPeerContestNotices;
@@ -393,9 +390,9 @@ function ConsumeNetBuffer(const i: integer; out aDesync: boolean): integer;
   THE ROWS ARE THE LOG'S. sent_to_server = 0 marks a QSO the server has not been
   given and server_dirty = 1 one it holds an older version of; the repository
   answers which rows (uLogStore.LogStoreCollectUnsentToServer). A row owing a QSO
-  goes as NET_QSOINFO_ID -- NOT NET_OFFLINEQSO_ID, which both servers store and
+  goes as NET_WIRE_QSO_ID -- NOT NET_WIRE_OFFLINE_ID, which both servers store and
   never relay, so the other stations would not get it. A row owing an edit goes
-  as NET_EDITEDQSO_ID. Both are posted from the MAIN thread to the send queue in
+  as NET_WIRE_EDIT_ID. Both are posted from the MAIN thread to the send queue in
   one go, with no wait for an answer per record (the old loop waited a second
   for each).
 
@@ -434,7 +431,7 @@ procedure NetServiceCatchUp;
 
 (* THE THIRD HALF: RESTOCKING A SERVER THAT LOST ITS LOG (2026-10-28). The fetch
   that catches this station up also shows which of THIS log's QSOs the server
-  lacks (uNetCatchUp.TPushPlan); this posts them. Each goes as NET_OFFLINEQSO_ID,
+  lacks (uNetCatchUp.TPushPlan); this posts them. Each goes as NET_WIRE_OFFLINE_ID,
   which both servers store, ACK and do NOT relay, so the stations that are
   connected are not flooded. NO TAG: the rows are already sent_to_server = 1, so
   no flag is written when the packets go (SettleServerProgress sees nothing to
@@ -456,7 +453,7 @@ function NetCanRestock: boolean;
 
 (* THE PAIRS THE RESEND POSTED ON THIS LINK, owed rows the server may not have
   read yet. TPushPlan counts them as owed. Cleared when a link comes up. *)
-function NetResentThisLink: TServerQsoIndex;
+function NetResentThisLink: TGuidSet;
 
 (* Record what became of the QSO packets the writer thread has finished with,
   and bring tUSQ / tUSQE into line with the log. Main thread. The writer
@@ -464,11 +461,12 @@ function NetResentThisLink: TServerQsoIndex;
 procedure SettleServerProgress;
 
 (* Do we already hold this QSO? A QSO arriving twice -- a resend of one the
-  server had, an overlap of a live send and a resend -- must be logged once. The
-  pair (0, 0) is never "known": it identifies nothing. *)
-function ReceivedQsoIsKnown(const aRec: ContestExchange): boolean;
+  server had, an overlap of a live send and a resend -- must be logged once. It is
+  judged by the row's GUID (protocol 5). The empty guid is never "known": it
+  identifies nothing. *)
+function ReceivedGuidIsKnown(const aGuid: string; const aCall: string = ''): boolean;
 
-(* How many received QSOs ReceivedQsoIsKnown has turned away since start. *)
+(* How many received QSOs ReceivedGuidIsKnown has turned away since start. *)
 function NetDuplicateQsosIgnored: integer;
 
 (* A PEER'S QSO THIS STATION COULD NOT STORE (issue 347, plan commit 6, NY4I
@@ -495,7 +493,29 @@ function NetDeliveryLedger: TNetDelivery;
   without a server. *)
 procedure AttachNetClient(aClient: TNetClient);
 
+(* POSTS A COMMITTED ROW TO THE SERVER as a wire message (protocol 5).
+
+  RecordType is NET_WIRE_QSO_ID (a new QSO), NET_WIRE_EDIT_ID (an edit, the whole
+  row) or NET_WIRE_OFFLINE_ID (stored by the server, not relayed). The message is
+  built from the ROW (ReadWireValues -> BuildWireMessage), never from a
+  ContestExchange, so it carries the stored station facts, the guid and every
+  wire column. The sender byte is this station's computer id.
+
+  SendRowToServer takes the row id; SendRecordToServer finds the row from the
+  record's local network pair (ceQSOID1, ceQSOID2), which is the row's
+  session_id / session_seq -- the pair every row has: a QSO logged here, and a
+  row received or caught up (which is given a fresh local pair when stored). A
+  record with no pair, or whose row is not in the log (a refused QSO), posts
+  nothing and answers False.
+
+  True means POSTED, not delivered. aTag is what the writer hands back when the
+  bytes are written (uNetResend.NetQsoTag of the row's pair; 0 = nothing to
+  settle). *)
+function SendRowToServer(RecordType: Word; aRowId: Int64; aTag: Int64): boolean;
 function SendRecordToServer(RecordType: Word; const rec: ContestExchange): boolean;
+(* THIS STATION'S COMPUTER ID AS THE WIRE SPELLS IT: the ordinal 1..26 (the
+  sender byte, the HELLO's id), #0 when it has none. *)
+function WireComputerID: AnsiChar;
 procedure SendFullStationStatus;
 (* WHAT THIS STATION TELLS THE SERVER WHEN THE LINK COMES UP (issue 150): every
   status, the cluster state and the request for the others' statuses. MAIN
@@ -544,7 +564,6 @@ var
 {(*}
   MyStationState                        : TStationState        ;// = (ssID: NET_STATIONSTATUS_ID);
   NetSynQSOInformation                  : TNetSynQSOInformation;// = (qsID: NET_TAKESERVERQSO_ID);//262
-  NetQSOInfoToSend                      : TNetQSOInformation   ;// = (qiID: NET_QSOINFO_ID);//264
   (* NetDXSpot, NetIntercomMessage and SendSpotViaNetwork are no
     longer global (2026-10-27). Their id initialisers were commented out when
     the Network window stopped assigning them, and nothing else did, so every
@@ -586,6 +605,10 @@ uses
    { The SQLite shadow -- an IMPLEMENTATION-section use, so no interface
      cycle. uLogStore never raises and never blocks logging. }
    uLogStore,
+  uLogRepository, { the TWireSave constants (wsInserted ...) -- re-exported type only }
+  uWireQso,       { TWireValues -- a QSO is a wire row (protocol 5) }
+  uQsoColumns,    { QsoWireColumns -- the one list of on-wire columns }
+  uQsoMyFacts,    { TQsoMyFacts -- the station a stored peer row recorded }
   (* Which store a log read comes from. *)
   uLogSource,
   uMainForm,   { the call field, named -- wh[] round 3 }
@@ -675,8 +698,8 @@ var
   (* What became of the QSO packets: the writer thread reports, the main thread
     settles (uNetResend). *)
   GNetDelivery:      TNetDelivery = nil;
-  (* The pairs ResendOfflineWork posted on this link. Main thread. *)
-  GResentKeys:       TServerQsoIndex = nil;
+  (* The guids ResendOfflineWork posted on this link. Main thread. *)
+  GResentKeys:       TGuidSet = nil;
   GDuplicateQsos:    integer = 0;
   (* Which refused outbound packets (SendToNet's guard) have been reported on
     this link. Thread-safe; reset when a link comes up. *)
@@ -759,16 +782,20 @@ end;
   told otherwise (no packet acknowledges a QSO), so it holds the QSO and a
   catch-up or Net > Synchronize adds it once this log can be written. Nothing
   is queued here. *)
-procedure ReportPeerQsoRefused(const aRec: ContestExchange);
+procedure ReportPeerQsoRefused(const aValues: TWireValues);
 var
    notice: string;
+   cols: TWireColumns;
 begin
    inc(GPeerQsosRefused);
+   cols := QsoWireColumns;
    logger.Error('[Net] a QSO from the network did NOT commit to the contest '
-                + 'log and was refused: %s on %s %s (network key %d/%d); it is '
+                + 'log and was refused: %s on %s %s (guid %s); it is '
                 + 'left to catch-up / Synchronize',
-                [string(aRec.Callsign), string(BandStringsArray[aRec.Band]),
-                 string(ADIFModeString[aRec.Mode]), aRec.ceQSOID1, aRec.ceQSOID2]);
+                [aValues[cols.IndexOfName('callsign')],
+                 aValues[cols.IndexOfName('band')],
+                 aValues[cols.IndexOfName('mode')],
+                 aValues[cols.IndexOfName('guid')]]);
    if GPeerQsosRefused > 1 then
       begin
       Exit;
@@ -782,6 +809,178 @@ begin
       begin
       QuickDisplay(notice);
       end;
+end;
+
+(* A PEER'S ROW, STORED AND THEN DRIVEN THROUGH THE SHEETS (protocol 5).
+
+  The row is already in the log, committed, VERBATIM -- the sender's guid and
+  every wire column, my_* and my_source included (NY4I ruling 2). This reads it
+  back and does what LogContact does for a peer's QSO except the write
+  (LogStoredPeerQSO): dupe and multiplier sheets, totals, display, UDP and
+  HamScore. A note is only stored; a QTC record also updates the QTC books, as
+  the old arm did. *)
+procedure ProcessStoredPeerRow(aRowId: Int64);
+var
+   rec: ContestExchange;
+   facts: TQsoMyFacts;
+   sentExchange: AnsiString;
+begin
+   if LogStoreRepository = nil then
+      begin
+      Exit;
+      end;
+   if not LogStoreRepository.LoadQSO(aRowId, rec) then
+      begin
+      logger.Error('[Net] row %d was stored but could not be read back; the sheets ' +
+                   'catch up at the next rescore', [aRowId]);
+      Exit;
+      end;
+   if not LogStoreRepository.LoadQSOMyFacts(aRowId, facts, sentExchange) then
+      begin
+      facts := NotCapturedMyFacts;
+      end;
+
+   case rec.ceRecordKind of
+      rkQSO:
+         begin
+         if LogStoredPeerQSO(rec, facts) then
+            begin
+            UpdateWindows;
+            end;
+         end;
+      rkQTCR, rkQTCS:
+         begin
+         if rec.ceRecordKind = rkQTCS then
+            begin
+            NumberQTCBooksSent := rec.QSOPoints;
+            end;
+         IncrementQTCCount(rec.Callsign);
+         DisplayTotalScore;
+         UpdateTotals2;
+         end;
+   end;
+end;
+
+(* A NEW ROW FROM A PEER: not one this log holds, stored whole under the sender's
+  guid, then driven through the sheets. A log that refuses it is REPORTED
+  (ReportPeerQsoRefused), not retried: the server holds the row and the next
+  catch-up adds it. aCheckKnown False when the caller already knows the guid is
+  not held (an edit for a row this log never had). *)
+procedure AcceptPeerQso(const aValues: TWireValues; aCheckKnown: boolean);
+var
+   cols: TWireColumns;
+   guid: string;
+   rowId: Int64;
+   save: TWireSave;
+begin
+   cols := QsoWireColumns;
+   guid := aValues[cols.IndexOfName('guid')];
+   if aCheckKnown and ReceivedGuidIsKnown(guid, aValues[cols.IndexOfName('callsign')]) then
+      begin
+      Exit;
+      end;
+
+   (* A fresh LOCAL pair, so an edit this station later makes to the row can be
+     sent and settled (the delivery ledger is keyed by it); the guid is the
+     identity every station shares. *)
+   if not LogStoreSaveWireRow(aValues, STARTTIMEOFTHETR4W,
+                              NextQsoSequence(Cardinal(GetTickCount64)),
+                              rowId, save) then
+      begin
+      ReportPeerQsoRefused(aValues);
+      Exit;
+      end;
+   case save of
+      wsAlreadyHeld:
+         begin
+         inc(GDuplicateQsos);
+         Exit;
+         end;
+      wsNoIdentity:
+         begin
+         logger.Error('[Net] a QSO from the network carries no guid and was not ' +
+                      'stored (call %s)', [aValues[cols.IndexOfName('callsign')]]);
+         Exit;
+         end;
+   end;
+   ProcessStoredPeerRow(rowId);
+end;
+
+(* AN EDIT FROM A PEER REPLACES THE ROW'S WIRE COLUMNS (an edit is a complete
+  snapshot). DECISION where the contract was silent: an edit for a guid this log
+  does NOT hold is STORED AS A NEW ROW (and driven through the sheets) -- a
+  station that was offline when the QSO was made receives the QSO's latest form,
+  and the insert is idempotent by guid, so nothing can be duplicated. *)
+procedure AcceptPeerEdit(const aValues: TWireValues);
+var
+   rowId: Int64;
+   found: boolean;
+begin
+   if not LogStoreUpdateWireRow(aValues, rowId, found) then
+      begin
+      logger.Error('[Net] an edit from the network did NOT commit to the contest log');
+      Exit;
+      end;
+   if not found then
+      begin
+      logger.Info('[Net] an edit arrived for a QSO this log does not hold; it is ' +
+                  'stored as a new QSO');
+      AcceptPeerQso(aValues, False);
+      Exit;
+      end;
+   if Settings.Network.AllowAutoUpdate then
+      begin
+      RescoreLog;
+      end;
+end;
+
+(* ONE WIRE MESSAGE'S PAYLOAD (sender byte + JSON), judged and applied. A row that
+  fails its checksum, does not parse or holds a non-number is REPORTED and
+  DROPPED and the link is KEPT. The sender byte is the own-echo test and the
+  contest judge's key; the server re-stamps it on relay. *)
+procedure HandleWireMessage(const aMsgId: Word; const aPayload: TBytes);
+var
+   sender: Byte;
+   values: TWireValues;
+   reason, call: string;
+   take: TWireTake;
+begin
+   take := TakeWireMessage(QsoWireColumns, aPayload, sender, values, reason);
+   if take <> wtOk then
+      begin
+      logger.Error('[Net] a QSO message from the network was REFUSED (%d): %s; the ' +
+                   'row is dropped and the link is kept', [Ord(take), reason]);
+      Exit;
+      end;
+
+   if sender = Ord(WireComputerID) then
+      begin
+      logger.Debug('[Net] a QSO message carrying this station''s own id was ignored');
+      Exit;
+      end;
+
+   call := values[QsoWireColumns.IndexOfName('callsign')];
+   case aMsgId of
+      NET_WIRE_QSO_ID:
+         begin
+         if PeerSenderInOurContest(sender, call, 'NET_QSO') then
+            begin
+            AcceptPeerQso(values, True);
+            end;
+         end;
+      NET_WIRE_EDIT_ID:
+         begin
+         if PeerSenderInOurContest(sender, call, 'NET_EDIT') then
+            begin
+            AcceptPeerEdit(values);
+            end;
+         end;
+   else
+      begin
+      logger.Warn('[Net] a stored-only QSO message (id %d) reached this station and ' +
+                  'was ignored: the server does not relay it', [aMsgId]);
+      end;
+   end;
 end;
 
 (* A STATION ON ANOTHER BUILD IS REPORTED, NEVER REFUSED (issue 120 item 4).
@@ -908,11 +1107,15 @@ var
   MsgId                                 : word;
   MsgSize                               : integer;
   StationStPtr                          : TStationStatePtr;
-  NetQSOInfoPtr                         : NetQSOInformationPtr;
   ServerMessagePtr                      : TServerMessagePtr;
   NetDXSpotPtr                          : TNetDXSpotPtr;
   ParameterToNetworkPtr                 : TParameterToNetworkPtr;
   IntercomMessagePtr                    : TIntercomMessagePtr;
+  (* THE VARIABLE-LENGTH QSO MESSAGES (protocol 5): their size is in their own
+    header, so they are framed before the fixed-size table is asked. *)
+  WireDeclared                          : Cardinal;
+  WireTotal, WireK                      : integer;
+  WirePayload                           : TBytes;
 
    { The label lives HERE: a goto may not cross a procedure boundary. }
    procedure Walk;
@@ -934,7 +1137,58 @@ var
           48-byte message.  While the size lives beside the arm, the arm can
           disagree with the cast on the line above it.  uNetFraming holds one
           table now and the arms hold none. }
+        (* LESS THAN AN ID IS A SHORT TAIL: kept, the next read completes it. *)
+        if (i - Bufindex + 1) < SizeOf(word) then
+           begin
+           Exit;
+           end;
         MsgId := PWORD(@NetBuffer[Bufindex])^;
+
+        (* A WIRE QSO MESSAGE: id, 4-byte LE payload length, payload (sender byte
+          + JSON). Framed here by its OWN length, never from the table. An
+          impossible length is a protocol error -- the stream cannot be framed
+          past it, so it is a desync (the buffer is dropped, the link is kept
+          and the server, which judges the same way, has dropped the sender). A
+          frame that is not all here yet is a short tail. *)
+        if NetIsWireId(MsgId) then
+           begin
+           if (i - Bufindex + 1) < NET_WIRE_HEADER_SIZE then
+              begin
+              Exit;
+              end;
+           WireDeclared := Cardinal(Byte(NetBuffer[Bufindex + 2])) or
+                           (Cardinal(Byte(NetBuffer[Bufindex + 3])) shl 8) or
+                           (Cardinal(Byte(NetBuffer[Bufindex + 4])) shl 16) or
+                           (Cardinal(Byte(NetBuffer[Bufindex + 5])) shl 24);
+           if (WireDeclared < 1) or (WireDeclared > NET_WIRE_MAX_PAYLOAD) then
+              begin
+              Desync := True;
+              logger.Error('[Net] a QSO message (id %d) declares a payload of %d bytes ' +
+                           '(1..%d allowed) -- the rest of this buffer is discarded',
+                           [MsgId, WireDeclared, NET_WIRE_MAX_PAYLOAD]);
+              Exit;
+              end;
+           WireTotal := NET_WIRE_HEADER_SIZE + Integer(WireDeclared);
+           if (i - Bufindex + 1) < WireTotal then
+              begin
+              Exit;
+              end;
+           SetLength(WirePayload, WireDeclared);
+           WireK := 0;
+           while WireK < Integer(WireDeclared) do
+              begin
+              WirePayload[WireK] := Byte(NetBuffer[Bufindex + NET_WIRE_HEADER_SIZE + WireK]);
+              inc(WireK);
+              end;
+           HandleWireMessage(MsgId, WirePayload);
+           inc(Bufindex, WireTotal);
+           if Bufindex - 1 >= i then
+              begin
+              Exit;
+              end;
+           goto CheckBuffer;
+           end;
+
         MsgSize := NetMessageSize(MsgId);
 
         { AN ID NOTHING KNOWS USED TO BE A SILENT WHOLE-BUFFER LOSS.  No arm
@@ -1091,98 +1345,9 @@ var
                  end;
             end;
 
-          NET_QSOINFO_ID:
-            begin
-              NetQSOInfoPtr := @NetBuffer[Bufindex];
-              (* JUDGED BY WHAT THE SENDER ANNOUNCED, NOT BY THE RECORD'S BYTE
-                (protocol 2). An accepted record comes back stamped with THIS
-                station's contest; one from a station on another contest, or
-                one that never said HELLO, is dropped whole and reported. *)
-              (* AND NOT ONE THIS STATION ALREADY HOLDS (Phase 1, C5). A station
-                that was disconnected sends again what it logged meanwhile, and
-                one it had already sent whose flag was never set (a crash, a
-                write that finished as the link fell) goes twice; the server
-                relays a QSO it did not have, but another station may still meet
-                the same pair twice. The first copy is logged; the next ones are
-                counted and ignored. Judged AFTER the contest gate, so a QSO from
-                another contest is still reported as that. *)
-              if PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
-                                        NetQSOInfoPtr^.qiSenderID,
-                                        'NET_QSOINFO') and
-                 (not ReceivedQsoIsKnown(NetQSOInfoPtr^.qiInformation)) then
-                 begin
-                 if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQSO then
-                    begin
-                    if NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID then
-                       begin
-                       (* LogContact's ANSWER IS HONOURED (issue 347, plan
-                         commit 6). True means COMMITTED and only then are
-                         the windows redrawn as for a saved QSO. False was
-                         refused by the log; commit 4 posted nothing for it
-                         (no UDP, no HamScore), and it is reported, not
-                         retried. *)
-                       if LogContact(NetQSOInfoPtr^.qiInformation, False) then
-                          begin
-                          UpdateWindows;
-                          end
-                       else
-                          begin
-                          ReportPeerQsoRefused(NetQSOInfoPtr^.qiInformation);
-                          end;
-                       end;
-                    end;
-
-                 if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkNote then
-                    begin
-                    (* A PEER'S RECORD THAT THIS STATION COULD NOT KEEP. It is
-                      already logged at the station that made it, so this is not
-                      a lost contact -- but this station's copy of the multi-op
-                      log is now incomplete and only the log says so. *)
-                    if not tAddQSOToLog(NetQSOInfoPtr^.qiInformation) then
-                       begin
-                       logger.Error('[Net] a note from the network did NOT commit '
-                                    + 'to the contest log');
-                       end;
-                    end;
-
-                 if NetQSOInfoPtr^.qiInformation.ceRecordKind in [rkQTCR, rkQTCS] then
-                    begin
-                    if NetQSOInfoPtr^.qiInformation.ceRecordKind = rkQTCS then
-                       begin
-                       NumberQTCBooksSent := NetQSOInfoPtr^.qiInformation.QSOPoints;
-                       end;
-                    IncrementQTCCount(NetQSOInfoPtr^.qiInformation.Callsign);
-                    if not tAddQSOToLog(NetQSOInfoPtr^.qiInformation) then
-                       begin
-                       logger.Error('[Net] a QTC record from %s did NOT commit to '
-                                    + 'the contest log',
-                                    [NetQSOInfoPtr^.qiInformation.Callsign]);
-                       end;
-                    DisplayTotalScore;
-                    UpdateTotals2;
-                    end;
-                 end;
-
-            end;
-
-          NET_EDITEDQSO_ID:
-            begin
-              NetQSOInfoPtr := @NetBuffer[Bufindex];
-
-              if (NetQSOInfoPtr^.qiComputerID <> NetQSOInfoToSend.qiComputerID) and
-                 PeerRecordInOurContest(NetQSOInfoPtr^.qiInformation,
-                                        NetQSOInfoPtr^.qiSenderID,
-                                        'NET_EDITEDQSO') then
-                 begin
-                 if FindAndUpdateQSOInLog(NetQSOInfoPtr^.qiInformation) then
-                    begin
-                    if Settings.Network.AllowAutoUpdate then
-                       begin
-                       RescoreLog;
-                       end;
-                    end;
-                 end;
-            end;
+          (* THE RETIRED FIXED-SIZE QSO IDS (1040, 1050, 1055)
+            ARE RETIRED (protocol 5): a QSO is a variable-length wire message, framed
+            and applied above the table (HandleWireMessage). *)
 
           NET_SPOTVIANETWORK_ID:
             begin
@@ -1582,7 +1747,7 @@ end;
 
 const
    (* The packet kind the writer reports for a new QSO; also the name
-     NetPacketKind gives NET_QSOINFO_ID. *)
+     NetPacketKind gives NET_WIRE_QSO_ID. *)
    KIND_QSOINFO = NET_KIND_QSOINFO;
 
 (* ON THE WRITER THREAD.  A QSO or edit packet's write FINISHED -- written, or
@@ -1655,11 +1820,6 @@ begin
    GResentThisLink := False;
    GCatchUpDue := False;
    GResentKeys.Clear;
-   (* Cardinal(GetTickCount64) -- TRUNCATED DELIBERATELY. qiComputerID is a
-     field of TNetQSOInformation, which is a PACKED RECORD SENT BETWEEN
-     STATIONS, so its width is on the wire and is not ours to widen. The
-     value is only ever used as a distinguishing number. *)
-   NetQSOInfoToSend.qiComputerID := Cardinal(GetTickCount64);
 end;
 
 function NetDeliveryLedger: TNetDelivery;
@@ -2517,33 +2677,6 @@ begin
    QuickDisplayError(PassRefusalText(failure, missingId, theWord));
 end;
 
-function FindAndUpdateQSOInLog(var RXData: ContestExchange): boolean;
-label
-  1, 2;
-var
-  FilePointer                           : integer;
-begin
-  Result := False;
-  FilePointer := -1;
-
-  (* ONE INDEXED STATEMENT INSTEAD OF A BACKWARDS SCAN OF THE WHOLE LOG.
-
-     This walked the .TRW from the end, one record at a time, comparing
-     (ceQSOID1, ceQSOID2) until it found the QSO -- then seeked back and
-     rewrote it in place. The search and the write are a single UPDATE ...
-     WHERE on that pair. (This said "the database has an index on exactly that
-     pair" until 2026-10-27, and it has none: the statement reads the table,
-     about 2 ms for 12,000 rows, measured. Cheap enough not to add one.)
-
-     The scan and its FilePointer are gone with the binary log. FilePointer is
-     kept only because the surrounding routine still reports it. *)
-  if not LogSourceOpen then Exit;
-  begin
-    Result := LogStoreUpdateQSOBySessionIds(RXData);
-    CloseLogFile;
-  end;
-end;
-
 (* EnableNetworkMenuItem IS GONE (2026-10-27). It greyed the WHOLE Net menu, by
   position, whenever there was no link - which would now hide the very commands
   that make one. The Net menu is always available; ApplyNetworkMenuState enables
@@ -2574,13 +2707,10 @@ begin
      server called empty (or the reverse) something a person can see. The size
      counts the server's header record. The fields of the packet this station
      used to fill in are not read by anything and are not written. *)
-  Records := 0;
-  if s^.liServerLogSize > SizeOfTLogHeader then
-     begin
-     Records := (Int64(s^.liServerLogSize) - SizeOfTLogHeader) div SizeOf(ContestExchange);
-     end;
-  logger.Info('[Net] the server says its log holds %d record(s) (%d bytes)',
-              [Records, s^.liServerLogSize]);
+  (* PROTOCOL 5: liServerLogSize IS THE SERVER'S ROW COUNT (the server's log is
+     a database, with no file size or byte image). *)
+  Records := s^.liServerLogSize;
+  logger.Info('[Net] the server says its log holds %d row(s)', [Records]);
 end;
 
 (* THE ROW IS CREATED WHEN IT IS FIRST WRITTEN, not here.
@@ -3043,9 +3173,9 @@ begin
       NET_LOGCOMPARE_ID:         Result := 'LOGCOMPARE';
       NET_INTERCOMMESSAGE_ID:    Result := 'INTERCOM';
       NET_NETWORKDXSPOT_ID:      Result := 'DXSPOT';
-      NET_QSOINFO_ID:            Result := KIND_QSOINFO;
-      NET_EDITEDQSO_ID:          Result := NET_KIND_EDITEDQSO;
-      NET_OFFLINEQSO_ID:         Result := NET_KIND_OFFLINEQSO;
+      NET_WIRE_QSO_ID:           Result := KIND_QSOINFO;
+      NET_WIRE_EDIT_ID:          Result := NET_KIND_EDITEDQSO;
+      NET_WIRE_OFFLINE_ID:       Result := NET_KIND_OFFLINEQSO;
       NET_THIS_QTC_WAS__SEND_ID: Result := 'QTCSENT';
       NET_TAKESERVERQSO_ID:      Result := 'TAKESERVERQSO';
       NET_TIMESYN_ID:            Result := 'TIMESYNC';
@@ -3179,8 +3309,7 @@ end;
 var
    FPeerContestNotices: integer;
 
-function PeerRecordInOurContest(var aRec: ContestExchange; const aSender: integer;
-                                const aDoor: string): boolean;
+function PeerSenderInOurContest(const aSender: integer; const aCall, aDoor: string): boolean;
 var
    peer, ours, theirs, theirsName, notice: string;
    theirHandle: TContestHandle;
@@ -3202,10 +3331,8 @@ begin
 
    if verdict = pcSame then
       begin
-      (* THE SENDER'S BYTE IS NEVER READ. A contest registered by id has a byte
-        that differs between builds, so the record is stamped with THIS
-        station's own handle before anything stores or scores it. *)
-      aRec.ceContest := Contest;
+      (* A WIRE ROW CARRIES NO CONTEST (design 13.1): nothing is restamped; the
+        row is stored under THIS log's contest. *)
       Result := True;
       Exit;
       end;
@@ -3217,7 +3344,7 @@ begin
          logger.Error('[Net] %s from station %s REFUSED: that station has ' +
                       'not announced a contest (no HELLO from it), so there ' +
                       'is nothing to say it is on "%s" (call %s).',
-                      [aDoor, peer, ours, string(aRec.Callsign)]);
+                      [aDoor, peer, ours, aCall]);
          end;
       Exit;
       end;
@@ -3232,7 +3359,7 @@ begin
       logger.Error('[Net] %s from station %s REFUSED: it is on contest "%s" and ' +
                    'this station is on "%s" (call %s). Peers must run the same ' +
                    'contest (Q110).',
-                   [aDoor, peer, theirs, ours, string(aRec.Callsign)]);
+                   [aDoor, peer, theirs, ours, aCall]);
       end;
 
    if GPeers.FirstNotice(aSender, theirs) then
@@ -3283,6 +3410,9 @@ end;
   keeps the store from being read while the main thread is busy writing. Nothing
   is written to the log here -- the flags change when the packets are WRITTEN
   (SettleServerProgress). *)
+function PostWireRow(aRecordType: Word; aRowId: Int64; aTag: Int64;
+                     out aGuid: string): boolean; forward;
+
 function ResendOfflineWork: TResendResult;
 var
    rows: TLogRowUpdates;
@@ -3290,7 +3420,7 @@ var
    needs: TResendNeeds;
    rec: ContestExchange;
    posted: boolean;
-   notice: string;
+   notice, guid: string;
 begin
    Result.Qsos := 0;
    Result.Edits := 0;
@@ -3333,23 +3463,25 @@ begin
             begin
             (* A QSO the server has never been given goes whole, with whatever
               edits it has had: the packet is the record as it stands. *)
-            posted := SendRecordToServer(NET_QSOINFO_ID, rec);
+            posted := PostWireRow(NET_WIRE_QSO_ID, rows.RowId(i),
+                                  NetQsoTag(rec.ceQSOID1, rec.ceQSOID2), guid);
             if not posted then
                begin
                Break;
                end;
-            GResentKeys.Add(rec.ceQSOID1, rec.ceQSOID2);
+            GResentKeys.Add(guid);
             Inc(Result.Qsos);
             end;
 
          if needs.NeedsEdit then
             begin
-            posted := SendRecordToServer(NET_EDITEDQSO_ID, rec);
+            posted := PostWireRow(NET_WIRE_EDIT_ID, rows.RowId(i),
+                                  NetQsoTag(rec.ceQSOID1, rec.ceQSOID2), guid);
             if not posted then
                begin
                Break;
                end;
-            GResentKeys.Add(rec.ceQSOID1, rec.ceQSOID2);
+            GResentKeys.Add(guid);
             Inc(Result.Edits);
             end;
          end;
@@ -3487,21 +3619,20 @@ begin
       end;
 end;
 
-function ReceivedQsoIsKnown(const aRec: ContestExchange): boolean;
+function ReceivedGuidIsKnown(const aGuid: string; const aCall: string): boolean;
 begin
    Result := False;
-   if not QsoHasNetworkIdentity(aRec) then
+   if aGuid = '' then
       begin
       Exit;
       end;
 
-   Result := LogStoreHasQSOBySessionIds(aRec.ceQSOID1, aRec.ceQSOID2);
+   Result := LogStoreRowIdByGuid(aGuid) <> 0;
    if Result then
       begin
       Inc(GDuplicateQsos);
-      logger.Info('[Net] QSO %s (%d/%d) is already in the log; the copy that ' +
-                  'just arrived is ignored',
-                  [string(aRec.Callsign), aRec.ceQSOID1, aRec.ceQSOID2]);
+      logger.Info('[Net] QSO %s (guid %s) is already in the log; the copy that ' +
+                  'just arrived is ignored', [aCall, aGuid]);
       end;
 end;
 
@@ -3510,67 +3641,107 @@ begin
    Result := GDuplicateQsos;
 end;
 
-(* ONE QSO OR EDIT PACKET, built from a record and posted.
+(* THE ONE PLACE A QSO, EDIT OR OFFLINE MESSAGE IS BUILT AND POSTED (protocol 5).
 
-  THE RECORD IS NEVER CHANGED. It used to set ceSendToServer on it before
-  posting, and callers then stored it, so the log said "sent" for a packet that
-  was only queued -- and a link that died with it still queued lost the QSO
-  without a trace. The log's flags now change when the packet is WRITTEN
-  (SettleServerProgress), so the record goes to the log as the caller made it:
-  a new QSO unsent, an edited one dirty.
+  THE ROW IS THE SOURCE. The values are read from the COMMITTED row
+  (LogStoreReadWireValues -> ReadWireValues) and made a wire message by
+  BuildWireMessage: header, this station's computer id as the sender byte, the
+  UTF-8 JSON with defaults omitted and the record checksum. Nothing is built from
+  a ContestExchange, so the message carries the stored guid and every on-wire
+  column, my_* and my_source included. The packet says nothing about "sent" or
+  "dirty": those are this database's own columns and never travel.
 
-  THE PACKET says the opposite: sent, not dirty. That is what the server stores
-  and what every other station logs for a QSO that came from the network, and
-  those must not try to send it back.
+  THE TAG is the row's local network pair (uNetResend.NetQsoTag), handed back by
+  the writer when the bytes are written so the right row is marked sent or clean.
+  0 = nothing to settle (the restock sends rows that are already marked sent).
 
-  THE TAG is the QSO's network key, handed back when the write finishes so the
-  right row is marked. A QSO with no key (both ids 0) travels, as it always
-  did, but cannot be marked afterwards; it is not owed after a link-up either.
-
+  A row that cannot be read, a message over the wire's limit, or a refusal at
+  SendToNet posts nothing and answers False (the first two are logged here).
+  aGuid is the row's guid for the caller's ledger ('' when nothing was built).
   True means POSTED, not delivered. *)
-(* THE ONE PLACE A QSO OR EDIT PACKET IS BUILT AND POSTED. aTag is what the
-  writer hands back when the bytes are written (0 = nothing to settle: the
-  restock sends rows that are already marked sent). *)
-function PostQsoPacket(RecordType: Word; const rec: ContestExchange;
-                       aTag: Int64): boolean;
+function PostWireRow(aRecordType: Word; aRowId: Int64; aTag: Int64;
+                     out aGuid: string): boolean;
+var
+   values: TWireValues;
+   packet: TBytes;
 begin
    Result := False;
+   aGuid := '';
    if not NetIsConnected then
       begin
       Exit;
       end;
-
-   NetQSOInfoToSend.qiID := RecordType;
-   NetQSOInfoToSend.qiInformation := rec;
-   NetQSOInfoToSend.qiInformation.ceSendToServer := True;
-   NetQSOInfoToSend.qiInformation.ceNeedSendToServerAE := False;
-   (* WHO PUT THIS ON THE WIRE (protocol 2). Every QSO, edit and offline resend
-     goes through here, so this is the one place the sender is stated: the
-     receivers judge the packet's contest by what THIS station announced, not by
-     ceContest -- which, for a contest registered by id, means nothing outside
-     this program. *)
-   NetQSOInfoToSend.qiSenderID := Ord(WireComputerID);
-
-   if SendToNet(NetQSOInfoToSend, SizeOf(NetQSOInfoToSend), aTag) <>
-      SizeOf(NetQSOInfoToSend) then
+   if aRowId = 0 then
       begin
       Exit;
       end;
 
-   if (RecordType = NET_EDITEDQSO_ID) and (GNetDelivery <> nil) then
+   if not LogStoreReadWireValues(aRowId, values) then
+      begin
+      logger.Error('[Net] row %d could not be read for the server; nothing was sent',
+                   [aRowId]);
+      Exit;
+      end;
+   aGuid := values[QsoWireColumns.IndexOfName('guid')];
+
+   try
+      (* WHO PUT THIS ON THE WIRE: this station's ordinal 1..26. The receivers
+        judge the row's contest by what THIS station announced; the server
+        re-stamps the byte from the accepted HELLO. *)
+      packet := BuildWireMessage(aRecordType, Byte(Ord(WireComputerID)),
+                                 QsoWireColumns, values);
+   except
+      on E: EWireQsoError do
+         begin
+         logger.Error('[Net] row %d (guid %s) cannot be sent: %s', [aRowId, aGuid, E.Message]);
+         Exit;
+         end;
+   end;
+
+   if (not OutboundWireMessageIsWellFormed(packet)) or
+      (SendToNet(packet[0], Length(packet), aTag) <> Length(packet)) then
+      begin
+      Exit;
+      end;
+
+   if (aRecordType = NET_WIRE_EDIT_ID) and (GNetDelivery <> nil) then
       begin
       GNetDelivery.EditPosted(aTag);
       end;
    Result := True;
 end;
 
-function SendRecordToServer(RecordType: Word; const rec: ContestExchange): boolean;
+function SendRowToServer(RecordType: Word; aRowId: Int64; aTag: Int64): boolean;
+var
+   guid: string;
 begin
-   Result := PostQsoPacket(RecordType, rec,
-                           NetQsoTag(rec.ceQSOID1, rec.ceQSOID2));
+   Result := PostWireRow(RecordType, aRowId, aTag, guid);
 end;
 
-function NetResentThisLink: TServerQsoIndex;
+function SendRecordToServer(RecordType: Word; const rec: ContestExchange): boolean;
+var
+   rowId: Int64;
+begin
+   Result := False;
+   (* THE ROW, FROM THE RECORD'S LOCAL PAIR. A record whose pair is (0, 0) names
+     no row; a row not in the log (a refused QSO) is not found, so it sends
+     nothing. *)
+   if not QsoHasNetworkIdentity(rec) then
+      begin
+      Exit;
+      end;
+   rowId := LogStoreRowIdBySessionIds(rec.ceQSOID1, rec.ceQSOID2);
+   if rowId = 0 then
+      begin
+      logger.Warn('[Net] QSO %s (%d/%d) is not in the log; nothing was sent',
+                  [string(rec.Callsign), rec.ceQSOID1, rec.ceQSOID2]);
+      Exit;
+      end;
+   Result := SendRowToServer(RecordType, rowId,
+                             NetQsoTag(rec.ceQSOID1, rec.ceQSOID2));
+end;
+
+function NetResentThisLink: TGuidSet;
 begin
    Result := GResentKeys;
 end;
@@ -3583,6 +3754,7 @@ end;
 function RestockServer(aPlan: TPushPlan; out aPosted: integer): boolean;
 var
    i: integer;
+   guid: string;
 begin
    Result := False;
    aPosted := 0;
@@ -3596,7 +3768,10 @@ begin
    Result := True;
    for i := 0 to aPlan.Count - 1 do
       begin
-      if not PostQsoPacket(NET_OFFLINEQSO_ID, aPlan.Row(i), 0) then
+      (* AS AN OFFLINE ROW: stored by the server, acknowledged, not relayed. The
+        row is read AGAIN from the log (the plan holds its id), so what goes is
+        what is stored now. *)
+      if not PostWireRow(NET_WIRE_OFFLINE_ID, aPlan.RowId(i), 0, guid) then
          begin
          Result := False;
          logger.Warn('[Net] restock: the link went down after %d of %d QSO(s); ' +
@@ -3610,7 +3785,7 @@ begin
    if aPosted > 0 then
       begin
       logger.Info('[Net] restock: %d QSO(s) the server did not have were posted ' +
-                  '(OFFLINEQSO: stored, acknowledged, not relayed)', [aPosted]);
+                  '(OFFLINE: stored, acknowledged, not relayed)', [aPosted]);
       end;
 end;
 
@@ -3691,7 +3866,7 @@ initialization
   GPeers      := TNetPeers.Create;
   GSendRefusals := TNetSendRefusals.Create;
   GNetDelivery := TNetDelivery.Create;
-  GResentKeys := TServerQsoIndex.Create;
+  GResentKeys := TGuidSet.Create;
 
   (* OWNED HERE NOW, not created in uProgramMain's CreateEvent block with the
     three CW/DVP events. It is this unit's signal and nothing outside uses it,

@@ -227,6 +227,12 @@ procedure OTRSPCommand;
   the status line, with a beep. *)
 function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;
 
+(* A PEER'S QSO THAT THE RECEIVE ARM ALREADY STORED (protocol 5): everything
+  LogContact does for a peer's QSO except the write. aFacts is the station the
+  row recorded. True when it was released. *)
+function LogStoredPeerQSO(var RXData: ContestExchange;
+                          const aFacts: TQsoMyFacts): boolean;
+
 type
    (* BUILDS LEG aLeg (1 or more) OF A SEVERAL-LEG ENTRY into aLegs[aLeg],
      from aLegs[0 .. aLeg - 1] AS PREPARE AND SCORE LEFT THEM -- the earlier
@@ -779,7 +785,7 @@ begin
      PostQsoEvent(qmDeleted, TempRXData, restoredFacts, '', 0,
                   UDPBroadcaster.Enabled(usContact), True);
      end;
-  SendRecordToServer(NET_EDITEDQSO_ID, TempRXData);
+  SendRecordToServer(NET_WIRE_EDIT_ID, TempRXData);
   LogSourceClose;
   LoadinLog;
   ShowMessage(p);
@@ -1773,6 +1779,9 @@ type
       FQsos: array of ContestExchange;
       FLegs: array of TLiveQSOLeg;
       FFacts: TLiveQsoFacts;
+      (* A PEER'S ROW THAT IS ALREADY STORED (protocol 5): the write step has
+        nothing to do and FFacts holds the station the row recorded. *)
+      FAlreadyStored: boolean;
       FSequence: TSubmitSequence;
       FBuildLeg: TLiveQSOBuildLeg;
       function PrepareLeg(aLeg: integer): boolean;
@@ -1789,6 +1798,10 @@ type
         (a placeholder record until then). *)
       procedure AddBuiltLegs(aCount: integer; aMyComputer: boolean;
                              aBuildLeg: TLiveQSOBuildLeg);
+      (* The one leg's row is already in the log, committed, with this station
+        record: the sheets, display and posts are driven as for any QSO and
+        nothing is written. *)
+      procedure SetAlreadyStored(const aFacts: TQsoMyFacts);
       (* True only when every leg is committed to the log and released. *)
       function Submit: boolean;
       (* Leg aLeg's record as the steps left it -- refused or not. *)
@@ -1798,6 +1811,31 @@ type
 (* The write: tAddQSOToLog for several records in ONE transaction. *)
 function tAddQSOsToLog(const aQsos: array of ContestExchange;
                        out aFacts: TLiveQsoFacts): boolean; forward;
+
+(* A PEER'S QSO THAT IS ALREADY IN THE LOG (protocol 5, NY4I ruling 2): the
+  receive arm stored its wire row verbatim -- the sender's guid, station facts and
+  my_source -- and read it back as RXData with aFacts, the station the row
+  recorded. This runs everything LogContact does for a peer's QSO EXCEPT the
+  write: the dupe and multiplier sheets, the totals, the display, the UDP and
+  HamScore posts. True when it was released. *)
+function LogStoredPeerQSO(var RXData: ContestExchange;
+                          const aFacts: TQsoMyFacts): boolean;
+var
+  submission                            : TLiveQSOSubmission;
+begin
+  submission := TLiveQSOSubmission.Create;
+  try
+     submission.AddLeg(RXData, False);
+     submission.SetAlreadyStored(aFacts);
+     try
+        Result := submission.Submit;
+     finally
+        RXData := submission.Qso(0);
+     end;
+  finally
+     submission.Free;
+  end;
+end;
 
 function LogContact(var RXData: ContestExchange; MyComputer: boolean): boolean;
 { This procedure will log the contact just completed.  It will be
@@ -2209,7 +2247,7 @@ begin
   if aLeg.PacketOwed then
      begin
      aLeg.PacketOwed := False;
-     if not SendRecordToServer(NET_QSOINFO_ID, aLeg.Packet) then
+     if not SendRecordToServer(NET_WIRE_QSO_ID, aLeg.Packet) then
         begin
         inc(tUSQ);
         end;
@@ -2415,7 +2453,19 @@ end;
   store recorded it in FFacts. *)
 function TLiveQSOSubmission.WriteLegs(aLegCount: integer): boolean;
 begin
+   if FAlreadyStored then
+      begin
+      Result := True;
+      Exit;
+      end;
    Result := tAddQSOsToLog(FQsos, FFacts);
+end;
+
+procedure TLiveQSOSubmission.SetAlreadyStored(const aFacts: TQsoMyFacts);
+begin
+   FAlreadyStored := True;
+   SetLength(FFacts, 1);
+   FFacts[0] := aFacts;
 end;
 
 procedure TLiveQSOSubmission.ReleaseLeg(aLeg: integer);

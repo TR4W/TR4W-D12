@@ -62,7 +62,7 @@ param(
 # uAppPaths + uFileText instead.
 # 42 at birth: the residual list is in the issue 165 commit message, each site
 # with why it is not converted yet.
-$WRITE_CEILING = 42
+ = 40
 # Floors for -Gate: fewer than these means the reader failed, not that the tree
 # is clean.
 $FILE_FLOOR  = 300

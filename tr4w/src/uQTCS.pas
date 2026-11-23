@@ -384,7 +384,7 @@ begin
            why) and not sent; the QTC itself has gone, so the scan goes on. *)
         if LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData) then
            begin
-           if SendRecordToServer(NET_EDITEDQSO_ID, TempRXData) then
+           if SendRecordToServer(NET_WIRE_EDIT_ID, TempRXData) then
               begin
               Sleep(50);
               end;

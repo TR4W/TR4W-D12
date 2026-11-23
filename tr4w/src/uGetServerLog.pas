@@ -28,6 +28,7 @@ uses
   IdGlobal,    // TIdBytes -- the password's wire form, in FetchServerLog
   TF,
   VC,
+  uWireQso,    // TWireValues -- the server's rows
   uNetCatchUp;
 
 (* CATCHING UP FROM THE SERVER'S LOG -- Phase 1, C6 (2026-10-27).
@@ -86,8 +87,7 @@ function StartServerCatchUp(aOrigin: TCatchUpOrigin): boolean;
   out because they belong to another contest or to none that can be told. False
   says why in aWhy and the log is as it was. It does not rescore. *)
 function MergeServerLog(aImage: TServerLogImage; const aBackupDir: string;
-                        out aAdded, aSkippedContest: integer;
-                        out aWhy: string): boolean;
+                        out aAdded: integer; out aWhy: string): boolean;
 
 (* THE MERGE AND EVERYTHING AROUND IT, as the operator meets it: MergeServerLog
   into uAppPaths.BackupDir, then a rescore (the new rows are scored like any
@@ -103,8 +103,8 @@ function AddServerLogToLog(aImage: TServerLogImage): boolean;
   when exactly the size the server stated has been written to aInto. False says
   why in aWhy and aInto holds whatever arrived. *)
 function FetchServerLog(const aHost: AnsiString; aPort: integer;
-                        const aPassword: TIdBytes; aInto: TStream;
-                        out aDeclaredSize: Int64; out aWhy: string): boolean;
+                        const aPassword: TIdBytes; aInto: TServerLogImage;
+                        out aWhy: string): boolean;
 
 (* HOW MANY QSOS THE SERVER HOLDS THAT THIS LOG DOES NOT, without changing
   anything. False when the log could not be read. MAIN THREAD. *)
@@ -145,6 +145,12 @@ procedure ReportSyncProgress(aField: integer; aValue: integer);
   window releases it when it closes. *)
 function TryGetServerLogRow(const aIndex: integer;
                             out aRecord: ContestExchange): boolean;
+(* THE PRINCIPAL FIELDS OF A WIRE ROW AS A ContestExchange, for the window's grid
+  only: callsign, time, band, mode, signal reports, serials, the received
+  exchange text, points and the dupe, deleted and X-QSO marks. NOT the way a row
+  reaches the log (that stores the wire columns whole). Exported for the unit
+  tests. *)
+procedure WireRowToDisplayRecord(const aValues: TWireValues; out aRecord: ContestExchange);
 function ServerLogWindowImage: TServerLogImage;
 procedure ReleaseServerLogImage;
 
@@ -203,8 +209,14 @@ uses SysUtils,
    uContestRegistry,
    uContestBase,     (* ContestReceivedYearKind -- does the contest send a year *)
    uLogStore,
-   uQsoMyFacts,
-   uServerQsoIndex;
+   uGuidSet,
+   uNetFraming,      (* TakeSyncHeader, TakeSyncRow, NET_WIRE_MAX_PAYLOAD *)
+   uNetHello,        (* NET_PROTOCOL_VERSION *)
+   uNetResend,       (* NextQsoSequence *)
+   uQsoColumns,      (* QsoWireColumns *)
+   uADIF,            (* GetADIFBand *)
+   uLogBinaryFile,   (* UnixUTCToQSOTime *)
+   uLogRepository;   (* TokenToMode, GetADIFBand, UnixUTCToQSOTime ... as found *)
 
 { GetServerLogDlgProc STOOD HERE and went with dialog template 73 on
   2026-08-29 -- the last Win32 dialog in the program. Its window is
@@ -232,19 +244,77 @@ function TryGetServerLogRow(const aIndex: integer;
                             out aRecord: ContestExchange): boolean;
 begin
    Result := False;
-   if GWindowImage <> nil then
+   aRecord := Default(ContestExchange);
+   if (GWindowImage <> nil) and (aIndex >= 0) and (aIndex < GWindowImage.Count) then
       begin
-      Result := GWindowImage.Row(aIndex, aRecord);
+      WireRowToDisplayRecord(GWindowImage.Row(aIndex), aRecord);
+      Result := True;
       end;
    (* A RECORD FROM THE SERVER'S LOG ARRIVES HERE, so it is judged here -- log
-     schema 10. The byte it carries is its sender's (zero from a station older
-     than schema 10), and the window reads the stored predicate like every
-     other grid; so this station's contest stamps it on the way in, as the
-     grids judged it before. *)
+     schema 10: the window reads the stored predicate like every other grid; so
+     this station's contest stamps it on the way in. *)
    if Result then
       begin
       StampOffContest(aRecord);
       end;
+end;
+
+procedure WireRowToDisplayRecord(const aValues: TWireValues; out aRecord: ContestExchange);
+var
+   cols: TWireColumns;
+
+   function V(const aName: string): string;
+   begin
+      Result := '';
+      if Length(aValues) = cols.Count then
+         begin
+         Result := aValues[cols.IndexOfName(aName)];
+         end;
+   end;
+
+   function N(const aName: string; aDefault: Int64): Int64;
+   var
+      n: Int64;
+   begin
+      Result := aDefault;
+      if TryCanonicalInt64(V(aName), n) then
+         begin
+         Result := n;
+         end;
+   end;
+
+begin
+   cols := QsoWireColumns;
+   aRecord := Default(ContestExchange);
+   aRecord.Band := NoBand;
+   aRecord.Mode := NoMode;
+   aRecord.ExtMode := eNoMode;
+   aRecord.NumberReceived := -1;
+   aRecord.NumberSent := -1;
+   aRecord.ceRecordKind := TokenToRecordKind(AnsiString(V('record_kind')));
+   aRecord.tSysTime := UnixUTCToQSOTime(N('qso_at', 0));
+   aRecord.Callsign := AnsiString(V('callsign'));
+   aRecord.Frequency := N('freq_tx_hz', 0);
+   aRecord.Band := GetADIFBand(V('band'));
+   aRecord.Mode := TokenToMode(AnsiString(V('mode')));
+   aRecord.ExchString := AnsiString(V('exchange_received'));
+   aRecord.RSTSent := N('rst_sent', 0);
+   aRecord.RSTReceived := N('rst_received', 0);
+   aRecord.NumberSent := N('serial_sent', -1);
+   aRecord.NumberReceived := N('serial_received', -1);
+   aRecord.QTHString := AnsiString(V('rcvd_qth'));
+   aRecord.Name := AnsiString(V('rcvd_name'));
+   aRecord.DomesticQTH := AnsiString(V('domestic_qth'));
+   aRecord.QSOPoints := word(N('qso_points', 0));
+   aRecord.ceDupe := N('is_dupe', 0) <> 0;
+   (* NOT is_xqso / is_off_contest: Lint-XQSOReads reserves the X-QSO rule to the
+     units that set it, so the grid does not grey a server row as an X-QSO. *)
+   aRecord.ceQSO_Deleted := (N('deleted', 0) <> 0) or (N('is_skipped', 0) <> 0);
+   if V('computer_id') <> '' then
+      begin
+      aRecord.ceComputerID := AnsiChar(V('computer_id')[1]);
+      end;
+   aRecord.ceContest := Contest;
 end;
 
 procedure ReleaseServerLogImage;
@@ -293,47 +363,74 @@ end;
 
 (* THE LOG DOWNLOAD, ON INDY -- into MEMORY, on the worker's own connection.
 
-  THE PROTOCOL, which was never written down: connect to the server's port
-  PLUS ONE, write ten bytes of password, then read a four-byte size in NATIVE
-  byte order and exactly that many bytes. The size is the file's, header
-  included.
+  THE PROTOCOL (design 13.7): connect to the server's port PLUS ONE, write ten
+  bytes of password, then read a header frame {"contest":..,"rows":N,"schema":5}
+  and N row frames. A frame is a four-byte length in NATIVE (little-endian) byte
+  order and that many bytes of UTF-8 JSON; a row frame is the on-wire row of a
+  live QSO message without the sender byte. Each frame is read EXACTLY, so how TCP
+  cuts the stream does not matter.
 
-  D7 READ UNTIL THE PEER WENT QUIET (two seconds of silence ended the transfer)
-  and compared the byte count with the size afterwards. The size is stated up
-  front, so this reads exactly that many and a short transfer is a read that
-  fails, naming how far it got.
+  A frame over NET_RECEIVE_BUFFER_SIZE (NOT the 60000 live-message cap: the server writes a spaced JSON, so an at-cap row frame can exceed it), a header that does not parse, a schema other
+  than this build's protocol, more rows than SERVER_LOG_MAX_ROWS, or a row whose
+  checksum does not match ends the download with the reason: nothing is guessed.
+  A server that closes early is a read that fails, naming how many rows arrived.
 
-  TWO THINGS THAT LOOK LIKE TRANSLATION AND ARE NOT:
-
-  1. ReadInt32(AConvert := False). Indy converts from NETWORK byte order by
-     default; those four bytes are native. On a little-endian machine the
-     default would have turned a 25,000-byte log into 3,347,644,416.
-  2. THE FOUR-BYTE HEADER IS READ AS A HEADER, not skipped out of whatever the
-     first read happened to return. TCP does not promise four bytes at once.
+  ReadInt32(AConvert := False): Indy converts from NETWORK byte order by default;
+  these four bytes are native.
 
   NO SETTINGS ARE READ HERE: the starter captured the address, port and the
-  password's wire form on the main thread. Runs on the worker; aProgress is
-  called there too. *)
+  password's wire form. Runs on the worker; progress is reported from it. *)
 function FetchServerLog(const aHost: AnsiString; aPort: integer;
-                        const aPassword: TIdBytes; aInto: TStream;
-                        out aDeclaredSize: Int64; out aWhy: string): boolean;
+                        const aPassword: TIdBytes; aInto: TServerLogImage;
+                        out aWhy: string): boolean;
 const
    CONNECT_TIMEOUT_MS = 5000;
    IDLE_TIMEOUT_MS    = 15000;   // nothing arriving for this long ends the transfer
-   CHUNK_BYTES        = 65536;
 var
-   Client:    TIdTCPClient;
-   Chunk:     TIdBytes;
-   Remaining: Int64;
-   Take:      integer;
-   Received:  Int64;
+   Client:      TIdTCPClient;
+   Body:        TIdBytes;
+   Bytes:       TBytes;
+   Length32:    integer;
    resolved:    string;
    resolveWhy:  string;
+   contest:     string;
+   rows, schema: integer;
+   i, n:        integer;
+   values:      TWireValues;
+   rowWhy:      string;
+   received:    Int64;
+
+   function ReadFrame: boolean;
+   var
+      k: integer;
+   begin
+      Result := False;
+      Length32 := Client.IOHandler.ReadInt32(False);   // native order
+      if (Length32 < 0) or (Length32 > NET_RECEIVE_BUFFER_SIZE) then
+         begin
+         aWhy := 'the server sent a frame of ' + IntToStr(Length32) +
+                 ' bytes (the limit is ' + IntToStr(NET_RECEIVE_BUFFER_SIZE) + ')';
+         Exit;
+         end;
+      SetLength(Body, 0);
+      if Length32 > 0 then
+         begin
+         Client.IOHandler.ReadBytes(Body, Length32, False);
+         end;
+      SetLength(Bytes, Length(Body));
+      for k := 0 to High(Body) do
+         begin
+         Bytes[k] := Body[k];
+         end;
+      Inc(received, 4 + Length(Body));
+      Result := True;
+   end;
+
 begin
-   Result        := False;
-   aDeclaredSize := 0;
-   aWhy          := '';
-   Received      := 0;
+   Result   := False;
+   aWhy     := '';
+   received := 0;
+   n        := 0;
 
    (* THE SERVER'S NAME, through the platform resolver (uHostResolve, issue 148;
      Windows is unchanged). Here on the WORKER thread, which may wait on the
@@ -368,52 +465,51 @@ begin
       try
          Client.IOHandler.Write(aPassword);
 
-         aDeclaredSize := Client.IOHandler.ReadInt32(False);   // native order
-         if (aDeclaredSize < 0) or (aDeclaredSize > SERVER_LOG_MAX_BYTES) then
+         if not ReadFrame then
             begin
-            aWhy := 'the server stated an impossible log size (' +
-                    IntToStr(aDeclaredSize) + ' bytes)';
             Exit;
             end;
-
-         Remaining := aDeclaredSize;
-         while Remaining > 0 do
+         if (not TakeSyncHeader(Bytes, contest, rows, schema)) or
+            (rows < 0) or (rows > SERVER_LOG_MAX_ROWS) then
             begin
-            Take := CHUNK_BYTES;
-            if Remaining < Take then
-               begin
-               Take := Integer(Remaining);
-               end;
-
-            SetLength(Chunk, 0);
-            Client.IOHandler.ReadBytes(Chunk, Take, False);
-            aInto.WriteBuffer(Chunk[0], Length(Chunk));
-            Inc(Received, Length(Chunk));
-            Dec(Remaining, Length(Chunk));
-            ReportSyncProgress(SYNC_FIELD_BYTES, Received);
+            aWhy := 'the server sent a sync header this station cannot read';
+            Exit;
             end;
+         if schema <> NET_PROTOCOL_VERSION then
+            begin
+            aWhy := 'the server sent schema ' + IntToStr(schema) +
+                    ', this station speaks ' + IntToStr(NET_PROTOCOL_VERSION);
+            Exit;
+            end;
+         aInto.StartImage(contest, rows);
+
+         for i := 1 to rows do
+            begin
+            if not ReadFrame then
+               begin
+               Exit;
+               end;
+            if TakeSyncRow(QsoWireColumns, Bytes, values, rowWhy) <> wtOk then
+               begin
+               aWhy := 'row ' + IntToStr(i) + ' of ' + IntToStr(rows) +
+                       ' is refused: ' + rowWhy;
+               Exit;
+               end;
+            aInto.AddRow(values);
+            Inc(n);
+            if (i mod 200) = 0 then
+               begin
+               ReportSyncProgress(SYNC_FIELD_BYTES, received);
+               end;
+            end;
+         ReportSyncProgress(SYNC_FIELD_BYTES, received);
 
          Result := True;
       except
          on E: Exception do
             begin
-            (* A READ THAT FAILS LEAVES WHAT HAD ARRIVED IN INDY'S BUFFER. Keep it
-              -- the caller was promised whatever arrived -- and count it, so the
-              report says how far the transfer really got. *)
-            try
-               if Client.IOHandler.InputBuffer.Size > 0 then
-                  begin
-                  SetLength(Chunk, 0);
-                  Client.IOHandler.InputBuffer.ExtractToBytes(
-                     Chunk, Client.IOHandler.InputBuffer.Size);
-                  aInto.WriteBuffer(Chunk[0], Length(Chunk));
-                  Inc(Received, Length(Chunk));
-                  end;
-            except
-               (* What could not be salvaged is simply not counted. *)
-            end;
-            aWhy := 'the transfer failed after ' + IntToStr(Received) +
-                    ' of ' + IntToStr(aDeclaredSize) + ' byte(s) -- ' + E.Message;
+            aWhy := 'the transfer failed after ' + IntToStr(n) + ' of ' +
+                    IntToStr(rows) + ' row(s) -- ' + E.Message;
             end;
       end;
    finally
@@ -446,40 +542,58 @@ begin
    inherited Destroy;
 end;
 
-(* THE CONTEST, as the judge needs to know it. *)
-function CurrentCatchUpContext: TCatchUpContext;
+(* THE SERVER'S CONTEST AGAINST OURS, ONCE (design 13.7 ruling 4). True when the
+  rows may be used; False, reported once per call site's caller, when the server
+  holds another contest. The notice is the existing contest-mismatch one. *)
+function ServerContestMatches(aImage: TServerLogImage; out aWhy: string): boolean;
 var
-   legacyNumber: integer;
+   ours, theirsName: string;
+   theirHandle: TContestHandle;
 begin
-   Result.Peers := NetPeers;
-   Result.OurContestId := ContestId(Contest);
-   Result.OurHandle := Contest;
-   Result.OurIsLegacy := ContestLegacyNumber(Contest, legacyNumber);
+   Result := True;
+   aWhy := '';
+   ours := ContestId(Contest);
+   if JudgeSyncContest(aImage.Contest, ours) <> scOther then
+      begin
+      Exit;
+      end;
+
+   Result := False;
+   theirsName := aImage.Contest;
+   if FindContestById(aImage.Contest, theirHandle) then
+      begin
+      theirsName := ContestIdentity(theirHandle).DisplayName;
+      end;
+   aWhy := SysUtils.Format(SPeerOnAnotherContest,
+                           ['(the server)', theirsName,
+                            ContestIdentity(Contest).DisplayName]);
+   logger.Error('[Net] catch-up: the server holds contest "%s" and this station is ' +
+                'on "%s": nothing was compared, added or sent', [aImage.Contest, ours]);
 end;
 
-(* THE PLAN against the log as it is NOW. False, with nil, when the log's keys
+(* THE PLAN against the log as it is NOW. False, with nil, when the log's guids
   cannot be read: a plan made without them would add what is already there. *)
 function MakePlan(aImage: TServerLogImage; out aPlan: TCatchUpPlan): boolean;
 var
-   keys: TQsoSessionKeys;
-   held: TServerQsoIndex;
+   guids: TGuidArray;
+   held: TGuidSet;
    i: integer;
 begin
    Result := False;
    aPlan := nil;
 
-   if not LogStoreCollectSessionKeys(keys) then
+   if not LogStoreCollectGuids(guids) then
       begin
       Exit;
       end;
 
-   held := TServerQsoIndex.Create;
+   held := TGuidSet.Create;
    try
-      for i := 0 to High(keys) do
+      for i := 0 to High(guids) do
          begin
-         held.Add(Cardinal(keys[i].SessionId), Cardinal(keys[i].SessionSeq));
+         held.Add(guids[i]);
          end;
-      aPlan := BuildCatchUpPlan(aImage, held, CurrentCatchUpContext);
+      aPlan := BuildCatchUpPlan(aImage, held);
       Result := True;
    finally
       held.Free;
@@ -508,14 +622,19 @@ end;
   rest. *)
 function MakePushPlan(aImage: TServerLogImage; out aPlan: TPushPlan): boolean;
 var
-   rows: TLogRowUpdates;
+   rows: TWireRows;
    i: integer;
+   computerId: string;
 begin
    Result := False;
-   aPlan := TPushPlan.Create(aImage, NetResentThisLink);
-   rows := TLogRowUpdates.Create;
+   computerId := string(Settings.Computer.Id);
+   aPlan := TPushPlan.Create(aImage, computerId, NetResentThisLink);
+   rows := TWireRows.Create;
    try
-      if not LogStoreCollectForServerRestock(rows, aPlan.ServerHolds) then
+      (* ONLY ROWS LOGGED HERE (the wire computer_id is this station's) whose
+        guid the server lacks: the repository asks the plan before it reads a
+        row's other columns. *)
+      if not LogStoreCollectWireRowsForServer(rows, computerId, aPlan.ServerHolds) then
          begin
          FreeAndNil(aPlan);
          Exit;
@@ -523,7 +642,7 @@ begin
 
       for i := 0 to rows.Count - 1 do
          begin
-         aPlan.Consider(rows.Row(i));
+         aPlan.Consider(rows.RowId(i), rows.Values(i), rows.Owed(i));
          end;
       Result := True;
    finally
@@ -580,21 +699,24 @@ begin
 end;
 
 function MergeServerLog(aImage: TServerLogImage; const aBackupDir: string;
-                        out aAdded, aSkippedContest: integer;
-                        out aWhy: string): boolean;
+                        out aAdded: integer; out aWhy: string): boolean;
 var
    plan: TCatchUpPlan;
-   appends: TLogQsoAppends;
-   facts: TQsoMyFacts;
-   rec: ContestExchange;
-   i, failedIndex: integer;
-   sendsYear: boolean;
-   backupPath, backupReport, failure: string;
+   rows: array of TWireValues;
+   keys: TQsoSessionKeys;
+   i, n: integer;
+   backupPath, backupReport: string;
 begin
    Result := False;
    aAdded := 0;
-   aSkippedContest := 0;
    aWhy := '';
+
+   (* THE CONTEST IS COMPARED ONCE, from the sync header (design 13.7 ruling 4):
+     a server on another contest is refused whole. *)
+   if not ServerContestMatches(aImage, aWhy) then
+      begin
+      Exit;
+      end;
 
    if not MakePlan(aImage, plan) then
       begin
@@ -604,8 +726,6 @@ begin
 
    try
       logger.Info('[Net] catch-up: %s', [CatchUpSummary(plan)]);
-      aSkippedContest := plan.Skipped(cusOtherContest) +
-                         plan.Skipped(cusUnknownContest);
 
       if plan.Count = 0 then
          begin
@@ -614,7 +734,7 @@ begin
          end;
 
       (* A VERIFIED BACKUP FIRST, AND NO WRITE WITHOUT ONE. This only inserts, but
-        it inserts into the contest log from a file this station did not make. *)
+        it inserts into the contest log from rows this station did not make. *)
       if not LogStoreBackupBeforeCatchUp(aBackupDir, backupPath, backupReport) then
          begin
          aWhy := 'the backup of the log taken first failed -- ' + backupReport;
@@ -623,48 +743,27 @@ begin
          end;
       logger.Info('[Net] catch-up: log backed up to %s', [backupPath]);
 
-      (* THE STATION IS OURS, ASSUMED: the V1 record carries no station of its
-        own, so each QSO is stamped with THIS station's values and marked so
-        (ruling D), exactly as a QSO that arrives live is. It stores no sent
-        exchange: we do not know what the author sent. *)
-      facts := LogStoreCurrentMyFacts;
-      facts.Source := mfsAssumed;
-      (* THE SENT LICENCE YEAR IS THE RECORD'S, row by row (issue 300, protocol
-        4): the author's QSO sent the AUTHOR's year and the record carries it
-        (uQsoMyFacts.TSentYearSource, sysPeer); ours would be invented. A
-        record with none (an older server log) stores none. Set per row in the
-        loop below; cleared here so no row inherits another's. *)
-      SetFactsYearSent(facts, False, 0);
-      sendsYear := ContestReceivedYearKind(ContestIdentity(Contest)) <> rykNone;
+      (* EVERY ROW IS STORED VERBATIM, under the sender's guid, with the sender's
+        station facts and my_source as they were sent (NY4I ruling 2). Only this
+        database's own columns are set here: a fresh local pair (so an edit
+        made to the row here can be sent), sent and clean (it came from the
+        server, so it is not owed back). *)
+      n := plan.Count;
+      SetLength(rows, n);
+      SetLength(keys, n);
+      for i := 0 to n - 1 do
+         begin
+         rows[i] := aImage.Row(plan.RowIndex(i));
+         keys[i].SessionId := STARTTIMEOFTHETR4W;
+         keys[i].SessionSeq := NextQsoSequence(Cardinal(GetTickCount64));
+         end;
 
-      appends := TLogQsoAppends.Create;
-      try
-         for i := 0 to plan.Count - 1 do
-            begin
-            aImage.Row(plan.RowIndex(i), rec);
-            StampCaughtUp(rec, Contest);
-            if sendsYear then
-               begin
-               SetFactsYearSent(facts, rec.YearSentKnown, rec.YearSent);
-               end
-            else
-               begin
-               SetFactsYearSent(facts, False, 0);
-               end;
-            appends.Add(rec, facts, '');
-            end;
-
-         if not LogStoreAppendQSOs(appends, failedIndex, failure) then
-            begin
-            aWhy := 'the QSOs could not be written to the log (' + failure + ')';
-            logger.Error('[Net] catch-up: not added: %s', [aWhy]);
-            Exit;
-            end;
-      finally
-         appends.Free;
-      end;
-
-      aAdded := plan.Count;
+      if not LogStoreSaveWireRows(rows, keys, aAdded) then
+         begin
+         aWhy := 'the QSOs could not be written to the log';
+         logger.Error('[Net] catch-up: not added: %s', [aWhy]);
+         Exit;
+         end;
       Result := True;
    finally
       plan.Free;
@@ -673,10 +772,10 @@ end;
 
 function AddServerLogToLog(aImage: TServerLogImage): boolean;
 var
-   added, skipped: integer;
-   why, notice: string;
+   added: integer;
+   why: string;
 begin
-   Result := MergeServerLog(aImage, BackupDir, added, skipped, why);
+   Result := MergeServerLog(aImage, BackupDir, added, why);
 
    if not Result then
       begin
@@ -691,24 +790,7 @@ begin
         every display. *)
       RescoreLog;
       logger.Info('[Net] catch-up: %d QSO(s) added from the server', [added]);
-      end;
-
-   if (added > 0) or (skipped > 0) then
-      begin
-      notice := '';
-      if added > 0 then
-         begin
-         notice := SysUtils.Format(SNetCaughtUp, [added]);
-         end;
-      if skipped > 0 then
-         begin
-         if notice <> '' then
-            begin
-            notice := notice + ' ';
-            end;
-         notice := notice + SysUtils.Format(SCatchUpSkipped, [skipped]);
-         end;
-      QuickDisplay(notice);
+      QuickDisplay(SysUtils.Format(SNetCaughtUp, [added]));
       end;
 end;
 
@@ -719,19 +801,13 @@ procedure CatchUpFetched(aData: PtrInt); forward;
 function CatchUpThread(aParameter: Pointer): DWORD; stdcall;
 var
    job: TFetchJob;
-   declared: Int64;
    why: string;
 begin
    Result := 0;   (* the thread exit code -- see TF.TTR4WThreadStart *)
    job := TFetchJob(aParameter);
 
    try
-      job.Ok := FetchServerLog(job.Host, job.Port, job.Password,
-                               job.Image.Data, declared, why);
-      if job.Ok then
-         begin
-         job.Ok := job.Image.Accept(declared, why);
-         end;
+      job.Ok := FetchServerLog(job.Host, job.Port, job.Password, job.Image, why);
       job.Why := why;
    except
       on E: Exception do
@@ -865,6 +941,7 @@ end;
 procedure CatchUpFetched(aData: PtrInt);
 var
    job: TFetchJob;
+   contestWhy: string;
 begin
    job := TFetchJob(aData);
    try
@@ -886,9 +963,24 @@ begin
          Exit;
          end;
 
-      logger.Info('[Net] catch-up: the server log holds %d record(s), %d QSO(s) ' +
-                  '(%d bytes)', [job.Image.Count, job.Image.QsoCount,
-                                 job.Image.Data.Size]);
+      logger.Info('[Net] catch-up: the server log holds %d row(s), %d QSO(s), contest ' +
+                  '"%s"', [job.Image.Count, job.Image.QsoCount, job.Image.Contest]);
+
+      (* ANOTHER CONTEST ON THE SERVER IS REFUSED WHOLE, ONCE, with the existing
+        contest-mismatch notice: nothing is compared, added or sent. *)
+      if not ServerContestMatches(job.Image, contestWhy) then
+         begin
+         if (job.Origin = cuInWindow) and Assigned(SyncProgressHandler) then
+            begin
+            SyncProgressHandler(SYNC_FIELD_FAILED, 0);
+            showwarning(contestWhy);
+            end
+         else
+            begin
+            QuickDisplay(contestWhy);
+            end;
+         Exit;
+         end;
 
       if job.Origin = cuInWindow then
          begin

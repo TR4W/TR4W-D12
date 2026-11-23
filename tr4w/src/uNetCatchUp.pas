@@ -20,84 +20,45 @@ unit uNetCatchUp;
 
 (*
   A STATION THAT COMES UP IN THE MIDDLE OF A CONTEST CATCHES UP FROM THE SERVER
-  (Phase 1, C6, 2026-10-27).
+  (Phase 1, C6, 2026-10-27; REBUILT FOR PROTOCOL 5, W3+W5, 2026-11-22).
 
   NY4I: "Late catch-up has to be supported as it was ... to handle a station that
   comes up (reboots) in the middle of the contest."
 
-  HOW IT WAS (D7, uNet.ProcessServerLogInfo and uGetServerLog): on connect the
-  server sent a packet holding a CRC32 of SERVERLOG.TRW; the station CRC32'd its
-  own .TRW and, when they differed, either replaced its log with the server's
-  file (SERVER AUTO SYNCHRONIZE LOG ON CONNECT) or asked. This station keeps no
-  .TRW, so the comparison means nothing and the REPLACE would destroy every QSO
-  that only this station holds. Both go.
+  WHAT THE SERVER SENDS (docs/TR4WSERVER_SQLITE_DESIGN.md 13.7). On its second
+  port, after the password: a header frame {"contest":"<id>","rows":N,
+  "schema":5}, then N row frames, each a 4-byte LE length and the UTF-8 JSON row
+  (the same row as a live QSO message, no sender byte), in arrival order, from ONE
+  read of the server's database. There is no byte image of a file and no CRC: a
+  row is its on-wire columns, and its identity is its GUID (the old pair
+  (ceQSOID1, ceQSOID2) is a station's local session id and no longer travels).
 
-  WHAT IT IS NOW. The log is fetched from the server's second port whenever a
-  station catches up, and MERGED, INSERT ONLY:
+  WHAT THE STATION DOES, INSERT ONLY:
 
-    - a server record whose (ceQSOID1, ceQSOID2) this log already holds is left
-      alone, and so is the row it matches -- nothing here deletes or rewrites a
-      row this station has;
-    - a record whose pair is (0, 0) names nothing and is skipped;
-    - a record that is not for THIS contest is skipped and counted, never
-      imported (below);
-    - every record that is added is stamped with this station's own contest
-      handle and marked sent and clean, so the resend (uNetResend) never sends
-      it back.
+    - THE CONTEST IS COMPARED ONCE, from the header (JudgeSyncContest): the
+      server holds ONE contest (the first station's HELLO named it). A different
+      one is refused whole with the existing contest-mismatch notice; there is no
+      per-row judge. A server that holds none yet has no rows to give.
+    - DOWNLOAD: every row the server holds whose guid this log lacks is added
+      (BuildCatchUpPlan), after a backup, in one transaction, stored VERBATIM
+      under the sender's guid -- a station that was offline receives everything
+      it missed (NY4I ruling 3). A row with no guid names nothing and is skipped;
+      a guid twice in the server's rows is added once. Nothing already in this log
+      is changed or removed.
+    - PUSH (TPushPlan): rows LOGGED HERE (the wire computer_id is this station's)
+      whose guid the server lacks go to it as OFFLINE rows. A row copied from a
+      peer by an older build carries a local guid unlike the original, so pushing
+      it would DUPLICATE it on the server: only rows logged here are pushed. A
+      row still owed (the resend sends it as a new QSO) and a row with no guid
+      are left out and counted.
 
   There is no "is this station behind" test to get wrong: the fetch IS the
-  comparison, and the answer is the number of server records this log lacks. The
-  server log is 376 bytes a QSO, so 10,000 QSOs is 3.76 MB.
+  comparison, and the answer is the number of server rows this log lacks.
 
   WHAT IT DOES NOT DO: pick up an EDIT another station made to a QSO this one
-  holds, while this one was away. The server's copy of an edited QSO is the
-  edited record in place; D7 got it by replacing the whole file. Here nothing
-  says which copy is newer (a record has no edit counter, and this station's own
-  edit may still be on its way to the server), so overwriting could turn a newer
-  local edit back into an older one. Insert-only is the safe half, and the other
-  half belongs to the row-level protocol. An edit made while this station is UP
-  still arrives live (uNet, NET_EDITEDQSO).
-
-  WHICH CONTEST A SERVER RECORD BELONGS TO is the delicate question, because the
-  server is contest-agnostic and its log may not have been cleared between
-  contests, and because the one byte on the record (ceContest) is only
-  comparable for a legacy contest -- a contest registered by id has a handle
-  assigned when the registry seals, different between builds. The rule
-  (JudgeServerRecord):
-
-    this station's contest is a LEGACY one: the byte is definitive. A record
-      whose byte is not ours is another contest, whatever its author says.
-    the record's author (ceComputerID) is a station that has announced a
-      contest in its HELLO on this link: if that contest is ours the record is
-      accepted, if not it is skipped.
-    the author has announced nothing (it has left, or it is this very station
-      after its log was lost): the byte decides -- equal to our handle is
-      accepted, different is skipped. For a contest registered by id this is
-      right for stations on the same build and cannot be better; the skipped
-      count says how many were not judged, and the log names the first.
-
-  THE OTHER DIRECTION -- RESTOCKING THE SERVER (2026-10-28). The same download
-  answers the converse question: which of THIS log's QSOs does the server lack?
-  NY4I moved the server to a machine with no log; his station held 83 QSOs, all
-  already marked sent to the old server, and nothing would ever send them again
-  (the resend only sends rows still owed, and the catch-up only asks what the
-  SERVER has that this log lacks). The same happens after the server's Clear-all-
-  logs message or any restart that lost SERVERLOG.TRW. The push plan (TPushPlan)
-  is built from the image the catch-up already downloaded -- no second transfer:
-
-    - a row whose (ceQSOID1, ceQSOID2) the image holds is left alone;
-    - a row with both ids 0 (an import) names nothing on the wire: skipped and
-      counted;
-    - a row still OWED (sent_to_server = 0 or server_dirty = 1) is skipped and
-      counted: the resend sends it, as a QSOINFO the others also receive;
-    - everything else is pushed, INCLUDING the QSOs this station received from
-      other stations -- any station can restock the server. The key is the id
-      pair, not the author.
-
-  The rows go as NET_OFFLINEQSO_ID, which both servers STORE, ACK and do NOT
-  relay, so restocking does not flood the stations that are connected; a station
-  that lacks some catches up from the server's log on its next link. A server
-  that already holds a pair stores it once and still ACKs.
+  holds while this one was away. Insert-only cannot tell which copy is newer (a
+  row has no edit counter and this station's own edit may still be on its way).
+  An edit made while this station is UP arrives live.
 
   A LEAF, like uNetHello and uNetResend: no sockets, no store, no widget set, so
   all of it is reachable from a unit test. The fetch is uGetServerLog's, the
@@ -109,88 +70,69 @@ interface
 uses
    SysUtils,
    Classes,
-   VC,
-   uComputerID,
-   uNetHello,
-   uNetResend,
-   uServerQsoIndex;
+   uGuidSet,
+   uWireQso;
 
 const
-   (* A server log larger than this is refused before it is read into memory:
-     about 700,000 QSOs, far past any contest, and a number a damaged size field
-     cannot reach by accident. *)
-   SERVER_LOG_MAX_BYTES = 256 * 1024 * 1024;
+   (* A server that declares more rows than this is refused before any is read: a
+     number a damaged header cannot reach by accident. *)
+   SERVER_LOG_MAX_ROWS = 2000000;
 
 type
-   (* THE SERVER'S LOG FILE, AS BYTES. The first SizeOfTLogHeader bytes are a
-     header (the server's own, no QSO); every SizeOf(ContestExchange) after that
-     is one record. It is kept as bytes and read a record at a time, so a large
-     log is held once and not twice. MAIN THREAD once it has been handed over:
-     Row moves the stream's position. *)
+   (* THE SERVER'S LOG AS THE SYNC PORT SENT IT: the contest its header named and
+     its rows, as wire values in QsoWireColumns' order. Filled by the download
+     (one thread), then read on the MAIN thread only. *)
    TServerLogImage = class(TObject)
    private
-      FData: TMemoryStream;
+      FContest: string;
+      FDeclared: integer;
+      FRows: array of TWireValues;
       FCount: integer;
       FQsoCount: integer;
+      FGuids: TGuidSet;
+      FGuidTag, FKindTag, FDeletedTag: integer;
    public
       constructor Create;
       destructor Destroy; override;
 
-      (* Where the download is written. *)
-      property Data: TMemoryStream read FData;
+      (* The header frame was read: the contest the server holds and how many
+        rows follow. *)
+      procedure StartImage(const aContest: string; aDeclaredRows: integer);
+      (* One row frame, taken apart and checked. *)
+      procedure AddRow(const aValues: TWireValues);
 
-      (* The download is complete: aDeclaredSize is the size the server stated
-        before the bytes. True when what arrived is exactly that and is a whole
-        number of records after the header (an empty log, no bytes or a header
-        only, is whole). False says why, in aWhy, and the image holds no
-        records. *)
-      function Accept(aDeclaredSize: Int64; out aWhy: string): boolean;
-
-      (* Records after the header. *)
+      property Contest: string read FContest;
+      property DeclaredRows: integer read FDeclared;
+      (* Rows held; equal to DeclaredRows when the download is whole. *)
       function Count: integer;
-
-      (* How many of them are QSOs that count: a band and a mode and not deleted
-        -- what the sync window has always shown as "QSOs". *)
+      (* How many of them are QSOs that count: record_kind QSO and not deleted --
+        what the sync window has always shown as "QSOs". *)
       function QsoCount: integer;
-
-      (* Record aIndex (0-based). False, with a zeroed record, outside 0..Count-1. *)
-      function Row(aIndex: integer; out aRec: ContestExchange): boolean;
+      (* Row aIndex (0-based); no values outside 0..Count-1. *)
+      function Row(aIndex: integer): TWireValues;
+      (* Does the server hold this guid? *)
+      function HoldsGuid(const aGuid: string): boolean;
    end;
 
-   (* WHAT THE JUDGE NEEDS TO KNOW ABOUT THIS STATION AND THE LINK. *)
-   TCatchUpContext = record
-      (* What every station announced on this link. *)
-      Peers: TNetPeers;
-      (* This station's contest, by id and by handle. *)
-      OurContestId: string;
-      OurHandle: TContestHandle;
-      (* True when it is a legacy contest, whose handle is its frozen number and
-        therefore means the same thing on every build. *)
-      OurIsLegacy: boolean;
-   end;
-
-   TCatchUpVerdict = (
-      cvAccept,           // for this contest
-      cvOtherContest,     // for another contest: its author said so, or its byte does
-      cvUnknownContest    // its author is not here to ask and its byte cannot say
+   TSyncContestVerdict = (
+      scSame,       // the server holds this station's contest
+      scServerNone, // the server names none (it holds nothing yet)
+      scOther       // another contest: refuse the download
    );
 
-(* IS THIS SERVER RECORD FOR THE CONTEST THIS STATION IS RUNNING? The rule is in
-  the unit header. *)
-function JudgeServerRecord(const aRec: ContestExchange;
-                           const aCtx: TCatchUpContext): TCatchUpVerdict;
+(* THE ONE COMPARISON of the sync header's contest with this station's, by id
+  string, case-insensitive. *)
+function JudgeSyncContest(const aServerContest, aOurContestId: string): TSyncContestVerdict;
 
 type
-   (* WHY A SERVER RECORD IS NOT ADDED. *)
+   (* WHY A SERVER ROW IS NOT ADDED. *)
    TCatchUpSkip = (
-      cusNoIdentity,      // (0, 0): it names no QSO
+      cusNoIdentity,      // no guid: it names no QSO
       cusAlreadyHeld,     // this log has it
-      cusRepeated,        // the server's file holds the same pair twice
-      cusOtherContest,
-      cusUnknownContest
+      cusRepeated         // the server's rows hold the same guid twice
    );
 
-   (* WHAT A CATCH-UP WOULD DO, computed and not yet done: the records to add (by
+   (* WHAT A CATCH-UP WOULD DO, computed and not yet done: the rows to add (by
      position in the image) and how many were skipped, and why. *)
    TCatchUpPlan = class(TObject)
    private
@@ -202,80 +144,77 @@ type
       procedure AddRow(aIndex: integer);
       procedure Skip(aWhy: TCatchUpSkip; const aCall: string);
 
-      (* Records to add. *)
+      (* Rows to add. *)
       function Count: integer;
-      (* The image position of record aN of those to add. *)
+      (* The image position of row aN of those to add. *)
       function RowIndex(aN: integer): integer;
       function Skipped(aWhy: TCatchUpSkip): integer;
       function SkippedTotal: integer;
-      (* The callsign of the first record skipped for that reason, or ''. *)
+      (* The callsign of the first row skipped for that reason, or ''. *)
       function FirstCallSkipped(aWhy: TCatchUpSkip): string;
    end;
 
 (* The reason as words, for the log. *)
 function CatchUpSkipText(aWhy: TCatchUpSkip): string;
 
-(* THE PLAN: every record of aImage that aHeld does not hold and the judge
-  accepts, once each. aHeld is the set of network keys this log holds; it is
-  read, not changed. *)
-function BuildCatchUpPlan(aImage: TServerLogImage; aHeld: TServerQsoIndex;
-                          const aCtx: TCatchUpContext): TCatchUpPlan;
+(* THE PLAN: every row of aImage whose guid aHeld does not hold, once each.
+  aHeld is the set of guids this log holds; it is read, not changed. *)
+function BuildCatchUpPlan(aImage: TServerLogImage; aHeld: TGuidSet): TCatchUpPlan;
 
-(* A one-line account of a plan for the log: how many to add, and how many were
-  skipped for each reason with the first call. *)
+(* A one-line account of a plan for the log. *)
 function CatchUpSummary(aPlan: TCatchUpPlan): string;
-
-(* A RECORD AS IT IS WHEN IT JOINS THIS LOG: this station's contest handle (the
-  sender's byte is never stored), and sent and clean -- it came from the server,
-  so it is not owed back. *)
-procedure StampCaughtUp(var aRec: ContestExchange; const aOurHandle: TContestHandle);
 
 type
    (* WHAT BECOMES OF ONE ROW OF THIS LOG when the server is restocked. *)
    TPushVerdict = (
-      pvSend,          // the server lacks it: push it
-      pvNoIdentity,    // (0, 0): an import, it names nothing on the wire
+      pvSend,          // logged here and the server lacks it: push it
+      pvNoIdentity,    // no guid: it names nothing on the wire
+      pvNotLoggedHere, // another station's row: that station pushes it
       pvOwed,          // the resend sends it (sent_to_server = 0 or server_dirty = 1)
-      pvServerHas,     // the server's log holds the pair
-      pvRepeated       // this log holds the pair twice; pushed once
+      pvServerHas,     // the server's rows hold the guid
+      pvRepeated       // this log holds the guid twice; pushed once
    );
 
    (* THE ROWS OF THIS LOG THE SERVER LACKS, computed and not yet sent. Built from
-     the server image; fed this log's rows one at a time (Consider), so the log
-     is never held twice. Owns copies of the records it will send. *)
+     the server image; fed this log's rows one at a time (Consider). Owns copies
+     of the rows it will send, with their row ids. *)
    TPushPlan = class(TObject)
    private
-      FServerKeys: TServerQsoIndex;
-      FTaken: TServerQsoIndex;
+      FServer: TGuidSet;
+      FTaken: TGuidSet;
       (* Not owned. See Create. *)
-      FResentThisLink: TServerQsoIndex;
-      FRows: array of ContestExchange;
+      FResentThisLink: TGuidSet;
+      FComputerId: string;
+      FRowIds: array of Int64;
+      FRows: array of TWireValues;
       FCount: integer;
       FVerdicts: array[TPushVerdict] of integer;
+      FGuidTag, FComputerTag: integer;
    public
-      (* aImage is the server's log; its pairs are read now and the image is not
-        kept. Every record counts, deleted ones and other contests' too: the
-        question is whether the server HOLDS the pair, not whether it is ours.
-        aResentThisLink (not owned, may be nil) is the set of pairs the resend
-        posted on THIS link: the fetch runs on its own connection and may have
-        been served before the server read them, and the writer may already have
-        marked them sent, so they would otherwise look like rows the server
-        lacks. They count as owed. *)
-      constructor Create(aImage: TServerLogImage;
-                         aResentThisLink: TServerQsoIndex = nil);
+      (* aImage is the server's log; its guids are read now and the image is not
+        kept (it may be nil). aComputerId is THIS station's computer id letter:
+        only rows logged here are pushed. aResentThisLink (not owned, may be nil)
+        is the set of guids the resend posted on THIS link: the fetch runs on its
+        own connection and may have been served before the server read them, and
+        the writer may already have marked them sent, so they would otherwise
+        look like rows the server lacks. They count as owed. *)
+      constructor Create(aImage: TServerLogImage; const aComputerId: string;
+                         aResentThisLink: TGuidSet = nil);
       destructor Destroy; override;
 
-      (* Does the server's log hold this pair? The repository asks it before it
-        reads a row's other columns. False for (0, 0). *)
-      function ServerHolds(aSessionId, aSessionSeq: Int64): boolean;
+      (* Does the server's log hold this guid? The repository asks it before it
+        reads a row's other columns. *)
+      function ServerHolds(const aGuid: string): boolean;
 
-      (* Judge one row of this log, and keep it when the server lacks it. *)
-      function Consider(const aRec: ContestExchange): TPushVerdict;
+      (* Judge one row of this log, and keep it when the server lacks it. aOwed is
+        True for a row whose flags say the resend still owes it. *)
+      function Consider(aRowId: Int64; const aValues: TWireValues;
+                        aOwed: boolean = False): TPushVerdict;
 
-      (* Rows to send, and the row aN of them (0-based); a zeroed record outside
-        0..Count-1, as TServerLogImage.Row gives. *)
+      (* Rows to send, and row aN of them (0-based). *)
       function Count: integer;
-      function Row(aN: integer): ContestExchange;
+      function RowId(aN: integer): Int64;
+      function Row(aN: integer): TWireValues;
 
       (* How many rows got each verdict. *)
       function Verdicts(aVerdict: TPushVerdict): integer;
@@ -300,77 +239,53 @@ function SyncOnConnect(aPull, aPush: integer; aAutoSynchronize: boolean): TSyncO
 
 implementation
 
+uses
+   uQsoColumns;
+
 (* ---------------------------------------------------------- TServerLogImage *)
 
 constructor TServerLogImage.Create;
 begin
    inherited Create;
-   FData := TMemoryStream.Create;
+   FGuids := TGuidSet.Create;
+   FGuidTag := QsoWireColumns.IndexOfName('guid');
+   FKindTag := QsoWireColumns.IndexOfName('record_kind');
+   FDeletedTag := QsoWireColumns.IndexOfName('deleted');
 end;
 
 destructor TServerLogImage.Destroy;
 begin
-   FData.Free;
+   FGuids.Free;
    inherited Destroy;
 end;
 
-function TServerLogImage.Accept(aDeclaredSize: Int64; out aWhy: string): boolean;
-var
-   i: integer;
-   rec: ContestExchange;
+procedure TServerLogImage.StartImage(const aContest: string; aDeclaredRows: integer);
 begin
-   Result := False;
-   aWhy := '';
+   FContest := aContest;
+   FDeclared := aDeclaredRows;
+   FRows := nil;
    FCount := 0;
    FQsoCount := 0;
+   FGuids.Clear;
+end;
 
-   if FData.Size > SERVER_LOG_MAX_BYTES then
+procedure TServerLogImage.AddRow(const aValues: TWireValues);
+begin
+   if Length(aValues) <> QsoWireColumns.Count then
       begin
-      aWhy := 'the server log is larger than ' + IntToStr(SERVER_LOG_MAX_BYTES) +
-              ' bytes';
       Exit;
       end;
-
-   if FData.Size <> aDeclaredSize then
+   if FCount = Length(FRows) then
       begin
-      aWhy := 'the server said its log was ' + IntToStr(aDeclaredSize) +
-              ' bytes and ' + IntToStr(FData.Size) + ' arrived';
-      Exit;
+      SetLength(FRows, (FCount * 2) + 256);
       end;
-
-   if FData.Size = 0 then
+   FRows[FCount] := aValues;
+   Inc(FCount);
+   FGuids.Add(aValues[FGuidTag]);
+   if (aValues[FKindTag] = 'QSO') and (aValues[FDeletedTag] <> '1') then
       begin
-      Result := True;
-      Exit;
+      Inc(FQsoCount);
       end;
-
-   if FData.Size < SizeOfTLogHeader then
-      begin
-      aWhy := 'the server log is shorter than its header (' +
-              IntToStr(FData.Size) + ' bytes)';
-      Exit;
-      end;
-
-   if ((FData.Size - SizeOfTLogHeader) mod SizeOf(ContestExchange)) <> 0 then
-      begin
-      aWhy := 'the server log is not a whole number of ' +
-              IntToStr(SizeOf(ContestExchange)) + '-byte records after its ' +
-              IntToStr(SizeOfTLogHeader) + '-byte header (' +
-              IntToStr(FData.Size) + ' bytes)';
-      Exit;
-      end;
-
-   FCount := (FData.Size - SizeOfTLogHeader) div SizeOf(ContestExchange);
-   for i := 0 to FCount - 1 do
-      begin
-      Row(i, rec);
-      if (rec.Band <> NoBand) and (rec.Mode <> NoMode) and
-         (not rec.ceQSO_Deleted) then
-         begin
-         Inc(FQsoCount);
-         end;
-      end;
-   Result := True;
 end;
 
 function TServerLogImage.Count: integer;
@@ -383,68 +298,38 @@ begin
    Result := FQsoCount;
 end;
 
-function TServerLogImage.Row(aIndex: integer; out aRec: ContestExchange): boolean;
+function TServerLogImage.Row(aIndex: integer): TWireValues;
 begin
-   Result := (aIndex >= 0) and (aIndex < FCount);
-   if not Result then
+   if (aIndex < 0) or (aIndex >= FCount) then
       begin
-      aRec := Default(ContestExchange);
+      Result := nil;
       Exit;
       end;
-
-   FData.Position := Int64(SizeOfTLogHeader) + Int64(aIndex) * SizeOf(ContestExchange);
-   FData.ReadBuffer(aRec, SizeOf(ContestExchange));
+   Result := FRows[aIndex];
 end;
 
-(* ------------------------------------------------------------------- judge *)
-
-function JudgeServerRecord(const aRec: ContestExchange;
-                           const aCtx: TCatchUpContext): TCatchUpVerdict;
-var
-   authorOrdinal: integer;
-   byteIsOurs: boolean;
+function TServerLogImage.HoldsGuid(const aGuid: string): boolean;
 begin
-   byteIsOurs := aRec.ceContest = aCtx.OurHandle;
+   Result := FGuids.Contains(aGuid);
+end;
 
-   (* A LEGACY CONTEST'S BYTE IS DEFINITIVE: it is the frozen number, the same on
-     every build. A record that is not ours is another contest's, whatever its
-     author announces now -- a station can change contest, and its earlier QSOs
-     stay in the server's log. *)
-   if aCtx.OurIsLegacy and (not byteIsOurs) then
+function JudgeSyncContest(const aServerContest, aOurContestId: string): TSyncContestVerdict;
+begin
+   if aServerContest = '' then
       begin
-      Result := cvOtherContest;
-      Exit;
-      end;
-
-   (* ceComputerID is the LETTER; the table is by ordinal. 0 for anything that is
-     not A..Z, which the table does not know. *)
-   authorOrdinal := Ord(ComputerIDOrdinal(aRec.ceComputerID));
-
-   case JudgePeerContest(aCtx.Peers, authorOrdinal, aCtx.OurContestId) of
-      pcSame:
-         begin
-         Result := cvAccept;
-         end;
-      pcOther:
-         begin
-         Result := cvOtherContest;
-         end;
+      Result := scServerNone;
+      end
+   else if LowerCase(aServerContest) = LowerCase(aOurContestId) then
+      begin
+      Result := scSame;
+      end
    else
       begin
-      (* The author is not here to ask. *)
-      if byteIsOurs then
-         begin
-         Result := cvAccept;
-         end
-      else
-         begin
-         Result := cvUnknownContest;
-         end;
+      Result := scOther;
       end;
-   end;
 end;
 
-(* -------------------------------------------------------------------- plan *)
+(* ------------------------------------------------------------ TCatchUpPlan *)
 
 procedure TCatchUpPlan.AddRow(aIndex: integer);
 begin
@@ -458,11 +343,11 @@ end;
 
 procedure TCatchUpPlan.Skip(aWhy: TCatchUpSkip; const aCall: string);
 begin
-   Inc(FSkipped[aWhy]);
-   if FFirstCall[aWhy] = '' then
+   if FSkipped[aWhy] = 0 then
       begin
       FFirstCall[aWhy] := aCall;
       end;
+   Inc(FSkipped[aWhy]);
 end;
 
 function TCatchUpPlan.Count: integer;
@@ -474,8 +359,8 @@ function TCatchUpPlan.RowIndex(aN: integer): integer;
 begin
    if (aN < 0) or (aN >= FCount) then
       begin
-      raise ERangeError.Create('TCatchUpPlan.RowIndex: ' + IntToStr(aN) +
-                               ' is outside 0..' + IntToStr(FCount - 1));
+      Result := -1;
+      Exit;
       end;
    Result := FRows[aN];
 end;
@@ -504,11 +389,9 @@ end;
 function CatchUpSkipText(aWhy: TCatchUpSkip): string;
 begin
    case aWhy of
-      cusNoIdentity:     Result := 'no network identity (0, 0)';
+      cusNoIdentity:     Result := 'no guid';
       cusAlreadyHeld:    Result := 'already in this log';
       cusRepeated:       Result := 'repeated in the server log';
-      cusOtherContest:   Result := 'for another contest';
-      cusUnknownContest: Result := 'contest not known (its author is not here and its contest byte differs)';
    else
       begin
       Result := '';
@@ -516,53 +399,41 @@ begin
    end;
 end;
 
-function BuildCatchUpPlan(aImage: TServerLogImage; aHeld: TServerQsoIndex;
-                          const aCtx: TCatchUpContext): TCatchUpPlan;
+function BuildCatchUpPlan(aImage: TServerLogImage; aHeld: TGuidSet): TCatchUpPlan;
 var
-   i: integer;
-   rec: ContestExchange;
-   taken: TServerQsoIndex;
+   i, guidTag, callTag: integer;
+   row: TWireValues;
+   taken: TGuidSet;
 begin
    Result := TCatchUpPlan.Create;
-   taken := TServerQsoIndex.Create;
+   guidTag := QsoWireColumns.IndexOfName('guid');
+   callTag := QsoWireColumns.IndexOfName('callsign');
+   taken := TGuidSet.Create;
    try
       for i := 0 to aImage.Count - 1 do
          begin
-         aImage.Row(i, rec);
+         row := aImage.Row(i);
 
-         if (rec.ceQSOID1 = 0) and (rec.ceQSOID2 = 0) then
+         if row[guidTag] = '' then
             begin
-            Result.Skip(cusNoIdentity, string(rec.Callsign));
+            Result.Skip(cusNoIdentity, row[callTag]);
             Continue;
             end;
 
-         if aHeld.Contains(rec.ceQSOID1, rec.ceQSOID2) then
+         if aHeld.Contains(row[guidTag]) then
             begin
-            Result.Skip(cusAlreadyHeld, string(rec.Callsign));
+            Result.Skip(cusAlreadyHeld, row[callTag]);
             Continue;
             end;
 
-         if taken.Contains(rec.ceQSOID1, rec.ceQSOID2) then
+         if taken.Contains(row[guidTag]) then
             begin
-            Result.Skip(cusRepeated, string(rec.Callsign));
+            Result.Skip(cusRepeated, row[callTag]);
             Continue;
             end;
 
-         case JudgeServerRecord(rec, aCtx) of
-            cvAccept:
-               begin
-               taken.Add(rec.ceQSOID1, rec.ceQSOID2);
-               Result.AddRow(i);
-               end;
-            cvOtherContest:
-               begin
-               Result.Skip(cusOtherContest, string(rec.Callsign));
-               end;
-         else
-            begin
-            Result.Skip(cusUnknownContest, string(rec.Callsign));
-            end;
-         end;
+         taken.Add(row[guidTag]);
+         Result.AddRow(i);
          end;
    finally
       taken.Free;
@@ -588,31 +459,25 @@ begin
       end;
 end;
 
-procedure StampCaughtUp(var aRec: ContestExchange; const aOurHandle: TContestHandle);
-begin
-   aRec.ceContest := aOurHandle;
-   aRec.ceSendToServer := True;
-   aRec.ceNeedSendToServerAE := False;
-end;
-
 (* ------------------------------------------------------------ the push plan *)
 
-constructor TPushPlan.Create(aImage: TServerLogImage;
-                             aResentThisLink: TServerQsoIndex);
+constructor TPushPlan.Create(aImage: TServerLogImage; const aComputerId: string;
+                             aResentThisLink: TGuidSet);
 var
    i: integer;
-   rec: ContestExchange;
 begin
    inherited Create;
    FResentThisLink := aResentThisLink;
-   FServerKeys := TServerQsoIndex.Create;
-   FTaken := TServerQsoIndex.Create;
+   FComputerId := aComputerId;
+   FServer := TGuidSet.Create;
+   FTaken := TGuidSet.Create;
+   FGuidTag := QsoWireColumns.IndexOfName('guid');
+   FComputerTag := QsoWireColumns.IndexOfName('computer_id');
    if aImage <> nil then
       begin
       for i := 0 to aImage.Count - 1 do
          begin
-         aImage.Row(i, rec);
-         FServerKeys.Add(rec.ceQSOID1, rec.ceQSOID2);
+         FServer.Add(aImage.Row(i)[FGuidTag]);
          end;
       end;
 end;
@@ -620,51 +485,57 @@ end;
 destructor TPushPlan.Destroy;
 begin
    FTaken.Free;
-   FServerKeys.Free;
+   FServer.Free;
    inherited Destroy;
 end;
 
-function TPushPlan.ServerHolds(aSessionId, aSessionSeq: Int64): boolean;
+function TPushPlan.ServerHolds(const aGuid: string): boolean;
 begin
-   Result := FServerKeys.Contains(Cardinal(aSessionId), Cardinal(aSessionSeq));
+   Result := FServer.Contains(aGuid);
 end;
 
-function TPushPlan.Consider(const aRec: ContestExchange): TPushVerdict;
+function TPushPlan.Consider(aRowId: Int64; const aValues: TWireValues;
+                            aOwed: boolean): TPushVerdict;
 var
-   needs: TResendNeeds;
+   guid: string;
 begin
-   needs := ResendNeedsOf(aRec);
+   guid := aValues[FGuidTag];
 
-   if not QsoHasNetworkIdentity(aRec) then
+   if guid = '' then
       begin
       Result := pvNoIdentity;
       end
-   else if needs.NeedsQso or needs.NeedsEdit then
+   else if aValues[FComputerTag] <> FComputerId then
+      begin
+      Result := pvNotLoggedHere;
+      end
+   else if aOwed then
       begin
       Result := pvOwed;
       end
-   else if (FResentThisLink <> nil) and
-           FResentThisLink.Contains(aRec.ceQSOID1, aRec.ceQSOID2) then
+   else if (FResentThisLink <> nil) and FResentThisLink.Contains(guid) then
       begin
       Result := pvOwed;
       end
-   else if FServerKeys.Contains(aRec.ceQSOID1, aRec.ceQSOID2) then
+   else if FServer.Contains(guid) then
       begin
       Result := pvServerHas;
       end
-   else if FTaken.Contains(aRec.ceQSOID1, aRec.ceQSOID2) then
+   else if FTaken.Contains(guid) then
       begin
       Result := pvRepeated;
       end
    else
       begin
       Result := pvSend;
-      FTaken.Add(aRec.ceQSOID1, aRec.ceQSOID2);
+      FTaken.Add(guid);
       if FCount = Length(FRows) then
          begin
          SetLength(FRows, (FCount * 2) + 64);
+         SetLength(FRowIds, Length(FRows));
          end;
-      FRows[FCount] := aRec;
+      FRows[FCount] := aValues;
+      FRowIds[FCount] := aRowId;
       Inc(FCount);
       end;
 
@@ -676,14 +547,22 @@ begin
    Result := FCount;
 end;
 
-function TPushPlan.Row(aN: integer): ContestExchange;
+function TPushPlan.RowId(aN: integer): Int64;
 begin
-   if (aN < 0) or (aN >= FCount) then
+   Result := 0;
+   if (aN >= 0) and (aN < FCount) then
       begin
-      Result := Default(ContestExchange);
-      Exit;
+      Result := FRowIds[aN];
       end;
-   Result := FRows[aN];
+end;
+
+function TPushPlan.Row(aN: integer): TWireValues;
+begin
+   Result := nil;
+   if (aN >= 0) and (aN < FCount) then
+      begin
+      Result := FRows[aN];
+      end;
 end;
 
 function TPushPlan.Verdicts(aVerdict: TPushVerdict): integer;
@@ -694,7 +573,8 @@ end;
 function PushSummary(aPlan: TPushPlan): string;
 begin
    Result := IntToStr(aPlan.Count) + ' to send; ' +
-             IntToStr(aPlan.Verdicts(pvNoIdentity)) + ' imported (no network identity) skipped; ' +
+             IntToStr(aPlan.Verdicts(pvNoIdentity)) + ' with no guid skipped; ' +
+             IntToStr(aPlan.Verdicts(pvNotLoggedHere)) + ' logged at another station skipped; ' +
              IntToStr(aPlan.Verdicts(pvOwed)) + ' still owed (the resend sends them) skipped';
    if aPlan.Verdicts(pvRepeated) > 0 then
       begin

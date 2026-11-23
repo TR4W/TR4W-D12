@@ -10900,7 +10900,7 @@ begin
   Result := False;
   if tAddQSOToLog(CE) then
      begin
-     Result := SendRecordToServer(NET_QSOINFO_ID, CE);
+     Result := SendRecordToServer(NET_WIRE_QSO_ID, CE);
      if not Result then
         begin
         inc(tUSQ);

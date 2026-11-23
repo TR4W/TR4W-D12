@@ -20,28 +20,30 @@
  *)
 
 (* A STATION THAT COMES UP IN THE MIDDLE OF A CONTEST CATCHES UP FROM THE SERVER
-  -- Phase 1, C6, 2026-10-27.
+  -- Phase 1, C6, 2026-10-27; REBUILT FOR PROTOCOL 5 (W3+W5, 2026-11-22).
 
-  TWO LAYERS.
+  THREE LAYERS.
 
-  uNetCatchUp, ALONE: the server's log as bytes (whole or refused), the judge of
-  which contest a record belongs to (by what its author announced, by its byte,
-  by neither), and the plan -- what a catch-up would add and why it leaves each
-  of the others. No store, no socket.
-
-  THE MERGE, over a REAL SQLite log in a scratch directory (uGetServerLog.
-  MergeServerLog): absent rows go in and present rows are not touched, even when
-  the server's copy differs; (0, 0) is skipped; the contest is this station's
-  whatever byte the record carried; what is added is sent and clean and marked as
-  assumed; a verified backup is taken first and without one nothing is written;
-  a record that will not go in leaves the log as it was; and doing it twice adds
-  nothing the second time.
+  uNetCatchUp, ALONE: the server's log as the rows its sync port sent (the image,
+  keyed by GUID), the one contest comparison from the header, the plan -- what a
+  catch-up would add and why it leaves each of the others -- and the push plan:
+  only rows LOGGED HERE that the server's guid set lacks. No store, no socket.
 
   THE DOWNLOAD (uGetServerLog.FetchServerLog) is run against a REAL socket: an
   in-process TIdTCPServer on loopback that plays the server's sync port -- reads
-  the password, writes a four-byte size and the bytes -- so what is pinned is
-  the client's side of the protocol: ten password bytes, a native-order size,
-  exactly that many bytes, and a clear report of a server that stops short.
+  the password, writes the header frame and the row frames (4-byte length, UTF-8
+  JSON) -- so what is pinned is the client's side of the protocol: ten password
+  bytes, exact frames however TCP cuts them (a 1 MB stream split into odd
+  chunks), a server that stops short, an impossible length, a row whose checksum
+  does not match, and a server that is not there.
+
+  THE MERGE, over a REAL SQLite log in a scratch directory (uGetServerLog.
+  MergeServerLog): absent rows go in VERBATIM under the sender's guid, station
+  facts and my_source as sent (NY4I ruling 2), and present rows are not touched,
+  even when the server's copy differs; a row with no guid is skipped; what is
+  added is sent and clean; a verified backup is taken first and without one
+  nothing is written; a row the log refuses leaves it as it was; doing it twice
+  adds nothing the second time; and a server on another contest is refused whole.
 
   WHAT IT CANNOT REACH: a real server's sync port (tools/netprobe's `catchup`
   case, against both servers), the thread and the question asked of the
@@ -54,7 +56,7 @@ interface
 
 uses
    SysUtils, Classes, SyncObjs, IdTCPServer, IdContext, IdGlobal, VC, uTR4WTestFramework,
-   uTestNetSupport, uNetCatchUp, uNetHello;
+   uTestNetSupport, uNetCatchUp, uNetHello, uWireQso;
 
 type
    TNetCatchUpTests = class(TNetStoreTestCase)
@@ -62,53 +64,55 @@ type
       procedure RunAllTests; override;
 
    private
-      (* THE FIXTURE SYNC PORT. What the server writes after the password: a size,
-        then FPayload cut short at FSendOnly bytes when that is >= 0. *)
+      (* THE FIXTURE SYNC PORT. What the server writes after the password: FStream
+        (a header frame and row frames, built by the test), cut short at
+        FSendOnly bytes when that is >= 0, in chunks of the sizes in FChunks. *)
       FServer: TIdTCPServer;
-      FPayload: TBytes;
-      FDeclared: Int64;
+      FStream: TBytes;
       FSendOnly: integer;
+      FChunks: array of integer;
       FPasswordSeen: TBytes;
       FLock: TCriticalSection;
       procedure ServerExecute(AContext: TIdContext);
       function StartServer: Word;
       procedure StopServer;
-      function PayloadOf(aRecords: integer): TBytes;
-      (* A QSO as the server holds it, by author, with flags that are NOT the
-        ones a caught-up row ends with, so the stamping is seen. *)
-      function Rec(const aCall: string; aId1, aId2: Cardinal;
-                   aAuthor: AnsiChar; aContest: TContestHandle): ContestExchange;
-      procedure Announce(aPeers: TNetPeers; aOrdinal: Byte; const aContestId: string);
-      function LegacyContext(aPeers: TNetPeers): TCatchUpContext;
-      function ByIdContext(aPeers: TNetPeers): TCatchUpContext;
+      (* A sync stream: the header frame and aRows row frames. *)
+      function StreamOf(aRows: integer; const aContest: string): TBytes;
+      (* A row as the server holds it: a guid, a call, the station that logged it. *)
+      function Row(aN: integer; const aComputerId: string = 'B'): TWireValues;
       function BackupFolder: string;
-      function PeerLetter: AnsiChar;
+      function Guid(aN: integer): string;
+      function ComputerLetter: string;
 
       (* uNetCatchUp alone. *)
-      procedure Test_AnImageIsWholeOrRefused;
-      procedure Test_ALegacyContestIsJudgedByItsByteAndItsAuthor;
-      procedure Test_AContestByIdIsJudgedByItsAuthorThenItsByte;
+      procedure Test_AnImageHoldsTheRowsTheHeaderPromised;
+      procedure Test_TheContestIsComparedOnceByIdString;
       procedure Test_ThePlanAddsOnlyWhatTheLogLacks;
-      procedure Test_ACaughtUpRecordIsOursSentAndClean;
+      procedure Test_APushPlanSendsOnlyRowsLoggedHereThatTheServerLacks;
+      procedure Test_TheDecisionOnConnectAsksAtMostOnce;
       procedure Test_APlanOverALargeLogIsFast;
 
       (* The download, against a fixture sync port. *)
       procedure Test_TheDownloadIsExactlyWhatTheServerSent;
+      procedure Test_AOneMegabyteStreamSplitIntoOddChunksArrivesWhole;
       procedure Test_TheDownloadSendsTenPasswordBytes;
-      procedure Test_AServerThatStopsShortIsReportedAndTheImageRefusesIt;
-      procedure Test_AnImpossibleSizeIsRefusedBeforeAnyByteIsRead;
+      procedure Test_AServerThatStopsShortIsReported;
+      procedure Test_AnImpossibleFrameOrCountIsRefused;
+      procedure Test_ARowWithABadChecksumEndsTheDownload;
       procedure Test_NothingListeningIsReportedByName;
 
       (* The merge, over a scratch log. *)
       procedure Test_TheMergeAddsWhatIsAbsentAndNeverTouchesWhatIsPresent;
-      procedure Test_WhatIsAddedIsSentCleanAssumedAndOfThisContest;
+      procedure Test_AnAddedRowIsTheSendersVerbatimSentAndClean;
       procedure Test_AVerifiedBackupIsTakenFirst;
       procedure Test_TheDatedNamesAreOneRuleWithAPurpose;
       procedure Test_WithoutABackupNothingIsWritten;
       procedure Test_DoingItTwiceAddsNothingTheSecondTime;
-      procedure Test_ARecordThatWillNotGoInLeavesTheLogAsItWas;
-      procedure Test_ARecordTheLogReceivedLiveMeanwhileIsNotAddedTwice;
+      procedure Test_ARowThatWillNotGoInLeavesTheLogAsItWas;
+      procedure Test_ARowTheLogReceivedLiveMeanwhileIsNotAddedTwice;
       procedure Test_AnEmptyServerLogChangesNothing;
+      procedure Test_AServerOnAnotherContestIsRefusedWhole;
+      procedure Test_ThePushOnlyEverSendsRowsLoggedHere;
 
       (* The wiring, by source. *)
       procedure Test_TheWiringIsWhatTheDesignSays;
@@ -117,72 +121,35 @@ type
 implementation
 
 uses
-   StrUtils, TF, uNet, uNetClient, uComputerID, uContestRegistry, PostUnit,
-   uLogStore, uServerQsoIndex, uGetServerLog;
+   StrUtils, TF, uNet, uNetClient, uNetFraming, uComputerID, uContestRegistry, PostUnit,
+   uLogStore, uGuidSet, uGetServerLog, uQsoColumns, uLogRepository, uSettingsModel;
 
 const
    (* The station-id every test peer announces itself as. *)
    PEER = 2;
-   OTHER_PEER = 3;
 
 (* --------------------------------------------------------------------------- *)
 (* builders                                                                     *)
 (* --------------------------------------------------------------------------- *)
 
-function TNetCatchUpTests.PeerLetter: AnsiChar;
+function TNetCatchUpTests.Guid(aN: integer): string;
 begin
-   Result := ComputerIDLetter(AnsiChar(PEER));
+   Result := Format('00000000-0000-4000-8000-%.12d', [aN]);
 end;
 
-function TNetCatchUpTests.Rec(const aCall: string; aId1, aId2: Cardinal;
-                              aAuthor: AnsiChar; aContest: TContestHandle): ContestExchange;
+function TNetCatchUpTests.ComputerLetter: string;
 begin
-   Result := Default(ContestExchange);
-   Result.ceRecordKind := rkQSO;
-   Result.ceContest := aContest;
-   Result.Callsign := ShortString(aCall);
-   Result.ceQSOID1 := aId1;
-   Result.ceQSOID2 := aId2;
-   Result.ceComputerID := aAuthor;
-   Result.ceSendToServer := False;
-   Result.ceNeedSendToServerAE := True;
-   Result.Band := Band20;
-   Result.Mode := CW;
-   Result.Frequency := 14025000;
-   Result.tSysTime.qtYear := 26;
-   Result.tSysTime.qtMonth := 6;
-   Result.tSysTime.qtDay := 1;
-   Result.tSysTime.qtHour := 12;
-   Result.tSysTime.qtMinute := 30;
-   Result.tSysTime.qtSecond := 15;
+   Result := 'A';
 end;
 
-procedure TNetCatchUpTests.Announce(aPeers: TNetPeers; aOrdinal: Byte;
-                                    const aContestId: string);
-var
-   hello: THelloMessage;
+function TNetCatchUpTests.Row(aN: integer; const aComputerId: string): TWireValues;
 begin
-   CheckTrue(BuildHello(NET_PROTOCOL_VERSION, aOrdinal, '5.0.99', aContestId, hello),
-             'the hello can be built');
-   CheckTrue(aPeers.Announce(hello), 'and is accepted');
-end;
-
-function TNetCatchUpTests.LegacyContext(aPeers: TNetPeers): TCatchUpContext;
-begin
-   Result.Peers := aPeers;
-   Result.OurHandle := ContestHandleOf(ARRLDXCW);
-   Result.OurContestId := ContestId(Result.OurHandle);
-   Result.OurIsLegacy := True;
-end;
-
-function TNetCatchUpTests.ByIdContext(aPeers: TNetPeers): TCatchUpContext;
-begin
-   Result.Peers := aPeers;
-   (* A handle above every legacy number: what a contest registered by id holds.
-     The judge never asks the registry, only the id's text. *)
-   Result.OurHandle := TContestHandle.FromByte(200);
-   Result.OurContestId := 'TEST-BY-ID-QP';
-   Result.OurIsLegacy := False;
+   Result := MakeWireRow(Guid(aN), 'K' + IntToStr(aN), aComputerId);
+   (* THE STATION FACTS THE SENDER RECORDED travel with the row. *)
+   SetWireValue(Result, 'my_call', 'W1AW');
+   SetWireValue(Result, 'my_source', 'logged');
+   SetWireValue(Result, 'my_grid', 'FN31');
+   SetWireValue(Result, 'exchange_sent', '599 CT');
 end;
 
 function TNetCatchUpTests.BackupFolder: string;
@@ -190,195 +157,104 @@ begin
    Result := IncludeTrailingPathDelimiter(FDir) + 'backup';
 end;
 
+function TNetCatchUpTests.StreamOf(aRows: integer; const aContest: string): TBytes;
+var
+   frame: TBytes;
+   n, at: integer;
+
+   procedure Put;
+   var
+      k: integer;
+   begin
+      SetLength(Result, at + Length(frame));
+      for k := 0 to High(frame) do
+         begin
+         Result[at + k] := frame[k];
+         end;
+      Inc(at, Length(frame));
+   end;
+
+begin
+   Result := nil;
+   at := 0;
+   frame := BuildSyncHeaderFrame(aContest, aRows);
+   Put;
+   for n := 1 to aRows do
+      begin
+      frame := BuildSyncRowFrame(QsoWireColumns, Row(n));
+      Put;
+      end;
+end;
+
 (* --------------------------------------------------------------------------- *)
 (* uNetCatchUp alone                                                            *)
 (* --------------------------------------------------------------------------- *)
 
-procedure TNetCatchUpTests.Test_AnImageIsWholeOrRefused;
+procedure TNetCatchUpTests.Test_AnImageHoldsTheRowsTheHeaderPromised;
 var
    image: TServerLogImage;
-   why: string;
-   first, back: ContestExchange;
-   header: TBytes;
-   deleted: ContestExchange;
+   deleted, note: TWireValues;
 begin
-   BeginTest('a server log image is whole or refused');
-   first := Rec('K1ONE', 1, 1, 'B', ContestHandleOf(ARRLDXCW));
-   deleted := Rec('K1DEL', 1, 2, 'B', ContestHandleOf(ARRLDXCW));
-   deleted.ceQSO_Deleted := True;
+   BeginTest('a server image holds the rows its header promised, by guid');
+   deleted := Row(2);
+   SetWireValue(deleted, 'deleted', '1');
+   note := Row(3);
+   SetWireValue(note, 'record_kind', 'NOTE');
 
-   image := NewImage([first, deleted]);
+   image := NewImage([Row(1), deleted, note], 'ARRLDXCW');
    try
-      CheckEquals(2, image.Count, 'two records after the header');
-      CheckEquals(1, image.QsoCount, 'and one counts: a deleted QSO does not');
-      CheckTrue(image.Row(1, back), 'a record can be read back');
-      CheckEquals('K1DEL', string(back.Callsign), 'by position');
-      CheckFalse(image.Row(2, back), 'one past the end is refused');
-      CheckFalse(image.Row(-1, back), 'and so is before the start');
-   finally
-      image.Free;
-   end;
-
-   (* The size the server stated must be the size that arrived. *)
-   image := NewImage([first]);
-   try
-      CheckFalse(image.Accept(image.Data.Size + 1, why), 'a short transfer is refused');
-      CheckTrue(Pos('arrived', why) > 0, 'and says what arrived: ' + why);
-      CheckEquals(0, image.Count, 'and holds no records');
-   finally
-      image.Free;
-   end;
-
-   (* A whole number of records after the header, or nothing. *)
-   image := TServerLogImage.Create;
-   try
-      SetLength(header, SizeOfTLogHeader + 100);
-      image.Data.WriteBuffer(header[0], Length(header));
-      CheckFalse(image.Accept(image.Data.Size, why), 'a torn record is refused');
-      CheckTrue(Pos('whole number', why) > 0, 'and says so: ' + why);
-   finally
-      image.Free;
-   end;
-
-   image := TServerLogImage.Create;
-   try
-      SetLength(header, 40);
-      image.Data.WriteBuffer(header[0], Length(header));
-      CheckFalse(image.Accept(image.Data.Size, why), 'less than a header is refused');
-   finally
-      image.Free;
-   end;
-
-   (* An empty log is whole: no bytes, or a header and nothing after it. *)
-   image := TServerLogImage.Create;
-   try
-      CheckTrue(image.Accept(0, why), 'no bytes at all is an empty log');
-      CheckEquals(0, image.Count, 'with no records');
-   finally
-      image.Free;
-   end;
-
-   image := NewImage([]);
-   try
-      CheckEquals(0, image.Count, 'a header alone is an empty log too');
+      CheckEquals('ARRLDXCW', image.Contest, 'the contest the header named');
+      CheckEquals(3, image.DeclaredRows, 'and how many rows it promised');
+      CheckEquals(3, image.Count, 'three rows held');
+      CheckEquals(1, image.QsoCount, 'and one counts: a deleted QSO and a note do not');
+      CheckEquals('K2', WireValue(image.Row(1), 'callsign'), 'a row can be read back by position');
+      CheckEquals(0, Length(image.Row(3)), 'one past the end is nothing');
+      CheckEquals(0, Length(image.Row(-1)), 'and so is before the start');
+      CheckTrue(image.HoldsGuid(Guid(1)), 'a guid the server holds');
+      CheckFalse(image.HoldsGuid(Guid(9)), 'and one it does not');
+      CheckFalse(image.HoldsGuid(''), 'the empty guid is never held');
    finally
       image.Free;
    end;
 end;
 
-procedure TNetCatchUpTests.Test_ALegacyContestIsJudgedByItsByteAndItsAuthor;
-var
-   peers: TNetPeers;
-   ctx: TCatchUpContext;
-   ours, other: TContestHandle;
+procedure TNetCatchUpTests.Test_TheContestIsComparedOnceByIdString;
 begin
-   BeginTest('a legacy contest: the byte is definitive, the author''s word decides the rest');
-   peers := TNetPeers.Create;
-   try
-      ctx := LegacyContext(peers);
-      ours := ctx.OurHandle;
-      other := ContestHandleOf(CQWWCW);
-
-      (* The author said it is on our contest. *)
-      Announce(peers, PEER, ctx.OurContestId);
-      Announce(peers, OTHER_PEER, ContestId(other));
-
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 1, PeerLetter, ours), ctx) = cvAccept,
-                'our byte, an author on our contest: accepted');
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 2, ComputerIDLetter(AnsiChar(OTHER_PEER)), ours), ctx) = cvOtherContest,
-                'our byte, but the author is on another contest now: not ours');
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 3, PeerLetter, other), ctx) = cvOtherContest,
-                'ANOTHER LEGACY BYTE IS ANOTHER CONTEST whatever its author says now');
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 4, 'Z', ours), ctx) = cvAccept,
-                'our byte, an author who is not here: accepted');
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 5, 'Z', other), ctx) = cvOtherContest,
-                'another byte, an author who is not here: another contest');
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 6, #0, ours), ctx) = cvAccept,
-                'our byte, no author at all (a single-op log): accepted');
-   finally
-      peers.Free;
-   end;
-end;
-
-procedure TNetCatchUpTests.Test_AContestByIdIsJudgedByItsAuthorThenItsByte;
-var
-   peers: TNetPeers;
-   ctx: TCatchUpContext;
-   ours, foreign: TContestHandle;
-begin
-   BeginTest('a contest registered by id: its author''s word first, its byte only when the author is gone');
-   peers := TNetPeers.Create;
-   try
-      ctx := ByIdContext(peers);
-      ours := ctx.OurHandle;
-      foreign := TContestHandle.FromByte(77);
-
-      Announce(peers, PEER, ctx.OurContestId);
-      Announce(peers, OTHER_PEER, 'SOME-OTHER-QP');
-
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 1, PeerLetter, foreign), ctx) = cvAccept,
-                'THE BYTE IS NOT READ when the author is here and says it is ours: a '
-                + 'by-id handle differs between builds');
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 2, ComputerIDLetter(AnsiChar(OTHER_PEER)), ours), ctx) = cvOtherContest,
-                'an author on another contest: not ours, whatever the byte');
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 3, 'Z', ours), ctx) = cvAccept,
-                'an author who has gone, our byte: accepted (same build)');
-      CheckTrue(JudgeServerRecord(Rec('A', 1, 4, 'Z', foreign), ctx) = cvUnknownContest,
-                'an author who has gone, another byte: NOT JUDGED, and counted as such');
-   finally
-      peers.Free;
-   end;
+   BeginTest('the server''s contest is compared once, by id string, ignoring case');
+   CheckTrue(JudgeSyncContest('ARRLDXCW', 'ARRLDXCW') = scSame, 'the same id');
+   CheckTrue(JudgeSyncContest('arrldxcw', 'ARRLDXCW') = scSame, 'the compare ignores case');
+   CheckTrue(JudgeSyncContest('', 'ARRLDXCW') = scServerNone,
+             'a server that names none holds nothing yet: nothing to refuse');
+   CheckTrue(JudgeSyncContest('CQWWCW', 'ARRLDXCW') = scOther,
+             'another contest is refused whole');
 end;
 
 procedure TNetCatchUpTests.Test_ThePlanAddsOnlyWhatTheLogLacks;
 var
-   peers: TNetPeers;
-   ctx: TCatchUpContext;
-   held: TServerQsoIndex;
+   held: TGuidSet;
    image: TServerLogImage;
    plan: TCatchUpPlan;
-   ours, other: TContestHandle;
+   noGuid: TWireValues;
 begin
    BeginTest('the plan adds only what the log lacks, each once, and says why it left the rest');
-   peers := TNetPeers.Create;
-   held := TServerQsoIndex.Create;
+   held := TGuidSet.Create;
    try
-      ctx := LegacyContext(peers);
-      ours := ctx.OurHandle;
-      other := ContestHandleOf(CQWWCW);
-      Announce(peers, PEER, ctx.OurContestId);
-
-      held.Add(10, 1);
-      held.Add(10, 2);
-
-      image := NewImage([
-         Rec('K1HELD', 10, 1, PeerLetter, ours),      (* 0: the log has it *)
-         Rec('W1NEW', 10, 3, PeerLetter, ours),       (* 1: added *)
-         Rec('W2NEW', 10, 4, PeerLetter, ours),       (* 2: added *)
-         Rec('N0ID', 0, 0, PeerLetter, ours),         (* 3: names nothing *)
-         Rec('W1NEW', 10, 3, PeerLetter, ours),       (* 4: the same pair again *)
-         Rec('AA1OTH', 10, 5, PeerLetter, other),     (* 5: another contest *)
-         Rec('W3NEW', 10, 6, 'Z', ours),              (* 6: added: its author is gone, its byte is ours *)
-         Rec('K1HELD', 10, 2, PeerLetter, ours)]);    (* 7: the log has it *)
+      held.Add(Guid(1));
+      noGuid := Row(5);
+      SetWireValue(noGuid, 'guid', '');
+      image := NewImage([Row(1), Row(2), Row(3), noGuid, Row(2), Row(4)], 'ARRLDXCW');
       try
-         plan := BuildCatchUpPlan(image, held, ctx);
+         plan := BuildCatchUpPlan(image, held);
          try
-            CheckEquals(3, plan.Count, 'three are added');
-            CheckEquals(1, plan.RowIndex(0), 'in the server''s order: first');
-            CheckEquals(2, plan.RowIndex(1), 'second');
-            CheckEquals(6, plan.RowIndex(2), 'third');
-            CheckEquals(2, plan.Skipped(cusAlreadyHeld), 'two the log has');
-            CheckEquals(1, plan.Skipped(cusNoIdentity), '(0, 0) names nothing');
-            CheckEquals(1, plan.Skipped(cusRepeated), 'a pair twice in the file is added once');
-            CheckEquals(1, plan.Skipped(cusOtherContest), 'one for another contest');
-            CheckEquals(0, plan.Skipped(cusUnknownContest), 'none unjudged');
-            CheckEquals('AA1OTH', plan.FirstCallSkipped(cusOtherContest),
-                        'and the log can name the first');
-            CheckEquals(5, plan.SkippedTotal, 'five left');
-            CheckTrue(Pos('3 to add', CatchUpSummary(plan)) = 1, 'the summary leads with the count');
-            CheckTrue(Pos('for another contest (first: AA1OTH)', CatchUpSummary(plan)) > 0,
-                      'and says why the others were left: ' + CatchUpSummary(plan));
-            CheckFalse(held.Contains(10, 3), 'the held set is only read');
+            CheckEquals(3, plan.Count, 'rows 2, 3 and 4 are to be added');
+            CheckEquals(1, plan.Skipped(cusAlreadyHeld), 'one is held');
+            CheckEquals(1, plan.Skipped(cusNoIdentity), 'one names nothing');
+            CheckEquals(1, plan.Skipped(cusRepeated), 'one is the server''s own repeat');
+            CheckEquals('K5', plan.FirstCallSkipped(cusNoIdentity), 'the first skipped is named');
+            CheckEquals(1, plan.RowIndex(0), 'in the server''s order');
+            CheckEquals(5, plan.RowIndex(2), 'and each once');
+            CheckTrue(Pos('3 to add', CatchUpSummary(plan)) = 1, 'the summary: ' + CatchUpSummary(plan));
+            CheckEquals(1, held.Count, 'it still holds one');
          finally
             plan.Free;
          end;
@@ -387,87 +263,108 @@ begin
       end;
    finally
       held.Free;
-      peers.Free;
    end;
 end;
 
-procedure TNetCatchUpTests.Test_ACaughtUpRecordIsOursSentAndClean;
+(* NY4I RULING 3: A STATION PUSHES ONLY ROWS LOGGED HERE. A row copied from a peer
+  by an older build carries a local guid unlike the original, so pushing it would
+  duplicate it on the server. Rows the server holds, rows still owed, rows
+  resent on this link, rows with no guid and repeats are left out, each counted. *)
+procedure TNetCatchUpTests.Test_APushPlanSendsOnlyRowsLoggedHereThatTheServerLacks;
 var
-   r: ContestExchange;
-   ours: TContestHandle;
-begin
-   BeginTest('a caught-up record carries this station''s contest, and is sent and clean');
-   ours := ContestHandleOf(ARRLDXCW);
-   r := Rec('W1NEW', 5, 5, 'B', TContestHandle.FromByte(99));
-   CheckFalse(r.ceSendToServer, 'it starts unsent');
-   CheckTrue(r.ceNeedSendToServerAE, 'and dirty');
-
-   StampCaughtUp(r, ours);
-   CheckTrue(r.ceContest = ours, 'the sender''s byte is replaced by ours');
-   CheckTrue(r.ceSendToServer, 'it came from the server: sent');
-   CheckFalse(r.ceNeedSendToServerAE, 'and clean');
-   CheckEquals('W1NEW', string(r.Callsign), 'nothing else is touched');
-   CheckTrue((r.ceQSOID1 = 5) and (r.ceQSOID2 = 5), 'least of all its network key');
-end;
-
-(* THE COST IS NOT A GUESS: a large multi-op log, planned in memory. The bound is
-  loose on purpose (a slow build machine must not fail it); the figure printed
-  is the measurement. *)
-procedure TNetCatchUpTests.Test_APlanOverALargeLogIsFast;
-const
-   RECORD_COUNT = 20000;
-   HELD_COUNT = 10000;
-var
-   peers: TNetPeers;
-   ctx: TCatchUpContext;
-   held: TServerQsoIndex;
    image: TServerLogImage;
-   plan: TCatchUpPlan;
-   header: TBytes;
-   r: ContestExchange;
-   i: integer;
-   why: string;
-   started, buildMs, planMs: QWord;
+   plan: TPushPlan;
+   resent: TGuidSet;
+   noGuid: TWireValues;
 begin
-   BeginTest('a plan over ' + IntToStr(RECORD_COUNT) + ' server records is fast');
-   peers := TNetPeers.Create;
-   held := TServerQsoIndex.Create;
-   image := TServerLogImage.Create;
+   BeginTest('a push plan sends only rows logged here that the server lacks');
+   resent := TGuidSet.Create;
+   image := NewImage([Row(1, 'A')], 'ARRLDXCW');
    try
-      ctx := LegacyContext(peers);
-      SetLength(header, SizeOfTLogHeader);
-      image.Data.WriteBuffer(header[0], SizeOfTLogHeader);
-      for i := 1 to RECORD_COUNT do
-         begin
-         r := Rec('K' + IntToStr(i), 700, i, 'Z', ctx.OurHandle);
-         image.Data.WriteBuffer(r, SizeOf(ContestExchange));
-         end;
-
-      started := GetTickCount64;
-      CheckTrue(image.Accept(image.Data.Size, why), 'the image is whole');
-      buildMs := GetTickCount64 - started;
-
-      for i := 1 to HELD_COUNT do
-         begin
-         held.Add(700, i);
-         end;
-
-      started := GetTickCount64;
-      plan := BuildCatchUpPlan(image, held, ctx);
-      planMs := GetTickCount64 - started;
+      resent.Add(Guid(5));
+      plan := TPushPlan.Create(image, 'A', resent);
       try
-         CheckEquals(RECORD_COUNT - HELD_COUNT, plan.Count, 'half of them are missing');
-         CheckEquals(HELD_COUNT, plan.Skipped(cusAlreadyHeld), 'half are held');
-         WriteLn('[info] ', RECORD_COUNT, ' records (', image.Data.Size, ' bytes): accepted in ',
-                 buildMs, ' ms, planned against ', HELD_COUNT, ' held in ', planMs, ' ms');
-         CheckTrue(planMs < 10000, 'the plan took ' + IntToStr(planMs) + ' ms');
+         noGuid := Row(9, 'A');
+         SetWireValue(noGuid, 'guid', '');
+
+         CheckTrue(plan.Consider(101, Row(1, 'A')) = pvServerHas, 'the server holds it');
+         CheckTrue(plan.Consider(102, Row(2, 'A')) = pvSend, 'logged here, the server lacks it');
+         CheckTrue(plan.Consider(103, Row(3, 'B')) = pvNotLoggedHere,
+                   'LOGGED AT ANOTHER STATION: never pushed from here');
+         CheckTrue(plan.Consider(104, Row(4, 'A'), True) = pvOwed, 'still owed: the resend sends it');
+         CheckTrue(plan.Consider(105, Row(5, 'A')) = pvOwed, 'posted by the resend on this link');
+         CheckTrue(plan.Consider(106, noGuid) = pvNoIdentity, 'no guid names nothing');
+         CheckTrue(plan.Consider(107, Row(2, 'A')) = pvRepeated, 'this log''s own repeat: once');
+         CheckTrue(plan.Consider(108, Row(6, 'A')) = pvSend, 'another to send');
+
+         CheckEquals(2, plan.Count, 'two rows to send');
+         CheckEquals(102, integer(plan.RowId(0)), 'the row ids go with them, in order');
+         CheckEquals(108, integer(plan.RowId(1)), 'both');
+         CheckEquals('K6', WireValue(plan.Row(1), 'callsign'), 'and the values');
+         CheckEquals(1, plan.Verdicts(pvNotLoggedHere), 'the other station''s row is counted');
+         CheckTrue(plan.ServerHolds(Guid(1)) and (not plan.ServerHolds(Guid(2))),
+                   'the repository asks the plan what the server holds');
+         CheckTrue(Pos('2 to send', PushSummary(plan)) = 1, 'the summary: ' + PushSummary(plan));
       finally
          plan.Free;
       end;
    finally
       image.Free;
+      resent.Free;
+   end;
+end;
+
+procedure TNetCatchUpTests.Test_TheDecisionOnConnectAsksAtMostOnce;
+begin
+   BeginTest('the decision on connect asks at most once');
+   CheckTrue(SyncOnConnect(0, 0, False) = socNothing, 'both complete: nothing is said');
+   CheckTrue(SyncOnConnect(0, 0, True) = socNothing, 'even with auto on');
+   CheckTrue(SyncOnConnect(3, 0, True) = socDoNow, 'auto on: just do it');
+   CheckTrue(SyncOnConnect(3, 2, True) = socDoNow, 'both directions, auto on: do it');
+   CheckTrue(SyncOnConnect(3, 0, False) = socAskPull, 'only the server has something: ask');
+   CheckTrue(SyncOnConnect(0, 2, False) = socAskPush, 'only this log has: ask');
+   CheckTrue(SyncOnConnect(3, 2, False) = socAskBoth, 'both: ONE question covering both');
+end;
+
+procedure TNetCatchUpTests.Test_APlanOverALargeLogIsFast;
+const
+   ROWS = 20000;
+   HELD_ROWS = 10000;
+var
+   image: TServerLogImage;
+   held: TGuidSet;
+   plan: TCatchUpPlan;
+   i: integer;
+   started, planMs: QWord;
+begin
+   BeginTest('a plan over 20,000 server rows against 10,000 held is fast');
+   image := TServerLogImage.Create;
+   held := TGuidSet.Create;
+   try
+      image.StartImage('ARRLDXCW', ROWS);
+      for i := 1 to ROWS do
+         begin
+         image.AddRow(Row(i));
+         end;
+      for i := 1 to HELD_ROWS do
+         begin
+         held.Add(Guid(i));
+         end;
+
+      started := GetTickCount64;
+      plan := BuildCatchUpPlan(image, held);
+      planMs := GetTickCount64 - started;
+      try
+         CheckEquals(ROWS - HELD_ROWS, plan.Count, 'half of them are missing');
+         CheckEquals(HELD_ROWS, plan.Skipped(cusAlreadyHeld), 'half are held');
+         WriteLn('[info] ', ROWS, ' rows planned against ', HELD_ROWS, ' held in ', planMs, ' ms');
+         CheckTrue(planMs < 10000, 'the plan took ' + IntToStr(planMs) + ' ms');
+      finally
+         plan.Free;
+      end;
+   finally
       held.Free;
-      peers.Free;
+      image.Free;
    end;
 end;
 
@@ -475,15 +372,14 @@ end;
 (* the download, against a fixture sync port                                    *)
 (* --------------------------------------------------------------------------- *)
 
-(* THE SERVER'S SYNC PORT, AS D7 AND BOTH OUR SERVERS PLAY IT: read what the
-  client writes as its password (up to 50 bytes, whatever has arrived), write the
-  file's size as four bytes in native order, then the file, then close. The test
-  decides what the size says and how much of the file is actually sent. *)
+(* THE SERVER'S SYNC PORT, AS BOTH OUR SERVERS PLAY IT: read what the client
+  writes as its password (up to 50 bytes, whatever has arrived), write the stream
+  (header frame, row frames), then close. The test decides what the stream is,
+  how much of it is actually sent and in what chunk sizes. *)
 procedure TNetCatchUpTests.ServerExecute(AContext: TIdContext);
 var
    raw: TIdBytes;
-   got, sendCount, i: integer;
-   size32: LongInt;
+   got, sendCount, i, at, take, k: integer;
 begin
    AContext.Connection.IOHandler.CheckForDataOnSource(3000);
    got := AContext.Connection.IOHandler.InputBuffer.Size;
@@ -508,17 +404,26 @@ begin
       FLock.Leave;
    end;
 
-   size32 := LongInt(FDeclared);
-   AContext.Connection.IOHandler.Write(size32, False);   (* native order *)
-
-   sendCount := Length(FPayload);
+   sendCount := Length(FStream);
    if (FSendOnly >= 0) and (FSendOnly < sendCount) then
       begin
       sendCount := FSendOnly;
       end;
-   if sendCount > 0 then
+   at := 0;
+   k := 0;
+   while at < sendCount do
       begin
-      AContext.Connection.IOHandler.Write(RawToBytes(FPayload[0], sendCount));
+      take := sendCount - at;
+      if Length(FChunks) > 0 then
+         begin
+         if FChunks[k mod Length(FChunks)] < take then
+            begin
+            take := FChunks[k mod Length(FChunks)];
+            end;
+         Inc(k);
+         end;
+      AContext.Connection.IOHandler.Write(RawToBytes(FStream[at], take));
+      Inc(at, take);
       end;
    AContext.Connection.Disconnect;
 end;
@@ -545,81 +450,88 @@ begin
       end;
 end;
 
-(* A server log file: a header slot, then aRecords records, each with its own
-  callsign and key so a misplaced byte shows. *)
-function TNetCatchUpTests.PayloadOf(aRecords: integer): TBytes;
-var
-   image: TServerLogImage;
-   header: TBytes;
-   one: ContestExchange;
-   i: integer;
-begin
-   image := TServerLogImage.Create;
-   try
-      SetLength(header, SizeOfTLogHeader);
-      image.Data.WriteBuffer(header[0], SizeOfTLogHeader);
-      for i := 1 to aRecords do
-         begin
-         one := Rec('K' + IntToStr(i), 900, i, 'B', ContestHandleOf(ARRLDXCW));
-         image.Data.WriteBuffer(one, SizeOf(ContestExchange));
-         end;
-      SetLength(Result, image.Data.Size);
-      if image.Data.Size > 0 then
-         begin
-         image.Data.Position := 0;
-         image.Data.ReadBuffer(Result[0], image.Data.Size);
-         end;
-   finally
-      image.Free;
-   end;
-end;
-
 procedure TNetCatchUpTests.Test_TheDownloadIsExactlyWhatTheServerSent;
 var
-   stream: TMemoryStream;
    image: TServerLogImage;
-   declared: Int64;
    why: string;
    port: Word;
+   i: integer;
    same: boolean;
-   last: ContestExchange;
 begin
-   BeginTest('the download is exactly what the server sent, and then reads as a log');
+   BeginTest('the download is exactly the rows the server sent');
    FLock := TCriticalSection.Create;
-   stream := TMemoryStream.Create;
+   image := TServerLogImage.Create;
    try
-      (* 300 records is 112,800 bytes: more than one chunk, so the loop that
-        reads a size's worth in pieces is the thing being run. *)
-      FPayload := PayloadOf(300);
-      FDeclared := Length(FPayload);
+      FStream := StreamOf(300, 'ARRLDXCW');
       FSendOnly := -1;
+      FChunks := nil;
       port := StartServer;
       try
          CheckTrue(FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('TR4WSERVER'),
-                                  stream, declared, why), 'the download succeeds: ' + why);
+                                  image, why), 'the download succeeds: ' + why);
       finally
          StopServer;
       end;
 
-      CheckTrue(declared = Length(FPayload), 'the size is the one the server stated');
-      CheckEquals(Length(FPayload), integer(stream.Size), 'and that many bytes arrived');
-      same := (stream.Size = Length(FPayload)) and
-              CompareMem(stream.Memory, @FPayload[0], Length(FPayload));
-      CheckTrue(same, 'every byte is the byte sent');
-
-      (* And it is a log: the image takes it, and reads a record back. *)
-      image := TServerLogImage.Create;
-      try
-         image.Data.CopyFrom(stream, 0);
-         CheckTrue(image.Accept(declared, why), 'the image is whole: ' + why);
-         CheckEquals(300, image.Count, 'with the 300 records');
-         CheckTrue(image.Row(299, last), 'the last can be read');
-         CheckEquals('K300', string(last.Callsign), 'and is the last sent');
-      finally
-         image.Free;
-      end;
+      CheckEquals('ARRLDXCW', image.Contest, 'the header''s contest');
+      CheckEquals(300, image.DeclaredRows, 'the header''s count');
+      CheckEquals(300, image.Count, 'and every row arrived');
+      same := True;
+      for i := 1 to 300 do
+         begin
+         if (WireValue(image.Row(i - 1), 'guid') <> Guid(i)) or
+            (WireValue(image.Row(i - 1), 'callsign') <> 'K' + IntToStr(i)) or
+            (WireValue(image.Row(i - 1), 'my_source') <> 'logged') then
+            begin
+            same := False;
+            end;
+         end;
+      CheckTrue(same, 'each row is the row sent, in order, my_* as sent');
    finally
-      stream.Free;
+      image.Free;
+      FreeAndNil(FLock);
+   end;
+end;
+
+(* THE 1 MB STREAM, CUT INTO ODD CHUNKS. 3,200 rows is a little over a megabyte; the
+  server writes it 1, 7, 13, 509, 4,093 and 65,537 bytes at a time, so every frame
+  boundary and every length prefix is split somewhere in the run. *)
+procedure TNetCatchUpTests.Test_AOneMegabyteStreamSplitIntoOddChunksArrivesWhole;
+const
+   ROWS = 3200;
+var
+   image: TServerLogImage;
+   why: string;
+   port: Word;
+begin
+   BeginTest('a one-megabyte sync stream split into odd chunks arrives whole');
+   FLock := TCriticalSection.Create;
+   image := TServerLogImage.Create;
+   try
+      FStream := StreamOf(ROWS, 'ARRLDXCW');
+      CheckTrue(Length(FStream) > 1000 * 1000, 'the stream is over a megabyte: ' +
+                IntToStr(Length(FStream)));
+      FSendOnly := -1;
+      SetLength(FChunks, 6);
+      FChunks[0] := 1;
+      FChunks[1] := 7;
+      FChunks[2] := 13;
+      FChunks[3] := 509;
+      FChunks[4] := 4093;
+      FChunks[5] := 65537;
+      port := StartServer;
+      try
+         CheckTrue(FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('TR4WSERVER'),
+                                  image, why), 'the download succeeds: ' + why);
+      finally
+         StopServer;
+      end;
+      CheckEquals(ROWS, image.Count, 'every row arrived');
+      CheckEquals(Guid(ROWS), WireValue(image.Row(ROWS - 1), 'guid'), 'the last is the last sent');
+      CheckEquals(Guid(1), WireValue(image.Row(0), 'guid'), 'and the first the first');
+   finally
+      FChunks := nil;
+      image.Free;
       FreeAndNil(FLock);
    end;
 end;
@@ -628,23 +540,22 @@ end;
   send(buf, 10). The in-tree server's sync port once waited for fifty. *)
 procedure TNetCatchUpTests.Test_TheDownloadSendsTenPasswordBytes;
 var
-   stream: TMemoryStream;
-   declared: Int64;
+   image: TServerLogImage;
    why: string;
    port: Word;
    seen: TBytes;
 begin
    BeginTest('the download writes the password as ten bytes, NUL padded');
    FLock := TCriticalSection.Create;
-   stream := TMemoryStream.Create;
+   image := TServerLogImage.Create;
    try
-      FPayload := PayloadOf(1);
-      FDeclared := Length(FPayload);
+      FStream := StreamOf(1, 'ARRLDXCW');
       FSendOnly := -1;
+      FChunks := nil;
       port := StartServer;
       try
          CheckTrue(FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('PW'),
-                                  stream, declared, why), 'the download succeeds: ' + why);
+                                  image, why), 'the download succeeds: ' + why);
       finally
          StopServer;
       end;
@@ -659,116 +570,172 @@ begin
       CheckTrue((seen[0] = Ord('P')) and (seen[1] = Ord('W')) and (seen[2] = 0) and
                 (seen[9] = 0), 'the password, then NULs');
    finally
-      stream.Free;
+      image.Free;
       FreeAndNil(FLock);
    end;
 end;
 
 (* A SERVER THAT STOPS SHORT -- a link cut mid-transfer -- is a failed download
-  that says how far it got, and what did arrive is not a log: the image refuses
-  it, so nothing downstream sees half a file. *)
-procedure TNetCatchUpTests.Test_AServerThatStopsShortIsReportedAndTheImageRefusesIt;
+  that says how far it got. *)
+procedure TNetCatchUpTests.Test_AServerThatStopsShortIsReported;
 var
-   stream: TMemoryStream;
    image: TServerLogImage;
-   declared: Int64;
-   why, imageWhy: string;
+   why: string;
    port: Word;
 begin
-   BeginTest('a server that stops short is reported, and the partial file is refused');
+   BeginTest('a server that stops short is reported with how far it got');
    FLock := TCriticalSection.Create;
-   stream := TMemoryStream.Create;
+   image := TServerLogImage.Create;
    try
-      FPayload := PayloadOf(10);
-      FDeclared := Length(FPayload);
-      FSendOnly := 1000;
+      FStream := StreamOf(10, 'ARRLDXCW');
+      FSendOnly := Length(FStream) div 2;
+      FChunks := nil;
       port := StartServer;
       try
          CheckFalse(FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('TR4WSERVER'),
-                                   stream, declared, why), 'the download fails');
+                                   image, why), 'the download fails');
       finally
          StopServer;
       end;
-      CheckTrue(Pos('1000 of ' + IntToStr(Length(FPayload)), why) > 0,
-                'and says how far it got: ' + why);
-
-      image := TServerLogImage.Create;
-      try
-         image.Data.CopyFrom(stream, 0);
-         CheckFalse(image.Accept(declared, imageWhy), 'what arrived is not a log');
-         CheckEquals(0, image.Count, 'and holds no records');
-      finally
-         image.Free;
-      end;
+      CheckTrue(Pos(' of 10 row(s)', why) > 0, 'and says how far it got: ' + why);
+      CheckTrue(image.Count < 10, 'and the image is not whole');
    finally
-      stream.Free;
+      image.Free;
       FreeAndNil(FLock);
    end;
 end;
 
-procedure TNetCatchUpTests.Test_AnImpossibleSizeIsRefusedBeforeAnyByteIsRead;
+(* NOTHING IS GUESSED: a frame over the limit, a count past the limit and a schema
+  this build does not speak each end the download with the reason. *)
+procedure TNetCatchUpTests.Test_AnImpossibleFrameOrCountIsRefused;
 var
-   stream: TMemoryStream;
-   declared: Int64;
+   image: TServerLogImage;
    why: string;
    port: Word;
-begin
-   BeginTest('an impossible size is refused before any byte is read');
-   FLock := TCriticalSection.Create;
-   stream := TMemoryStream.Create;
-   try
-      FPayload := PayloadOf(1);
+   bad: TBytes;
+   header: TBytes;
+   i: integer;
+
+   function Run(const aStream: TBytes): boolean;
+   begin
+      FStream := aStream;
       FSendOnly := -1;
-
-      FDeclared := -5;
+      FChunks := nil;
+      image.Free;
+      image := TServerLogImage.Create;
       port := StartServer;
       try
-         CheckFalse(FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('TR4WSERVER'),
-                                   stream, declared, why), 'a negative size fails');
+         Result := FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('TR4WSERVER'),
+                                  image, why);
       finally
          StopServer;
       end;
-      CheckTrue(Pos('impossible', why) > 0, 'and says so: ' + why);
+   end;
 
-      FDeclared := SERVER_LOG_MAX_BYTES + 1;
-      port := StartServer;
-      try
-         CheckFalse(FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('TR4WSERVER'),
-                                   stream, declared, why), 'a size past the limit fails');
-      finally
-         StopServer;
-      end;
-      CheckEquals(0, integer(stream.Size), 'and nothing was written either time');
+begin
+   BeginTest('an impossible frame length, count or schema is refused');
+   FLock := TCriticalSection.Create;
+   image := TServerLogImage.Create;
+   try
+      (* A frame longer than the protocol's limit. *)
+      SetLength(bad, 8);
+      for i := 0 to High(bad) do
+         begin
+         bad[i] := 0;
+         end;
+      PutCardinalLE(bad, 0, NET_RECEIVE_BUFFER_SIZE + 1);
+      CheckFalse(Run(bad), 'an oversize header frame fails');
+      CheckTrue(Pos('limit', why) > 0, 'and says so: ' + why);
+
+      (* More rows than any contest has. *)
+      CheckFalse(Run(BuildSyncHeaderFrame('ARRLDXCW', SERVER_LOG_MAX_ROWS + 1)),
+                 'a count past the limit fails');
+      CheckTrue(Pos('cannot read', why) > 0, 'and says so: ' + why);
+      CheckEquals(0, image.Count, 'and nothing was read');
+
+      (* Another schema: the header says 4. *)
+      header := BuildSyncHeaderFrame('ARRLDXCW', 0);
+      for i := 4 to High(header) do
+         begin
+         if (header[i] = Ord('5')) and ((header[i - 1] = Ord(':')) or (header[i - 1] = Ord(' '))) then
+            begin
+            header[i] := Ord('4');
+            end;
+         end;
+      CheckFalse(Run(header), 'a header of another schema fails');
+      CheckTrue(Pos('schema 4', why) > 0, 'and names it: ' + why);
    finally
-      stream.Free;
+      image.Free;
+      FreeAndNil(FLock);
+   end;
+end;
+
+(* A ROW WHOSE CHECKSUM DOES NOT MATCH ENDS THE DOWNLOAD, naming the row: a station
+  that took it would store a row nobody can vouch for. *)
+procedure TNetCatchUpTests.Test_ARowWithABadChecksumEndsTheDownload;
+var
+   image: TServerLogImage;
+   why: string;
+   port: Word;
+   frame: TBytes;
+   at, i: integer;
+begin
+   BeginTest('a row with a bad checksum ends the download and names the row');
+   FLock := TCriticalSection.Create;
+   image := TServerLogImage.Create;
+   try
+      FStream := StreamOf(3, 'ARRLDXCW');
+      (* Flip a byte inside the LAST frame's JSON (its callsign). *)
+      frame := BuildSyncRowFrame(QsoWireColumns, Row(3));
+      at := Length(FStream) - Length(frame);
+      for i := at + 4 to High(FStream) do
+         begin
+         if (FStream[i] = Ord('K')) and (FStream[i + 1] = Ord('3')) then
+            begin
+            FStream[i + 1] := Ord('4');
+            Break;
+            end;
+         end;
+      FSendOnly := -1;
+      FChunks := nil;
+      port := StartServer;
+      try
+         CheckFalse(FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('TR4WSERVER'),
+                                   image, why), 'the download fails');
+      finally
+         StopServer;
+      end;
+      CheckTrue(Pos('row 3 of 3', why) > 0, 'naming the row: ' + why);
+      CheckEquals(2, image.Count, 'the two good rows before it were read');
+   finally
+      image.Free;
       FreeAndNil(FLock);
    end;
 end;
 
 procedure TNetCatchUpTests.Test_NothingListeningIsReportedByName;
 var
-   stream: TMemoryStream;
-   declared: Int64;
+   image: TServerLogImage;
    why: string;
    port: Word;
 begin
    BeginTest('a server that is not there is reported with its address');
    FLock := TCriticalSection.Create;
-   stream := TMemoryStream.Create;
+   image := TServerLogImage.Create;
    try
-      FPayload := PayloadOf(1);
-      FDeclared := Length(FPayload);
+      FStream := StreamOf(1, 'ARRLDXCW');
       FSendOnly := -1;
+      FChunks := nil;
       (* A port that was listening a moment ago and is not now. *)
       port := StartServer;
       StopServer;
 
       CheckFalse(FetchServerLog('127.0.0.1', port, ServerPasswordOnWire('TR4WSERVER'),
-                                stream, declared, why), 'the download fails');
+                                image, why), 'the download fails');
       CheckTrue(Pos('could not connect to 127.0.0.1:' + IntToStr(port), why) > 0,
                 'and names where it tried: ' + why);
    finally
-      stream.Free;
+      image.Free;
       FreeAndNil(FLock);
    end;
 end;
@@ -778,56 +745,57 @@ end;
 (* --------------------------------------------------------------------------- *)
 
 (* THE POINT OF INSERT-ONLY: the log keeps what it has. A row the server holds
-  under the same key, with a DIFFERENT callsign, is not applied; a row the
+  under the same guid, with a DIFFERENT callsign, is not applied; a row the
   station has not yet sent keeps its flags; and every absent row is added once.
-  (0, 0), another contest and a repeated pair are left, and counted. *)
+  A row with no guid and a repeated guid are left. *)
 procedure TNetCatchUpTests.Test_TheMergeAddsWhatIsAbsentAndNeverTouchesWhatIsPresent;
 var
    image: TServerLogImage;
-   added, skipped: integer;
-   why: string;
-   ours, other: TContestHandle;
-   row: ContestExchange;
-   sent, dirty: boolean;
+   added: integer;
+   why, heldGuid: string;
+   heldValues, differing, noGuid: TWireValues;
+   rec: ContestExchange;
 begin
    BeginTest('the merge adds what is absent and never touches what is present');
    OpenScratchStore;
    ForceDirectories(BackupFolder);
    NetBeginLinkSession;
    try
-      ours := Contest;
-      other := ContestHandleOf(CQWWCW);
       FeedHello(PEER, ContestId(Contest));
 
       AppendRow('K1HELD', 601, 1, True, False);
       AppendRow('K1MINE', 601, 9, False, True);
+      heldGuid := RowGuid(601, 1);
+      CheckTrue(heldGuid <> '', 'the held row has a guid');
 
-      image := NewImage([
-         Rec('K1DIFF', 601, 1, PeerLetter, ours),     (* held, but the server's copy differs *)
-         Rec('W1NEW', 601, 2, PeerLetter, ours),
-         Rec('W2NEW', 601, 3, PeerLetter, ours),
-         Rec('W3NEW', 601, 4, PeerLetter, ours),
-         Rec('N0ID', 0, 0, PeerLetter, ours),
-         Rec('AA1OTH', 601, 5, PeerLetter, other),
-         Rec('W1NEW', 601, 2, PeerLetter, ours)]);
+      differing := Row(1);
+      SetWireValue(differing, 'guid', heldGuid);
+      SetWireValue(differing, 'callsign', 'K1DIFF');
+      noGuid := Row(5);
+      SetWireValue(noGuid, 'guid', '');
+
+      image := NewImage([differing, Row(2), Row(3), Row(4), noGuid, Row(2)],
+                        ContestId(Contest));
       try
-         CheckTrue(MergeServerLog(image, BackupFolder, added, skipped, why),
-                   'the merge succeeds: ' + why);
+         CheckTrue(MergeServerLog(image, BackupFolder, added, why), 'the merge succeeds: ' + why);
          CheckEquals(3, added, 'three QSOs were added');
-         CheckEquals(1, skipped, 'one was for another contest');
          CheckEquals(5, LogRowCount, 'the log holds the two it had and the three');
 
-         CheckTrue(ReadRow(601, 1, row), 'the held row is still there');
-         CheckEquals('K1HELD', string(row.Callsign),
+         CheckTrue(RowWire(601, 1, heldValues), 'the held row is still there');
+         CheckEquals('K1HELD', WireValue(heldValues, 'callsign'),
                      'and is NOT OVERWRITTEN by the server''s differing copy');
-         CheckTrue(ReadFlags(601, 9, sent, dirty), 'the unsent row is still there');
-         CheckFalse(sent, 'it is still unsent');
-         CheckTrue(dirty, 'and still dirty: the resend will take it up');
+         CheckTrue(ReadRow(601, 9, rec), 'the unsent row is still there');
+         CheckFalse(rec.ceSendToServer, 'it is still unsent');
+         CheckTrue(rec.ceNeedSendToServerAE, 'and still dirty: the resend will take it up');
 
-         CheckTrue(ReadRow(601, 2, row) and ReadRow(601, 3, row) and ReadRow(601, 4, row),
-                   'the three new rows are in');
-         CheckFalse(ReadRow(601, 5, row), 'the other contest''s is not');
-         CheckFalse(ReadRow(0, 0, row), 'and neither is the one that names nothing');
+         CheckTrue((LogStoreRowIdByGuid(Guid(2)) <> 0) and (LogStoreRowIdByGuid(Guid(3)) <> 0) and
+                   (LogStoreRowIdByGuid(Guid(4)) <> 0), 'the three new rows are in, by their guids');
+         CheckEquals(1, integer(ScalarOfLogFile(FDb,
+                     'SELECT COUNT(*) FROM qso WHERE callsign = ''K2''')),
+                     'a guid twice in the server''s rows is added once');
+         CheckEquals(0, integer(ScalarOfLogFile(FDb,
+                     'SELECT COUNT(*) FROM qso WHERE callsign = ''K5''')),
+                     'and the row that names nothing is not added');
       finally
          image.Free;
       end;
@@ -836,52 +804,59 @@ begin
    end;
 end;
 
-(* WHAT AN ADDED ROW IS: this station's contest whatever byte it carried, sent
-  and clean so the resend never sends it back, a deleted QSO still deleted, and
-  our station marked ASSUMED -- the packet carries no station of its own. *)
-procedure TNetCatchUpTests.Test_WhatIsAddedIsSentCleanAssumedAndOfThisContest;
+(* WHAT AN ADDED ROW IS (NY4I ruling 2): the sender's row VERBATIM -- its guid, its
+  station facts and my_source and its sent exchange exactly as it sent them, a
+  deleted QSO still deleted -- with only this database's own columns set: sent
+  and clean, so the resend never sends it back. *)
+procedure TNetCatchUpTests.Test_AnAddedRowIsTheSendersVerbatimSentAndClean;
 var
    image: TServerLogImage;
-   added, skipped: integer;
+   added, unsent, dirtyCount, i: integer;
    why: string;
-   row, deleted: ContestExchange;
-   sent, dirty: boolean;
-   unsent, dirtyCount: integer;
+   sentRow, deleted, back: TWireValues;
+   rec: ContestExchange;
+   same: boolean;
 begin
-   BeginTest('an added row is sent, clean, assumed and of this contest');
+   BeginTest('an added row is the sender''s, verbatim, and sent and clean');
    OpenScratchStore;
    ForceDirectories(BackupFolder);
    NetBeginLinkSession;
    try
       FeedHello(PEER, ContestId(Contest));
 
-      (* The author is not here and its byte is OURS: accepted, and stamped. A
-        deleted QSO is a QSO the server still holds. *)
-      deleted := Rec('W9DEL', 611, 2, 'Z', Contest);
-      deleted.ceQSO_Deleted := True;
-      image := NewImage([
-         Rec('W1NEW', 611, 1, PeerLetter, Contest),
-         deleted]);
+      sentRow := Row(1, 'B');
+      SetWireValue(sentRow, 'rcvd_qth', 'CT');
+      SetWireValue(sentRow, 'my_state', 'MA');
+      SetWireValue(sentRow, 'serial_sent', '17');
+      deleted := Row(2, 'B');
+      SetWireValue(deleted, 'deleted', '1');
+      image := NewImage([sentRow, deleted], ContestId(Contest));
       try
-         CheckTrue(MergeServerLog(image, BackupFolder, added, skipped, why),
-                   'the merge succeeds: ' + why);
+         CheckTrue(MergeServerLog(image, BackupFolder, added, why), 'the merge succeeds: ' + why);
          CheckEquals(2, added, 'both were added');
 
-         CheckTrue(ReadFlags(611, 1, sent, dirty), 'the row is in');
-         CheckTrue(sent, 'sent: it came from the server');
-         CheckFalse(dirty, 'clean');
-         CheckTrue(ReadRow(611, 1, row), 'read back');
-         CheckTrue(row.ceContest = Contest, 'of this contest');
-         CheckEquals(PeerLetter, row.ceComputerID, 'its author is kept');
-         CheckTrue(ReadRow(611, 2, row), 'the deleted one is in');
-         CheckTrue(row.ceQSO_Deleted, 'and still deleted');
+         CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid(Guid(1)), back), 'read back');
+         same := Length(back) = Length(sentRow);
+         for i := 0 to High(sentRow) do
+            begin
+            if same and (back[i] <> sentRow[i]) then
+               begin
+               same := False;
+               CheckEquals(sentRow[i], back[i], 'column ' + QsoWireColumns.Name[i]);
+               end;
+            end;
+         CheckTrue(same, 'EVERY on-wire column is as the sender sent it');
+         CheckEquals('logged', WireValue(back, 'my_source'),
+                     'the sender''s my_source is kept (ruling 2 replaces ruling D)');
+         CheckEquals('W1AW', WireValue(back, 'my_call'), 'and its station');
+         CheckEquals('599 CT', WireValue(back, 'exchange_sent'), 'and the exchange it sent');
+         CheckEquals('B', WireValue(back, 'computer_id'), 'and who logged it');
 
-         CheckEquals(2, integer(ScalarOfLogFile(FDb,
-                     'SELECT COUNT(*) FROM qso WHERE my_source = ''assumed''')),
-                     'OUR STATION is marked assumed on both: the packet carries none');
-         CheckEquals(0, integer(ScalarOfLogFile(FDb,
-                     'SELECT COUNT(*) FROM qso WHERE exchange_sent IS NOT NULL')),
-                     'and no sent exchange is invented');
+         CheckTrue(LogStoreRepository.LoadQSO(LogStoreRowIdByGuid(Guid(1)), rec), 'the row reads');
+         CheckTrue(rec.ceSendToServer, 'sent: it came from the server');
+         CheckFalse(rec.ceNeedSendToServerAE, 'clean');
+         CheckTrue(LogStoreRepository.LoadQSO(LogStoreRowIdByGuid(Guid(2)), rec), 'the deleted one reads');
+         CheckTrue(rec.ceQSO_Deleted, 'and is still deleted');
 
          CheckTrue(LogStoreCountUnsentToServer(unsent, dirtyCount), 'the owed count reads');
          CheckEquals(0, unsent, 'NOTHING IS OWED to the server for them');
@@ -901,7 +876,7 @@ end;
 procedure TNetCatchUpTests.Test_AVerifiedBackupIsTakenFirst;
 var
    image: TServerLogImage;
-   added, skipped: integer;
+   added: integer;
    why, backup, periodic, seed: string;
    found: TSearchRec;
    stamps: integer;
@@ -923,11 +898,9 @@ begin
       Write(f, seed);
       CloseFile(f);
 
-      image := NewImage([
-         Rec('W1NEW', 621, 2, PeerLetter, Contest),
-         Rec('W2NEW', 621, 3, PeerLetter, Contest)]);
+      image := NewImage([Row(2), Row(3)], ContestId(Contest));
       try
-         CheckTrue(MergeServerLog(image, BackupFolder, added, skipped, why), 'merged: ' + why);
+         CheckTrue(MergeServerLog(image, BackupFolder, added, why), 'merged: ' + why);
          CheckEquals(2, added, 'two were added');
 
          backup := '';
@@ -996,7 +969,7 @@ end;
 procedure TNetCatchUpTests.Test_WithoutABackupNothingIsWritten;
 var
    image: TServerLogImage;
-   added, skipped: integer;
+   added: integer;
    why: string;
 begin
    BeginTest('without a backup nothing is written');
@@ -1006,10 +979,10 @@ begin
       FeedHello(PEER, ContestId(Contest));
       AppendRow('K1HELD', 631, 1, True, False);
 
-      image := NewImage([Rec('W1NEW', 631, 2, PeerLetter, Contest)]);
+      image := NewImage([Row(2)], ContestId(Contest));
       try
          CheckFalse(MergeServerLog(image, IncludeTrailingPathDelimiter(FDir) + 'no such folder',
-                                   added, skipped, why),
+                                   added, why),
                     'a folder that is not there is a failed backup');
          CheckTrue(Pos('backup', why) > 0, 'and the reason names it: ' + why);
          CheckEquals(0, added, 'nothing was added');
@@ -1026,7 +999,7 @@ end;
 procedure TNetCatchUpTests.Test_DoingItTwiceAddsNothingTheSecondTime;
 var
    image: TServerLogImage;
-   added, skipped: integer;
+   added: integer;
    why: string;
 begin
    BeginTest('doing it twice adds nothing the second time');
@@ -1036,17 +1009,14 @@ begin
    try
       FeedHello(PEER, ContestId(Contest));
 
-      image := NewImage([
-         Rec('W1NEW', 641, 1, PeerLetter, Contest),
-         Rec('W2NEW', 641, 2, PeerLetter, Contest)]);
+      image := NewImage([Row(1), Row(2)], ContestId(Contest));
       try
-         CheckTrue(MergeServerLog(image, BackupFolder, added, skipped, why), 'first: ' + why);
+         CheckTrue(MergeServerLog(image, BackupFolder, added, why), 'first: ' + why);
          CheckEquals(2, added, 'the first adds both');
          CheckEquals(2, LogRowCount, 'and the log holds them');
 
-         CheckTrue(MergeServerLog(image, BackupFolder, added, skipped, why), 'second: ' + why);
+         CheckTrue(MergeServerLog(image, BackupFolder, added, why), 'second: ' + why);
          CheckEquals(0, added, 'THE SECOND ADDS NOTHING');
-         CheckEquals(0, skipped, 'and has nothing to report about contests');
          CheckEquals(2, LogRowCount, 'the log is the same size');
       finally
          image.Free;
@@ -1056,17 +1026,17 @@ begin
    end;
 end;
 
-(* ALL OR NONE: one record the log refuses (a QSO needs a callsign) and not even
+(* ALL OR NONE: one row the log refuses (a number that is not digits) and not even
   the good ones around it are written. The store stays usable -- the fault is
-  the file's, not the log's. *)
-procedure TNetCatchUpTests.Test_ARecordThatWillNotGoInLeavesTheLogAsItWas;
+  the row's, not the log's. *)
+procedure TNetCatchUpTests.Test_ARowThatWillNotGoInLeavesTheLogAsItWas;
 var
    image: TServerLogImage;
-   added, skipped: integer;
+   added: integer;
    why: string;
-   row: ContestExchange;
+   bad: TWireValues;
 begin
-   BeginTest('a record the log refuses leaves the log as it was');
+   BeginTest('a row the log refuses leaves the log as it was');
    OpenScratchStore;
    ForceDirectories(BackupFolder);
    NetBeginLinkSession;
@@ -1074,17 +1044,15 @@ begin
       FeedHello(PEER, ContestId(Contest));
       AppendRow('K1HELD', 651, 1, True, False);
 
-      image := NewImage([
-         Rec('W1GOOD', 651, 2, PeerLetter, Contest),
-         Rec('', 651, 3, PeerLetter, Contest),
-         Rec('W3GOOD', 651, 4, PeerLetter, Contest)]);
+      bad := Row(3);
+      SetWireValue(bad, 'freq_tx_hz', '14.025');
+      image := NewImage([Row(2), bad, Row(4)], ContestId(Contest));
       try
-         CheckFalse(MergeServerLog(image, BackupFolder, added, skipped, why),
-                    'the merge fails');
+         CheckFalse(MergeServerLog(image, BackupFolder, added, why), 'the merge fails');
          CheckTrue(Pos('could not be written', why) > 0, 'and says why: ' + why);
          CheckEquals(0, added, 'nothing is counted as added');
          CheckEquals(1, LogRowCount, 'THE LOG IS AS IT WAS');
-         CheckFalse(ReadRow(651, 2, row), 'not even the good record before it');
+         CheckEquals(0, integer(LogStoreRowIdByGuid(Guid(2))), 'not even the good row before it');
          CheckTrue(LogStoreIsUsable, 'the store is still usable');
       finally
          image.Free;
@@ -1097,12 +1065,14 @@ end;
 (* THE QUESTION TAKES TIME. The operator is asked on the main thread, which keeps
   running the link; a QSO the others relay meanwhile is logged by the live arm.
   The merge plans against the log AS IT IS WHEN IT RUNS, so that QSO, which is
-  also in the server's file, is not added a second time. *)
-procedure TNetCatchUpTests.Test_ARecordTheLogReceivedLiveMeanwhileIsNotAddedTwice;
+  also in the server's rows, is not added a second time. *)
+procedure TNetCatchUpTests.Test_ARowTheLogReceivedLiveMeanwhileIsNotAddedTwice;
 var
    image: TServerLogImage;
-   added, skipped, missing: integer;
+   added, missing: integer;
    why: string;
+   rowId: Int64;
+   save: TWireSave;
 begin
    BeginTest('a QSO logged live while the question was open is not added again');
    OpenScratchStore;
@@ -1111,16 +1081,16 @@ begin
    try
       FeedHello(PEER, ContestId(Contest));
 
-      image := NewImage([
-         Rec('W1NEW', 661, 1, PeerLetter, Contest),
-         Rec('W2NEW', 661, 2, PeerLetter, Contest)]);
+      image := NewImage([Row(1), Row(2)], ContestId(Contest));
       try
          CheckTrue(CountMissingFromServer(image, missing), 'the count is read');
          CheckEquals(2, missing, 'two are missing when the operator is asked');
 
-         AppendRow('W1NEW', 661, 1, True, False);   (* the live arm logged it *)
+         (* The live arm stores row 1 meanwhile. *)
+         CheckTrue(LogStoreSaveWireRow(Row(1), 661, 1, rowId, save), 'the live arm stored it');
+         CheckTrue(save = wsInserted, 'as a new row');
 
-         CheckTrue(MergeServerLog(image, BackupFolder, added, skipped, why), 'merged: ' + why);
+         CheckTrue(MergeServerLog(image, BackupFolder, added, why), 'merged: ' + why);
          CheckEquals(1, added, 'only the one still missing is added');
          CheckEquals(2, LogRowCount, 'and no QSO is in the log twice');
       finally
@@ -1134,7 +1104,7 @@ end;
 procedure TNetCatchUpTests.Test_AnEmptyServerLogChangesNothing;
 var
    image: TServerLogImage;
-   added, skipped: integer;
+   added: integer;
    why: string;
 begin
    BeginTest('an empty server log changes nothing, and takes no backup');
@@ -1143,9 +1113,9 @@ begin
    NetBeginLinkSession;
    try
       AppendRow('K1HELD', 671, 1, True, False);
-      image := NewImage([]);
+      image := NewImage([], '');
       try
-         CheckTrue(MergeServerLog(image, BackupFolder, added, skipped, why), 'merged: ' + why);
+         CheckTrue(MergeServerLog(image, BackupFolder, added, why), 'merged: ' + why);
          CheckEquals(0, added, 'nothing added');
          CheckEquals(1, LogRowCount, 'the log is the same');
          CheckFalse(FileExists(LogStorePeriodicBackupPath(BackupFolder)),
@@ -1154,6 +1124,95 @@ begin
          image.Free;
       end;
    finally
+      CloseScratchStore;
+   end;
+end;
+
+(* A SERVER ON ANOTHER CONTEST IS REFUSED WHOLE, from the header, once (design
+  13.7 ruling 4): nothing is backed up, added or compared. *)
+procedure TNetCatchUpTests.Test_AServerOnAnotherContestIsRefusedWhole;
+var
+   image: TServerLogImage;
+   added: integer;
+   why: string;
+begin
+   BeginTest('a server on another contest is refused whole');
+   OpenScratchStore;
+   ForceDirectories(BackupFolder);
+   NetBeginLinkSession;
+   try
+      AppendRow('K1HELD', 681, 1, True, False);
+      image := NewImage([Row(2), Row(3)], 'CQWWCW');
+      try
+         CheckFalse(MergeServerLog(image, BackupFolder, added, why),
+                    'the merge is refused: our contest is ' + ContestId(Contest));
+         CheckTrue(Pos('(the server)', why) > 0, 'with the existing contest-mismatch notice: ' + why);
+         CheckEquals(0, added, 'nothing was added');
+         CheckEquals(1, LogRowCount, 'the log is as it was');
+         CheckFalse(FileExists(LogStorePeriodicBackupPath(BackupFolder)), 'and nothing was backed up');
+      finally
+         image.Free;
+      end;
+   finally
+      CloseScratchStore;
+   end;
+end;
+
+(* THE PUSH, END TO END over the scratch log and a stub writer: rows logged here
+  that the server lacks go as OFFLINE messages (stored, not relayed); a row logged
+  at ANOTHER station, and a row the server holds, never do. *)
+procedure TNetCatchUpTests.Test_ThePushOnlyEverSendsRowsLoggedHere;
+var
+   image: TServerLogImage;
+   plan: TPushPlan;
+   link: TStubLink;
+   posted: integer;
+   savedId: AnsiChar;
+begin
+   BeginTest('the push sends only rows logged here that the server lacks');
+   OpenScratchStore;
+   NetBeginLinkSession;
+   savedId := Settings.Computer.Id;
+   Settings.Computer.Id := 'A';
+   link := TStubLink.Create;
+   try
+      NetClient := TNetClient.CreateWithWriter(link.Write);
+      AttachNetClient(NetClient);
+      try
+         FeedHello(0, '');
+         FRowAuthor := 'A';
+         AppendRow('K1MINE1', 701, 1, True, False);
+         AppendRow('K1MINE2', 701, 2, True, False);
+         FRowAuthor := 'B';
+         AppendRow('K1THEIRS', 701, 3, True, False);
+         FRowAuthor := 'A';
+         AppendRow('K1HAVE', 701, 4, True, False);
+
+         (* The server holds the last of ours only. *)
+         image := NewImage([MakeWireRow(RowGuid(701, 4), 'K1HAVE', 'A')], ContestId(Contest));
+         try
+            CheckTrue(MakePushPlan(image, plan), 'the push is planned from the log');
+            try
+               CheckEquals(2, plan.Count, 'two rows: ours, and the server lacks them');
+               CheckEquals(0, plan.Verdicts(pvServerHas), 'the server''s row is skipped by the repository before it is read');
+               CheckTrue(RestockServer(plan, posted), 'the plan is posted');
+               CheckEquals(2, posted, 'both');
+            finally
+               plan.Free;
+            end;
+         finally
+            image.Free;
+         end;
+         CheckTrue(WaitWrites(link, 2), 'both were written');
+         CheckEquals('OK1MINE1,OK1MINE2', link.WrittenText,
+                     'as OFFLINE rows (stored, not relayed), ours and only ours');
+      finally
+         NetClient.Free;
+         NetClient := nil;
+      end;
+   finally
+      Settings.Computer.Id := savedId;
+      link.Free;
       CloseScratchStore;
    end;
 end;
@@ -1250,10 +1309,12 @@ begin
    CheckEquals(0, Pos('TR4W_LOG_FILENAME', sync), 'and the .TRW is not named');
    CheckEquals(0, Pos('LogStoreBackupPeriodic', sync), 'and the periodic backup slot is never used');
    CheckTrue(Pos('LogStoreBackupBeforeCatchUp', BodyOf(sync, 'function MergeServerLog(')) <
-             Pos('LogStoreAppendQSOs', BodyOf(sync, 'function MergeServerLog(')),
+             Pos('LogStoreSaveWireRows', BodyOf(sync, 'function MergeServerLog(')),
              'the backup is taken before the write');
    CheckTrue(Pos('LogStoreBackupBeforeCatchUp', BodyOf(sync, 'function MergeServerLog(')) > 0,
              'and there is one');
+   CheckEquals(0, Pos('NET_QSOINFO_ID', sync + net), 'no retired QSO id is named');
+   CheckEquals(0, Pos('uServerQsoIndex', sync + net), 'and no pair index');
 
    (* The window's second button adds. *)
    CheckTrue(Pos('AddServerLogToLog', BodyOf(form, 'procedure TfrmServerLog.HandleClose(')) > 0,
@@ -1268,28 +1329,32 @@ end;
 
 procedure TNetCatchUpTests.RunAllTests;
 begin
-   Test_AnImageIsWholeOrRefused;
-   Test_ALegacyContestIsJudgedByItsByteAndItsAuthor;
-   Test_AContestByIdIsJudgedByItsAuthorThenItsByte;
+   Test_AnImageHoldsTheRowsTheHeaderPromised;
+   Test_TheContestIsComparedOnceByIdString;
    Test_ThePlanAddsOnlyWhatTheLogLacks;
-   Test_ACaughtUpRecordIsOursSentAndClean;
+   Test_APushPlanSendsOnlyRowsLoggedHereThatTheServerLacks;
+   Test_TheDecisionOnConnectAsksAtMostOnce;
    Test_APlanOverALargeLogIsFast;
 
    Test_TheDownloadIsExactlyWhatTheServerSent;
+   Test_AOneMegabyteStreamSplitIntoOddChunksArrivesWhole;
    Test_TheDownloadSendsTenPasswordBytes;
-   Test_AServerThatStopsShortIsReportedAndTheImageRefusesIt;
-   Test_AnImpossibleSizeIsRefusedBeforeAnyByteIsRead;
+   Test_AServerThatStopsShortIsReported;
+   Test_AnImpossibleFrameOrCountIsRefused;
+   Test_ARowWithABadChecksumEndsTheDownload;
    Test_NothingListeningIsReportedByName;
 
    Test_TheMergeAddsWhatIsAbsentAndNeverTouchesWhatIsPresent;
-   Test_WhatIsAddedIsSentCleanAssumedAndOfThisContest;
+   Test_AnAddedRowIsTheSendersVerbatimSentAndClean;
    Test_AVerifiedBackupIsTakenFirst;
    Test_TheDatedNamesAreOneRuleWithAPurpose;
    Test_WithoutABackupNothingIsWritten;
    Test_DoingItTwiceAddsNothingTheSecondTime;
-   Test_ARecordThatWillNotGoInLeavesTheLogAsItWas;
-   Test_ARecordTheLogReceivedLiveMeanwhileIsNotAddedTwice;
+   Test_ARowThatWillNotGoInLeavesTheLogAsItWas;
+   Test_ARowTheLogReceivedLiveMeanwhileIsNotAddedTwice;
    Test_AnEmptyServerLogChangesNothing;
+   Test_AServerOnAnotherContestIsRefusedWhole;
+   Test_ThePushOnlyEverSendsRowsLoggedHere;
 
    Test_TheWiringIsWhatTheDesignSays;
 end;

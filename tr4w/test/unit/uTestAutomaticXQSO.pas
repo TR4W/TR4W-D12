@@ -956,7 +956,7 @@ begin
    (* RELEASE POSTS -- the packet, then the message -- and lets go first. *)
    part := Span('procedure LiveQSORelease(', 'procedure TLiveQSOLeg.FreeMessage;');
    CheckTrue(part <> '', 'Release is found');
-   w := Pos('SendRecordToServer(NET_QSOINFO_ID, aLeg.Packet)', part);
+   w := Pos('SendRecordToServer(NET_WIRE_QSO_ID, aLeg.Packet)', part);
    CheckTrue(w > 0, 'Release sends the packet Prepare copied');
    CheckTrue(w < Pos('QsoDispatcher.Post(msg);', part), 'then posts the message');
    CheckTrue(Pos('aLeg.Message := nil;', part) < Pos('QsoDispatcher.Post(msg);', part),
@@ -1283,7 +1283,7 @@ begin
    text := SourceText('uEditQSO.pas');
    s := Pos('StampOffContest(EditableQSORXData);', text);
    CheckTrue(s > 0, 'Edit QSO''s save stamps the rule');
-   CheckTrue(s < Pos('SendRecordToServer(NET_EDITEDQSO_ID, EditableQSORXData);', text),
+   CheckTrue(s < Pos('SendRecordToServer(NET_WIRE_EDIT_ID, EditableQSORXData);', text),
              'before the edit goes to the network');
    CheckTrue(s < Pos('LogStoreUpdateQSOAtIndex(IndexInMap, EditableQSORXData', text),
              'and before it is written');
@@ -1309,36 +1309,50 @@ begin
 end;
 
 (* ISSUE 347, PLAN COMMIT 6 (NY4I ruling 3, 2026-11-21): THE PEER ARM ACTS ON
-   LogContact'S ANSWER. It used to call LogContact, drop the Boolean and redraw
-   the windows as for a saved QSO. Now True redraws; False is reported through
-   ReportPeerQsoRefused (an Error line each time, one notice per link) and
-   queued nowhere -- catch-up and Synchronize are the retry. Read from the
-   source: LogContact cannot be driven headless. *)
+   THE LOG'S ANSWER. It used to call LogContact, drop the Boolean and redraw
+   the windows as for a saved QSO. PROTOCOL 5 (2026-11-22): the arm stores the
+   sender's row (AcceptPeerQso -> LogStoreSaveWireRow, which answers True only
+   after the COMMIT) and only then drives the sheets and redraws the windows
+   (ProcessStoredPeerRow). A False is reported through ReportPeerQsoRefused (an
+   Error line each time, one notice per link) and queued nowhere -- catch-up and
+   Synchronize are the retry. Read from the source: the arm needs a booted
+   contest session to run its second half. *)
 procedure TAutomaticXQSOTests.Test_APeersRefusedQSOIsReportedNotAssumedSaved;
 var
-   text, arm, report: string;
+   text, arm, report, process: string;
    p, e, w: integer;
 begin
    BeginTest('Test_APeersRefusedQSOIsReportedNotAssumedSaved');
    text := SourceText('uNet.pas');
-   p := Pos('NET_QSOINFO_ID:' + sLineBreak, text);
-   e := PosEx('NET_EDITEDQSO_ID:', text, p);
-   CheckTrue((p > 0) and (e > p), 'the NET_QSOINFO arm is found');
+   p := Pos('procedure AcceptPeerQso(', text);
+   e := PosEx('procedure AcceptPeerEdit(', text, p);
+   CheckTrue((p > 0) and (e > p), 'the new-QSO arm is found');
    arm := Copy(text, p, e - p);
-   w := Pos('if LogContact(NetQSOInfoPtr^.qiInformation, False) then', arm);
-   CheckTrue(w > 0, 'the arm asks LogContact''s answer');
-   CheckTrue(PosEx('UpdateWindows;', arm, w) > w, 'the windows are redrawn on True');
-   CheckTrue(PosEx('ReportPeerQsoRefused(NetQSOInfoPtr^.qiInformation);', arm, w) >
-             PosEx('UpdateWindows;', arm, w), 'and a False is reported, after that');
-   CheckEquals(0, Pos(sLineBreak + '                       LogContact(', arm),
-               'a bare LogContact whose result is dropped is gone');
+   w := Pos('if not LogStoreSaveWireRow(', arm);
+   CheckTrue(w > 0, 'the arm asks the log''s answer');
+   CheckTrue(PosEx('ReportPeerQsoRefused(aValues);', arm, w) > w,
+             'a False is reported, after that');
+   CheckTrue(PosEx('ProcessStoredPeerRow(rowId);', arm, w) >
+             PosEx('ReportPeerQsoRefused(aValues);', arm, w),
+             'and the sheets are driven only after the report branch has left');
+   CheckEquals(0, Pos('LogStoreSaveWireRow(', Copy(arm, PosEx('ProcessStoredPeerRow(rowId);', arm, w),
+                                                      Length(arm))),
+               'nothing is written after the sheets are driven');
+
+   p := Pos('procedure ProcessStoredPeerRow(', text);
+   e := PosEx('procedure AcceptPeerQso(', text, p);
+   CheckTrue((p > 0) and (e > p), 'the stored-row processing is found');
+   process := Copy(text, p, e - p);
+   w := Pos('if LogStoredPeerQSO(rec, facts) then', process);
+   CheckTrue(w > 0, 'the sheets are driven by the peer path that writes nothing');
+   CheckTrue(PosEx('UpdateWindows;', process, w) > w, 'and the windows are redrawn only on True');
 
    p := Pos('procedure ReportPeerQsoRefused(', text);
    e := PosEx('procedure ReportPeerVersion(', text, p);
    CheckTrue((p > 0) and (e > p), 'the report is found');
    report := Copy(text, p, e - p);
    CheckTrue(Pos('logger.Error(', report) > 0, 'it logs an Error line');
-   CheckTrue(Pos('ceQSOID1', report) > 0, 'naming the network key');
+   CheckTrue(Pos('guid', report) > 0, 'naming the row''s guid');
    CheckTrue(Pos('GPeerQsosRefused > 1', report) > 0, 'and tells the operator only once');
    CheckEquals(0, Pos('LogContact(', report), 'a refused QSO is never retried here');
    CheckTrue(Pos('GPeerQsosRefused := 0;', text) >
@@ -1365,13 +1379,13 @@ begin
    body := Copy(text, p, e - p);
    w := Pos('if tAddQSOToLog(CE) then', body);
    CheckTrue(w > 0, 'the log is written first and its answer is the condition');
-   CheckTrue(PosEx('SendRecordToServer(NET_QSOINFO_ID, CE)', body, w) > w,
+   CheckTrue(PosEx('SendRecordToServer(NET_WIRE_QSO_ID, CE)', body, w) > w,
              'the packet is sent after it, inside that branch');
    CheckEquals(0, PosEx('SendRecordToServer(', body,
                         PosEx('SendRecordToServer(', body, w) + 1),
                'and there is no other send');
    CheckTrue(Pos('did NOT commit', body) >
-             PosEx('SendRecordToServer(NET_QSOINFO_ID, CE)', body, w),
+             PosEx('SendRecordToServer(NET_WIRE_QSO_ID, CE)', body, w),
              'a refusal is reported at Error, after the send branch');
    CheckTrue(Pos('Result := False;', body) > 0, 'a refused record answers False (no pacing)');
 end;

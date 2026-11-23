@@ -1088,7 +1088,7 @@ begin
      end;
 
   (* THE SERVER HEARS OF THE EDIT ONLY ONCE IT IS IN THE LOG (issue 349). *)
-  SendRecordToServer(NET_EDITEDQSO_ID, EditableQSORXData);
+  SendRecordToServer(NET_WIRE_EDIT_ID, EditableQSORXData);
 
   (* THE LOG EDIT WINDOW REFRESHES ITSELF NOW.
 
@@ -1163,7 +1163,7 @@ begin
          PostQsoEvent(qmEdited, rec, facts, sent, secondKey,
                       UDPBroadcaster.Enabled(usContact), True);
          end;
-      SendRecordToServer(NET_EDITEDQSO_ID, rec);
+      SendRecordToServer(NET_WIRE_EDIT_ID, rec);
       Inc(announced);
       end;
 

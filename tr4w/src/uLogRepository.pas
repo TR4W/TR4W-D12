@@ -207,6 +207,35 @@ type
       function RowId(aIndex: integer): Int64;
    end;
 
+   (* WHAT SaveWireRow DID WITH A ROW THAT ARRIVED ON THE WIRE. *)
+   TWireSave = (
+      wsInserted,       // new to this log: stored, verbatim, under the sender's guid
+      wsAlreadyHeld,    // this log already holds that guid: nothing was written
+      wsNoIdentity);    // the row has no guid: nothing was written, nothing can name it
+
+   (* A QUESTION ABOUT A ROW'S GUID, asked before the row is read: does the
+     caller already have it (the server's set, for a restock)? *)
+   TGuidTest = function(const aGuid: string): boolean of object;
+
+   TGuidArray = array of string;
+
+   (* ROWS READ AS WIRE VALUES, WITH THEIR ROW IDS -- what a resend or a restock
+     posts. The values are in QsoWireColumns' order. *)
+   TWireRows = class(TObject)
+   private
+      FRowIds: array of Int64;
+      FRows: array of TWireValues;
+      FOwed: array of boolean;
+   public
+      (* aOwed: the row still owes the server a QSO (sent_to_server = 0) or an
+        edit (server_dirty = 1): the resend sends it. *)
+      procedure Add(aRowId: Int64; const aValues: TWireValues; aOwed: boolean = False);
+      function Count: integer;
+      function RowId(aIndex: integer): Int64;
+      function Values(aIndex: integer): TWireValues;
+      function Owed(aIndex: integer): boolean;
+   end;
+
    (* A QSO'S NETWORK KEY: ceQSOID1 and ceQSOID2, which are session_id and
      session_seq. Wide enough for both Cardinals, so a stored value is never
      read back negative. *)
@@ -216,10 +245,6 @@ type
    end;
 
    TQsoSessionKeys = array of TQsoSessionKey;
-
-   (* A QUESTION ABOUT A NETWORK KEY, asked before a row is read: does the caller
-     already have the QSO with this (session_id, session_seq)? *)
-   TQsoKeyTest = function(aSessionId, aSessionSeq: Int64): boolean of object;
 
    (* CALLED AFTER EACH ROW AN APPEND BATCH INSERTS, INSIDE ITS TRANSACTION
      (issue 347/348, plan commit 1): the live append's durable external-logger
@@ -831,6 +856,51 @@ type
       function ReadWireValues(aRowId: Int64; out aValues: TWireValues;
                               out aNulStripped: integer): boolean;
 
+      (* THE WRITER FROM WIRE VALUES INTO A qso ROW (protocol 5, 2026-11-22; NY4I
+        ruling 2: a receiver stores the SENDER's facts verbatim).
+
+        SaveWireRow inserts every on-wire column exactly as it arrived, my_* and
+        my_source included, under the sender's guid -- the one identity every
+        station shares -- unless this log already holds that guid. The columns
+        come from QsoWireColumns (the one list), so a column added to the wire
+        cannot be missed here. aValues is in QsoWireColumns' order and was
+        already judged (checksum, canonical numbers) by TakeWireMessage.
+
+        THE LOCAL COLUMNS are this database's own and are set here, never read
+        from the wire: session_id / session_seq = the pair the caller minted (so
+        an edit this station later makes to the row can be sent: the resend and
+        the delivery ledger are keyed by it), sent_to_server = 1 (it came FROM
+        the server, never owed back), server_dirty = 0.
+
+        An empty text value is stored as '' for a NOT NULL column (guid,
+        qso_set_id, callsign, band, mode) and as NULL for the rest; an empty
+        number is NULL, except for the NOT NULL ones (qso_at, freq_tx_hz,
+        freq_rx_hz), which store 0. Does NOT commit; the caller decides.
+
+        UpdateWireRow replaces every on-wire column of the row holding that
+        guid (an EDIT is a complete snapshot) and leaves the local columns
+        alone. False when no row holds it. RowIdByGuid is 0 when none does. *)
+      function SaveWireRow(const aValues: TWireValues; aSessionId, aSessionSeq: Int64;
+                           out aRowId: Int64): TWireSave;
+      function UpdateWireRow(const aValues: TWireValues; out aRowId: Int64): boolean;
+      function RowIdByGuid(const aGuid: string): Int64;
+
+      (* The row whose network pair (session_id, session_seq) this is: the newest,
+        0 for none and for the pair (0, 0). *)
+      function RowIdBySessionIds(aSessionId, aSessionSeq: Int64): Int64;
+
+      (* EVERY GUID THE LOG HOLDS, in one read -- what the catch-up compares the
+        server's rows against. Only reads. *)
+      function CollectGuids: TGuidArray;
+
+      (* THE ROWS A RESTOCK MAY SEND: only rows LOGGED HERE (the wire computer_id
+        equals aComputerId -- NY4I ruling 3, so a row copied from a peer by an
+        older build, which carries a local guid, is never duplicated onto the
+        server), whose guid aServerHolds says the server lacks. Imports without
+        a guid are left out. Oldest first, as wire values. Only reads. *)
+      function CollectWireRowsForServer(aInto: TWireRows; const aComputerId: string;
+                                        aServerHolds: TGuidTest): integer;
+
       (* A RUN OF RECORDS IN LOG ORDER, starting at aFirstIndex, in ONE
         statement. Fills aRows from its low bound and returns how many were
         read -- fewer than requested at the end of the log.
@@ -871,24 +941,6 @@ type
       (* Does the log already hold a QSO with this network key? False for the
         pair (0, 0), which is every unnetworked row's. *)
       function HasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
-
-      (* EVERY NETWORK KEY THE LOG HOLDS, in one read -- what a catch-up from the
-        server asks instead of HasQSOBySessionIds once per server record (that
-        one scans the table: 1.7 ms a miss on 11,800 rows, so a few thousand
-        records would cost seconds on the main thread). The pair (0, 0) is left
-        out: it names no QSO. Only reads. *)
-      function CollectSessionKeys: TQsoSessionKeys;
-
-      (* THE ROWS A RESTOCK OF THE MULTI-OP SERVER MAY NEED TO SEND (2026-10-28):
-        every row, oldest first, EXCEPT those whose network key aServerHolds says
-        the server already has -- asked from the key columns before the rest of
-        the row is read, so a log the server already holds costs one pass over
-        two integers a row and not a parse of every record. Rows with the pair
-        (0, 0) (imports) and rows still owed are returned too: judging them is
-        the caller's (uNetCatchUp.TPushPlan), which counts them. Answers how many
-        rows were appended to aInto. Only reads. *)
-      function CollectForServerRestock(aInto: TLogRowUpdates;
-                                       aServerHolds: TQsoKeyTest): integer;
 
       (* WRITES THE TWO FLAGS AND NOTHING ELSE. aSent get sent_to_server = 1;
         aEditsDone get server_dirty = 0. Each is addressed by its network key,
@@ -1173,6 +1225,11 @@ function QsoWireTableProblem: AnsiString;
   exactly one more column, named id, is required at that position. *)
 procedure VerifyQsoColumns(aQuery: TSQLQuery; aTrailingRowId: boolean = False);
 
+(* THE TEXT TOKENS A ROW STORES, read back as the program's types. The wire's
+  display record (uGetServerLog.WireRowToDisplayRecord) reads the same tokens. *)
+function TokenToMode(const aToken: AnsiString): ModeType;
+function TokenToRecordKind(const aToken: AnsiString): LogRecordKind;
+
 implementation
 
 uses
@@ -1453,6 +1510,7 @@ end;
 
 function TokenToRecordKind(const aToken: AnsiString): LogRecordKind;
 begin
+   (* Exported (WireRowToDisplayRecord) -- see the interface. *)
    if aToken = 'QTCR' then
       begin
       Result := rkQTCR;
@@ -3978,75 +4036,6 @@ begin
    end;
 end;
 
-function TLogRepository.CollectSessionKeys: TQsoSessionKeys;
-var
-   q: TSQLQuery;
-   n: integer;
-begin
-   Result := nil;
-   n := 0;
-   q := NewReadQuery;
-   try
-      q.SQL.Text := 'SELECT session_id, session_seq FROM qso ' +
-                    'WHERE NOT (session_id = 0 AND session_seq = 0)';
-      q.Open;
-      try
-         while not q.EOF do
-            begin
-            if n = Length(Result) then
-               begin
-               SetLength(Result, (n * 2) + 256);
-               end;
-            Result[n].SessionId := q.Fields[0].AsLargeInt;
-            Result[n].SessionSeq := q.Fields[1].AsLargeInt;
-            Inc(n);
-            q.Next;
-            end;
-      finally
-         q.Close;
-      end;
-   finally
-      q.Free;
-   end;
-   SetLength(Result, n);
-end;
-
-function TLogRepository.CollectForServerRestock(aInto: TLogRowUpdates;
-                                                 aServerHolds: TQsoKeyTest): integer;
-var
-   q: TSQLQuery;
-   qso: ContestExchange;
-   sid, sseq: Int64;
-begin
-   Result := 0;
-   q := NewReadQuery;
-   try
-      q.SQL.Text := 'SELECT ' + QSO_COLUMNS + ', ' + ROW_ID_COLUMN +
-                    ' FROM qso ORDER BY id';
-      OpenQsoReader(q, True);
-      try
-         while not q.EOF do
-            begin
-            sid := q.Fields[Ord(qc_session_id)].AsLargeInt;
-            sseq := q.Fields[Ord(qc_session_seq)].AsLargeInt;
-            if ((sid = 0) and (sseq = 0)) or
-               (not Assigned(aServerHolds)) or
-               (not aServerHolds(sid, sseq)) then
-               begin
-               ReadRecord(q, qso);
-               aInto.Add(q.Fields[QSO_COLUMN_COUNT].AsLargeInt, qso);
-               Inc(Result);
-               end;
-            q.Next;
-            end;
-      finally
-         q.Close;
-      end;
-   finally
-      q.Free;
-   end;
-end;
-
 function TLogRepository.MarkServerProgress(const aSent,
                                            aEditsDone: TQsoSessionKeys): integer;
 var
@@ -4704,6 +4693,39 @@ begin
    Result := FRowIds[aIndex];
 end;
 
+procedure TWireRows.Add(aRowId: Int64; const aValues: TWireValues; aOwed: boolean);
+var
+   n: integer;
+begin
+   n := Length(FRows);
+   SetLength(FRows, n + 1);
+   SetLength(FRowIds, n + 1);
+   SetLength(FOwed, n + 1);
+   FRows[n] := aValues;
+   FRowIds[n] := aRowId;
+   FOwed[n] := aOwed;
+end;
+
+function TWireRows.Owed(aIndex: integer): boolean;
+begin
+   Result := FOwed[aIndex];
+end;
+
+function TWireRows.Count: integer;
+begin
+   Result := Length(FRows);
+end;
+
+function TWireRows.RowId(aIndex: integer): Int64;
+begin
+   Result := FRowIds[aIndex];
+end;
+
+function TWireRows.Values(aIndex: integer): TWireValues;
+begin
+   Result := FRows[aIndex];
+end;
+
 procedure TLogQsoAppends.Add(const aQso: ContestExchange);
 begin
    Add(aQso, NotCapturedMyFacts, '');
@@ -4927,6 +4949,349 @@ begin
    finally
       FSelectWire.Close;
    end;
+end;
+
+(* ------------------------------------------------ wire values INTO a row *)
+
+const
+   (* THE qso COLUMNS THAT ARE NOT NULL AND HAVE NO DEFAULT (or a default the
+     wire omits): an empty wire value for one of them is stored as '' / 0, never
+     NULL, or the insert fails on a constraint. Comma-delimited so a name is
+     matched whole. *)
+   WIRE_NOT_NULL_TEXT   = ',guid,qso_set_id,callsign,band,mode,record_kind,';
+   WIRE_NOT_NULL_NUMBER = ',qso_at,freq_tx_hz,freq_rx_hz,is_split,is_off_contest,';
+
+(* THE UTF-8 BYTES OF A STRING, AS AN AnsiString THAT HOLDS THEM RAW -- the
+  inverse of ReadWireValues' UTF8Decode(AnsiString(field.AsString)). Copied byte
+  by byte: assigning the UTF8String itself would be a code-page conversion. *)
+function RawUtf8Of(const aText: string): AnsiString;
+var
+   u: UTF8String;
+   i: integer;
+begin
+   u := UTF8Encode(aText);
+   SetLength(Result, Length(u));
+   for i := 1 to Length(u) do
+      begin
+      Result[i] := u[i];
+      end;
+end;
+
+procedure BindWireValue(aParam: TParam; aColumns: TWireColumns; aTag: integer;
+                        const aValue: string);
+var
+   notNull: boolean;
+   n: Int64;
+begin
+   if aColumns.Numeric[aTag] then
+      begin
+      notNull := Pos(',' + aColumns.Name[aTag] + ',', WIRE_NOT_NULL_NUMBER) > 0;
+      end
+   else
+      begin
+      notNull := Pos(',' + aColumns.Name[aTag] + ',', WIRE_NOT_NULL_TEXT) > 0;
+      end;
+
+   if aValue = '' then
+      begin
+      if not notNull then
+         begin
+         aParam.Clear;
+         end
+      else if aColumns.Numeric[aTag] then
+         begin
+         aParam.AsLargeInt := 0;
+         end
+      else
+         begin
+         aParam.AsString := '';
+         end;
+      Exit;
+      end;
+
+   if aColumns.Numeric[aTag] then
+      begin
+      if not TryCanonicalInt64(aValue, n) then
+         begin
+         raise ELogRepositoryError.CreateFmt('wire column %s is numeric and holds "%s"',
+            [aColumns.Name[aTag], aValue]);
+         end;
+      aParam.AsLargeInt := n;
+      end
+   else
+      begin
+      aParam.AsString := RawUtf8Of(aValue);
+      end;
+end;
+
+function WireGuidOf(const aValues: TWireValues): string;
+begin
+   Result := '';
+   if Length(aValues) = QsoWireColumns.Count then
+      begin
+      Result := aValues[QsoWireColumns.IndexOfName('guid')];
+      end;
+end;
+
+function TLogRepository.RowIdByGuid(const aGuid: string): Int64;
+var
+   q: TSQLQuery;
+begin
+   Result := 0;
+   if aGuid = '' then
+      begin
+      Exit;
+      end;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT id FROM qso WHERE guid = :guid ORDER BY id DESC LIMIT 1';
+      q.ParamByName('guid').AsString := RawUtf8Of(aGuid);
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsLargeInt;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.RowIdBySessionIds(aSessionId, aSessionSeq: Int64): Int64;
+var
+   q: TSQLQuery;
+begin
+   Result := 0;
+   if (aSessionId = 0) and (aSessionSeq = 0) then
+      begin
+      Exit;
+      end;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT id FROM qso WHERE session_id = :sid ' +
+                    'AND session_seq = :sseq ORDER BY id DESC LIMIT 1';
+      q.ParamByName('sid').AsLargeInt := aSessionId;
+      q.ParamByName('sseq').AsLargeInt := aSessionSeq;
+      q.Open;
+      if not q.EOF then
+         begin
+         Result := q.Fields[0].AsLargeInt;
+         end;
+      q.Close;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.SaveWireRow(const aValues: TWireValues;
+                                    aSessionId, aSessionSeq: Int64;
+                                    out aRowId: Int64): TWireSave;
+var
+   cols: TWireColumns;
+   q: TSQLQuery;
+   names, marks: AnsiString;
+   i: integer;
+begin
+   cols := QsoWireColumns;
+   aRowId := 0;
+   if Length(aValues) <> cols.Count then
+      begin
+      raise ELogRepositoryError.CreateFmt('a wire row has %d values, the wire has %d columns',
+         [Length(aValues), cols.Count]);
+      end;
+   if Length(GWireTableProblem) > 0 then
+      begin
+      raise ELogRepositoryError.Create(GWireTableProblem);
+      end;
+
+   if WireGuidOf(aValues) = '' then
+      begin
+      Result := wsNoIdentity;
+      Exit;
+      end;
+   aRowId := RowIdByGuid(WireGuidOf(aValues));
+   if aRowId <> 0 then
+      begin
+      Result := wsAlreadyHeld;
+      Exit;
+      end;
+
+   names := '';
+   marks := '';
+   for i := 0 to cols.Count - 1 do
+      begin
+      names := names + AnsiString(cols.Name[i] + ', ');
+      marks := marks + AnsiString(':w' + IntToStr(i) + ', ');
+      end;
+
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.UsePrimaryKeyAsKey := False;
+      q.SQL.Text := AnsiString('INSERT INTO qso (' + string(names) +
+                    'session_id, session_seq, sent_to_server, server_dirty) VALUES (' +
+                    string(marks) + ':sid, :sseq, 1, 0)');
+      for i := 0 to cols.Count - 1 do
+         begin
+         BindWireValue(q.ParamByName(AnsiString('w' + IntToStr(i))), cols, i, aValues[i]);
+         end;
+      q.ParamByName('sid').AsLargeInt := aSessionId;
+      q.ParamByName('sseq').AsLargeInt := aSessionSeq;
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+   InvalidateRecordCount;
+   aRowId := LastInsertedRowId;
+   Result := wsInserted;
+end;
+
+function TLogRepository.UpdateWireRow(const aValues: TWireValues;
+                                      out aRowId: Int64): boolean;
+var
+   cols: TWireColumns;
+   q: TSQLQuery;
+   sets: AnsiString;
+   i, guidTag: integer;
+begin
+   cols := QsoWireColumns;
+   Result := False;
+   aRowId := 0;
+   if Length(aValues) <> cols.Count then
+      begin
+      raise ELogRepositoryError.CreateFmt('a wire row has %d values, the wire has %d columns',
+         [Length(aValues), cols.Count]);
+      end;
+   aRowId := RowIdByGuid(WireGuidOf(aValues));
+   if aRowId = 0 then
+      begin
+      Exit;
+      end;
+
+   guidTag := cols.IndexOfName('guid');
+   sets := '';
+   for i := 0 to cols.Count - 1 do
+      begin
+      if i <> guidTag then
+         begin
+         sets := sets + AnsiString(cols.Name[i] + ' = :w' + IntToStr(i) + ', ');
+         end;
+      end;
+   (* A row's identity does not change when its contents do. *)
+   SetLength(sets, Length(sets) - 2);
+
+   q := TSQLQuery.Create(nil);
+   try
+      q.DataBase := FDatabase.Connection;
+      q.UsePrimaryKeyAsKey := False;
+      q.SQL.Text := AnsiString('UPDATE qso SET ' + string(sets) + ' WHERE id = :row_id');
+      for i := 0 to cols.Count - 1 do
+         begin
+         if i <> guidTag then
+            begin
+            BindWireValue(q.ParamByName(AnsiString('w' + IntToStr(i))), cols, i, aValues[i]);
+            end;
+         end;
+      q.ParamByName('row_id').AsLargeInt := aRowId;
+      q.ExecSQL;
+      Result := q.RowsAffected = 1;
+   finally
+      q.Free;
+   end;
+end;
+
+function TLogRepository.CollectGuids: TGuidArray;
+var
+   q: TSQLQuery;
+   n: integer;
+begin
+   Result := nil;
+   n := 0;
+   q := NewReadQuery;
+   try
+      q.SQL.Text := 'SELECT guid FROM qso ORDER BY id';
+      q.Open;
+      try
+         while not q.EOF do
+            begin
+            if n = Length(Result) then
+               begin
+               SetLength(Result, (n * 2) + 256);
+               end;
+            Result[n] := UTF8Decode(AnsiString(q.Fields[0].AsString));
+            Inc(n);
+            q.Next;
+            end;
+      finally
+         q.Close;
+      end;
+   finally
+      q.Free;
+   end;
+   SetLength(Result, n);
+end;
+
+function TLogRepository.CollectWireRowsForServer(aInto: TWireRows;
+                                                 const aComputerId: string;
+                                                 aServerHolds: TGuidTest): integer;
+var
+   q: TSQLQuery;
+   ids: array of Int64;
+   owed: array of boolean;
+   n, i: integer;
+   guid: string;
+   values: TWireValues;
+   stripped: integer;
+begin
+   Result := 0;
+   n := 0;
+   ids := nil;
+   q := NewReadQuery;
+   try
+      (* An IMPORT (both session columns 0) is never pushed, as it is never owed:
+        it names nothing on the wire the ledger can mark. A row received or
+        caught up is given a local pair, so this leaves it only by its
+        computer_id. *)
+      q.SQL.Text := 'SELECT id, guid, (sent_to_server = 0 OR server_dirty = 1) ' +
+                    'FROM qso WHERE computer_id = :cid AND ' +
+                    'NOT (COALESCE(session_id, 0) = 0 AND COALESCE(session_seq, 0) = 0) ' +
+                    'ORDER BY id';
+      q.ParamByName('cid').AsString := RawUtf8Of(aComputerId);
+      q.Open;
+      try
+         while not q.EOF do
+            begin
+            guid := UTF8Decode(AnsiString(q.Fields[1].AsString));
+            if (guid <> '') and
+               ((not Assigned(aServerHolds)) or (not aServerHolds(guid))) then
+               begin
+               if n = Length(ids) then
+                  begin
+                  SetLength(ids, (n * 2) + 256);
+                  SetLength(owed, Length(ids));
+                  end;
+               ids[n] := q.Fields[0].AsLargeInt;
+               owed[n] := q.Fields[2].AsLargeInt <> 0;
+               Inc(n);
+               end;
+            q.Next;
+            end;
+      finally
+         q.Close;
+      end;
+   finally
+      q.Free;
+   end;
+
+   (* The cursor is closed before the rows are read one by one. *)
+   for i := 0 to n - 1 do
+      begin
+      if ReadWireValues(ids[i], values, stripped) then
+         begin
+         aInto.Add(ids[i], values, owed[i]);
+         Inc(Result);
+         end;
+      end;
 end;
 
 initialization

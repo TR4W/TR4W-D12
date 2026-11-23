@@ -145,7 +145,10 @@ var
   // not live.  The transport now delivers whole lines and the decoder takes
   // one as a parameter (uDXClusterClient / uTelnet.ProcessDX).
   spotsBuffer                            : array[0..4096 * 5 - 1] of AnsiChar;
-  NetBuffer                             : array[1..4096] of AnsiChar;
+  (* 131072 = uNetFraming.NET_RECEIVE_BUFFER_SIZE (protocol 5): room for a whole
+    maximum wire frame (6 + 60000 bytes) beside the tail of the previous read.
+    TF cannot name uNetFraming; uTestNetFraming pins the two equal. *)
+  NetBuffer                             : array[1..131072] of AnsiChar;
   SYSERRORBUFFER                       : array[0..255] of AnsiChar;
 
 

@@ -54,6 +54,7 @@ interface
 uses
    VC,
    uLogRepository,   (* TLogRepository -- see LogStoreRepository *)
+   uWireQso,         (* TWireValues -- the wire rows below *)
    uQsoMyFacts,      (* TQsoMyFacts -- the editor's read and write below *)
    (* STATION_FACT_IN_RECORD -- where each station fact lives on a QSO (log
      schema 9): LogStoreCurrentMyFacts captures by it, and
@@ -249,7 +250,6 @@ type
    (* Re-exported, as TLogRowUpdates is, so a caller needs no uLogRepository. *)
    TQsoSessionKey = uLogRepository.TQsoSessionKey;
    TQsoSessionKeys = uLogRepository.TQsoSessionKeys;
-   TQsoKeyTest = uLogRepository.TQsoKeyTest;
 
 (* THE MULTI-OP SERVER'S BOOKKEEPING -- Phase 1, C5 (2026-10-27). See
   TLogRepository.CollectUnsentToServer for what "owed" means.
@@ -257,11 +257,6 @@ type
   LogStoreCollectUnsentToServer appends every row the server still has to hear
   about to aInto, oldest first. False when the log cannot be read; a READ, so a
   failure is reported and the store stays enabled. It leaves the log as it was.
-
-  LogStoreHasQSOBySessionIds: does the log already hold a QSO with this network
-  key? What makes a received QSO safe to receive twice. False for (0, 0) and,
-  reported, when the log cannot be read -- a station that cannot ask records the
-  QSO, because a duplicate is the lesser harm than a lost contact.
 
   LogStoreMarkServerProgress writes sent_to_server = 1 for aSent and
   server_dirty = 0 for aEditsDone, ONE TRANSACTION, FLAGS ONLY, and commits. A
@@ -272,20 +267,52 @@ type
   LogStoreCountUnsentToServer: how many networked rows the server has never been
   given, and how many it holds an older version of. *)
 function LogStoreCollectUnsentToServer(aInto: TLogRowUpdates): boolean;
-function LogStoreHasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
 
-(* EVERY NETWORK KEY IN THE LOG, for the catch-up from the server (Phase 1, C6).
-  False, with no keys, when the log cannot be read: a catch-up that cannot tell
-  what the log holds must not insert, or it would add what is already there. A
-  READ, so a failure is reported and the store stays enabled. *)
-function LogStoreCollectSessionKeys(out aKeys: TQsoSessionKeys): boolean;
+type
+   (* Re-exported, as TLogRowUpdates is, so a caller needs no uLogRepository. *)
+   TWireSave = uLogRepository.TWireSave;
+   TWireRows = uLogRepository.TWireRows;
+   TGuidArray = uLogRepository.TGuidArray;
+   TGuidTest = uLogRepository.TGuidTest;
 
-(* THE ROWS TO CONSIDER WHEN THE MULTI-OP SERVER IS RESTOCKED (2026-10-28), every
-  row except those aServerHolds says the server has. See
-  TLogRepository.CollectForServerRestock. False when the log cannot be read; a
-  READ, so a failure is reported and the store stays enabled. *)
-function LogStoreCollectForServerRestock(aInto: TLogRowUpdates;
-                                         aServerHolds: TQsoKeyTest): boolean;
+(* THE WIRE, FROM AND TO THE LOG (protocol 5, 2026-11-22). A row travels as the
+  qso table's on-wire columns (uQsoColumns.QsoWireColumns), identified by its
+  guid.
+
+  LogStoreReadWireValues reads a COMMITTED row's wire values by row id; False,
+  with no values, when there is no such row or the log cannot be read (reported).
+  LogStoreRowIdBySessionIds finds a row from a record's (ceQSOID1, ceQSOID2): 0
+  for none and for (0, 0). LogStoreNewestRowId and LogStoreRowIdAtIndex find the
+  rows the editors and Alt-Y address. A READ each; they never disable the store.
+
+  LogStoreSaveWireRow stores a row that arrived (TLogRepository.SaveWireRow) and
+  COMMITS it: True means committed, or nothing to write (aSave says which --
+  wsAlreadyHeld, wsNoIdentity). False when the log refused or failed (a failure
+  disables the store like every other write here) -- the caller reports it.
+  LogStoreUpdateWireRow replaces the on-wire columns of the row holding that
+  guid and commits; aFound False (and True returned) when no row holds it.
+
+  LogStoreCollectGuids and LogStoreCollectWireRowsForServer are the catch-up's
+  reads (TLogRepository). *)
+function LogStoreReadWireValues(aRowId: Int64; out aValues: TWireValues): boolean;
+function LogStoreRowIdBySessionIds(aSessionId, aSessionSeq: Int64): Int64;
+function LogStoreRowIdByGuid(const aGuid: string): Int64;
+function LogStoreNewestRowId: Int64;
+function LogStoreRowIdAtIndex(aRecordIndex: Int64): Int64;
+function LogStoreSaveWireRow(const aValues: TWireValues; aSessionId, aSessionSeq: Int64;
+                             out aRowId: Int64; out aSave: TWireSave): boolean;
+function LogStoreUpdateWireRow(const aValues: TWireValues; out aRowId: Int64;
+                               out aFound: boolean): boolean;
+(* ALL OR NONE, ONE TRANSACTION: every row of aRows stored (as SaveWireRow does,
+  its local pair from aKeys[i]) and committed, or none. aAdded counts the rows
+  actually inserted (a guid already held is skipped). The catch-up's write. *)
+function LogStoreSaveWireRows(const aRows: array of TWireValues;
+                              const aKeys: TQsoSessionKeys;
+                              out aAdded: integer): boolean;
+function LogStoreCollectGuids(out aGuids: TGuidArray): boolean;
+function LogStoreCollectWireRowsForServer(aInto: TWireRows; const aComputerId: string;
+                                          aServerHolds: TGuidTest): boolean;
+
 function LogStoreMarkServerProgress(const aSent, aEditsDone: TQsoSessionKeys): boolean;
 function LogStoreCountUnsentToServer(out aUnsent, aDirty: integer): boolean;
 
@@ -4303,11 +4330,13 @@ begin
    end;
 end;
 
-function LogStoreHasQSOBySessionIds(aSessionId, aSessionSeq: Int64): boolean;
+function LogStoreReadWireValues(aRowId: Int64; out aValues: TWireValues): boolean;
 var
    rebuilt: boolean;
+   stripped: integer;
 begin
    Result := False;
+   aValues := nil;
    if GDisabled then
       begin
       Exit;
@@ -4318,26 +4347,141 @@ begin
          begin
          Exit;
          end;
-      Result := GRepository.HasQSOBySessionIds(aSessionId, aSessionSeq);
+      Result := GRepository.ReadWireValues(aRowId, aValues, stripped);
+      if Result and (stripped > 0) and (logger <> nil) then
+         begin
+         logger.Warn('[LogStore] row %d: %d NUL byte(s) were left out of the text ' +
+                     'columns it sends', [aRowId, stripped]);
+         end;
    except
       on E: Exception do
          begin
          Result := False;
+         aValues := nil;
          if logger <> nil then
             begin
-            logger.Error('[LogStore] could not ask whether QSO %d/%d is in the ' +
-                         'log: %s', [aSessionId, aSessionSeq, E.Message]);
+            logger.Error('[LogStore] could not read row %d as wire values: %s',
+                         [aRowId, E.Message]);
             end;
          end;
    end;
 end;
 
-function LogStoreCollectSessionKeys(out aKeys: TQsoSessionKeys): boolean;
+function LogStoreRowIdBySessionIds(aSessionId, aSessionSeq: Int64): Int64;
+var
+   rebuilt: boolean;
+begin
+   Result := 0;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if EnsureOpen(rebuilt) then
+         begin
+         Result := GRepository.RowIdBySessionIds(aSessionId, aSessionSeq);
+         end;
+   except
+      on E: Exception do
+         begin
+         Result := 0;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not find QSO %d/%d: %s',
+                         [aSessionId, aSessionSeq, E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreRowIdByGuid(const aGuid: string): Int64;
+var
+   rebuilt: boolean;
+begin
+   Result := 0;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if EnsureOpen(rebuilt) then
+         begin
+         Result := GRepository.RowIdByGuid(aGuid);
+         end;
+   except
+      on E: Exception do
+         begin
+         Result := 0;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not ask whether guid %s is in the log: %s',
+                         [aGuid, E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreNewestRowId: Int64;
+var
+   rebuilt: boolean;
+begin
+   Result := 0;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if EnsureOpen(rebuilt) then
+         begin
+         Result := GRepository.NewestRowId;
+         end;
+   except
+      on E: Exception do
+         begin
+         Result := 0;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not find the newest row: %s', [E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreRowIdAtIndex(aRecordIndex: Int64): Int64;
+var
+   rebuilt: boolean;
+begin
+   Result := 0;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   try
+      if EnsureOpen(rebuilt) then
+         begin
+         Result := GRepository.RowIdAtIndex(aRecordIndex);
+         end;
+   except
+      on E: Exception do
+         begin
+         Result := 0;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] could not find the row at record %d: %s',
+                         [aRecordIndex, E.Message]);
+            end;
+         end;
+   end;
+end;
+
+function LogStoreSaveWireRow(const aValues: TWireValues; aSessionId, aSessionSeq: Int64;
+                             out aRowId: Int64; out aSave: TWireSave): boolean;
 var
    rebuilt: boolean;
 begin
    Result := False;
-   aKeys := nil;
+   aRowId := 0;
+   aSave := wsNoIdentity;
    if GDisabled then
       begin
       Exit;
@@ -4348,23 +4492,191 @@ begin
          begin
          Exit;
          end;
-      aKeys := GRepository.CollectSessionKeys;
+      if RefuseReadOnly('storing a QSO from the network') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
+      aSave := GRepository.SaveWireRow(aValues, aSessionId, aSessionSeq, aRowId);
+      if aSave = wsInserted then
+         begin
+         GRepository.Commit;
+         end
+      else
+         begin
+         RollBackAfterBusy;
+         end;
+      Result := True;
+   except
+      on E: ELogRepositoryError do
+         begin
+         (* THE ROW IS BAD, NOT THE LOG: a value the writer refuses. Rolled back,
+           reported, and the store stays open for the next QSO. *)
+         Result := False;
+         RollBackAfterBusy;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] a QSO from the network was refused: %s', [E.Message]);
+            end;
+         end;
+      on E: Exception do
+         begin
+         Result := False;
+         Disable('storing a QSO from the network', E);
+         end;
+   end;
+end;
+
+function LogStoreUpdateWireRow(const aValues: TWireValues; out aRowId: Int64;
+                               out aFound: boolean): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   aRowId := 0;
+   aFound := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      if RefuseReadOnly('rewriting a QSO from the network') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
+      aFound := GRepository.UpdateWireRow(aValues, aRowId);
+      if aFound then
+         begin
+         GRepository.Commit;
+         end
+      else
+         begin
+         RollBackAfterBusy;
+         end;
+      Result := True;
+   except
+      on E: ELogRepositoryError do
+         begin
+         Result := False;
+         aFound := False;
+         RollBackAfterBusy;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] an edit from the network was refused: %s', [E.Message]);
+            end;
+         end;
+      on E: Exception do
+         begin
+         Result := False;
+         aFound := False;
+         Disable('rewriting a QSO from the network', E);
+         end;
+   end;
+end;
+
+function LogStoreSaveWireRows(const aRows: array of TWireValues;
+                              const aKeys: TQsoSessionKeys;
+                              out aAdded: integer): boolean;
+var
+   rebuilt: boolean;
+   i: integer;
+   rowId: Int64;
+   save: TWireSave;
+begin
+   Result := False;
+   aAdded := 0;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+   if Length(aRows) = 0 then
+      begin
+      Result := True;
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      if RefuseReadOnly('adding the server''s QSOs') then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
+      for i := 0 to High(aRows) do
+         begin
+         save := GRepository.SaveWireRow(aRows[i], aKeys[i].SessionId,
+                                         aKeys[i].SessionSeq, rowId);
+         if save = wsInserted then
+            begin
+            Inc(aAdded);
+            end;
+         end;
+      GRepository.Commit;
+      Result := True;
+   except
+      on E: ELogRepositoryError do
+         begin
+         (* ALL OR NONE: one row the writer refuses and nothing is written. The
+           log is as it was and stays in use. *)
+         Result := False;
+         aAdded := 0;
+         RollBackAfterBusy;
+         if logger <> nil then
+            begin
+            logger.Error('[LogStore] the server''s QSOs were ROLLED BACK and none ' +
+                         'written; the log is as it was: %s', [E.Message]);
+            end;
+         end;
+      on E: Exception do
+         begin
+         Result := False;
+         aAdded := 0;
+         Disable('adding the server''s QSOs to the log', E);
+         end;
+   end;
+end;
+
+function LogStoreCollectGuids(out aGuids: TGuidArray): boolean;
+var
+   rebuilt: boolean;
+begin
+   Result := False;
+   aGuids := nil;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      aGuids := GRepository.CollectGuids;
       Result := True;
    except
       on E: Exception do
          begin
-         aKeys := nil;
+         aGuids := nil;
          if logger <> nil then
             begin
-            logger.Error('[LogStore] could not read the network keys of the ' +
-                         'log: %s', [E.Message]);
+            logger.Error('[LogStore] could not read the guids of the log: %s', [E.Message]);
             end;
          end;
    end;
 end;
 
-function LogStoreCollectForServerRestock(aInto: TLogRowUpdates;
-                                         aServerHolds: TQsoKeyTest): boolean;
+function LogStoreCollectWireRowsForServer(aInto: TWireRows; const aComputerId: string;
+                                          aServerHolds: TGuidTest): boolean;
 var
    rebuilt: boolean;
 begin
@@ -4379,7 +4691,7 @@ begin
          begin
          Exit;
          end;
-      GRepository.CollectForServerRestock(aInto, aServerHolds);
+      GRepository.CollectWireRowsForServer(aInto, aComputerId, aServerHolds);
       Result := True;
    except
       on E: Exception do

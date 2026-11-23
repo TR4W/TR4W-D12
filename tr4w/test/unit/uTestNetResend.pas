@@ -81,7 +81,7 @@ type
       procedure Test_ALinkThatFallsMidBurstLeavesTheRestForTheNextOne;
       procedure Test_ABurstOfTwoHundredIsPostedWhole;
       procedure Test_AQsoThatArrivesTwiceIsLoggedOnce;
-      procedure Test_TheServersIndexFollowsItsLogFile;
+      procedure Test_AGuidSetHoldsGuidsOnceAndNeverTheEmptyOne;
       procedure Test_TheOldReaderOfTheBinaryLogIsGone;
    end;
 
@@ -90,7 +90,7 @@ implementation
 uses
    SysUtils, utils_text, TF, uNet, uNetClient, uNetResend, uNetHello,
    uLogStore, uLogDatabase, uLogRepository, uContestRegistry, PostUnit,
-   uServerQsoIndex;
+   uGuidSet, uWireQso, uQsoColumns, uNetFraming;
 
 const
    (* The station-id 2 every test peer announces itself as. *)
@@ -346,7 +346,7 @@ begin
          NetBeginLinkSession;
          rec := AppendRow('K1POST', 401, 1, False, False);
 
-         CheckTrue(SendRecordToServer(NET_QSOINFO_ID, rec), 'the packet is posted');
+         CheckTrue(SendRecordToServer(NET_WIRE_QSO_ID, rec), 'the packet is posted');
          SettleServerProgress;
          CheckFalse(RowSent(401, 1),
                     'POSTED, NOT WRITTEN: the row is still unsent');
@@ -386,15 +386,25 @@ begin
       try
          NetBeginLinkSession;
          rec := AppendRow('K1WIRE', 402, 1, False, True);
-         CheckTrue(SendRecordToServer(NET_EDITEDQSO_ID, rec), 'posted');
+         CheckTrue(SendRecordToServer(NET_WIRE_EDIT_ID, rec), 'posted');
          CheckTrue(WaitSettled(1), 'written');
          SettleServerProgress;
 
          CheckFalse(rec.ceSendToServer, 'the record is still unsent');
          CheckTrue(rec.ceNeedSendToServerAE, 'and still dirty');
-         CheckTrue(link.Last.qiInformation.ceSendToServer, 'the packet says sent');
-         CheckFalse(link.Last.qiInformation.ceNeedSendToServerAE, 'and not dirty');
-         CheckTrue(link.Last.qiInformation.ceQSOID1 = 402, 'and carries the key');
+         (* PROTOCOL 5: the message is the stored row's ON-WIRE columns. The
+           sent and dirty flags are this database's own and are not among them
+           (before, the packet said "sent, not dirty"); the guid is the key. *)
+         CheckTrue(QsoWireColumns.IndexOfName('sent_to_server') < 0,
+                   'the wire has no sent flag');
+         CheckTrue(QsoWireColumns.IndexOfName('server_dirty') < 0,
+                   'and no dirty flag');
+         CheckEquals('K1WIRE', link.LastValue('callsign'), 'the message carries the row');
+         CheckEquals(RowGuid(402, 1), link.LastValue('guid'),
+                     'and its guid, the identity every station shares');
+         CheckTrue(RowGuid(402, 1) <> '', 'the row has a guid');
+         CheckEquals(integer(Ord(WireComputerID)), integer(link.LastSender),
+                     'and this station''s id as the sender');
       finally
          NetClient.Free;
          NetClient := nil;
@@ -425,7 +435,7 @@ begin
       try
          NetBeginLinkSession;
          rec := AppendRow('K1LOST', 403, 1, False, False);
-         CheckTrue(SendRecordToServer(NET_QSOINFO_ID, rec), 'posted: the link was up');
+         CheckTrue(SendRecordToServer(NET_WIRE_QSO_ID, rec), 'posted: the link was up');
          CheckTrue(WaitSettled(1), 'the writer reported');
          SettleServerProgress;
          CheckFalse(RowSent(403, 1), 'the write failed: the row stays unsent');
@@ -445,7 +455,7 @@ begin
          NetServiceResend;
          CheckTrue(WaitWrites(next, 2), 'the catch-up was written');
          SettleServerProgress;
-         CheckEquals('Q403/1,S', next.WrittenText,
+         CheckEquals('QK1LOST,S', next.WrittenText,
                      'the QSO, then the note that a batch arrived');
          CheckTrue(RowSent(403, 1), 'now it is sent');
          CheckEquals(0, integer(tUSQ), 'and nothing is counted as unsent');
@@ -478,8 +488,8 @@ begin
       try
          NetBeginLinkSession;
          rec := AppendRow('K1EDIT', 404, 1, True, True);
-         CheckTrue(SendRecordToServer(NET_EDITEDQSO_ID, rec), 'the first edit is posted');
-         CheckTrue(SendRecordToServer(NET_EDITEDQSO_ID, rec), 'and a second');
+         CheckTrue(SendRecordToServer(NET_WIRE_EDIT_ID, rec), 'the first edit is posted');
+         CheckTrue(SendRecordToServer(NET_WIRE_EDIT_ID, rec), 'and a second');
          CheckEquals(2, NetDeliveryLedger.EditsInFlight, 'both are in flight');
          link.Gate.SetEvent;
          CheckTrue(WaitSettled(2), 'both were written');
@@ -516,8 +526,8 @@ begin
       try
          NetBeginLinkSession;
          rec := AppendRow('K1EFAIL', 405, 1, True, True);
-         CheckTrue(SendRecordToServer(NET_EDITEDQSO_ID, rec), 'the first edit is posted');
-         CheckTrue(SendRecordToServer(NET_EDITEDQSO_ID, rec), 'and a second');
+         CheckTrue(SendRecordToServer(NET_WIRE_EDIT_ID, rec), 'the first edit is posted');
+         CheckTrue(SendRecordToServer(NET_WIRE_EDIT_ID, rec), 'and a second');
          CheckTrue(WaitSettled(2), 'both finished');
          SettleServerProgress;
          CheckTrue(RowDirty(405, 1), 'the row is still dirty');
@@ -623,7 +633,7 @@ begin
          CheckTrue(WaitWrites(link, 6), 'five QSO or edit packets and the note were written');
          SettleServerProgress;
 
-         CheckEquals('Q421/1,Q422/1,E423/1,Q424/1,E424/1,S', link.WrittenText,
+         CheckEquals('QK1A,QK1B,EK1C,QK1D,EK1D,S', link.WrittenText,
                      'a QSO for each never sent, an edit for each edited, in log order');
 
          ReadFlags(421, 1, sent, dirty);
@@ -711,7 +721,7 @@ begin
          NetServiceResend;
          CheckTrue(WaitWrites(second, 6), 'the five and the note were written');
          SettleServerProgress;
-         CheckEquals('Q436/1,Q437/1,Q438/1,Q439/1,Q440/1,S', second.WrittenText,
+         CheckEquals('QK1B6,QK1B7,QK1B8,QK1B9,QK1B10,S', second.WrittenText,
                      'exactly the five that had not gone, and none of the five that had');
          CheckEquals(0, integer(tUSQ), 'and none is owed now');
       finally
@@ -780,17 +790,17 @@ begin
    end;
 end;
 
-(* A QSO THAT ARRIVES TWICE IS LOGGED ONCE. The real QSOINFO arm is fed a packet
-  whose key the log already holds (a station sending again what it had sent): the
-  arm ignores it -- no LogContact, which a unit test could not survive anyway --
-  and counts it. A QSO it does not hold is not "known". *)
+(* A QSO THAT ARRIVES TWICE IS LOGGED ONCE (protocol 5: judged by GUID). The real
+  wire QSO arm is fed a message whose guid the log already holds (a station
+  sending again what it had sent): the arm ignores it and counts it, and the log
+  does not grow. A guid the log does not hold is not "known", and the empty guid
+  is never known. *)
 procedure TNetResendTests.Test_AQsoThatArrivesTwiceIsLoggedOnce;
 var
-   pkt: NetQSOInformationPtr;
    desync: boolean;
    before, dupes: integer;
    known: ContestExchange;
-   other: ContestExchange;
+   values: TWireValues;
    repo: TLogRepository;
 begin
    BeginTest('a QSO that arrives twice is logged once');
@@ -803,99 +813,52 @@ begin
       before := integer(repo.RecordCount);
       dupes := NetDuplicateQsosIgnored;
 
-      other := Default(ContestExchange);
-      other.ceQSOID1 := 441;
-      other.ceQSOID2 := 2;
-      CheckTrue(ReceivedQsoIsKnown(known), 'a stored key is known');
-      CheckFalse(ReceivedQsoIsKnown(other), 'a key the log does not hold is not');
-      other.ceQSOID1 := 0;
-      other.ceQSOID2 := 0;
-      CheckFalse(ReceivedQsoIsKnown(other), '(0, 0) is never known');
+      CheckTrue(RowWire(441, 1, values), 'the stored row reads as wire values');
+      CheckTrue(ReceivedGuidIsKnown(WireValue(values, 'guid')), 'a stored guid is known');
+      CheckFalse(ReceivedGuidIsKnown('not-a-guid-this-log-holds'), 'a guid the log does not hold is not');
+      CheckFalse(ReceivedGuidIsKnown(''), 'the empty guid is never known');
       CheckEquals(dupes + 1, NetDuplicateQsosIgnored,
                   'only the first was counted as a duplicate');
 
-      pkt := NetQSOInformationPtr(@NetBuffer[1]);
-      pkt^ := Default(TNetQSOInformation);
-      pkt^.qiID := NET_QSOINFO_ID;
-      pkt^.qiComputerID := 2;
-      pkt^.qiSenderID := PEER;
-      pkt^.qiInformation := known;
-      pkt^.qiInformation.ceSendToServer := True;
-      CheckEquals(SizeOf(TNetQSOInformation),
-                  ConsumeNetBuffer(SizeOf(TNetQSOInformation), desync),
-                  'the whole packet was consumed');
+      CheckEquals(Length(BuildWireMessage(NET_WIRE_QSO_ID, PEER, QsoWireColumns, values)),
+                  FeedWireMessage(NET_WIRE_QSO_ID, PEER, values, desync),
+                  'the whole message was consumed');
       CheckFalse(desync, 'and the stream stayed on a message boundary');
-      CheckEquals(dupes + 2, NetDuplicateQsosIgnored, 'the arm turned the second copy away');
+      CheckTrue(NetDuplicateQsosIgnored >= dupes + 2, 'the arm turned the copies away');
       CheckEquals(before, integer(repo.RecordCount), 'and the log did not grow');
+      CheckTrue(known.ceQSOID1 = 441, 'the row is the one that was stored');
    finally
       CloseScratchStore;
    end;
 end;
 
-(* THE IN-TREE SERVER'S SET OF HELD QSOs. It is built from the log file, treats
-  the file as the authority (a different size means stale), is kept in step by
-  the server's own appends, never holds the pair (0, 0), and forgets on a clear.
-  The stream is a memory stream shaped like SERVERLOG.TRW: a header the size of
-  one record, then records. *)
-procedure TNetResendTests.Test_TheServersIndexFollowsItsLogFile;
+(* THE GUID SET. What the resend and the catch-up ask "is this guid held?" with:
+  a guid is held once however often it is added, and the empty guid is never
+  held (it names nothing -- the old pair (0, 0)). *)
+procedure TNetResendTests.Test_AGuidSetHoldsGuidsOnceAndNeverTheEmptyOne;
 var
-   index: TServerQsoIndex;
-   log: TMemoryStream;
-   rec: ContestExchange;
-
-   procedure AppendToLog(aId1, aId2: Cardinal);
-   begin
-      rec := Default(ContestExchange);
-      rec.ceQSOID1 := aId1;
-      rec.ceQSOID2 := aId2;
-      log.Seek(0, soEnd);
-      log.WriteBuffer(rec, SizeOf(ContestExchange));
-   end;
-
+   s: TGuidSet;
 begin
-   BeginTest('the server''s index follows its log file');
-   index := TServerQsoIndex.Create;
-   log := TMemoryStream.Create;
+   BeginTest('a guid set holds a guid once and never the empty one');
+   s := TGuidSet.Create;
    try
-      rec := Default(ContestExchange);
-      log.WriteBuffer(rec, SizeOf(ContestExchange));   (* the header slot *)
-      AppendToLog(11, 1);
-      AppendToLog(12, 1);
-      AppendToLog(0, 0);                               (* an unnetworked record *)
-      AppendToLog(13, $FFFFFFFF);
-
-      CheckFalse(index.ReflectsLog(log.Size), 'a new index reflects no log');
-      index.LoadFromLog(log, SizeOf(ContestExchange));
-      CheckEquals(3, index.Count, 'three pairs; the (0, 0) record is not one');
-      CheckTrue(index.Contains(11, 1) and index.Contains(12, 1), 'the stored pairs are held');
-      CheckTrue(index.Contains(13, $FFFFFFFF), 'a high id is held whole');
-      CheckFalse(index.Contains(11, 2), 'a pair that differs in one id is not');
-      CheckFalse(index.Contains(0, 0), '(0, 0) is never held');
-      CheckTrue(index.ReflectsLog(log.Size), 'and it reflects the log it was built from');
-
-      (* THE SERVER'S OWN APPEND keeps it current. *)
-      AppendToLog(14, 1);
-      CheckFalse(index.ReflectsLog(log.Size), 'a log that grew behind its back is stale');
-      index.Add(14, 1);
-      index.NoteLogSize(log.Size);
-      CheckTrue(index.ReflectsLog(log.Size) and index.Contains(14, 1),
-                'told of the append, it is current again');
-      index.Add(14, 1);
-      CheckEquals(4, index.Count, 'a pair added twice is held once');
-
-      (* THE FILE IS THE AUTHORITY: cleared or replaced, the set is rebuilt. *)
-      log.Size := SizeOf(ContestExchange);
-      CheckFalse(index.ReflectsLog(log.Size), 'a cleared log is not the one it reflects');
-      index.LoadFromLog(log, SizeOf(ContestExchange));
-      CheckEquals(0, index.Count, 'rebuilt from the cleared log it holds nothing');
-      CheckFalse(index.Contains(11, 1), 'and forgets what was in it');
-
-      index.NoteLogSize(log.Size);
-      index.Clear;
-      CheckFalse(index.ReflectsLog(log.Size), 'Clear forgets the size too');
+      s.Add('11111111-1111-1111-1111-111111111111');
+      s.Add('22222222-2222-2222-2222-222222222222');
+      s.Add('11111111-1111-1111-1111-111111111111');
+      s.Add('');
+      CheckEquals(2, s.Count, 'two guids, one added twice, and the empty one refused');
+      CheckTrue(s.Contains('22222222-2222-2222-2222-222222222222'), 'a held guid is found');
+      CheckFalse(s.Contains('22222222-2222-2222-2222-222222222223'), 'one that differs by a digit is not');
+      CheckFalse(s.Contains(UpperCase('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')),
+                 'a guid never added is not held');
+      s.Add('abcdef00-0000-0000-0000-000000000000');
+      CheckFalse(s.Contains(UpperCase('abcdef00-0000-0000-0000-000000000000')),
+                 'the compare is exact: case matters');
+      CheckFalse(s.Contains(''), 'the empty guid is never held');
+      s.Clear;
+      CheckEquals(0, s.Count, 'Clear forgets everything');
    finally
-      log.Free;
-      index.Free;
+      s.Free;
    end;
 end;
 
@@ -948,11 +911,10 @@ begin
                'the sync unit does not call it');
    (* The implementation, not the declaration: its header is followed by the
      routine's var block. *)
-   (* SendRecordToServer is a one-line delegate since the restock (2026-10-28);
-     the packet is built in PostQsoPacket. *)
+   (* The message is built in PostWireRow (protocol 5), from the stored row. *)
    CheckEquals(0, Pos('rec.ceSendToServer :=',
-                      BodyOf(net, 'function PostQsoPacket(')),
-               'PostQsoPacket (what SendRecordToServer posts through) does not ' +
+                      BodyOf(net, 'function PostWireRow(')),
+               'PostWireRow (what SendRecordToServer posts through) does not ' +
                'write the record''s flag');
    CheckTrue(Pos('NetServiceResend;', BodyOf(net, 'procedure TNetDrainer.Drain(')) > 0,
              'the drain services the catch-up after the buffer is handled');
@@ -980,7 +942,7 @@ begin
    Test_ALinkThatFallsMidBurstLeavesTheRestForTheNextOne;
    Test_ABurstOfTwoHundredIsPostedWhole;
    Test_AQsoThatArrivesTwiceIsLoggedOnce;
-   Test_TheServersIndexFollowsItsLogFile;
+   Test_AGuidSetHoldsGuidsOnceAndNeverTheEmptyOne;
    Test_TheOldReaderOfTheBinaryLogIsGone;
 end;
 

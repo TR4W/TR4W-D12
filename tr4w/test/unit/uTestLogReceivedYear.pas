@@ -26,8 +26,13 @@
   and the range follows from it; exactly the contests whose zone slot holds a
   year state one (a registry walk); the parser, Edit QSO's save and the ADIF
   import ask the kind; the readers read the field; the v7 re-carry of a
-  schema-6 log; and a QSO received LIVE through the NET_QSOINFO arm stores
-  its year. *)
+  schema-6 log; and a QSO received LIVE through the wire QSO arm stores
+  its year.
+
+  PROTOCOL 5 (2026-11-22) moved the wire tests to rows: a message is the stored
+  row's on-wire columns, identified by its guid, and the receive arm stores the
+  sender's row verbatim. The last three tests of TNetReceivedYearTests are the
+  receive arm's own. *)
 unit uTestLogReceivedYear;
 
 {$I ..\..\src\tr4w.inc}
@@ -85,6 +90,9 @@ type
       procedure Test_AServerLogQSOStoresTheYear;
       procedure Test_AQSOReceivedLiveStoresTheYear;
       procedure Test_APeersSentYearTravelsAndIsStored;
+      procedure Test_APeersRowIsStoredWithItsGuidAndFactsVerbatim;
+      procedure Test_ABadRowIsDroppedAndTheLinkIsKept;
+      procedure Test_APeersEditReplacesTheRowAndAnUnheldEditIsStoredAsNew;
    public
       procedure RunAllTests; override;
    end;
@@ -117,6 +125,7 @@ uses
    uTestEngineEntry,     (* LoadCountryFile *)
    uTestRegisteredContests, (* ContestsToWalk, HandleOf, ContestWho *)
    uCallsigns,           (* CallsignsList -- a fresh one for the live arm *)
+   uWireQso, uQsoColumns, uNetFraming, uQsoMyFacts, uSettingsModel,
    uTestMainFormHarness; (* EnsureTestMainForm -- the panels the live arm draws *)
 
 const
@@ -995,14 +1004,69 @@ end;
 (* TNetReceivedYearTests -- the wire, over the real uNet and a stub writer      *)
 (* --------------------------------------------------------------------------- *)
 
-(* THE QSO PACKET CARRIES THE YEAR: the record goes out as it is, its year in
-  the bytes that were sReserved (the packet is still 384 bytes). *)
+(* ONE QSO STORED THE WAY A QSO LOGGED HERE IS, with the received year on the
+  record and the year it SENT in the my_* tier (year_sent, schema 8): the row a
+  wire message is built from. Protocol 5: a message carries the STORED row, so a
+  year has to be in the row to travel. *)
+function StoreYearRow(const aCall: string; aId1, aId2: Cardinal;
+                      aRcvdKnown: boolean; aRcvdYear: Word;
+                      aSentKnown: boolean; aSentYear: Word): ContestExchange;
+var
+   appends: TLogQsoAppends;
+   facts: TQsoMyFacts;
+   failedIndex: integer;
+   failure: string;
+begin
+   Result := Default(ContestExchange);
+   Result.ceRecordKind := rkQSO;
+   Result.ceContest := Contest;
+   Result.ceComputerID := 'B';
+   Result.Callsign := ShortString(aCall);
+   Result.ceQSOID1 := aId1;
+   Result.ceQSOID2 := aId2;
+   Result.ceSendToServer := True;
+   Result.Band := Band20;
+   Result.Mode := CW;
+   Result.Frequency := 14025000;
+   Result.tSysTime.qtYear := 26;
+   Result.tSysTime.qtMonth := 6;
+   Result.tSysTime.qtDay := 1;
+   Result.tSysTime.qtHour := 12;
+   Result.tSysTime.qtMinute := aId2;
+   if aRcvdKnown then
+      begin
+      StoreLicenceYear(Result, aRcvdYear);
+      end;
+   facts := LogStoreCurrentMyFacts;
+   SetFactsYearSent(facts, aSentKnown, aSentYear);
+   appends := TLogQsoAppends.Create;
+   try
+      appends.Add(Result, facts, '');
+      LogStoreAppendQSOs(appends, failedIndex, failure);
+   finally
+      appends.Free;
+   end;
+end;
+
+(* A WIRE ROW FROM A PEER, ready to send or serve: its years set as given ('' is
+  none, '0' the year 00). *)
+function YearWireRow(const aGuid, aCall: string; const aRcvd, aSent: string): TWireValues;
+begin
+   Result := MakeWireRow(aGuid, aCall, 'B');
+   SetWireValue(Result, 'rcvd_year', aRcvd);
+   SetWireValue(Result, 'year_sent', aSent);
+   SetWireValue(Result, 'is_xqso', '1');
+end;
+
+(* THE MESSAGE CARRIES THE YEAR: the stored row goes out as its wire columns, the
+  received year in rcvd_year, and the year 00 is a year (the value '0', not an
+  omitted field). *)
 procedure TNetReceivedYearTests.Test_AQSOPacketCarriesTheYear;
 var
    link: TStubLink;
    rec: ContestExchange;
 begin
-   BeginTest('a QSO packet carries the received year, and the year 00');
+   BeginTest('a QSO message carries the received year, and the year 00');
    OpenScratchStore;
    link := TStubLink.Create;
    try
@@ -1010,20 +1074,20 @@ begin
       AttachNetClient(NetClient);
       try
          NetBeginLinkSession;
-         CheckEquals(384, SizeOf(TNetQSOInformation), 'the packet did not grow');
-         rec := AppendRow('S50YR', 811, 1, False, False);
-         rec.RcvdYear := 85;
-         rec.RcvdYearKnown := True;
-         CheckTrue(SendRecordToServer(NET_QSOINFO_ID, rec), 'posted');
+         rec := StoreYearRow('S50YR', 811, 1, True, 85, False, 0);
+         CheckTrue(SendRecordToServer(NET_WIRE_QSO_ID, rec), 'posted');
          CheckTrue(WaitWrites(link, 1), 'written');
-         CheckTrue(link.Last.qiInformation.RcvdYearKnown, 'the packet has a year');
-         CheckEquals(85, link.Last.qiInformation.RcvdYear, 'and it is 85');
+         CheckEquals('85', link.LastValue('rcvd_year'), 'the message has the year 85');
 
-         rec.RcvdYear := 0;
-         CheckTrue(SendRecordToServer(NET_EDITEDQSO_ID, rec), 'an edit is posted');
+         rec := StoreYearRow('S50Y0', 811, 2, True, 0, False, 0);
+         CheckTrue(SendRecordToServer(NET_WIRE_EDIT_ID, rec), 'an edit is posted');
          CheckTrue(WaitWrites(link, 2), 'and written');
-         CheckTrue(link.Last.qiInformation.RcvdYearKnown, 'the year 00 is a year');
-         CheckEquals(0, link.Last.qiInformation.RcvdYear, 'held as 0');
+         CheckEquals('0', link.LastValue('rcvd_year'), 'the year 00 is a year: held as 0');
+
+         rec := StoreYearRow('S50NY', 811, 3, False, 0, False, 0);
+         CheckTrue(SendRecordToServer(NET_WIRE_QSO_ID, rec), 'a QSO with none is posted');
+         CheckTrue(WaitWrites(link, 3), 'and written');
+         CheckEquals('', link.LastValue('rcvd_year'), 'and carries none');
          SettleServerProgress;
       finally
          NetClient.Free;
@@ -1035,40 +1099,18 @@ begin
    end;
 end;
 
-(* A QSO FROM THE SERVER'S LOG STORES THE YEAR IT CARRIES. The server stores
-  each QSO packet's record as it comes (SERVERLOG.TRW, 376 bytes a record), and
-  a station catching up adds the records its log lacks (uGetServerLog.
-  MergeServerLog): the year rides the record in and out of rcvd_year.
+(* A QSO FROM THE SERVER'S ROWS STORES THE YEAR IT CARRIES. A station catching up
+  adds the rows its log lacks (uGetServerLog.MergeServerLog), verbatim: the year
+  rides the row in and out of rcvd_year.
 
   THE LIVE RECEIVE ARM is Test_AQSOReceivedLiveStoresTheYear (stage 2), which
   also says why stage 1 could not run it. *)
 procedure TNetReceivedYearTests.Test_AServerLogQSOStoresTheYear;
 var
    image: TServerLogImage;
-   withYear, withoutYear, stored: ContestExchange;
-   added, skipped: integer;
+   stored: TWireValues;
+   added: integer;
    why, backups: string;
-
-   function ServerRecord(const aCall: string; aId2: Cardinal): ContestExchange;
-   begin
-      Result := Default(ContestExchange);
-      Result.ceRecordKind := rkQSO;
-      Result.ceContest := Contest;
-      Result.ceComputerID := 'B';      (* station 2, who announced our contest *)
-      Result.Callsign := ShortString(aCall);
-      Result.ceQSOID1 := 812;
-      Result.ceQSOID2 := aId2;
-      Result.ceSendToServer := True;
-      Result.Band := Band20;
-      Result.Mode := CW;
-      Result.Frequency := 14025000;
-      Result.tSysTime.qtYear := 26;
-      Result.tSysTime.qtMonth := 6;
-      Result.tSysTime.qtDay := 1;
-      Result.tSysTime.qtHour := 12;
-      Result.tSysTime.qtMinute := aId2;
-   end;
-
 begin
    BeginTest('a QSO caught up from the server''s log stores its received year');
    OpenScratchStore;
@@ -1077,108 +1119,62 @@ begin
    NetBeginLinkSession;
    try
       FeedHello(PEER, ContestId(Contest));
-      withYear := ServerRecord('S51YR', 1);
-      withYear.RcvdYear := 92;
-      withYear.RcvdYearKnown := True;
-      withoutYear := ServerRecord('S52NY', 2);
 
-      image := NewImage([withYear, withoutYear]);
+      image := NewImage([YearWireRow('00000000-0000-4000-8000-000000000001', 'S51YR', '92', ''),
+                         YearWireRow('00000000-0000-4000-8000-000000000002', 'S52NY', '', '')],
+                        ContestId(Contest));
       try
-         CheckTrue(MergeServerLog(image, backups, added, skipped, why),
-                   'the merge succeeds: ' + why);
+         CheckTrue(MergeServerLog(image, backups, added, why), 'the merge succeeds: ' + why);
          CheckEquals(2, added, 'both QSOs were added');
       finally
          image.Free;
       end;
 
-      CheckTrue(ReadRow(812, 1, stored), 'the first QSO is in the log');
-      CheckTrue(stored.RcvdYearKnown, 'with a year');
-      CheckEquals(92, stored.RcvdYear, 'the one the server held');
-      CheckTrue(ReadRow(812, 2, stored), 'the second QSO is in the log');
-      CheckFalse(stored.RcvdYearKnown, 'with none, as the server held it');
+      CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid('00000000-0000-4000-8000-000000000001'), stored),
+                'the first QSO is in the log');
+      CheckEquals('92', WireValue(stored, 'rcvd_year'), 'with the year the server held');
+      CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid('00000000-0000-4000-8000-000000000002'), stored),
+                'the second QSO is in the log');
+      CheckEquals('', WireValue(stored, 'rcvd_year'), 'with none, as the server held it');
    finally
       CloseScratchStore;
    end;
 end;
 
-(* A QSO RECEIVED LIVE STORES ITS YEAR -- the real NET_QSOINFO arm, fed
-  through NetBuffer: PeerRecordInOurContest, then LogContact(.., False), which
-  writes the record as it came (tAddQSOToLog), then UpdateWindows.
+(* A QSO RECEIVED LIVE STORES ITS YEAR -- the real wire QSO arm, fed through
+  NetBuffer: the sender's row is stored whole (guid, years, station facts), then
+  LogStoredPeerQSO drives the sheets and the display.
 
   STAGE 1 COULD NOT RUN THIS: the arm raised an access violation here and the
   test was replaced by the catch-up path. STAGE 2 FOUND WHY, by running each
-  step of the arm and of LogContact on its own (2026-11-12): LogContact
-  completed and the row was STORED, year and all; the fault was the display
-  -- UpdateWindows' DisplayTotalScore, DisplayNextQSONumber and
-  DisplayQSOsByOpMode, and LogContact's DisplayHour, each write a panel of
-  TR4WMainForm, which this binary never creates. In the program the form
-  exists before the link can deliver anything (uProgramMain: CreateMainWindow,
-  then NetLinkStartup; a received packet is parsed on the main thread through
-  Application.QueueAsyncCall), so it was a gap in the harness, not a defect in
-  the arm. The designed form is streamed for the test (uTestMainFormHarness)
-  and released after it, as uTestStatusAndNotice does.
+  step of the arm and of LogContact on its own (2026-11-12): the fault was the
+  display -- UpdateWindows' DisplayTotalScore, DisplayNextQSONumber and
+  DisplayQSOsByOpMode, and DisplayHour, each write a panel of TR4WMainForm, which
+  this binary never creates. In the program the form exists before the link can
+  deliver anything (uProgramMain: CreateMainWindow, then NetLinkStartup; a
+  received packet is parsed on the main thread through Application.
+  QueueAsyncCall), so it was a gap in the harness, not a defect in the arm. The
+  designed form is streamed for the test (uTestMainFormHarness) and released
+  after it, as uTestStatusAndNotice does.
 
-  THE PEER'S QSOs ARE X-QSOs, so LogContact keeps them off the session's
+  THE PEER'S QSOs ARE X-QSOs (is_xqso), so the sheets keep them off the session's
   totals, sheets and score view -- state this binary shares with every later
-  suite -- while the path that STORES the record is the same. The call list
-  the arm writes the remembered exchange to is a fresh one, put back after.
-  The year rides the record whatever the session's contest (ARRL DX CW here):
-  the arm neither parses nor rewrites the exchange. *)
+  suite -- while the path that STORES the row is the same. The call list the arm
+  writes the remembered exchange to is a fresh one, put back after. *)
 procedure TNetReceivedYearTests.Test_AQSOReceivedLiveStoresTheYear;
 var
-   pkt: NetQSOInformationPtr;
    desync: boolean;
-   stored: ContestExchange;
+   stored: TWireValues;
    savedList: TCallsignsList;
 
-   function PeerQSO(const aCall: string; aId2: Cardinal): ContestExchange;
+   procedure Receive(const aValues: TWireValues);
    begin
-      Result := Default(ContestExchange);
-      Result.ceRecordKind := rkQSO;
-      Result.ceContest := Contest;
-      Result.ceComputerID := 'B';
-      Result.Callsign := ShortString(aCall);
-      Result.ceQSOID1 := 813;
-      Result.ceQSOID2 := aId2;
-      Result.ceSendToServer := True;
-      Result.ceXQSO := True;
-      Result.Band := Band20;
-      Result.Mode := CW;
-      Result.ExtMode := eCW;
-      Result.Frequency := 14025000;
-      Result.RSTSent := 599;
-      Result.RSTReceived := 599;
-      Result.NumberSent := -1;
-      Result.NumberReceived := -1;
-      Result.Prefecture := 255;
-      Result.TenTenNum := 65535;
-      Result.Zone := DUMMYZONE;
-      Result.QTH.Zone := 255;
-      Result.tSysTime.qtYear := 26;
-      Result.tSysTime.qtMonth := 6;
-      Result.tSysTime.qtDay := 1;
-      Result.tSysTime.qtHour := 12;
-      Result.tSysTime.qtMinute := aId2;
+      FeedWireMessage(NET_WIRE_QSO_ID, PEER, aValues, desync);
+      CheckFalse(desync, WireValue(aValues, 'callsign') + ': the stream stayed on a message boundary');
    end;
 
-   procedure Receive(const aRec: ContestExchange);
-   begin
-      pkt := NetQSOInformationPtr(@NetBuffer[1]);
-      pkt^ := Default(TNetQSOInformation);
-      pkt^.qiID := NET_QSOINFO_ID;
-      pkt^.qiComputerID := 2;          (* not this station's id *)
-      pkt^.qiSenderID := PEER;
-      pkt^.qiInformation := aRec;
-      CheckEquals(SizeOf(TNetQSOInformation),
-                  ConsumeNetBuffer(SizeOf(TNetQSOInformation), desync),
-                  string(aRec.Callsign) + ': the whole packet was consumed');
-      CheckFalse(desync, string(aRec.Callsign) + ': the stream stayed on a message boundary');
-   end;
-
-var
-   withYear, yearZero, noYear: ContestExchange;
 begin
-   BeginTest('a QSO received live through the NET_QSOINFO arm stores its received year');
+   BeginTest('a QSO received live through the wire arm stores its received year');
    OpenScratchStore;
    EnsureTestMainForm;
    savedList := CallsignsList;
@@ -1187,24 +1183,19 @@ begin
    try
       FeedHello(PEER, ContestId(Contest));
 
-      withYear := PeerQSO('S53YR', 1);
-      StoreLicenceYear(withYear, 85);
-      yearZero := PeerQSO('S54YR', 2);
-      StoreLicenceYear(yearZero, 0);
-      noYear := PeerQSO('S55NY', 3);
+      Receive(YearWireRow('00000000-0000-4000-8000-0000000000a1', 'S53YR', '85', ''));
+      Receive(YearWireRow('00000000-0000-4000-8000-0000000000a2', 'S54YR', '0', ''));
+      Receive(YearWireRow('00000000-0000-4000-8000-0000000000a3', 'S55NY', '', ''));
 
-      Receive(withYear);
-      Receive(yearZero);
-      Receive(noYear);
-
-      CheckTrue(ReadRow(813, 1, stored), 'the first QSO is in the log');
-      CheckTrue(stored.RcvdYearKnown, 'with a year');
-      CheckEquals(85, integer(stored.RcvdYear), 'the one the peer sent');
-      CheckTrue(ReadRow(813, 2, stored), 'the second QSO is in the log');
-      CheckTrue(stored.RcvdYearKnown, 'the year 00 is a year');
-      CheckEquals(0, integer(stored.RcvdYear), 'held as 0');
-      CheckTrue(ReadRow(813, 3, stored), 'the third QSO is in the log');
-      CheckFalse(stored.RcvdYearKnown, 'with no year, as the peer sent it');
+      CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid('00000000-0000-4000-8000-0000000000a1'), stored),
+                'the first QSO is in the log');
+      CheckEquals('85', WireValue(stored, 'rcvd_year'), 'with the year the peer sent');
+      CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid('00000000-0000-4000-8000-0000000000a2'), stored),
+                'the second QSO is in the log');
+      CheckEquals('0', WireValue(stored, 'rcvd_year'), 'the year 00 is a year: held as 0');
+      CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid('00000000-0000-4000-8000-0000000000a3'), stored),
+                'the third QSO is in the log');
+      CheckEquals('', WireValue(stored, 'rcvd_year'), 'with no year, as the peer sent it');
    finally
       CallsignsList.Free;
       CallsignsList := savedList;
@@ -1213,51 +1204,26 @@ begin
    end;
 end;
 
-(* THE SENT YEAR TRAVELS (issue 300, protocol 4). Three links, in a contest that
-  sends a year (EUHFC):
+(* THE SENT YEAR TRAVELS (issue 300, protocol 4; protocol 5 carries it as the
+  year_sent column). Three links, in a contest that sends a year (EUHFC):
 
-    the PACKET    carries YearSent / YearSentKnown at offsets 328 / 327 of the
-                  record (inside the 384-byte packet, which did not grow)
-    the CATCH-UP  a peer's record in the server's log stores ITS year in
-                  year_sent -- 91, the year 00, and none for a record that
-                  carries none (an older server log) -- never ours
+    the MESSAGE   carries year_sent of the stored row
+    the CATCH-UP  a peer's row in the server's rows stores ITS year in year_sent
+                  -- 91, the year 00, and none for a row that carries none --
+                  never ours
     the RESEND    a STORED row read back carries the year it holds, so the
                   resend, the restock and an edit send the SENDER's year and
-                  not this station's
-
-  The live NET_QSOINFO arm reaches the store through CaptureMyFactsNow, which
-  uTestLogMyFacts.TestTheStoreRecordsTheYearOurQSOSent drives. *)
+                  not this station's *)
 procedure TNetReceivedYearTests.Test_APeersSentYearTravelsAndIsStored;
 var
    link: TStubLink;
    image: TServerLogImage;
    rec, stored: ContestExchange;
-   one, two, three: ContestExchange;
-   added, skipped: integer;
+   values: TWireValues;
+   added: integer;
    why, backups: string;
-
-   function PeerRecord(const aCall: string; aId2: Cardinal): ContestExchange;
-   begin
-      Result := Default(ContestExchange);
-      Result.ceRecordKind := rkQSO;
-      Result.ceContest := Contest;
-      Result.ceComputerID := 'B';      (* station 2, who announced our contest *)
-      Result.Callsign := ShortString(aCall);
-      Result.ceQSOID1 := 814;
-      Result.ceQSOID2 := aId2;
-      Result.ceSendToServer := True;
-      Result.Band := Band20;
-      Result.Mode := CW;
-      Result.Frequency := 14025000;
-      Result.tSysTime.qtYear := 26;
-      Result.tSysTime.qtMonth := 6;
-      Result.tSysTime.qtDay := 1;
-      Result.tSysTime.qtHour := 12;
-      Result.tSysTime.qtMinute := aId2;
-   end;
-
 begin
-   BeginTest('a peer''s sent year rides the packet, the catch-up and the resend');
+   BeginTest('a peer''s sent year rides the message, the catch-up and the resend');
    OpenScratchStore;
    Contest := ContestHandleOf(EUROPEANHFC);
    backups := IncludeTrailingPathDelimiter(FDir) + 'backup';
@@ -1270,47 +1236,41 @@ begin
          NetBeginLinkSession;
          FeedHello(PEER, ContestId(Contest));
 
-         (* THE PACKET *)
-         rec := PeerRecord('S56YS', 9);
-         StoreSentLicenceYear(rec, True, 77);
-         CheckEquals(327, PtrUInt(@rec.YearSentKnown) - PtrUInt(@rec), 'Known at 327');
-         CheckEquals(328, PtrUInt(@rec.YearSent) - PtrUInt(@rec), 'the year at 328');
-         CheckTrue(SendRecordToServer(NET_QSOINFO_ID, rec), 'posted');
+         (* THE MESSAGE *)
+         rec := StoreYearRow('S56YS', 814, 9, False, 0, True, 77);
+         CheckTrue(SendRecordToServer(NET_WIRE_QSO_ID, rec), 'posted');
          CheckTrue(WaitWrites(link, 1), 'written');
-         CheckTrue(link.Last.qiInformation.YearSentKnown, 'the packet says there is a year');
-         CheckEquals(77, integer(link.Last.qiInformation.YearSent), 'and it is 77');
+         CheckEquals('77', link.LastValue('year_sent'), 'the message says it sent 77');
 
          (* THE CATCH-UP *)
-         one := PeerRecord('S57YS', 1);
-         StoreSentLicenceYear(one, True, 91);
-         two := PeerRecord('S58YS', 2);
-         StoreSentLicenceYear(two, True, 0);
-         three := PeerRecord('S59NY', 3);
-         image := NewImage([one, two, three]);
+         image := NewImage([YearWireRow('00000000-0000-4000-8000-0000000000b1', 'S57YS', '', '91'),
+                            YearWireRow('00000000-0000-4000-8000-0000000000b2', 'S58YS', '', '0'),
+                            YearWireRow('00000000-0000-4000-8000-0000000000b3', 'S59NY', '', '')],
+                           ContestId(Contest));
          try
-            CheckTrue(MergeServerLog(image, backups, added, skipped, why),
-                      'the merge succeeds: ' + why);
+            CheckTrue(MergeServerLog(image, backups, added, why), 'the merge succeeds: ' + why);
             CheckEquals(3, added, 'all three were added');
          finally
             image.Free;
          end;
 
-         CheckTrue(ReadRow(814, 1, stored), 'the first is in the log');
-         CheckTrue(stored.YearSentKnown, 'it holds the year the peer sent');
-         CheckEquals(91, integer(stored.YearSent), 'the peer''s 91');
-         CheckTrue(ReadRow(814, 2, stored), 'the second is in the log');
-         CheckTrue(stored.YearSentKnown, 'the year 00 is a year');
-         CheckEquals(0, integer(stored.YearSent), 'held as 0');
-         CheckTrue(ReadRow(814, 3, stored), 'the third is in the log');
-         CheckFalse(stored.YearSentKnown, 'a record with none stores none');
+         CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid('00000000-0000-4000-8000-0000000000b1'), values),
+                   'the first is in the log');
+         CheckEquals('91', WireValue(values, 'year_sent'), 'it holds the peer''s 91');
+         CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid('00000000-0000-4000-8000-0000000000b2'), values),
+                   'the second is in the log');
+         CheckEquals('0', WireValue(values, 'year_sent'), 'the year 00 is a year: held as 0');
+         CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid('00000000-0000-4000-8000-0000000000b3'), values),
+                   'the third is in the log');
+         CheckEquals('', WireValue(values, 'year_sent'), 'a row with none stores none');
 
-         (* THE RESEND OF A STORED ROW carries the year it holds *)
-         CheckTrue(ReadRow(814, 1, stored), 'read back for the resend');
-         CheckTrue(SendRecordToServer(NET_EDITEDQSO_ID, stored), 'an edit is posted');
+         (* THE RESEND OF A STORED ROW carries the year it holds. The caught-up
+           row has a local pair; the record read back names it. *)
+         CheckTrue(LogStoreRepository.LoadQSO(LogStoreRowIdByGuid('00000000-0000-4000-8000-0000000000b1'), stored),
+                   'read back for the resend');
+         CheckTrue(SendRecordToServer(NET_WIRE_EDIT_ID, stored), 'an edit is posted');
          CheckTrue(WaitWrites(link, 2), 'and written');
-         CheckTrue(link.Last.qiInformation.YearSentKnown, 'the edit has the year');
-         CheckEquals(91, integer(link.Last.qiInformation.YearSent),
-                     'the peer''s, not this station''s');
+         CheckEquals('91', link.LastValue('year_sent'), 'the peer''s, not this station''s');
          SettleServerProgress;
       finally
          NetClient.Free;
@@ -1322,12 +1282,189 @@ begin
    end;
 end;
 
+(* THE RECEIVE ARM (protocol 5, NY4I ruling 2): a peer's new QSO is stored with
+  the SENDER's guid and every wire column verbatim -- my_* and my_source included
+  (this replaces ruling D for wire rows) -- a guid already held is ignored, and a
+  message carrying this station's own id is ignored. *)
+procedure TNetReceivedYearTests.Test_APeersRowIsStoredWithItsGuidAndFactsVerbatim;
+var
+   desync: boolean;
+   sent, stored: TWireValues;
+   savedList: TCallsignsList;
+   before, dupes, i: integer;
+   same: boolean;
+begin
+   BeginTest('a peer''s QSO is stored under its guid with its station facts verbatim; a repeat and an echo are ignored');
+   OpenScratchStore;
+   EnsureTestMainForm;
+   savedList := CallsignsList;
+   CallsignsList := TCallsignsList.Create;
+   NetBeginLinkSession;
+   try
+      FeedHello(PEER, ContestId(Contest));
+
+      sent := YearWireRow('00000000-0000-4000-8000-0000000000c1', 'S60AA', '', '');
+      SetWireValue(sent, 'my_call', 'W1AW');
+      SetWireValue(sent, 'my_source', 'logged');
+      SetWireValue(sent, 'my_grid', 'FN31');
+      SetWireValue(sent, 'my_state', 'CT');
+      SetWireValue(sent, 'exchange_sent', '599 CT');
+      SetWireValue(sent, 'operator_call', 'W1AW');
+
+      before := LogRowCount;
+      FeedWireMessage(NET_WIRE_QSO_ID, PEER, sent, desync);
+      CheckFalse(desync, 'the stream stayed on a message boundary');
+      CheckEquals(before + 1, LogRowCount, 'one row was added');
+
+      CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid(WireValue(sent, 'guid')), stored),
+                'it is stored under the SENDER''s guid');
+      same := Length(stored) = Length(sent);
+      for i := 0 to High(sent) do
+         begin
+         if same and (stored[i] <> sent[i]) then
+            begin
+            same := False;
+            CheckEquals(sent[i], stored[i], 'column ' + QsoWireColumns.Name[i]);
+            end;
+         end;
+      CheckTrue(same, 'EVERY on-wire column is as the sender sent it');
+      CheckEquals('logged', WireValue(stored, 'my_source'),
+                  'the sender''s my_source, not "assumed" (ruling 2 replaces ruling D)');
+      CheckEquals('W1AW', WireValue(stored, 'my_call'), 'the sender''s station, not ours');
+      CheckEquals('599 CT', WireValue(stored, 'exchange_sent'), 'and the exchange it sent');
+
+      (* A GUID ALREADY HELD IS IGNORED. *)
+      dupes := NetDuplicateQsosIgnored;
+      FeedWireMessage(NET_WIRE_QSO_ID, PEER, sent, desync);
+      CheckEquals(before + 1, LogRowCount, 'the second copy did not grow the log');
+      CheckEquals(dupes + 1, NetDuplicateQsosIgnored, 'and was counted');
+
+      (* A MESSAGE CARRYING THIS STATION'S OWN ID IS IGNORED. *)
+      SetWireValue(sent, 'guid', '00000000-0000-4000-8000-0000000000c2');
+      FeedWireMessage(NET_WIRE_QSO_ID, Byte(Ord(WireComputerID)), sent, desync);
+      CheckEquals(before + 1, LogRowCount, 'an echo of our own message stores nothing');
+   finally
+      CallsignsList.Free;
+      CallsignsList := savedList;
+      ReleaseTestMainForm;
+      CloseScratchStore;
+   end;
+end;
+
+(* A ROW THAT FAILS ITS CHECKSUM, DOES NOT PARSE OR HOLDS A NON-NUMBER IS REPORTED
+  AND DROPPED, AND THE LINK IS KEPT: the message after it is still taken. *)
+procedure TNetReceivedYearTests.Test_ABadRowIsDroppedAndTheLinkIsKept;
+var
+   desync: boolean;
+   good: TWireValues;
+   packet: TBytes;
+   i, before, consumed: integer;
+   savedList: TCallsignsList;
+begin
+   BeginTest('a QSO message with a bad checksum is dropped and the link is kept');
+   OpenScratchStore;
+   EnsureTestMainForm;
+   savedList := CallsignsList;
+   CallsignsList := TCallsignsList.Create;
+   NetBeginLinkSession;
+   try
+      FeedHello(PEER, ContestId(Contest));
+      before := LogRowCount;
+
+      (* A message whose JSON was altered after the checksum was made. *)
+      good := YearWireRow('00000000-0000-4000-8000-0000000000d1', 'S61AA', '', '');
+      packet := BuildWireMessage(NET_WIRE_QSO_ID, PEER, QsoWireColumns, good);
+      for i := NET_WIRE_HEADER_SIZE + 1 to High(packet) - 1 do
+         begin
+         if (packet[i] = Ord('S')) and (packet[i + 1] = Ord('6')) then
+            begin
+            packet[i + 1] := Ord('7');
+            Break;
+            end;
+         end;
+      for i := 0 to High(packet) do
+         begin
+         NetBuffer[i + 1] := AnsiChar(packet[i]);
+         end;
+      consumed := ConsumeNetBuffer(Length(packet), desync);
+      CheckEquals(Length(packet), consumed, 'the whole message was consumed');
+      CheckFalse(desync, 'the stream stayed on a message boundary: the link is kept');
+      CheckEquals(before, LogRowCount, 'and nothing was stored');
+      CheckEquals(0, integer(LogStoreRowIdByGuid(WireValue(good, 'guid'))), 'not under its guid either');
+
+      (* THE NEXT MESSAGE IS TAKEN. *)
+      SetWireValue(good, 'guid', '00000000-0000-4000-8000-0000000000d2');
+      FeedWireMessage(NET_WIRE_QSO_ID, PEER, good, desync);
+      CheckEquals(before + 1, LogRowCount, 'a good message after it is stored');
+   finally
+      CallsignsList.Free;
+      CallsignsList := savedList;
+      ReleaseTestMainForm;
+      CloseScratchStore;
+   end;
+end;
+
+(* AN EDIT REPLACES THE ROW'S WIRE COLUMNS (a complete snapshot: a field it omits
+  is its default), and an edit for a guid this log does not hold is STORED AS A
+  NEW QSO -- the contract was silent; an edit carries the whole row and the
+  insert is idempotent by guid, so a station that missed the original receives
+  the QSO's latest form. *)
+procedure TNetReceivedYearTests.Test_APeersEditReplacesTheRowAndAnUnheldEditIsStoredAsNew;
+var
+   desync: boolean;
+   row, edited, stored: TWireValues;
+   before: integer;
+   savedList: TCallsignsList;
+   savedAuto: boolean;
+begin
+   BeginTest('a peer''s edit replaces the row; an edit for an unheld guid is stored as new');
+   OpenScratchStore;
+   EnsureTestMainForm;
+   savedList := CallsignsList;
+   CallsignsList := TCallsignsList.Create;
+   savedAuto := Settings.Network.AllowAutoUpdate;
+   Settings.Network.AllowAutoUpdate := False;   (* no rescore of the scratch log *)
+   NetBeginLinkSession;
+   try
+      FeedHello(PEER, ContestId(Contest));
+
+      row := YearWireRow('00000000-0000-4000-8000-0000000000e1', 'S62AA', '85', '');
+      SetWireValue(row, 'rcvd_qth', 'CT');
+      FeedWireMessage(NET_WIRE_QSO_ID, PEER, row, desync);
+      before := LogRowCount;
+
+      edited := YearWireRow('00000000-0000-4000-8000-0000000000e1', 'S62AB', '', '');
+      FeedWireMessage(NET_WIRE_EDIT_ID, PEER, edited, desync);
+      CheckFalse(desync, 'the stream stayed on a message boundary');
+      CheckEquals(before, LogRowCount, 'the edit changed the row; it added none');
+      CheckTrue(LogStoreReadWireValues(LogStoreRowIdByGuid(WireValue(row, 'guid')), stored), 'the row is there');
+      CheckEquals('S62AB', WireValue(stored, 'callsign'), 'with the edited callsign');
+      CheckEquals('', WireValue(stored, 'rcvd_qth'), 'a field the edit omits is its default, not "unchanged"');
+      CheckEquals('', WireValue(stored, 'rcvd_year'), 'including the year');
+
+      (* AN EDIT FOR A ROW THIS LOG NEVER HAD. *)
+      edited := YearWireRow('00000000-0000-4000-8000-0000000000e2', 'S63AA', '', '');
+      FeedWireMessage(NET_WIRE_EDIT_ID, PEER, edited, desync);
+      CheckEquals(before + 1, LogRowCount, 'an edit for an unheld guid is stored as a new QSO');
+      CheckTrue(LogStoreRowIdByGuid(WireValue(edited, 'guid')) <> 0, 'under its guid');
+   finally
+      Settings.Network.AllowAutoUpdate := savedAuto;
+      CallsignsList.Free;
+      CallsignsList := savedList;
+      ReleaseTestMainForm;
+      CloseScratchStore;
+   end;
+end;
+
 procedure TNetReceivedYearTests.RunAllTests;
 begin
    Test_AQSOPacketCarriesTheYear;
    Test_AServerLogQSOStoresTheYear;
    Test_AQSOReceivedLiveStoresTheYear;
    Test_APeersSentYearTravelsAndIsStored;
+   Test_APeersRowIsStoredWithItsGuidAndFactsVerbatim;
+   Test_ABadRowIsDroppedAndTheLinkIsKept;
+   Test_APeersEditReplacesTheRowAndAnUnheldEditIsStoredAsNew;
 end;
 
 end.

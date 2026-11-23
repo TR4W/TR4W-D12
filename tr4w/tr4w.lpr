@@ -164,7 +164,7 @@ uses
   uNetLink in 'src\uNetLink.pas',
   uNetFraming in 'src\uNetFraming.pas',
   uNetResend in 'src\uNetResend.pas',
-  uServerQsoIndex in 'src\uServerQsoIndex.pas',
+  uGuidSet in 'src\uGuidSet.pas',
   uNetCatchUp in 'src\uNetCatchUp.pas',
   uNet in 'src\uNet.pas',
   uNetSendQueue in 'src\uNetSendQueue.pas',

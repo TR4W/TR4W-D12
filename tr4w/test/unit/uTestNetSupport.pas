@@ -36,7 +36,7 @@ unit uTestNetSupport;
 interface
 
 uses
-   SysUtils, Classes, SyncObjs, VC, uTR4WTestFramework, uNetCatchUp;
+   SysUtils, Classes, SyncObjs, VC, uTR4WTestFramework, uNetCatchUp, uWireQso;
 
 type
    TNetStoreTestCase = class(TTestCase)
@@ -51,8 +51,10 @@ type
         what a station's own QSO carries here, unless a test names another. *)
       FRowAuthor: AnsiChar;
 
-      (* A server log image: a header, then these records. Checked whole. *)
-      function NewImage(const aRecords: array of ContestExchange): TServerLogImage;
+      (* A server log image as the sync port sends it: the contest its header
+        names and these rows. Checked whole. *)
+      function NewImage(const aRows: array of TWireValues;
+                        const aContest: string = ''): TServerLogImage;
 
       (* A new, empty scratch log, open, with the contest set to ARRL DX CW and
         any earlier refusal forgotten. *)
@@ -63,6 +65,11 @@ type
         it, with the flags it is to start with. Returns the record. *)
       function AppendRow(const aCall: string; aId1, aId2: Cardinal;
                          aSent, aDirty: boolean): ContestExchange;
+
+      (* The wire values of the stored row with this local network pair, and its
+        guid ('' when there is no such row). *)
+      function RowWire(aId1, aId2: Cardinal; out aValues: TWireValues): boolean;
+      function RowGuid(aId1, aId2: Cardinal): string;
 
       (* The stored row with this network key. *)
       function ReadRow(aId1, aId2: Cardinal; out aRec: ContestExchange): boolean;
@@ -86,7 +93,8 @@ type
    private
       FLock: TCriticalSection;
       FWritten: TStringList;
-      FLast: TNetQSOInformation;
+      FLast: TWireValues;
+      FLastSender: Byte;
       FAttempts: integer;
    public
       (* The 1-based number of the write from which writes fail; 0 never. *)
@@ -97,12 +105,29 @@ type
       destructor Destroy; override;
       function Write(const aBytes: TBytes): boolean;
       function Attempts: integer;
-      (* One text per packet written: Q, E, O or S, then the QSO's key. *)
+      (* One text per packet written: Q, E, O or S, then (for a QSO) the row's
+        CALLSIGN -- a wire message carries no network pair. *)
       function WrittenText: string;
       function WrittenCount: integer;
       function CountOf(const aPrefix: string): integer;
-      function Last: TNetQSOInformation;
+      (* The last QSO message written, decoded, and its sender byte. *)
+      function Last: TWireValues;
+      function LastSender: Byte;
+      function LastValue(const aColumn: string): string;
    end;
+
+(* A WIRE ROW with every column at its default, then these set. aComputerId is the
+  letter of the station that logged it. *)
+function MakeWireRow(const aGuid, aCall, aComputerId: string): TWireValues;
+(* One column of a row, by name. *)
+function WireValue(const aValues: TWireValues; const aColumn: string): string;
+procedure SetWireValue(var aValues: TWireValues; const aColumn, aValue: string);
+
+(* A WIRE QSO MESSAGE THROUGH THE REAL RECEIVE ARM: builds the message (id,
+  length, sender byte, JSON), puts it in NetBuffer and consumes it. Returns the
+  bytes consumed; aDesync says the stream lost its framing. *)
+function FeedWireMessage(aId: Word; aSender: Byte; const aValues: TWireValues;
+                         out aDesync: boolean): integer;
 
 (* Waits (5 s at most) until the stub has been asked to write aCount packets of
   any kind. A QSO packet's outcome is reported before the next write begins, so
@@ -119,7 +144,46 @@ implementation
 
 uses
    sqldb, FileUtil, utils_text, TF, Version, uNet, uNetHello, uLogStore, uLogDatabase,
-   uLogRepository, uContestRegistry, PostUnit;
+   uLogRepository, uContestRegistry, PostUnit, uNetFraming, uQsoColumns;
+
+function WireValue(const aValues: TWireValues; const aColumn: string): string;
+begin
+   Result := aValues[QsoWireColumns.IndexOfName(aColumn)];
+end;
+
+procedure SetWireValue(var aValues: TWireValues; const aColumn, aValue: string);
+begin
+   aValues[QsoWireColumns.IndexOfName(aColumn)] := aValue;
+end;
+
+function MakeWireRow(const aGuid, aCall, aComputerId: string): TWireValues;
+begin
+   Result := QsoWireColumns.DefaultValues;
+   SetWireValue(Result, 'guid', aGuid);
+   SetWireValue(Result, 'callsign', aCall);
+   SetWireValue(Result, 'computer_id', aComputerId);
+   SetWireValue(Result, 'qso_set_id', aGuid);
+   SetWireValue(Result, 'record_kind', 'QSO');
+   SetWireValue(Result, 'qso_at', '1780317015');
+   SetWireValue(Result, 'freq_tx_hz', '14025000');
+   SetWireValue(Result, 'freq_rx_hz', '14025000');
+   SetWireValue(Result, 'band', '20m');
+   SetWireValue(Result, 'mode', 'CW');
+end;
+
+function FeedWireMessage(aId: Word; aSender: Byte; const aValues: TWireValues;
+                         out aDesync: boolean): integer;
+var
+   packet: TBytes;
+   i: integer;
+begin
+   packet := BuildWireMessage(aId, aSender, QsoWireColumns, aValues);
+   for i := 0 to High(packet) do
+      begin
+      NetBuffer[i + 1] := AnsiChar(packet[i]);
+      end;
+   Result := ConsumeNetBuffer(Length(packet), aDesync);
+end;
 
 constructor TStubLink.Create;
 begin
@@ -139,7 +203,9 @@ function TStubLink.Write(const aBytes: TBytes): boolean;
 var
    id: Word;
    kind: string;
-   pkt: NetQSOInformationPtr;
+   values: TWireValues;
+   sender: Byte;
+   reason: string;
 begin
    if Gate <> nil then
       begin
@@ -157,9 +223,9 @@ begin
 
       id := Word(aBytes[0]) or (Word(aBytes[1]) shl 8);
       case id of
-         NET_QSOINFO_ID:        kind := 'Q';
-         NET_EDITEDQSO_ID:      kind := 'E';
-         NET_OFFLINEQSO_ID:     kind := 'O';
+         NET_WIRE_QSO_ID:       kind := 'Q';
+         NET_WIRE_EDIT_ID:      kind := 'E';
+         NET_WIRE_OFFLINE_ID:   kind := 'O';
          NET_SERVERMESSAGE_ID:  kind := 'S';
       else
          kind := 'X';
@@ -167,10 +233,18 @@ begin
 
       if (kind = 'Q') or (kind = 'E') or (kind = 'O') then
          begin
-         pkt := NetQSOInformationPtr(@aBytes[0]);
-         FLast := pkt^;
-         FWritten.Add(kind + IntToStr(pkt^.qiInformation.ceQSOID1) + '/' +
-                      IntToStr(pkt^.qiInformation.ceQSOID2));
+         if TakeWireMessage(QsoWireColumns, Copy(aBytes, NET_WIRE_HEADER_SIZE,
+                            Length(aBytes) - NET_WIRE_HEADER_SIZE),
+                            sender, values, reason) = wtOk then
+            begin
+            FLast := values;
+            FLastSender := sender;
+            FWritten.Add(kind + WireValue(values, 'callsign'));
+            end
+         else
+            begin
+            FWritten.Add(kind + '?');
+            end;
          end
       else
          begin
@@ -230,7 +304,7 @@ begin
    end;
 end;
 
-function TStubLink.Last: TNetQSOInformation;
+function TStubLink.Last: TWireValues;
 begin
    FLock.Enter;
    try
@@ -238,6 +312,21 @@ begin
    finally
       FLock.Leave;
    end;
+end;
+
+function TStubLink.LastSender: Byte;
+begin
+   FLock.Enter;
+   try
+      Result := FLastSender;
+   finally
+      FLock.Leave;
+   end;
+end;
+
+function TStubLink.LastValue(const aColumn: string): string;
+begin
+   Result := WireValue(Last, aColumn);
 end;
 
 (* Waits (5 s at most) until the stub has been asked to write aCount packets of
@@ -355,20 +444,18 @@ begin
       end;
 end;
 
-function TNetStoreTestCase.NewImage(const aRecords: array of ContestExchange): TServerLogImage;
+function TNetStoreTestCase.NewImage(const aRows: array of TWireValues;
+                                     const aContest: string): TServerLogImage;
 var
-   header: TBytes;
    i: integer;
-   why: string;
 begin
    Result := TServerLogImage.Create;
-   SetLength(header, SizeOfTLogHeader);
-   Result.Data.WriteBuffer(header[0], SizeOfTLogHeader);
-   for i := Low(aRecords) to High(aRecords) do
+   Result.StartImage(aContest, Length(aRows));
+   for i := Low(aRows) to High(aRows) do
       begin
-      Result.Data.WriteBuffer(aRecords[i], SizeOf(ContestExchange));
+      Result.AddRow(aRows[i]);
       end;
-   CheckTrue(Result.Accept(Result.Data.Size, why), 'the image is whole: ' + why);
+   CheckEquals(Length(aRows), Result.Count, 'the image holds every row');
 end;
 
 function TNetStoreTestCase.AppendRow(const aCall: string; aId1, aId2: Cardinal;
@@ -393,6 +480,30 @@ begin
    Result.tSysTime.qtMinute := 30;
    Result.tSysTime.qtSecond := 15;
    CheckTrue(LogStoreAppendQSO(Result), 'row ' + aCall + ' is stored');
+end;
+
+function TNetStoreTestCase.RowWire(aId1, aId2: Cardinal;
+                                   out aValues: TWireValues): boolean;
+var
+   rowId: Int64;
+begin
+   rowId := LogStoreRowIdBySessionIds(aId1, aId2);
+   Result := (rowId <> 0) and LogStoreReadWireValues(rowId, aValues);
+   if not Result then
+      begin
+      aValues := nil;
+      end;
+end;
+
+function TNetStoreTestCase.RowGuid(aId1, aId2: Cardinal): string;
+var
+   values: TWireValues;
+begin
+   Result := '';
+   if RowWire(aId1, aId2, values) then
+      begin
+      Result := WireValue(values, 'guid');
+      end;
 end;
 
 function TNetStoreTestCase.ReadRow(aId1, aId2: Cardinal;

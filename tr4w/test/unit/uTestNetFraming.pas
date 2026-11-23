@@ -1000,7 +1000,7 @@ begin
       Check(not OutboundWireMessageIsWellFormed(damaged), 'a retired id');
       Check(not OutboundWireMessageIsWellFormed(Copy(msg, 0, 6)), 'a header with no payload');
       Check(OutboundPacketIsWellFormed(NET_WIRE_QSO_ID, Length(msg)), 'the id and length check passes a wire id');
-      Check(not OutboundPacketIsWellFormed(NET_QSOINFO_ID, 384), 'and refuses the retired fixed QSO');
+      Check(not OutboundPacketIsWellFormed(1040, 384), 'and refuses the retired fixed QSO');
    finally
       cols.Free;
    end;

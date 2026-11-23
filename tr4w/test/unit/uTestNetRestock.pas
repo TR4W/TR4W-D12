@@ -28,12 +28,15 @@
   converse, from the image the catch-up already downloads.
 
   THE PLAN, over a REAL SQLite log in a scratch directory (uGetServerLog.
-  MakePushPlan): NY4I's own case (83 sent rows, three imports, two owed rows,
-  an empty server) pushes exactly the 83 and counts the imports and the owed;
-  a server that holds them all gets none; one that holds some gets the rest in
-  log order; a QSO this station received from ANOTHER station is pushed too; a
-  second plan made after the push is empty; and a row the resend posted on this
-  link is counted as owed, not pushed again.
+  MakePushPlan; PROTOCOL 5: rows are wire rows keyed by GUID): NY4I's own case
+  (83 sent rows, three imports, two owed rows, an empty server) pushes exactly
+  the 83 and counts the owed (an import is never read); a server that holds them
+  all gets none; one that holds some gets the rest in log order; a QSO logged at
+  ANOTHER station is NEVER pushed from here (NY4I ruling 3, 2026-11-22: only rows
+  logged here, so a row an older build copied from a peer, which carries a local
+  guid, is not duplicated onto the server); a second plan made after the push is
+  empty; and a row the resend posted on this link is counted as owed, not pushed
+  again.
 
   THE DECISION (SyncOnConnect): one question for both directions, none when the
   setting is on, nothing at all when both sides are complete.
@@ -54,7 +57,7 @@ unit uTestNetRestock;
 interface
 
 uses
-   SysUtils, Classes, VC, uTR4WTestFramework, uTestNetSupport, uNetCatchUp;
+   SysUtils, Classes, VC, uTR4WTestFramework, uTestNetSupport, uNetCatchUp, uWireQso;
 
 type
    TNetRestockTests = class(TNetStoreTestCase)
@@ -64,6 +67,9 @@ type
    private
       (* NY4I's log: 83 networked rows already sent, three imports, two rows still
         owed. Server key of row n of the 83 is (7000, n). *)
+      FSavedStationId: AnsiChar;
+      procedure BeginStation;
+      procedure EndStation;
       procedure SeedTheEightyThreeLog;
       function ServerRec(aId1, aId2: Cardinal): ContestExchange;
       function MakePlan(aImage: TServerLogImage): TPushPlan;
@@ -71,16 +77,17 @@ type
       (* aCount networked rows (STATION_START, aFirst .. aFirst + aCount - 1), all
         sent and clean, in ONE transaction -- the way a long log is made. *)
       procedure SeedBulk(aFirst, aCount: integer);
-      (* A server image holding exactly those keys. *)
-      function BulkImage(aFirst, aCount: integer): TServerLogImage;
+      (* A server image holding the guids of the log's rows aSkip .. aSkip +
+        aCount - 1 (in storage order). *)
+      function ImageHolding(aSkip, aCount: integer): TServerLogImage;
 
       procedure Test_TheEightyThreeAreTheOnlyOnesPushed;
       procedure Test_AServerThatHoldsThemAllGetsNone;
       procedure Test_AServerThatHoldsSomeGetsOnlyTheRest;
-      procedure Test_AQsoReceivedFromAnotherStationIsPushedToo;
+      procedure Test_AQsoLoggedAtAnotherStationIsNeverPushed;
       procedure Test_ASecondPlanAfterThePushIsEmpty;
       procedure Test_ARowTheResendPostedOnThisLinkIsOwedNotPushed;
-      procedure Test_ADeletedQsoAndARepeatedPairAreHandled;
+      procedure Test_ADeletedQsoIsPushedLikeTheOthers;
       procedure Test_TheDecisionIsOneQuestionOrNone;
       procedure Test_AnUpToDateLogIsPlannedQuickly;
       procedure Test_APushOfFiveThousandIsFastAndSmall;
@@ -94,8 +101,8 @@ type
 implementation
 
 uses
-   PostUnit, uNet, uNetClient, uNetLink, uLogStore, uLogRepository, uQsoMyFacts,
-   uGetServerLog, uAppStrings, uServerLogForm;
+   PostUnit, uContestRegistry, uNet, uNetClient, uNetLink, uLogStore, uLogRepository, uQsoMyFacts,
+   uGetServerLog, uAppStrings, uServerLogForm, uSettingsModel;
 
 const
    (* The first half of the network key of every row of NY4I's log. *)
@@ -114,6 +121,8 @@ begin
    Result.ceQSOID1 := aId1;
    Result.ceQSOID2 := aId2;
    Result.ceSendToServer := True;
+   (* LOGGED HERE: the push only sends rows whose computer_id is this station's. *)
+   Result.ceComputerID := 'A';
    Result.Band := Band20;
    Result.Mode := CW;
    Result.Frequency := 14025000;
@@ -125,6 +134,20 @@ begin
    Result.tSysTime.qtSecond := 15;
 end;
 
+(* THIS STATION IS 'A' for the length of a test, and the rows AppendRow stores are
+  logged by it. *)
+procedure TNetRestockTests.BeginStation;
+begin
+   FSavedStationId := Settings.Computer.Id;
+   Settings.Computer.Id := 'A';
+   FRowAuthor := 'A';
+end;
+
+procedure TNetRestockTests.EndStation;
+begin
+   Settings.Computer.Id := FSavedStationId;
+end;
+
 procedure TNetRestockTests.SeedTheEightyThreeLog;
 var
    i: integer;
@@ -133,7 +156,8 @@ begin
       begin
       AppendRow('K' + IntToStr(i), STATION_START, i, True, False);
       end;
-   (* IMPORTS: no network identity. *)
+   (* IMPORTS: no network identity (both ids 0). They are never owed and never
+     pushed, whoever's computer id they carry. *)
    AppendRow('IMP1', 0, 0, False, False);
    AppendRow('IMP2', 0, 0, True, False);
    AppendRow('IMP3', 0, 0, False, False);
@@ -173,7 +197,7 @@ var
    failure: string;
 begin
    facts := LogStoreCurrentMyFacts;
-   facts.Source := mfsAssumed;
+   facts.Source := mfsLogged;
    appends := TLogQsoAppends.Create;
    try
       for i := aFirst to aFirst + aCount - 1 do
@@ -187,22 +211,21 @@ begin
    end;
 end;
 
-function TNetRestockTests.BulkImage(aFirst, aCount: integer): TServerLogImage;
+(* A server image holding the guids of the log's rows aSkip .. aSkip + aCount - 1,
+  in the order they were stored (what the server holds after those rows reached
+  it). *)
+function TNetRestockTests.ImageHolding(aSkip, aCount: integer): TServerLogImage;
 var
-   header: TBytes;
+   guids: TGuidArray;
    i: integer;
-   rec: ContestExchange;
-   why: string;
 begin
+   CheckTrue(LogStoreCollectGuids(guids), 'the log''s guids are read');
    Result := TServerLogImage.Create;
-   SetLength(header, SizeOfTLogHeader);
-   Result.Data.WriteBuffer(header[0], SizeOfTLogHeader);
-   for i := aFirst to aFirst + aCount - 1 do
+   Result.StartImage(ContestId(Contest), aCount);
+   for i := aSkip to aSkip + aCount - 1 do
       begin
-      rec := ServerRec(STATION_START, i);
-      Result.Data.WriteBuffer(rec, SizeOf(ContestExchange));
+      Result.AddRow(MakeWireRow(guids[i], 'S' + IntToStr(i), 'A'));
       end;
-   CheckTrue(Result.Accept(Result.Data.Size, why), 'the bulk image is whole: ' + why);
 end;
 
 (* --------------------------------------------------------------------------- *)
@@ -215,11 +238,11 @@ procedure TNetRestockTests.Test_TheEightyThreeAreTheOnlyOnesPushed;
 var
    image: TServerLogImage;
    plan: TPushPlan;
-   rec: ContestExchange;
    i: integer;
 begin
    BeginTest('an empty server, 83 sent rows, 3 imports and 2 owed: exactly the 83 are pushed');
    OpenScratchStore;
+   BeginStation;
    NetBeginLinkSession;
    try
       SeedTheEightyThreeLog;
@@ -232,15 +255,14 @@ begin
             CheckEquals(83, plan.Count, 'the 83 are pushed');
             for i := 0 to plan.Count - 1 do
                begin
-               rec := plan.Row(i);
-               CheckEquals(STATION_START, integer(rec.ceQSOID1), 'row ' + IntToStr(i) + ' is this station''s');
-               CheckEquals(i + 1, integer(rec.ceQSOID2), 'in log order');
+               CheckEquals('K' + IntToStr(i + 1), WireValue(plan.Row(i), 'callsign'),
+                           'row ' + IntToStr(i) + ' is this station''s, in log order');
                end;
-            CheckEquals(3, plan.Verdicts(pvNoIdentity), 'three imports are left out and counted');
+            CheckEquals(0, plan.Verdicts(pvNoIdentity),
+                        'the three imports are never read for the push (they are never owed)');
             CheckEquals(2, plan.Verdicts(pvOwed), 'two owed rows are left out and counted');
             CheckEquals(0, plan.Verdicts(pvRepeated), 'nothing repeated');
             CheckTrue(Pos('83 to send', PushSummary(plan)) = 1, 'the summary leads with the count: ' + PushSummary(plan));
-            CheckTrue(Pos('3 imported', PushSummary(plan)) > 0, 'and names the imports: ' + PushSummary(plan));
             CheckTrue(Pos('2 still owed', PushSummary(plan)) > 0, 'and the owed: ' + PushSummary(plan));
          finally
             plan.Free;
@@ -254,35 +276,30 @@ begin
       CheckTrue(RowSent(STATION_START, 1), 'and no flag was written');
       CheckFalse(RowSent(STATION_START, 901), 'the owed row is still owed');
    finally
+      EndStation;
       CloseScratchStore;
    end;
 end;
 
 procedure TNetRestockTests.Test_AServerThatHoldsThemAllGetsNone;
 var
-   held: array of ContestExchange;
    image: TServerLogImage;
    plan: TPushPlan;
-   i: integer;
 begin
    BeginTest('a server that already holds them all gets none (idempotence)');
    OpenScratchStore;
+   BeginStation;
    NetBeginLinkSession;
    try
       SeedTheEightyThreeLog;
-      SetLength(held, 83);
-      for i := 1 to 83 do
-         begin
-         held[i - 1] := ServerRec(STATION_START, i);
-         end;
-
-      image := NewImage(held);
+      image := ImageHolding(0, 88);
       try
          plan := MakePlan(image);
          try
             CheckEquals(0, plan.Count, 'nothing to send');
-            CheckEquals(3, plan.Verdicts(pvNoIdentity), 'the imports are still not judged sendable');
-            CheckEquals(2, plan.Verdicts(pvOwed), 'and the owed rows are still the resend''s');
+            CheckEquals(0, plan.Verdicts(pvSend),
+                        'nothing is judged sendable: the repository skips every row ' +
+                        'whose guid the server holds before it is read');
          finally
             plan.Free;
          end;
@@ -290,38 +307,29 @@ begin
          image.Free;
       end;
    finally
+      EndStation;
       CloseScratchStore;
    end;
 end;
 
 procedure TNetRestockTests.Test_AServerThatHoldsSomeGetsOnlyTheRest;
 var
-   held: array of ContestExchange;
    image: TServerLogImage;
    plan: TPushPlan;
-   rec: ContestExchange;
-   i: integer;
 begin
    BeginTest('a server that holds 30 of the 83 gets the other 53, in order');
    OpenScratchStore;
+   BeginStation;
    NetBeginLinkSession;
    try
       SeedTheEightyThreeLog;
-      SetLength(held, 30);
-      for i := 1 to 30 do
-         begin
-         held[i - 1] := ServerRec(STATION_START, i);
-         end;
-
-      image := NewImage(held);
+      image := ImageHolding(0, 30);
       try
          plan := MakePlan(image);
          try
             CheckEquals(53, plan.Count, 'the rest');
-            rec := plan.Row(0);
-            CheckEquals(31, integer(rec.ceQSOID2), 'starting where the server stopped');
-            rec := plan.Row(52);
-            CheckEquals(83, integer(rec.ceQSOID2), 'and ending at the last');
+            CheckEquals('K31', WireValue(plan.Row(0), 'callsign'), 'starting where the server stopped');
+            CheckEquals('K83', WireValue(plan.Row(52), 'callsign'), 'and ending at the last');
          finally
             plan.Free;
          end;
@@ -329,21 +337,24 @@ begin
          image.Free;
       end;
    finally
+      EndStation;
       CloseScratchStore;
    end;
 end;
 
-(* ANY STATION CAN RESTOCK THE SERVER: the key is the pair, not the author. *)
-procedure TNetRestockTests.Test_AQsoReceivedFromAnotherStationIsPushedToo;
+(* NY4I RULING 3 (2026-11-22), reversing the 2026-10-28 rule: A ROW LOGGED AT
+  ANOTHER STATION IS NEVER PUSHED FROM HERE. A row copied from a peer by an older
+  build carries a local guid unlike the original's, so pushing it would duplicate
+  it on the server. Only rows whose computer_id is this station's go. *)
+procedure TNetRestockTests.Test_AQsoLoggedAtAnotherStationIsNeverPushed;
 var
    image: TServerLogImage;
    plan: TPushPlan;
-   rec: ContestExchange;
    i: integer;
-   foreign: integer;
 begin
-   BeginTest('a QSO this station received from another station is pushed too');
+   BeginTest('a QSO logged at another station is never pushed from here');
    OpenScratchStore;
+   BeginStation;
    NetBeginLinkSession;
    try
       FRowAuthor := 'B';
@@ -351,24 +362,15 @@ begin
          begin
          AppendRow('W9R' + IntToStr(i), 9100, i, True, False);
          end;
-      FRowAuthor := #0;
+      FRowAuthor := 'A';
       AppendRow('K1OWN', STATION_START, 1, True, False);
 
       image := NewImage([]);
       try
          plan := MakePlan(image);
          try
-            CheckEquals(5, plan.Count, 'its own and the four received');
-            foreign := 0;
-            for i := 0 to plan.Count - 1 do
-               begin
-               rec := plan.Row(i);
-               if rec.ceComputerID = 'B' then
-                  begin
-                  Inc(foreign);
-                  end;
-               end;
-            CheckEquals(4, foreign, 'the four from station B are among them');
+            CheckEquals(1, plan.Count, 'only its own');
+            CheckEquals('K1OWN', WireValue(plan.Row(0), 'callsign'), 'and it is the one');
          finally
             plan.Free;
          end;
@@ -376,6 +378,7 @@ begin
          image.Free;
       end;
    finally
+      EndStation;
       CloseScratchStore;
    end;
 end;
@@ -384,11 +387,11 @@ procedure TNetRestockTests.Test_ASecondPlanAfterThePushIsEmpty;
 var
    image, after: TServerLogImage;
    plan, second: TPushPlan;
-   restocked: array of ContestExchange;
    i: integer;
 begin
    BeginTest('a second plan made after the push, from the updated image, is empty');
    OpenScratchStore;
+   BeginStation;
    NetBeginLinkSession;
    try
       SeedTheEightyThreeLog;
@@ -396,31 +399,31 @@ begin
       try
          plan := MakePlan(image);
          try
-            SetLength(restocked, plan.Count);
-            for i := 0 to plan.Count - 1 do
-               begin
-               restocked[i] := plan.Row(i);
+            CheckEquals(83, plan.Count, 'the first plan was 83');
+            after := TServerLogImage.Create;
+            try
+               after.StartImage(ContestId(Contest), plan.Count);
+               for i := 0 to plan.Count - 1 do
+                  begin
+                  after.AddRow(plan.Row(i));
+                  end;
+               second := MakePlan(after);
+               try
+                  CheckEquals(0, second.Count, 'the server holds them now: nothing is pushed again');
+               finally
+                  second.Free;
                end;
+            finally
+               after.Free;
+            end;
          finally
             plan.Free;
          end;
       finally
          image.Free;
       end;
-      CheckEquals(83, Length(restocked), 'the first plan was 83');
-
-      after := NewImage(restocked);
-      try
-         second := MakePlan(after);
-         try
-            CheckEquals(0, second.Count, 'the server holds them now: nothing is pushed again');
-         finally
-            second.Free;
-         end;
-      finally
-         after.Free;
-      end;
    finally
+      EndStation;
       CloseScratchStore;
    end;
 end;
@@ -435,11 +438,12 @@ var
 begin
    BeginTest('a row the resend posted on this link is counted as owed, not pushed');
    OpenScratchStore;
+   BeginStation;
    NetBeginLinkSession;
    try
       SeedTheEightyThreeLog;
-      NetResentThisLink.Add(STATION_START, 5);
-      NetResentThisLink.Add(STATION_START, 6);
+      NetResentThisLink.Add(RowGuid(STATION_START, 5));
+      NetResentThisLink.Add(RowGuid(STATION_START, 6));
 
       image := NewImage([]);
       try
@@ -468,35 +472,37 @@ begin
          image.Free;
       end;
    finally
+      EndStation;
       CloseScratchStore;
    end;
 end;
 
 (* A deleted QSO is a QSO the server held, so it goes like the others (the catch-up
-  carries deleted records too); a pair held twice in the LOG is pushed once. *)
-procedure TNetRestockTests.Test_ADeletedQsoAndARepeatedPairAreHandled;
+  carries deleted records too). A guid is unique in a log (the table says so), so
+  a log cannot hold one twice; the plan's own repeat test is TPushPlan's
+  (uTestNetCatchUp). *)
+procedure TNetRestockTests.Test_ADeletedQsoIsPushedLikeTheOthers;
 var
    image: TServerLogImage;
    plan: TPushPlan;
    deleted: ContestExchange;
 begin
-   BeginTest('a deleted QSO is pushed, and a pair held twice in the log is pushed once');
+   BeginTest('a deleted QSO is pushed like the others');
    OpenScratchStore;
+   BeginStation;
    NetBeginLinkSession;
    try
       deleted := ServerRec(STATION_START, 1);
       deleted.ceQSO_Deleted := True;
-      deleted.Frequency := 14025000;
       CheckTrue(LogStoreAppendQSO(deleted), 'a deleted row is stored');
       AppendRow('K2', STATION_START, 2, True, False);
-      AppendRow('K2AGAIN', STATION_START, 2, True, False);
 
       image := NewImage([]);
       try
          plan := MakePlan(image);
          try
-            CheckEquals(2, plan.Count, 'the deleted one and one of the pair');
-            CheckEquals(1, plan.Verdicts(pvRepeated), 'the second copy is counted and left');
+            CheckEquals(2, plan.Count, 'the deleted one and the other');
+            CheckEquals('1', WireValue(plan.Row(0), 'deleted'), 'and it still says deleted');
          finally
             plan.Free;
          end;
@@ -504,6 +510,7 @@ begin
          image.Free;
       end;
    finally
+      EndStation;
       CloseScratchStore;
    end;
 end;
@@ -545,10 +552,11 @@ var
 begin
    BeginTest('a log the server already holds is planned quickly (10,000 and 20,000 rows)');
    OpenScratchStore;
+   BeginStation;
    NetBeginLinkSession;
    try
       SeedBulk(1, 10000);
-      image := BulkImage(1, 10000);
+      image := ImageHolding(0, 10000);
       try
          started := GetTickCount64;
          plan := MakePlan(image);
@@ -563,7 +571,7 @@ begin
       end;
 
       SeedBulk(10001, 10000);
-      image := BulkImage(1, 20000);
+      image := ImageHolding(0, 20000);
       try
          started := GetTickCount64;
          plan := MakePlan(image);
@@ -582,6 +590,7 @@ begin
       CheckTrue(took20 < 20000, 'the plan over 20,000 rows is not a main-thread stall: ' +
                 IntToStr(took20) + ' ms');
    finally
+      EndStation;
       CloseScratchStore;
    end;
 end;
@@ -598,6 +607,7 @@ var
 begin
    BeginTest('a push of 5,000 QSOs: planned, posted and written, and what it holds');
    OpenScratchStore;
+   BeginStation;
    link := TStubLink.Create;
    try
       NetClient := TNetClient.CreateWithWriter(link.Write);
@@ -642,6 +652,7 @@ begin
       end;
    finally
       link.Free;
+      EndStation;
       CloseScratchStore;
    end;
 end;
@@ -659,6 +670,7 @@ var
 begin
    BeginTest('the restock posts OFFLINEQSO only, writes no flag and queues nothing to settle');
    OpenScratchStore;
+   BeginStation;
    link := TStubLink.Create;
    try
       NetClient := TNetClient.CreateWithWriter(link.Write);
@@ -689,7 +701,7 @@ begin
          CheckEquals(60, link.CountOf('O'), 'every packet is an OFFLINEQSO');
          CheckEquals(0, link.CountOf('Q'), 'none is a QSOINFO (which the server would relay)');
          CheckEquals(0, link.CountOf('E'), 'and none an edit');
-         CheckEquals('O7000/1', Copy(link.WrittenText, 1, 7), 'in log order, starting with the first');
+         CheckEquals('OK1,OK2', Copy(link.WrittenText, 1, 7), 'in log order, starting with the first');
 
          (* NO FLAG, NO LEDGER. *)
          CheckEquals(0, NetDeliveryLedger.Unsettled, 'nothing is waiting for the main thread to settle');
@@ -706,6 +718,7 @@ begin
       end;
    finally
       link.Free;
+      EndStation;
       CloseScratchStore;
    end;
 end;
@@ -719,6 +732,7 @@ var
 begin
    BeginTest('a restock with no link, or before the server''s HELLO, sends nothing');
    OpenScratchStore;
+   BeginStation;
    link := TStubLink.Create;
    try
       AppendRow('K1', STATION_START, 1, True, False);
@@ -759,6 +773,7 @@ begin
       end;
    finally
       link.Free;
+      EndStation;
       CloseScratchStore;
    end;
 end;
@@ -1016,13 +1031,13 @@ begin
    catchUp := SourceOf('uNetCatchUp.pas');
 
    (* WHAT GOES: OFFLINEQSO, UNTAGGED, through the one packet builder. *)
-   CheckTrue(Pos('NET_OFFLINEQSO_ID', restockBody) > 0,
-             'the restock sends OFFLINEQSO');
-   CheckEquals(0, Pos('NET_QSOINFO_ID', restockBody),
-               'never QSOINFO: the server would relay it to every station');
-   CheckTrue(Pos('PostQsoPacket(NET_OFFLINEQSO_ID, aPlan.Row(i), 0)',
+   CheckTrue(Pos('NET_WIRE_OFFLINE_ID', restockBody) > 0,
+             'the restock sends OFFLINE rows');
+   CheckEquals(0, Pos('NET_WIRE_QSO_ID', restockBody),
+               'never a new-QSO message: the server would relay it to every station');
+   CheckTrue(Pos('PostWireRow(NET_WIRE_OFFLINE_ID, aPlan.RowId(i), 0, guid)',
                  restockBody) > 0,
-             'through the one packet builder, with no tag');
+             'through the one message builder, with no tag');
    CheckEquals(0, Pos('IOHandler', restockBody),
                'and never the socket directly');
    CheckEquals(0, Pos('LogStoreMark', restockBody + BodyOf(sync, 'function SendLogToServer(aImage: ' +
@@ -1046,9 +1061,9 @@ begin
              'and in its destructor');
 
    (* THE RESEND IS UNCHANGED: it still sends QSOINFO and remembers what it posted. *)
-   CheckTrue(Pos('SendRecordToServer(NET_QSOINFO_ID, rec)',
+   CheckTrue(Pos('PostWireRow(NET_WIRE_QSO_ID, rows.RowId(i)',
                  BodyOf(net, 'function ResendOfflineWork: TResendResult;' + LineEnding + 'var')) > 0,
-             'the resend still sends QSOINFO');
+             'the resend still sends new-QSO messages, from the owed rows');
    CheckTrue(Pos('GResentKeys.Add', BodyOf(net, 'function ResendOfflineWork: TResendResult;' + LineEnding + 'var')) > 0,
              'and remembers its keys for the plan');
    CheckTrue(Pos('GResentKeys.Clear', BodyOf(net, 'procedure NetBeginLinkSession;' + LineEnding + 'begin')) > 0,
@@ -1083,10 +1098,10 @@ begin
              'the notice is NY4I''s wording');
 
    (* THE PLAN IS THE LEAF'S. *)
-   CheckTrue(Pos('ResendNeedsOf(aRec)', BodyOf(catchUp, 'function TPushPlan.Consider(')) > 0,
-             'owed is judged by the resend''s own rule');
-   CheckTrue(Pos('QsoHasNetworkIdentity(aRec)', BodyOf(catchUp, 'function TPushPlan.Consider(')) > 0,
-             'and identity by its own');
+   CheckTrue(Pos('aOwed', BodyOf(catchUp, 'function TPushPlan.Consider(')) > 0,
+             'owed is what the repository says the row''s flags are');
+   CheckTrue(Pos('FComputerTag', BodyOf(catchUp, 'function TPushPlan.Consider(')) > 0,
+             'and only rows logged here are sent');
 end;
 
 procedure TNetRestockTests.RunAllTests;
@@ -1094,10 +1109,10 @@ begin
    Test_TheEightyThreeAreTheOnlyOnesPushed;
    Test_AServerThatHoldsThemAllGetsNone;
    Test_AServerThatHoldsSomeGetsOnlyTheRest;
-   Test_AQsoReceivedFromAnotherStationIsPushedToo;
+   Test_AQsoLoggedAtAnotherStationIsNeverPushed;
    Test_ASecondPlanAfterThePushIsEmpty;
    Test_ARowTheResendPostedOnThisLinkIsOwedNotPushed;
-   Test_ADeletedQsoAndARepeatedPairAreHandled;
+   Test_ADeletedQsoIsPushedLikeTheOthers;
    Test_TheDecisionIsOneQuestionOrNone;
    Test_AnUpToDateLogIsPlannedQuickly;
    Test_APushOfFiveThousandIsFastAndSmall;
