@@ -175,6 +175,18 @@ change. The tag-time CI run (`release.yml`) is unaffected.
 harness ASK before any command that runs `FullBuild.ps1` or its `.cmd` twin. Reads of the file
 (`rg`, `git add`, `cat`) do not prompt. Approve the prompt only when NY4I asked for the run.
 
+**THE SAME HOOK NOW GATES TESTS, LINTS AND THE CORPUS (NY4I, 2026-11-22: *"We have wasted days with
+needless builds"*).** One session ran about 35 full app builds and about 60 unit-suite builds
+(`Build-Tests.ps1` clears and rebuilds the whole suite on every call), because briefs listed the gates
+as each agent's own work and the coordinator then repeated them. A memory note against it was broken
+twice, so it is a lock. **COMPILING THE PRODUCT IS FREE:** `Build-App.ps1` (any form) and
+`Build-Server.ps1` never prompt, so an agent can always find its own compile error. **THESE ASK:**
+`Build-Tests.ps1` (any form), the unit-test exe, `Build-Bench.ps1`, `Run-Lints.ps1` (a single
+`Lint-*.ps1` is free), the corpus, the contest matrix, the ADIF round trip and the ADIF validator.
+Approve only when NY4I asked, and run each ONCE per batch. An agent that is refused reports "not run";
+the coordinator asks once. `.claude/gates-preapproved` (untracked) pre-approves the group for an
+unattended run, as `fullbuild-preapproved` does for FullBuild; delete it afterwards.
+
 ### Iterating
 
 `.\build\Build-App.ps1` (full rebuild, the safe default; `-Incremental` for seconds instead of

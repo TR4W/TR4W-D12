@@ -22,13 +22,43 @@ through (the other hooks fail closed; this one is a convenience guard, and a
 broken one must not wedge every shell command).
 
 Not covered, on purpose: a script that itself calls FullBuild. Nothing here does.
+
+THE SECOND GATE GROUP -- TESTS, LINTS, CORPUS (NY4I, 2026-11-22). "We have wasted
+days with needless builds": one session ran about 35 full app builds and about 60
+unit-suite builds, because the agent briefs listed the gates as each agent's own
+work and the coordinator then re-ran them. A rule in memory was broken twice, so
+it is a hook now. COMPILING THE PRODUCT IS FREE (Build-App, Build-App
+-Incremental, Build-Server): an agent must be able to find its own compile
+error. EVERYTHING THAT RUNS OR REBUILDS A CHECK ASKS:
+
+   Build-Tests (any form: it clears and rebuilds the whole suite every time),
+   the unit-test exe itself, Build-Bench, Run-Lints (the whole set; a single
+   Lint-*.ps1 stays free), the corpus, the contest matrix, the ADIF round
+   trip and the ADIF validator.
+
+The marker `.claude/gates-preapproved` (untracked, local to a clone) pre-approves
+this group for an unattended run, as `fullbuild-preapproved` does for FullBuild.
 """
 import json
 import os
 import re
 import sys
 
-NAME = re.compile(r'fullbuild', re.IGNORECASE)
+FULLBUILD_REASON = ('FullBuild.ps1 takes about 13 minutes and runs only when NY4I asks '
+                    '(pre-release / pre-push). Approve only if he asked for it.')
+GATES_REASON = ('A TEST, LINT OR CORPUS RUN: each rebuilds or runs a whole check and the '
+                'suite alone is a full rebuild every time. NY4I, 2026-11-22: run these '
+                'once per batch, only when asked. Compiling the product (Build-App, '
+                'Build-Server) does not need approval. Approve only if he asked for this run.')
+
+# (pattern, reason, marker file) -- the first gate whose pattern a run segment names.
+GATES = [
+   (re.compile(r'fullbuild', re.IGNORECASE), FULLBUILD_REASON, 'fullbuild-preapproved'),
+   (re.compile(r'build-tests|tr4w_unit_tests|build-bench|run-lints|export-d12-corpus|'
+               r'run-contest-matrix|freeze-contest-matrix|freeze-rescore-baseline|'
+               r'test-adif-roundtrip|validate-adif-outputs', re.IGNORECASE),
+    GATES_REASON, 'gates-preapproved'),
+]
 
 # Programs that read a file or run git bookkeeping; naming FullBuild after one of
 # these is not a run.
@@ -58,14 +88,15 @@ def first_word(segment):
    return word
 
 
-def is_run(command):
+def gate_for(command):
+   """The (reason, marker) of the first gate this command RUNS, or None."""
    for segment in SEGMENT_SPLIT.split(command):
-      if not NAME.search(segment):
-         continue
       if first_word(segment) in READERS:
          continue
-      return True
-   return False
+      for pattern, reason, marker in GATES:
+         if pattern.search(segment):
+            return reason, marker
+   return None
 
 
 def main():
@@ -75,13 +106,19 @@ def main():
    except Exception:
       return 0
 
-   if not command or not is_run(command):
+   gate = gate_for(command) if command else None
+   if gate is None:
       return 0
+   reason, marker_name = gate
 
-   # NY4I, 2026-11-20: an unattended session sat on this prompt. He creates
-   # .claude/fullbuild-preapproved (untracked, local to his clone) to pre-approve
-   # the run, and deletes it to restore the prompt.
-   marker = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fullbuild-preapproved')
+   # NY4I, 2026-11-20: an unattended session sat on this prompt. He creates the
+   # marker (untracked, local to his clone) to pre-approve the group, and deletes
+   # it to restore the prompt.
+   # GATE_MARKER_DIR is for the test, which must not depend on whether the clone
+   # happens to hold a marker right now.
+   marker_dir = os.environ.get('GATE_MARKER_DIR') or os.path.join(
+      os.path.dirname(os.path.abspath(__file__)), '..')
+   marker = os.path.join(marker_dir, marker_name)
    if os.path.exists(marker):
       return 0
 
@@ -89,9 +126,7 @@ def main():
       'hookSpecificOutput': {
          'hookEventName': 'PreToolUse',
          'permissionDecision': 'ask',
-         'permissionDecisionReason':
-            'FullBuild.ps1 takes about 13 minutes and runs only when NY4I asks '
-            '(pre-release / pre-push). Approve only if he asked for it.',
+         'permissionDecisionReason': reason,
       }
    }))
    return 0

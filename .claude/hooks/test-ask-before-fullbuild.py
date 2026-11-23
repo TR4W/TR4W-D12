@@ -41,14 +41,50 @@ PASSES = [
    r"Get-Content tr4w\FullBuild.ps1 -TotalCount 40",
    r"Select-String -Path tr4w\FullBuild.ps1 -Pattern python",
    r"wc -l tr4w/FullBuild.ps1 | cat",
-   r"powershell -File tr4w\build\Run-Lints.ps1",
    r".\tr4w\build\Build-App.ps1 -Incremental",
-   r"bash tr4w/test/corpus/export-d12-corpus.sh",
+   r".\tr4w\build\Build-App.ps1",
+   r"cd C:\tr4w-d12\tr4w; .\build\Build-App.ps1 2>&1 | Select-String 'BUILD'",
+   r".\tr4w\build\Build-Server.ps1",
+   r"powershell -File tr4w\build\Lint-LineEndings.ps1 -SourceDir tr4w -Fix",
+   r"rg -n Run-Lints tr4w/build/FullBuild.ps1",
+   r"git add tr4w/build/Build-Tests.ps1 tr4w/test/corpus/export-d12-corpus.sh",
+   r"cat tr4w/build/Run-Lints.ps1",
+   r"git commit -m 'Run-Lints and Build-Tests ceilings lowered'",
    r"ls tr4w",
 ]
 
-ASK_FLOOR = 9
-PASS_FLOOR = 12
+# The second group (2026-11-22): tests, lints, corpus. Compiling the product is
+# free (see PASSES); each of these asks.
+ASKS += [
+   r".\tr4w\build\Build-Tests.ps1",
+   r".\tr4w\build\Build-Tests.ps1 -Run",
+   r".\tr4w\build\Build-Tests.ps1 -Checked -Run",
+   r"cd C:\tr4w-d12\tr4w; .\build\Build-Tests.ps1 -Run 2>&1 | Select-String PASSED",
+   r"powershell -File tr4w\build\Run-Lints.ps1",
+   r"tr4w\build\Run-Lints.cmd",
+   r"powershell -File tr4w\build\Build-Bench.ps1",
+   r"tr4w\test\unit\tr4w_unit_tests_fpc.exe",
+   r".\tr4w_unit_tests_fpc.exe | Select-String FAIL",
+   r"bash tr4w/test/corpus/export-d12-corpus.sh",
+   r"bash tr4w/test/contest-matrix/run-contest-matrix.sh",
+   r"sh tr4w/test/corpus/test-adif-roundtrip.sh",
+   r"bash tr4w/test/adif-validate/validate-adif-outputs.sh",
+   r"bash tr4w/test/corpus/freeze-rescore-baseline.sh",
+]
+
+ASK_FLOOR = 20
+PASS_FLOOR = 18
+
+
+EMPTY_MARKER_DIR = tempfile.mkdtemp(prefix='gate-markers-')
+
+
+def hook_env():
+   """The hook's environment with the marker directory pointed at an EMPTY one,
+   so the result does not depend on a pre-approval marker in this clone."""
+   env = dict(os.environ)
+   env['GATE_MARKER_DIR'] = EMPTY_MARKER_DIR
+   return env
 
 
 def run_hook(command):
@@ -59,7 +95,7 @@ def run_hook(command):
    try:
       with open(path, 'rb') as stdin:
          result = subprocess.run([sys.executable, HOOK], stdin=stdin,
-                                 capture_output=True, timeout=15)
+                                 capture_output=True, timeout=15, env=hook_env())
    finally:
       os.unlink(path)
    out = result.stdout.decode('utf-8', 'replace').strip()
