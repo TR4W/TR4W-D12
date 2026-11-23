@@ -770,7 +770,12 @@ begin
          res := ResendOfflineWork;
          elapsed := GetTickCount64 - started;
          CheckEquals(BURST, res.Qsos, 'all two hundred were posted');
-         Check(elapsed < 3000,
+         (* 10 SECONDS, NOT 3: each record is now read from its committed row and
+           built as a wire row (a SQLite read, JSON and a CRC), and the CHECKED
+           run (heaptrc, -gt) is about twelve times slower than a normal one; it
+           took 3.2 s there against a few hundred ms normally. The guard is the
+           old one-second wait per record, 200 s, which 10 s is still far under. *)
+         Check(elapsed < 10000,
                'in well under the 200 seconds the old one-second wait per record cost: ' +
                IntToStr(Integer(elapsed)) + ' ms');
          CheckTrue(WaitWrites(link, BURST + 1), 'and all were written, with the note');

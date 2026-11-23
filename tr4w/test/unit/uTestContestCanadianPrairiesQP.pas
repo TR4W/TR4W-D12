@@ -198,8 +198,9 @@ begin
    CheckFalse(party.WritesADIFCounty, 'no ADIF CNTY: ADIF has no Canadian counties');
 
    (* "Begins 1700 UTC - May 9, 2026 Ends: 0300 UTC - May 10, 2025" -- the
-      date alone; the sponsor states no recurrence (issue 117). *)
-   CheckEquals('2026-05-09 at 17:00 UTC for 10h', party.Schedule, 'the schedule');
+      sponsor states the 2026 date only; NY4I ruled (issue 117, 2026-11-22) it
+      recurs on the 2nd Saturday of May, which May 9, 2026 is. *)
+   CheckEquals('2nd Saturday of May at 17:00 UTC for 10h', party.Schedule, 'the schedule');
    CheckTrue(TryParseContestSchedule(party.Schedule, s, err), 'it parses (' + err + ')');
 end;
 

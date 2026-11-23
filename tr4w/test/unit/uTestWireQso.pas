@@ -156,16 +156,19 @@ begin
          ok := DecodeJson(wire, pyJson, back, pyCrc);
          CheckTrue(ok, lbl + ': Python''s JSON states a checksum');
          CheckTrue(pyCrc = crc, lbl + ': ... and it is this row''s');
-         CheckTrue(SameRow(back, values, first), lbl + ': Python''s JSON decodes to the row' +
-            DiffNote(wire, first));
+         (* THE COMPARISON FIRST, THEN THE MESSAGE: written as one call, the
+           argument DiffNote(wire, first) can be evaluated BEFORE SameRow has set
+           first, and the checked build (-gt) fills it with garbage. *)
+         ok := SameRow(back, values, first);
+         CheckTrue(ok, lbl + ': Python''s JSON decodes to the row' + DiffNote(wire, first));
 
          (* Our own JSON, both ways, back to the row exactly. *)
          mine := EncodeJson(wire, values, crc, True);
          CheckEquals(MemberCount(pyJson), MemberCount(mine),
             lbl + ': the same members are omitted as Python omits');
          CheckTrue(DecodeJson(wire, mine, back, stated) and (stated = crc), lbl + ': omit states the CRC');
-         CheckTrue(SameRow(back, values, first), lbl + ': omit round-trips' +
-            DiffNote(wire, first));
+         ok := SameRow(back, values, first);
+         CheckTrue(ok, lbl + ': omit round-trips' + DiffNote(wire, first));
          CheckTrue(RecordCrc32(wire, back) = crc, lbl + ': omit recomputes the CRC');
          mine := EncodeJson(wire, values, crc, False);
          CheckEquals(wire.Count + 1, MemberCount(mine), lbl + ': full names every field');
