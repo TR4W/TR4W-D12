@@ -89,6 +89,15 @@ python -m mkdocs gh-deploy --strict --config-file mkdocs.pages.yml --remote-name
 
 `d12` is this checkout's remote for `TR4W/TR4W-D12`; use `origin` instead in a clone with that remote name. Publishing is explicit, not automatic on every source push. Do not edit generated files on `gh-pages` directly. Do not add a `CNAME` or publish to the organization-site repository for this project site.
 
+### Download links on the homepage (`latest.json`)
+
+The Download cards on the homepage are filled at page load by `user-guide/assets/javascripts/downloads.js` from `latest.json`, a file beside the page on `gh-pages`. Without JavaScript, or if the file is missing or unreadable, every card still links to https://github.com/TR4W/TR4W-D12/releases/latest. No version number is written in the page.
+
+- **Who writes it:** `.github/workflows/publish-latest.yml`, on `release: published` (and by hand with `workflow_dispatch`). It is deliberately not part of `release.yml`: that workflow ends in a draft whose assets have non-public `untagged-` URLs, so a file written there would describe a release the public cannot download. The workflow reads the repository's latest release, runs `tools/latest_release_json.py` (tests: `python -m unittest tools/test_latest_release_json.py`) and commits only `latest.json` to `gh-pages`, with a retry and never a force push.
+- **`mkdocs gh-deploy` deletes `latest.json`.** It replaces the whole `gh-pages` tree. After every site deploy, run the workflow again: `gh workflow run publish-latest.yml`. Until then the page shows the releases/latest fallback, which is correct, just less specific.
+- A platform missing from a partial release appears greyed with its reason; the Windows installer is required and the script refuses a release without one.
+- The offline preview (`file://`) cannot fetch the file and shows the fallback.
+
 `mkdocs.pages.yml` supplies the project's hosted URL and enables normal web search behavior. Use `mkdocs.yml` for the local/offline preview. Both builds retain `.html` page links. Rebuild with the desired configuration before previewing or publishing.
 
 The 5.1.0 reference covers 310 settings with 321 accepted names, 335 old-manual entries, four configuration actions, 111 withdrawn names, 40 store-owned names, 102 radio registrations and 213 contest identifiers. The command reference links to call-window commands and function-key messages. Hardware capabilities and delivery limits are covered in the operator procedures.

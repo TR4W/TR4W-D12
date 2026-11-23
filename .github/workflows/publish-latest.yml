@@ -1,0 +1,95 @@
+# Publishes latest.json, the file the download page on the MkDocs site reads.
+#
+# WHY THIS IS NOT A STEP IN release.yml.  release.yml ends by creating a DRAFT
+# release.  A draft's assets live under "untagged-<hash>" URLs that the public
+# cannot download, and a person promotes the draft by hand.  A latest.json
+# written from that job would describe a release that is not public yet and
+# whose links 404.  This workflow fires on the PUBLISH instead, when the real
+# tagged URLs exist.  It is also a separate workflow run, so nothing here can
+# block, delay or fail a release.
+#
+# WHAT IT WRITES.  tools/latest_release_json.py turns
+#     gh release view --json tagName,publishedAt,assets
+# (no tag: the repository's LATEST release, which is what /releases/latest, the
+# page's fallback link, points at) into latest.json.  All the logic is in that
+# script and its tests (tools/test_latest_release_json.py); this file only moves
+# bytes.  It refuses a payload with no Windows installer or with a draft URL.
+#
+# WHERE IT GOES.  One file, one commit, on gh-pages, which is the branch
+# https://tr4w.github.io/TR4W-D12/ is served from.  The site itself is deployed
+# BY HAND with `mkdocs gh-deploy` (DOCS.md), and that replaces the whole branch
+# tree, so a site deploy deletes latest.json.  The page treats a missing file as
+# the ordinary fallback case (every card links to releases/latest), and DOCS.md
+# says to run this workflow again after a site deploy (workflow_dispatch).
+#
+# NEVER A FORCE PUSH.  A rejected push is retried from a fresh fetch, at most
+# four times, and then the step fails.
+#
+# NOT YET RUN.  Nothing in this file has been executed on GitHub.
+
+name: Publish latest.json
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-latest-json
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Write latest.json to gh-pages
+    runs-on: ubuntu-latest
+    # A pre-release must not become what the download page offers.
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      # main, not the release tag: an older tag does not contain the script.
+      - name: Checkout the script from main
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: main
+          path: src
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: gh-pages
+          path: site
+
+      - name: Read the latest release and build latest.json
+        run: |
+          gh release view --repo "$GITHUB_REPOSITORY" --json tagName,publishedAt,assets > "$RUNNER_TEMP/release.json"
+          python3 -I src/tools/latest_release_json.py "$RUNNER_TEMP/release.json" "$RUNNER_TEMP/latest.json"
+          cat "$RUNNER_TEMP/latest.json"
+
+      - name: Commit only latest.json to gh-pages
+        run: |
+          cd site
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          tag="$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['tag'])" "$RUNNER_TEMP/latest.json")"
+          for attempt in 1 2 3 4; do
+            cp "$RUNNER_TEMP/latest.json" latest.json
+            git add latest.json
+            if git diff --cached --quiet; then
+              echo "latest.json already describes $tag; nothing to commit."
+              exit 0
+            fi
+            git commit -m "latest.json: $tag"
+            if git push origin HEAD:gh-pages; then
+              echo "Pushed latest.json for $tag (attempt $attempt)."
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt); refetching gh-pages and retrying. No force push."
+            git fetch origin gh-pages
+            git reset --hard origin/gh-pages
+          done
+          echo "::error::Could not push latest.json after 4 attempts."
+          exit 1

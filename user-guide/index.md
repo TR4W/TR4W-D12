@@ -128,35 +128,55 @@ Each connection has its own capabilities. Cloudlog / Wavelog and ACLog currently
 
 ## Choose your desktop.
 
-TR4W 5.1.0 has native downloads for all three platforms. Choose the package for your operating system and CPU.
+The latest TR4W release has native downloads for all three platforms. Choose the package for your operating system and CPU.
+
+<p class="tr4w-latest-line" aria-live="polite" hidden></p>
 
 <div class="tr4w-platforms" markdown>
 
-<div markdown>
+<div class="tr4w-download" data-platform="windows-x64" markdown>
 
 ### Windows
 
 The current 5.x line targets **64-bit Windows**. For a 32-bit Windows station, keep using 4.x.
 
+<div class="tr4w-download-files" markdown>
+
+[Download from the release page](https://github.com/TR4W/TR4W-D12/releases/latest){ .tr4w-button }
+
+</div>
+
 [Windows installation →](start/install.md)
 
 </div>
 
-<div markdown>
+<div class="tr4w-download" data-platform="macos-aarch64" markdown>
 
 ### macOS
 
-Native **Apple Silicon** packages. Choose an installer, disk image, or archive to suit your station.
+Native **Apple Silicon** packages. Choose an installer or a disk image to suit your station.
+
+<div class="tr4w-download-files" markdown>
+
+[Download from the release page](https://github.com/TR4W/TR4W-D12/releases/latest){ .tr4w-button }
+
+</div>
 
 [macOS installation →](start/install.md)
 
 </div>
 
-<div markdown>
+<div class="tr4w-download" data-platform="linux-x86_64" markdown>
 
 ### Linux
 
-Native **x86-64** AppImage and archive packages. Check the package's runtime requirements before installing.
+A native **x86-64** AppImage. Check its runtime requirements before installing.
+
+<div class="tr4w-download-files" markdown>
+
+[Download from the release page](https://github.com/TR4W/TR4W-D12/releases/latest){ .tr4w-button }
+
+</div>
 
 [Linux installation →](start/install.md)
 
@@ -166,12 +186,12 @@ Native **x86-64** AppImage and archive packages. Check the package's runtime req
 
 <div class="tr4w-actions" markdown>
 
-[Download TR4W 5.1.0](https://github.com/TR4W/TR4W-D12/releases/tag/v5.1.0){ .tr4w-button }
+[Download the latest TR4W](https://github.com/TR4W/TR4W-D12/releases/latest){ .tr4w-button }
 [Earlier 4.x downloads ↗](https://tr4w.net/){ .tr4w-text-link }
 
 </div>
 
-Check the assets attached to the chosen release for platform availability. [Choose your version](start/version.md) and review the [CW platform notes](station/cw.md) before setting up a station.
+Check the assets attached to the release for platform availability; the file list is the authority. [Choose your version](start/version.md) and review the [CW platform notes](station/cw.md) before setting up a station.
 
 </section>
 

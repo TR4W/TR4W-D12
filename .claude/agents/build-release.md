@@ -383,6 +383,13 @@ Version lives in `tr4w/src/Version.pas` (`TR4W_CURRENTVERSION_NUMBER`,
 tr4w.net still serves 4.x. Never report a green run as "5.x is shipping to
 operators".
 
+**`release.yml` ends in a DRAFT, and a draft's asset URLs are `releases/download/untagged-<hash>/...`**,
+which the public cannot download (measured on the existing drafts). So nothing that publishes a link
+to a release can run in that job. The download page's `latest.json` is written by its own workflow,
+`publish-latest.yml`, on `release: published`, from `tools/latest_release_json.py` (which refuses an
+untagged URL). It commits one file to `gh-pages`; `mkdocs gh-deploy` deletes it, so re-run the
+workflow after a site deploy (DOCS.md). Written 2026-11-23, **never run on GitHub**.
+
 `docs/RELEASE_WORKFLOW.md` sections 5–8 (1–4 are superseded by `BUILD.md`).
 
 ## Non-negotiable git rules

@@ -33,6 +33,8 @@ plugins:
 extra_css:
   - assets/stylesheets/landing.css
   - assets/stylesheets/operating-guide.css
+extra_javascript:
+  - assets/javascripts/downloads.js
 markdown_extensions:
   - admonition
   - attr_list
