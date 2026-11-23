@@ -31,6 +31,7 @@ plugins:
   - search
   - offline
 extra_css:
+  - assets/stylesheets/landing.css
   - assets/stylesheets/operating-guide.css
 markdown_extensions:
   - admonition
@@ -50,7 +51,8 @@ validation:
     not_found: warn
     anchors: warn
 nav:
-  - Welcome: index.md
+  - Home: index.md
+  - Operator guide: guide.md
   - What's new:
       - TR4W 5.1.0: features.md
       - What's new since 4.x: features-since-4.md

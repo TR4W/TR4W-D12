@@ -1,75 +1,204 @@
-# TR4W — Cross-platform contest logging
+---
+title: TR4W — Cross-platform contest logging
+hide:
+   - navigation
+   - toc
+---
 
-A free, open-source contest logger rooted in N6TR's TRLOG. TR4W brings keyboard-driven exchange entry, radio control, and digital-mode integration to your station.
+<div class="tr4w-home" markdown>
 
-Native on **Windows, macOS, and Linux**. [Install the build for your platform](start/install.md) and check its release-specific notes.
+<section class="tr4w-hero" markdown>
 
-!!! warning "5.x documentation preview"
-    This guide covers **TR4W 5.1.0**. Check [Choose your version](start/version.md) before upgrading. Multi-op stations must [upgrade the server and all clients together](station/network.md).
+<div class="tr4w-eyebrow">Rooted in TRLOG. Ready for your next contest.</div>
 
-## What's new
+# Stay on the air.<br>Keep your rhythm.
 
-TR4W 5.1.0 adds background backups, a more flexible operating window, and new contest and rover tools.
+<p class="tr4w-intro">TR4W brings keyboard-driven contest logging to <strong>Windows, macOS and Linux</strong>. Work the exchange, find the next multiplier, and keep your station connected.</p>
 
-[Explore the 5.1.0 features →](features.md) · [See what changed since 4.x →](features-since-4.md)
+<div class="tr4w-actions" markdown>
 
-For the earlier TR4W version, see the [existing TR4W documentation](https://tr4w.github.io/).
-
-<div class="grid cards" markdown>
-
-- **Start a contest**
-
-    Choose a contest, enter your station call, and reopen your log.
-
-    [Open your first contest →](start/first-contest.md)
-
-- **Connect your radio**
-
-    Set up serial or network CAT and check that frequency follows the rig.
-
-    [Set up radio control →](station/radio.md)
-
-- **Use WSJT-X**
-
-    Match the UDP settings and check that a logged contact reaches TR4W.
-
-    [Connect WSJT-X →](station/wsjtx.md)
-
-- **Bring an older log**
-
-    Understand the change from legacy contest files to a database.
-
-    [Moving from 4.x →](start/migration.md)
-
-- **Operate from a park**
-
-    Set your park, enter park-to-park exchanges, and handle multiple parks.
-
-    [POTA operating guide →](operating/pota.md)
-
-- **Protect and export your log**
-
-    Configure verified backups and prepare files for another logger or a contest sponsor.
-
-    [Back up your log →](log/backup.md) · [Export your log →](log/export.md)
+[Find your download](#get-tr4w){ .tr4w-button }
+[Explore the operator guide →](guide.md){ .tr4w-text-link }
 
 </div>
 
-## Before a contest
+<p class="tr4w-fine">Free and open source. Native desktop builds. One application, with a choice of interface language.</p>
 
-Use a separate practice contest to check your exchange, radio connection, CW or voice messages, and log export. Confirm the submitted log format and exchange requirements with the contest organizer. A successful radio connection alone does not check keying or scoring.
+<div class="tr4w-signal" aria-hidden="true"><span>CQ TEST</span><strong>TR4W<span> / 5</span></strong><span>CALL · EXCHANGE · LOG · NEXT</span></div>
 
-Start with [installation](start/install.md), [file locations](start/files.md), and [data updates](start/data-updates.md). Moving an older station? Review [INI-to-JSON conversion](start/ini-to-json.md) and [contact import](log/import.md) separately.
+</section>
 
-## Operating and understanding TR4W
+<div class="tr4w-ribbon"><span>Keyboard first</span><span>Native on three platforms</span><span>Built by radio amateurs</span></div>
 
-- Browse [available contests](reference/contests.md) and [languages with testing codes](reference/languages.md).
-- Use the [band map](operating/bandmap.md), [DX cluster](operating/dxcluster.md), and [multiplier windows](operating/multipliers.md).
-- Configure [CW sending](station/cw.md) and [multi-station networking](station/network.md).
-- Understand [SQLite integrity](theory/database.md), [test methodology](theory/testing.md), and [reports](log/reports.md).
+<section class="tr4w-section" markdown>
 
-## Looking for another topic?
+## What's new in TR4W 5.1.0 { #whats-new }
 
-Search this guide by task or configuration name, such as `WSJT-X BROADCAST PORT`. Browse the [command reference](reference/commands/index.md), check an older name in the [old-to-new lookup](reference/commands/legacy-map.md), or find your model in the [radio support table](reference/radios.md).
+<div class="tr4w-features" markdown>
 
-For other software, see [TCI](station/tci.md), [WSJT-X](station/wsjtx.md), and [external loggers](station/external-loggers.md). The [earlier manuals and wiki](reference/legacy.md) cover additional topics; their instructions may differ from 5.x.
+<div markdown>
+
+### Keep your contacts safe
+
+Unsaved contacts stay on screen so you can retry. Automatic backups run in the background, and **Correct Station Facts** fixes a sent value across eligible contacts.
+
+[Backups](log/backup.md) · [Correct station facts](log/restore.md#correct-station-facts-already-logged)
+
+</div>
+
+<div markdown>
+
+### See what to send and work
+
+Resize the main window in both directions and see the sent exchange above the callsign field. See which multipliers need a backup contact, follow the radio's band and mode on the band map, and self-spot from the Control menu.
+
+[Main window](operating/appearance.md#read-the-main-window) · [Band map](operating/bandmap.md) · [Multipliers](operating/multipliers.md)
+
+</div>
+
+<div markdown>
+
+### Work more contests and locations
+
+Try Russian WW Digital and the Weekly RTTY Test. Winter Field Day, RU3AX Memorial, and many QSO parties have rule updates. Use **ROVER** to log a contact from both sides of a county line together.
+
+[Contests and rover operation](operating/contests.md)
+
+</div>
+
+<div markdown>
+
+### Run commands from the keyboard
+
+Find call-window commands under **Tools → Commands**. Use braces to add radio commands, rover details, or a network station's frequency to function-key messages.
+
+[Call-window commands](operating/keyboard.md#run-a-call-window-command) · [Function-key messages](station/cw-messages.md#message-commands)
+
+</div>
+
+<div markdown>
+
+### Keep stations connected
+
+Multi-op stations catch up on missing contacts after reconnecting. Radio and digital updates include native FLRig, improved Flex reconnects, optional N1MM log input, and FT2 support.
+
+[Multi-op setup](station/network.md) · [Radio setup](station/radio.md) · [Digital logging](station/wsjtx.md)
+
+</div>
+
+<div markdown>
+
+### Refresh data and set up your station
+
+Reload TRMASTER and call history without restarting. Windows keeps writable files in AppData when installed in Program Files. Preferences have more tooltips and screen-reader support for the main callsign field.
+
+[Data updates](start/data-updates.md) · [Station files](start/files.md) · [Languages](station/language.md)
+
+</div>
+
+</div>
+
+[Read all 5.1.0 highlights and upgrade notes](features.md) · [See what's new since 4.x](features-since-4.md)
+
+</section>
+
+<section class="tr4w-connected tr4w-section" markdown>
+
+<div class="tr4w-eyebrow">Beyond the contest log</div>
+
+## Your contacts. Your logbooks.
+
+Send contacts to **DXKeeper, World Radio League, Club Log, QRZ Logbook, Cloudlog / Wavelog, and N3FJP ACLog**. Configure multiple destinations, check delivery status, and resend contacts to a selected logger. Create a World Radio League logbook from its logger row. **Log4OM** receives new contacts through TR4W's UDP broadcast.
+
+Each connection has its own capabilities. Cloudlog / Wavelog and ACLog currently receive new contacts; changes to contacts already sent need manual correction in those logbooks. QRZ and ACLog still need live-service verification in the reviewed source.
+
+[Compare connections and setup requirements →](station/external-loggers.md)
+
+<div class="tr4w-more" markdown>
+
+**And when the station grows:** explore [multi-station networking](station/network.md), [SO2R operation](station/so2r.md), [online scores](station/online-scores.md), and [POTA® park-to-park logging](operating/pota.md).
+
+</div>
+
+</section>
+
+<section class="tr4w-section" id="get-tr4w" markdown>
+
+<div class="tr4w-eyebrow">Get on the air</div>
+
+## Choose your desktop.
+
+TR4W 5.1.0 has native downloads for all three platforms. Choose the package for your operating system and CPU.
+
+<div class="tr4w-platforms" markdown>
+
+<div markdown>
+
+### Windows
+
+The current 5.x line targets **64-bit Windows**. For a 32-bit Windows station, keep using 4.x.
+
+[Windows installation →](start/install.md)
+
+</div>
+
+<div markdown>
+
+### macOS
+
+Native **Apple Silicon** packages. Choose an installer, disk image, or archive to suit your station.
+
+[macOS installation →](start/install.md)
+
+</div>
+
+<div markdown>
+
+### Linux
+
+Native **x86-64** AppImage and archive packages. Check the package's runtime requirements before installing.
+
+[Linux installation →](start/install.md)
+
+</div>
+
+</div>
+
+<div class="tr4w-actions" markdown>
+
+[Download TR4W 5.1.0](https://github.com/TR4W/TR4W-D12/releases/tag/v5.1.0){ .tr4w-button }
+[Earlier 4.x downloads ↗](https://tr4w.net/){ .tr4w-text-link }
+
+</div>
+
+Check the assets attached to the chosen release for platform availability. [Choose your version](start/version.md) and review the [CW platform notes](station/cw.md) before setting up a station.
+
+</section>
+
+<section class="tr4w-languages tr4w-section" markdown>
+
+<div class="tr4w-eyebrow">One application. Your language.</div>
+
+## At home at your station.
+
+Choose the interface language in Preferences and restart TR4W. No separate language installer is needed. The source includes **21 translation catalogs plus English**.
+
+<p class="tr4w-language-list">Chinese (Simplified) · Czech · Danish · Dutch · English · Finnish · French · German · Greek · Italian · Japanese · Korean · Mongolian · Polish · Portuguese · Portuguese (Brazil) · Romanian · Russian · Serbian · Spanish · Swedish · Ukrainian</p>
+
+Translations are at different stages of review, and some text may fall back to English. Language choices in your installed build are authoritative.
+
+[Language settings and translation contributions →](station/language.md)
+
+</section>
+
+<section class="tr4w-close tr4w-section" markdown>
+
+## Made for the hobby.<br>Built with the community.
+
+TR4W is free and open source, with a history that reaches back to N6TR's TRLOG. Read the code, report a problem, help translate, or join the conversation.
+
+[Source & issues ↗](https://github.com/TR4W/TR4W-D12) · [Community ↗](https://groups.google.com/g/tr4w) · [About TR4W](about/tr4w.md)
+
+</section>
+
+</div>

@@ -2,6 +2,8 @@
 
 Source of truth: **main**. Editorial source: `user-guide/`. Configuration: `mkdocs.yml`.
 
+MkDocs builds the product landing page from [user-guide/index.md](user-guide/index.md). The **Operator guide** link opens `guide.html`, which comes from [user-guide/guide.md](user-guide/guide.md). The landing-page styles live in [landing.css](user-guide/assets/stylesheets/landing.css).
+
 The MkDocs toolchain was adopted into main on November 8, 2026. The old `docs/mkdocs-prototype` branch records that history. The current operating instructions and reference tables cover **5.1.0**, tagged at `4a0707be1`.
 
 The existing engineering `docs/` folder is intentionally not the site's input: it mixes plans, investigations, historical manuals, and current instructions. The operator guide selects and reconciles sources rather than presenting every Markdown file as current documentation.
