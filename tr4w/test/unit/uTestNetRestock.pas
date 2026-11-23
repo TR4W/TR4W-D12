@@ -645,12 +645,13 @@ begin
          WriteLn('[MEASURE] restock of 5,000: plan ', tookPlan, ' ms (retained heap ',
                  (heapPlan - heapBefore) div 1024, ' KB), post ', tookPost,
                  ' ms, drained by the writer ', tookWrite, ' ms');
-         (* 90 SECONDS, NOT 20: a normal run measures about 12 s (plan 6.0 s, post
-           6.4 s: each row is read and built as a wire row), and the checked run
-           (heaptrc, -gt) is about twelve times slower. 12 s on the main thread is
-           itself the thing to fix (issue 381: measure it, then the outbox sender
-           thread); this guard only catches a stall, a minutes-long hang. *)
-         CheckTrue(tookPlan + tookPost < 90000, 'planning and posting 5,000 is not a stall');
+         (* TEN MINUTES, NOT 20 SECONDS: a normal run measures about 12 s (plan
+           6.0 s, post 6.4 s: each row is read and built as a wire row), and the
+           checked run (heaptrc, -gt) took well over 90 s. 12 s on the main thread
+           is itself the thing to fix (issue 381: measure it, then the outbox
+           sender thread). This guard only catches a STALL: the old one-second wait
+           per record would take 5,000 s here, which ten minutes still catches. *)
+         CheckTrue(tookPlan + tookPost < 600000, 'planning and posting 5,000 is not a stall');
       finally
          NetClient.Free;
          NetClient := nil;
