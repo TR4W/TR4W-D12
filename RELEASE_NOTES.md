@@ -180,8 +180,10 @@ worked multiplier now lives under Appearance > Colors.
 #### Messages and Macros
 
 - In message text, { and } replace the old bookends: a brace body runs exactly as the old bookend form did
-  (for example {SPEED+}, {ALT-D}), a leading $ means the inactive radio, and {ROVERCALL} and {ROVERQTH} are
-  the roving call and place. Existing messages are upgraded automatically.
+  (for example {SPEED+}, {ALT-D}), and {ROVERCALL} and {ROVERQTH} are the roving call and place. A leading
+  $ inside the braces sends the command to the inactive radio instead of the active one: {SPAN=+} widens the
+  panadapter span of the radio you are using, and {$SPAN=+} widens it on the other radio. Existing messages
+  are upgraded automatically.
 - {PASS station-or-band} and {LASTPASSEDFREQ}: pass a message or frequency to another station.
 
 #### Contests
