@@ -792,7 +792,10 @@ function CabrilloSentRSTQSONumberZone(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       const aCtx: TCabrilloQSOContext): string;
 begin
-  Result := SysUtils.Format('%-3s %.*d %.2d', [aCtx.RSTSent, SentSerialWidth(aQso.NumberSent, 3, aCtx),
+  (* THE TRAILING SPACE IS THE SEPARATOR from the received call: the column ends
+     where the call begins, and without it the line reads '599 001 07W1AW'
+     (found by the contest matrix, 2026-11-23). *)
+  Result := SysUtils.Format('%-3s %.*d %.2d ', [aCtx.RSTSent, SentSerialWidth(aQso.NumberSent, 3, aCtx),
                                                aQso.NumberSent, MyZoneNumber(aMy)]);
 end;
 

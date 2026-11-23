@@ -253,7 +253,9 @@ function TContestAllJA.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange;
                                                const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := UnicodeFormat('%3s %-2s', [aMy.MyPrefecture, UpperCase(aMy.MyPowerClass)]);
+   (* The trailing space is the separator from the received call (DXLog's
+      EXCHANGE{F=L,2, }); without it the line reads '  10 MW1AW'. *)
+   Result := UnicodeFormat('%3s %-2s ', [aMy.MyPrefecture, UpperCase(aMy.MyPowerClass)]);
 end;
 
 (* THE CABRILLO RECEIVED COLUMNS: the other station's prefecture number,
