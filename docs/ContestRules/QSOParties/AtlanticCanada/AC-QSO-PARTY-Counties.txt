@@ -1,5 +1,11 @@
 Atlantic Canada QSO Party -- the 47 county and division multiplier codes (issue 116)
 
+VERIFIED 2026-11-22 against the sponsor's own sheet, which NY4I saved as
+ACQP-Province-County-Division-Abbreviations-1.2-Sheet2.pdf (the resources page of acqp.ca): all 47
+codes below appear in it, and it holds no province-prefixed code that is not below. The paragraphs
+that follow describe where the codes CAME from before that check (DXLog); the sponsor's sheet is now
+the authority. The names below are from ham2k and DXLog; the sheet's division and county names agree.
+
 SOURCE OF THE CODES: the sponsor's rules (ACQP-Rules-B-V26.0.1.pdf, V 26.0.1, last updated 2026-05-01)
 do NOT list them. They give the counts -- "Nova Scotia (NS- 18), New Brunswick (NB- 15), Prince Edward
 Island (PE-3), and Newfoundland (NL-11 Divisions)", 47 -- and say "County/division codes may be found on
