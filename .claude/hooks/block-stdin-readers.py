@@ -261,7 +261,10 @@ def extract_substitutions(cmd):
          close = find_closing_paren(cmd, i + 2)
          if close < 0:
             return None
-         bodies.append(cmd[i + 2:close])
+         body = cmd[i + 2:close]
+         if c == '>':
+            body = WRITER_MARK + body     # `>( )` is fed by the writer: a filter in it cannot wait
+         bodies.append(body)
          out.append('SUBST')
          i = close + 1
          continue
@@ -490,9 +493,93 @@ def cmd_command_line(operands):
    return None
 
 
-def judge(name, args, fed, depth):
+# 5. (2026-11-23) A FILTER GIVEN NO FILE READS STANDARD INPUT. `rg PATTERN --glob '*.pas'`
+# with no path is the case that hung a background shell for 4+ hours: ripgrep searches
+# the working directory only when stdin is a terminal, and a tool shell's is not.
+# name -> (options whose NEXT word is a value, letters of the same, options that supply
+# the pattern/script themselves, positional words needed when they do not, options that
+# mean "no stdin needed" -- a recursive grep, `rg --files`, `jq -n`).
+FILTERS = {
+   'rg': ({'--regexp', '--file', '--glob', '--iglob', '--type', '--type-not', '--type-add', '--replace',
+           '--max-count', '--context', '--after-context', '--before-context', '--threads', '--max-depth',
+           '--sort', '--sortr', '--max-filesize', '--encoding', '--engine', '--colors', '--color',
+           '--pre', '--pre-glob', '--path-separator', '--ignore-file', '--field-match-separator',
+           '--field-context-separator', '--dfa-size-limit', '--regex-size-limit', '--maxdepth'},
+          'efgtTrABCmjdE', {'-e', '-f', '--regexp', '--file'}, 2,
+          {'--files', '--type-list', '--version', '-V', '--help', '-h', '--pcre2-version'}),
+   'grep': ({'--regexp', '--file', '--include', '--exclude', '--exclude-dir', '--max-count', '--context',
+             '--after-context', '--before-context', '--directories', '--devices', '--label', '--binary-files'},
+            'efABCmdD', {'-e', '-f', '--regexp', '--file'}, 2,
+            {'-r', '-R', '--recursive', '--dereference-recursive', '--version', '-V', '--help'}),
+   'head': ({'--lines', '--bytes'}, 'nc', set(), 1, set()),
+   'tail': ({'--lines', '--bytes', '--pid', '--sleep-interval'}, 'ncs', set(), 1, set()),
+   'wc': ({'--files0-from'}, '', {'--files0-from'}, 1, set()),
+   'sort': ({'--key', '--field-separator', '--output', '--buffer-size', '--temporary-directory', '--files0-from'},
+            'ktoST', {'--files0-from'}, 1, set()),
+   'uniq': ({'--skip-fields', '--skip-chars', '--check-chars'}, 'fsw', set(), 1, set()),
+   'tr': (set(), '', set(), 99, set()),
+   'sed': ({'--expression', '--file', '--line-length'}, 'efl', {'-e', '-f', '--expression', '--file'}, 2,
+           {'--version', '--help'}),
+   'awk': ({'--file', '--assign', '--field-separator'}, 'Fvf', {'-f', '--file'}, 2, {'--version', '--help'}),
+   'jq': ({'--from-file', '--indent', '--tab'}, 'f', {'-f', '--from-file'}, 2,
+          {'-n', '--null-input', '--args', '--jsonargs', '--help', '--version', '-h'}),
+}
+FILTERS['egrep'] = FILTERS['grep']
+FILTERS['fgrep'] = FILTERS['grep']
+# jq's --arg family takes TWO words.
+JQ_TWO_VALUES = {'--arg', '--argjson', '--slurpfile', '--rawfile'}
+
+
+def filter_reads_stdin(name, operands):
+   """True when `name` (a search/filter tool) is given no file, so reads standard input."""
+   valued, letters, own, needed, exempt = FILTERS[name]
+   positionals = 0
+   supplied = False
+   i = 0
+   while i < len(operands):
+      tok = operands[i]
+      if tok == '--':
+         positionals += len(operands) - i - 1
+         break
+      if tok in exempt or (tok.startswith('-') and not tok.startswith('--') and len(tok) > 1
+                           and any(ch in tok[1:] for ch in 'rR') and name in ('grep', 'egrep', 'fgrep')
+                           and not any(ch in letters for ch in tok[1:])):
+         return False
+      if name == 'jq' and tok in JQ_TWO_VALUES:
+         i += 3
+         continue
+      if tok.startswith('--'):
+         if tok in own:
+            supplied = True
+         i += 2 if tok in valued else 1
+         continue
+      if tok.startswith('-') and len(tok) > 1:
+         skip = 1
+         for pos, ch in enumerate(tok[1:], 1):
+            if ch in letters:
+               if ('-' + ch) in own:
+                  supplied = True
+               if pos == len(tok) - 1:
+                  skip = 2                # the value is the next word
+               break
+         i += skip
+         continue
+      positionals += 1
+      i += 1
+   if supplied:
+      needed -= 1
+   return positionals < needed
+
+
+def judge(name, args, fed, depth, writer_fed=False):
    """One simple command: None when it may run, else ('cat', name) / ('interp', name) / ('unparseable', '')."""
    operands, stdin_target, here_string = split_redirections(args)
+   if name in FILTERS:
+      if fed or writer_fed or supplies_stdin(stdin_target, here_string, False):
+         return None
+      if filter_reads_stdin(name, operands):
+         return ('filter', name)
+      return None
    if name == 'cat':
       if fed or supplies_stdin(stdin_target, here_string, True):
          return None
@@ -518,6 +605,9 @@ def judge(name, args, fed, depth):
    return None
 
 
+WRITER_MARK = '\x01'
+
+
 def scan(cmd, depth=0):
    """The first finding in a command line, or None.
 
@@ -527,6 +617,8 @@ def scan(cmd, depth=0):
    """
    if depth > MAX_DEPTH:
       return ('unparseable', '')
+   writer_fed = cmd.startswith(WRITER_MARK)
+   cmd = cmd.lstrip(WRITER_MARK)
    cmd = normalise_windows_paths(cmd)
    split = extract_substitutions(cmd)
    if split is None:
@@ -540,7 +632,7 @@ def scan(cmd, depth=0):
    if toks is None:
       return ('unparseable', '')
    for name, args, fed in commands(toks):
-      found = judge(name, args, fed, depth)
+      found = judge(name, args, fed, depth, writer_fed)
       if found:
          return found
    return None
@@ -574,6 +666,12 @@ def verdict(cmd):
               "so the hook cannot tell whether it waits on standard input and refuses it "
               "(issue 289). Fix the quoting, or write the text to a file with the Write "
               "tool and pass the FILE.")
+   if kind == 'filter':
+      return ("BLOCKED (block-stdin-readers hook): `" + waiting + "` is given no file or "
+              "directory, so it reads standard input and waits for ever -- a 2026-11-23 "
+              "background `rg` with no path ran for 4+ hours. Name the path: `rg PATTERN .` "
+              "or `rg PATTERN dir`. (For a filter such as sort/wc/head, give it a file or "
+              "pipe a real producer into it.)")
    if kind == 'cat':
       return ("BLOCKED (block-stdin-readers hook): `cat` has no input file here, so it "
               "reads standard input and waits for ever -- a 2026-10-14 shell sat for "
