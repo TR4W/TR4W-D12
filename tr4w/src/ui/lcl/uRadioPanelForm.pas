@@ -57,11 +57,13 @@ type
                               Shift: TShiftState);
    private
       FSlot: integer;
+      FSpectrumTimer: TTimer;
       FFlagOn: array[0..2] of boolean;
       { The layout as DESIGNED, recorded once before anything scales it --
         see CaptureDesignLayout for why it cannot be re-derived later. }
       FDesign: TDesignLayout;
       FDesignW, FDesignH: integer;
+      procedure SpectrumTimerTick(Sender: TObject);
    public
       { Called once, at construction, while the form is still at its designed
         size -- see CreateTR4WRadioPanelWindow. }
@@ -180,7 +182,13 @@ begin
       Exit;
       end;
 
-   btnSpectrum.Visible := obj.Supports(rcSpectrum) and obj.SpectrumAvailable;
+   (* AND ONLY WHILE THE RADIO IS CONNECTED (2026-11-23). A K4 configured on its
+     network address answered SpectrumAvailable whether or not it was on:
+     NY4I's K4 was powered off and the panel still offered a Spectrum that could
+     only open an empty window. RadioPanelsRefreshActive runs on a connect and a
+     drop, so the button follows. *)
+   btnSpectrum.Visible := obj.Supports(rcSpectrum) and obj.SpectrumAvailable and
+                          obj.IsConnected;
 end;
 
 { OPEN ONE RADIO'S PANADAPTER.  Takes the SLOT rather than reading it off a
@@ -571,6 +579,25 @@ end;
 procedure TfrmRadioPanel.CaptureDesign;
 begin
    CaptureDesignLayout(Self, FDesign, FDesignW, FDesignH);
+
+   (* THE SPECTRUM BUTTON FOLLOWS THE LINK (2026-11-23). It is shown only while
+     the radio is connected, and nothing tells the panel the moment a radio
+     powers on or drops -- RadioPanelsRefreshActive runs on a profile change or
+     an active-radio switch, not on a connection. A one-second tick while the
+     panel is open is cheap (a few field reads) and needs no new event from the
+     radio threads. Owned by the form, so it is freed with it. *)
+   FSpectrumTimer := TTimer.Create(Self);
+   FSpectrumTimer.Interval := 1000;
+   FSpectrumTimer.OnTimer  := SpectrumTimerTick;
+   FSpectrumTimer.Enabled  := True;
+end;
+
+procedure TfrmRadioPanel.SpectrumTimerTick(Sender: TObject);
+begin
+   if Visible then
+      begin
+      UpdateSpectrumButton;
+      end;
 end;
 
 { SCALED LIVE, NOT ON A DEBOUNCE TIMER.

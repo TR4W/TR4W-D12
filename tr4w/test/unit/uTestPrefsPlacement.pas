@@ -681,9 +681,9 @@ begin
              'the keyer library is a child of Hardware');
 
    panel := aForm.lstKeyers.Parent;
-   CheckTrue(panel = aForm.layKeyers, 'the keyer list is on its own page');
+   CheckTrue(panel = aForm.PageHost(aForm.layKeyers), 'the keyer list is on its own page');
    CheckEquals(NAV_KEYERS, integer(aForm.layKeyers.Tag), 'that page answers to NAV_KEYERS');
-   CheckTrue(aForm.chkCWEnable.Parent = aForm.layCW,
+   CheckTrue(aForm.chkCWEnable.Parent = aForm.PageHost(aForm.layCW),
              'CW Settings keeps the sending settings');
    CheckEquals(NAV_CW, integer(aForm.layCW.Tag), 'CW Settings keeps its tag');
 
@@ -1144,15 +1144,15 @@ begin
                   rows[i].Caption.Name + ': the designed caption');
       CheckTrue(rows[i].Caption.FocusControl = rows[i].Input,
                 rows[i].Caption.Name + ' is paired with ' + rows[i].Input.Name);
-      CheckTrue((rows[i].Caption.Parent = aForm.layStation) and
-                (rows[i].Input.Parent = aForm.layStation),
+      CheckTrue((rows[i].Caption.Parent = aForm.PageHost(aForm.layStation)) and
+                (rows[i].Input.Parent = aForm.PageHost(aForm.layStation)),
                 rows[i].Caption.Name + ' and its input are on the Station page');
 
       (* AFTER its input in the child list, which is the window ABOVE it:
         the LCL's child list is the reverse of window z-order. *)
-      at := aForm.layStation.GetControlIndex(rows[i].Input);
-      CheckTrue((at >= 0) and (at + 1 < aForm.layStation.ControlCount) and
-                (aForm.layStation.Controls[at + 1] = rows[i].Caption),
+      at := aForm.PageHost(aForm.layStation).GetControlIndex(rows[i].Input);
+      CheckTrue((at >= 0) and (at + 1 < aForm.PageHost(aForm.layStation).ControlCount) and
+                (aForm.PageHost(aForm.layStation).Controls[at + 1] = rows[i].Caption),
                 rows[i].Caption.Name + ' is the control immediately after '
                 + rows[i].Input.Name + ' in the child list');
 
@@ -1188,12 +1188,12 @@ begin
         A caption in it would be a stop that goes nowhere. *)
       order := TFPList.Create;
       try
-         aForm.layStation.GetTabOrderList(order);
+         aForm.PageHost(aForm.layStation).GetTabOrderList(order);
          n := 0;
          for i := 0 to order.Count - 1 do
             begin
             stop := TWinControl(order[i]);
-            if (stop.Parent <> aForm.layStation) or (not stop.TabStop) then
+            if (stop.Parent <> aForm.PageHost(aForm.layStation)) or (not stop.TabStop) then
                begin
                Continue;
                end;

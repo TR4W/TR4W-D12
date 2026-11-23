@@ -562,9 +562,9 @@ function TakeWritableRootNotice(out aInstallDir, aRoot, aCopied: string): boolea
   These were composed from TR4W_PATH_NAME, which is DataDir, the READ-ONLY
   tier. On Windows that is the program folder, so this answers the writable
   root: unchanged when the folder is writable, %APPDATA%\TR4W\ when it is
-  not. OFF WINDOWS IT IS DataDir, EXACTLY AS BEFORE -- moving them there is
-  a separate decision (they are still written inside a .app bundle or an
-  AppImage mount, which is an open defect, not this change). *)
+  not. OFF WINDOWS IT IS A WRITABLE PER-USER FOLDER (2026-11-23): the
+  settings folder on macOS, the XDG state folder on Linux -- never DataDir,
+  which is inside the signed .app or the AppImage mount and refuses writes. *)
 function StationStateDir: string;
 
 (* ------------------------------------------------------------------------
@@ -1238,9 +1238,12 @@ end;
 
 function LogDir: string;      begin Result := EnsureDir(HomeDir + 'Library/Logs/TR4W'); end;
 
-(* DataDir, exactly what TR4W_PATH_NAME composed before -- see the interface
-  note. Unchanged on purpose. *)
-function StationStateDir: string; begin Result := DataDir; end;
+(* THE PER-USER SUPPORT FOLDER, NOT DataDir (2026-11-23). DataDir is the
+  bundle's Contents/Resources, inside a signed .app that refuses writes:
+  bandmap.bin failed with "Permission denied" on NY4I's Mac (tr4w.log,
+  19 Nov). The band map, the DVK recordings and the legacy tr4w.pos seed's
+  folder now sit beside the settings. *)
+function StationStateDir: string; begin Result := SettingsDir; end;
 
 {$ENDIF}
 
@@ -1305,11 +1308,12 @@ begin
    Result := XdgDir('XDG_STATE_HOME', '.local/state');
 end;
 
-(* DataDir, exactly what TR4W_PATH_NAME composed before -- see the interface
-  note. Unchanged on purpose. *)
+(* THE XDG STATE FOLDER, NOT DataDir (2026-11-23). DataDir is beside the
+  binary, which is read-only inside an AppImage mount: the band map and the DVK
+  recordings could not be saved there. The same folder as the logs. *)
 function StationStateDir: string;
 begin
-   Result := DataDir;
+   Result := LogDir;
 end;
 
 (* Beside the binary. Nothing is shipped here by the tarball -- OpenSSL,

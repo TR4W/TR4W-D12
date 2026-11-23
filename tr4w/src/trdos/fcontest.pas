@@ -208,8 +208,9 @@ begin
   (* WRITTEN FILES, SO uAppPaths.StationStateDir AND NOT TR4W_PATH_NAME
     (issue 165, 2026-11-20). TR4W_PATH_NAME is the read-only data tier; on a
     Windows install the program folder refuses (C:\Program Files) these move
-    with every other writable file. Off Windows StationStateDir IS DataDir,
-    so the path there is exactly what it was. *)
+    with every other writable file. Off Windows it is the per-user settings
+    folder (macOS) or state folder (Linux), never the read-only bundle or
+    AppImage mount (2026-11-23). *)
   SetCharBuffer(TR4W_POS_FILENAME,
                 StationStateDir + 'settings' + PathDelim + 'tr4w.pos');
   ResolveDataFileInPlace(TR4W_POS_FILENAME);

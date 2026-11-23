@@ -334,10 +334,11 @@ begin
    CheckEquals(WrittenFileDir(wfStationState) + 'bandmap.bin',
                WrittenFilePath(wfStationState, 'bandmap.bin'), 'the path is the folder plus the name');
 {$IFNDEF WINDOWS}
-   (* Off Windows the old station-state files stay exactly where
-     TR4W_PATH_NAME (DataDir) put them. *)
-   CheckEquals(IncludeTrailingPathDelimiter(DataDir), WrittenFileDir(wfStationState),
-               'off Windows the station state is DataDir, unchanged');
+   (* Off Windows the station-state files are NOT in DataDir: that is the
+     signed .app's Resources or the AppImage mount, and bandmap.bin got
+     "Permission denied" there (NY4I's Mac, 2026-11-23). *)
+   CheckTrue(IncludeTrailingPathDelimiter(DataDir) <> WrittenFileDir(wfStationState),
+             'off Windows the station state is not the read-only DataDir');
    CheckFalse(WritableFilesRedirected, 'off Windows nothing is ever redirected');
    CheckEquals('', WritableFilesRoot, 'off Windows there is no single root');
 {$ELSE}

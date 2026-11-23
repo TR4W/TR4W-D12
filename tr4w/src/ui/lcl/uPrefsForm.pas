@@ -1274,6 +1274,7 @@ type
       function  BuildPlacedBlock(const aParent: TWinControl; const aBelow: TControl;
                                  const aPageTag: NativeInt;
                                  out aHost: TPanel): integer;
+      procedure MakeDesignedPagesScroll;
       function  NewGeneratedBlock(const aParent: TWinControl; const aBelow: TControl;
                                   const aHeading: string; out aY: integer): TPanel;
       procedure CheckEveryInventoriedSettingHasOneEditor;
@@ -1370,6 +1371,10 @@ type
    public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
+      (* The scroll box a designed page's controls sit in, or the page itself
+        when it has none. Public so uTestPrefsPlacement can ask where a
+        designed control now lives. *)
+      function  PageHost(const aPage: TWinControl): TWinControl;
       (* What the last page build found wrong (issue 235): every More settings
         or placed setting that has no editor, or more than one.  Read by
         uTestPrefsPlacement on a really built form. *)
@@ -3888,6 +3893,8 @@ begin
    //
    // NAV_CONTEST and NAV_ADVANCED are panel-less pages built by key prefix,
    // with the settings TPrefsPlacements puts on them after the prefix rows.
+   MakeDesignedPagesScroll;
+
    total := 0;
    total := total + BuildGeneratedSection(NAV_CONTEST, 'Contest settings',
                                           ['contest.']);
@@ -4432,6 +4439,127 @@ begin
    logger.Debug('[Prefs] generated page tag=%d -> %d setting(s)', [aTag, n]);
 end;
 
+(* THE SCROLL BOX OF A DESIGNED PAGE, or the page itself when it has none.
+
+  A designed page is a fixed-height TPanel, which cannot scroll, while a
+  generated page is a TScrollBox. So Band Map -- designed controls plus a placed
+  block -- ran past its panel with nothing to scroll to, and the last row was
+  clipped away (NY4I, macOS 2026-11-23: "other leafs scroll though"). *)
+function PageScrollName(const aPage: TWinControl): string;
+begin
+   Result := string(aPage.Name) + '_scroll';
+end;
+
+function TPrefsForm.PageHost(const aPage: TWinControl): TWinControl;
+var
+   i: integer;
+begin
+   Result := aPage;
+   for i := 0 to aPage.ControlCount - 1 do
+      begin
+      if (aPage.Controls[i] is TScrollBox) and
+         (string(aPage.Controls[i].Name) = PageScrollName(aPage)) then
+         begin
+         Result := TWinControl(aPage.Controls[i]);
+         Exit;
+         end;
+      end;
+end;
+
+(* EVERY DESIGNED PAGE SCROLLS. Each tagged TPanel child of layContent gets one
+  alClient TScrollBox and its designed controls move into it, so a page taller
+  than the window shows a vertical scrollbar exactly when it needs one. Code only:
+  the .lfm is untouched.
+
+  IDEMPOTENT -- BuildGeneratedSections runs again on every reload (Cancel), and a
+  page that already has its box is left alone.
+
+  THE TAB ORDER IS KEPT: a control moved to a new parent is appended to that
+  parent's tab list in the order it was moved, so the designed TabOrder is
+  recorded first and written back after.
+
+  Nothing anchors to a page panel (checked in the .lfm), so no anchor loses its
+  reference; the controls all move together and keep their anchors to each
+  other. The horizontal bar is switched off: the pages are laid out to the
+  panel's width and a sideways scroll would only be a defect. *)
+procedure TPrefsForm.MakeDesignedPagesScroll;
+var
+   i, j, n, k: integer;
+   page: TWinControl;
+   box: TScrollBox;
+   moving: array of TControl;
+   wins: array of TWinControl;
+   keys: array of integer;
+   swapW: TWinControl;
+   swapK: integer;
+begin
+   for i := 0 to layContent.ControlCount - 1 do
+      begin
+      if not (layContent.Controls[i] is TPanel) then
+         begin
+         Continue;
+         end;
+      page := TWinControl(layContent.Controls[i]);
+      if (page.Tag = NAV_NONE) or (PageHost(page) <> page) then
+         begin
+         Continue;
+         end;
+
+      n := page.ControlCount;
+      SetLength(moving, n);
+      SetLength(wins, 0);
+      SetLength(keys, 0);
+      for j := 0 to n - 1 do
+         begin
+         moving[j] := page.Controls[j];
+         if moving[j] is TWinControl then
+            begin
+            k := Length(wins);
+            SetLength(wins, k + 1);
+            SetLength(keys, k + 1);
+            wins[k] := TWinControl(moving[j]);
+            keys[k] := wins[k].TabOrder;
+            end;
+         end;
+
+      box := TScrollBox.Create(Self);
+      box.Name        := AnsiString(PageScrollName(page));
+      box.Parent      := page;
+      box.Align       := alClient;
+      box.BorderStyle := bsNone;
+      box.Color       := clWindow;
+      box.ParentColor := False;
+      box.HorzScrollBar.Visible := False;
+      box.AutoScroll  := True;
+
+      for j := 0 to n - 1 do
+         begin
+         moving[j].Parent := box;
+         end;
+
+      (* Sort by the recorded tab position (a short insertion sort -- a page
+        holds a few dozen controls), then number them in that order. *)
+      for j := 1 to High(wins) do
+         begin
+         k := j;
+         while (k > 0) and (keys[k - 1] > keys[k]) do
+            begin
+            swapW := wins[k];
+            wins[k] := wins[k - 1];
+            wins[k - 1] := swapW;
+            swapK := keys[k];
+            keys[k] := keys[k - 1];
+            keys[k - 1] := swapK;
+            Dec(k);
+            end;
+         end;
+      for j := 0 to High(wins) do
+         begin
+         wins[j].TabOrder := j;
+         end;
+      end;
+end;
+
 (* A whole generated page holding the settings TPrefsPlacements puts on aTag,
   in table order.  Issue 235's leaves are built this way. *)
 function TPrefsForm.BuildPlacedSection(const aTag: NativeInt;
@@ -4490,7 +4618,10 @@ function TPrefsForm.BuildPlacedBlock(const aParent: TWinControl; const aBelow: T
 var
    y: integer;
 begin
-   aHost  := NewGeneratedBlock(aParent, aBelow, '', y);
+   (* The block goes on the page's scroll box, beside aBelow, which
+     MakeDesignedPagesScroll moved there with the rest of the designed
+     controls. *)
+   aHost  := NewGeneratedBlock(PageHost(aParent), aBelow, '', y);
    Result := AddPlacedRows(aHost, aPageTag, y);
    aHost.Height  := y;
    aHost.Visible := Result > 0;
