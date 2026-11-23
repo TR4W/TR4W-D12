@@ -507,9 +507,13 @@ begin
    Add('CALIFORNIA QSO PARTY', At(2027, 10, 3, 22, 0), At(2028, 10, 7, 16, 0));
    Add('COLORADO QSO PARTY', At(2027, 1, 1, 0, 0), At(2027, 9, 11, 14, 0));
    (* The sponsor's rules page (last update March 8, 2026): 1700 UTC May 9 to
-      0300 UTC May 10, 2026, the date alone (no recurrence stated). *)
+      0300 UTC May 10, 2026. It states the date only; NY4I ruled (issue 117,
+      2026-11-22) it recurs on the 2nd Saturday of May: 2027's is May 8, 2028's
+      May 13. *)
    Add('CP-QSO-PARTY', At(2026, 1, 1, 0, 0), At(2026, 5, 9, 17, 0));
    Add('CP-QSO-PARTY', At(2026, 5, 10, 2, 59), At(2026, 5, 10, 2, 59));
+   Add('CP-QSO-PARTY', At(2026, 5, 10, 3, 30), At(2027, 5, 8, 17, 0));
+   Add('CP-QSO-PARTY', At(2027, 5, 9, 3, 30), At(2028, 5, 13, 17, 0));
    Add('CQ-WPX-SSB', At(2027, 1, 1, 0, 0), At(2027, 3, 27, 0, 0));
    Add('CQ-WPX-SSB', At(2030, 1, 1, 0, 0), At(2030, 3, 30, 0, 0));
    Add('GA-QSO-PARTY', At(2027, 1, 1, 0, 0), At(2027, 4, 10, 18, 0));
@@ -613,9 +617,6 @@ begin
    CheckFalse(TryScheduleSortKey(s, At(2030, 9, 22, 2, 0), key), 'Iowa after 2030 is undated');
    s := Parsed(ScheduleOf('KS-QSO-PARTY'));
    CheckFalse(TryScheduleSortKey(s, At(2031, 8, 31, 20, 0), key), 'Kansas after 2031 is undated');
-   (* The Canadian Prairies states its 2026 date only, so it is undated today. *)
-   s := Parsed(ScheduleOf('CP-QSO-PARTY'));
-   CheckFalse(TryScheduleSortKey(s, At(2026, 5, 10, 3, 0), key), 'CP after 0300 UTC 2026-05-10 is undated');
 end;
 
 (* THE NEW CONTEST LIST'S ORDER, through uContestDates.SortContestDates:

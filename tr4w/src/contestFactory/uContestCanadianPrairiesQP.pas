@@ -254,11 +254,14 @@ end;
 
 (* WHEN IT RUNS -- https://cpqp.ve6hams.ca/rules-2/, "Last Update: March 8,
    2026": "Begins 1700 UTC - May 9, 2026 Ends: 0300 UTC - May 10, 2025" (the
-   end year a typo). The sponsor states no recurrence rule, so the date
-   alone: it ran out after May 10, 2026 (a question for NY4I, issue 117). *)
+   end year a typo). The sponsor states no recurrence rule, only the 2026
+   date; NY4I ruled (issue 117, 2026-11-22) that it recurs on the 2nd
+   Saturday of May, 1700 UTC for 10 hours: May 9, 2026 is that Saturday, and
+   a fixed date goes stale every year. One period, so it can show time left
+   (issue 243). *)
 function TContestCanadianPrairiesQP.GetSchedule: string;
 begin
-   Result := '2026-05-09 at 17:00 UTC for 10h';
+   Result := '2nd Saturday of May at 17:00 UTC for 10h';
 end;
 
 function TContestCanadianPrairiesQP.GetFriendlyName: string;
