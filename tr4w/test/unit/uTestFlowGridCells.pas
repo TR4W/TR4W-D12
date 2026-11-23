@@ -636,7 +636,7 @@ begin
 end;
 
 (* TWO NEIGHBOURING BACKUPS WANTED MUST NOT RUN TOGETHER (NY4I, 2026-11-22).
-  The grid draws its own lines in both directions, in the main log's light
+  The grid draws its own VERTICAL lines only (like the log), in the main log's light
   rule derived from the window colour -- one function, so the two windows
   cannot drift -- and that rule is still told apart from the default BAND MAP
   WORKED MULT COLOR (ORANGE) fill, not only from the window. *)
@@ -650,7 +650,7 @@ begin
    f := TfrmRemMults.Create(nil);
    try
       CheckTrue(goVertLine in f.grdMults.Options, 'vertical lines are on');
-      CheckTrue(goHorzLine in f.grdMults.Options, 'horizontal lines are on');
+      CheckFalse(goHorzLine in f.grdMults.Options, 'no horizontal lines');
       rule := LogSoftRuleColor(longint(ColorToRGB(clWindow)));
       CheckEquals(rule, longint(ColorToRGB(f.grdMults.GridLineColor)),
                   'the line is the log''s rule on the window colour');

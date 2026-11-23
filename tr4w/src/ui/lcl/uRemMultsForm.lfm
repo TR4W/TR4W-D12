@@ -28,7 +28,7 @@ object frmRemMults: TfrmRemMults
     DefaultRowHeight = 16
     FixedCols = 0
     FixedRows = 0
-    Options = [goVertLine, goHorzLine, goThumbTracking, goSmoothScroll]
+    Options = [goVertLine, goThumbTracking, goSmoothScroll]
     RowCount = 1
     ScrollBars = ssAutoHorizontal
     TabOrder = 0

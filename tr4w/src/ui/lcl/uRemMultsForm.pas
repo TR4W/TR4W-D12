@@ -196,8 +196,8 @@ end;
 
 (* A LIGHT LINE BETWEEN CELLS (NY4I, 2026-11-22). Two neighbouring backups
   wanted are flat fills of BAND MAP WORKED MULT COLOR and ran together into one
-  block. The lines themselves are the grid's own (goVertLine and goHorzLine in
-  the .lfm, drawn by the LCL's DrawCellGrid after OnPrepareCanvas's fill); this
+  block. The lines themselves are the grid's own (goVertLine ALONE, in the .lfm:
+  vertical only, like the log -- NY4I, 2026-11-22, the horizontal ones went, drawn by the LCL's DrawCellGrid after OnPrepareCanvas's fill); this
   only picks their colour, from the window colour MultsPrepareCanvas fills a
   needed cell with, through the main log's rule (uLogGrid.LogSoftRuleColor) so
   the two windows cannot drift. SHOW GRIDLINES is the main log's setting
