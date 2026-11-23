@@ -1,11 +1,10 @@
 """Summarize catalogue coverage without equating non-fuzzy text with human review."""
 from pathlib import Path
 import subprocess
-import sys
+
+from i18n.pofile import parse_po
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'tools/i18n'))
-import pofile
 
 LANGUAGES = {
     'en': ('English', 'Source language'),
@@ -31,13 +30,15 @@ LANGUAGES = {
     'sv': ('Swedish', 'New machine-seeded catalogue — review required'),
     'zh_CN': ('Chinese (Simplified)', 'New machine-seeded catalogue — review required'),
 }
-files = {p.stem.removeprefix('tr4w_'): p for p in (ROOT / 'i18n').glob('tr4w_*.po')}
-assert set(files) == set(LANGUAGES), 'Review language names/provenance when catalogues change'
 revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+catalogues = set(subprocess.check_output(
+   ['git', 'ls-tree', '--name-only', f'{revision}:i18n'], cwd=ROOT, text=True).splitlines())
+files = {Path(name).stem.removeprefix('tr4w_'): name for name in catalogues
+         if name.startswith('tr4w_') and name.endswith('.po')}
+assert set(files) == set(LANGUAGES) - {'en'}, 'Review language names/provenance when catalogues change'
 lines = ['# Available languages and translation status', '',
-    f'The source snapshot contains **{len(files)} UI catalogues, including English**. '
-    'A normal resource build embeds the catalogues; the language choices in your installed build '
-    'are authoritative if it was packaged differently.', '',
+    f'TR4W includes built-in English and **{len(files)} UI translation catalogues**. '
+    'A normal resource build embeds the translation catalogues. Check the language choices in your installed build.', '',
     '## Test a language', '',
     'Use the table’s `--lang=` argument when launching TR4W. Examples:', '',
     '=== "Windows"', '', '    ```powershell', '    .\\tr4w.exe --lang=it', '    ```', '',
@@ -57,20 +58,22 @@ lines = ['# Available languages and translation status', '',
     'can still be machine-generated or missing. Italian and French have no inherited human translation '
     'baseline in this expansion: their LibreTranslate drafts require review, even where a few '
     'entries are not marked fuzzy. Treat the other newly seeded languages the same way.', '',
-    'English is the compiled source/fallback language, so translation flags in its extraction catalogue '
-    'do not measure the availability of the English interface.', '',
+    'English is compiled into the program as the source and fallback language.', '',
     '## Language table', '',
     '| Language | Test argument | Translation history | Unflagged text | Needs review | Empty | Help catalogue |',
     '| --- | --- | --- | ---: | ---: | ---: | --- |']
 for code, (label, history) in sorted(LANGUAGES.items(), key=lambda item: item[1][0]):
-    entries = [e for e in pofile.read_po(str(files[code])) if e.source.strip() and not e.obsolete]
-    unflagged = sum(bool(e.target.strip()) and not e.fuzzy for e in entries)
-    fuzzy = sum(bool(e.target.strip()) and e.fuzzy for e in entries)
-    empty = sum(not e.target.strip() for e in entries)
-    assert unflagged + fuzzy + empty == len(entries)
-    help_status = 'Present; separate review' if (ROOT / f'i18n/help_{code}.po').exists() else 'Not in this snapshot'
-    values = ('Source', '—', '—') if code == 'en' else (str(unflagged), str(fuzzy), str(empty))
-    lines += [f'| {label} | `--lang={code.lower()}` | {history} | {values[0]} | {values[1]} | {values[2]} | {help_status} |']
+   values = ('Source', '—', '—')
+   if code != 'en':
+      raw = subprocess.check_output(['git', 'show', f'{revision}:i18n/{files[code]}'], cwd=ROOT)
+      entries = [e for e in parse_po(raw) if e.source.strip() and not e.obsolete]
+      unflagged = sum(bool(e.target.strip()) and not e.fuzzy for e in entries)
+      fuzzy = sum(bool(e.target.strip()) and e.fuzzy for e in entries)
+      empty = sum(not e.target.strip() for e in entries)
+      assert unflagged + fuzzy + empty == len(entries)
+      values = (str(unflagged), str(fuzzy), str(empty))
+   help_status = 'Present, with separate review' if f'help_{code}.po' in catalogues else 'Unavailable'
+   lines += [f'| {label} | `--lang={code.lower()}` | {history} | {values[0]} | {values[1]} | {values[2]} | {help_status} |']
 lines += ['', '## Review before calling a language complete', '',
     'Review contest terminology and every machine draft, preserve formatting placeholders, '
     'then inspect real windows for clipping, keyboard markers, and meaning in context. '
@@ -85,5 +88,5 @@ lines += ['', '## Review before calling a language complete', '',
     'cannot identify which tool wrote an individual phrase.', '',
     'Run `python tools/build_language_reference.py` to refresh this table. This measures source '
     'catalogues, not the resources of an arbitrary downloaded binary.']
-(ROOT / 'user-guide/reference/languages.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+(ROOT / 'user-guide/reference/languages.md').write_text('\n'.join(lines) + '\n', encoding='utf-8', newline='\r\n')
 print('Language catalogues:', len(files))

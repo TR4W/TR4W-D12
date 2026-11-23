@@ -1,8 +1,5 @@
 # Actions and moved configuration
 
-!!! warning "Historical reference snapshot"
-    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
-
 ## Actions
 
 These commands do work rather than simply storing a preference. They are handled separately in `TryApplyCommandAction`; do not document them as persistent checkboxes.
@@ -19,6 +16,7 @@ These commands do work rather than simply storing a preference. They are handled
 These are not withdrawn features. The compatibility parser recognizes the old name, but configuration belongs to its owning store or setup panel. This list alone does not establish an import recipe.
 
 - `CONNECTION COMMAND`
+- `FREQUENCY POLL RATE`
 - `FT1000MP CW REVERSE`
 - `HAMLIB ASYNC ONLY`
 - `HAMLIB DEBUG`
@@ -70,20 +68,29 @@ These exact names are in RETIRED_COMMANDS. Their acceptance avoids invalid-state
 - `BACKCOPY ENABLE`
 - `BAND MAP ENABLE`
 - `CALL WINDOW POSITION`
+- `COLUMN DUPESHEET COLOR`
 - `COLUMN DUPESHEET ENABLE`
+- `COUNTRY INFORMATION FILE`
 - `CURTIS KEYER MODE`
 - `CUSTOM CARET`
+- `DOMESTIC MULTIPLIER`
 - `DUPE SHEET ENABLE`
+- `DX MULTIPLIER`
 - `EIGHT BIT PACKET PORT`
 - `EX MENU`
+- `EXCHANGE RECEIVED`
 - `EXCHANGE WINDOW S&P BACKGROUND`
 - `FOOT SWITCH MODE`
 - `FOOT SWITCH PORT`
 - `FREQUENCY ADDER RADIO ONE`
 - `FREQUENCY ADDER RADIO TWO`
 - `ICOM RESPONSE TIMEOUT`
+- `INITIAL EXCHANGE`
 - `LATEST CONFIG FILE`
 - `LOG FILE NAME`
+- `LPT1 BASE ADDRESS`
+- `LPT2 BASE ADDRESS`
+- `LPT3 BASE ADDRESS`
 - `MODEM PORT`
 - `MODEM PORT BAUD RATE`
 - `MOUSE ENABLE`
@@ -117,7 +124,9 @@ These exact names are in RETIRED_COMMANDS. Their acceptance avoids invalid-state
 - `PADDLE BUG ENABLE`
 - `PARTIAL CALL LOAD LOG ENABLE`
 - `PARTIAL CALL MULT INFO ENABLE`
+- `PREFIX MULTIPLIER`
 - `PRINTER ENABLE`
+- `QSO POINT METHOD`
 - `QUICK QSL KEY`
 - `QUICK QSL MESSAGE`
 - `RADIO ONE COMMAND PAUSE`
@@ -126,13 +135,16 @@ These exact names are in RETIRED_COMMANDS. Their acceptance avoids invalid-state
 - `RADIO ONE ID CHARACTER`
 - `RADIO ONE TRACKING ENABLE`
 - `RADIO ONE UPDATE SECONDS`
+- `RADIO TCP SERVER PORT`
 - `RADIO TWO COMMAND PAUSE`
 - `RADIO TWO ICOM NETWORK PASSWORD`
 - `RADIO TWO ICOM NETWORK USERNAME`
 - `RADIO TWO ID CHARACTER`
 - `RADIO TWO TRACKING ENABLE`
 - `RADIO TWO UPDATE SECONDS`
+- `RELAY CONTROL PORT`
 - `REMINDER`
+- `ROW COUNT`
 - `RTTY PORT`
 - `RTTY RECEIVE STRING`
 - `RTTY SEND STRING`
@@ -141,18 +153,27 @@ These exact names are in RETIRED_COMMANDS. Their acceptance avoids invalid-state
 - `SEND QSO IMMEDIATELY`
 - `SERIAL 5 PORT ADDRESS`
 - `SERIAL 6 PORT ADDRESS`
+- `SHOW ALL SERIAL PORTS`
 - `SHOW SEARCH AND POUNCE`
 - `SIMULATOR ENABLE`
 - `SINGLE RADIO MODE`
+- `STEREO CONTROL PORT`
 - `TAB MODE`
+- `TAIL END CW MESSAGE`
+- `TAIL END KEY`
+- `TAIL END MESSAGE`
+- `TAIL END SSB MESSAGE`
 - `TOTAL OFF TIME`
 - `TOTAL SCORE MESSAGE`
 - `UDP BROADCAST PORT`
 - `USE BIOS KEY CALLS`
+- `USE CONTROL PORT`
 - `USE IRQS`
 - `VGA DISPLAY ENABLE`
 - `VISIBLE DUPESHEET`
 - `WIDE FREQUENCY DISPLAY`
+- `WINDOW SIZE`
 - `YAESU RESPONSE TIMEOUT`
+- `ZONE MULTIPLIER`
 
 Classification source (`tr4w/src/uCFG.pas`)

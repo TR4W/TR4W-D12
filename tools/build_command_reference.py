@@ -10,8 +10,12 @@ import json
 import re
 import subprocess
 
+from i18n.pofile import read_po
+from settings_inventory import frozen_vocabulary
+
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'user-guide/reference/commands'
+OUT = ROOT / 'user-guide/reference'
+pages = {}
 
 
 def read(path):
@@ -34,7 +38,29 @@ def cell(value):
 
 
 def write(name, text):
-    (OUT / name).write_text(text.rstrip() + '\n', encoding='utf-8')
+   # Keep every page in memory until all source and registry checks pass.
+   pages[OUT / name] = text.rstrip() + '\n'
+
+
+def initialization(text):
+   parts = re.split(r'^\s*initialization\s*$', text, maxsplit=1, flags=re.I | re.M)
+   return parts[1] if len(parts) == 2 else ''
+
+
+def command_help():
+   result = {}
+   for entry in read_po(ROOT / 'i18n/help_en.po'):
+      if entry.obsolete:
+         continue
+      for note in entry.notes:
+         if note.startswith('Config command: '):
+            name = re.sub(r'\s+\(default:.*$', '', note.removeprefix('Config command: ')).strip()
+            if name in result and result[name] != entry.source:
+               raise ValueError(f'Conflicting English help for {name}')
+            result[name] = entry.source
+   if not result:
+      raise ValueError('No config command help found in i18n/help_en.po')
+   return result
 
 
 inventory = read('tr4w/docs/SETTINGS_INVENTORY.md')
@@ -47,9 +73,7 @@ for line in inventory.splitlines():
         rows.append(dict(zip(('name', 'aliases', 'scope', 'path', 'type', 'notes'), cells)))
 names = {r['name'] for r in rows}
 aliases = {a.strip(): r['name'] for r in rows for a in r['aliases'].split(',') if a.strip()}
-frozen = {m[1] or m[2] for m in re.finditer(
-    r'''^\s*\+ '(?:"([^"]+)"|([A-Z0-9][^,']*))[,']''',
-    read('tr4w/test/unit/uTestSettingsModel.pas'), re.M)}
+frozen = frozen_vocabulary(ROOT / 'tr4w/test/unit/uTestSettingsModel.pas')
 if not rows or not frozen or names | set(aliases) != frozen:
     raise SystemExit('Inventory differs from frozen settings vocabulary; regenerate/review inventory first.')
 if len(names) != len(rows) or len({slug(n) for n in names}) != len(names):
@@ -80,9 +104,11 @@ old_names = set(re.findall(r'^3\.2\.\d+\s*(.*?)\.{3,}\d+\s*$', old_manual, re.M)
 assert len(old_names) >= 300, 'Old manual contents extraction failed'
 help_ini = configparser.RawConfigParser(strict=False, interpolation=None)
 help_ini.read_string(read('tr4w/target/commands_help_eng.ini'))
+english_help = command_help()
 editorial = json.loads(read('tools/command_reference_notes.json'))
 assert set(editorial) <= names, 'Editorial entry no longer resolves to a setting'
 revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+version = re.search(r"\bTR4W_CURRENTVERSION_NUMBER\s*=\s*'([^']+)'", read('tr4w/src/Version.pas'))[1]
 
 
 def source(path, label=None):
@@ -145,7 +171,6 @@ def link(name):
     return f'[{cell(name)}]({bucket(canonical)}.md#{slug(canonical)})'
 
 
-OUT.mkdir(parents=True, exist_ok=True)
 missing = []
 counts = {'settings': len(rows), 'accepted_setting_names': len(frozen),
           'retired': len(retired), 'store_owned': len(owned), 'actions': len(actions),
@@ -153,8 +178,8 @@ counts = {'settings': len(rows), 'accepted_setting_names': len(frozen),
 defaults = 0
 for key, title in buckets:
     lines = [f'# Commands {title}', '',
-        'Current setting metadata comes from the 5.0.22 inventory and source snapshot. '
-        'Inherited help is explicitly labeled and may describe older behavior. '
+        f'Setting metadata was extracted from TR4W {version}. '
+        'The English help accompanying each setting may still need operator review. '
         '[Read the reference conventions](index.md) before editing settings.', '']
     for row in sorted(rows, key=lambda r: r['name']):
         name = row['name']
@@ -174,9 +199,9 @@ for key, title in buckets:
             if editorial[name].get('guide'):
                 lines += [f'[Step-by-step guide]({editorial[name]["guide"]})', '']
         else:
-            description = help_ini.get(name, 'DESCRIPTION', fallback='').strip()
+            description = english_help.get(name, '').strip()
             if description:
-                lines += ['!!! quote "Inherited English help — behavior needs review"',
+                lines += ['!!! quote "English settings help"',
                           '    ' + html.escape(description).replace('\n', '\n    '), '']
             else:
                 missing.append(name)
@@ -188,17 +213,17 @@ for key, title in buckets:
                   f'    Model path: `{row["path"]}`. Source type: `{row["type"]}`.', '',
                   '    ' + source('tr4w/src/uSettingsModel.pas', 'Settings model') + ' · '
                   + source('tr4w/docs/SETTINGS_INVENTORY.md', 'Inventory') + ' · '
-                  + source('tr4w/target/commands_help_eng.ini', 'Inherited help'), '',
+                  + source('i18n/help_en.po', 'Current English help'), '',
                   '    ' + ('This exact name appears in the v4.01 manual contents.' if name in old_names
                             else 'This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.'), '']
         if old_default:
             lines += [f'    Historical help default: {cell(old_default)}. This is not a verified current default.', '']
-    write(key + '.md', '\n'.join(lines))
+    write('commands/' + key + '.md', '\n'.join(lines))
 
 index = ['# Command reference', '',
     '**Find a setting by its current name or an older name from the reference manual.**', '',
     'This reference combines the current settings inventory, source declarations, English help, '
-    'and the v4.01 manual contents. It targets the same 5.0.22 snapshot as this guide.', '',
+    f'and the v4.01 manual contents. It covers TR4W {version}.', '',
     f'There are **{len(rows)} settings** with **{len(frozen)} accepted names**, '
     f'plus **{len(actions)} action commands** documented separately. Radio, keyer, '
     'message, and compatibility command routes are not all ordinary settings.', '',
@@ -214,17 +239,19 @@ index = ['# Command reference', '',
     '- **Values** gives boolean choices or literal numeric type bounds when available. '
     'Other validation can apply; numeric bounds do not establish units.',
     '- **Other accepted names** are inventory aliases. They do not imply that every input route applies the value.',
-    '- **Inherited help** is useful background, not a reviewed 5.x procedure. Older hotkeys, file paths, '
-    'default values, and platform assumptions require checking.', '',
+    '- **English settings help** comes from the application catalogue. Follow the linked operator procedure where available.', '',
     'Prefer the settings UI. Current command dispatch can recognize a name without applying it, '
     'depending on the caller and ownership. Recognition alone does not prove a legacy config line takes effect.', '',
     '## Topic starting points', '',
     '- [Log backup](../../log/backup.md)', '- [Radio connection](../../station/radio.md)',
     '- [WSJT-X](../../station/wsjtx.md)', '- [POTA](../../operating/pota.md)', '',
+    '- [Call-window commands](../../operating/keyboard.md#run-a-call-window-command)',
+    '- [Function-key message commands](../../station/cw-messages.md#message-commands)', '',
     '## All current setting names', '', '| Name | Scope |', '| --- | --- |']
 for row in sorted(rows, key=lambda r: r['name']):
     index += [f'| {link(row["name"])} | {"Contest" if "CONTEST" in row["scope"] else "Station"} |']
-write('index.md', '\n'.join(index))
+index += ['', '## Accepted aliases', '', *[f'- {link(name)}' for name in sorted(aliases)]]
+write('commands/index.md', '\n'.join(index))
 
 
 def status(name):
@@ -251,7 +278,7 @@ legacy = ['# Old-to-new command lookup', '',
     source('docs/TR4W_Reference_Manual_4.01-1.md', 'Original manual transcription') + ' · '
     + source('tr4w/src/uCFG.pas', 'Current dispatch'), '', '| Older name | Current classification |', '| --- | --- |']
 legacy += [f'| {cell(n)} | {status(n)} |' for n in sorted(old_names)]
-write('legacy-map.md', '\n'.join(legacy))
+write('commands/legacy-map.md', '\n'.join(legacy))
 
 lifecycle = ['# Actions and moved configuration', '', '## Actions', '',
     'These commands do work rather than simply storing a preference. They are handled '
@@ -276,7 +303,7 @@ lifecycle = ['# Actions and moved configuration', '', '## Actions', '',
     'family from the retirement of one command name.', '',
     *[f'- `{n}`' for n in sorted(retired)], '',
     source('tr4w/src/uCFG.pas', 'Classification source')]
-write('lifecycle.md', '\n'.join(lifecycle))
+write('commands/lifecycle.md', '\n'.join(lifecycle))
 
 counts['literal_initial_values'] = defaults
 counts['missing_descriptions'] = len(missing)
@@ -289,12 +316,12 @@ coverage = ['# Reference coverage and review', '',
     '1. Current settings inventory, checked against the frozen command vocabulary, supplies names, aliases, scopes, and types.',
     '2. Current model declarations verify every inventory property/type and supply literal initial values and numeric subranges.',
     '3. Current uCFG dispatch lists distinguish withdrawn names, store-owned names, and actions.',
-    '4. Reviewed editorial descriptions override inherited English help. Unreviewed help stays visibly labeled.',
+    '4. Reviewed descriptions override the English settings help in `i18n/help_en.po`. Historical INI defaults appear separately.',
     '5. The old manual supplies historical names and the migration lookup; its extracted PDF layout is too inconsistent '
     'to safely promote whole definition blocks automatically.', '',
     'The older CTRLJ_INVENTORY, CFG_COMMAND_TABLE, and HELP_TEXT_GAPS documents explain '
     'the migration but contain historical counts and architecture. They are not the current command list.', '',
-    '## Missing explanations', '', *[f'- {link(n)}' for n in missing], '',
+    '## Missing explanations', '', *([f'- {link(n)}' for n in missing] or ['Every setting has an English help entry or a reviewed description.']), '',
     '## Reproduce', '', 'Run `python tools/build_command_reference.py`, then '
     '`python -m mkdocs build --strict`. The generator reads only this worktree and refuses '
     'to publish when the inventory differs from the frozen settings vocabulary. It does not '
@@ -303,24 +330,27 @@ coverage = ['# Reference coverage and review', '',
     '`tools/command_reference_notes.json`; generated pages should not be edited directly.', '',
     'Historical manual credit: TR4W Reference Manual v4.01, Tod Olson, K0TO. '
     'Inherited English help retains its provenance in the project help catalogue.']
-write('coverage.md', '\n'.join(coverage))
-print(json.dumps(counts, indent=2))
+write('commands/coverage.md', '\n'.join(coverage))
 
 # Registration metadata is explicit. Do not infer instance capabilities such
 # as CW-by-CAT from filenames or inheritance; those need a runtime export.
 radio_rows = []
 native_pattern = re.compile(
     r"RegisterRadio(?:ById)?\(\s*('?\w+'?)\s*,\s*\w+\s*,\s*"
-    r"(?:\w+\s*,\s*)?'([^']+)'\s*,\s*\[([^]]*)\]\s*,\s*(\d+)\s*,\s*(True|False)\s*,"
+    r"(?:\w+\s*,\s*)?'([^']+)'\s*,\s*\[([^]]*)\]\s*,\s*(\w+)\s*,\s*(True|False)\s*,"
     r"\s*SerialParams\((\d+),\s*(\d+),\s*(\w+),\s*(\d+)\)", re.I)
 ham_pattern = re.compile(
     r"RegisterHamLibOnlyRadio\(\s*(\w+)\s*,\s*\w+\s*,\s*'([^']+)'\s*,\s*(\d+)\s*,"
     r"\s*SerialParams\((\d+),\s*(\d+),\s*(\w+),\s*(\d+)\)", re.I)
-for path in sorted((ROOT / 'tr4w/src/radioFactory').glob('*.pas')):
-    text = strip_comments(path.read_text(encoding='utf-8-sig'))
-    if not re.search(r'\binitialization\b', text, re.I):
-        continue
-    init = re.split(r'\binitialization\b', text, flags=re.I)[-1]
+radio_sources = {path: strip_comments(path.read_text(encoding='utf-8-sig'))
+                 for path in sorted((ROOT / 'tr4w/src/radioFactory').glob('*.pas'))}
+port_constants = {}
+for code in radio_sources.values():
+   for name, value in re.findall(r'^\s*(\w+)\s*=\s*(\d+)\s*;', code, re.M):
+      port_constants.setdefault(name.upper(), set()).add(value)
+
+for path, code in radio_sources.items():
+    init = initialization(code)
     matches = list(native_pattern.finditer(init))
     ham_matches = list(ham_pattern.finditer(init))
     expected = len(re.findall(r'\bRegister(?:Radio(?:ById)?|HamLibOnlyRadio)\s*\(', init))
@@ -328,6 +358,11 @@ for path in sorted((ROOT / 'tr4w/src/radioFactory').glob('*.pas')):
         raise ValueError(f'Unparsed radio registration in {path.name}: {expected}')
     for m in matches:
         ident, label, links, port, discover, baud, bits, parity, stop = m.groups()
+        if not port.isdecimal():
+            values = port_constants.get(port.upper(), set())
+            if len(values) != 1:
+                raise ValueError(f'{path.name}: cannot resolve port {port}')
+            port = next(iter(values))
         radio_rows.append((label, ident.strip("'"), 'Native TR4W',
             'Yes' if 'rlSerial' in links else 'No',
             'Yes' if 'rlNetwork' in links else 'No',
@@ -387,8 +422,7 @@ radio_doc += ['', '## Reproduce and verify', '',
     'unparsed registration calls or duplicate identifiers. It does not instantiate drivers, open '
     'ports, or check the linked application at runtime. Review model-specific source and bench '
     'status before claiming hardware validation.', '', f'Source snapshot: `{revision}`.']
-(ROOT / 'user-guide/reference/radios.md').write_text('\n'.join(radio_doc) + '\n', encoding='utf-8')
-print('Radio registrations:', len(radio_rows))
+write('radios.md', '\n'.join(radio_doc))
 
 vc = strip_comments(read('tr4w/src/VC.pas'))
 contest_match = re.search(r'ContestTypeSA\s*:\s*array\[ContestType\] of string\s*=\s*\((.*?)\);', vc, re.S)
@@ -397,21 +431,43 @@ if not contest_match:
 contest_names = re.findall(r"'((?:''|[^'])*)'", contest_match[1])
 assert contest_names[0] == 'DUMMY CONTEST' and len(contest_names) > 100
 contest_names = [n.replace("''", "'") for n in contest_names[1:]]
-assert len(set(contest_names)) == len(contest_names)
+project = strip_comments(read('tr4w/tr4w.lpr'))
+contest_units = re.findall(r"'src\\contestFactory\\([^']+\.pas)'", project, re.I)
+if not contest_units:
+   raise ValueError('No linked contest units found in tr4w.lpr')
+for unit in contest_units:
+   code = strip_comments(read('tr4w/src/contestFactory/' + unit))
+   init = initialization(code)
+   ids = re.findall(r"RegisterContestById\(\s*('(?:''|[^'])*'|\w+)\s*,\s*\w+\s*\)", init, re.I)
+   if len(ids) != len(re.findall(r'\bRegisterContestById\s*\(', init, re.I)):
+      raise ValueError(f'{unit}: unparsed contest registration')
+   for expr in ids:
+      if not expr.startswith("'"):
+         match = re.search(r"^\s*" + re.escape(expr) + r"\s*=\s*('(?:''|[^'])*')\s*;", code, re.M | re.I)
+         if not match:
+            raise ValueError(f'{unit}: cannot resolve contest id {expr}')
+         expr = match[1]
+      contest_names.append(expr[1:-1].replace("''", "'"))
+assert len({name.casefold() for name in contest_names}) == len(contest_names)
 contest_doc = ['# Available contests', '',
-    f'**{len(contest_names)} choices** from the same `ContestTypeSA` table used by the new-contest picker. '
-    'The internal DUMMY CONTEST entry is omitted, just as it is in that picker. '
+    f'**{len(contest_names)} contest identifiers** in TR4W {version}, including legacy names and contests registered by ID. '
     'This list includes general logging and operating activities as well as competitive events.', '',
     'Select the exact event/mode when [starting a contest](../start/first-contest.md). '
     'A selectable name means the program has a contest definition; it does not certify current '
     'sponsor rules, every exchange variation, or hardware/platform testing. Check the event rules '
     'and exercise an example exchange and export before operating.', '',
-    'The newer contest factory is not the entire supported-contest list: definitions that remain '
-    'in the existing contest engine still appear in the picker.', '']
+    'The New Contest picker can show a friendly event name in place of the identifier.', '']
 for letter in sorted({n[0] for n in contest_names}):
     contest_doc += [f'## {letter}', ''] + [f'- {cell(n)}' for n in sorted(contest_names) if n[0] == letter] + ['']
 contest_doc += ['## Evidence', '', source('tr4w/src/VC.pas', 'Contest name table') + ' · '
-    + source('tr4w/src/ui/lcl/uNewContestForm.pas', 'Picker population'), '',
-    'Regenerate with `python tools/build_command_reference.py`. Names are retained exactly as the picker supplies them.']
-(ROOT / 'user-guide/reference/contests.md').write_text('\n'.join(contest_doc) + '\n', encoding='utf-8')
+    + source('tr4w/src/contestFactory/uContestRegistry.pas', 'Contest registry') + ' · '
+    + source('tr4w/tr4w.lpr', 'Linked contest units'), '',
+    f'Source revision: `{revision}`. Regenerate with `python tools/build_command_reference.py`.']
+write('contests.md', '\n'.join(contest_doc))
+
+for path, contents in pages.items():
+   path.write_text(contents, encoding='utf-8', newline='\r\n')
+
+print(json.dumps(counts, indent=2))
+print('Radio registrations:', len(radio_rows))
 print('Contest choices:', len(contest_names))

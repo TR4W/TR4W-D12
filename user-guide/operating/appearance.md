@@ -8,9 +8,9 @@ Start with the callsign and exchange fields, editable log, dupe indication, and 
 
 ## Show more QSOs in the main window
 
-Drag the main window's lower edge or corner downward to enlarge the log area and see more contacts at once. Shrink it to reserve space for the band map or radio panels. The entry and status controls remain below the expanding log grid, and the grid can scroll through contacts that do not fit.
+Drag the main window wider or taller. The log, possible-call and status areas use the available width, and the main text scales with width. The sent exchange appears above the call field. Set the font and **Main window text size** in **Preferences → Appearance**. The earlier `ROW COUNT` and `WINDOW SIZE` settings are retired.
 
-This changes the **visible rows**, not the number of contacts retained in the database. The old fixed-row layout is not a reason to delete contacts or split a log. Saved window bounds affect the size on the next start; fonts and display scaling also affect how many rows fit.
+**SHOW GRIDLINES** and **NO COLUMN HEADER** apply immediately. **NO COLUMN HEADER** hides the heading row on the log grids and the Network and Stations lists. Hold **Alt** and drag with the left mouse button to move a tool window whose title bar is hidden by **NO CAPTION**.
 
 ## Recover a window from a missing monitor
 

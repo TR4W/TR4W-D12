@@ -4,7 +4,7 @@ Internationalization (I18N) is the machinery that lets one TR4W build present it
 
 See [Available languages and translation status](../reference/languages.md) for all language names, command-line testing codes, earlier translation credits, and measured review/empty counts. Italian, French, and the other newly seeded catalogues require review of their machine-generated drafts.
 
-The 5.0.37 notes record review work for Spanish and Brazilian Portuguese, and translated setting-help additions in other languages. The generated reference counts are an older snapshot, not current approval totals.
+The 5.1.0 update adds machine-drafted help for 15 languages and new interface strings. The reference counts catalogue flags at the release tag. Human review remains necessary before treating a translation as approved.
 
 ## Choose the interface language
 

@@ -32,6 +32,20 @@ Ctrl+Enter is a logging action: check the call and exchange before using it. Fun
 
 The function-key commands `TOGGLECW` and `CWENABLETOGGLE` behave the same way as Alt+K: they toggle CW in CW mode and the voice keyer in any other mode. The call-window commands `CWON` and `CWOFF` act on CW only, whatever the mode.
 
+## Run a call-window command
+
+Choose **Tools → Commands**, or type the complete command in the callsign field and press **Enter**. A recognized typed command clears the call field. Choosing the same action from the menu leaves any call you were entering in place.
+
+| Task | Commands |
+| --- | --- |
+| Export or report | `ADIF`, `CAB` (Cabrillo), `SUM` (summary sheet) |
+| Log and operate | `NOTE`, `OPON` (operator sign-in), `ROVER`, `CWON`, `CWOFF` |
+| Send over UDP | `SCORE` (score), `UDP` (whole log) |
+| Query the DX cluster | `WCY` (`SH/WCY`), `WWV` (`SH/WWV`) |
+| Open a tool or exit | `PREF`, `COL` (colors), `CMD` (Windows command prompt), `EXIT` |
+
+Use the [message command syntax](../station/cw-messages.md#message-commands) when programming function keys.
+
 ## Focus and menu shortcuts
 
 Menus now display assigned shortcuts in a separate column. In the main QSO-entry window, **Ctrl+A** opens keyboard CW; do not assume it selects all callsign text. **Ctrl+C**, **Ctrl+V**, and **Ctrl+A** perform normal copy, paste, and select-all operations in focused text controls, including the cluster console and dialogs. Their effect depends on which window has focus.

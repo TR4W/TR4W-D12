@@ -35,7 +35,11 @@ Generating a file does not submit it to the sponsor. Retain the submitted file a
 
 ADIF, Cabrillo, and CSV files are written beside the contest database using its basename and the appropriate extension. Check the preview path before replacing an earlier export. Station facts saved with individual QSOs are used for their applicable exported station/location fields.
 
-ADIF output follows the current standard-mode and contest-exchange handling described in the release notes. **Unreleased source through 48806af1** also includes STATE alongside DXCC where applicable; inspect these fields in the receiving application.
+ADIF includes the worked station's `DXCC` when it writes `STATE`. JTTY and FT2 use `MODE=MFSK` with their respective `SUBMODE` under ADIF 3.1.8. Older TR4W JTTY records remain importable.
+
+ADIF exports a set of linked county-line or rover rows as one contact. For two counties, check `USACA_COUNTIES` for the worked station and `MY_USACA_COUNTIES` for your own locations, as applicable. A longer county list uses TR4W extension fields. Check how the receiving application reads those fields. Vermont's separate `-ft.adi` is written when the log contains contacts assigned to that export.
+
+Hawaii rover logs can produce a Cabrillo file per activation. In an unsplit rover export, the header `CALLSIGN` is your base call. Inspect the sent call and place on the individual QSO lines. Review `CATEGORY-STATION` or an overlay where the contest offers one.
 
 ## What to check before delivery
 

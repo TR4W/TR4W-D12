@@ -11,9 +11,13 @@ The HamScore integration sends live score information and can also send QSO cont
 
 Normally the worker posts every two minutes. **Push Now** requests an immediate cycle. Unconfirmed contacts remain queued for retry; explicit server confirmation clears them. A growing queue or repeated error needs attention: check credentials, service URL, connectivity, and whether the service accepts the contest. Both radios use the same uploader.
 
+## Check scoring URLs
+
+The default HamScore URL is `https://hamscore.com/postxml/` and the default scoreboard posting URL is `https://contestonlinescore.com/post/`. TR4W updates a saved old default once and preserves a custom URL. Use **Test** next to a URL to check its HTTP response. A 200 response confirms reachability and does not verify an actual score upload. Keep **Verify the server's certificate** enabled for each destination. The global certificate setting controls whether TLS verification can run.
+
 ## Rebuild the remote log
 
-In source through **48806af1**, **Tools → Re-send Log to HamScore...** and the status window's **Re-send Log to HamScore...** button open the same confirmation dialog:
+**Tools → Re-send Log to HamScore...** and the status window's **Re-send Log to HamScore...** button open the same confirmation dialog:
 
 - **Re-send only** uploads the current contacts with their original IDs, without deleting remote contacts. A QSO deleted locally can therefore remain on the server.
 - **Delete and re-send** deletes the server's log for this contest, then uploads the current contacts. The remote deletion cannot be undone, and the scoreboard can be empty or incomplete until the upload finishes.

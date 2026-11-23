@@ -1,17 +1,18 @@
-import json
 import os
 import re
 import sys
-sys.path.insert(0, r'C:\tr4w-d12\tools')
+from pathlib import Path
+
 import srcfile
+from settings_inventory import collect, frozen_vocabulary
 
-SCRATCH = os.path.dirname(os.path.abspath(__file__))
-OUT = r'C:\tr4w-d12\tr4w\docs\SETTINGS_INVENTORY.md'
-FROZEN = r'C:\tr4w-d12\tr4w\test\unit\uTestSettingsModel.pas'
+ROOT = Path(__file__).resolve().parents[1]
+OUT = ROOT / 'tr4w/docs/SETTINGS_INVENTORY.md'
+FROZEN = ROOT / 'tr4w/test/unit/uTestSettingsModel.pas'
 
-inv = json.load(open(os.path.join(SCRATCH, 'inv.json')))
-moved = sorted(inv['moved'], key=lambda r: r['command'])
-pending = sorted(inv['pending'], key=lambda r: r['command'])
+moved, pending = collect()
+moved.sort(key=lambda r: r['command'])
+pending.sort(key=lambda r: r['command'])
 
 
 # THE NOTES COLUMN IS NY4I'S, AND IT IS CARRIED FORWARD (2026-09-19).
@@ -46,12 +47,6 @@ notes = existing_notes(OUT)
 # frozen vocabulary in uTestSettingsModel is read out of the live settings
 # object by a test, so if this generator and it disagree, THE GENERATOR IS
 # WRONG -- and it stops rather than writing a table that says otherwise.
-def frozen_vocabulary(path):
-   text = srcfile.read(path)
-   return set(m.group(1) or m.group(2) for m in re.finditer(
-      r"^\s*\+ '(?:\"([^\"]+)\"|([A-Z0-9][^,']*))[,']", text, re.M))
-
-
 generated = set(r['command'] for r in moved)
 for r in moved:
    for a in r['aka'].split(','):
@@ -246,7 +241,7 @@ A('makes that comparison every time it runs and refuses to write this file')
 A('when the two differ; when this file was written they agreed exactly on all')
 A('%d command names.' % len(frozen))
 A('')
-A('Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.')
+A('Run `python tools/settings_inventory_doc.py` from this checkout.')
 A('')
 A('**The Notes column is carried forward when regenerating**: the generator')
 A('reads this file first and puts each note back against its command. A note')

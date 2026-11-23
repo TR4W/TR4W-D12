@@ -17,13 +17,13 @@ Order controls dispatch order, not the order in which independent remote service
 | Provider | Connection details | Changes and deletes |
 | --- | --- | --- |
 | DXKeeper | Receiving TCP host/IP and port | Supported; replacement can involve deleting and re-sending the QSO. Check the receiving log after an interrupted replacement. |
-| World Radio League | API key; choose the logbook from the retrieved list | Supported, with persistent delivery/retry state. Create logbooks in WRL before selecting one here. |
+| World Radio League | API key and a logbook from the retrieved list | Supported, with persistent delivery and retry state. Use **Create logbook…** on the WRL row when you need a new logbook. |
 | Club Log | Club Log callsign and API token | Supported through the bearer-token QSO API. An edit deletes the old remote QSO then creates its replacement; a failure between these steps requires review. No Club Log email/password is needed. |
-| QRZ Logbook — **Unreleased source** | Logbook callsign and API access key (from your QRZ logbook settings; needs a QRZ logbook subscription) | Supported. An edit deletes the old QRZ entry then inserts its replacement; a failure between these steps requires review. One definition per callsign. Not yet tried against a live QRZ logbook. |
-| Cloudlog / Wavelog — **Unreleased source** | Server URL, API key, station profile ID | New QSOs only. Editing or deleting a previously sent QSO produces a failed delivery row; correct the remote log manually. |
-| ACLog — **Unreleased source** | Host/IP and port; defaults 127.0.0.1:1100. Enable **TCP API Enabled** in ACLog. | New QSOs only. Changes/deletes of sent QSOs fail explicitly; correct the remote log manually. Live ACLog verification remains outstanding. Direct logging does not perform ACLog contest scoring. |
+| QRZ Logbook | Logbook callsign and API access key from your QRZ logbook settings. One definition per callsign. | An edit deletes the old QRZ entry and inserts its replacement. Review the receiving log if a replacement fails. |
+| Cloudlog / Wavelog | Server URL, API key, station profile ID | New QSOs only. Editing or deleting a previously sent QSO produces a failed delivery row. Correct the remote log manually. |
+| ACLog | Host/IP and port, default `127.0.0.1:1100`. Enable **TCP API Enabled** in ACLog. | New QSOs only. Changes and deletes of sent QSOs fail explicitly. Direct delivery bypasses ACLog contest scoring. |
 
-The first three providers are covered by the 5.0.37 release notes. Additional providers describe source through **48806af1**; check your installed build before expecting them in its list. The ACLog radio-control bridge is a separate feature.
+The ACLog radio-control bridge is separate from the ACLog logger. The setup wizard can also configure an external logger.
 
 For **Log4OM**, use TR4W's standard **UDP** contact-broadcast settings rather than adding an external-logger provider. New-QSO forwarding is documented in the change history; edit forwarding still needs verification.
 
@@ -31,9 +31,11 @@ For **Log4OM**, use TR4W's standard **UDP** contact-broadcast settings rather th
 
 Review pending, retrying, uncertain, and failed counts. **Enabled** means a destination is selected for sending, not that all its contacts have arrived. A persistent queue can resume earlier work after startup, before you log a new QSO. Investigate an uncertain result in the receiving log before retrying it, to avoid duplicates.
 
+Right-click a configured logger row for **Open web site** when available, or **Resend QSOs…**. The resend dialog applies to the current contest and that destination. Choose undelivered QSOs or all QSOs. Check the remote log before using **All** to avoid duplicate work or entries.
+
 Not every remote API supports the same operations. A successful create does not establish that a later edit or delete succeeded. Keep the TR4W log and inspect the receiving log when a delivery fails.
 
 API keys and passwords use the operating system's credential store. Copying the settings file to another computer does not copy those secrets; re-enter credentials there. Resolve a locked or unavailable credential store rather than expecting a plaintext fallback.
 
 ??? info "Source and review boundary"
-    Reviewed November 8, 2026 against release notes and the provider units, registry, queue service, and external-logger grid at 48806af1. This documentation update did not send contacts to live services.
+    Reviewed for 5.1.0 against the provider units, registry, queue service, and external-logger grid. Live service behavior requires verification with the intended account and server.

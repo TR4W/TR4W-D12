@@ -6,13 +6,15 @@ The **contest log** contains your contacts. The **diagnostic log**, `tr4w.log`, 
 
 `~` means your home directory. On Windows, “working folder” means the process's current directory, normally established by its shortcut or launch command; it is not always the executable's folder.
 
-| File group | Windows | macOS | Linux |
-| --- | --- | --- | --- |
-| Station settings | `working folder/settings/tr4w.json` | `~/Library/Application Support/TR4W/tr4w.json` | `~/.config/tr4w/tr4w.json` |
-| Diagnostic log | `working folder/tr4w.log` | `~/Library/Logs/TR4W/tr4w.log` | `~/.local/state/tr4w/tr4w.log` |
-| Default contest root | Working folder | `~/tr4w/` | `~/tr4w/` |
-| Shipped reference data | Working folder | `TR4W.app/Contents/Resources/` | `/usr/share/tr4w/`, with fallback beside the binary |
-| Downloaded CTY/TRMASTER/POTA data | Settings directory | Settings directory | Settings directory |
+| File group | Windows under Program Files | Windows in a writable folder | macOS | Linux |
+| --- | --- | --- | --- | --- |
+| Station settings | `%APPDATA%\TR4W\settings\tr4w.json` | `working folder/settings/tr4w.json` | `~/Library/Application Support/TR4W/tr4w.json` | `~/.config/tr4w/tr4w.json` |
+| Diagnostic log | `%APPDATA%\TR4W\tr4w.log` | `working folder/tr4w.log` | `~/Library/Logs/TR4W/tr4w.log` | `~/.local/state/tr4w/tr4w.log` |
+| Default contest root | `%APPDATA%\TR4W\` | Working folder | `~/tr4w/` | `~/tr4w/` |
+| Shipped reference data | Working folder | Working folder | `TR4W.app/Contents/Resources/` | `/usr/share/tr4w/`, with fallback beside the binary |
+| Downloaded CTY/TRMASTER/POTA data | Settings directory | Settings directory | Settings directory | Settings directory |
+
+TR4W 5.1.0 also uses the per-user location when a Windows working folder elsewhere refuses writes. It reports the redirect at startup. If you launch from a custom shortcut, check its **Start in** folder and the reported paths.
 
 On Linux, `XDG_CONFIG_HOME` and `XDG_STATE_HOME` override the `.config` and `.local/state` bases. A `--settings <path>` launch option selects a different settings file and also relocates downloaded data beside that file. Opening a contest elsewhere does not imply that the station settings moved with it.
 

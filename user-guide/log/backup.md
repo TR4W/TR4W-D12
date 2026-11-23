@@ -13,7 +13,7 @@ TR4W creates a verified snapshot of the open contest database. A manual backup w
 
 Open **Ctrl+J**, find the backup settings, and set the number of new QSOs between backups. **0** disables the automatic schedule.
 
-The interval counts newly logged records since the last backup, rather than the current log total. It starts at zero each session. New dupes, X-QSOs, and contacts received from peer stations count; notes do not. A manual backup resets the interval counter, including a failed attempt, so check the result and retry a failure yourself.
+The interval counts newly logged records since the last successful backup. It starts at zero each session. Dupes, X-QSOs, and contacts received from peers count. Notes are excluded. With automatic backups enabled, the next QSO also triggers a backup if the last successful snapshot is at least 30 minutes old or missing. The snapshot runs in the background. A failure keeps the count and delays the next automatic attempt for five minutes.
 
 An optional **BACKUP DESTINATION** adds a background copy; it is not required for local backups.
 
@@ -22,6 +22,8 @@ An optional **BACKUP DESTINATION** adds a background copy; it is not required fo
 The periodic snapshot is named for its log, with **periodic.db** in the filename. A successful replacement retains the prior snapshot as **.bak**. A **.new** file is a staging file: preserve it after a failure, but check the result and diagnostic log before trusting it.
 
 **Clear Log** first makes a separate UTC-dated snapshot in the local backup folder. If that snapshot fails, clearing stops without removing the contacts. Keep the dated snapshot until you have verified the intended result.
+
+Opening a database with an older schema takes a verified snapshot before conversion. Look for a file named `<log> before schema <old> to <new>.db` in the local backup folder. TR4W refuses to upgrade the log if it cannot publish the backup. Keep this copy if you may need to return to the older TR4W version.
 
 ## Recover safely
 
@@ -32,4 +34,4 @@ For a full station archive, close TR4W and retain the contest folder, settings, 
 Follow [Restore files and recover a contest](restore.md) to rehearse recovery on a separate copy. Check identity, contact count, recent QSOs, and score before relying on it.
 
 ??? info "Source and review boundary"
-    Reviewed at 48806af1: uAppPaths.BackupDir, uLogStore, domain/uLogBackup, uBackupCopyService, and manual/periodic backup callers. No live contest was cleared or restored during this review.
+    Reviewed for 5.1.0 against `uAppPaths`, `uLogStore`, `uLogBackup`, `uBackupCopyService`, and the backup callers. The procedures were reviewed in source.

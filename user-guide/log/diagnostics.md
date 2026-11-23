@@ -46,11 +46,13 @@ The form says the three Hamlib settings take effect on the next TR4W start. This
 
 | Platform | Default main diagnostic log |
 | --- | --- |
-| Windows | `tr4w.log` in the working folder |
+| Windows | `%APPDATA%\TR4W\tr4w.log` for a Program Files install or read-only working folder. Otherwise `tr4w.log` in the working folder. |
 | macOS | `~/Library/Logs/TR4W/tr4w.log` |
 | Linux | `~/.local/state/tr4w/tr4w.log`, or under the configured XDG state root |
 
 The Hamlib trace uses the same diagnostic-log root with filename `hamlib_trace.log`. The panel's active path and **Open log file** command are useful when several installations or launch profiles exist. [Files and folders](../start/files.md) shows directory trees, contest databases, and reference-data locations.
+
+Startup records the active data paths, redirection and database journal settings. DEBUG lines tagged `[Lookup]` identify the source of a callsign lookup's name, QTH, or exchange. Use those lines to distinguish a recent log entry from call history or reference data.
 
 For a useful diagnostic report, retain the relevant log together with the TR4W version, platform, radio or integration involved, reproduction steps, and approximate time. The Logging panel also offers **Warn when the log file grows unexpectedly**; this is a warning control, not a backup or retention policy.
 

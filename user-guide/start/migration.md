@@ -4,6 +4,10 @@ The 5.x contest picker works with database logs. Some instructions in the older 
 
 Treat station and contest migration as separate tasks: [convert station INI settings to JSON](ini-to-json.md), then [import and verify contact data](../log/import.md). Neither step alone confirms that your messages and contest-specific configuration are correct.
 
+## Upgrade an existing 5.x database
+
+TR4W 5.1.0 opens contest logs at **schema 13**. On first open it verifies a backup of an older database before upgrading it. An earlier TR4W build that supports only an earlier schema will refuse the upgraded database. Keep the [pre-upgrade snapshot](../log/backup.md#snapshot-files) and use a copy of that snapshot if you need to reopen the contest in the earlier build. **Multi-op stations** also need to [upgrade the server and clients together](../station/network.md).
+
 ## Try an older contest on a copy
 
 1. Close the old TR4W instance and copy the entire contest folder to a separate test location.

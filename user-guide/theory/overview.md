@@ -13,7 +13,9 @@ TR4W connects several sources of information to one contest: your entries, radio
 
 ## From a contact to a saved record
 
-The entry and contest logic construct a contact record. The log-store layer sends it through the repository to SQLite and commits it. The append routine reports success only after its commit succeeds. Displays, scoring, and exports depend on the stored contest data, but each also has logic that needs testing in its own right.
+The entry and contest logic construct a contact record. The log store sends it through the repository to SQLite. A boundary or multi-park entry commits all of its rows together. Only after a successful commit does TR4W publish the contact to the multi-op link, external loggers, and UDP destinations. The record retains the applicable station facts and contest X-QSO decision for display and export.
+
+On a multi-op network, the server keeps a separate SQLite log of the fields shared by protocol 5. Each client owns its contest database. On reconnect, contacts are compared by identity and the client adds missing rows in a transaction. See [multi-station networking](../station/network.md) for upgrade and catch-up behavior.
 
 This division is useful when diagnosing a problem. A radio can follow frequency correctly while a keyer is misconfigured. A structurally sound database can contain a mistyped exchange. A correct export can still have the wrong submission category.
 

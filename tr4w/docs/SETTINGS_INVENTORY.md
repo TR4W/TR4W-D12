@@ -33,7 +33,7 @@ where a property does not. It is a staging post: every row that reaches the
 settings model leaves the record, and it is down to a handful of fields.
 Read `Config.X` as "a station setting that has not finished moving yet".
 
-## Settings that have moved (308)
+## Settings that have moved (310)
 
 These are published properties. The command name is DERIVED from the
 property path unless an alias says otherwise, and an alias exists only
@@ -148,6 +148,7 @@ comes last, a word run together.
 | `DVK LOCALIZED MESSAGES ENABLE` |  | global | `Settings.Dvk.LocalizedMessagesEnable` | boolean |  |
 | `DVK PATH` |  | global | `Settings.Dvk.Path` | string |  |
 | `DVK RECORDER` |  | global | `Settings.Dvk.Recorder` | string |  |
+| `ENABLE N1MM LOG LISTENER` |  | global | `Settings.Wsjtx.N1mmListenerEnabled` | boolean |  |
 | `ENFORCE VALID CALLSIGN` |  | global | `Settings.CallWindow.EnforceValidCallsign` | boolean |  |
 | `ESCAPE EXITS SEARCH AND POUNCE` |  | global | `Settings.Cq.EscapeExitsSearchAndPounce` | boolean |  |
 | `EXCHANGE MEMORY ENABLE` |  | **CONTEST** | `Settings.Contest.ExchangeMemoryEnable` | boolean |  |
@@ -224,6 +225,7 @@ comes last, a word run together.
 | `MY SECTION` |  | global | `Settings.My.Section` | string |  |
 | `MY STATE` | `MY QTH` | global | `Settings.My.State` | string |  |
 | `MY ZONE` |  | global | `Settings.My.Zone` | string |  |
+| `N1MM LISTEN ADDRESS` |  | global | `Settings.Wsjtx.N1mmListenAddress` | string |  |
 | `NAME FLAG ENABLE` |  | global | `Settings.Scp.NameFlagEnable` | boolean |  |
 | `NET STATUS UPDATE INTERVAL` |  | global | `Settings.Network.StatusUpdateInterval` | TNetStatusInterval |  |
 | `NETWORK AUTO CONNECT` |  | global | `Settings.Network.AutoConnect` | boolean |  |
@@ -373,9 +375,9 @@ is read out of the live settings object, so if the generator and the program
 ever disagree, the generator is wrong. `tools/settings_inventory_doc.py`
 makes that comparison every time it runs and refuses to write this file
 when the two differ; when this file was written they agreed exactly on all
-319 command names.
+321 command names.
 
-Run `tools/settings_inventory.py`, then `tools/settings_inventory_doc.py`.
+Run `python tools/settings_inventory_doc.py` from this checkout.
 
 **The Notes column is carried forward when regenerating**: the generator
 reads this file first and puts each note back against its command. A note

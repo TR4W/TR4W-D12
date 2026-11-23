@@ -12,11 +12,11 @@ The older manual distinguishes three related tools:
 
 Open preferences with **Ctrl+J** and search for those command names. Use the [current command reference](../reference/commands/index.md) for their current storage and accepted settings. In particular, do not assume the old manual's `NAMES` default is the current default: the current settings constructor selects **ALL**.
 
-## Sweepstakes call history in newer source
+## Contest call history
 
-**Unreleased source through 48806af1:** enable **USE CALL HISTORY FILE** and choose **CALL HISTORY FILENAME** in Preferences to use an N1MM-format history file. For Sweepstakes, a call not already known in the local log can prefill its check and section. With no filename set, the defaults are **SSCW.txt** for CW and **SSSSB.txt** for phone. Always confirm the received exchange on the air.
+Enable **USE CALL HISTORY FILE** and choose **CALL HISTORY FILENAME** in Preferences to use an N1MM-format history file. For Sweepstakes, a call not already known in the local log can prefill its check and section. With no filename set, the defaults are **SSCW.txt** for CW and **SSSSB.txt** for phone. A partial history row can prefill the fields it has. Always confirm the received exchange on the air.
 
-**Help → Download call history for this contest** downloads the contest file on demand from supercheckhistory.com. Downloads do not run for every QSO or on a timer. Invalid downloads do not replace an existing file. If you configured a custom filename, confirm that the downloaded file is the one you selected; downloading does not necessarily change that choice.
+**Help → Download call history for this contest** downloads supported files on demand, including for Sweepstakes, several other ARRL contests, CWops events, NA Sprint, and many QSO parties. TR4W applies a successful load live. A failed load leaves the previous history in use. If you configured a custom filename, confirm the path in the completion message.
 
 ## Use the possible-call strip
 
@@ -26,7 +26,7 @@ The current strip uses bold selection and red/white dupe cells rather than relyi
 
 ## Maintain the master data
 
-Use [Download TRMASTER.DTA](../start/data-updates.md) and restart as described there. SCP needs the master data available at the current [data-file location](../start/files.md). An empty result can mean no match, a country filter, a minimum-character threshold, or missing master data; it does not prove the callsign is invalid.
+Use [Download TRMASTER.DTA](../start/data-updates.md) and check the completion message. The new data is available after a successful load. An empty result can mean no match, a country filter, a minimum-character threshold, or missing master data. If enabled, **ENFORCE VALID CALLSIGN** separately checks the base call against the loaded country file before logging.
 
 ??? info "Source check"
     Earlier reference manual and wiki configuration statements for partial/possible calls and SCP. Current: `trdos/logedit.pas` (`DoPossibleCalls`, `SuperCheckPartial`), `trdos/logscp.pas`, `uSettingsModel`, and `MainUnit` candidate-key handlers. The current default keys are `,`, `.`, and `;`.

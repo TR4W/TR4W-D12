@@ -6,6 +6,7 @@ Update reference data before an event, then verify the affected lookup in a prac
 | --- | --- | --- |
 | `CTY.DAT` | Country/prefix lookup used by contest calculations | Country-file download action; **Alt+O** in the current accelerator table. |
 | `TRMASTER.DTA` | Super Check Partial/callsign assistance | **Download TRMASTER.DTA**. |
+| Contest call history | Known exchange information such as a Sweepstakes check and section | **Help → Download call history for this contest**, where available. |
 | `pota_parks.csv` | Park-reference lookup and displayed park names | **Download POTA Parks**. |
 | `.DOM` files | Contest-specific domestic multiplier definitions | Obtain the correct contest definition/data set; these are not the CTY or TRMASTER download. |
 
@@ -14,7 +15,7 @@ Update reference data before an event, then verify the affected lookup in a prac
 1. Finish any active operating task and retain a backup of the contest before changing data used for scoring.
 2. Select the appropriate download action and wait for its completion or error report.
 3. Check the destination if diagnosing a failure. Downloads use the [settings directory](files.md), or the directory of the explicit `--settings` file, rather than the application bundle.
-4. Follow the program's reload/restart message. The TRMASTER download module explicitly does not reload the running SCP database; restart before expecting the new callsign data to be active.
+4. In 5.1.0 a successful TRMASTER or call-history load takes effect in the running application. If the new file fails validation or loading, TR4W continues using the previous data. Follow the program's message for other data files.
 5. Check a known call/prefix or park reference. For POTA, confirm that the expected park name appears.
 
 CTY, TRMASTER, and park data solve different problems. Updating the callsign database does not update country boundaries or domestic multiplier definitions. A callsign suggestion is assistance, not evidence that it is the station you heard.

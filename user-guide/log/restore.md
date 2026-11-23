@@ -2,6 +2,16 @@
 
 The current contest log is a SQLite database. Older instructions for rebuilding or copying a legacy binary log are not the recovery procedure for this version. **Ctrl+R**, described as “Restore last entry” in the old shortcut list, is an entry-editing action, not database restoration.
 
+## Resume after a full disk
+
+If TR4W can open the database read-only, you can review the log while writes are blocked. A refused QSO stays in the call and exchange fields and the **QSO not saved** panel remains visible. Free space on the drive named in the notice, then press **Enter** to retry the retained entry. Confirm the QSO appears in the log and the writable notice clears the error. On a multi-op station, verify catch-up before continuing.
+
+One **Enter** saves all linked county-line, multi-park or rover rows in one transaction. A refused save leaves the entry available for retry and sends no contact to the server, external loggers, or UDP. Edit QSO and Alt+Y also keep the edit available when the database refuses it.
+
+## Correct station facts already logged
+
+Use **Tools → Correct Station Facts…** to repair an eligible sent value, such as the wrong CQ zone. Review the affected and skipped row counts before confirming. The confirmation defaults to **Cancel**. TR4W takes a verified backup, applies the change in one transaction, sends edits to connected systems, and rescores. Imported contacts, rows that never recorded that value, and applicable rover rows are skipped. In **Edit QSO**, you can inspect or correct individual station facts.
+
 ## Restore a verified log snapshot
 
 1. Stop logging and close TR4W. Preserve the current contest folder before replacing anything, including any `.db-wal` and `.db-shm` files that remain. Keep the originals together and untouched for investigation.

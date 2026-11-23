@@ -19,7 +19,7 @@ Only the multiplier categories used by the contest are meaningful. A view's exis
 
 The display resolves each entry against current multiplier state when painting. Worked status is evaluated with band and mode context and the contest's multiplier rules; a multiplier worked elsewhere may still be needed on this band.
 
-[REMAINING MULT DISPLAY MODE](../reference/commands/q-s.md#remaining-mult-display-mode) affects how worked entries are displayed. In the highlight mode, the form changes the rendering of worked entries. Exact colors depend on the UI configuration; do not rely on a color legend from an older screenshot.
+[REMAINING MULT DISPLAY MODE](../reference/commands/q-s.md#remaining-mult-display-mode) controls which entries appear. In 5.1.0, an unworked multiplier is plain, a worked multiplier is black with white text, and a multiplier that still wants a backup is orange by default. A count appears from the second working. Use **Preferences → Appearance → Colors** to change **BAND MAP WORKED MULT COLOR**, the backup-needed color shared with the band map.
 
 [SHOW DOMESTIC MULTIPLIER NAME](../reference/commands/q-s.md#show-domestic-multiplier-name) uses the longer alternate domestic name when one is available, otherwise retaining the ordinary entry label.
 

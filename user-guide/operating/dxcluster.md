@@ -14,6 +14,14 @@ The cluster console shows the node's messages and lets you send commands. Parsed
 
 The form also provides **Disconnect**, **Freeze**, **Clear**, **Commands**, and **SH/50**. Command support and response syntax depend on the cluster node; a button's presence does not make every server understand that command.
 
+Recognized `SH/DX` history replies can also populate the band map. Their age comes from the UTC time in the reply.
+
+## Self-spot from the run frequency
+
+Choose **Control → Self-spot** or put `{SPOTME}` in a [function-key message](../station/cw-messages.md#message-commands). TR4W supplies your callsign, run frequency, and contest name. It checks the contest's self-spot rules, run state, frequency, and cluster connection before sending.
+
+**CLUSTER AUTO SELF SPOT** is off by default. When enabled, **CLUSTER SELF SPOT INTERVAL** accepts 1–240 minutes and defaults to 10. A contest can require a longer minimum. Check the notice if a manual self-spot is refused.
+
 ## Freeze, clear, and history
 
 **Freeze** lets you hold the console view for reading; it is not the Disconnect command. **Clear** concerns console content, not the contest's QSO database. Use the controls for their displayed purpose rather than using console visibility as a connection-status test.

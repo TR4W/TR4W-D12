@@ -1,9 +1,6 @@
 # Commands Q–S
 
-!!! warning "Historical reference snapshot"
-    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
-
-Current setting metadata comes from the 5.0.22 inventory and source snapshot. Inherited help is explicitly labeled and may describe older behavior. [Read the reference conventions](index.md) before editing settings.
+Setting metadata was extracted from TR4W 5.1.0. The English help accompanying each setting may still need operator review. [Read the reference conventions](index.md) before editing settings.
 
 ## QSL CW MESSAGE {#qsl-cw-message}
 
@@ -14,13 +11,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;TU \ TEST&#x27; |
 | Other accepted names | QSL MESSAGE |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     The CW message sent to confirm (QSL) a completed QSO when logging in CQ Mode. Programmed via Alt+P. Typically includes your callsign and a TU or similar.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.QslCw`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -33,13 +30,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;NONE&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: STANDARD, QSL AND LOG, or QSL BUT NO LOG. This command can be used to change the criteria used to QSL an exchange and to log it when you are in CQ Mode. Normally, TR4W requires the complete exchange to be entered before you can QSL and log the contact. However, if you select QSL BUT NO LOG, the QSL message will be sent even if the exchange information is not completed, but you need to finish entering the exchange and hit &lt;Enter&gt; again before it will be logged. QSL AND LOG will totally eliminate any syntax checking on the exchange and log whatever you have entered. This mode is NOT recommended in normal operations.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Contest.QslMode`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -54,13 +51,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;QSL.WAV&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     The SSB voice message sent to confirm a completed QSO. Programmed via Alt+P.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.QslSsb`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -73,13 +70,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27; SRI QSO B4 TU \ TEST&#x27; |
 | Other accepted names | QSO BEFORE MESSAGE |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     CW message sent before the QSO exchange in CQ Mode - typically not used in standard operation. Programmed via Alt+P.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.QsoBeforeCw`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -92,13 +89,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;QSOB4.WAV&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     SSB voice message sent before the QSO exchange. Programmed via Alt+P.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.QsoBeforeSsb`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -111,13 +108,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     These parameters determine whether QSOs can be counted again if they occur on different bands or modes. The parameters are set up automatically when the CONTEST statement in your *.CFG file is executed, and normally do not require any changes.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qso.ByBand`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -132,13 +129,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     These parameters determine whether QSOs can be counted again if they occur on different bands or modes. The parameters are set up automatically when the CONTEST statement in your *.CFG file is executed, and normally do not require any changes.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qso.ByMode`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -153,38 +150,17 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When set to TRUE, the QSO numbers that are displayed on the screen, those that are sent in a CW message with the # character, and those shown in the log will be calculated from the total number of contacts on the active band. This is useful in a multi-transmitter situation where QSO numbers are being sent (e.g., the CQ WPX contest).
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Contest.QsoNumberByBand`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
     Historical help default: FALSE. This is not a verified current default.
-
-## QSO POINT METHOD {#qso-point-method}
-
-| Detail | Current metadata |
-| --- | --- |
-| Scope | Contest |
-| Values | Text |
-| Initial value in constructor | &#x27;NONE&#x27; |
-| Other accepted names | None listed |
-
-!!! warning "Explanation not yet written"
-    The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.
-
-??? info "Evidence and historical context"
-    Model path: `Settings.Contest.QsoPointMethod`. Source type: `string`.
-
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
-
-    This exact name appears in the v4.01 manual contents.
-
-    Historical help default: NONE. This is not a verified current default.
 
 ## QSO POINTS DOMESTIC CW {#qso-points-domestic-cw}
 
@@ -195,13 +171,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | -1 |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qso.PointsDomesticCw`. Source type: `TQsoPoints`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -216,13 +192,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | -1 |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qso.PointsDomesticPhone`. Source type: `TQsoPoints`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -237,13 +213,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | -1 |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qso.PointsDxCw`. Source type: `TQsoPoints`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -258,13 +234,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | -1 |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     These parameters allow you to control the QSO point values for the class of QSOs indicated. These will over-ride any existing QSO point method for the contacts in the category indicated.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qso.PointsDxPhone`. Source type: `TQsoPoints`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -279,13 +255,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | True |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     This parameter determines whether QSX information is decoded from packet spots. You might want to disable this feature if you are a DX station and are not interested in split spots.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qsx.Enable`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -300,13 +276,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     If TRUE, when you click on BANDMAP entry, it will QSY on the inactive radio. Note that TwoRadioMode must also be enabled for this to work.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.So2r.QsyInactiveRadio`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
@@ -321,13 +297,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     This is normally turned on automatically when a WAE is being configured. When you have enabled QTCs, you will need to remember that ctrl-Q is the magic key to send (if you are not in EU) or receive (if you are in EU) QTCs. TR4W will automatically ensure that you do not send a QTC containing the call of the station to whom you are sending the QTC. On CW, both the ctrl-Enter and alt-K keys work as usual even when QTCs are being sent.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qtc.Enable`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -342,13 +318,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | True |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When this parameter is TRUE, extra spaces are inserted between the elements of a QTC.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qtc.ExtraSpace`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -363,13 +339,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When this parameter is TRUE, the QTC function will send only the minutes of QTC times that are in the same hour as the time previously sent.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qtc.Minutes`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -384,13 +360,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | True |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When this parameter is TRUE, TR4W will send QTCs with the CW. speed approximately 6% slower than the normal sending speed.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qtc.Qrs`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -405,13 +381,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;?&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any key. Some keyboards require the use of a shift key to type the question mark. This command can be used to assign the ? key to another key2. This allows 2The author finds it useful to assign the = character with this command. operation without pressing the shift key, which may be inconvenient, or may change the rig frequency if your rig is interfaced to the computer.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.QuestionMarkChar`. Source type: `Char`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -426,13 +402,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;TU&#x27; |
 | Other accepted names | QUICK QSL CW MESSAGE1, QUICK QSL MESSAGE 1 |
 
-!!! quote "Inherited English help — behavior needs review"
-    Short CW acknowledgement message used instead of the full QSL MESSAGE when the AUTO QSL INTERVAL is active or when the QUICK QSL KEY is pressed. Programmed via Alt+P.
+!!! quote "English settings help"
+    Short CW acknowledgement message 1, sent instead of the full QSL MESSAGE when QUICK QSL KEY 1 is pressed instead of Enter (on phone that key sends QUICK QSL SSB MESSAGE), between the full QSL messages while AUTO QSL INTERVAL is active, and when a call is waiting on deck. Programmed via Alt+P.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.QuickQslCw1`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -445,13 +421,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;\&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any key. When you finish a contact while running on CW, normally you press &lt;Enter&gt; to log the contact and send the QSL MESSAGE. If you want to send the QUICK QSL MESSAGE 1 instead, you press the QUICK QSL KEY1 instead of &lt;Enter&gt;.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Message.QuickQslKey1`. Source type: `Char`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -464,13 +440,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;=&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any key. When you finish a contact while running on CW, normally you press &lt;Enter&gt; to log the contact and send the QSL MESSAGE. If you want to send the QUICK QSL MESSAGE 2 instead, you press the QUICK QSL KEY2 instead of &lt;Enter&gt;.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Message.QuickQslKey2`. Source type: `Char`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -485,13 +461,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;TU&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Short CW acknowledgement message 2, sent when QUICK QSL KEY 2 is pressed. Programmed via Alt+P.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.QuickQslCw2`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -506,13 +482,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;QUICKQSL.WAV&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
-    Short SSB voice acknowledgement message. Programmed via Alt+P. ### R
+!!! quote "English settings help"
+    Short SSB voice acknowledgement message. Programmed via Alt+P.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.QuickQslSsb`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -527,13 +503,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! warning "Explanation not yet written"
-    The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.
+!!! quote "English settings help"
+    When this parameter is TRUE and you are on CW, tuning the radio to a band map spot adds a small random offset of up to 30 Hz either side of the spot frequency (and of its split frequency, if the spot has one), so you do not land exactly on the spotted frequency. When FALSE, the radio is tuned exactly to the spot.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Qzb.RandomOffsetEnable`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -548,36 +524,17 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     If TRUE calculation of contriyes-multipliers will be based on R-150-S list.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Contest.R150SMode`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
     Historical help default: FALSE. This is not a verified current default.
-
-## RADIO TCP SERVER PORT {#radio-tcp-server-port}
-
-| Detail | Current metadata |
-| --- | --- |
-| Scope | Station |
-| Values | Integer |
-| Initial value in constructor | 52002 |
-| Other accepted names | None listed |
-
-!!! warning "Explanation not yet written"
-    The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.
-
-??? info "Evidence and historical context"
-    Model path: `Settings.Radio.TcpServerPort`. Source type: `integer`.
-
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
-
-    This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
 ## RADIUS OF EARTH {#radius-of-earth}
 
@@ -588,13 +545,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | Not extracted; see source |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any number. This parameter can be used to override the internal value of the Earths radius that is used for distance calculations. Enter the new radius in kilometers. A value of 0 causes TR4W to use the default internal value (which is 6378.1370 km3).
 
 ??? info "Evidence and historical context"
     Model path: `Settings.GridMap.RadiusOfEarth`. Source type: `double`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -609,13 +566,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When this parameter is TRUE, the Auto-CQ function will behave differently when selecting CQ MEMORY F1. Instead of always playing the message recorded in F1, the Auto-CQ procedure will randomly pick CQs from memories F1 through F4. This allows you to sound like you are awake. Blank messages in F1 through F4 are ignored.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cq.RandomMode`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -630,13 +587,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | Not extracted; see source |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: QSOS or QSO POINTS. The rate display can show either the rate at which you are making QSOs, or the rate at which your QSO points are increasing.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.MainWindow.RateDisplay`. Source type: `RateDisplayType`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -651,13 +608,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | Not extracted; see source |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: NONE, ERASE, HILIGHT. This command allows you to control how the remaining multiplier display function will work. If it is set to NONE, there will not be any display of remaining multipliers. If set to ERASE, the multipliers will be removed from the list as they are worked. If set to HILIGHT, multipliers that you have not worked yet will be highlighted.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.RemainingMults.DisplayMode`. Source type: `RemainingMultDisplayModeType`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -672,13 +629,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;&#x27; |
 | Other accepted names | REPEAT S&amp;P EXCHANGE |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     CW Exchange sent ween repeating the exchange in S&amp;P mode.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.RepeatSpExchangeCw`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
@@ -693,13 +650,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;RPTSPEX.WAV&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     SSB exchange message sent when repeating your exchange in S&amp;P mode. Programmed via Alt+P. ### S
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.RepeatSpExchangeSsb`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -712,13 +669,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Turning REVERSE INITIAL EX on to TRUE will reverse the search order so that TRMASTER is searched before Initial.Ex
 
 ??? info "Evidence and historical context"
     Model path: `Settings.InitialExchange.Reverse`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
@@ -733,13 +690,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     TO BE COMPLETED
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Contest.RfoblMode`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
@@ -754,13 +711,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | Not extracted; see source |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: SERIAL 1 to SERIAL 6. This command is used to choose a serial port over which commands will be sent to the rotator control (which may be set with the ROTATOR TYPE command). To send the rotator to the direction for the country of a callsign in the Call Window, use the ctrl-P command.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Rotator.Port`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -775,38 +732,17 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;NONE&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: DCU1, ORION, YAESU, ALFA SPID or PSTROTATOR. Sets the type of the rotator control.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Rotator.RotatorType`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
     Historical help default: NONE. This is not a verified current default.
-
-## ROW COUNT {#row-count}
-
-| Detail | Current metadata |
-| --- | --- |
-| Scope | Station |
-| Values | 5–15 (numeric type bounds; see description for units) |
-| Initial value in constructor | 5 |
-| Other accepted names | None listed |
-
-!!! quote "Inherited English help — behavior needs review"
-    Number of log lines displayed in the main window.
-
-??? info "Evidence and historical context"
-    Model path: `Settings.MainWindow.RowCount`. Source type: `TLogRowCount`.
-
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
-
-    This exact name appears in the v4.01 manual contents.
-
-    Historical help default: 5. This is not a verified current default.
 
 ## S&P CW EXCHANGE {#s-p-cw-exchange}
 
@@ -817,13 +753,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;&#x27; |
 | Other accepted names | S&amp;P EXCHANGE |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     The CW exchange message sent in Search and Pounce mode. This is separate from the CQ exchange to allow different content when calling a station. Programmed via Alt+P.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.SpExchangeCw`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -836,13 +772,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;SAPEXCHG.WAV&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     The SSB voice exchange message sent in S&amp;P mode. Programmed via Alt+P. ### T
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Messages.SpExchangeSsb`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -855,13 +791,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     If you have programmed CW messages that include names from the TRMASTER database, SAY HI ENABLE will determine whether the names are actually used. This allows you to program the messages with the names included, but to disable them all without having to edit each message.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.SayHi.Enable`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -876,13 +812,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | 200 |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     If SAY HI ENABLE is TRUE, TR4W will cease to greet the other station when your rate exceeds the value of SAY HI RATE CUTOFF.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.SayHi.RateCutoff`. Source type: `TSayHiRateCutoff`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -894,20 +830,40 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | --- | --- |
 | Scope | Station |
 | Values | Text |
-| Initial value in constructor | &#x27;https://post.contestonlinescore.com/post/&#x27; |
+| Initial value in constructor | Not extracted; see source |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Post to Online Scoreboard
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Score.PostingUrl`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
     Historical help default: http://post.contestonlinescore.com/. This is not a verified current default.
+
+## SCORE POSTING URL DEFAULT MIGRATED {#score-posting-url-default-migrated}
+
+| Detail | Current metadata |
+| --- | --- |
+| Scope | Station |
+| Values | TRUE or FALSE |
+| Initial value in constructor | False |
+| Other accepted names | None listed |
+
+Internal flag recording whether TR4W has checked the saved scoreboard posting URL for the one-time default URL migration. Set the posting URL through Online scoring.
+
+[Step-by-step guide](../../station/online-scores.md)
+
+??? info "Evidence and historical context"
+    Model path: `Settings.Score.PostingUrlDefaultMigrated`. Source type: `boolean`.
+
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
+
+    This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
 ## SCORE READING URL {#score-reading-url}
 
@@ -918,17 +874,36 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;https://contestonlinescore.com/scoreboard/&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Read Online Scoreboard
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Score.ReadingUrl`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
     Historical help default: https://contestonlinescore.com/scoreboard/. This is not a verified current default.
+
+## SCORE VERIFY SERVER {#score-verify-server}
+
+| Detail | Current metadata |
+| --- | --- |
+| Scope | Station |
+| Values | TRUE or FALSE |
+| Initial value in constructor | True |
+| Other accepted names | None listed |
+
+!!! quote "English settings help"
+    When TRUE, TR4W checks the score board server&#x27;s certificate when it posts your score to the Posting URL, as long as the program-wide certificate check in settings/tr4w.json is on (it is by default). Clear it only for a server whose certificate cannot be checked: the server&#x27;s identity is then not checked and anyone between you and it can read what you send.
+
+??? info "Evidence and historical context"
+    Model path: `Settings.Score.VerifyServer`. Source type: `boolean`.
+
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
+
+    This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
 ## SCP COUNTRY STRING {#scp-country-string}
 
@@ -939,13 +914,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Comma-separated list of country prefixes. This command allows you to limit the stations that are displayed by the Super Check Partial function. Entering a comma-separated list of country prefixes (e.g., K, VE, KL7, KH6, KP2, KP4) causes only stations from those countries to be displayed when performing the Super Check Partial function. The default is to list stations from all countries. If you place a ! or - in front of the list of countries, then only stations in countries not in the list will be displayed by Super Check Partial.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Scp.CountryString`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -960,13 +935,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | 0 |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: 0, 3, 4, or 5. When this parameter is non-zero, it enables the automatic Super Check Partial function. When you enter the number of characters specified, partial calls will be automatically displayed. You must have a TRMASTER.DTA file available for the program for this feature to work.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Scp.MinimumLetters`. Source type: `integer`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -981,13 +956,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     The } character in a CW message will send the prefix or suffix of a corrected callsign. If you set this parameter to TRUE, it will send the complete callsign if it is only four characters in length.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.SendCompleteFourLetterCall`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1002,13 +977,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;LOCALHOST&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     The name or IP address of the computer that is running TR4WSERVER.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Server.Address`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1023,13 +998,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When running in network mode, rather than asking th euser if they want to sync the logs, the program does so automatically. It reports any errors it finds.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Server.AutoSynchronizeLogOnConnect`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
@@ -1044,13 +1019,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;TR4WSERVER&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Value: 10 chars length string. Password for connection to TR4WSERVER.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Server.Password`. Source type: `TSecretText`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1065,17 +1040,55 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | 1061 |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Ethernet port number, which will used connection with TR4WSERVER.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Server.Port`. Source type: `TServerPort`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
     Historical help default: 1061. This is not a verified current default.
+
+## SERVER TAILCAT ADDRESS {#server-tailcat-address}
+
+| Detail | Current metadata |
+| --- | --- |
+| Scope | Station |
+| Values | Credential; use the settings UI |
+| Initial value in constructor | &#x27;&#x27; |
+| Other accepted names | None listed |
+
+!!! quote "English settings help"
+    The address the operator of a TR4WSERVER gives you so that this computer can reach the server from another network through a Tailcat tunnel. Paste it exactly as given. It is used only while SERVER USE TAILCAT is TRUE. It contains the tunnel&#x27;s key, so treat it like a password.
+
+??? info "Evidence and historical context"
+    Model path: `Settings.Server.TailcatAddress`. Source type: `TSecretText`.
+
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
+
+    This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
+
+## SERVER USE TAILCAT {#server-use-tailcat}
+
+| Detail | Current metadata |
+| --- | --- |
+| Scope | Station |
+| Values | TRUE or FALSE |
+| Initial value in constructor | False |
+| Other accepted names | None listed |
+
+!!! quote "English settings help"
+    Set to TRUE to reach TR4WSERVER through the Tailcat tunnel named by SERVER TAILCAT ADDRESS instead of at SERVER ADDRESS. While it is TRUE, SERVER ADDRESS is not used; SERVER PORT still is, because it is the server&#x27;s port inside the tunnel. If SERVER TAILCAT ADDRESS is empty the connection fails and says so; TR4W does not fall back to SERVER ADDRESS. Set it to FALSE when you are on the server&#x27;s own network; the address is kept for next time.
+
+??? info "Evidence and historical context"
+    Model path: `Settings.Server.UseTailcat`. Source type: `boolean`.
+
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
+
+    This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
 ## SHIFT KEY ENABLE {#shift-key-enable}
 
@@ -1086,13 +1099,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | True |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     The shift keys can be used to adjust the frequency of Kenwood, Flex, Icom and some Yaesu rigs. To disable this feature, set this parameter to FALSE.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Operating.ShiftKeyEnable`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1107,13 +1120,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;0&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any character. Defines the character to be sent instead of a 0 in a QSO number if SHORT INTEGERS is TRUE.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.Short0`. Source type: `AnsiChar`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1128,13 +1141,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;1&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any character. Defines the character to be sent instead of a 1 in a QSO number if SHORT INTEGERS is TRUE.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.Short1`. Source type: `AnsiChar`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1149,13 +1162,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;2&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any character. Defines the character to be sent instead of a 2 in a QSO number if SHORT INTEGERS is TRUE.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.Short2`. Source type: `AnsiChar`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1170,13 +1183,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;9&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any character. Defines the character to be sent instead of a 9 in a QSO number if SHORT INTEGERS is TRUE.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.Short9`. Source type: `AnsiChar`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1191,36 +1204,17 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When this parameter is TRUE, TR4W will allow short abbreviations for some integers when they are sent as part of a QSO number. The actual abbreviations that are used can be programmed using the Alt-P command or the SHORT 0, SHORT 1, SHORT 2, and SHORT 9 commands.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.ShortIntegers`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
     Historical help default: FALSE. This is not a verified current default.
-
-## SHOW ALL SERIAL PORTS {#show-all-serial-ports}
-
-| Detail | Current metadata |
-| --- | --- |
-| Scope | Station |
-| Values | TRUE or FALSE |
-| Initial value in constructor | False |
-| Other accepted names | None listed |
-
-!!! warning "Explanation not yet written"
-    The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.
-
-??? info "Evidence and historical context"
-    Model path: `Settings.SerialPorts.ShowAll`. Source type: `boolean`.
-
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
-
-    This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
 ## SHOW DOMESTIC MULTIPLIER NAME {#show-domestic-multiplier-name}
 
@@ -1231,13 +1225,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! warning "Explanation not yet written"
-    The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.
+!!! quote "English settings help"
+    When this parameter is TRUE, the remaining multipliers window lists each domestic multiplier by the name its domestic multiplier (.dom) file gives it (the entry starting with ^), where it has one, instead of its abbreviation, and widens the column to fit. The change is shown at once.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.RemainingMults.ShowDomesticName`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1252,13 +1246,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | True |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     If the value is TRUE in Cabrillo log will substitute the actual frequency of QSO.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Log.ShowFrequency`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1273,13 +1267,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | Not extracted; see source |
 | Other accepted names | None listed |
 
-!!! warning "Explanation not yet written"
-    The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.
+!!! quote "English settings help"
+    When this parameter is TRUE, grid lines are drawn between the rows and columns of the log grid in the main window. The change is shown at once.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.MainWindow.ShowGridlines`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1294,13 +1288,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | True |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     If TRUE typed callsign in callsign window will displayed in &quot;Network&quot; window.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Network.ShowTypedCallsign`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1315,13 +1309,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;160&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     This command can be used to force the score calculator to use the QSOs for only a single band. If you change the value of the SINGLE BAND SCORE parameter during a contest, you will need to delete your *.RST file before restarting TR4W.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Contest.SingleBandScore`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1336,13 +1330,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     If you are using two rigs and SKIP ACTIVE BAND is TRUE, TR4W will skip over the band to which the other rig is tuned when switching bands using the alt-B or alt-V commands.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.So2r.SkipActiveBand`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1357,13 +1351,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;/&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any character. If you wish to use a different keyboard character to make the / mark, use this command to specify it. This is handy for some European keyboards.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.SlashMarkChar`. Source type: `Char`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1378,13 +1372,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | True |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Normally when you press &lt;Space&gt; when a callsign is present in the Call Window, TR4W will perform a dupe check on the displayed callsign. If you press &lt;Space&gt; without a callsign in the window, you will be put into S&amp;P Mode and your callsign will be sent. If you set SPACE BAR DUPE CHECK ENABLE to FALSE, you will always go into S&amp;P Mode and send your call, even if a call is present in the Call Window.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.CallWindow.SpaceBarDupeCheck`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1399,13 +1393,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | Not extracted; see source |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When using the DXLab Suite of programs, this will allow SpotCollector to populate the TR4W callsign window when clicking on a spot.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.SpotCollector.Enabled`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name was not found in the extracted v4.01 contents; that does not establish when the feature was introduced.
 
@@ -1420,13 +1414,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     If this parameter is TRUE, TR4W will automatically enter CQ Mode after completing a QSO in S&amp;P Mode. This parameter is automatically set to TRUE when the Sprint contest is selected. See subsection 6.18.1 for more information on operating the Sprint. You should not set this variable to TRUE unless you are operating the Sprint. For similar (but not quite identical) behaviour in other contests, see the AUTO S&amp;P ENABLE command.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Contest.SprintQsyRule`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1441,13 +1435,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;&#x27;&#x27;&#x27; |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     Values: Any key. If you are running stations on CW and a station that has answered you has already finished sending his call, but you have not yet finished typing his call, you can press the START SENDING NOW KEY. This will send the characters you have already typed, and also the ones that you type after hitting the key, until you press &lt;Enter&gt;. After pressing &lt;Enter&gt;, the normal exchange will be sent. You may set the START SENDING NOW KEY to the &lt;Space&gt; key with the command: START SENDING NOW KEY = SPACE If the cursor is in the Call Window, then the space bar only causes sending to begin if there is at least one character in the window.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.StartSendingNowKey`. Source type: `Char`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1462,13 +1456,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | &#x27;&#x27; |
 | Other accepted names | None listed |
 
-!!! warning "Explanation not yet written"
-    The setting is present in the inventory, but no usable English description was found. Its name alone is not enough to infer its behavior.
+!!! quote "English settings help"
+    Values: any text. The Stations window lists only the callsigns that contain this text anywhere in them (it is a plain match, not a wildcard pattern); leave it empty to list every station. The list on screen is filtered again as soon as you change it.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Stations.CallsignsMask`. Source type: `string`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1483,13 +1477,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     This command sets the state of the STEREO CONTROL PIN on the STEREO CONTROL PORT. The value may be toggled with the function key command TOGGLESTEREOPIN.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Cw.StereoPinHigh`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1504,13 +1498,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When this parameter is TRUE, TR4W reverses which rig receives a packet spot when ctrl-U and the left/right cursor keys are used. This is useful if your station is configured such that your rig number 2 is physically on the left.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.So2r.SwapPacketSpotRadios`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1525,13 +1519,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     This parameter swaps the dit and dah inputs on the paddle port. This is handy if your paddle is wired backwards.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.Paddle.Swap`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 
@@ -1546,13 +1540,13 @@ Current setting metadata comes from the 5.0.22 inventory and source snapshot. In
 | Initial value in constructor | False |
 | Other accepted names | None listed |
 
-!!! quote "Inherited English help — behavior needs review"
+!!! quote "English settings help"
     When this parameter is TRUE, TR4W reverses the polarity of the relay for controlling the radio.
 
 ??? info "Evidence and historical context"
     Model path: `Settings.So2r.SwapRelaySense`. Source type: `boolean`.
 
-    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Inherited help (`tr4w/target/commands_help_eng.ini`)
+    Settings model (`tr4w/src/uSettingsModel.pas`) · Inventory (`tr4w/docs/SETTINGS_INVENTORY.md`) · Current English help (`i18n/help_en.po`)
 
     This exact name appears in the v4.01 manual contents.
 

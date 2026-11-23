@@ -6,6 +6,8 @@ TR4W uses a SQLite database as the contest log. Protection comes from several ch
 
 The database layer checks file identity and schema version. A foreign database or a schema newer than the program understands is refused rather than treated as a compatible log.
 
+Before upgrading an older schema, the log store requests and verifies a snapshot. A failed backup stops the upgrade before changes to the original database. The 5.1.0 station log uses schema 13. The protocol 5 server store has its own format and file extension.
+
 On opening the contest store, TR4W checks database integrity and then checks whether it can write. An integrity failure prevents normal logging and reports the problem. If another process locks the log, startup offers **Retry**, **Open read-only (no logging)**, or **Quit TR4W**. Read-only mode permits viewing and export but cannot save QSOs. Release the other process's lock and retry when you need to log; opening read-only does not repair a damaged database. Opening a file successfully is not treated as proof that a later QSO can be saved.
 
 | Check | What it detects |
@@ -21,6 +23,8 @@ The full integrity check runs on open; it is not a full database scan after ever
 
 The append path starts with a failure result and returns success only after the repository commit succeeds. This makes “saved” depend on persistence rather than merely placing a row on screen.
 
+Linked county-line, multi-park, and rover rows are committed as a batch. A refused save keeps the entry in the operating window and suppresses outbound delivery. When a full disk leaves the log read-only, see [resume after a full disk](../log/restore.md#resume-after-a-full-disk).
+
 The write connection requests `synchronous = FULL` and write-ahead logging (`journal_mode = WAL`). It reads back the actual journal mode and foreign-key enforcement state. Foreign-key enforcement is required. WAL is requested rather than assumed; the connection records the mode SQLite actually supplies.
 
 In WAL mode, recent committed data can reside in a companion `-wal` file. The main `.db` file alone is therefore not necessarily a complete live copy of the contest.
@@ -30,6 +34,8 @@ In WAL mode, recent committed data can reside in a companion `-wal` file. The ma
 The backup path creates a consistent SQLite snapshot, including committed data still in the WAL. It writes to a staged `.new` file, opens that snapshot on a separate read-only connection, checks it, then publishes it by rename. An existing destination is retained as `.bak` during replacement.
 
 Verification is read-only so it does not change the bytes being checked. Failure cases report the surviving filenames, including a verified `.new` file when publication fails. See [Back up your log](../log/backup.md) for the operating procedure.
+
+The periodic worker snapshots through its own read-only connection and coalesces requests. Backups required before upgrading, clearing, or bulk correcting station facts complete before the corresponding write proceeds.
 
 ## What these protections cannot prove
 

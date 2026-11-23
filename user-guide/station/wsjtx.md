@@ -2,6 +2,8 @@
 
 WSJT-X performs the digital-mode work. TR4W receives its UDP messages to support contest logging and callsign highlighting.
 
+You can set up WSJT-X in **Tools → Setup Wizard**. The page offers the enable switch, UDP port, callsign highlighting, radio control, and the advanced multicast group. The wizard saves only changed settings, and a Tools-menu run tells you when a restart is needed.
+
 ## Match the UDP connection
 
 1. Open a practice contest in TR4W.
@@ -14,6 +16,8 @@ WSJT-X performs the digital-mode work. TR4W receives its UDP messages to support
 
 Confirm that decoded calls receive the expected highlighting. Then, when you complete and confirm a QSO in WSJT-X, check that it appears once in TR4W with the expected call, band, mode, and exchange.
 
+TR4W can fill a missing state from the received grid when the lookup gives a unique answer. If the grid spans more than one state, it shows the candidates for you to check. Live WSJT-X records use the open TR4W contest.
+
 | If you see this | Check this |
 | --- | --- |
 | No received activity | Matching port, destination/group, selected network interface, and local firewall rules. |
@@ -22,7 +26,13 @@ Confirm that decoded calls receive the expected highlighting. Then, when you com
 
 ## Radio control is a separate connection
 
-Receiving a QSO over UDP does not establish CAT control. First verify [TR4W's radio connection](radio.md). The wiki also describes using TR4W's DXLab Commander-compatible TCP server from WSJT-X; a current 5.x end-to-end setup for that path is outside this prototype.
+First verify [TR4W's radio connection](radio.md). To let WSJT-X use that radio, enable **WSJT-X RADIO CONTROL ENABLED** in Preferences or the wizard, restart if prompted, and select **DX Lab Suite Commander** as the rig in WSJT-X. Point it at TR4W's Commander-compatible TCP service, default port `52002`. Test frequency and mode changes with the intended rig. The UDP logging port is separate.
+
+## Receive N1MM-style log messages
+
+For a program configured to send N1MM Logger+ Log messages, enable **ENABLE N1MM LOG LISTENER** in TR4W Preferences. It is off by default. TR4W listens on UDP `2333` and TCP `52001`. **N1MM LISTEN ADDRESS** defaults to `127.0.0.1`, for senders on the same computer. To receive from another computer, set the listener to this station's LAN address and allow only trusted senders to reach it. Both settings apply when saved. Any sender that can reach the listener can add records to the open contest log.
+
+Choose one forwarding path per sender. A resent contact can be logged and flagged as a dupe. This listener receives contact records and does not provide WSJT-X highlighting or CAT control.
 
 [WSJT-X setting names and defaults](../reference/wsjtx.md)
 

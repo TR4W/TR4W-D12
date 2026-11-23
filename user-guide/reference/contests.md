@@ -1,13 +1,10 @@
 # Available contests
 
-!!! warning "Historical reference snapshot"
-    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
-
-**184 choices** from the same `ContestTypeSA` table used by the new-contest picker. The internal DUMMY CONTEST entry is omitted, just as it is in that picker. This list includes general logging and operating activities as well as competitive events.
+**213 contest identifiers** in TR4W 5.1.0, including legacy names and contests registered by ID. This list includes general logging and operating activities as well as competitive events.
 
 Select the exact event/mode when [starting a contest](../start/first-contest.md). A selectable name means the program has a contest definition; it does not certify current sponsor rules, every exchange variation, or hardware/platform testing. Check the event rules and exercise an example exchange and export before operating.
 
-The newer contest factory is not the entire supported-contest list: definitions that remain in the existing contest engine still appear in the picker.
+The New Contest picker can show a friendly event name in place of the identifier.
 
 ## 7
 
@@ -15,11 +12,14 @@ The newer contest factory is not the entire supported-contest list: definitions 
 
 ## A
 
+- AC-QSO-PARTY
+- AL-QSO-PARTY
 - ALL JA
 - ALL-ASIAN-DX-CW
 - ALL-ASIAN-DX-SSB
 - ALRS-UA1DZ-CUP
 - AP-SPRINT
+- AR-QSO-PARTY
 - ARCI
 - ARI-DX
 - ARIZONA QSO PARTY
@@ -54,6 +54,7 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - CIS
 - COLORADO QSO PARTY
 - COUNTY HUNTER
+- CP-QSO-PARTY
 - CQ-160-CW
 - CQ-160-SSB
 - CQ-M
@@ -76,6 +77,7 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - DARC-WAEDC-CW
 - DARC-WAEDC-SSB
 - DARC-XMAS
+- DELAWARE QSO PARTY
 
 ## E
 
@@ -95,6 +97,7 @@ The newer contest factory is not the entire supported-contest list: definitions 
 
 ## G
 
+- GA-QSO-PARTY
 - GACW-WWSA-CW
 - GAGARIN-CUP
 - GENERAL QSO
@@ -105,10 +108,14 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - HA DX
 - HELVETIA
 - HF-TESLA
+- HI-QSO-PARTY
 
 ## I
 
+- IA-QSO-PARTY
 - IARU-HF
+- IDAHO QSO PARTY
+- IL-QSO-PARTY
 - IN QSO PARTY
 - IN7QPNE
 - INTERNET SPRINT
@@ -126,10 +133,13 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - KIDS DAY
 - KING-OF-SPAIN-CW
 - KING-OF-SPAIN-SSB
+- KS-QSO-PARTY
 - KVP
+- KY-QSO-PARTY
 
 ## L
 
+- LA-QSO-PARTY
 - LABRE
 - LOCUST QSO PARTY
 - LZ DX
@@ -145,6 +155,7 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - MINNESOTA QSO PARTY
 - MISSOURI QSO PARTY
 - MONGOLIAN DX
+- MS-QSO-PARTY
 - MST
 - MWC
 
@@ -157,7 +168,12 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - NAQP-SSB
 - NC QSO PARTY
 - NCCC-SPRINT
-- NEQP
+- ND-QSO-PARTY
+- NE-QSO-PARTY
+- NEWEQP
+- NH-QSO-PARTY
+- NJ-QSO-PARTY
+- NM-QSO-PARTY
 - NRAU-BALTIC-CW
 - NRAU-BALTIC-SSB
 - NY-QSO-PARTY
@@ -170,6 +186,8 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - OHIO QSO PARTY
 - OK-OM DX CW
 - OK-OM DX SSB
+- OK-QSO-PARTY
+- ON-QSO-PARTY
 - OZCHR
 - OZCHR-TEAMS
 - OZHCR-VHF
@@ -183,6 +201,7 @@ The newer contest factory is not the entire supported-contest list: definitions 
 
 ## Q
 
+- QC-QSO-PARTY
 - QCWA
 - QCWA GOLDEN
 
@@ -213,6 +232,7 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - RSGB-ROPOCO-SSB
 - RTC
 - RU3AX MEMORIAL
+- RUS-WW-DIGI
 
 ## S
 
@@ -220,6 +240,8 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - SAC-CW
 - SAC-SSB
 - SALMON RUN
+- SC-QSO-PARTY
+- SD-QSO-PARTY
 - SOUTH AMERICAN WW
 - SP DX
 - SRR-JR
@@ -244,17 +266,21 @@ The newer contest factory is not the entire supported-contest list: definitions 
 - UKRAINIAN
 - UN DX
 - URAL-CUP
+- URC-DX-RTTY
 
 ## V
 
 - VAQP
+- VT-QSO-PARTY
 
 ## W
 
 - WAG
 - WINTER FIELD DAY
 - WISCONSIN QSO PARTY
+- WRT
 - WRTC
+- WV-QSO-PARTY
 - WW PMC
 - WWDIGI
 - WWIH
@@ -273,6 +299,6 @@ The newer contest factory is not the entire supported-contest list: definitions 
 
 ## Evidence
 
-Contest name table (`tr4w/src/VC.pas`) · Picker population (`tr4w/src/ui/lcl/uNewContestForm.pas`)
+Contest name table (`tr4w/src/VC.pas`) · Contest registry (`tr4w/src/contestFactory/uContestRegistry.pas`) · Linked contest units (`tr4w/tr4w.lpr`)
 
-Regenerate with `python tools/build_command_reference.py`. Names are retained exactly as the picker supplies them.
+Source revision: `4a0707be141d12c48327358c23deeddd2f0af0b7`. Regenerate with `python tools/build_command_reference.py`.

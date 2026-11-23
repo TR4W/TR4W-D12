@@ -1,16 +1,16 @@
 # Install TR4W
 
-Choose a package for your operating system and CPU, and read the release notes supplied with that package. This guide covers the 5.x preview. The [5.0.26 release](https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.26) includes a Windows installer, Linux x86-64 tarball/AppImage, and macOS Apple Silicon packages; check the asset name before downloading.
+Choose the package for your operating system and CPU from the [TR4W-D12 releases](https://github.com/TR4W/TR4W-D12/releases). This guide covers 5.1.0. Check the asset name and read the notes supplied with your chosen release.
 
 TR4W runs natively on Windows, macOS, and Linux. Start at the [TR4W website](https://tr4w.net/) or the project's release channel and select the intended version; these pages document 5.x.
 
 === "Windows"
 
-    1. Obtain the intended Windows installer or complete preview package from the project's release channel.
+    1. Obtain `tr4w_setup_<version>-x64.exe` or the corresponding complete preview package from the project's release channel. Current 5.x Windows builds require 64-bit Windows. Use 4.x on a 32-bit Windows system.
     2. Close TR4W before replacing an existing installation. Preserve your contest files and settings.
     3. Run the installer, or extract the complete preview package into a writable location according to its supplied instructions. Keep required libraries and data with the application.
     4. When moving from 4.x, run the [INI-to-JSON converter](ini-to-json.md) before the first normal launch.
-    5. Launch using the installed shortcut. Windows data and contest defaults are based on the working directory, so a custom shortcut's **Start in** folder matters.
+    5. Launch using the installed shortcut. A Program Files installation keeps [writable files](files.md) under `%APPDATA%\TR4W`. The Start menu's **Release notes** shortcut opens the notes included with the installer.
 
 === "Linux"
 
@@ -48,7 +48,7 @@ TR4W runs natively on Windows, macOS, and Linux. Start at the [TR4W website](htt
     | `.dmg` — disk image | Open the image and drag `TR4W.app` to Applications, then eject the image. | Yes, `tr4wserver` is beside the app in the image. |
     | `.tar.gz` — archive | Extract the archive, keep the app bundle intact, and copy it to Applications. | Yes, beside the app in the extracted payload. |
 
-    For a normal desktop installation, download `tr4w-5.0.26-aarch64-darwin.pkg`. Close any running TR4W instance before installing an update, complete Installer, then open **Applications → TR4W** and confirm the version. Station setup, including callsign and grid, happens in TR4W after installation.
+    For a normal desktop installation, download the Apple Silicon `.pkg` for the version you intend to run. Close any running TR4W instance before installing an update, complete Installer, then open **Applications → TR4W** and confirm the version. Station setup, including callsign and grid, happens in TR4W after installation.
 
     All three formats carry the same application build. Choose the disk image or archive if this Mac must also run the [multi-op server](../station/network.md); the installer alone does not install it. Installing the app does not start a server automatically.
 

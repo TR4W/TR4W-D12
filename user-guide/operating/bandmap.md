@@ -10,9 +10,9 @@ In a two-radio setup, double-click behavior can target the inactive radio when t
 
 Tuning to a spot does not complete or log a contact. Confirm the station's callsign and exchange on the air.
 
-## Worked-multiplier target in newer source
+## Worked-multiplier target
 
-**Unreleased source through 48806af1:** **BAND MAP WORKED MULT LIMIT** accepts **1–9**, with **1** as the default. An orange **M** marks a multiplier already worked fewer times than your chosen target. **MULTS ONLY** keeps those spots visible. Sweepstakes counts a section across bands; CQ WW counts the relevant multiplier per band.
+**BAND MAP WORKED MULT LIMIT** accepts **1–9**, with **1** as the default. An orange **M** marks a multiplier already worked fewer times than your chosen target. **MULTS ONLY** keeps those spots visible. Sweepstakes counts a section across bands and CQ WW counts the relevant multiplier per band.
 
 A spot needs usable multiplier information, such as a section or state in the cluster comment. Tuning to a spot does not count it as worked; logging the contact changes the count.
 
@@ -28,7 +28,15 @@ Right-click the map for its display controls:
 | BAND MAP DUPE DISPLAY | Control whether already-worked stations remain visible. |
 | BAND MAP MULTS ONLY | Limit the view to spots classified as multipliers. |
 | BAND MAP SO2R DISPLAY | Adjust the two-radio display behavior. |
+| Hide digital spots | Filter digital spots from the map. |
+| Center on radio frequency | Center the frequency-ordered view around the radio. |
+| Sort by beam heading | Sort spots by heading. Centering is unavailable while this sort is active. |
+| Text size | Enlarge, shrink or reset band-map text independently of the main window. **BAND MAP SIZE** accepts **−4 to 12**. |
 | Delete selected spot / Remove all spots | Remove spot entries, not contacts from the contest log. |
+
+**BAND MAP DISPLAY LIMIT** caps how many spots can display within the available space. The map follows the active radio's band and mode. The nearest spot has an outline, and a spot within the guard band uses the VFO marker color for its frequency. Set the spot, selection and marker colors in **Preferences → Appearance → Colors**.
+
+Enable **BAND MAP CLICK GOES TO EXCHANGE** if you want a single click to move keyboard focus to the exchange field. Its default is off.
 
 Spot decay limits how long entries remain useful. [BAND MAP DECAY TIME](../reference/commands/a-d.md#band-map-decay-time) is used as minutes by the display's age calculation. A station can leave the frequency before the spot expires.
 

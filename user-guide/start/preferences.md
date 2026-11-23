@@ -12,8 +12,10 @@ For [external loggers](../station/external-loggers.md), saving applies enable/di
 
 Passwords and API keys use the operating system's credential store. A settings-file backup alone does not move these secrets to another machine.
 
-## Contest pages in newer source
+## Contest pages and station defaults
 
-**Unreleased source through 48806af1** organizes Contest settings into **QSO settings**, **Modes**, **Initial exchange**, **Multiplier data**, **Quick QSL**, **QTC**, **Contest rules**, and **Cabrillo headings**. The initial-exchange and call-history filename controls have browse buttons. An older installed release may show a different tree.
+Contest settings include **QSO settings**, **Modes**, **Initial exchange**, **Multiplier data**, **Quick QSL**, **QTC**, **Contest rules**, and **Cabrillo headings**. The initial-exchange and call-history filename controls have browse buttons.
 
-Use a setting's help tooltip for its meaning. The generated [command reference snapshot](../reference/commands/index.md) preserves older names and descriptions; it is not a complete inventory of these newer pages.
+The **Station** page shows the open contest's values when it defines its own. When you change such a value, choose **Station default only** or **Also this contest**. Review any separate offer to correct older QSOs. Individual contacts retain the station facts sent when they were logged.
+
+Hover over a control for help or search the [command reference](../reference/commands/index.md) by its configuration name.

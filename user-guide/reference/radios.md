@@ -1,9 +1,6 @@
 # Radio support and connection reference
 
-!!! warning "Historical reference snapshot"
-    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
-
-**101 registrations** extracted from the radio factory in this source snapshot. This is a declared driver/transport inventory, not a report of successful hardware tests.
+**102 registrations** extracted from the radio factory in this source snapshot. This is a declared driver/transport inventory, not a report of successful hardware tests.
 
 ## Read the table
 
@@ -158,8 +155,9 @@
 
 | Model | Driver | Serial | Network | Network port | Discovery | Serial defaults: baud / bits / parity / stops |
 | --- | --- | --- | --- | --- | --- | --- |
+| DXLab Commander | Native TR4W | No | Yes | 52002 | No | — |
 | Expert TCI (HamLib bridge) | Hamlib only (ID 7) | Backend-dependent | Backend-dependent | — | No | 57600 / 8 / NONE / 2 |
-| FLRig (HamLib bridge) | Hamlib only (ID 4) | Backend-dependent | Backend-dependent | — | No | 57600 / 8 / NONE / 2 |
+| FLRig (XML-RPC) | Native TR4W | No | Yes | 12345 | No | — |
 | N3FJP ACLog (HamLib bridge) | Hamlib only (ID 8) | Backend-dependent | Backend-dependent | — | No | 57600 / 8 / NONE / 2 |
 | TCI (ExpertSDR / Thetis / AetherSDR) | Native TR4W | No | Yes | 50001 | No | — |
 | TRX-Manager (HamLib bridge) | Hamlib only (ID 5) | Backend-dependent | Backend-dependent | — | No | 57600 / 8 / NONE / 2 |
@@ -168,4 +166,4 @@
 
 `python tools/build_command_reference.py` extracts initialization registrations and fails on unparsed registration calls or duplicate identifiers. It does not instantiate drivers, open ports, or check the linked application at runtime. Review model-specific source and bench status before claiming hardware validation.
 
-Source snapshot: `24f06a30081b607dbca5020fe583d97944be97d8`.
+Source snapshot: `4a0707be141d12c48327358c23deeddd2f0af0b7`.

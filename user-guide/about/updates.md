@@ -1,5 +1,12 @@
 # Recent guide updates
 
+## November 22, 2026 — 5.1.0
+
+- Documented [protocol 5 upgrades and catch-up](../station/network.md), [schema upgrades](../start/migration.md#upgrade-an-existing-5x-database), and [full-disk recovery and station corrections](../log/restore.md).
+- Refreshed Windows paths, first-run setup, live data reload, station integrations, and band-map and multiplier controls.
+- Added [call-window commands](../operating/keyboard.md#run-a-call-window-command), [message syntax](../station/cw-messages.md#message-commands), rover operation, and current contest and export behavior.
+- Regenerated the settings, lifecycle, radio, contest, and language references from `v5.1.0` (`4a0707be1`). The settings index covers 321 accepted names, and the contest list includes entries registered by ID.
+
 ## November 8, 2026 — 5.0.37 and marked source additions
 
 Reviewed RELEASE_NOTES.md and CHANGES.md against the previous 5.0.26 baseline, using source through **48806af1**.

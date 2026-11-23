@@ -1,9 +1,6 @@
 # Available languages and translation status
 
-!!! warning "Historical reference snapshot"
-    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
-
-The source snapshot contains **22 UI catalogues, including English**. A normal resource build embeds the catalogues; the language choices in your installed build are authoritative if it was packaged differently.
+TR4W includes built-in English and **21 UI translation catalogues**. A normal resource build embeds the translation catalogues. Check the language choices in your installed build.
 
 ## Test a language
 
@@ -38,34 +35,34 @@ Close the running instance first so the argument is applied to a new launch. You
 
 Earlier translation means the catalogue credits an earlier language contributor; new UI strings can still be machine-generated or missing. Italian and French have no inherited human translation baseline in this expansion: their LibreTranslate drafts require review, even where a few entries are not marked fuzzy. Treat the other newly seeded languages the same way.
 
-English is the compiled source/fallback language, so translation flags in its extraction catalogue do not measure the availability of the English interface.
+English is compiled into the program as the source and fallback language.
 
 ## Language table
 
 | Language | Test argument | Translation history | Unflagged text | Needs review | Empty | Help catalogue |
 | --- | --- | --- | ---: | ---: | ---: | --- |
-| Chinese (Simplified) | `--lang=zh_cn` | New machine-seeded catalogue — review required | 1 | 1268 | 26 | Not in this snapshot |
-| Czech | `--lang=cs` | Earlier translation — OK1RR | 491 | 784 | 24 | Present; separate review |
-| Danish | `--lang=da` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Not in this snapshot |
-| Dutch | `--lang=nl` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Present; separate review |
-| English | `--lang=en` | Source language | Source | — | — | Present; separate review |
-| Finnish | `--lang=fi` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Not in this snapshot |
-| French | `--lang=fr` | New LibreTranslate catalogue — review required | 2 | 1273 | 24 | Present; separate review |
-| German | `--lang=de` | Earlier translation — DL4BBH | 424 | 851 | 24 | Present; separate review |
-| Greek | `--lang=el` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Not in this snapshot |
-| Italian | `--lang=it` | New LibreTranslate catalogue — review required | 19 | 1256 | 24 | Present; separate review |
-| Japanese | `--lang=ja` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Not in this snapshot |
-| Korean | `--lang=ko` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Not in this snapshot |
-| Mongolian | `--lang=mn` | Earlier translation — JT1CD | 484 | 57 | 758 | Not in this snapshot |
-| Polish | `--lang=pl` | Earlier authored translation — SP2EWQ | 438 | 1485 | 24 | Present; separate review |
-| Portuguese | `--lang=pt` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Not in this snapshot |
-| Portuguese (Brazil) | `--lang=pt_br` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Not in this snapshot |
-| Romanian | `--lang=ro` | Earlier translation — YO2IS | 451 | 824 | 24 | Present; separate review |
-| Russian | `--lang=ru` | Earlier translation — UR7QM / R8TR | 484 | 790 | 25 | Present; separate review |
-| Serbian | `--lang=sr` | Earlier translation — YT3W | 505 | 35 | 759 | Not in this snapshot |
-| Spanish | `--lang=es` | Earlier translation — EB2CYQ | 537 | 739 | 23 | Present; separate review |
-| Swedish | `--lang=sv` | New machine-seeded catalogue — review required | 1 | 1272 | 26 | Not in this snapshot |
-| Ukrainian | `--lang=uk` | Earlier translation — UR7QM | 487 | 788 | 24 | Present; separate review |
+| Chinese (Simplified) | `--lang=zh_cn` | New machine-seeded catalogue — review required | 3 | 1962 | 18 | Present, with separate review |
+| Czech | `--lang=cs` | Earlier translation — OK1RR | 485 | 1486 | 18 | Present, with separate review |
+| Danish | `--lang=da` | New machine-seeded catalogue — review required | 3 | 1967 | 18 | Present, with separate review |
+| Dutch | `--lang=nl` | New machine-seeded catalogue — review required | 1 | 1320 | 668 | Present, with separate review |
+| English | `--lang=en` | Source language | Source | — | — | Present, with separate review |
+| Finnish | `--lang=fi` | New machine-seeded catalogue — review required | 2 | 1870 | 116 | Present, with separate review |
+| French | `--lang=fr` | New LibreTranslate catalogue — review required | 3 | 1870 | 116 | Present, with separate review |
+| German | `--lang=de` | Earlier translation — DL4BBH | 416 | 1457 | 116 | Present, with separate review |
+| Greek | `--lang=el` | New machine-seeded catalogue — review required | 2 | 1870 | 116 | Present, with separate review |
+| Italian | `--lang=it` | New LibreTranslate catalogue — review required | 18 | 1303 | 668 | Present, with separate review |
+| Japanese | `--lang=ja` | New machine-seeded catalogue — review required | 1 | 1318 | 670 | Present, with separate review |
+| Korean | `--lang=ko` | New machine-seeded catalogue — review required | 1 | 1312 | 676 | Present, with separate review |
+| Mongolian | `--lang=mn` | Earlier translation — JT1CD | 475 | 59 | 1455 | Present, with separate review |
+| Polish | `--lang=pl` | Earlier authored translation — SP2EWQ | 657 | 1535 | 655 | Present, with separate review |
+| Portuguese | `--lang=pt` | New machine-seeded catalogue — review required | 1 | 1316 | 672 | Present, with separate review |
+| Portuguese (Brazil) | `--lang=pt_br` | New machine-seeded catalogue — review required | 1 | 1318 | 669 | Present, with separate review |
+| Romanian | `--lang=ro` | Earlier translation — YO2IS | 442 | 879 | 668 | Present, with separate review |
+| Russian | `--lang=ru` | Earlier translation — UR7QM / R8TR | 473 | 848 | 668 | Present, with separate review |
+| Serbian | `--lang=sr` | Earlier translation — YT3W | 496 | 38 | 1455 | Present, with separate review |
+| Spanish | `--lang=es` | Earlier translation — EB2CYQ | 554 | 1419 | 16 | Present, with separate review |
+| Swedish | `--lang=sv` | New machine-seeded catalogue — review required | 1 | 1321 | 666 | Present, with separate review |
+| Ukrainian | `--lang=uk` | Earlier translation — UR7QM | 476 | 846 | 667 | Present, with separate review |
 
 ## Review before calling a language complete
 
@@ -75,6 +72,6 @@ Presence of a help catalogue does not establish its completeness. Its review wor
 
 ## Provenance and regeneration
 
-Counts: `i18n/tr4w_*.po` at source revision `24f06a30081b607dbca5020fe583d97944be97d8`. Earlier contributor names come from the catalogues’ translation-author entries. New-language classification follows the project’s translation expansion and supplied editorial guidance; fuzzy flags alone cannot identify which tool wrote an individual phrase.
+Counts: `i18n/tr4w_*.po` at source revision `4a0707be141d12c48327358c23deeddd2f0af0b7`. Earlier contributor names come from the catalogues’ translation-author entries. New-language classification follows the project’s translation expansion and supplied editorial guidance; fuzzy flags alone cannot identify which tool wrote an individual phrase.
 
 Run `python tools/build_language_reference.py` to refresh this table. This measures source catalogues, not the resources of an arbitrary downloaded binary.

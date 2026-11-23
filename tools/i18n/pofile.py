@@ -319,7 +319,11 @@ def read_po(path):
    if not os.path.exists(path):
       return []
    with open(path, "rb") as fh:
-      raw = fh.read()
+      return parse_po(fh.read())
+
+
+def parse_po(raw):
+   """Parse the bytes of a catalogue, preserving its original formatting."""
    bom = raw.startswith(b"\xef\xbb\xbf")
    if bom:
       raw = raw[3:]

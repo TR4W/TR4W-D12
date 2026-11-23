@@ -2,7 +2,7 @@
 
 Source of truth: **main**. Editorial source: `user-guide/`. Configuration: `mkdocs.yml`.
 
-The MkDocs toolchain was adopted into main on November 8, 2026. The old docs/mkdocs-prototype branch is retained as history, not a second editing location. Operating instructions were refreshed on November 8 through **5.0.37**, with explicitly marked **Unreleased** changes from source **48806af1**. Generated reference inventories remain at their original snapshot; they are not current settings, radio, or contest inventories.
+The MkDocs toolchain was adopted into main on November 8, 2026. The old `docs/mkdocs-prototype` branch records that history. The current operating instructions and reference tables cover **5.1.0**, tagged at `4a0707be1`.
 
 The existing engineering `docs/` folder is intentionally not the site's input: it mixes plans, investigations, historical manuals, and current instructions. The operator guide selects and reconciles sources rather than presenting every Markdown file as current documentation.
 
@@ -20,19 +20,19 @@ Visit http://127.0.0.1:8000. On Linux/macOS, use `.venv-docs/bin/python` instead
 
 ## Build and check
 
-The following generators were built against the original source snapshot. Before regenerating references against newer application code, check their compatibility with the current settings inventory and registration layout; they deliberately fail on vocabulary drift. Do not replace the reviewed reference with a partial or failed generation. The November 8 review found that the command generator stops with **Inventory differs from frozen settings vocabulary; regenerate/review inventory first.** It left the reference unchanged. Reconcile the inventory and generator with current settings before regenerating; do not bypass that check. Keep the historical-reference notices until the corresponding inventory has been refreshed and reviewed.
-
-Regeneration commands:
+Regenerate from a checkout with the source and catalogues for the intended revision. From the repository root, run:
 
 ```powershell
+python tools/settings_inventory_doc.py
 python tools/build_command_reference.py
 python tools/build_language_reference.py
 ```
 
-This reads only the current worktree. It checks inventory names against the frozen settings vocabulary, verifies property types, extracts literal constructor values, and rejects unparsed radio registrations. It does not use the older inventory scripts' hard-coded paths into the main checkout. Maintain reviewed descriptions in `tools/command_reference_notes.json`.
+The inventory generator reads settings from the current checkout and preserves the existing Notes column. The reference generator checks those names against the frozen settings vocabulary, verifies property types, and reads English help from `i18n/help_en.po`. It resolves declared radio port constants and adds contests registered by ID by the units linked in `tr4w/tr4w.lpr`. It checks the source before writing any reference pages. Maintain reviewed descriptions in `tools/command_reference_notes.json`. The language generator counts the catalogues committed at `HEAD` so local translation drafts cannot change the published counts.
 
 ```powershell
 .\.venv-docs\Scripts\python -m mkdocs build --strict
+.\.venv-docs\Scripts\python -m mkdocs build --strict --config-file mkdocs.pages.yml --site-dir build-out/docs-site-hosted
 ```
 
 Output: `build-out/docs-site/index.html`. Flat HTML URLs and Material's offline plugin permit a local-file preview, including search. The generated site is ignored by Git. Dependencies pin the two primary packages; transitive dependencies are not yet locked.
@@ -89,7 +89,14 @@ python -m mkdocs gh-deploy --strict --config-file mkdocs.pages.yml --remote-name
 
 `mkdocs.pages.yml` supplies the project's hosted URL and enables normal web search behavior. Use `mkdocs.yml` for the local/offline preview. Both builds retain `.html` page links. Rebuild with the desired configuration before previewing or publishing.
 
-The reference expansion adds 288 settings, 298 accepted setting names, the 335-name old-manual lookup, four actions, 88 withdrawn names, 39 store-owned names, and 101 radio registrations. These are distinct sets; they must not be summed and advertised as a single count of working features. Dedicated TCI and external-logger pages distinguish implemented behavior from selectable placeholders.
+The 5.1.0 reference covers 310 settings with 321 accepted names, 335 old-manual entries, four configuration actions, 111 withdrawn names, 40 store-owned names, 102 radio registrations and 213 contest identifiers. The command reference links to call-window commands and function-key messages. Hardware capabilities and delivery limits are covered in the operator procedures.
+
+## 5.1.0 documentation checks
+
+- Strict offline and hosted MkDocs builds passed, including link and anchor validation.
+- Both search indexes include the new N1MM settings, rover and self-spot commands, protocol 5 server filename, FLRig and DXLab Commander.
+- A second generation produced identical bytes for the inventory and twelve reference pages. All 13 PO parser tests passed.
+- Installer and hardware procedures were reviewed against source. See `user-guide/about/sources.md` for operator checks that require a running station.
 
 ## Validation performed (September 24–25, 2026)
 

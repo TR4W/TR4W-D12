@@ -1,9 +1,6 @@
 # WSJT-X settings
 
-!!! warning "Historical reference snapshot"
-    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
-
-These names are explicitly registered as aliases in the 5.0.22 settings model. Use the [setup guide](../station/wsjtx.md) to connect the programs.
+The 5.1.0 settings model registers these names. Use the [setup guide](../station/wsjtx.md) to connect the programs.
 
 | Setting | Purpose |
 | --- | --- |
@@ -14,6 +11,8 @@ These names are explicitly registered as aliases in the 5.0.22 settings model. U
 | `WSJT-X RADIO CONTROL ENABLED` | Allow frequency changes from WSJT-X to move the radio. |
 
 The model documents an enabled listener and port `2237` as defaults. The port type restricts values to `1–65535`.
+
+The separate [N1MM-style log listener](../station/wsjtx.md#receive-n1mm-style-log-messages) uses `ENABLE N1MM LOG LISTENER` and `N1MM LISTEN ADDRESS`. Its default is off, with a loopback address of `127.0.0.1`.
 
 !!! note "Names, not a file-editing recipe"
     This table documents supported command names. It does not imply that a particular settings file uses this text as its on-disk format. Use the settings UI for the current build.

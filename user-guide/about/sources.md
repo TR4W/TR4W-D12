@@ -6,8 +6,8 @@
 | --- | --- |
 | Original reference baseline | `24f06a30081b607dbca5020fe583d97944be97d8`, version 5.0.22 |
 | Earlier operator review | 5.0.26 through 3753d2ba; September 29, 2026 |
-| Current operator review | Release notes and changes through 48806af1, November 8, 2026; 5.0.37 plus explicitly marked Unreleased changes |
-| Published release | [5.0.37](https://github.com/TR4W/TR4W-D12/releases/tag/v5.0.37), published November 7, 2026; release metadata checked November 8. Packages were not installed in this review. |
+| Earlier operator review | 5.0.37 plus source through `48806af1`, November 8, 2026 |
+| Current guide and regenerated reference | `v5.1.0`, commit `4a0707be141d12c48327358c23deeddd2f0af0b7`, November 22, 2026 |
 | TR4W wiki | `d512ef6d6adfa8c187b6c9c7992af0cc9d60d791`, fetched September 24, 2026 |
 | Public website | [tr4w.net](https://tr4w.net/), consulted September 24, 2026; describes 4.x |
 | Local documentation | Files in the development snapshot above; includes historical manuals and design proposals |
@@ -16,11 +16,11 @@ The wiki was read from its Git repository after browser retrieval failed. It is 
 
 Operator instructions are included in this guide. Development-tree filenames below and in source notes identify editorial evidence; they are not external links or required reading. The generated reference retains this provenance without requiring access to the TR4W-D12 repository.
 
-## November 8 review scope
+## November 22 review scope
 
-RELEASE_NOTES.md and CHANGES.md were compared with the 5.0.26 guide. Refreshed instructions cover contest creation, Preferences, backups/recovery, transactional imports, logger queues and provider limits, per-radio polling, and source-only network/call-history/band-map additions. Related export and keyboard instructions were reconciled. No live service, physical radio, multi-station network, or GUI recovery test was run.
+The review compared `RELEASE_NOTES.md`, `CHANGES.md`, and the commit history from `48806af1` through `v5.1.0`, then checked affected forms, commands, handlers and registries. Updates cover the multi-op upgrade, log durability and recovery, file locations, the setup wizard, operating commands, contest and export behavior, and integrations.
 
-Generated reference tables still use the original baseline. The command generator refused the changed settings vocabulary without writing a replacement. Its inventory and extraction rules need a separate review; historical counts and names must not be represented as a current inventory. See DOCS.md in the repository for maintenance details.
+The command generator verifies accepted names against the settings model test, reads current English help, and extracts radio and contest registrations. Language counts come from the catalogues committed at the tag. Review of the site does not exercise installers, live services, physical radios, or multi-station recovery. See `DOCS.md` for regeneration and publishing procedures.
 
 ## Evidence by page
 
@@ -46,10 +46,10 @@ Generated reference tables still use the original baseline. The command generato
 | Band map / cluster / multipliers | LCL forms, `uBandMapView`, `uSpots`, `uDXClusterClient`, `uTelnet`, `uRemMults`, `uMults` | Live UI, spot feed, and contest examples |
 | CW | `uCWKeyerBase` and four adapters, keyer form, factory design history | Device/platform timing, routing, and cancellation |
 | Languages | `uUILanguage`, embedded loader, resource-build script, `i18n/*.po`, translator documents | Human translation quality and screen layout; source counts are not approval counts |
-| Contests | `VC.ContestTypeSA` and new-contest picker | Sponsor rule changes and event-specific examples |
+| Contests | `VC.ContestTypeSA`, `uContestRegistry`, `tr4w.lpr` and `uContestChoices` | Sponsor rule changes and event-specific examples |
 | Installation / files / data | Build scripts, Linux notes, `uAppPaths`, downloaders | Package-specific installation checks; owner confirms native macOS operation |
 | Reports / imports | Menus, `MainUnit.ImportFromADIF` batch transaction, ADIF and report implementations | Individual report output and representative migration files |
-| Network | `uNet`, network/compare forms, corrected networking analysis | Real multi-station disconnect/sync tests |
+| Network | `uNet`, `uNetHello`, `uGetServerLog`, `uNetCatchUp`, `uServerWireStore` | Real multi-station disconnect and catch-up tests |
 | INI conversion | `tools/tr4wconvert/tr4wconvert.lpr`, `uSettingsConvert` | Conversion of representative copied settings and post-conversion station checks |
 
 ## Editorial rules

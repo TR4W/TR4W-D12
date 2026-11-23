@@ -5,7 +5,13 @@ A free, open-source contest logger rooted in N6TR's TRLOG. TR4W brings keyboard-
 Native on **Windows, macOS, and Linux**. [Install the build for your platform](start/install.md) and check its release-specific notes.
 
 !!! warning "5.x documentation preview"
-    Operating instructions were refreshed for **5.0.37**, with explicitly marked **Unreleased** additions from source through **48806af1** (November 8, 2026). Generated reference tables retain their older snapshot. Source review does not replace an operator walkthrough. See [Choose your version](start/version.md) before following them.
+    This guide covers **TR4W 5.1.0**. Check [Choose your version](start/version.md) before upgrading. Multi-op stations must [upgrade the server and all clients together](station/network.md).
+
+## What's new
+
+TR4W 5.1.0 adds background backups, a more flexible operating window, and new contest and rover tools.
+
+[Explore the 5.1.0 features →](features.md) · [See what changed since 4.x →](features-since-4.md)
 
 For the earlier TR4W version, see the [existing TR4W documentation](https://tr4w.github.io/).
 

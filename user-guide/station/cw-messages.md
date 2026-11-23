@@ -28,7 +28,21 @@ Alt+P opens the current message list. The chooser, list and editor below show th
 
 Test each bank separately, including the exchange sent by the normal Enter workflow. **Esc** stops CW/automatic-CQ activity through the active sending path. Check the selected radio before testing a message that changes radio focus.
 
-The old SO2R tips include messages that send on the inactive radio or swap focus. Those actions can change which radio supplies the band and mode for the contact being entered. Introduce them only after the basic [SO2R workflow](so2r.md) works, and insert the commands from the current command list.
+## Message commands
+
+Use braces around a command. The editor upgrades recognized commands saved with the old control-character bookends. A leading `$` inside the braces directs a radio command to the inactive radio.
+
+| Message text | Effect |
+| --- | --- |
+| `{SPEED+}` | Increase CW speed. |
+| `{ALT-D}` | Dupe check on radio 2. |
+| `{SPAN=+}` / `{$SPAN=+}` | Widen the panadapter on the active or inactive radio, respectively. |
+| `{ROVERCALL}` / `{ROVERQTH}` | Send the roving callsign or place. |
+| `{SPOTME}` | [Request a self-spot](../operating/dxcluster.md#self-spot-from-the-run-frequency). |
+| `PLS QSY {PASS B}` | Send a CW message with network station B's current frequency in kHz. A station name or band such as `{PASS 14000}` can also select a peer. |
+| `{LASTPASSEDFREQ}` | Send the last frequency resolved by `{PASS …}`, for example `14025R5` for 14,025.5 kHz. |
+
+If a required pass frequency cannot be resolved, TR4W displays the reason and skips sending the message. Check the radio and the [SO2R workflow](so2r.md) before testing a command that changes radio focus.
 
 ??? info "Source check"
     Earlier wiki SO2R tips and reference manual message concepts. Current chooser/editor: `uProgramMessageForm`, `uEditMessageForm` (`SaveToConfig`), and `uMessagesListForm`; expansions: `trdos/logsend.pas`; stopping: `MainUnit.Escape_proc`. These examples have been checked against code, not transmitted on a radio.

@@ -1,13 +1,10 @@
 # Command reference
 
-!!! warning "Historical reference snapshot"
-    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
-
 **Find a setting by its current name or an older name from the reference manual.**
 
-This reference combines the settings inventory, source declarations, English help, and v4.01 manual contents from its original 5.0.22 snapshot. The operating guide has since been refreshed; this generated inventory has not.
+This reference combines the current settings inventory, source declarations, English help, and the v4.01 manual contents. It covers TR4W 5.1.0.
 
-There are **288 settings** with **298 accepted names**, plus **4 action commands** documented separately. Radio, keyer, message, and compatibility command routes are not all ordinary settings.
+There are **310 settings** with **321 accepted names**, plus **4 action commands** documented separately. Radio, keyer, message, and compatibility command routes are not all ordinary settings.
 
 ## Browse by name
 
@@ -26,7 +23,7 @@ There are **288 settings** with **298 accepted names**, plus **4 action commands
 - **Initial value** means a direct literal in the source constructor. Loading a station, a contest definition, or a saved database can change it. An unextracted value is not an empty or zero default.
 - **Values** gives boolean choices or literal numeric type bounds when available. Other validation can apply; numeric bounds do not establish units.
 - **Other accepted names** are inventory aliases. They do not imply that every input route applies the value.
-- **Inherited help** is useful background, not a reviewed 5.x procedure. Older hotkeys, file paths, default values, and platform assumptions require checking.
+- **English settings help** comes from the application catalogue. Follow the linked operator procedure where available.
 
 Prefer the settings UI. Current command dispatch can recognize a name without applying it, depending on the caller and ownership. Recognition alone does not prove a legacy config line takes effect.
 
@@ -36,6 +33,9 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 - [Radio connection](../../station/radio.md)
 - [WSJT-X](../../station/wsjtx.md)
 - [POTA](../../operating/pota.md)
+
+- [Call-window commands](../../operating/keyboard.md#run-a-call-window-command)
+- [Function-key message commands](../../station/cw-messages.md#message-commands)
 
 ## All current setting names
 
@@ -60,28 +60,41 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [AUTO SEND CHARACTER COUNT](a-d.md#auto-send-character-count) | Station |
 | [AUTO TIME INCREMENT](a-d.md#auto-time-increment) | Station |
 | [AUTO-CQ DELAY TIME](a-d.md#auto-cq-delay-time) | Station |
-| [BACKUP LOG FILE NAME](a-d.md#backup-log-file-name) | Station |
+| [BACKUP DESTINATION](a-d.md#backup-destination) | Station |
 | [BACKUP LOG FREQUENCY](a-d.md#backup-log-frequency) | Station |
 | [BAND](a-d.md#band) | Contest |
+| [BAND MAP ACTIVE BAND COLOR](a-d.md#band-map-active-band-color) | Station |
 | [BAND MAP ALL BANDS](a-d.md#band-map-all-bands) | Station |
 | [BAND MAP ALL MODES](a-d.md#band-map-all-modes) | Station |
 | [BAND MAP CALL WINDOW ENABLE](a-d.md#band-map-call-window-enable) | Station |
+| [BAND MAP CENTER ON RADIO](a-d.md#band-map-center-on-radio) | Station |
+| [BAND MAP CLICK GOES TO EXCHANGE](a-d.md#band-map-click-goes-to-exchange) | Station |
 | [BAND MAP DECAY TIME](a-d.md#band-map-decay-time) | Station |
 | [BAND MAP DISPLAY CQ](a-d.md#band-map-display-cq) | Station |
 | [BAND MAP DISPLAY GHZ](a-d.md#band-map-display-ghz) | Station |
 | [BAND MAP DISPLAY LIMIT](a-d.md#band-map-display-limit) | Station |
+| [BAND MAP DUPE COLOR](a-d.md#band-map-dupe-color) | Station |
 | [BAND MAP DUPE DISPLAY](a-d.md#band-map-dupe-display) | Station |
+| [BAND MAP FILTER OUT DIGITAL](a-d.md#band-map-filter-out-digital) | Station |
 | [BAND MAP GUARD BAND](a-d.md#band-map-guard-band) | Station |
 | [BAND MAP ITEM HEIGHT](a-d.md#band-map-item-height) | Station |
 | [BAND MAP ITEM WIDTH](a-d.md#band-map-item-width) | Station |
+| [BAND MAP MULT COLOR](a-d.md#band-map-mult-color) | Station |
 | [BAND MAP MULTS ONLY](a-d.md#band-map-mults-only) | Station |
+| [BAND MAP OTHER BAND COLOR](a-d.md#band-map-other-band-color) | Station |
+| [BAND MAP SELECTION COLOR](a-d.md#band-map-selection-color) | Station |
 | [BAND MAP SIZE](a-d.md#band-map-size) | Station |
 | [BAND MAP SO2R DISPLAY](a-d.md#band-map-so2r-display) | Station |
+| [BAND MAP SORT BY BEAM HEADING](a-d.md#band-map-sort-by-beam-heading) | Station |
 | [BAND MAP SPLIT MODE](a-d.md#band-map-split-mode) | Station |
+| [BAND MAP VFO MARKER COLOR](a-d.md#band-map-vfo-marker-color) | Station |
+| [BAND MAP WORKED MULT COLOR](a-d.md#band-map-worked-mult-color) | Station |
+| [BAND MAP WORKED MULT LIMIT](a-d.md#band-map-worked-mult-limit) | Station |
 | [BEEP ENABLE](a-d.md#beep-enable) | Station |
 | [BEEP EVERY 10 QSOS](a-d.md#beep-every-10-qsos) | Station |
 | [BOLD FONT](a-d.md#bold-font) | Station |
 | [BROADCAST ALL PACKET DATA](a-d.md#broadcast-all-packet-data) | Station |
+| [CALL HISTORY FILENAME](a-d.md#call-history-filename) | Contest |
 | [CALL OK NOW CW MESSAGE](a-d.md#call-ok-now-cw-message) | Contest |
 | [CALL OK NOW SSB MESSAGE](a-d.md#call-ok-now-ssb-message) | Contest |
 | [CALL WINDOW SHOW ALL SPOTS](a-d.md#call-window-show-all-spots) | Station |
@@ -92,8 +105,12 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [CATEGORY-OPERATOR](a-d.md#category-operator) | Contest |
 | [CATEGORY-OVERLAY](a-d.md#category-overlay) | Contest |
 | [CATEGORY-POWER](a-d.md#category-power) | Contest |
+| [CATEGORY-STATION](a-d.md#category-station) | Contest |
 | [CATEGORY-TRANSMITTER](a-d.md#category-transmitter) | Contest |
 | [CHECK LOG FILE SIZE](a-d.md#check-log-file-size) | Station |
+| [CLUSTER AUTO SELF SPOT](a-d.md#cluster-auto-self-spot) | Station |
+| [CLUSTER SELF SPOT INTERVAL](a-d.md#cluster-self-spot-interval) | Station |
+| [CLUSTER SPOT COMMENT MULTIPLIER](a-d.md#cluster-spot-comment-multiplier) | Station |
 | [CODE SPEED](a-d.md#code-speed) | Station |
 | [COLUMN AUTOSIZE](a-d.md#column-autosize) | Station |
 | [COMPLETE CALLSIGN MASK](a-d.md#complete-callsign-mask) | Station |
@@ -106,7 +123,6 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [CONTEST NAME](a-d.md#contest-name) | Contest |
 | [CONTEST TITLE](a-d.md#contest-title) | Contest |
 | [COUNT DOMESTIC COUNTRIES](a-d.md#count-domestic-countries) | Contest |
-| [COUNTRY INFORMATION FILE](a-d.md#country-information-file) | Station |
 | [CQ CW EXCHANGE](a-d.md#cq-cw-exchange) | Contest |
 | [CQ CW EXCHANGE NAME KNOWN](a-d.md#cq-cw-exchange-name-known) | Contest |
 | [CQ SSB EXCHANGE](a-d.md#cq-ssb-exchange) | Contest |
@@ -125,32 +141,35 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [DISTANCE MODE](a-d.md#distance-mode) | Station |
 | [DIT DAH RATIO](a-d.md#dit-dah-ratio) | Station |
 | [DOMESTIC FILENAME](a-d.md#domestic-filename) | Contest |
-| [DOMESTIC MULTIPLIER](a-d.md#domestic-multiplier) | Contest |
 | [DUPE CHECK SOUND](a-d.md#dupe-check-sound) | Station |
 | [DUPE SHEET AUTO RESET](a-d.md#dupe-sheet-auto-reset) | Station |
 | [DVK ENABLE](a-d.md#dvk-enable) | Station |
 | [DVK LOCALIZED MESSAGES ENABLE](a-d.md#dvk-localized-messages-enable) | Station |
 | [DVK PATH](a-d.md#dvk-path) | Station |
 | [DVK RECORDER](a-d.md#dvk-recorder) | Station |
-| [DX MULTIPLIER](a-d.md#dx-multiplier) | Contest |
+| [ENABLE N1MM LOG LISTENER](e-l.md#enable-n1mm-log-listener) | Station |
+| [ENFORCE VALID CALLSIGN](e-l.md#enforce-valid-callsign) | Station |
 | [ESCAPE EXITS SEARCH AND POUNCE](e-l.md#escape-exits-search-and-pounce) | Station |
 | [EXCHANGE MEMORY ENABLE](e-l.md#exchange-memory-enable) | Contest |
-| [EXCHANGE RECEIVED](e-l.md#exchange-received) | Contest |
 | [EXTERNAL LOGGER](e-l.md#external-logger) | Station |
+| [EXTERNAL LOGGER ACCOUNT ID](e-l.md#external-logger-account-id) | Station |
 | [EXTERNAL LOGGER ADDRESS](e-l.md#external-logger-address) | Station |
+| [EXTERNAL LOGGER API KEY](e-l.md#external-logger-api-key) | Station |
 | [EXTERNAL LOGGER ENABLED](e-l.md#external-logger-enabled) | Station |
+| [EXTERNAL LOGGER LOGBOOK ID](e-l.md#external-logger-logbook-id) | Station |
 | [EXTERNAL LOGGER PORT](e-l.md#external-logger-port) | Station |
 | [FARNSWORTH ENABLE](e-l.md#farnsworth-enable) | Station |
 | [FARNSWORTH SPEED](e-l.md#farnsworth-speed) | Station |
 | [FONT SIZE](e-l.md#font-size) | Station |
 | [FREQUENCY MEMORY ENABLE](e-l.md#frequency-memory-enable) | Station |
-| [FREQUENCY POLL RATE](e-l.md#frequency-poll-rate) | Station |
 | [GRID MAP CENTER](e-l.md#grid-map-center) | Station |
 | [HAMSCORE ENABLE](e-l.md#hamscore-enable) | Contest |
 | [HAMSCORE PASSWORD](e-l.md#hamscore-password) | Station |
 | [HAMSCORE SEND CONTACT INFO](e-l.md#hamscore-send-contact-info) | Station |
 | [HAMSCORE URL](e-l.md#hamscore-url) | Station |
+| [HAMSCORE URL DEFAULT MIGRATED](e-l.md#hamscore-url-default-migrated) | Station |
 | [HAMSCORE USERNAME](e-l.md#hamscore-username) | Station |
+| [HAMSCORE VERIFY SERVER](e-l.md#hamscore-verify-server) | Station |
 | [HAND LOG MODE](e-l.md#hand-log-mode) | Station |
 | [HF BAND ENABLE](e-l.md#hf-band-enable) | Contest |
 | [HOUR DISPLAY](e-l.md#hour-display) | Station |
@@ -158,7 +177,6 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [IN BAND LOCKOUT](e-l.md#in-band-lockout) | Station |
 | [INCLUDE F-KEY NUMBER](e-l.md#include-f-key-number) | Station |
 | [INCREMENT TIME ENABLE](e-l.md#increment-time-enable) | Station |
-| [INITIAL EXCHANGE](e-l.md#initial-exchange) | Contest |
 | [INITIAL EXCHANGE CURSOR POS](e-l.md#initial-exchange-cursor-pos) | Contest |
 | [INITIAL EXCHANGE FILENAME](e-l.md#initial-exchange-filename) | Contest |
 | [INITIAL EXCHANGE OVERWRITE](e-l.md#initial-exchange-overwrite) | Contest |
@@ -198,6 +216,7 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [MY GRID](m-p.md#my-grid) | Station |
 | [MY IOTA](m-p.md#my-iota) | Station |
 | [MY ITU ZONE](m-p.md#my-itu-zone) | Station |
+| [MY LICENSE YEAR](m-p.md#my-license-year) | Station |
 | [MY NAME](m-p.md#my-name) | Station |
 | [MY PARK](m-p.md#my-park) | Station |
 | [MY POSTAL CODE](m-p.md#my-postal-code) | Station |
@@ -205,8 +224,12 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [MY SECTION](m-p.md#my-section) | Station |
 | [MY STATE](m-p.md#my-state) | Station |
 | [MY ZONE](m-p.md#my-zone) | Station |
+| [N1MM LISTEN ADDRESS](m-p.md#n1mm-listen-address) | Station |
 | [NAME FLAG ENABLE](m-p.md#name-flag-enable) | Station |
 | [NET STATUS UPDATE INTERVAL](m-p.md#net-status-update-interval) | Station |
+| [NETWORK AUTO CONNECT](m-p.md#network-auto-connect) | Station |
+| [NETWORK HTTP TRANSPORT](m-p.md#network-http-transport) | Station |
+| [NETWORK SHARE SPOTS](m-p.md#network-share-spots) | Station |
 | [NO BORDER](m-p.md#no-border) | Station |
 | [NO CAPTION](m-p.md#no-caption) | Station |
 | [NO COLUMN HEADER](m-p.md#no-column-header) | Station |
@@ -222,12 +245,12 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [POSSIBLE CALL MODE](m-p.md#possible-call-mode) | Station |
 | [POSSIBLE CALL RIGHT KEY](m-p.md#possible-call-right-key) | Station |
 | [POSSIBLE CALLS](m-p.md#possible-calls) | Station |
-| [PREFIX MULTIPLIER](m-p.md#prefix-multiplier) | Contest |
 | [PSTROTATOR IP ADDRESS](m-p.md#pstrotator-ip-address) | Station |
 | [PSTROTATOR UDP PORT](m-p.md#pstrotator-udp-port) | Station |
 | [PTT ENABLE](m-p.md#ptt-enable) | Station |
 | [PTT LOCKOUT](m-p.md#ptt-lockout) | Station |
 | [PTT TURN ON DELAY](m-p.md#ptt-turn-on-delay) | Station |
+| [PTT TX INHIBIT BEEP](m-p.md#ptt-tx-inhibit-beep) | Station |
 | [PTT VIA COMMANDS](m-p.md#ptt-via-commands) | Station |
 | [QSL CW MESSAGE](q-s.md#qsl-cw-message) | Contest |
 | [QSL MODE](q-s.md#qsl-mode) | Contest |
@@ -237,7 +260,6 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [QSO BY BAND](q-s.md#qso-by-band) | Contest |
 | [QSO BY MODE](q-s.md#qso-by-mode) | Contest |
 | [QSO NUMBER BY BAND](q-s.md#qso-number-by-band) | Contest |
-| [QSO POINT METHOD](q-s.md#qso-point-method) | Contest |
 | [QSO POINTS DOMESTIC CW](q-s.md#qso-points-domestic-cw) | Contest |
 | [QSO POINTS DOMESTIC PHONE](q-s.md#qso-points-domestic-phone) | Contest |
 | [QSO POINTS DX CW](q-s.md#qso-points-dx-cw) | Contest |
@@ -256,7 +278,6 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [QUICK QSL SSB MESSAGE](q-s.md#quick-qsl-ssb-message) | Contest |
 | [QZB RANDOM OFFSET ENABLE](q-s.md#qzb-random-offset-enable) | Station |
 | [R150S MODE](q-s.md#r150s-mode) | Contest |
-| [RADIO TCP SERVER PORT](q-s.md#radio-tcp-server-port) | Station |
 | [RADIUS OF EARTH](q-s.md#radius-of-earth) | Station |
 | [RANDOM CQ MODE](q-s.md#random-cq-mode) | Station |
 | [RATE DISPLAY](q-s.md#rate-display) | Station |
@@ -267,13 +288,14 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [RFOBL MODE](q-s.md#rfobl-mode) | Contest |
 | [ROTATOR PORT](q-s.md#rotator-port) | Station |
 | [ROTATOR TYPE](q-s.md#rotator-type) | Station |
-| [ROW COUNT](q-s.md#row-count) | Station |
 | [S&amp;P CW EXCHANGE](q-s.md#s-p-cw-exchange) | Contest |
 | [S&amp;P SSB EXCHANGE](q-s.md#s-p-ssb-exchange) | Contest |
 | [SAY HI ENABLE](q-s.md#say-hi-enable) | Station |
 | [SAY HI RATE CUTOFF](q-s.md#say-hi-rate-cutoff) | Station |
 | [SCORE POSTING URL](q-s.md#score-posting-url) | Station |
+| [SCORE POSTING URL DEFAULT MIGRATED](q-s.md#score-posting-url-default-migrated) | Station |
 | [SCORE READING URL](q-s.md#score-reading-url) | Station |
+| [SCORE VERIFY SERVER](q-s.md#score-verify-server) | Station |
 | [SCP COUNTRY STRING](q-s.md#scp-country-string) | Station |
 | [SCP MINIMUM LETTERS](q-s.md#scp-minimum-letters) | Station |
 | [SEND COMPLETE FOUR LETTER CALL](q-s.md#send-complete-four-letter-call) | Station |
@@ -281,13 +303,14 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [SERVER AUTO SYNCHRONIZE LOG ON CONNECT](q-s.md#server-auto-synchronize-log-on-connect) | Station |
 | [SERVER PASSWORD](q-s.md#server-password) | Station |
 | [SERVER PORT](q-s.md#server-port) | Station |
+| [SERVER TAILCAT ADDRESS](q-s.md#server-tailcat-address) | Station |
+| [SERVER USE TAILCAT](q-s.md#server-use-tailcat) | Station |
 | [SHIFT KEY ENABLE](q-s.md#shift-key-enable) | Station |
 | [SHORT 0](q-s.md#short-0) | Station |
 | [SHORT 1](q-s.md#short-1) | Station |
 | [SHORT 2](q-s.md#short-2) | Station |
 | [SHORT 9](q-s.md#short-9) | Station |
 | [SHORT INTEGERS](q-s.md#short-integers) | Station |
-| [SHOW ALL SERIAL PORTS](q-s.md#show-all-serial-ports) | Station |
 | [SHOW DOMESTIC MULTIPLIER NAME](q-s.md#show-domestic-multiplier-name) | Station |
 | [SHOW FREQUENCY IN LOG](q-s.md#show-frequency-in-log) | Station |
 | [SHOW GRIDLINES](q-s.md#show-gridlines) | Station |
@@ -313,6 +336,7 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [UNKNOWN COUNTRY FILE ENABLE](t-z.md#unknown-country-file-enable) | Station |
 | [UNKNOWN COUNTRY FILE NAME](t-z.md#unknown-country-file-name) | Station |
 | [UPDATE RESTART FILE ENABLE](t-z.md#update-restart-file-enable) | Station |
+| [USE CALL HISTORY FILE](t-z.md#use-call-history-file) | Contest |
 | [USE RECORDED SIGNS](t-z.md#use-recorded-signs) | Station |
 | [USER INFO SHOWN](t-z.md#user-info-shown) | Station |
 | [VHF BAND ENABLE](t-z.md#vhf-band-enable) | Contest |
@@ -321,11 +345,23 @@ Prefer the settings UI. Current command dispatch can recognize a name without ap
 | [WARC BAND ENABLE](t-z.md#warc-band-enable) | Contest |
 | [WEIGHT](t-z.md#weight) | Station |
 | [WILDCARD PARTIALS](t-z.md#wildcard-partials) | Station |
-| [WINDOW SIZE](t-z.md#window-size) | Station |
 | [WSJT-X BROADCAST PORT](t-z.md#wsjt-x-broadcast-port) | Station |
 | [WSJT-X ENABLED](t-z.md#wsjt-x-enabled) | Station |
 | [WSJT-X MULTICAST GROUP](t-z.md#wsjt-x-multicast-group) | Station |
 | [WSJT-X RADIO CONTROL ENABLED](t-z.md#wsjt-x-radio-control-enabled) | Station |
 | [WSJT-X SEND HIGHLIGHTS](t-z.md#wsjt-x-send-highlights) | Station |
 | [YCCC SO2R ENABLE](t-z.md#yccc-so2r-enable) | Station |
-| [ZONE MULTIPLIER](t-z.md#zone-multiplier) | Contest |
+
+## Accepted aliases
+
+- [BACKUP LOG FILE NAME](a-d.md#backup-destination)
+- [CALL OK NOW MESSAGE](a-d.md#call-ok-now-cw-message)
+- [CQ EXCHANGE](a-d.md#cq-cw-exchange)
+- [CQ EXCHANGE NAME KNOWN](a-d.md#cq-cw-exchange-name-known)
+- [MY QTH](m-p.md#my-state)
+- [QSL MESSAGE](q-s.md#qsl-cw-message)
+- [QSO BEFORE MESSAGE](q-s.md#qso-before-cw-message)
+- [QUICK QSL CW MESSAGE1](q-s.md#quick-qsl-cw-message)
+- [QUICK QSL MESSAGE 1](q-s.md#quick-qsl-cw-message)
+- [REPEAT S&amp;P EXCHANGE](q-s.md#repeat-s-p-cw-exchange)
+- [S&amp;P EXCHANGE](q-s.md#s-p-cw-exchange)

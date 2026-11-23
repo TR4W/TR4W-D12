@@ -35,7 +35,7 @@ Put each worked park in the same exchange, separated by spaces:
 57 US-0663 US-1234
 ```
 
-When the contact is logged, the first park is recorded normally and the pending-park handling records the additional park contacts. Check that the resulting entries have the same worked call, band, mode, and report, with a different park reference in each entry. The number of log entries can therefore exceed the number of on-air contacts.
+One **Enter** saves the park rows together. Check that the resulting entries have the same worked call, band, mode, and report, with a different park reference in each entry. The number of log entries can therefore exceed the number of on-air contacts.
 
 These are example references, not a claim about which parks can be activated together.
 
@@ -51,11 +51,11 @@ This command saves typing; it does not switch your own station identity or your 
 
 | Field | What to verify |
 | --- | --- |
-| `MY_SIG_INFO`, `MY_POTA_REF` | Your activating park from MY PARK. |
+| `MY_SIG_INFO`, `MY_POTA_REF` | The activating park recorded with the QSO. |
 | `SIG_INFO`, `POTA_REF` | The worked park when a recognized park reference is present. |
 | `SRX_STRING` | The individual worked-park reference for each park entry. |
 
-Confirm MY PARK before exporting: the export code takes your park from the current setting. This preview does not establish how a log containing several different activating locations should be managed.
+Set **MY PARK** for the location before logging. ADIF uses the recorded park where available, and the current value for older rows that never recorded a station. Check representative entries from each activation before upload.
 
 ??? info "Evidence and review status"
     Adapted from the wiki's `POTA-Operation.md`. Current checks: `uPOTAParks.pas`; `ProcessRSTAndPOTAPark` in `trdos/logstuff.pas`; pending-park handling and `HandleRepeatPOTAParks` in `MainUnit.pas`; ADIF tail fields in `trdos/postunit.pas`; MY PARK binding in `ui/lcl/uPrefsForm.pas`. A field activation, multi-park sequence, and exported file still need an operator walkthrough.

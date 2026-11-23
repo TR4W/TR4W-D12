@@ -1,8 +1,5 @@
 # Old-to-new command lookup
 
-!!! warning "Historical reference snapshot"
-    This generated page retains the original 5.0.22 reference baseline. Names, counts, defaults, and availability may have changed. Use Preferences in your build and the refreshed operating instructions; this page is not a current inventory.
-
 Names are extracted from the 335-command table of contents of the local v4.01 manual. Classification comes from the current inventory and dispatch lists, not from name similarity. Unclassified names can include message commands or other specialized parsers.
 
 Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Current dispatch (`tr4w/src/uCFG.pas`)
@@ -71,7 +68,7 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | CONTEST NAME | Current setting: [CONTEST NAME](a-d.md#contest-name) |
 | CONTEST TITLE | Current setting: [CONTEST TITLE](a-d.md#contest-title) |
 | COUNT DOMESTIC COUNTRIES | Current setting: [COUNT DOMESTIC COUNTRIES](a-d.md#count-domestic-countries) |
-| COUNTRY INFORMATION FILE | Current setting: [COUNTRY INFORMATION FILE](a-d.md#country-information-file) |
+| COUNTRY INFORMATION FILE | Withdrawn name; accepted and ignored by compatibility dispatch |
 | CQ CW EXCHANGE | Current setting: [CQ CW EXCHANGE](a-d.md#cq-cw-exchange) |
 | CQ CW EXCHANGE NAME KNOWN | Current setting: [CQ CW EXCHANGE NAME KNOWN](a-d.md#cq-cw-exchange-name-known) |
 | CQ EXCHANGE | Accepted alias: [CQ EXCHANGE](a-d.md#cq-cw-exchange) |
@@ -90,16 +87,16 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | DISTANCE MODE | Current setting: [DISTANCE MODE](a-d.md#distance-mode) |
 | DIT DAH RATIO | Current setting: [DIT DAH RATIO](a-d.md#dit-dah-ratio) |
 | DOMESTIC FILENAME | Current setting: [DOMESTIC FILENAME](a-d.md#domestic-filename) |
-| DOMESTIC MULTIPLIER | Current setting: [DOMESTIC MULTIPLIER](a-d.md#domestic-multiplier) |
+| DOMESTIC MULTIPLIER | Withdrawn name; accepted and ignored by compatibility dispatch |
 | DUPE CHECK SOUND | Current setting: [DUPE CHECK SOUND](a-d.md#dupe-check-sound) |
 | DUPE SHEET AUTO RESET | Current setting: [DUPE SHEET AUTO RESET](a-d.md#dupe-sheet-auto-reset) |
 | DVP ENABLE | Not classified by this reference; review required (not proof of removal) |
 | DVP PATH | Not classified by this reference; review required (not proof of removal) |
 | DVP RECORDER | Not classified by this reference; review required (not proof of removal) |
-| DX MULTIPLIER | Current setting: [DX MULTIPLIER](a-d.md#dx-multiplier) |
+| DX MULTIPLIER | Withdrawn name; accepted and ignored by compatibility dispatch |
 | ESCAPE EXITS SEARCH AND POUNCE | Current setting: [ESCAPE EXITS SEARCH AND POUNCE](e-l.md#escape-exits-search-and-pounce) |
 | EXCHANGE MEMORY ENABLE | Current setting: [EXCHANGE MEMORY ENABLE](e-l.md#exchange-memory-enable) |
-| EXCHANGE RECEIVED | Current setting: [EXCHANGE RECEIVED](e-l.md#exchange-received) |
+| EXCHANGE RECEIVED | Withdrawn name; accepted and ignored by compatibility dispatch |
 | FARNSWORTH ENABLE | Current setting: [FARNSWORTH ENABLE](e-l.md#farnsworth-enable) |
 | FARNSWORTH SPEED | Current setting: [FARNSWORTH SPEED](e-l.md#farnsworth-speed) |
 | FLOPPY FILE SAVE FREQUENCY | Not classified by this reference; review required (not proof of removal) |
@@ -110,14 +107,14 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | FREQUENCY ADDER RADIO TWO | Withdrawn name; accepted and ignored by compatibility dispatch |
 | FREQUENCY MEMORY | [Action command](lifecycle.md#actions) |
 | FREQUENCY MEMORY ENABLE | Current setting: [FREQUENCY MEMORY ENABLE](e-l.md#frequency-memory-enable) |
-| FREQUENCY POLL RATE | Current setting: [FREQUENCY POLL RATE](e-l.md#frequency-poll-rate) |
+| FREQUENCY POLL RATE | Owned by a settings store; use the relevant setup panel |
 | GRID MAP CENTER | Current setting: [GRID MAP CENTER](e-l.md#grid-map-center) |
 | HAND LOG MODE | Current setting: [HAND LOG MODE](e-l.md#hand-log-mode) |
 | HF BAND ENABLE | Current setting: [HF BAND ENABLE](e-l.md#hf-band-enable) |
 | HOUR DISPLAY | Current setting: [HOUR DISPLAY](e-l.md#hour-display) |
 | INCLUDE F-KEY NUMBER | Current setting: [INCLUDE F-KEY NUMBER](e-l.md#include-f-key-number) |
 | INCREMENT TIME ENABLE | Current setting: [INCREMENT TIME ENABLE](e-l.md#increment-time-enable) |
-| INITIAL EXCHANGE | Current setting: [INITIAL EXCHANGE](e-l.md#initial-exchange) |
+| INITIAL EXCHANGE | Withdrawn name; accepted and ignored by compatibility dispatch |
 | INITIAL EXCHANGE CURSOR POS | Current setting: [INITIAL EXCHANGE CURSOR POS](e-l.md#initial-exchange-cursor-pos) |
 | INITIAL EXCHANGE FILENAME | Current setting: [INITIAL EXCHANGE FILENAME](e-l.md#initial-exchange-filename) |
 | INITIAL EXCHANGE OVERWRITE | Current setting: [INITIAL EXCHANGE OVERWRITE](e-l.md#initial-exchange-overwrite) |
@@ -137,9 +134,9 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | LOG SUB TITLE | Current setting: [LOG SUB TITLE](e-l.md#log-sub-title) |
 | LOG WITH SINGLE ENTER | Current setting: [LOG WITH SINGLE ENTER](e-l.md#log-with-single-enter) |
 | LOOK FOR RST SENT | Current setting: [LOOK FOR RST SENT](e-l.md#look-for-rst-sent) |
-| LPT1 BASE ADDRESS | Not classified by this reference; review required (not proof of removal) |
-| LPT2 BASE ADDRESS | Not classified by this reference; review required (not proof of removal) |
-| LPT3 BASE ADDRESS | Not classified by this reference; review required (not proof of removal) |
+| LPT1 BASE ADDRESS | Withdrawn name; accepted and ignored by compatibility dispatch |
+| LPT2 BASE ADDRESS | Withdrawn name; accepted and ignored by compatibility dispatch |
+| LPT3 BASE ADDRESS | Withdrawn name; accepted and ignored by compatibility dispatch |
 | MAIN CALLSIGN | Current setting: [MAIN CALLSIGN](m-p.md#main-callsign) |
 | MAIN FONT | Current setting: [MAIN FONT](m-p.md#main-font) |
 | MESSAGE ENABLE | Current setting: [MESSAGE ENABLE](m-p.md#message-enable) |
@@ -192,7 +189,7 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | POSSIBLE CALL MODE | Current setting: [POSSIBLE CALL MODE](m-p.md#possible-call-mode) |
 | POSSIBLE CALL RIGHT KEY | Current setting: [POSSIBLE CALL RIGHT KEY](m-p.md#possible-call-right-key) |
 | POSSIBLE CALLS | Current setting: [POSSIBLE CALLS](m-p.md#possible-calls) |
-| PREFIX MULTIPLIER | Current setting: [PREFIX MULTIPLIER](m-p.md#prefix-multiplier) |
+| PREFIX MULTIPLIER | Withdrawn name; accepted and ignored by compatibility dispatch |
 | PTT ENABLE | Current setting: [PTT ENABLE](m-p.md#ptt-enable) |
 | PTT LOCKOUT | Current setting: [PTT LOCKOUT](m-p.md#ptt-lockout) |
 | PTT TURN ON DELAY | Current setting: [PTT TURN ON DELAY](m-p.md#ptt-turn-on-delay) |
@@ -207,7 +204,7 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | QSO BY BAND | Current setting: [QSO BY BAND](q-s.md#qso-by-band) |
 | QSO BY MODE | Current setting: [QSO BY MODE](q-s.md#qso-by-mode) |
 | QSO NUMBER BY BAND | Current setting: [QSO NUMBER BY BAND](q-s.md#qso-number-by-band) |
-| QSO POINT METHOD | Current setting: [QSO POINT METHOD](q-s.md#qso-point-method) |
+| QSO POINT METHOD | Withdrawn name; accepted and ignored by compatibility dispatch |
 | QSO POINTS DOMESTIC CW | Current setting: [QSO POINTS DOMESTIC CW](q-s.md#qso-points-domestic-cw) |
 | QSO POINTS DOMESTIC PHONE | Current setting: [QSO POINTS DOMESTIC PHONE](q-s.md#qso-points-domestic-phone) |
 | QSO POINTS DX CW | Current setting: [QSO POINTS DX CW](q-s.md#qso-points-dx-cw) |
@@ -258,7 +255,7 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | RADIUS OF EARTH | Current setting: [RADIUS OF EARTH](q-s.md#radius-of-earth) |
 | RANDOM CQ MODE | Current setting: [RANDOM CQ MODE](q-s.md#random-cq-mode) |
 | RATE DISPLAY | Current setting: [RATE DISPLAY](q-s.md#rate-display) |
-| RELAY CONTROL PORT | Not classified by this reference; review required (not proof of removal) |
+| RELAY CONTROL PORT | Withdrawn name; accepted and ignored by compatibility dispatch |
 | REMAINING MULT DISPLAY MODE | Current setting: [REMAINING MULT DISPLAY MODE](q-s.md#remaining-mult-display-mode) |
 | REMINDER | Withdrawn name; accepted and ignored by compatibility dispatch |
 | REPEAT S&amp; P CW EXCHANGE | Not classified by this reference; review required (not proof of removal) |
@@ -266,7 +263,7 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | REPEAT S&amp;P SSB EXCHANGE | Current setting: [REPEAT S&amp;P SSB EXCHANGE](q-s.md#repeat-s-p-ssb-exchange) |
 | ROTATOR PORT | Current setting: [ROTATOR PORT](q-s.md#rotator-port) |
 | ROTATOR TYPE | Current setting: [ROTATOR TYPE](q-s.md#rotator-type) |
-| ROW COUNT | Current setting: [ROW COUNT](q-s.md#row-count) |
+| ROW COUNT | Withdrawn name; accepted and ignored by compatibility dispatch |
 | S&amp;P CW EXCHANGE | Current setting: [S&amp;P CW EXCHANGE](q-s.md#s-p-cw-exchange) |
 | S&amp;P EXCHANGE | Accepted alias: [S&amp;P EXCHANGE](q-s.md#s-p-cw-exchange) |
 | S&amp;P SSB EXCHANGE | Current setting: [S&amp;P SSB EXCHANGE](q-s.md#s-p-ssb-exchange) |
@@ -300,15 +297,15 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | START SENDING NOW KEY | Current setting: [START SENDING NOW KEY](q-s.md#start-sending-now-key) |
 | STATIONS CALLSIGNS MASK | Current setting: [STATIONS CALLSIGNS MASK](q-s.md#stations-callsigns-mask) |
 | STEREO CONTROL PIN | Not classified by this reference; review required (not proof of removal) |
-| STEREO CONTROL PORT | Not classified by this reference; review required (not proof of removal) |
+| STEREO CONTROL PORT | Withdrawn name; accepted and ignored by compatibility dispatch |
 | STEREO PIN HIGH | Current setting: [STEREO PIN HIGH](q-s.md#stereo-pin-high) |
 | SWAP PACKET SPOT RADIOS | Current setting: [SWAP PACKET SPOT RADIOS](q-s.md#swap-packet-spot-radios) |
 | SWAP PADDLES | Current setting: [SWAP PADDLES](q-s.md#swap-paddles) |
 | SWAP RADIO RELAY SENSE | Current setting: [SWAP RADIO RELAY SENSE](q-s.md#swap-radio-relay-sense) |
-| TAIL END CW MESSAGE | Not classified by this reference; review required (not proof of removal) |
-| TAIL END KEY | Not classified by this reference; review required (not proof of removal) |
-| TAIL END MESSAGE | Not classified by this reference; review required (not proof of removal) |
-| TAIL END SSB MESSAGE | Not classified by this reference; review required (not proof of removal) |
+| TAIL END CW MESSAGE | Withdrawn name; accepted and ignored by compatibility dispatch |
+| TAIL END KEY | Withdrawn name; accepted and ignored by compatibility dispatch |
+| TAIL END MESSAGE | Withdrawn name; accepted and ignored by compatibility dispatch |
+| TAIL END SSB MESSAGE | Withdrawn name; accepted and ignored by compatibility dispatch |
 | TELNET SERVER | Current setting: [TELNET SERVER](t-z.md#telnet-server) |
 | TEN MINUTE RULE | Current setting: [TEN MINUTE RULE](t-z.md#ten-minute-rule) |
 | TUNE ALT-D ENABLE | Current setting: [TUNE ALT-D ENABLE](t-z.md#tune-alt-d-enable) |
@@ -316,7 +313,7 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | TWO RADIO MODE | Current setting: [TWO RADIO MODE](t-z.md#two-radio-mode) |
 | UNKNOWN COUNTRY FILE ENABLE | Current setting: [UNKNOWN COUNTRY FILE ENABLE](t-z.md#unknown-country-file-enable) |
 | UNKNOWN COUNTRY FILE NAME | Current setting: [UNKNOWN COUNTRY FILE NAME](t-z.md#unknown-country-file-name) |
-| USE CONTROL PORT | Not classified by this reference; review required (not proof of removal) |
+| USE CONTROL PORT | Withdrawn name; accepted and ignored by compatibility dispatch |
 | USE RECORDED SIGNS | Current setting: [USE RECORDED SIGNS](t-z.md#use-recorded-signs) |
 | USER INFO SHOWN | Current setting: [USER INFO SHOWN](t-z.md#user-info-shown) |
 | VHF BAND ENABLE | Current setting: [VHF BAND ENABLE](t-z.md#vhf-band-enable) |
@@ -325,7 +322,7 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | WARC BAND ENABLE | Current setting: [WARC BAND ENABLE](t-z.md#warc-band-enable) |
 | WEIGHT | Current setting: [WEIGHT](t-z.md#weight) |
 | WILDCARD PARTIALS | Current setting: [WILDCARD PARTIALS](t-z.md#wildcard-partials) |
-| WINDOW SIZE | Current setting: [WINDOW SIZE](t-z.md#window-size) |
+| WINDOW SIZE | Withdrawn name; accepted and ignored by compatibility dispatch |
 | WK AUTOSPACE | Owned by a settings store; use the relevant setup panel |
 | WK CT SPACING | Owned by a settings store; use the relevant setup panel |
 | WK DIT DAH RATIO | Owned by a settings store; use the relevant setup panel |
@@ -343,4 +340,4 @@ Original manual transcription (`docs/TR4W_Reference_Manual_4.01-1.md`) · Curren
 | WK SIDETONE FREQUENCY | Owned by a settings store; use the relevant setup panel |
 | WK TAIL TIME | Owned by a settings store; use the relevant setup panel |
 | WK WEIGHT | Owned by a settings store; use the relevant setup panel |
-| ZONE MULTIPLIER | Current setting: [ZONE MULTIPLIER](t-z.md#zone-multiplier) |
+| ZONE MULTIPLIER | Withdrawn name; accepted and ignored by compatibility dispatch |

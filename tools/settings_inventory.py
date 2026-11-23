@@ -66,6 +66,12 @@ def published_properties(body):
    return found
 
 
+def frozen_vocabulary(path):
+   """Read the command names pinned by the settings model test."""
+   return {match[1] or match[2] for match in re.finditer(
+      r"^\s*\+ '(?:\"([^\"]+)\"|([A-Z0-9][^,']*))[,']", srcfile.read(path), re.M)}
+
+
 def collect():
    """(moved, pending): every settings-object command, and any CFGCA row left.
 

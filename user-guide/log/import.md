@@ -13,6 +13,8 @@ ADIF import adds contacts to the open contest database. Choose the receiving con
 
 The importer collects contacts and writes the batch in one database transaction. A database write failure rolls back that batch, leaving the receiving log unchanged. This does not mean every malformed line is imported: incomplete or malformed input can be skipped and reported. Read the completion counts and skipped-record report, then compare the result with the original file. A successful import rescores and reloads the log.
 
+The import report also names unrecognized `CONTEST_ID` values. Check those records and the intended contest before exporting or submitting the resulting log.
+
 ## Avoid accidental duplicates
 
 The append prompt is not a promise that repeated imports are automatically deduplicated. Keep track of which source files have been imported and check the log before repeating an import. The importer has contest-specific handling, including county-line contacts; unusual repeated calls may be legitimate and need inspection rather than blanket removal.

@@ -2,7 +2,7 @@
 
 Check the [radio support table](../reference/radios.md) for the driver's registered serial/network connections, discovery support, and setup defaults. For a TCI connection, also read [TCI connections](tci.md).
 
-Open the radio configuration dialog for the radio you want to configure. Confirm **Name** and **Radio type** before entering connection details. Exact menu navigation still needs a walkthrough in the preview build.
+Open the editor for the intended radio from the radio library in Preferences or from the [setup wizard](../start/first-contest.md#complete-the-initial-station-setup). Confirm **Name** and **Radio type** before entering connection details.
 
 === "Serial CAT"
 
@@ -21,6 +21,15 @@ Open the radio configuration dialog for the radio you want to configure. Confirm
     5. Check the radio's own network-control configuration if the connection fails.
 
 Choose **Save and close** to keep the configuration, or **Cancel** to discard the dialog changes.
+
+## Network radios and software interfaces
+
+- **Elecraft K4.** Discovery lists each address with its radio name. Choose the address reachable from your station when both Wi-Fi and Ethernet are connected.
+- **FLRig.** Select **FLRig (XML-RPC)** as the network radio type and use the FLRig host and port, default `12345`. The native driver provides radio control. PTT by CAT is unconfirmed and CW requires a separate keying method.
+- **DXLab Commander.** Select **DXLab Commander** to control a radio through that program, default TCP port `52002`. CW by CAT is implemented and still needs verification on a real rig. [TR4W's Commander-compatible endpoint for WSJT-X](wsjtx.md#radio-control-is-a-separate-connection) runs in the opposite direction.
+- **Flex API.** The driver checks the link every second and reconnects a link that has been silent for ten seconds.
+
+Verify PTT by CAT and CW on the intended radio before relying on either. TR4W reports when the selected driver is known to lack CAT PTT.
 
 ## Per-radio polling
 
