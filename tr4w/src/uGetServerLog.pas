@@ -691,7 +691,18 @@ begin
       Result := RestockServer(plan, aSent);
       if aSent > 0 then
          begin
-         QuickDisplay(SysUtils.Format(SNetPushedToServer, [aSent]));
+         (* THE WHOLE COUNT (NY4I, 2026-11-22): the QSOs logged while disconnected
+           went out by the resend on this link, the rest by this push; saying
+           only the push said 5 when 25 had gone. *)
+         if NetResentQsoCount > 0 then
+            begin
+            QuickDisplay(SysUtils.Format(SNetPushedToServerTotal,
+                                         [NetResentQsoCount + aSent, NetResentQsoCount, aSent]));
+            end
+         else
+            begin
+            QuickDisplay(SysUtils.Format(SNetPushedToServer, [aSent]));
+            end;
          end;
    finally
       plan.Free;

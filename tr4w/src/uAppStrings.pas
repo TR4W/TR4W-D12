@@ -653,6 +653,13 @@ resourcestring
    SNetPushedToServer =
       'Sent to the server: %d QSO(s) it did not have.';
 
+   (* The same, when QSOs logged while disconnected were ALSO resent on this
+     link (NY4I, 2026-11-22: the notice said 5 when 25 went). %d: the total,
+     how many were logged while disconnected, how many the server did not have. *)
+   SNetPushedToServerTotal =
+      'Sent to the server: %d QSO(s) -- %d logged while disconnected, ' +
+      '%d it did not have.';
+
    (* The question when only this log has something to give and SERVER AUTO
      SYNCHRONIZE LOG ON CONNECT is off. %d: how many QSOs. *)
    SPushAsk =

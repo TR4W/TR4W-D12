@@ -419,6 +419,10 @@ type
 function ResendOfflineWork: TResendResult;
 procedure NetServiceResend;
 
+(* HOW MANY QSOs ResendOfflineWork has posted on THIS link (0 when none, and again
+  0 when a new link comes up), so the restock notice can state the whole count. *)
+function NetResentQsoCount: integer;
+
 (* THE OTHER HALF OF CATCHING UP: WHAT THE OTHER STATIONS LOGGED WHILE THIS ONE
   WAS AWAY (Phase 1, C6). Once per link, at the same moment as the resend (the
   server's HELLO, at the end of the drain that handled it), the server's log is
@@ -691,6 +695,8 @@ var
     cleared when a link comes up. Main thread. *)
   GResendDue:        boolean = False;
   GResentThisLink:   boolean = False;
+  (* How many QSOs that resend posted (NetResentQsoCount), for the restock notice. *)
+  GResentQsoCount:   integer = 0;
   (* CATCHING UP FROM THE SERVER'S LOG (Phase 1, C6): due once the server's HELLO
     has come on this link, started by NetServiceCatchUp at the end of the same
     drain as the resend. Cleared when a link comes up. Main thread. *)
@@ -1818,6 +1824,7 @@ begin
      sent -- nothing can be reading them until the server has answered it. *)
    GResendDue := False;
    GResentThisLink := False;
+   GResentQsoCount := 0;
    GCatchUpDue := False;
    GResentKeys.Clear;
 end;
@@ -3513,6 +3520,7 @@ begin
       SendToNet(ServerMessage, SizeOf(ServerMessage));
       end;
 
+   GResentQsoCount := Result.Qsos;
    notice := SysUtils.Format(SNetResent, [Result.Qsos, Result.Edits]);
    if Assigned(ResendNoticeSink) then
       begin
@@ -3522,6 +3530,11 @@ begin
       begin
       QuickDisplay(notice);
       end;
+end;
+
+function NetResentQsoCount: integer;
+begin
+   Result := GResentQsoCount;
 end;
 
 procedure NetServiceResend;
