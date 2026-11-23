@@ -94,6 +94,7 @@ type
                                    aState: TGridDrawState);
    private
       FIndex: WindowsType;
+      procedure ApplyGridLineColor;
    public
       Mults: TFlowGrid;
 
@@ -148,6 +149,7 @@ uses
                         the type moved here with the setting *)
    uSpots,            (* WorkedMultColor -- BAND MAP WORKED MULT COLOR, issue 357 *)
    uRemMultWorkState, (* TRemMultWorkState, RemainingMultCellStyle *)
+   uLogGrid,          (* LogSoftRuleColor -- the log's light rule, shared *)
    uLCLFormHelpers;   // LeaveFormUnowned
 
 const
@@ -189,6 +191,25 @@ end;
 procedure TfrmRemMults.HandleCreate(Sender: TObject);
 begin
    Mults := TFlowGrid.Create(grdMults, BASECOLUMNWIDTH, CELL_HEIGHT);   // owns its TRemainingMult cells
+   ApplyGridLineColor;
+end;
+
+(* A LIGHT LINE BETWEEN CELLS (NY4I, 2026-11-22). Two neighbouring backups
+  wanted are flat fills of BAND MAP WORKED MULT COLOR and ran together into one
+  block. The lines themselves are the grid's own (goVertLine and goHorzLine in
+  the .lfm, drawn by the LCL's DrawCellGrid after OnPrepareCanvas's fill); this
+  only picks their colour, from the window colour MultsPrepareCanvas fills a
+  needed cell with, through the main log's rule (uLogGrid.LogSoftRuleColor) so
+  the two windows cannot drift. SHOW GRIDLINES is the main log's setting
+  (Settings.MainWindow) and does not govern this window: the line is always
+  shown here.
+
+  Called at create and again at every show, because the form is hidden and
+  reused (caHide) and the system window colour can change between opens. Never
+  from MultsPrepareCanvas: assigning GridLineColor invalidates the grid. *)
+procedure TfrmRemMults.ApplyGridLineColor;
+begin
+   grdMults.GridLineColor := TColor(LogSoftRuleColor(longint(ColorToRGB(clWindow))));
 end;
 
 procedure TfrmRemMults.HandleDestroy(Sender: TObject);
@@ -287,6 +308,7 @@ end;
 
 procedure TfrmRemMults.HandleShow(Sender: TObject);
 begin
+   ApplyGridLineColor;
    if Assigned(RemMultsOnShow) then
       begin
       RemMultsOnShow;
