@@ -4578,7 +4578,7 @@ msgstr "Hlavní okno"
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
-msgstr ""
+msgstr "Písmo platí pro hlavní okno soutěže. Obojí nabude účinku, až příště začne TR4W."
 
 #: tprefsform.lblappearmenunote.caption
 #, fuzzy
@@ -4841,7 +4841,7 @@ msgstr "Rychlost znaku:"
 #, fuzzy
 #| msgid "Size:"
 msgid "Font size step:"
-msgstr ""
+msgstr "Stupeň velikosti písma:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -12384,83 +12384,83 @@ msgstr "TRMASTER.DTA stažena, ale nemohla být načtena -- použitá data jsou 
 #: tprefsform.btnchoosefont.caption
 #, fuzzy
 msgid "Choose..."
-msgstr ""
+msgstr "Vyberte..."
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgid "Windows and log"
-msgstr ""
+msgstr "Windows a log"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "-- dB"
-msgstr ""
+msgstr "-- dB"
 
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid ""
 "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.\r\n"
 "Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign."
-msgstr ""
+msgstr "Tyto jsou odesílány do ostatních stanic v síti multioperátorů, když je změníte, takže všechny pozice se dohodnou na výměně.\rCall, Country, Continent a Zone se čtou jednou, když je soutěž nastavena, takže změna na ně nabývá účinnosti, když TR4W příště začne. Opusťte zemi prázdnou a TR4W to vyřeší z vaší volací značky."
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "TR4W nabízí DX Commander kompatibilní rozhraní na TCP portu 52002, kdykoli je spuštěna podpora WSJT-X, a DXLab programy připojit k tomu."
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Integrate with DXLab SpotCollector"
-msgstr ""
+msgstr "Integrovat pomocí DXLab SpotCollector"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgid "IP port"
-msgstr ""
+msgstr "IP port"
 
 #: uappstrings.sbandmaptextsize
 #: tfrmbandmap.mitextsize.caption
 #, fuzzy
 msgid "Text size"
-msgstr ""
+msgstr "Velikost textu"
 
 #: uappstrings.sbandmaptextlarger
 #: tfrmbandmap.mitextlarger.caption
 #, fuzzy
 msgid "Larger"
-msgstr ""
+msgstr "Větší"
 
 #: uappstrings.sbandmaptextsmaller
 #: tfrmbandmap.mitextsmaller.caption
 #, fuzzy
 msgid "Smaller"
-msgstr ""
+msgstr "Menší"
 
 #: uappstrings.sbandmaptextreset
 #: tfrmbandmap.mitextreset.caption
 #, fuzzy
 msgid "Reset"
-msgstr ""
+msgstr "Obnovit"
 
 #: uappstrings.sloggergridopensite
 #, fuzzy
 msgid "Open web site"
-msgstr ""
+msgstr "Otevřít webové stránky"
 
 #: uappstrings.sloggergridresend
 #, fuzzy
 msgid "Resend QSOs..."
-msgstr ""
+msgstr "Revend QSO..."
 
 #: uappstrings.sloggersiterefused
 #, fuzzy
 msgid "Not opened: \"%s\" is not an http or https web address."
-msgstr ""
+msgstr "Neotevřeno: \"%s\"není internetová adresa http nebo https."
 
 #: uappstrings.sloggersiteopenfailed
 #, fuzzy
 msgid "The browser could not be started for %s."
-msgstr ""
+msgstr "Prohlížeč nemohl být spuštěn pro %s."
 
 #: uappstrings.sloggerresendbody
 #, fuzzy
@@ -12471,232 +12471,237 @@ msgid ""
 "\n"
 "Resend all: also sends delivered QSOs again as updates of the same remote contact (not for Cloudlog / Wavelog or AC Log, which have no update call). A QSO of unknown outcome is never resent."
 msgstr ""
+"Revend QSO této soutěže %s pouze.\n"
+"\n"
+"Ještě není doručeno: fronty QSO tento logger nebyl nikdy odeslán (například ty, které se přihlásily, zatímco Odeslat nové QSO byl vypnut) a všechny, které odmítl. QSP již dodané, čekající, nebo neznámého výsledku jsou ponechány na pokoji.\n"
+"\n"
+"Revend all: také odeslané QSO opět jako aktualizace stejného vzdáleného kontaktu (ne pro Cloudlog / Wavelog nebo AC Log, které nemají žádné aktualizované volání). QSO neznámého výsledku není nikdy odmítání."
 
 #: uappstrings.sloggerresendundelivered
 #, fuzzy
 msgid "Not yet delivered"
-msgstr ""
+msgstr "Dosud nedodaný"
 
 #: uappstrings.sloggerresendall
 #, fuzzy
 msgid "Resend all"
-msgstr ""
+msgstr "Vrátit všechny"
 
 #: uappstrings.sloggerresendallask
 #, fuzzy
 msgid "Resend all QSOs to %s? A contact that is already at the destination by another route (another definition of this logger, a manual import) cannot be recognised and may appear twice. Delivered contacts are sent again as updates, which uses the service's quota."
-msgstr ""
+msgstr "Předat všechny QSO %s? Kontakt, který je již na místě určení jinou trasou (jinou definicí tohoto záznamníku, manuálního importu), nelze rozpoznat a může se objevit dvakrát. Dodávané kontakty se zasílají jako aktualizace, které využívají kvótu služby."
 
 #: uappstrings.sloggerresenddone
 #, fuzzy
 msgid "%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations."
-msgstr ""
+msgstr "%s: queued %d QSP (%d nové, %d poslán znovu). Samostatně: %d dodané, %d čekání, %d neznámého výsledku, který je třeba přezkoumat, %d Zaznamenáno jinými stanicemi."
 
 #: uappstrings.sloggerresendrefused
 #, fuzzy
 msgid "Nothing was queued for %s: %s"
-msgstr ""
+msgstr "Nic nebylo ve frontě. %s: %s"
 
 #: uappstrings.sloggerresendwhynotrunning
 #, fuzzy
 msgid "it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start."
-msgstr ""
+msgstr "To není běh. Uložit preference a restartovat TR4W, pokud byl přidán, nebo jeho nastavení připojení se od začátku změnilo."
 
 #: uappstrings.sloggerresendwhynotactive
 #, fuzzy
 msgid "Send new QSOs is off for it. Switch it on and save Preferences first."
-msgstr ""
+msgstr "Pošlete na to nové QSO. Zapněte to a nejprve uložte preference."
 
 #: uappstrings.sloggerresendwhypaused
 #, fuzzy
 msgid "its delivery is paused after a capture failure (see tr4w.log)."
-msgstr ""
+msgstr "jeho dodávka je pozastavena po selhání zachycení (viz tr4w.log)."
 
 #: uappstrings.sloggerresendwhysetup
 #, fuzzy
 msgid "its account or logbook is not set up."
-msgstr ""
+msgstr "není zřízen její účet nebo lodní deník."
 
 #: uappstrings.sloggerresendwhyunsupported
 #, fuzzy
 msgid "it has no delivery queue to resend into."
-msgstr ""
+msgstr "nemá žádnou doručovací frontu."
 
 #: uappstrings.sloggerresendwhynolog
 #, fuzzy
 msgid "no writable contest log is open."
-msgstr ""
+msgstr "žádný zápis do soutěže není otevřený."
 
 #: uappstrings.sloggerresendwhyfailed
 #, fuzzy
 msgid "the log could not be updated (see tr4w.log). Nothing was changed."
-msgstr ""
+msgstr "záznam nemohl být aktualizován (viz tr4w.log). Nic se nezměnilo."
 
 #: uappstrings.slogbackupstillfailing
 #, fuzzy
 msgid "Last log backup FAILED: retried every %d min. See tr4w.log."
-msgstr ""
+msgstr "Poslední záznam zálohování FAILED: znovu vyzkoušel každý %d min. Viz Tr4w.log."
 
 #: uappstrings.slogchangenotsaved
 #, fuzzy
 msgid "NOT SAVED -- the contest log did not take this change. See tr4w.log."
-msgstr ""
+msgstr "NOT USAVED - záznam soutěže tuto změnu nepřijal. Viz Tr4w.log."
 
 #: uappstrings.speerqsonotsaved
 #, fuzzy
 msgid "A QSO from another station could NOT be saved to this log. It is not lost if the server has it: the next catch-up from the server, or Net > Synchronize, adds it once this log can be written. Further refusals are in tr4w.log."
-msgstr ""
+msgstr "QSO z jiné stanice nemohl být uložen do tohoto záznamu. Není ztracena, pokud ji server má: další chytla- up ze serveru, nebo Net > Synchronizovat, přidat, jakmile tento záznam může být zapsán. Další odmítnutí jsou v tr4w.log."
 
 #: uappstrings.sentrystatusqsonotsaved
 #, fuzzy
 msgid "QSO not saved"
-msgstr ""
+msgstr "QSO není uloženo"
 
 #: uappstrings.sentrystatuslogreadonly
 #, fuzzy
 msgid "Log read-only"
-msgstr ""
+msgstr "Pouze čtení záznamu"
 
 #: uappstrings.sentryfieldexchangename
 #, fuzzy
 msgid "Exchange"
-msgstr ""
+msgstr "Burza"
 
 #: uappstrings.sradiopanelactive
 #, fuzzy
 msgid "Active"
-msgstr ""
+msgstr "Aktivní"
 
 #: uappstrings.sradiopanelactivename
 #, fuzzy
 msgid "Active radio"
-msgstr ""
+msgstr "Aktivní rádio"
 
 #: usettingscaptions.rs_operating_enforcevalidcallsign
 #, fuzzy
 msgid "Refuse a QSO whose call is not in the country file"
-msgstr ""
+msgstr "Odmítnout QSO, jehož hovor není ve složce země"
 
 #: usettingscaptions.rs_bandmap_clickgoestoexchange
 #, fuzzy
 msgid "After tuning to a spot, put the cursor in the exchange window"
-msgstr ""
+msgstr "Po naladění na místo, dejte kurzor v okně výměny"
 
 #: uappstrings.scallnotaknownentity
 #, fuzzy
 msgid "%s is not logged: its base call is not in the country file"
-msgstr ""
+msgstr "%s není přihlášen: jeho základní hovor není v souboru země"
 
 #: uappstrings.scallwindowcwon
 #, fuzzy
 msgid "CW On"
-msgstr ""
+msgstr "CW zapnuto"
 
 #: uappstrings.smenutogglevoicekeyer
 #, fuzzy
 msgid "Toggle Voice Keyer"
-msgstr ""
+msgstr "Přepnout hlasový keyer"
 
 #: uappstrings.sexchangecountylineoneparty
 #, fuzzy
 msgid "County line %s/%s: the counties must be in one QSO party"
-msgstr ""
+msgstr "Oblast %s/%s: okresy musí být v jedné straně QSO"
 
 #: uappstrings.sradiopttbycatnotsupported
 #, fuzzy
 msgid "%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off \"Key the transmitter with a CAT command\"."
-msgstr ""
+msgstr "%s: PTT přes CAT není podporováno tímto rádiem. Použijte hardwarovou PTT linku nebo vypněte \"Klíč k vysílači s povelem CAT\"."
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenerenabled
 #, fuzzy
 msgid "Accept QSOs from JTDX and JTAlert (N1MM log listener)"
-msgstr ""
+msgstr "Akceptovat QSP z JTDX a JTAlert (N1MM log listener)"
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenaddress
 #, fuzzy
 msgid "Address the N1MM log listener binds to"
-msgstr ""
+msgstr "Adresa posluchače N1MM log se váže na"
 
 #: uappstrings.sprefsgroupn1mmlistener
 #, fuzzy
 msgid "N1MM log listener (JTDX, JTAlert)"
-msgstr ""
+msgstr "N1MM log listener (JTDX, JTAlert)"
 
 #: uappstrings.snetstationmissing
 #, fuzzy
 msgid "Missing"
-msgstr ""
+msgstr "Chybějící"
 
 #: uappstrings.spassneedsname
 #, fuzzy
 msgid "A {PASS} word needs a station or a band, for example {PASS B} or {PASS 14000}. The message was not sent."
-msgstr ""
+msgstr "Slovo {PASS} potřebuje stanici nebo kapelu, například {PASS B} nebo {PASS 14000}. Zpráva nebyla odeslána."
 
 #: uappstrings.spassnotaband
 #, fuzzy
 msgid "{PASS %0:s} is not a band. Use a band in kHz, for example 14000. The message was not sent."
-msgstr ""
+msgstr "{PASS %0:sNení to kapela. Používejte pásmo v kHz, například 14000. Zpráva nebyla odeslána."
 
 #: uappstrings.spassbandempty
 #, fuzzy
 msgid "No other station is on the %0:s kHz band, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "Žádná jiná stanice není na %0:s kHz pásmo, takže {PASS %0:sNelze vyplnit. Zpráva nebyla odeslána."
 
 #: uappstrings.spassstationabsent
 #, fuzzy
 msgid "Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "Stanice %0:s není v síti, takže {PASS %0:sNelze vyplnit. Zpráva nebyla odeslána."
 
 #: uappstrings.spassstationisus
 #, fuzzy
 msgid "{PASS %0:s} names this computer. Name another position. The message was not sent."
-msgstr ""
+msgstr "{PASS %0:sJmenuje tenhle počítač. Jmenuj jinou pozici. Zpráva nebyla odeslána."
 
 #: uappstrings.spassnofrequency
 #, fuzzy
 msgid "Station %0:s is on the network but has not reported a frequency yet. The message was not sent."
-msgstr ""
+msgstr "Stanice %0:s je v síti, ale zatím nehlásila frekvenci. Zpráva nebyla odeslána."
 
 #: uappstrings.spassnothingpassed
 #, fuzzy
 msgid "{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent."
-msgstr ""
+msgstr "{LASTPASSEDFREQ} nemá co posílat: žádná frekvence ještě nebyla překročena. Nejprve použijte {PASS B}. Zpráva nebyla odeslána."
 
 #: uappstrings.slogrestoredeliverynotice
 #, fuzzy
 msgid "The restored log's record of what was sent to external loggers (Club Log, WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may already be at those services but are not in this log, and QSOs the backup had not yet sent will be sent again. Check each service's log."
-msgstr ""
+msgstr "Rekonstruovaný záznam záznamu o tom, co bylo odesláno externím záznamníkům (Klub Log, WRL, DXKeeper) je stejně starý jako záloha. QSO přihlášené po záloze může být již na těchto službách, ale nejsou v tomto záznamu, a QSO zálohování ještě poslal bude poslán znovu. Zkontrolujte záznamy každé služby."
 
 #: uappstrings.smenucorrectstationfacts
 #, fuzzy
 msgid "Correct Station Facts..."
-msgstr ""
+msgstr "Fakta o správné stanici..."
 
 #: uappstrings.sstationcorrectionbackupfailed
 #, fuzzy
 msgid "Nothing was changed: the log could not be backed up first. %s"
-msgstr ""
+msgstr "Nic se nezměnilo: záznam nemohl být zálohován jako první. %s"
 
 #: uappstrings.sstationcorrectionbadfrom
 #, fuzzy
 msgid "A log record number is a whole number from 1 up."
-msgstr ""
+msgstr "Číslo záznamu je celé číslo od 1 nahoru."
 
 #: uappstrings.sstationcorrectioncancelbutton
 #, fuzzy
 msgctxt "uappstrings.sstationcorrectioncancelbutton"
 msgid "Cancel"
-msgstr ""
+msgstr "Zrušit"
 
 #: uappstrings.sstationcorrectionchangebutton
 #, fuzzy
 msgid "Change the QSOs"
-msgstr ""
+msgstr "Změnit QSP"
 
 #: uappstrings.sstationcorrectionchoosefact
 #, fuzzy
 msgid "Which of your station's values is wrong on the QSOs already logged?"
-msgstr ""
+msgstr "Která z hodnot vaší stanice je špatná na již zaznamenaných QSO?"
 
 #: uappstrings.sstationcorrectionconfirm
 #, fuzzy
@@ -12708,6 +12713,12 @@ msgid ""
 "\n"
 "Not changed: %5:d imported, %6:d never recorded (they follow your setting: correct it in Preferences too), %7:d per place (a rover or an in-state party)."
 msgstr ""
+"Tyto změny %0:s na \"%1:s\"on %2:d zaznamenané QSO (s): %3:s.\n"
+"Teď říkají: %4:s.\n"
+"\n"
+"Záznamy jsou první. Každý změněný QSO je pak poslán znovu jako editace - do Klubu Log, WRL a jiného externího loggeru, na server multi- op a jako náhradu za UDP - a záznam je obnoven. %8:d Z nich je mnohaoperativní peer 's: opraveno zde, posláno touto stanicí.\n"
+"\n"
+"Nezměnila se: %5:d dovezené, %6:d nikdy nezaznamenané (řídí se nastavením: opraví to i v preferencích), %7:d na místo (Rover nebo nestátní strana)."
 
 #: uappstrings.sstationcorrectiondone
 #, fuzzy
@@ -12715,168 +12726,175 @@ msgid ""
 "%0:s is now \"%1:s\" on %2:d logged QSO(s).\n"
 "The log as it was is in %3:s"
 msgstr ""
+"%0:s je nyní \"%1:s\"on %2:d QSO (s).\n"
+"Záznamy tak, jak byly v %3:s"
 
 #: uappstrings.sstationcorrectionemptyvalue
 #, fuzzy
 msgid "Type the value the QSOs should have."
-msgstr ""
+msgstr "Napište hodnotu, kterou by QSO měly mít."
 
 #: uappstrings.sstationcorrectionfailed
 #, fuzzy
 msgid "Nothing was changed: the contest log did not take the correction. See tr4w.log."
-msgstr ""
+msgstr "Nic se nezměnilo: záznam o soutěži nepřijal opravu. Viz Tr4w.log."
 
 #: uappstrings.sstationcorrectionfromprompt
 #, fuzzy
 msgid "Change the QSOs from log record number (1 = every QSO in the log):"
-msgstr ""
+msgstr "Změňte QSP od čísla záznamu záznamu (1 = každý QSO v záznamu):"
 
 #: uappstrings.sstationcorrectionnotallowed
 #, fuzzy
 msgid "%s cannot be changed on logged QSOs."
-msgstr ""
+msgstr "%s nelze měnit na přihlášených QSO."
 
 #: uappstrings.sstationcorrectionnothing
 #, fuzzy
 msgid "No logged QSO needs changing."
-msgstr ""
+msgstr "Žádný zaznamenaný QSO nepotřebuje změnit."
 
 #: uappstrings.sstationcorrectionreadonly
 #, fuzzy
 msgid "Nothing was changed: the contest log is read-only."
-msgstr ""
+msgstr "Nic se nezměnilo. Záznamy jsou jen pro čtení."
 
 #: uappstrings.sstationcorrectionscopeall
 #, fuzzy
 msgid "ALL PRIOR CONTACTS in the log"
-msgstr ""
+msgstr "VŠECHNY PRVNÍ KONTAKTY V LOGU"
 
 #: uappstrings.sstationcorrectionscopefrom
 #, fuzzy
 msgid "every contact from log record %d on"
-msgstr ""
+msgstr "každý kontakt z záznamu záznamu %d n"
 
 #: uappstrings.sstationcorrectiontitle
 #, fuzzy
 msgid "Correct station facts on logged QSOs"
-msgstr ""
+msgstr "Správná fakta stanice na přihlášených QSO"
 
 #: uappstrings.sstationcorrectionvalueprompt
 #, fuzzy
 msgid "The value the QSOs should have for %s:"
-msgstr ""
+msgstr "Hodnota, pro kterou by QSO měly mít %s:"
 
 #: uappstrings.sstationcorrectionzonezero
 #, fuzzy
 msgid "A zone of 0 is not a zone."
-msgstr ""
+msgstr "Zóna 0 není zóna."
 
 #: uappstrings.sloggergridcreatelogbook
 #, fuzzy
 msgid "Create logbook..."
-msgstr ""
+msgstr "Vytvořit deník..."
 
 #: uappstrings.swrlcreatebusy
 #, fuzzy
 msgid "A logbook is already being created for a logger. Wait for it to finish."
-msgstr ""
+msgstr "Lodní deník je již vytvořen pro záznamník. Počkej, až to skončí."
 
 #: uappstrings.swrlcreatecaption
 #, fuzzy
 msgid "Create World Radio League logbook"
-msgstr ""
+msgstr "Vytvořit světový deník Radio League"
 
 #: uappstrings.swrlcreatedone
 #, fuzzy
 msgid "Created logbook \"%s\" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with."
-msgstr ""
+msgstr "Vytvořeno lodní deník \"%s\"id %s) na World Radio League a vybral ji pro %sUložit preference, aby to. Nový deník se používá po restartu TR4W: běžící záznamník udržuje nastavení, která začala."
 
 #: uappstrings.swrlcreatefailed
 #, fuzzy
 msgid "The logbook was not created: %s"
-msgstr ""
+msgstr "Lodní deník nebyl vytvořen: %s"
 
 #: uappstrings.swrlcreatekeymissing
 #, fuzzy
 msgid "This logger has no API key available. Enter the key in the logger's editor (unlock the password vault if it is locked) first."
-msgstr ""
+msgstr "Tento záznamník nemá k dispozici API klíč. Nejprve zadejte klíč do editoru loggeru (pokud je uzamčen, odemkněte heslo)."
 
 #: uappstrings.swrlcreateprompt
 #, fuzzy
 msgid "Name of the new logbook (up to 100 characters). It is made on the World Radio League web site for the account this API key belongs to:"
-msgstr ""
+msgstr "Název nového lodního deníku (do 100 znaků). Je vyroben na webové stránce World Radio League pro účet tento API klíč patří do:"
 
 #: uappstrings.swrlcreatereplaceask
 #, fuzzy
 msgid "%s already has a logbook chosen. Create a new logbook and use it instead? Contacts already queued for the old logbook are not moved."
-msgstr ""
+msgstr "%s Už má vybrán deník. Vytvořit nový deník a použít ho místo? Kontakty, které již byly uvedeny do fronty pro starý lodní deník, nejsou přesunuty."
 
 #: uappstrings.swrlcreateuncertain
 #, fuzzy
 msgid "World Radio League did not confirm the logbook, so it may have been created. Look at your logbooks on the World Radio League web site (or use Refresh in the logger's editor) before trying again, so you do not make a second one."
-msgstr ""
+msgstr "Liga World Radio nepotvrdila lodní deník, takže mohl být vytvořen. Podívejte se na své deníky na webových stránkách World Radio League (nebo použít Refresh v editoru logger) před tím, než se snaží znovu, takže nemusíte dělat druhý."
 
 #: uappstrings.swrlrequestid
 #, fuzzy
 msgid "(request id %s)"
-msgstr ""
+msgstr "(žádost id %s)"
 
 #: uappstrings.swrlwhyconflict
 #, fuzzy
 msgid "a logbook with that name may already exist, or World Radio League treated the request as a conflict. Choose the existing logbook in the logger's editor, or use another name."
-msgstr ""
+msgstr "lodní deník s tímto názvem již může existovat nebo Světová Radio League považuje žádost za konflikt. Vyberte stávající deník v editoru záznamníku, nebo použijte jiné jméno."
 
 #: uappstrings.swrlwhydown
 #, fuzzy
 msgid "the World Radio League service is not available right now (%s). Try again later."
-msgstr ""
+msgstr "služba World Radio League není nyní k dispozici (%s). Zkuste to později."
 
 #: uappstrings.swrlwhyip
 #, fuzzy
 msgid "the key is restricted to other IP addresses than this computer's."
-msgstr ""
+msgstr "klíč je omezen na jiné IP adresy, než je tento počítač."
 
 #: uappstrings.swrlwhykey
 #, fuzzy
 msgid "World Radio League did not accept the API key (it is missing, wrong or revoked). Check the key in the logger's editor."
-msgstr ""
+msgstr "World Radio League nepřijala API klíč (chybí, není správný nebo zrušen). Zkontrolujte klíč v editoru záznamníku."
 
 #: uappstrings.swrlwhymembership
 #, fuzzy
 msgid "the key was refused because the account needs a current World Radio League membership."
-msgstr ""
+msgstr "Klíč byl zamítnut, protože účet potřebuje aktuální členství v lize World Radio."
 
 #: uappstrings.swrlwhynamerequired
 #, fuzzy
 msgid "the name is empty."
-msgstr ""
+msgstr "Jméno je prázdné."
 
 #: uappstrings.swrlwhynametoolong
 #, fuzzy
 msgid "the name is longer than %d characters."
-msgstr ""
+msgstr "název je delší než %d postavy."
 
 #: uappstrings.swrlwhyother
 #, fuzzy
 msgid "the request failed (%s)."
-msgstr ""
+msgstr "žádost selhala (%s)."
 
 #: uappstrings.swrlwhyrate
 #, fuzzy
 msgid "too many requests just now. Wait a minute and try again."
-msgstr ""
+msgstr "Až moc žádostí. Počkej chvíli a zkus to znovu."
 
 #: uappstrings.swrlwhyscope
 #, fuzzy
 msgid "the key is not allowed to create logbooks. Make a key that may write logbooks."
-msgstr ""
+msgstr "klíč není povolen k vytvoření lodních deníků. Vytvořte klíč, který může psát deníky."
 
 #: uappstrings.swrlwhyvalidation
 #, fuzzy
 msgid "World Radio League rejected the request: %s"
-msgstr ""
+msgstr "World Radio League zamítl žádost: %s"
 
 #: uappstrings.swrlwhyvalidationfield
 #, fuzzy
 msgid "World Radio League rejected the %s: %s"
-msgstr ""
+msgstr "World Radio League odmítl %s: %s"
+
+#: uappstrings.snetpushedtoservertotal
+#, fuzzy
+msgid "Sent to the server: %d QSO(s) -- %d logged while disconnected, %d it did not have."
+msgstr "Odesláno na server: %d QSO (s) -- %d zaznamenán při odpojení, %d To se nestalo."

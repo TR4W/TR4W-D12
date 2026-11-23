@@ -13324,3 +13324,8 @@ msgstr ""
 #, fuzzy
 msgid "World Radio League rejected the %s: %s"
 msgstr ""
+
+#: uappstrings.snetpushedtoservertotal
+#, fuzzy
+msgid "Sent to the server: %d QSO(s) -- %d logged while disconnected, %d it did not have."
+msgstr "Naar de server gestuurd: %d QSO(s) -- %d ingelogd terwijl de verbinding verbroken is, %d Dat had het niet."

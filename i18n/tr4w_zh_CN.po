@@ -5742,7 +5742,7 @@ msgstr "主窗口"
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
-msgstr ""
+msgstr "字体适用于主竞赛窗口. 两者在TR4W下次开机时都生效."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "这些是设置菜单的外观项目 。 一旦WINDOW SIZE和他们一起进来 窗户就会消失."
 #: tprefsform.lblappearmenunote.caption
@@ -6004,7 +6004,7 @@ msgstr "字符速度 :"
 #, fuzzy
 #| msgid "Size:"
 msgid "Font size step:"
-msgstr ""
+msgstr "字体大小步骤 :"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -8447,37 +8447,37 @@ msgstr "年份"
 #: uappstrings.snewcontestfileslastqso
 #, fuzzy
 msgid "Last QSO"
-msgstr ""
+msgstr "最后一个QSO"
 
 #: uappstrings.sbackupdestinationreachable
 #, fuzzy
 msgid "Backup destination %s is reachable."
-msgstr ""
+msgstr "备份目的地 %s 可达到。"
 
 #: uappstrings.sbackupcopyfailed
 #, fuzzy
 msgid "Backups are NOT reaching %s: %s. Logging continues, and TR4W keeps trying."
-msgstr ""
+msgstr "备份未到达 %s数字 : %s继续伐木 TR4W不断尝试"
 
 #: uappstrings.sbackupcopyrecovered
 #, fuzzy
 msgid "Backups are reaching %s again."
-msgstr ""
+msgstr "备份正在到达 %s 再来一次"
 
 #: uappstrings.sbackupdestinationdialogtitle
 #, fuzzy
 msgid "Backup destination folder"
-msgstr ""
+msgstr "备份目的文件夹"
 
 #: uappstrings.sbackupcopyingtodestination
 #, fuzzy
 msgid "Log backed up; copying to %s ..."
-msgstr ""
+msgstr "日志备份; 复制到 %s . . . . . . ."
 
 #: uappstrings.sbackupcopiedto
 #, fuzzy
 msgid "Backup copied to %s."
-msgstr ""
+msgstr "备份复制到 %s。 。 。 。"
 
 #: uappstrings.sdomincludenotread
 #, fuzzy
@@ -8493,194 +8493,200 @@ msgstr ""
 #: uappstrings.sdomincludetoodeep
 #, fuzzy
 msgid "The domestic file %s nests INCLUDE FILE more than %d deep, on the line \"%s\". That line was not followed: the files probably include one another in a circle."
-msgstr ""
+msgstr "国内档案 %s 巢 INCLUDE 超过 %d 深处,在线上 \"%s\" .. 该行没有被遵循:文件可能包含相通圆."
 
 #: uappstrings.snewcontestontarioqpcountyorlocation
 #, fuzzy
 msgid "Enter your Ontario county code (e.g. TOR) if you are in Ontario. Enter your state or Canadian province if outside Ontario; leave it empty if you are DX (your country prefix is sent):"
-msgstr ""
+msgstr "如果您在安大略省,请输入安大略省的县代码( 如 TOR) 。 如果在安大略省以外, 请输入您的状态或加拿大省; 如果您是 DX , 请留空( 您的国家前缀已发送) :"
 
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
+msgstr "如果您在魁北克,请输入魁北克行政区代码(如 MTL)。 如果在魁北克省以外, 请输入您的州或加拿大省; 如果您是 DX( DX 发送) , 请留空 :"
 
 #: uappstrings.stxinhibitedstatus
 #, fuzzy
 msgid "TX INHIBITED: %s"
-msgstr ""
+msgstr "腾讯网: %s"
 
 #: uappstrings.snetnohelloanswer
 #, fuzzy
 msgid "The multi-op server closed the connection without answering. It is probably older than this TR4W (which speaks network protocol %d). Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "多操作服务器关闭了连接而不回答. 它可能比这个讲网络协议的TR4W还老 %d) (中文(简体) ). 更新TR4 服务器计算机上的WServer,然后在Net菜单上选择连接."
 
 #: uappstrings.snetserverprotocolnewer
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, which is newer than the protocol %d this TR4W speaks. Update TR4W on this computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "多操作服务器会讲网络协议 %d,比协议更新 %d 这个TR4W说话。 更新此计算机上的TR4W,然后在Net菜单上选择连接."
 
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "多操作服务器会讲网络协议 %d但是这个TR4W需要协议 %d。更新TR4 服务器计算机上的WServer,然后在Net菜单上选择连接."
 
 #: uappstrings.snetmenureconnect
 #, fuzzy
 msgid "Reconnect"
-msgstr ""
+msgstr "重新连接"
 
 #: uappstrings.snetmenushowwindow
 #, fuzzy
 msgid "Show Network window"
-msgstr ""
+msgstr "显示网络窗口"
 
 #: tprefsform.chknetautoconnect.caption
 #: usettingscaptions.rs_network_autoconnect
 #, fuzzy
 msgid "Connect to the multi-op server when TR4W starts"
-msgstr ""
+msgstr "TR4W 启动时连接到多操作服务器"
 
 #: usettingscaptions.rs_appearance_alertcolor
 #, fuzzy
 msgid "Alert Color"
-msgstr ""
+msgstr "警告颜色"
 
 #: usettingscaptions.rs_appearance_language
 #, fuzzy
 msgid "Language"
-msgstr ""
+msgstr "语言"
 
 #: usettingscaptions.rs_appearance_language_system
 #, fuzzy
 msgid "System default"
-msgstr ""
+msgstr "系统默认"
 
 #: usettingscaptions.rs_cluster_ctrlj_consolelines
 #, fuzzy
 msgid "Telnet Console Lines"
-msgstr ""
+msgstr "电话控制台线"
 
 #: usettingscaptions.rs_operating_standardeditkeys
 #, fuzzy
 msgid "Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A edit the field outside the main window"
-msgstr ""
+msgstr "Ctrl+C, Ctrl+V, Ctrl++X和 Ctrl+A 编辑主窗口外的字段"
 
 #: usettingscaptions.rs_ptt_txinhibitbeep
 #, fuzzy
 msgid "Beep when keying a radio that will not transmit"
-msgstr ""
+msgstr "键入不传送的收音机时鸣叫"
 
 #: uappstrings.scatchupask
 #, fuzzy
 msgid "The server holds %d QSO(s) that this log does not have. Add them to this log now? Nothing already in this log is changed or removed, and a backup of the log is taken first."
-msgstr ""
+msgstr "服务器持有 %d 本日志没有的 QSO 。 现在把它们添加到日志里? 此日志中已经没有任何内容被更改或去除,首先会取回日志的备份."
 
 #: uappstrings.scatchupfetchfailed
 #, fuzzy
 msgid "Could not read the server's log to catch up: %s"
-msgstr ""
+msgstr "无法读取服务器日志以追赶 : %s"
 
 #: uappstrings.scatchupmergefailed
 #, fuzzy
 msgid "Nothing was added to the log: %s"
-msgstr ""
+msgstr "日志中没有任何内容: %s"
 
 #: uappstrings.scatchupskipped
 #, fuzzy
 msgid "%d QSO(s) on the server belong to another contest and were not added."
-msgstr ""
+msgstr "%d 服务器上的QSO(s)属于另一个竞争,没有被添加."
 
 #: uappstrings.snetcaughtup
 #, fuzzy
 msgid "Caught up from the server: %d QSO(s) added."
-msgstr ""
+msgstr "从服务器上抓取: %d QSO)后加."
 
 #: uappstrings.snetresent
 #, fuzzy
 msgid "Resent to the server what was logged while disconnected: %d QSO(s), %d edit(s)."
-msgstr ""
+msgstr "向服务器发送断开时记录的内容 : %d 质量标准, %d 编辑。"
 
 #: uappstrings.sserverlogadd
 #: tfrmserverlog.btnaddmissing.caption
 #, fuzzy
 msgid "Add missing QSOs"
-msgstr ""
+msgstr "添加缺失的 QSO"
 
 #: uappstrings.sserverlogaddmissing
 #, fuzzy
 msgid "Add %d missing QSO(s)"
-msgstr ""
+msgstr "添加 %d 缺少QSO"
 
 #: uappstrings.snetmenuserverlog
 #, fuzzy
 msgid "Synchronize with the server..."
-msgstr ""
+msgstr "与服务器同步..."
 
 #: uappstrings.sserverlogtitle
 #: tfrmserverlog.caption
 #, fuzzy
 msgid "Synchronize with the server"
-msgstr ""
+msgstr "与服务器同步"
 
 #: uappstrings.snetpushedtoserver
 #, fuzzy
 msgid "Sent to the server: %d QSO(s) it did not have."
-msgstr ""
+msgstr "发送到服务器 : %d QSO没有。"
 
 #: uappstrings.spushask
 #, fuzzy
 msgid "The server lacks %d QSO(s) of yours. Send them to the server now? Nothing in this log is changed, and the server ignores any QSO it already holds."
-msgstr ""
+msgstr "服务器缺乏 %d 您的QSO(s). 现在把它们送到服务器上? 此日志中没有任何更改,服务器会忽略它已经持有的任何QSO."
 
 #: tfrmserverlog.btnsendmissing.caption
 #: uappstrings.sserverlogsend
 #, fuzzy
 msgid "Send QSOs to the server"
-msgstr ""
+msgstr "将 QSO 发送给服务器"
 
 #: uappstrings.sserverlogsendcount
 #, fuzzy
 msgid "Send %d QSO(s) to the server"
-msgstr ""
+msgstr "发送 %d QSO 到服务器"
 
 #: uappstrings.ssyncaskboth
 #, fuzzy
 msgid "The server holds %d QSO(s) this log lacks and lacks %d of yours. Add the first to this log and send the second to the server now? Nothing already in this log is changed or removed, and a backup of the log is taken first."
-msgstr ""
+msgstr "服务器持有 %d QSO 此日志缺少和缺少 %d 属于你的 在此日志中添加第一个并发送第二个到服务器中吗 ? 此日志中已经没有任何内容被更改或去除,首先会取回日志的备份."
 
 #: tprefsform.chknetsharespots.caption
 #: usettingscaptions.rs_network_sharespots
 #, fuzzy
 msgid "Share DX spots around the network"
-msgstr ""
+msgstr "在网络上共享 DX 点"
 
 #: tprefsform.lblhamscorehttpnote.caption
 #: uappstrings.shamscoreplainhttpnote
 #, fuzzy
 msgid "Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it."
-msgstr ""
+msgstr "Plain http: 您的 HamScore 密码是不加密的 。 如果服务器支持,请使用https://hamscore.com/postxml/."
 
 #: uappstrings.shamscoreresynccaption
 #: tfrmhamscore.btnresync.caption
 #, fuzzy
 msgid "Re-send Log to HamScore..."
-msgstr ""
+msgstr "将日志重新发送到 HamScore..."
 
 #: uappstrings.shamscoreresyncbody
 #, fuzzy
-msgid "Re-send only: uploads every QSO in this log again, each with its original ID. Nothing is deleted on the HamScore server, so a QSO you have deleted from this log will still be there.\n\nDelete and re-send: first deletes the HamScore server's log for this contest (%s), then uploads every QSO. This cannot be undone on the server, and scores on the HamScore site are empty or incomplete until the upload finishes. Use it when the server shows QSOs that are no longer in this log."
+msgid ""
+"Re-send only: uploads every QSO in this log again, each with its original ID. Nothing is deleted on the HamScore server, so a QSO you have deleted from this log will still be there.\n"
+"\n"
+"Delete and re-send: first deletes the HamScore server's log for this contest (%s), then uploads every QSO. This cannot be undone on the server, and scores on the HamScore site are empty or incomplete until the upload finishes. Use it when the server shows QSOs that are no longer in this log."
 msgstr ""
+"只重新发送:在此日志中再次上传每个QSO,每个都带有其原始的ID. HamScore服务器上没有删除任何内容, 因此您从此日志中删除的QSO 仍将存在 。\n"
+"\n"
+"删除并重新发送: 首先删除 HamScore 服务器对本次比赛的日志(%s),然后上传每个QSO. 无法在服务器上撤销, 在 HamScore 站点上的分数为空或不完整, 直到上传完成 。 当服务器显示此日志中不再存在的QSO时使用."
 
 #: uappstrings.shamscoreresynconly
 #, fuzzy
 msgid "Re-send only"
-msgstr ""
+msgstr "只重新发送"
 
 #: uappstrings.shamscoreresyncdeletefirst
 #, fuzzy
 msgid "Delete and re-send"
-msgstr ""
+msgstr "删除并重新发送"
 
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
@@ -8691,348 +8697,348 @@ msgstr "发送或关闭,地址、用户名和密码在TR4W下次启动时生效�
 #: uappstrings.slogsearchcallhint
 #, fuzzy
 msgid "Call or part of one"
-msgstr ""
+msgstr "调用或部分"
 
 #: uappstrings.slogsearchlogunreadable
 #, fuzzy
 msgid "The log could not be read"
-msgstr ""
+msgstr "无法读取日志"
 
 #: uappstrings.sloggerfieldhost
 #, fuzzy
 msgid "Host / IP address"
-msgstr ""
+msgstr "主机/ IP 地址"
 
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr ""
+msgstr "端口"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
 msgid "Club Log callsign"
-msgstr ""
+msgstr "俱乐部日志调用符号"
 
 #: uappstrings.sloggerfieldclublogtoken
 #, fuzzy
 msgid "Club Log API token"
-msgstr ""
+msgstr "俱乐部日志 API 令牌"
 
 #: uappstrings.sloggerfieldwrlkey
 #, fuzzy
 msgid "WRL API key"
-msgstr ""
+msgstr "WRL API 密钥"
 
 #: uappstrings.sloggerfieldwrllogbook
 #, fuzzy
 msgid "Logbook"
-msgstr ""
+msgstr "日志"
 
 #: uappstrings.sloggerfieldrequired
 #, fuzzy
 msgid "Enter %s"
-msgstr ""
+msgstr "输入 %s"
 
 #: uappstrings.sloggerchoicerequired
 #, fuzzy
 msgid "Choose %s from the list"
-msgstr ""
+msgstr "选择 %s 从列表中"
 
 #: uappstrings.sloggerchoiceneedskey
 #, fuzzy
 msgid "Enter the API key and load the list before choosing %s"
-msgstr ""
+msgstr "在选择前输入 API 密钥并加载列表 %s"
 
 #: uappstrings.sloggerportrange
 #, fuzzy
 msgid "External logger port must be between 1 and 65535"
-msgstr ""
+msgstr "外部日志端口必须在1至65535之间"
 
 #: uappstrings.sloggerchoicerefresh
 #, fuzzy
 msgid "Refresh"
-msgstr ""
+msgstr "刷新"
 
 #: uappstrings.sloggerchoiceloading
 #, fuzzy
 msgid "Loading..."
-msgstr ""
+msgstr "正在装入..."
 
 #: uappstrings.sloggerchoicefailed
 #, fuzzy
 msgid "The list could not be loaded: %s. The saved choice is kept."
-msgstr ""
+msgstr "无法装入列表 : %s。保存的选择被保留。"
 
 #: uappstrings.sloggerchoicesaved
 #, fuzzy
 msgid "Saved choice (refresh to see its name)"
-msgstr ""
+msgstr "保存选择( 重新显示名称)"
 
 #: uappstrings.sloggergridenabled
 #, fuzzy
 msgid "Enabled"
-msgstr ""
+msgstr "已启用"
 
 #: uappstrings.sloggergridstate
 #, fuzzy
 msgid "Connection"
-msgstr ""
+msgstr "连接"
 
 #: uappstrings.sloggerstatedisabled
 #, fuzzy
 msgid "Disabled"
-msgstr ""
+msgstr "已禁用"
 
 #: uappstrings.sloggerstaterestart
 #, fuzzy
 msgid "Restart TR4W to apply"
-msgstr ""
+msgstr "重新开始 TR4W 应用"
 
 #: uappstrings.sloggerstateidle
 #, fuzzy
 msgid "Idle"
-msgstr ""
+msgstr "闲置"
 
 #: uappstrings.sloggerstatesending
 #, fuzzy
 msgid "Sending (%d pending)"
-msgstr ""
+msgstr "发送( N)%d 待定)"
 
 #: uappstrings.sloggerstateretrying
 #, fuzzy
 msgid "Retrying: %s"
-msgstr ""
+msgstr "重试 : %s"
 
 #: uappstrings.sloggerstatepaused
 #, fuzzy
 msgid "Paused: %s"
-msgstr ""
+msgstr "已暂停 : %s"
 
 #: uappstrings.sloggerstatefailed
 #, fuzzy
 msgid "Failed: %s"
-msgstr ""
+msgstr "失败 : %s"
 
 #: uappstrings.sloggerstatecounts
 #, fuzzy
 msgid "%s (%d uncertain, %d failed)"
-msgstr ""
+msgstr "%s (单位:千美元)%d 不确定, %d 失败)"
 
 #: uappstrings.smenuopenlog
 #, fuzzy
 msgid "Open Log..."
-msgstr ""
+msgstr "打开日志..."
 
 #: uappstrings.sopenlogswitchtitle
 #, fuzzy
 msgid "Switch to another contest (TR4W restarts on the one you choose)"
-msgstr ""
+msgstr "切换到另一场比赛( TR4W 重新启动您选择的比赛)"
 
 #: uappstrings.sopenloghandofffailed
 #, fuzzy
 msgid "Open Log was not done: the new contest could not be saved for the restart. The reason is in tr4w.log."
-msgstr ""
+msgstr "打开日志未完成: 无法为重启保存新比赛 。 原因见于tr4w.log."
 
 #: uappstrings.sopenlogrefusedkeyed
 #, fuzzy
 msgid "Open Log was not done: a radio is transmitting. Unkey it, then choose File > Open Log again."
-msgstr ""
+msgstr "打开日志未完成: 正在发送收音机 。 解密它, 然后选择文件 > 打开日志 。"
 
 #: uappstrings.sopenlogrefusedsendingcw
 #, fuzzy
 msgid "Open Log was not done: a CW message is still being sent. Let it finish, then choose File > Open Log again."
-msgstr ""
+msgstr "打开日志未完成: CW 消息仍在发送中 。 让它完成, 然后再次选择文件 > 打开日志 。"
 
 #: uappstrings.sopenlogalreadyopen
 #, fuzzy
 msgid "That log is already open."
-msgstr ""
+msgstr "那日志已经打开了"
 
 #: uappstrings.sopenlognotacontestlog
 #, fuzzy
 msgid "Not a TR4W contest log, so it was not opened: %s"
-msgstr ""
+msgstr "不是TR4W竞技日志,所以没有打开: %s"
 
 #: uappstrings.sprefsnavmessages
 #, fuzzy
 msgid "Messages"
-msgstr ""
+msgstr "信件"
 
 #: uappstrings.sprefsnavcwwhileoperating
 #, fuzzy
 msgid "While operating"
-msgstr ""
+msgstr "运行时"
 
 #: uappstrings.sprefsnavcwspeedandcharacters
 #, fuzzy
 msgid "Speed and characters"
-msgstr ""
+msgstr "速度和字符"
 
 #: uappstrings.sprefsnavprintedlog
 #, fuzzy
 msgid "Printed log"
-msgstr ""
+msgstr "打印日志"
 
 #: uappstrings.sprefsprintedlognote
 #, fuzzy
 msgid "This version of TR4W does not print the log, so these two settings are kept but have no effect yet."
-msgstr ""
+msgstr "这个版本的TR4W没有打印日志,因此这两个设置被保留了下来,但还没有效果."
 
 #: uappstrings.sprefsycccboxheading
 #, fuzzy
 msgid "YCCC SO2R box"
-msgstr ""
+msgstr "共青团SO2R盒"
 
 #: uappstrings.sprefsinitialexchangefilterheading
 #, fuzzy
 msgid "Initial exchange filter"
-msgstr ""
+msgstr "初始交换过滤器"
 
 #: uappstrings.sprefsoperatinginfo
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings."
-msgstr ""
+msgstr "运行比赛时日志的表现 乐队地图,乐队,消息,评分和双收音机设置在下面的页面上;CW在CW设置下."
 
 #: uappstrings.sprefsnaventryanddupechecking
 #, fuzzy
 msgid "Entry and dupe checking"
-msgstr ""
+msgstr "输入和套接字检查"
 
 #: uappstrings.sprefsnavlogdisplay
 #, fuzzy
 msgid "Log display"
-msgstr ""
+msgstr "日志显示"
 
 #: uappstrings.sprefsnavfilesandupdates
 #, fuzzy
 msgid "Files and updates"
-msgstr ""
+msgstr "文件和更新"
 
 #: uappstrings.sprefsnavbandmapwindow
 #, fuzzy
 msgid "Window and tuning"
-msgstr ""
+msgstr "窗口和调音"
 
 #: uappstrings.sprefsnavclusterspots
 #, fuzzy
 msgid "Spots and console"
-msgstr ""
+msgstr "点和控制台"
 
 #: uappstrings.sprefsgroupbandsandfrequencies
 #, fuzzy
 msgid "Starting band and mode, and frequency memory"
-msgstr ""
+msgstr "开始带和模式以及频率内存"
 
 #: uappstrings.sprefsgroupdupechecking
 #, fuzzy
 msgid "Dupe checking"
-msgstr ""
+msgstr "dupe 检查"
 
 #: uappstrings.sprefsgroupsearchandpounce
 #, fuzzy
 msgid "Search and pounce"
-msgstr ""
+msgstr "搜索并弹出"
 
 #: uappstrings.sprefsgrouptyping
 #, fuzzy
 msgid "Typing"
-msgstr ""
+msgstr "键入"
 
 #: uappstrings.sprefsgroupwhatislogged
 #, fuzzy
 msgid "What a QSO records"
-msgstr ""
+msgstr "QSO的纪录"
 
 #: uappstrings.sprefsgrouphandlog
 #, fuzzy
 msgid "Entering a log by hand"
-msgstr ""
+msgstr "手动输入日志"
 
 #: uappstrings.sprefsgrouptuningotherradio
 #, fuzzy
 msgid "Tuning the other radio"
-msgstr ""
+msgstr "训练另一个电台"
 
 #: uappstrings.sprefsgroupbandmapwindow
 #, fuzzy
 msgid "Band map window"
-msgstr ""
+msgstr "带图窗口"
 
 #: uappstrings.sprefsgroupspottuning
 #, fuzzy
 msgid "Tuning to a spot"
-msgstr ""
+msgstr "切入点"
 
 #: uappstrings.sprefsgroupradiopolling
 #, fuzzy
 msgid "Radio polling - one rate for every radio"
-msgstr ""
+msgstr "无线电投票-每台一票"
 
 #: uappstrings.sprefsgroupstationcallsign
 #, fuzzy
 msgid "Your own callsign, remembered for New Contest"
-msgstr ""
+msgstr "你自己的呼号,新赛事的纪念"
 
 #: uappstrings.sprefsgroupsuggestedcalls
 #, fuzzy
 msgid "Suggested-call keys"
-msgstr ""
+msgstr "建议使用的钥匙"
 
 #: uappstrings.sprefsgroupnetworkstations
 #, fuzzy
 msgid "Stations and the Network window"
-msgstr ""
+msgstr "车站和网络窗口"
 
 #: uappstrings.sprefsgroupratedisplay
 #, fuzzy
 msgid "Rate display"
-msgstr ""
+msgstr "速率显示"
 
 #: uappstrings.sprefsgrouplogwindow
 #, fuzzy
 msgid "Log window"
-msgstr ""
+msgstr "日志窗口"
 
 #: uappstrings.sprefsgroupuserinfo
 #, fuzzy
 msgid "Information shown under the call window"
-msgstr ""
+msgstr "呼叫窗口下显示的信息"
 
 #: uappstrings.sprefsgroupalerts
 #, fuzzy
 msgid "Alerts"
-msgstr ""
+msgstr "警报"
 
 #: uappstrings.sprefsgroupvoicekeyer
 #, fuzzy
 msgid "Voice keyer"
-msgstr ""
+msgstr "语音密钥器"
 
 #: uappstrings.sprefsgroupmodes
 #, fuzzy
 msgid "Modes"
-msgstr ""
+msgstr "模式"
 
 #: uappstrings.sprefsgroupmultiplierdata
 #, fuzzy
 msgid "Multiplier data"
-msgstr ""
+msgstr "乘数数据"
 
 #: uappstrings.sprefsbandplanrow
 #, fuzzy
 msgid "Band plan (cutoff frequencies and memories)"
-msgstr ""
+msgstr "频段计划(断发频率和记忆)"
 
 #: uappstrings.sprefsbandplanedit
 #, fuzzy
 msgid "Edit..."
-msgstr ""
+msgstr "编辑..."
 
 #: uappstrings.sradioeditbadpollrate
 #, fuzzy
 msgid "The frequency poll rate must be a whole number of milliseconds from %d to %d."
-msgstr ""
+msgstr "频率民调率必须是从 %d 改为 %d。 。 。 。"
 
 #: uappstrings.sprefsbrowse
 #, fuzzy
@@ -9042,107 +9048,107 @@ msgstr "浏览..."
 #: uappstrings.smenudownloadcallhistory
 #, fuzzy
 msgid "Download call history for this contest"
-msgstr ""
+msgstr "下载本次比赛的调用历史"
 
 #: uappstrings.scallhistorydownloading
 #, fuzzy
 msgid "Downloading call history..."
-msgstr ""
+msgstr "正在下载调用历史..."
 
 #: uappstrings.scallhistorynosource
 #, fuzzy
 msgid "This contest has no call history download"
-msgstr ""
+msgstr "此比赛没有调用历史下载"
 
 #: uappstrings.scallhistorybusy
 #, fuzzy
 msgid "A call history download is already running"
-msgstr ""
+msgstr "已启动调用历史下载"
 
 #: uappstrings.scallhistoryupdated
 #, fuzzy
 msgid "Call history updated (%d entries, %s); it takes effect the next time the contest is opened"
-msgstr ""
+msgstr "调用历史更新( N)%d 条目, %s; 比赛下次开幕时生效"
 
 #: uappstrings.scallhistorycurrent
 #, fuzzy
 msgid "Call history already current"
-msgstr ""
+msgstr "调用历史已存在"
 
 #: uappstrings.scallhistorynotavailable
 #, fuzzy
 msgid "No call history file for this contest on supercheckhistory.com"
-msgstr ""
+msgstr "Supercheckhistory.com上的本次比赛没有征召历史文件"
 
 #: uappstrings.scallhistoryfailed
 #, fuzzy
 msgid "Download failed (%s); the previous file was kept"
-msgstr ""
+msgstr "下载失败 (E)%s); 保存了上一个文件"
 
 #: uappstrings.scallhistoryrefused
 #, fuzzy
 msgid "Server refused (HTTP %d); the previous file was kept"
-msgstr ""
+msgstr "服务器被拒绝( HTTP) %d); 保存了上一个文件"
 
 #: uappstrings.scallhistoryotherfile
 #, fuzzy
 msgid "CALL HISTORY FILENAME is \"%s\", so the downloaded file is not the one in use"
-msgstr ""
+msgstr "电话历史档案是 \"%s\",所以下载的文件不是正在使用的"
 
 #: uappstrings.scallhistoryreasonhtml
 #, fuzzy
 msgid "the server sent a web page, not a call history file"
-msgstr ""
+msgstr "服务器发送了一个网页,而不是一个调用历史文件"
 
 #: uappstrings.scallhistoryreasontoosmall
 #, fuzzy
 msgid "the file is too small to be a call history"
-msgstr ""
+msgstr "文件太小,不能成为调用历史"
 
 #: uappstrings.scallhistoryreasontoolarge
 #, fuzzy
 msgid "the file is larger than expected"
-msgstr ""
+msgstr "文件大于预期"
 
 #: uappstrings.scallhistoryreasontoofewrows
 #, fuzzy
 msgid "the file has too few usable rows"
-msgstr ""
+msgstr "文件可用的行太少"
 
 #: uappstrings.scallhistoryreasonsmaller
 #, fuzzy
 msgid "the new file is much smaller than the one held"
-msgstr ""
+msgstr "新文件比持有的文件小得多"
 
 #: uappstrings.scallhistoryreasonwrite
 #, fuzzy
 msgid "the file could not be saved"
-msgstr ""
+msgstr "无法保存文件"
 
 #: uappstrings.sprefsnavqtc
 #, fuzzy
 msgid "QTC"
-msgstr ""
+msgstr "卡塔尔"
 
 #: uappstrings.sprefsnavqsosettings
 #, fuzzy
 msgid "QSO settings"
-msgstr ""
+msgstr "QSO 设置"
 
 #: uappstrings.sprefsnavquickqsl
 #, fuzzy
 msgid "Quick QSL"
-msgstr ""
+msgstr "快速 QSL"
 
 #: uappstrings.sprefsnavcabrilloheadings
 #, fuzzy
 msgid "Cabrillo headings"
-msgstr ""
+msgstr "卡布里略标题"
 
 #: uappstrings.sprefsnavcontestrules
 #, fuzzy
 msgid "Contest rules"
-msgstr ""
+msgstr "竞争规则"
 
 
 #: uappstrings.surltestbutton
@@ -9151,97 +9157,97 @@ msgstr ""
 #: tprefsform.btnscorereadtest.caption
 #, fuzzy
 msgid "Test"
-msgstr ""
+msgstr "测试"
 
 #: uappstrings.surltestrunning
 #, fuzzy
 msgid "Asking..."
-msgstr ""
+msgstr "问..."
 
 #: uappstrings.surltestnothing
 #, fuzzy
 msgid "Nothing to test: the address box is empty."
-msgstr ""
+msgstr "无可考:地址框为空."
 
 #: uappstrings.surltestanswered
 #, fuzzy
 msgid "Answered %d"
-msgstr ""
+msgstr "已答复 %d"
 
 #: uappstrings.surltestansweredfrom
 #, fuzzy
 msgid "Answered %d from %s"
-msgstr ""
+msgstr "已答复 %d 从 %s"
 
 #: uappstrings.surltestnoanswerscheme
 #, fuzzy
 msgid "No answer: the address does not start with http:// or https://"
-msgstr ""
+msgstr "无答复:地址不以http://或https://开头"
 
 #: uappstrings.surltestnoanswerplain
 #, fuzzy
 msgid "No answer: a plain http:// address was not sent"
-msgstr ""
+msgstr "无答复:未发送平原 http://地址"
 
 #: uappstrings.surltestnoanswertls
 #, fuzzy
 msgid "No answer: the OpenSSL libraries could not be loaded"
-msgstr ""
+msgstr "没有答案: OpenSSL 库无法装入"
 
 #: uappstrings.surltestnoanswertlslib
 #, fuzzy
 msgid "No answer: the TLS library stopped while connecting"
-msgstr ""
+msgstr "无答案: TLS 库在连接时停止"
 
 #: uappstrings.surltestnoanswertrust
 #, fuzzy
 msgid "No answer: the certificate file cacert.pem could not be used"
-msgstr ""
+msgstr "无答:证书文件cacert. 无法使用 pem"
 
 #: uappstrings.surltestnoanswerverify
 #, fuzzy
 msgid "No answer: server certificates cannot be checked on this machine"
-msgstr ""
+msgstr "没有答案: 无法检查此机上的服务器证书"
 
 #: uappstrings.surltestnoanswercert
 #, fuzzy
 msgid "No answer: the server's certificate was not accepted"
-msgstr ""
+msgstr "无答复: 服务器的证书未被接受"
 
 #: uappstrings.surltestnoanswername
 #, fuzzy
 msgid "No answer: the host name was not found"
-msgstr ""
+msgstr "没有答案:没有找到主机名"
 
 #: uappstrings.surltestnoanswerconnect
 #, fuzzy
 msgid "No answer: could not connect"
-msgstr ""
+msgstr "无答案:无法连接"
 
 #: uappstrings.surltestnoanswerconntime
 #, fuzzy
 msgid "No answer: timed out connecting"
-msgstr ""
+msgstr "无答案: 连接已超时"
 
 #: uappstrings.surltestnoansweriotime
 #, fuzzy
 msgid "No answer: timed out waiting for the server"
-msgstr ""
+msgstr "无回复: 已超时等待服务器"
 
 #: uappstrings.surltestnoanswerlost
 #, fuzzy
 msgid "No answer: the connection was lost"
-msgstr ""
+msgstr "无答复: 连接已丢失"
 
 #: uappstrings.surltestnoanswercancelled
 #, fuzzy
 msgid "No answer: the request was cancelled"
-msgstr ""
+msgstr "无答复:请求被取消"
 
 #: uappstrings.surltestnoanswerother
 #, fuzzy
 msgid "No answer"
-msgstr ""
+msgstr "无答复"
 
 #: uappstrings.sverifyservercaption
 #: usettingscaptions.rs_scoring_board_verifyserver
@@ -9250,56 +9256,56 @@ msgstr ""
 #: tprefsform.chkscoreverify.caption
 #, fuzzy
 msgid "Verify the server's certificate"
-msgstr ""
+msgstr "验证服务器的证书"
 
 #: uappstrings.sverifyserveroffwarning
 #: tprefsform.lblscoreverifynote.caption
 #, fuzzy
 msgid "The server's identity is not checked; anyone between you and it can read what you send."
-msgstr ""
+msgstr "服务器的身份没有被检查;您和它之间的任何人都可以读取您发送的内容 。"
 
 #: uappstrings.sprefsnavcwkeyers
 #, fuzzy
 msgid "CW keyers"
-msgstr ""
+msgstr "CW 键器"
 
 #: uappstrings.sprefshardwareinfo
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers."
-msgstr ""
+msgstr "全站硬件. 属于一个收音机的设置在收音机下;转子在旋转器下;Winkeyer和YCCC SO2R+ 键器在 CW 键器下。"
 
 #: uappstrings.sprefscwkeyerspointer
 #: tprefsform.lblcwkeyerspointer.caption
 #, fuzzy
 msgid "WinKeyer and YCCC SO2R+ keyers, and their settings, are under Hardware > CW keyers."
-msgstr ""
+msgstr "WinKeyer和YCCC SO2R+键器及其设置在硬件 > CW键器下."
 
 #: uappstrings.sprefskeyerscwpointer
 #: tprefsform.lblkeyerscwpointer.caption
 #, fuzzy
 msgid "The CW TR4W sends, and the paddle and serial-line keying it does itself, are under CW Settings."
-msgstr ""
+msgstr "CW TR4W发送,以及它自己做的划桨和串行键,都在CW设置下."
 
 #: uappstrings.sprefssearchcwkeyers
 #, fuzzy
 msgid "WinKeyer and YCCC SO2R+ keyers"
-msgstr ""
+msgstr "Winkeyer 和 YCCC SO2R+ 键器"
 
 #: uappstrings.sprefssearchwinkeyersettings
 #, fuzzy
 msgid "Keyer mode, Sidetone, Weight, Dit/dah ratio, Switchpoint, Lead-in, Tail, Compensation, First extension, Auto space, CT spacing, Ignore speed pot, Sidetone on, Paddle-only sidetone, Swap paddles"
-msgstr ""
+msgstr "键器模式, Sidetone , Wight, Dit/dah 比率, 切换点, 铅接入, 尾接, 补偿, 第一扩展名, 自动空间, CT 间隔, 忽略速度壶, Sidetone 打开, 仅嵌侧通, 交换桨"
 
 #: tprefsform.chkbandmapfilterdigital.caption
 #, fuzzy
 msgid "Hide digital spots"
-msgstr ""
+msgstr "隐藏数字点"
 
 #: uappstrings.snewlognametakentitle
 #, fuzzy
 msgid "This contest already has a log"
-msgstr ""
+msgstr "此比赛已有日志"
 
 #: uappstrings.snewlognametakenbody
 #, fuzzy
@@ -9309,62 +9315,62 @@ msgstr ""
 #: uappstrings.snewlogcreatenumbered
 #, fuzzy
 msgid "Create new log"
-msgstr ""
+msgstr "创建新日志"
 
 #: uappstrings.snewlogopenexisting
 #, fuzzy
 msgid "Open existing log"
-msgstr ""
+msgstr "打开已存在的日志"
 
 #: uappstrings.snewcontestlicenseyearlabel
 #, fuzzy
 msgid "MY LICENSE YEAR"
-msgstr ""
+msgstr "我的年号"
 
 #: uappstrings.sexchangenonamefound
 #, fuzzy
 msgid "No name found!!"
-msgstr ""
+msgstr "没有找到名字!"
 
 #: uappstrings.snewcontestqthormemberlabel
 #, fuzzy
 msgid "MY QTH OR MEMBER NO"
-msgstr ""
+msgstr "我的QTH或成员否"
 
 #: uappstrings.snewcontesthostareacountylabel
 #, fuzzy
 msgid "MY COUNTY"
-msgstr ""
+msgstr "我的房间"
 
 #: uappstrings.snewcontesthostareastatelabel
 #, fuzzy
 msgid "MY STATE"
-msgstr ""
+msgstr "我的状态"
 
 #: uappstrings.snewcontesthostareainsidenotice
 #, fuzzy
 msgid "You are in %s: choose your county from the list."
-msgstr ""
+msgstr "你进来了 %s:从列表中选择你的县."
 
 #: uappstrings.snewcontesthostareaoutsidenotice
 #, fuzzy
 msgid "You are outside %0:s: enter your US state or Canadian province (two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s."
-msgstr ""
+msgstr "你在外面吗? %0:s: 输入您的美国州或加拿大省(两个字母,例如GA或ON),或DX。 选中框, 如果您在其中 %0:s。 。 。 。"
 
 #: uappstrings.snewcontesthostareaentryisinside
 #, fuzzy
 msgid "%0:s is inside %1:s: tick the box and choose your county from the list."
-msgstr ""
+msgstr "%0:s 已经在里面 %1:s:勾选出框,并从列表中选择您的县."
 
 #: uappstrings.snewcontesthostareaentrynotastate
 #, fuzzy
 msgid "%s is not a US state, a Canadian province or DX. Enter the two-letter code, e.g. GA or ON, or DX."
-msgstr ""
+msgstr "%s 不是美国的一个州,加拿大的一个省或DX。 输入双字母代码,例如GA或ON,或DX."
 
 #: uappstrings.stotalscallsignmults
 #, fuzzy
 msgid "Calls"
-msgstr ""
+msgstr "电话"
 
 #: uappstrings.snewlognametakenopenbody
 #, fuzzy
@@ -9374,181 +9380,181 @@ msgstr ""
 #: uappstrings.sexchangenolicenseyear
 #, fuzzy
 msgid "No license year found!!"
-msgstr ""
+msgstr "没找到驾照!"
 
 #: uappstrings.sexchangeimproperlicenseyear
 #, fuzzy
 msgid "Improper license year!!"
-msgstr ""
+msgstr "不适当的执照年度!"
 
 #: uappstrings.stotalslicenseyearmults
 #, fuzzy
 msgid "Years"
-msgstr ""
+msgstr "年份"
 
 #: tprefsform.lblmylicenseyear.caption
 #, fuzzy
 msgid "License year:"
-msgstr ""
+msgstr "许可年 :"
 
 #: uappstrings.sreadinessmylicenseyearmissing
 #, fuzzy
 msgid "MY LICENSE YEAR is empty and this contest sends the year you were first licensed."
-msgstr ""
+msgstr "我的LICENSE YAY是空的,这次比赛 让你第一次获得许可的一年。"
 
 #: uappstrings.snewcontestenternameandqth
 #, fuzzy
 msgid "Enter your name and QTH (US state, Canadian Province or DX country):"
-msgstr ""
+msgstr "输入您的姓名和 QTH( 美国州、 加拿大省或 DX 国家) :"
 
 #: uappstrings.snewcontestbranchnumberlabel
 #, fuzzy
 msgid "MY BRANCH NUMBER"
-msgstr ""
+msgstr "我的号码"
 
 #: uappstrings.scabundlemissingnotice
 #, fuzzy
 msgid "The certificate file cacert.pem was not found (looked in: %0:s); uploads to %1:s are paused until it is available."
-msgstr ""
+msgstr "证书文件cacert.pem没有找到(参见: %0:s; 上传到 %1:s 被暂停直到它可用。"
 
 #: uappstrings.seditqsodeliveryfailed
 #, fuzzy
 msgid "failed"
-msgstr ""
+msgstr "失败"
 
 #: uappstrings.seditqsodeliveryfailedwithcode
 #, fuzzy
 msgid "failed (%s)"
-msgstr ""
+msgstr "失败( E)%s(中文(简体) )."
 
 #: uappstrings.seditqsodeliverylastsent
 #, fuzzy
 msgid "Last sent %s UTC"
-msgstr ""
+msgstr "上次发送 %s 世界协调时"
 
 #: uappstrings.seditqsodeliveryline
 #, fuzzy
 msgid "External logger %s: %s. %s"
-msgstr ""
+msgstr "外部日志 %s数字 : %s。 。 。 。 %s"
 
 #: uappstrings.seditqsodeliveryneversent
 #, fuzzy
 msgid "Not sent yet"
-msgstr ""
+msgstr "尚未发送"
 
 #: uappstrings.seditqsodeliverypending
 #, fuzzy
 msgid "pending"
-msgstr ""
+msgstr "待处理"
 
 #: uappstrings.seditqsodeliverysending
 #, fuzzy
 msgid "sending"
-msgstr ""
+msgstr "发送"
 
 #: uappstrings.seditqsodeliverysynced
 #, fuzzy
 msgid "up to date"
-msgstr ""
+msgstr "最新数据"
 
 #: uappstrings.seditqsodeliveryuncertain
 #, fuzzy
 msgid "uncertain"
-msgstr ""
+msgstr "不确定"
 
 #: uappstrings.seditqsomycall
 #, fuzzy
 msgctxt "uappstrings.seditqsomycall"
 msgid "Call"
-msgstr ""
+msgstr "打电话"
 
 #: uappstrings.seditqsomycounty
 #: tfrmeditqso.lblmycounty.caption
 #, fuzzy
 msgid "County"
-msgstr ""
+msgstr "县"
 
 #: uappstrings.seditqsomycqzone
 #: tfrmeditqso.lblmycqzone.caption
 #, fuzzy
 msgid "CQ zone"
-msgstr ""
+msgstr "CQ 区"
 
 #: uappstrings.seditqsomygrid
 #: tfrmeditqso.lblmygrid.caption
 #, fuzzy
 msgid "Grid"
-msgstr ""
+msgstr "网格"
 
 #: uappstrings.seditqsomyituzone
 #: tfrmeditqso.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone"
-msgstr ""
+msgstr "国际电联区域"
 
 #: uappstrings.seditqsomypark
 #: tfrmeditqso.lblmypark.caption
 #, fuzzy
 msgid "Park"
-msgstr ""
+msgstr "公园"
 
 #: uappstrings.seditqsomysection
 #: tfrmeditqso.lblmysection.caption
 #, fuzzy
 msgid "Section"
-msgstr ""
+msgstr "节次"
 
 #: uappstrings.seditqsomystate
 #: tfrmeditqso.lblmystate.caption
 #, fuzzy
 msgid "State"
-msgstr ""
+msgstr "状态"
 
 #: uappstrings.seditqsomystation
 #: tfrmeditqso.grpmystation.caption
 #, fuzzy
 msgid "Our station for this QSO"
-msgstr ""
+msgstr "我们的QSO站"
 
 #: uappstrings.seditqsomystationassumed
 #, fuzzy
 msgid "Our station for this QSO (assumed: a network QSO)"
-msgstr ""
+msgstr "我们的QSO站(假定:一个网络QSO)"
 
 #: uappstrings.seditqsomystationnotrecorded
 #, fuzzy
 msgid "Our station for this QSO (not recorded)"
-msgstr ""
+msgstr "我们的QSO站(没有记录)"
 
 #: uappstrings.sexchangeambiguousserial
 #, fuzzy
 msgid "Ambiguous exchange - enter %s or %s to resolve"
-msgstr ""
+msgstr "模糊的交换 - 输入 %s 或者说 %s 解决"
 
 #: uappstrings.sexchangecallorexchange
 #, fuzzy
 msgid "Ambiguous entry - %s may be a callsign or an exchange. For the exchange, enter %s; for the call, type it in the call window"
-msgstr ""
+msgstr "隐蔽的入会 %s 可以是呼号或交换。 交换,请输入 %s; 对于呼叫, 在呼叫窗口中键入"
 
 #: uappstrings.sexchangechecknottwodigits
 #, fuzzy
 msgid "Check must be two digits (%s)"
-msgstr ""
+msgstr "检查必须是两位数( E)%s(中文(简体) )."
 
 #: uappstrings.sexchangenocheck
 #, fuzzy
 msgid "Missing check (two digits)"
-msgstr ""
+msgstr "缺少支票( 二位数)"
 
 #: uappstrings.sexchangenosection
 #, fuzzy
 msgid "Missing section"
-msgstr ""
+msgstr "缺少部分"
 
 #: uappstrings.shamscorenobundlestatus
 #, fuzzy
 msgid "Not sent: cacert.pem not found (looked in: %0:s) -- %1:d QSO(s) retained"
-msgstr ""
+msgstr "未发送: 未找到 Cacert.pem( 查看于 : %0:s) -- -- 。 %1:d QSO 保留"
 
 #: uappstrings.slogbusynotsaved
 #, fuzzy
@@ -9557,129 +9563,132 @@ msgid ""
 "\n"
 "If this was a QSO, it is still in the entry window: log it again. If this keeps happening, run Tools > Run Verification Checks."
 msgstr ""
+"比赛日志被另一个程序锁定时 %s,因此该更改没有被保存。 原木本身没有被损坏,TR4W保持开放.\n"
+"\n"
+"如果这是QSO,它仍然在条目窗口中:再次登录. 如果这种情况继续发生, 请运行工具 > 运行验证检查 。"
 
 #: uappstrings.sloggereditorcounts
 #, fuzzy
 msgid "Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d"
-msgstr ""
+msgstr "待决 %d 发送中 %d QQ 同步 %d | 不确定 %d QQ 失败 %d"
 
 #: uappstrings.sloggereditornocounts
 #, fuzzy
 msgid "Delivery status unavailable"
-msgstr ""
+msgstr "无法执行状态"
 
 #: uappstrings.sloggereditornolog
 #, fuzzy
 msgid "No contest log is open."
-msgstr ""
+msgstr "没有打开比赛日志 。"
 
 #: uappstrings.sloggereditornote
 #, fuzzy
 msgid "Save to Preferences returns this logger to the Preferences window. Click Save there to store it; Active takes effect then, with no restart. A logger added since TR4W started, or a changed key, host or logbook, applies after you restart TR4W. Each logger sends independently."
-msgstr ""
+msgstr "另存为首选项将此日志返回首选项窗口 。 点击“ 保存” 以存储它; 主动生效, 不重新启动 。 自 TR4W 启动后添加的日志, 或者在您重新启动 TR4W 后应用更改的密钥, 主机或日志 。 每个日志员独立发送."
 
 #: uappstrings.sloggerfieldcloudlogkey
 #, fuzzy
 msgid "Cloudlog / Wavelog API key"
-msgstr ""
+msgstr "Cloudlog / Wavelog API 密钥"
 
 #: uappstrings.sloggerfieldcloudlogprofile
 #, fuzzy
 msgid "Station profile ID"
-msgstr ""
+msgstr "车站简介 ID"
 
 #: uappstrings.sloggerfieldcloudlogurl
 #, fuzzy
 msgid "Cloudlog / Wavelog address (https://...)"
-msgstr ""
+msgstr "Cloudlog/ Wavelog 地址 (https://."
 
 #: uappstrings.sloggergridadd
 #: tprefsform.btnaddexternallogger.caption
 #, fuzzy
 msgid "Add..."
-msgstr ""
+msgstr "添加..."
 
 #: uappstrings.sloggergridchanged
 #, fuzzy
 msgid "Logger definitions changed. Save Preferences to apply Enabled and Order now; connection changes apply after a restart."
-msgstr ""
+msgstr "伐木者的定义发生了变化。 保存首选项以应用“启用”和“命令”;在重新启动后应用连接更改。"
 
 #: uappstrings.sloggergridedit
 #, fuzzy
 msgctxt "uappstrings.sloggergridedit"
 msgid "Edit..."
-msgstr ""
+msgstr "编辑..."
 
 #: uappstrings.sloggergridhint
 #, fuzzy
 msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences to apply Enabled and Order now; a new logger, or changed connection settings, applies after a restart."
-msgstr ""
+msgstr "右键单击日志编辑器, 更改新的 QSO, 移动或删除它; 拖动命令单元格重新排序 。 主动伐木者发出命令。 将首选项保存为当前应用 Electiond and Order; 重新启动后将应用新的日志或更改的连接设置 。"
 
 #: uappstrings.sloggergridlogger
 #, fuzzy
 msgid "Logger"
-msgstr ""
+msgstr "锁定器"
 
 #: uappstrings.sloggergridmovedown
 #, fuzzy
 msgid "Move down"
-msgstr ""
+msgstr "向下移动"
 
 #: uappstrings.sloggergridmoveup
 #, fuzzy
 msgid "Move up"
-msgstr ""
+msgstr "向上移动"
 
 #: uappstrings.sloggergridno
 #, fuzzy
 msgid "No"
-msgstr ""
+msgstr "没有"
 
 #: uappstrings.sloggergridnone
 #, fuzzy
 msgid "No loggers configured"
-msgstr ""
+msgstr "没有配置日志"
 
 #: uappstrings.sloggergridorder
 #, fuzzy
 msgid "Order"
-msgstr ""
+msgstr "顺序"
 
 #: uappstrings.sloggergridprovider
 #: texternalloggersform.lblprovider.caption
 #, fuzzy
 msgid "Provider"
-msgstr ""
+msgstr "供应商"
 
 #: uappstrings.sloggergridremove
 #, fuzzy
 msgid "Remove..."
-msgstr ""
+msgstr "删除..."
 
 #: uappstrings.sloggergridremoveask
 #, fuzzy
 msgid "Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition."
-msgstr ""
+msgstr "删除日志定义吗 ? 有待交付的货物留在竞价日志中,不会重定向到另一个定义."
 
 #: uappstrings.sloggergridsavedrestart
 #, fuzzy
 msgid "Saved. Enabled and Order are in effect. %d logger(s) with new or changed connection settings apply after you restart TR4W."
-msgstr ""
+msgstr "救过. 启用和顺序生效 。 %d 在您重新启动 TR4W 后, 启用新或已更改连接设置的日志 。"
 
 #: uappstrings.sloggergridsend
 #, fuzzy
 msgid "Send new QSOs"
-msgstr ""
+msgstr "发送新的 QSO"
 
 #: uappstrings.sloggergridyes
 #, fuzzy
 msgid "Yes"
-msgstr ""
+msgstr "对"
 
 #: uappstrings.sloggerstateapplyonsave
 #, fuzzy
 msgid "Applies on Save"
-msgstr ""
+msgstr "在保存时应用"
 
 #: uappstrings.sloglockedbody
 #, fuzzy
@@ -9697,32 +9706,32 @@ msgstr ""
 #: uappstrings.sloglockedheldelsewhere
 #, fuzzy
 msgid "Another program is holding it -- most likely another TR4W, or one that crashed and is still waiting at an error dialog; or a backup, cloud sync (OneDrive, Dropbox) or antivirus program reading the file."
-msgstr ""
+msgstr "另一个程序是持有它——很可能是另一个TR4W,或者一个崩溃了,仍在等待一个错误对话框;或者备份,云同步(OneDrive, Dropbox)或者反病毒程序读取文件."
 
 #: uappstrings.sloglockedheldhere
 #, fuzzy
 msgid "This TR4W's own background connection is holding it: %s."
-msgstr ""
+msgstr "这个TR4W自己的背景连接是持有: %s。 。 。 。"
 
 #: uappstrings.sloglockedquit
 #, fuzzy
 msgid "Quit TR4W"
-msgstr ""
+msgstr "退出TR4W"
 
 #: uappstrings.sloglockedreadonly
 #, fuzzy
 msgid "Open read-only (no logging)"
-msgstr ""
+msgstr "打开只读( 无日志)"
 
 #: uappstrings.sloglockedretry
 #, fuzzy
 msgid "Retry"
-msgstr ""
+msgstr "重试"
 
 #: uappstrings.sloglockedtitle
 #, fuzzy
 msgid "Contest log is locked"
-msgstr ""
+msgstr "竞技日志已锁定"
 
 #: uappstrings.slogreadonlyrefused
 #, fuzzy
@@ -9736,140 +9745,140 @@ msgstr ""
 #: uappstrings.snettailcatfailed
 #, fuzzy
 msgid "The link to the multi-op server through Tailcat could not be opened: %s. TR4W keeps trying."
-msgstr ""
+msgstr "无法打开通过 Tailcat 连接到多端服务器 : %sTR4W一直在尝试。"
 
 #: uappstrings.sprefsgroupinternet
 #, fuzzy
 msgid "Internet downloads and uploads"
-msgstr ""
+msgstr "互联网下载和上传"
 
 #: uappstrings.sprefsnettailcatcaption
 #: tprefsform.lblnettailcat.caption
 #, fuzzy
 msgid "Tailcat address:"
-msgstr ""
+msgstr "尾猫地址 :"
 
 #: uappstrings.sprefsnettailcathint
 #: tprefsform.lblnettailcathint.caption
 #, fuzzy
 msgid "To reach a server on another network, paste the address its operator gave you and tick Use Tailcat. Server above is then not used. Treat the address like a password."
-msgstr ""
+msgstr "要到达另一个网络上的服务器,请粘贴其操作员给你的地址并勾选使用 Tailcat 。 然后不使用上面的服务器 。 把地址当成密码"
 
 #: uappstrings.sprefsnetusetailcat
 #: tprefsform.chknetusetailcat.caption
 #, fuzzy
 msgid "Use Tailcat"
-msgstr ""
+msgstr "使用尾猫"
 
 #: uappstrings.swrldeliveryissue
 #, fuzzy
 msgid "World Radio League delivery needs attention. %s. Local logging continues; check the TR4W log and WRL delivery records."
-msgstr ""
+msgstr "世界无线电联盟的节目需要关注。 %s继续进行当地伐木;检查TR4W记录和WRL交付记录。"
 
 #: uappstrings.swrlstatusunavailable
 #, fuzzy
 msgid "WRL delivery status is unavailable for the current log."
-msgstr ""
+msgstr "当前日志无法使用 WRL 传输状态 。"
 
 #: uappstrings.swrlsummary
 #, fuzzy
 msgid "WRL delivery: pending %d; sending %d; up to date %d; uncertain %d; failed %d. Reopen Preferences to refresh."
-msgstr ""
+msgstr "WRL 交付:待定 %d; 发送 %d; 最新数据 %d; 不确定 %d; 失败 %d重新打开首选项以刷新 。"
 
 #: ulclformhelpers.tc_prefs_ports_unavailable
 #, fuzzy
 msgid "(port list not available on this platform)"
-msgstr ""
+msgstr "(本站台无法提供端口列表)."
 
 #: ulclformhelpers.tc_prefs_port_not_present
 #, fuzzy
 msgid "(not present)"
-msgstr ""
+msgstr "(未出席)"
 
 #: ulclformhelpers.tc_prefs_port_unsupported
 #, fuzzy
 msgid "(not selectable yet)"
-msgstr ""
+msgstr "(尚未选定)"
 
 #: usettingscaptions.rs_bandmap_workedmultcolor
 #, fuzzy
 msgid "Color of the M on a spot whose multiplier wants a backup"
-msgstr ""
+msgstr "M的颜色在现场,它的乘数需要备份"
 
 #: usettingscaptions.rs_bandmap_workedmultlimit
 #, fuzzy
 msgid "Workings of a multiplier before its spot shows no M"
-msgstr ""
+msgstr "乘数在出现前显示无 M"
 
 #: usettingscaptions.rs_cluster_ctrlj_spotcommentmultiplier
 #, fuzzy
 msgid "Spot Comment Multiplier"
-msgstr ""
+msgstr "点注释乘数"
 
 #: usettingscaptions.rs_files_ctrlj_callhistoryfilename
 #, fuzzy
 msgid "Call History Filename"
-msgstr ""
+msgstr "调用历史文件名"
 
 #: usettingscaptions.rs_files_ctrlj_usecallhistoryfile
 #, fuzzy
 msgid "Use Call History File"
-msgstr ""
+msgstr "使用调用历史文件"
 
 #: usettingscaptions.rs_network_httptransport
 #, fuzzy
 msgid "How downloads and uploads connect (generic, auto or platform)"
-msgstr ""
+msgstr "下载和上传如何连接(通用、自动或平台)"
 
 #: utr4wstrings.tc_improperdomesticqthhostonly
 #, fuzzy
 msgid "(%s: work %s stations only)"
-msgstr ""
+msgstr "(单位:千美元)%s(单位:工作) %s (仅限台站)"
 
 #: utr4wstrings.tc_improperdomesticqthnoqth
 #, fuzzy
 msgid "(no QTH)"
-msgstr ""
+msgstr "(没有QTH)"
 
 #: utr4wstrings.tc_improperdomesticqthnotinfile
 #, fuzzy
 msgid "(%s not in %s)"
-msgstr ""
+msgstr "(单位:千美元)%s 没有在 %s(中文(简体) )."
 
 #: utr4wstrings.tc_improperdomesticqthunknown
 #, fuzzy
 msgid "(%s not known)"
-msgstr ""
+msgstr "(单位:千美元)%s 不详)"
 
 #: utr4wstrings.tc_invalidarrlsection
 #, fuzzy
 msgid "Invalid ARRL Section"
-msgstr ""
+msgstr "无效的 ARRL 部分"
 
 #: utr4wstrings.tc_qsonumberzeronotvalid
 #, fuzzy
 msgid "QSO number 0 is not valid in this contest."
-msgstr ""
+msgstr "QSO 数字 0在本比赛中无效."
 
 #: utr4wstrings.tc_tciserverportusedbytciradio
 #, fuzzy
 msgid "The TCI server cannot use port %d: your TCI radio '%s' connects to the SDR on that port on this PC. Choose a different port for the TCI server (default %d) or turn the TCI server off."
-msgstr ""
+msgstr "TPI 服务器无法使用端口 %d: 您的 TIC 电台 '%s' 连接到这个PC上该端口上的特别提款权. 为 TI 服务器选择一个不同的端口( 默认) %d)或关闭 TCI 服务器。"
 
 #: utr4wstrings.tc_toomanycounties
 #, fuzzy
 msgid "Too many counties for this contest (maximum %d)!!"
-msgstr ""
+msgstr "参加比赛的县过多(最多) %d来啊!"
 
 #: uappstrings.sprefspagehasnosettingsyet
 #, fuzzy
 msgid "There are no settings on this page yet."
-msgstr ""
+msgstr "此页面尚未设置 。"
 
 #: uappstrings.slicenseyearscopealsocontest
 #, fuzzy
 msgid "Also this contest"
-msgstr ""
+msgstr "还有这场比赛"
 
 #: uappstrings.slicenseyearscopebody
 #, fuzzy
@@ -9882,133 +9891,140 @@ msgid ""
 "\n"
 "QSOs already logged do not store the year they sent: an export sends this contest's year for all of them."
 msgstr ""
+"车站的默认许可年是现在 %0:s。 。 。 。\n"
+"\n"
+"%1:s 发牌年,发牌 %2:s 现在\n"
+"\n"
+"这场比赛是否也应该送来新一年?\n"
+"\n"
+"已经登录的QSO不存储发送的年份: 一个导出会发送所有它们的本次比赛的年份 。"
 
 #: uappstrings.slicenseyearscopecontestandqsos
 #, fuzzy
 msgid "This contest and its existing QSOs"
-msgstr ""
+msgstr "本次比赛及其现有的QSO"
 
 #: uappstrings.slicenseyearscopestationonly
 #, fuzzy
 msgid "Station default only"
-msgstr ""
+msgstr "只默认站位"
 
 #: uappstrings.slicenseyearscopetitle
 #, fuzzy
 msgid "License year"
-msgstr ""
+msgstr "许可证年份"
 
 #: uappstrings.smessageeditcaptiontoolong
 #, fuzzy
 msgid "The caption is %0:d bytes long and a caption holds %1:d. Shorten it and press OK again."
-msgstr ""
+msgstr "标题是 %0:d 字节长而有标题 %1:d缩短时间,再按一次"
 
 #: uappstrings.smessageedittexttoolong
 #, fuzzy
 msgid "The message is %0:d bytes long and a message holds %1:d. Shorten it and press OK again."
-msgstr ""
+msgstr "讯息是 %0:d 字节长而信件持有 %1:d缩短时间,再按一次"
 
 #: uappstrings.snetparametertoolong
 #, fuzzy
 msgid "%0:s was not sent to the other stations: it is %1:d bytes and the network carries %2:d."
-msgstr ""
+msgstr "%0:s 没有送到其他车站: %1:d 字节和网络携带 %2:d。 。 。 。"
 
 #: uappstrings.sexchangehintage
 #, fuzzy
 msgid "age"
-msgstr ""
+msgstr "年龄"
 
 #: uappstrings.sexchangehintand
 #, fuzzy
 msgid "%0:s and %1:s"
-msgstr ""
+msgstr "%0:s 和 %1:s"
 
 #: uappstrings.sexchangehintchapter
 #, fuzzy
 msgid "chapter"
-msgstr ""
+msgstr "章 次 页 次"
 
 #: uappstrings.sexchangehintcheck
 #, fuzzy
 msgid "check"
-msgstr ""
+msgstr "检查"
 
 #: uappstrings.sexchangehintclass
 #, fuzzy
 msgid "class"
-msgstr ""
+msgstr "类"
 
 #: uappstrings.sexchangehintfocnumber
 #: tfrmeditqso.lblmyfocnumber.caption
 #, fuzzy
 msgid "FOC number"
-msgstr ""
+msgstr "FOC 编号"
 
 #: uappstrings.sexchangehintlicenseyear
 #, fuzzy
 msgid "license year"
-msgstr ""
+msgstr "许可证年份"
 
 #: uappstrings.sexchangehintname
 #, fuzzy
 msgid "name"
-msgstr ""
+msgstr "名称"
 
 #: uappstrings.sexchangehintpower
 #, fuzzy
 msgid "power"
-msgstr ""
+msgstr "动力"
 
 #: uappstrings.sexchangehintprecedence
 #, fuzzy
 msgid "precedence"
-msgstr ""
+msgstr "优先级"
 
 #: uappstrings.sexchangehintrandomchars
 #, fuzzy
 msgid "random characters"
-msgstr ""
+msgstr "随机字符"
 
 #: uappstrings.sexchangehintserialnumber
 #, fuzzy
 msgid "serial number"
-msgstr ""
+msgstr "序列号"
 
 #: uappstrings.sexchangehintsignalreport
 #, fuzzy
 msgid "signal report"
-msgstr ""
+msgstr "信号报告"
 
 #: uappstrings.sexchangehinttentennumber
 #, fuzzy
 msgid "10-10 number"
-msgstr ""
+msgstr "10-10号"
 
 #: uappstrings.sexchangehintyearslicensed
 #, fuzzy
 msgid "years licensed"
-msgstr ""
+msgstr "许可年数"
 
 #: uappstrings.sexchangehintzone
 #, fuzzy
 msgid "zone"
-msgstr ""
+msgstr "区域"
 
 #: uappstrings.sexchangehintzoneorsociety
 #, fuzzy
 msgid "zone or society"
-msgstr ""
+msgstr "地区或社会"
 
 #: uappstrings.seditqsomyyearsent
 #: tfrmeditqso.lblmyyearsent.caption
 #, fuzzy
 msgid "Year sent"
-msgstr ""
+msgstr "发送年份"
 
 #: uappstrings.seditqsoimpropersentyear
 #, fuzzy
 msgid "Improper license year sent!!"
-msgstr ""
+msgstr "违章执照年报!"
 
 #: uappstrings.slicenseyearscopebodystored
 #, fuzzy
@@ -10021,11 +10037,18 @@ msgid ""
 "\n"
 "QSOs already logged keep the year they sent."
 msgstr ""
+"车站的默认许可年是现在 %0:s。 。 。 。\n"
+"\n"
+"%1:s 发牌年,发牌 %2:s 现在\n"
+"\n"
+"这场比赛是否也应该送来新一年?\n"
+"\n"
+"已登录的QSO保持发送年份."
 
 #: uappstrings.slicenseyearcorrecttitle
 #, fuzzy
 msgid "Correct logged QSOs?"
-msgstr ""
+msgstr "正确的记录QSO?"
 
 #: uappstrings.slicenseyearcorrectbody
 #, fuzzy
@@ -10036,11 +10059,16 @@ msgid ""
 "\n"
 "Answer Yes only if %1:s was a mistake. A QSO logged with %1:s on the air sent %1:s, and its log should say so."
 msgstr ""
+"%0:d QSO 已经登录在本次比赛中, %1:s。 。 。 。\n"
+"\n"
+"换成 %2:s? 吗?\n"
+"\n"
+"答复 只有在 %1:s 是个错误 QSO 登录 %1:s 广播 %1:s,它的日志应该这么说。"
 
 #: uappstrings.swizback
 #, fuzzy
 msgid "< Back"
-msgstr ""
+msgstr "< 后边"
 
 #: uappstrings.swizcallodd
 #, fuzzy
@@ -10049,11 +10077,14 @@ msgid ""
 "\n"
 "Use it anyway?"
 msgstr ""
+"\" .%s\" 看上去不像一个普通的呼号。\n"
+"\n"
+"还是用它?"
 
 #: uappstrings.swizcallrequired
 #, fuzzy
 msgid "Enter your callsign to continue."
-msgstr ""
+msgstr "输入您的呼号继续 。"
 
 #: uappstrings.swizcancel
 #: tfrmcabrillosummary.btncancel.caption
@@ -10062,28 +10093,28 @@ msgstr ""
 #: tfrmrover.btncancel.caption
 #, fuzzy
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: uappstrings.swizchecklistheading
 #, fuzzy
 msgid "What else would you like to set up now?"
-msgstr ""
+msgstr "你现在还想设置什么?"
 
 #: uappstrings.swizchecklistintro
 #, fuzzy
 msgid "Tick what you have. Anything left unticked can be set up later in Preferences."
-msgstr ""
+msgstr "试试你有什么 任何闲置的都可以在后期的\"优惠\"中设置."
 
 #: uappstrings.swizclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
-msgstr ""
+msgstr "关闭"
 
 #: uappstrings.swizclusterheading
 #, fuzzy
 msgid "DX cluster"
-msgstr ""
+msgstr "DX 分组"
 
 #: uappstrings.swizclusterintro
 #, fuzzy
@@ -10093,109 +10124,109 @@ msgstr "从列表中选择一个集群,或者输入其主机名称或IP地址及
 #: uappstrings.swizclusterlogin
 #, fuzzy
 msgid "Login callsign:"
-msgstr ""
+msgstr "登录呼号 :"
 
 #: uappstrings.swizclusterneeded
 #, fuzzy
 msgid "Enter a cluster server, or go back and untick it."
-msgstr ""
+msgstr "输入集群服务器, 或返回并取消选中 。"
 
 #: uappstrings.swizclusterpassword
 #, fuzzy
 msgid "Password:"
-msgstr ""
+msgstr "密码 :"
 
 #: uappstrings.swizclusterserver
 #, fuzzy
 msgid "Server:"
-msgstr ""
+msgstr "服务器 :"
 
 #: uappstrings.swizcreate
 #, fuzzy
 msgid "Create configuration"
-msgstr ""
+msgstr "创建配置"
 
 #: uappstrings.swizderivednote
 #, fuzzy
 msgid "CQ zone, ITU zone, country and continent are filled in from the callsign. Correct any that are wrong."
-msgstr ""
+msgstr "CQ区,ITU区,国家和大陆由呼号填入. 纠正任何错误。"
 
 #: uappstrings.swizitemcluster
 #, fuzzy
 msgid "A DX cluster"
-msgstr ""
+msgstr "一个 DX 组"
 
 #: uappstrings.swizitemclusterhint
 #, fuzzy
 msgid "DX spots in the band map."
-msgstr ""
+msgstr "乐队图中的 DX 斑点."
 
 #: uappstrings.swizitemkeyer
 #, fuzzy
 msgid "A WinKeyer"
-msgstr ""
+msgstr "温克耶"
 
 #: uappstrings.swizitemkeyerhint
 #, fuzzy
 msgid "A WinKeyer CW keyer on its own port."
-msgstr ""
+msgstr "自己端口的Winkeyer CW键盘."
 
 #: uappstrings.swizitemradio
 #, fuzzy
 msgid "A radio (rig control)"
-msgstr ""
+msgstr "收音机(机械控制)"
 
 #: uappstrings.swizitemradiohint
 #, fuzzy
 msgid "TR4W reads and sets the frequency and mode."
-msgstr ""
+msgstr "TR4W读取并设定了频率和模式."
 
 #: uappstrings.swizkeyerheading
 #: uappstrings.sdefaultkeyername
 #, fuzzy
 msgid "WinKeyer"
-msgstr ""
+msgstr "温克耶"
 
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr ""
+msgstr "选择您的 Winkeyer 打开的端口 。 一个Winkeyer需要自己的港口 而不是无线电"
 
 #: uappstrings.swizmenu
 #, fuzzy
 msgid "Setup Wizard..."
-msgstr ""
+msgstr "设置向导..."
 
 #: uappstrings.swiznext
 #, fuzzy
 msgid "Next >"
-msgstr ""
+msgstr "下一个 >"
 
 #: uappstrings.swiznocountry
 #, fuzzy
 msgid "The country file does not know this callsign, so nothing was filled in from it."
-msgstr ""
+msgstr "国家档案不知道这个呼号,所以没有从中填写任何内容."
 
 #: uappstrings.swizprefsopen
 #, fuzzy
 msgid "Close Preferences first, so the setup wizard and Preferences do not overwrite each other's changes."
-msgstr ""
+msgstr "首先关闭首选项, 因此设置向导和首选项不会覆盖对方的更改 。"
 
 #: uappstrings.swizradioheading
 #: uappstrings.sdefaultradioname
 #, fuzzy
 msgid "Radio"
-msgstr ""
+msgstr "电台"
 
 #: uappstrings.swizradiointro
 #, fuzzy
 msgid "Choose your radio and how it is connected. These are the same settings Preferences uses. TR4W connects to it when you create the configuration."
-msgstr ""
+msgstr "选择您的收音机及其连接方式 。 这些是相同的设置首选项使用。 TR4W在创建配置时与之相接."
 
 #: uappstrings.swizresapplyfailed
 #, fuzzy
 msgid "Saved, but not put into use: %s. Restart TR4W or use Activate in Preferences."
-msgstr ""
+msgstr "已保存但未投入使用 : %s。恢复TR4W或以优惠方式使用。"
 
 #: uappstrings.swizrescluster
 #, fuzzy
@@ -10205,7 +10236,7 @@ msgstr "DX集群 \"%0:s\" : %1:s,登录为 %2:s。 。 。 。"
 #: uappstrings.swizresclusterfailed
 #, fuzzy
 msgid "The DX cluster was not saved. Set it up in Preferences > DX Cluster."
-msgstr ""
+msgstr "DX 集群没有被保存 。 设置为首选项 > DX Cluster 。"
 
 #: uappstrings.swizreskeyer
 #, fuzzy
@@ -10215,12 +10246,12 @@ msgstr "温凯尔 \"%0:s\" 打开 %1:s,用于无线电1中的CW."
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
 msgid "The WinKeyer was not saved: %s. Set it up in Preferences."
-msgstr ""
+msgstr "WinKeyer 没有保存 : %s设置在优惠中。"
 
 #: uappstrings.swizresnotsaved
 #, fuzzy
 msgid "The radio, keyer and cluster were not saved: %s"
-msgstr ""
+msgstr "收音机、按键和集群没有保存 : %s"
 
 #: uappstrings.swizresportwarning
 #, fuzzy
@@ -10228,6 +10259,8 @@ msgid ""
 "Check these ports:\n"
 "%s"
 msgstr ""
+"检查这些端口 :\n"
+"%s"
 
 #: uappstrings.swizresradio
 #, fuzzy
@@ -10237,82 +10270,82 @@ msgstr "电台1: %0:s %1:s名称: \"%2:s\" .."
 #: uappstrings.swizresradiofailed
 #, fuzzy
 msgid "The radio was not saved: %s. Set it up in Preferences > Radios."
-msgstr ""
+msgstr "收音机没有保存: %s在 \" 优惠 \" 中设置。"
 
 #: uappstrings.swizresrefused
 #, fuzzy
 msgid "%0:s \"%1:s\" was not accepted. Set it in Preferences > Station."
-msgstr ""
+msgstr "%0:s \" .%1:s\" 未获接受。 设置为首选项 > station。"
 
 #: uappstrings.swizresstation
 #, fuzzy
 msgid "Station %s saved."
-msgstr ""
+msgstr "车站 %s 已保存 。"
 
 #: uappstrings.swizresultheading
 #, fuzzy
 msgid "Done"
-msgstr ""
+msgstr "完成"
 
 #: uappstrings.swizresultintro
 #, fuzzy
 msgid "This is what was saved. All of it can be changed later in Preferences."
-msgstr ""
+msgstr "这就是所拯救的。 所有这一切都可以在后期的\"优惠\"中被改变."
 
 #: uappstrings.swizstationheading
 #, fuzzy
 msgid "Your station"
-msgstr ""
+msgstr "你的车站"
 
 #: uappstrings.swizstationintro
 #, fuzzy
 msgid "Who you are and where you are. Only the callsign is required, and all of this can be changed later in Preferences > Station."
-msgstr ""
+msgstr "汝今何人及所处. 只需呼号,所有这一切都可以在后期的\"优惠\"站被更改."
 
 #: uappstrings.swizstepof
 #, fuzzy
 msgid "Step %0:d of %1:d"
-msgstr ""
+msgstr "步骤 %0:d 联 合 国 %1:d"
 
 #: uappstrings.swiztitle
 #, fuzzy
 msgid "TR4W setup"
-msgstr ""
+msgstr "TR4W 设置"
 
 #: uappstrings.swizresprofile
 #, fuzzy
 msgid "The station profile \"%s\" now holds the hardware you set up. You can refine it in Preferences > Hardware."
-msgstr ""
+msgstr "站名简介 \"%s\" 现在持有你设置的硬件. 您可以在优惠中加以完善 > 硬件。"
 
 #: uappstrings.swizstartupprompt
 #, fuzzy
 msgid "This looks like a new installation. Would you like to run the Setup Wizard first?"
-msgstr ""
+msgstr "这看起来像一个新的装置。 您想要先运行设置向导吗 ?"
 
 #: uappstrings.swizctymissing
 #, fuzzy
 msgid "There is no country file yet, so the zones and country cannot be filled in from the callsign."
-msgstr ""
+msgstr "目前还没有国家档案,因此区和国家无法从呼号中填入."
 
 #: uappstrings.swizctydownload
 #, fuzzy
 msgid "Download country file"
-msgstr ""
+msgstr "下载国别文件"
 
 #: uappstrings.swizctydownloading
 #, fuzzy
 msgid "Downloading the country file..."
-msgstr ""
+msgstr "正在下载国家文件..."
 
 #: uappstrings.swizctydone
 #, fuzzy
 msgid "The country file was downloaded."
-msgstr ""
+msgstr "国家文件被下载."
 
 #: uappstrings.swizctyfailed
 #, fuzzy
 msgid "The country file could not be downloaded. tr4w.log says why. You can try again, or continue without it."
-msgstr ""
+msgstr "无法下载国家文件 。 tr4w.log说原因. 你可以再试一次, 或者继续没有它。"
 
 #: uappstrings.swizradiocwbycat
 #, fuzzy
@@ -10506,292 +10539,304 @@ msgstr "你被发现 %s。 。 。 。"
 #: uappstrings.snewcontestmembernumberlabel
 #, fuzzy
 msgid "MY MEMBER NO"
-msgstr ""
+msgstr "我的会员没有"
 
 #: uappstrings.sexchangenotasignalreport
 #, fuzzy
 msgid "%s is not a signal report"
-msgstr ""
+msgstr "%s 不是信号报告"
 
 #: uappstrings.snetservernotavailable
 #, fuzzy
 msgid "Connection to the TR4WServer is not available"
-msgstr ""
+msgstr "无法连接到 TR4WServer"
 
 #: tfrmaltp.btnedit.caption
 #: tfrmfileview.mnuedit.caption
 #, fuzzy
 msgid "Edit"
-msgstr ""
+msgstr "编辑"
 
 #: tfrmeditqso.lbldelivery.caption
 #, fuzzy
 msgid "External logger delivery"
-msgstr ""
+msgstr "外部日志发送"
 
 #: texternalloggersform.lblname.caption
 #: uappstrings.seditqsomyname
 #: tfrmeditqso.lblmyname.caption
 #, fuzzy
 msgid "Name"
-msgstr ""
+msgstr "名称"
 
 #: texternalloggersform.chkactive.caption
 #, fuzzy
 msgid "Active (send newly logged QSOs)"
-msgstr ""
+msgstr "活动( 发送新登录的 QSO)"
 
 #: texternalloggersform.btnok.caption
 #, fuzzy
 msgid "Save to Preferences"
-msgstr ""
+msgstr "保存到首选项"
 
 #: tfrmfileview.mnuopenineditor.caption
 #, fuzzy
 msgid "Open in text editor"
-msgstr ""
+msgstr "在文本编辑器中打开"
 
 #: tfrmfileview.mnucopy.caption
 #, fuzzy
 msgid "Copy"
-msgstr ""
+msgstr "复制"
 
 #: tfrmfileview.mnuselectall.caption
 #, fuzzy
 msgid "Select all"
-msgstr ""
+msgstr "全部选择"
 
 #: tfrmlogedit.caption
 #, fuzzy
 msgid "View / Edit Log"
-msgstr ""
+msgstr "查看/ 编辑日志"
 
 #: tfrmlogsearch.caption
 #, fuzzy
 msgid "Search Log"
-msgstr ""
+msgstr "搜索日志"
 
 #: tfrmlogsearch.lblcall.caption
 #: tfrmqtcreceive.lblcallsign.caption
 #, fuzzy
 msgid "Callsign"
-msgstr ""
+msgstr "调用"
 
 #: tfrmlogsearch.lblmode.caption
 #, fuzzy
 msgid "Mode"
-msgstr ""
+msgstr "模式"
 
 #: tfrmlogsearch.lblband.caption
 #, fuzzy
 msgid "Band"
-msgstr ""
+msgstr "带"
 
 #: tfrmlogsearch.lbloperator.caption
 #, fuzzy
 msgid "Operator"
-msgstr ""
+msgstr "运算符"
 
 #: ttr4wmainform.pnlmasterstatus.caption
 #, fuzzy
 msgid "MASTER"
-msgstr ""
+msgstr "大师"
 
 #: ttr4wmainform.pnlnewmultstatus.caption
 #, fuzzy
 msgid "MULT"
-msgstr ""
+msgstr "穆尔特"
 
 #: ttr4wmainform.pnlopmode.caption
 #, fuzzy
 msgid "CQ"
-msgstr ""
+msgstr "核心问题"
 
 #: ttr4wmainform.pnlpttstatus.caption
 #, fuzzy
 msgid "OFF"
-msgstr ""
+msgstr "关闭"
 
 #: ttr4wmainform.pnlqsob4status.caption
 #, fuzzy
 msgid "QSOB4"
-msgstr ""
+msgstr "QSOB4 请检查url=值 (帮助)."
 
 #: ttr4wmainform.pnlwinkey.caption
 #, fuzzy
 msgid "WK"
-msgstr ""
+msgstr "WK 键"
 
 #: tfrmqtcreceive.lblmaxqtcs.caption
 #, fuzzy
 msgid "Enter QTC"
-msgstr ""
+msgstr "输入 QTC"
 
 #: uappstrings.snewcontestiaminchecktitle
 #, fuzzy
 msgid "Check your location"
-msgstr ""
+msgstr "检查您的位置"
 
 #: uappstrings.snewcontestiamintickedoutside
 #, fuzzy
-msgid "You ticked \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
+msgid ""
+"You ticked \"I am in %0:s\", but your callsign %1:s is in %2:s.\n"
+"\n"
+"Create the contest as entered? Choose No to go back and change it."
 msgstr ""
+"你滴答道:\"我在这 %0:s但你的呼号 %1:s 进入 %2:s。 。 。 。\n"
+"\n"
+"创建输入的比赛吗 ? 选\"否\"回去换."
 
 #: uappstrings.snewcontestiaminclearedinside
 #, fuzzy
-msgid "You did not tick \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
+msgid ""
+"You did not tick \"I am in %0:s\", but your callsign %1:s is in %2:s.\n"
+"\n"
+"Create the contest as entered? Choose No to go back and change it."
 msgstr ""
+"你没有勾选 \"我加入\" %0:s但你的呼号 %1:s 进入 %2:s。 。 。 。\n"
+"\n"
+"创建输入的比赛吗 ? 选\"否\"回去换."
 
 #: uappstrings.sloggerfieldqrzcall
 #, fuzzy
 msgid "QRZ logbook callsign"
-msgstr ""
+msgstr "QRZ 日志呼号"
 
 #: uappstrings.sloggerfieldqrzkey
 #, fuzzy
 msgid "QRZ logbook API key"
-msgstr ""
+msgstr "QRZ 日志 API 密钥"
 
 #: uappstrings.sbandmapcenteronradio
 #: tfrmbandmap.micenteronradio.caption
 #, fuzzy
 msgid "Center on radio frequency"
-msgstr ""
+msgstr "无线电频率中心"
 
 #: uappstrings.sbandmapsortbybeam
 #: tfrmbandmap.misortbybeam.caption
 #, fuzzy
 msgid "Sort by beam heading"
-msgstr ""
+msgstr "按横梁方向排序"
 
 #: tprefsform.chkbandmapcenteronradio.caption
 #, fuzzy
 msgid "Keep the band map centered on the radio frequency"
-msgstr ""
+msgstr "保持以无线电频率为中心的波段图"
 
 #: tprefsform.chkbandmapsortbybeam.caption
 #, fuzzy
 msgid "Sort the band map by beam heading, nearest the beam first"
-msgstr ""
+msgstr "按横梁方向排列带状图, 离横梁最近"
 
 #: utr4wstrings.tc_winkeyerdidnotopen
 msgctxt "TC_WINKEYERDIDNOTOPEN"
 msgid "WinKeyer on %s did not open (see tr4w.log)"
-msgstr ""
+msgstr "温基尔 %s 未打开(见tr4w.log)"
 
 #: uappstrings.sexchangenopostcode
 #, fuzzy
 msgid "No postcode in the exchange"
-msgstr ""
+msgstr "交换中没有邮政编码"
 
 #: uappstrings.sdefaultclustername
 #, fuzzy
 msgid "Cluster"
-msgstr ""
+msgstr "组"
 
 #: uappstrings.sstationfieldgrid
 #, fuzzy
 msgid "A grid square is two letters A to R and two digits, optionally followed by two letters: EL88 or EL88PA."
-msgstr ""
+msgstr "网格平方是两个字母A至R和两个数字,可选后接两个字母:EL88或EL88PA."
 
 #: uappstrings.sstationfieldzone
 #, fuzzy
 msgid "A CQ zone is a number from 1 to 40."
-msgstr ""
+msgstr "一个CQ区是一个从1到40的数字."
 
 #: uappstrings.sstationfieldituzone
 #, fuzzy
 msgid "An ITU zone is a number from 1 to 90, or 0 to use the zone CTY.DAT gives."
-msgstr ""
+msgstr "ITU区为从1到90的编号,或为0来使用CTY.DAT给定的区."
 
 #: uappstrings.sstationfieldsection
 #, fuzzy
 msgid "This is not an ARRL or RAC section. A station outside the US and Canada enters DX."
-msgstr ""
+msgstr "这不是ARRL或RAC的一节。 美国和加拿大以外的一个车站进入DX."
 
 #: uappstrings.sstationfieldcountry
 #, fuzzy
 msgid "This is not a CTY.DAT country prefix. The United States is K."
-msgstr ""
+msgstr "这不是CTY.DAT国家前缀. 美国是K."
 
 #: uappstrings.sstationfieldpark
 #, fuzzy
 msgid "A park reference is two letters, a hyphen and four or five digits: US-1234. Separate several parks with commas."
-msgstr ""
+msgstr "一个公园参考是两个字母,一个连字符和四个或五个数字:US-1234. 分离出几个带逗号的公园."
 
 #: uappstrings.sstationfieldiota
 #, fuzzy
 msgid "An IOTA reference is two letters, a hyphen and three digits: NA-001."
-msgstr ""
+msgstr "一个IOTA的参考是两个字母,一个连字符和三个数字:NA-001."
 
 #: uappstrings.sstationfieldfdclass
 #, fuzzy
 msgid "A Field Day class is the number of transmitters and one letter: 2A, or 2H for Winter Field Day."
-msgstr ""
+msgstr "一个\"战地日\"班是发射机和一字母的数量:2A,即冬季战地日的2H."
 
 #: uappstrings.sstationfieldcheck
 #, fuzzy
 msgid "The check is two digits, the last two of the year first licensed: 85."
-msgstr ""
+msgstr "支票为两位数字,是当年最后两位首次获得许可:85."
 
 #: uappstrings.sstationfieldprec
 #, fuzzy
 msgid "The precedence is one letter: Q, A, B, U, M or S."
-msgstr ""
+msgstr "优先字母为:Q,A,B,U,M或S."
 
 #: uappstrings.sstationfieldfocnumber
 #, fuzzy
 msgid "The FOC number is digits only."
-msgstr ""
+msgstr "FOC 数字只是数字 。"
 
 #: uappstrings.sstationfieldlicenseyear
 #, fuzzy
 msgid "The license year is up to four digits: 1985, 85, or a number of years."
-msgstr ""
+msgstr "发牌年份可达四位数:1985年,85年或数年."
 
 #: uappstrings.sstationpagenotsaved
 #, fuzzy
 msgid "Station settings not saved. %s"
-msgstr ""
+msgstr "未保存站台设置 。 %s"
 
 #: uappstrings.sstationfieldstate
 #, fuzzy
 msgid "Two letters must be a US state, DC, a US territory or a Canadian province or territory. A county, grid or other QTH may be longer."
-msgstr ""
+msgstr "两个字母必须是美国国家,DC,美国领土或加拿大省或领土. 一个县,网格或其他QTH可能更长."
 
 #: uappstrings.snewcontestsoonestfirst
 #, fuzzy
 msgid "Upcoming contests first"
-msgstr ""
+msgstr "先参加比赛"
 
 #: uappstrings.snewcontestrunningnow
 #, fuzzy
 msgid "running now"
-msgstr ""
+msgstr "现在运行"
 
 #: uappstrings.seditqsomycheck
 #, fuzzy
 msgctxt "uappstrings.seditqsomycheck"
 msgid "Check"
-msgstr ""
+msgstr "检查"
 
 #: uappstrings.seditqsomyfdclass
 #: tfrmeditqso.lblmyfdclass.caption
 #, fuzzy
 msgid "FD class"
-msgstr ""
+msgstr "FD 类"
 
 #: uappstrings.seditqsomyfocnumber
 #, fuzzy
 msgctxt "uappstrings.seditqsomyfocnumber"
 msgid "FOC number"
-msgstr ""
+msgstr "FOC 编号"
 
 #: uappstrings.seditqsomypostalcode
 #: tfrmeditqso.lblmypostalcode.caption
 #, fuzzy
 msgid "Postal code"
-msgstr ""
+msgstr "邮政编码"
 
 #: uappstrings.seditqsostationvaluerefused
 #, fuzzy
@@ -10800,6 +10845,9 @@ msgid ""
 "\n"
 "%2:s"
 msgstr ""
+"%0:s \" .%1:s\" 无法挽救。\n"
+"\n"
+"%2:s"
 
 #: uappstrings.sstationcorrectbody
 #, fuzzy
@@ -10816,13 +10864,13 @@ msgstr ""
 #: uappstrings.sstationcorrectline
 #, fuzzy
 msgid "%0:s: %1:d QSO(s) sent %2:s, now %3:s"
-msgstr ""
+msgstr "%0:s数字 : %1:d 发送的QSO %2:s现在 %3:s"
 
 #: uappstrings.sstationfactlicenseyear
 #, fuzzy
 msgctxt "uappstrings.sstationfactlicenseyear"
 msgid "License year"
-msgstr ""
+msgstr "许可证年份"
 
 #: uappstrings.sstationscopebody
 #, fuzzy
@@ -10839,17 +10887,17 @@ msgstr ""
 #: uappstrings.sstationscopeline
 #, fuzzy
 msgid "%0:s: %1:s (this contest: %2:s)"
-msgstr ""
+msgstr "%0:s数字 : %1:s (本次比赛: %2:s(中文(简体) )."
 
 #: uappstrings.sstationscopetitle
 #, fuzzy
 msgid "Station values"
-msgstr ""
+msgstr "站点值"
 
 #: uappstrings.sstationcontestnote
 #, fuzzy
 msgid "Shown as %0:s uses them: this contest states its own value for some of these. Station defaults: %1:s."
-msgstr ""
+msgstr "显示为 %0:s 使用它们:本次比赛为其中部分内容陈述了自己的价值. 站台默认值 : %1:s。 。 。 。"
 
 #: uappstrings.sstationcontestnoteitem
 #, fuzzy
@@ -10859,238 +10907,238 @@ msgstr ""
 #: uappstrings.sstationscopestationonlynote
 #, fuzzy
 msgid "\"Station default only\" keeps this contest's own value, and the page shows it again."
-msgstr ""
+msgstr "\"只预设\"保持了这场比赛自己的价值,页面再次显示."
 
 #: tprefsform.lblstationcontestnote.caption
 #, fuzzy
 msgid "Shown as this contest uses them"
-msgstr ""
+msgstr "显示为本次比赛使用"
 
 #: uappstrings.sradioeditusehamlibhint
 #, fuzzy
 msgid "Drive this radio through the HamLib library instead of TR4W's own driver. HamLib version: %s"
-msgstr ""
+msgstr "驾驶这台收音机通过HamLib图书馆,而不是TR4W自己的司机. HamLib 版本 : %s"
 
 #: uappstrings.sradioedithamlibnotavailable
 #, fuzzy
 msgid "not available"
-msgstr ""
+msgstr "不详"
 
 #: uappstrings.snewcontesthawaiiqpdistrictorlocation
 #, fuzzy
 msgid "Enter your Hawaii district (e.g. HON) if you are in Hawaii. Enter your state or Canadian province if outside Hawaii, or DX:"
-msgstr ""
+msgstr "进入夏威夷区(如HON) 如果你在夏威夷。 输入夏威夷以外的州或加拿大省,或 DX :"
 
 #: uappstrings.snewcontesthostareadistrictlabel
 #, fuzzy
 msgid "MY DISTRICT"
-msgstr ""
+msgstr "我的脚印"
 
 #: uappstrings.snewcontesthostareainsidedistrictnotice
 #, fuzzy
 msgid "You are in %s: choose your district from the list."
-msgstr ""
+msgstr "你进来了 %s: 从列表中选择您的区域 。"
 
 #: uappstrings.stotalsgridmults
 #, fuzzy
 msgid "Grids"
-msgstr ""
+msgstr "网格"
 
 #: uappstrings.snewcontestcpqpdistrictorlocation
 #, fuzzy
 msgid "Enter your federal electoral district (e.g. AIR) if you are in Alberta, Saskatchewan or Manitoba. Enter your state or Canadian province if outside the prairies, or DX:"
-msgstr ""
+msgstr "若您在艾伯塔省、萨斯喀彻温省或马尼托巴省,请进入联邦选区(如AIR)。 如果在草原之外, 请输入您的州或加拿大省, 或者 DX :"
 
 #: uappstrings.stotalsprovincemults
 #, fuzzy
 msgid "Provinces"
-msgstr ""
+msgstr "省份"
 
 #: uappstrings.snewcontestacqpcountyorlocation
 #, fuzzy
 msgid "Enter your five-letter county or division code (e.g. NSHRM) if you are in New Brunswick, Nova Scotia, Prince Edward Island or Newfoundland and Labrador. Enter your state or Canadian province if outside Atlantic Canada, or DX:"
-msgstr ""
+msgstr "如果您在新不伦瑞克、新斯科舍、爱德华王子岛或纽芬兰和拉布拉多,请输入五字母郡或区划代码(如NSHR)。 如果在加拿大大西洋以外, 请输入您的州或加拿大省, 或 DX :"
 
 #: uappstrings.sdefaultrotatorname
 #, fuzzy
 msgctxt "uappstrings.sdefaultrotatorname"
 msgid "Rotator"
-msgstr ""
+msgstr "旋转器"
 
 #: uappstrings.swizitemlogger
 #, fuzzy
 msgid "An external logger"
-msgstr ""
+msgstr "外部日志"
 
 #: uappstrings.swizitemloggerhint
 #, fuzzy
 msgid "Each QSO also goes to DXKeeper, Club Log, QRZ, Cloudlog/Wavelog or another logbook."
-msgstr ""
+msgstr "每个QSO还去DXkeeper, Club Log, QRZ, Cloudlog/Wavelog或另一个日志."
 
 #: uappstrings.swizitemrotator
 #, fuzzy
 msgid "An antenna rotator"
-msgstr ""
+msgstr "天线旋转器"
 
 #: uappstrings.swizitemrotatorhint
 #, fuzzy
 msgid "TR4W turns the antenna toward the station you are working."
-msgstr ""
+msgstr "TR4W将天线转向你工作的空间站."
 
 #: uappstrings.swizitemwsjtx
 #, fuzzy
 msgctxt "uappstrings.swizitemwsjtx"
 msgid "WSJT-X"
-msgstr ""
+msgstr "WSJT-X 数据"
 
 #: uappstrings.swizitemwsjtxhint
 #, fuzzy
 msgid "Decodes and logged QSOs come in from WSJT-X over UDP."
-msgstr ""
+msgstr "解码器和已登录的QSO从WSJT-X出自UDP."
 
 #: uappstrings.swizloggerintro
 #, fuzzy
 msgid "Choose the program or service that should receive your QSOs, and how to reach it. These are the same settings Preferences uses. Keys and passwords are kept in the system's credential store."
-msgstr ""
+msgstr "选择应该接收您的QSO的程序或服务,以及如何达到它. 这些是相同的设置首选项使用。 密钥和密码保存在系统的证书库中."
 
 #: uappstrings.swizloggerloading
 #, fuzzy
 msgid "The logbook list is still loading. Wait for it, then press Next again."
-msgstr ""
+msgstr "日志列表仍在装入 。 等待它,然后再按下一个。"
 
 #: uappstrings.swizresdefaultaddress
 #, fuzzy
 msgid "at the default address"
-msgstr ""
+msgstr "在默认地址"
 
 #: uappstrings.swizresloggeractive
 #, fuzzy
 msgid "External logger \"%0:s\" (%1:s) receives each new QSO."
-msgstr ""
+msgstr "外部日志 \"%0:s\" (中文(简体) ).%1:s)接收每个新的QSO."
 
 #: uappstrings.swizresloggerfailed
 #, fuzzy
 msgid "The external logger was not saved: %s"
-msgstr ""
+msgstr "外部日志没有保存 : %s"
 
 #: uappstrings.swizresloggerinactive
 #, fuzzy
 msgid "External logger \"%0:s\" (%1:s) is saved but not switched on. Switch it on in Preferences."
-msgstr ""
+msgstr "外部日志 \"%0:s\" (中文(简体) ).%1:s)是保存的,但没有打开。 打开优惠"
 
 #: uappstrings.swizresloggerrestart
 #, fuzzy
 msgid "The external logger starts sending the next time TR4W starts."
-msgstr ""
+msgstr "外部日志开始发送下一次TR4W开始时."
 
 #: uappstrings.swizresrotator
 #, fuzzy
 msgid "Rotator \"%0:s\": %1:s %2:s, turning for every band."
-msgstr ""
+msgstr "旋转器 \"%0:s\" : %1:s %2:s转动每个乐队。"
 
 #: uappstrings.swizresrotatorfailed
 #, fuzzy
 msgid "The rotator was not saved. Set it up in Preferences > Rotators."
-msgstr ""
+msgstr "转子没有被保存 。 设置为优惠 > 旋转器。"
 
 #: uappstrings.swizreswsjtxoff
 #, fuzzy
 msgid "WSJT-X: the integration is off."
-msgstr ""
+msgstr "WSJT-X:整合关闭."
 
 #: uappstrings.swizreswsjtxon
 #, fuzzy
 msgid "WSJT-X: TR4W listens on UDP port %s."
-msgstr ""
+msgstr "WSJT-X:TR4W在UDP端口上收听 %s。 。 。 。"
 
 #: uappstrings.swizreswsjtxrestart
 #, fuzzy
 msgid "The WSJT-X change takes effect the next time TR4W starts."
-msgstr ""
+msgstr "WSJT-X变化在TR4W下次开始时生效."
 
 #: uappstrings.swizrotatorheading
 #, fuzzy
 msgctxt "uappstrings.swizrotatorheading"
 msgid "Rotator"
-msgstr ""
+msgstr "旋转器"
 
 #: uappstrings.swizrotatorintro
 #, fuzzy
 msgid "Choose your rotator and how it is connected. It turns for every band; Preferences > Rotators can limit it to some."
-msgstr ""
+msgstr "选择您的转子及其连接方式 。 它对每个带; 首选项 > 旋转器可以限制一些。"
 
 #: uappstrings.swizrotatorneedsport
 #, fuzzy
 msgid "Choose the serial port the rotator is on, or go back and untick it."
-msgstr ""
+msgstr "选择转子打开的序列端口, 或返回并打开它 。"
 
 #: uappstrings.swizrotatorneedstype
 #, fuzzy
 msgid "Choose the rotator type, or go back and untick it."
-msgstr ""
+msgstr "选择转子类型, 或者返回并解开它 。"
 
 #: uappstrings.swizrotatorport
 #, fuzzy
 msgid "Serial port:"
-msgstr ""
+msgstr "串行端口 :"
 
 #: uappstrings.swizrotatorudpport
 #, fuzzy
 msgctxt "uappstrings.swizrotatorudpport"
 msgid "UDP port:"
-msgstr ""
+msgstr "UDP 端口 :"
 
 #: uappstrings.swizrotatorudpportbad
 #, fuzzy
 msgid "The UDP port must be a number from 1 to 65535, or blank."
-msgstr ""
+msgstr "UDP端口必须是从1到65535的号码或空白."
 
 #: uappstrings.swizwsjtxenable
 #, fuzzy
 msgid "Use WSJT-X with TR4W"
-msgstr ""
+msgstr "使用带有TR4W的WSJT-X"
 
 #: uappstrings.swizwsjtxheading
 #, fuzzy
 msgctxt "uappstrings.swizwsjtxheading"
 msgid "WSJT-X"
-msgstr ""
+msgstr "WSJT-X 数据"
 
 #: uappstrings.swizwsjtxintro
 #, fuzzy
 msgid "TR4W can take decodes and logged QSOs from WSJT-X and mark the calls you still need. In WSJT-X, set Settings > Reporting > UDP Server to 127.0.0.1 and the port below."
-msgstr ""
+msgstr "TR4W可以从WSJT-X取出解码并登录QSO,并标记你仍然需要的电话. 在 WSJT- X 中,设置 > 报告 > UDP 服务器为 127.0.0.1,端口如下."
 
 #: uappstrings.swizwsjtxport
 #, fuzzy
 msgctxt "uappstrings.swizwsjtxport"
 msgid "UDP port:"
-msgstr ""
+msgstr "UDP 端口 :"
 
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr ""
+msgstr "港口的编号必须是从1到65535."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
 msgid "Backup to %s FAILED: the disk is full."
-msgstr ""
+msgstr "备份到 %s 盘子满了"
 
 #: uappstrings.sbackupcopyfailedfoldermissing
 #, fuzzy
 msgid "Backup to %s FAILED: the folder is not there."
-msgstr ""
+msgstr "备份到 %s 文件夹不在那里。"
 
 #: uappstrings.sbackupcopyfailednoaccess
 #, fuzzy
 msgid "Backup to %s FAILED: access denied."
-msgstr ""
+msgstr "备份到 %s 无法进入 。"
 
 #: uappstrings.sbackupcopyfailedother
 #, fuzzy
 msgid "Backup to %s FAILED."
-msgstr ""
+msgstr "备份到 %s 失败。"
 
 #: uappstrings.slognotsavedreadonly
 #, fuzzy
@@ -11105,187 +11153,187 @@ msgstr ""
 #: uappstrings.slogreadonlyfixdiskfull
 #, fuzzy
 msgid "Free at least %d MB on %s, then press Enter again."
-msgstr ""
+msgstr "至少免费 %d MB 打开 %s,然后再次按 Enter 键。"
 
 #: uappstrings.slogreadonlyfixwriteerror
 #, fuzzy
 msgid "Check the drive the log is on, then press Enter again. Details are in tr4w.log."
-msgstr ""
+msgstr "检查驱动器日志已打开, 然后按 Enter 键 。 详情见tr4w.log."
 
 #: uappstrings.slogreadonlyreasondiskfull
 #, fuzzy
 msgid "disk full"
-msgstr ""
+msgstr "磁盘已满"
 
 #: uappstrings.slogreadonlyreasonwriteerror
 #, fuzzy
 msgid "write error"
-msgstr ""
+msgstr "写入错误"
 
 #: uappstrings.slogreadonlyreasonlocked
 #, fuzzy
 msgid "locked"
-msgstr ""
+msgstr "锁定"
 
 #: uappstrings.slogreadonlynotsaved
 #, fuzzy
 msgid "Log is read-only (%s): not saved."
-msgstr ""
+msgstr "日志只读( O) (%s: 没有保存。"
 
 #: uappstrings.seditqsonoqsoselected
 #, fuzzy
 msgid "No QSO selected."
-msgstr ""
+msgstr "未选择 QSO 。"
 
 #: uappstrings.seditqsologunreadable
 #, fuzzy
 msgid "The contest log cannot be read: see tr4w.log."
-msgstr ""
+msgstr "无法读取比赛日志:参见tr4w.log."
 
 #: uappstrings.seditqsonosuchqso
 #, fuzzy
 msgid "That QSO is not in the log any more."
-msgstr ""
+msgstr "QSO已经不在日志里了"
 
 #: uappstrings.seditqsocannotread
 #, fuzzy
 msgid "That QSO could not be read from the log: see tr4w.log."
-msgstr ""
+msgstr "无法从日志中读取QSO:见tr4w.log."
 
 #: uappstrings.seditqsonoteditable
 #, fuzzy
 msgid "A deleted QSO, or a record that is not a QSO, cannot be edited here."
-msgstr ""
+msgstr "在此无法编辑已删除的QSO, 或非QSO的记录 。"
 
 #: uappstrings.slogwritableagain
 #, fuzzy
 msgid "The log is writable again."
-msgstr ""
+msgstr "日志又可以写了"
 
 #: uappstrings.slogreadonlynotsaveddiskfull
 #, fuzzy
 msgid "Log is read-only (disk full): free %d MB on %s, then Enter."
-msgstr ""
+msgstr "日志只读 (磁盘已满): 免费 %d MB 打开 %s,然后输入。"
 
 #: uappstrings.swizwsjtxhighlightshint
 #, fuzzy
 msgid "WSJT-X colours the calls in its decode list that are dupes or new multipliers, in TR4W's colours."
-msgstr ""
+msgstr "WSJT-X在其解码列表中的调用为dupes或新的乘数,在TR4W的颜色中."
 
 #: uappstrings.swizwsjtxradiocontrolhint
 #, fuzzy
 msgid "TR4W then offers a DX Commander compatible interface on TCP port %d, and that is what WSJT-X connects to when DX Commander is chosen as its radio."
-msgstr ""
+msgstr "TR4W 然后在 TCP 端口上提供一个 DX 指令兼容接口 %d,这就是WSJT-X在DX指挥官被选作它的收音机时所连接的."
 
 #: uappstrings.swizwsjtxmulticasthint
 #, fuzzy
 msgid "Advanced. Leave it blank unless WSJT-X is configured to use a multicast group."
-msgstr ""
+msgstr "先进. 除非WSJT-X配置为使用多播组,否则留作空白."
 
 #: uappstrings.swizreswsjtxradiocontrol
 #, fuzzy
 msgid "WSJT-X can control the radio through TCP port %d."
-msgstr ""
+msgstr "WSJT-X可以通过TCP端口控制收音机 %d。 。 。 。"
 
 #: uappstrings.swizreswsjtxhighlights
 #, fuzzy
 msgid "WSJT-X: TR4W sends it callsign highlighting."
-msgstr ""
+msgstr "WSJT-X:TR4W发送其呼号突出."
 
 #: uappstrings.swizreswsjtxmulticast
 #, fuzzy
 msgid "WSJT-X: TR4W joins multicast group %s."
-msgstr ""
+msgstr "WSJT-X:TR4W加入多播组 %s。 。 。 。"
 
 #: uappstrings.scmdmenuadif
 #, fuzzy
 msgid "ADIF - export the log as ADIF"
-msgstr ""
+msgstr "ADIF - 导出日志为 ADIF"
 
 #: uappstrings.scmdmenucab
 #, fuzzy
 msgid "CAB - export the log as Cabrillo"
-msgstr ""
+msgstr "CAB - 将日志导出为 Cabrillo"
 
 #: uappstrings.scmdmenucmd
 #, fuzzy
 msgid "CMD - open a command prompt"
-msgstr ""
+msgstr "CMD - 打开命令提示"
 
 #: uappstrings.scmdmenucol
 #, fuzzy
 msgid "COL - colours"
-msgstr ""
+msgstr "COL - 颜色"
 
 #: uappstrings.scmdmenucommands
 #, fuzzy
 msgid "Commands"
-msgstr ""
+msgstr "图标"
 
 #: uappstrings.scmdmenucwoff
 #, fuzzy
 msgid "CWOFF - turn CW off"
-msgstr ""
+msgstr "CWOFF - 关闭 CW"
 
 #: uappstrings.scmdmenucwon
 #, fuzzy
 msgid "CWON - turn CW on"
-msgstr ""
+msgstr "CWON - 打开CW"
 
 #: uappstrings.scmdmenuexit
 #, fuzzy
 msgid "EXIT - exit TR4W"
-msgstr ""
+msgstr "EXIT - 离开TR4W"
 
 #: uappstrings.scmdmenunote
 #, fuzzy
 msgid "NOTE - add a note to the log"
-msgstr ""
+msgstr "注 - 在日志中添加注解"
 
 #: uappstrings.scmdmenuopon
 #, fuzzy
 msgid "OPON - operator log-in"
-msgstr ""
+msgstr "OPON - 操作员登录"
 
 #: uappstrings.scmdmenupref
 #, fuzzy
 msgid "PREF - Preferences"
-msgstr ""
+msgstr "PREF - 首选项"
 
 #: uappstrings.scmdmenurover
 #, fuzzy
 msgid "ROVER - where this station is roving"
-msgstr ""
+msgstr "ROVER - 本站的巡回演出地点"
 
 #: uappstrings.scmdmenuscore
 #, fuzzy
 msgid "SCORE - send the score by UDP"
-msgstr ""
+msgstr "SCORE - 由 UDP 发送分数"
 
 #: uappstrings.scmdmenusum
 #, fuzzy
 msgid "SUM - summary sheet"
-msgstr ""
+msgstr "SUM - 总表"
 
 #: uappstrings.scmdmenuudp
 #, fuzzy
 msgid "UDP - send the whole log by UDP"
-msgstr ""
+msgstr "UDP - 通过 UDP 发送整个日志"
 
 #: uappstrings.scmdmenuwcy
 #, fuzzy
 msgid "WCY - ask the cluster for SH/WCY"
-msgstr ""
+msgstr "WCY - 为 SH/WCY 询问集群"
 
 #: uappstrings.scmdmenuwwv
 #, fuzzy
 msgid "WWV - ask the cluster for SH/WWV"
-msgstr ""
+msgstr "WWV - 为 SH/WWV 询问集群"
 
 #: uappstrings.smenuselfspot
 #, fuzzy
 msgid "Self-spot"
-msgstr ""
+msgstr "自选"
 
 #: uappstrings.snewcontestboxclearedinside
 #, fuzzy
@@ -11294,16 +11342,19 @@ msgid ""
 "\n"
 "If you are operating from somewhere else, choose Yes. Choose No to go back and change it."
 msgstr ""
+"你没有打勾 \"%0:s但你的呼号 %1:s 进入 %2:s在比赛中发送。\n"
+"\n"
+"如果你是在别的地方工作,选择是。 选\"否\"回去换."
 
 #: uappstrings.snewcontestboxsendsarrlorracsection
 #, fuzzy
 msgid "&I send an ARRL/RAC section"
-msgstr ""
+msgstr "我派出ARRL/RAC部门(&I)"
 
 #: uappstrings.snewcontestboxsendsstateorprovince
 #, fuzzy
 msgid "&I send a state or province"
-msgstr ""
+msgstr "我派出一个州或省(&I)"
 
 #: uappstrings.snewcontestboxtickedoutside
 #, fuzzy
@@ -11312,235 +11363,238 @@ msgid ""
 "\n"
 "If you are operating from a place that does, choose Yes. Choose No to go back and change it."
 msgstr ""
+"你跳过\"%0:s但你的呼号 %1:s 进入 %2:s站台不会在比赛中发送\n"
+"\n"
+"如果你是在某个地方工作,请选择是。 选\"否\"回去换."
 
 #: uappstrings.speeronanotherversion
 #, fuzzy
 msgid "Station %s runs TR4W %s, this station runs %s. All stations should run the same version."
-msgstr ""
+msgstr "车站 %s 运行 TR4W %s,本站运行 %s。所有车站应运行相同的版本。"
 
 #: uappstrings.spostredirected
 #, fuzzy
 msgid "the server answered the upload with a redirect (status %d) to %s. TR4W does not follow a redirect on an upload, and the upload was not repeated. This is unexpected: please file an issue at %s and include this message."
-msgstr ""
+msgstr "服务器用重定向( 状态) 回答上传 %d改为: %s. TR4W在上传时不遵循重定向,上传没有重复. 这是出乎意料的: 请在 %s 并包括这一信息。"
 
 #: uappstrings.sprefsgroupbandmapcolors
 #, fuzzy
 msgid "Band map colors"
-msgstr ""
+msgstr "带状图颜色"
 
 #: uappstrings.sroverdialogcancel
 #, fuzzy
 msgctxt "uappstrings.sroverdialogcancel"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: uappstrings.sroverdialogoff
 #, fuzzy
 msgctxt "uappstrings.sroverdialogoff"
 msgid "Rover off"
-msgstr ""
+msgstr "滚出"
 
 #: uappstrings.sroverdialogprompt
 #, fuzzy
 msgid "Where this station operates now (one place, or several at a county line, separated by a space, a comma or a dash)"
-msgstr ""
+msgstr "本站目前运行的地方(一个站点,或几个站点在县线上,由空间,逗号或破折号相隔)."
 
 #: uappstrings.sroverdialogtitle
 #: tfrmrover.caption
 #, fuzzy
 msgid "Rover"
-msgstr ""
+msgstr "漫游者"
 
 #: uappstrings.srovernoplaces
 #, fuzzy
 msgid "This contest has no places to rove"
-msgstr ""
+msgstr "这场比赛没有地方狂欢"
 
 #: uappstrings.srovernounit
 #, fuzzy
 msgid "No place was given"
-msgstr ""
+msgstr "没有地方"
 
 #: uappstrings.sroverstatus
 #, fuzzy
 msgid "ROVER %0:s"
-msgstr ""
+msgstr "覆盖 %0:s"
 
 #: uappstrings.srovertoomanyunits
 #, fuzzy
 msgid "This contest allows at most %0:d places at once"
-msgstr ""
+msgstr "这个比赛最多可以 %0:d 时间"
 
 #: uappstrings.sroverturnedoff
 #, fuzzy
 msgctxt "uappstrings.sroverturnedoff"
 msgid "Rover off"
-msgstr ""
+msgstr "滚出"
 
 #: uappstrings.sroverunknownunit
 #, fuzzy
 msgid "%0:s is not one of this contest's places"
-msgstr ""
+msgstr "%0:s 不是比赛地点之一"
 
 #: uappstrings.sscoreparthint
 #, fuzzy
 msgid "%0:s: %1:d QSOs, %2:d points, %3:d mults, score %4:d"
-msgstr ""
+msgstr "%0:s数字 : %1:d 快速行动组织, %2:d 点, %3:d 穆尔特斯,分数 %4:d"
 
 #: uappstrings.sselfspotnocall
 #, fuzzy
 msgid "Self-spot refused: there is no station call set. Nothing sent."
-msgstr ""
+msgstr "自点拒绝:没有站点呼叫设置. 没有寄出去。"
 
 #: uappstrings.sselfspotnofrequency
 #, fuzzy
 msgid "Self-spot refused: the radio has not reported a frequency. Nothing sent."
-msgstr ""
+msgstr "自点拒绝:收音机未报告频率. 没有寄出去。"
 
 #: uappstrings.sselfspotnolink
 #, fuzzy
 msgid "Self-spot refused: neither the DX cluster nor the network is connected. Nothing sent."
-msgstr ""
+msgstr "自点拒绝:DX集群和网络都没有连接. 没有寄出去。"
 
 #: uappstrings.sselfspotnotallowed
 #, fuzzy
 msgid "Self-spot refused: this contest's rules do not allow spotting yourself. Nothing sent."
-msgstr ""
+msgstr "自点拒绝:本次比赛的规则不允许自己出场. 没有寄出去。"
 
 #: uappstrings.sselfspotnotmoved
 #, fuzzy
 msgid "Self-spot refused: the VFO has not moved %d Hz since the last self-spot. Nothing sent."
-msgstr ""
+msgstr "自点拒绝:VFO没有移动 %d 上个自我点的Hz 没有寄出去。"
 
 #: uappstrings.sselfspotsearchandpounce
 #, fuzzy
 msgid "Self-spot refused: not in Search & Pounce mode. Nothing sent."
-msgstr ""
+msgstr "自点拒绝:不在搜索和弹出模式中. 没有寄出去。"
 
 #: uappstrings.sselfspotsent
 #, fuzzy
 msgid "Self-spot sent: %0:s on %1:s."
-msgstr ""
+msgstr "自选发送 : %0:s 打开 %1:s。 。 。 。"
 
 #: uappstrings.sselfspottoosoon
 #, fuzzy
 msgid "Self-spot refused: the last one was sent less than %d minutes ago. Nothing sent."
-msgstr ""
+msgstr "自点拒绝:上一个发送少于 %d 几分钟前 没有寄出去。"
 
 #: uappstrings.stotalsclubstationmults
 #, fuzzy
 msgid "Clubs"
-msgstr ""
+msgstr "俱乐部"
 
 #: uappstrings.svermontclubfilenoyear
 #, fuzzy
 msgid "%0:s states no contest year (a line YEAR 2027), so its Vermont QSO Party club stations will not count. Get a current list from %1:s"
-msgstr ""
+msgstr "%0:s 因此,它的佛蒙特州QSO俱乐部站将不计数。 获取当前列表 %1:s"
 
 #: uappstrings.svermontclubfilestale
 #, fuzzy
 msgid "%0:s is the Vermont QSO Party club-station list for %1:d: it appears to be last year's. Club stations will not count until you get a current list from %2:s"
-msgstr ""
+msgstr "%0:s 是佛蒙特州QSO党的俱乐部站列表 %1:d:这似乎是去年的. 俱乐部站不会数 直到您收到当前列表 %2:s"
 
 #: usettingscaptions.rs_bandmap_activebandcolor
 #, fuzzy
 msgid "Band map frequency on the active band"
-msgstr ""
+msgstr "活动波段的波段映射频率"
 
 #: usettingscaptions.rs_bandmap_dupecolor
 #, fuzzy
 msgid "Band map fill behind a dupe's D"
-msgstr ""
+msgstr "带图填入杜佩 D后"
 
 #: usettingscaptions.rs_bandmap_multcolor
 #, fuzzy
 msgid "Band map fill behind a multiplier's M"
-msgstr ""
+msgstr "带状图在乘数M后面填充"
 
 #: usettingscaptions.rs_bandmap_otherbandcolor
 #, fuzzy
 msgid "Band map frequency on another band"
-msgstr ""
+msgstr "另一段的频段映射频率"
 
 #: usettingscaptions.rs_bandmap_selectioncolor
 #, fuzzy
 msgid "Band map selected spot"
-msgstr ""
+msgstr "带状图所选位置"
 
 #: usettingscaptions.rs_bandmap_vfomarkercolor
 #, fuzzy
 msgid "Band map VFO marker (nearest spot and guard band)"
-msgstr ""
+msgstr "频段图 VFO 标记(最靠近点和警卫带)"
 
 #: usettingscaptions.rs_cluster_ctrlj_autoselfspot
 #, fuzzy
 msgid "Auto Self Spot"
-msgstr ""
+msgstr "自动自定义点"
 
 #: usettingscaptions.rs_cluster_ctrlj_selfspotinterval
 #, fuzzy
 msgid "Self Spot Interval (minutes)"
-msgstr ""
+msgstr "自点间隔( 分钟)"
 
 #: utr4wstrings.tc_distinctadifnotincabrillo
 #, fuzzy
 msgid "The Cabrillo leaves out %d %s QSO(s): this contest takes them as an ADIF file of their own, written by the ADIF export (%s)."
-msgstr ""
+msgstr "卡布里略离开 %d %s QSO(s) : 本比赛将它们作为它们自己的ADIF文件, 由 ADIF 导出(%s) (中文(简体) )."
 
 #: utr4wstrings.tc_distinctadifprompt
 #, fuzzy
 msgid "This contest takes its %s QSOs as an ADIF file of their own, and its Cabrillo leaves them out. Also write the %d such QSO(s) to %s?"
-msgstr ""
+msgstr "这场比赛就要开始 %s QSO作为自己的ADIF文件,它的Cabrillo将其排除在外. 还写着 %d 此类定性标准改为 %s? 吗?"
 
 #: tfrmrover.lblunits.caption
 #, fuzzy
 msgid "Where this station operates now"
-msgstr ""
+msgstr "这个车站现在在哪里运营"
 
 #: tfrmrover.btnoff.caption
 #, fuzzy
 msgid "Rover off"
-msgstr ""
+msgstr "滚出"
 
 #: uappstrings.spostrepostrefused
 #, fuzzy
 msgid "the server answered the upload with a redirect (status %d) to %s and it was not repeated: %s"
-msgstr ""
+msgstr "服务器用重定向( 状态) 回答上传 %d改为: %s 并且没有重复: %s"
 
 #: uappstrings.srepostbadlocation
 #, fuzzy
 msgid "the redirect address is not usable."
-msgstr ""
+msgstr "重定向地址无法使用。"
 
 #: uappstrings.srepostdowngrade
 #, fuzzy
 msgid "the redirect leads from https to plain http, which is never followed."
-msgstr ""
+msgstr "从 https 到 plain http 的重定向线索, 从未遵循 。"
 
 #: uappstrings.srepostnolocation
 #, fuzzy
 msgid "the redirect named no address."
-msgstr ""
+msgstr "重定向没有命名地址。"
 
 #: uappstrings.srepostotherhost
 #, fuzzy
 msgid "the redirect leads to a different host or port, and the upload carries a key that only the original server may see."
-msgstr ""
+msgstr "重定向引导到不同的主机或端口,而上传则带有只有原始服务器可能看到的密钥."
 
 #: uappstrings.srepostseeother
 #, fuzzy
 msgid "status 303 means the upload was handled and the result is at that address; TR4W does not send it again."
-msgstr ""
+msgstr "状态 303 表示上传已被处理,结果位于该地址;TR4W不再发送."
 
 #: uappstrings.sreposttoomany
 #, fuzzy
 msgid "the server redirected the upload more than %d times."
-msgstr ""
+msgstr "服务器重定向的上传次数多于 %d 时间。"
 
 #: utr4wstrings.tc_cabrilloperactivation
 #, fuzzy
 msgid "This contest takes a separate Cabrillo log for each activation: %d files were written (%s). Each claims the whole log's score."
-msgstr ""
+msgstr "本次比赛每次激活都要使用单独的 Cabrillo 日志: %d 已编写文件( E)%s) (中文(简体) ). 每个人声称整个日志的分数。"
 
 #: uappstrings.sdiagnosticlogunavailable
 #, fuzzy
@@ -11573,7 +11627,7 @@ msgstr ""
 #: uappstrings.swritablerootcopied
 #, fuzzy
 msgid "Copied from the install folder's settings: %s"
-msgstr ""
+msgstr "从安装文件夹的设置复制 : %s"
 
 #: uappstrings.swritablerootmoved
 #, fuzzy
@@ -11590,7 +11644,7 @@ msgstr ""
 #: uappstrings.swritablerootoldlogs
 #, fuzzy
 msgid "Contest logs already in the install folder were left where they are. To keep logging in one, copy it (with any file of the same name ending -wal or -shm) into the folder above."
-msgstr ""
+msgstr "安装文件夹中的竞技日志已留在原地 。 要将日志保存为一, 请将它复制到上面的文件夹中( 并带有结束 - wal 或 - shm 的同名文件 )。"
 
 #: uappstrings.swritablerootmovedprogramfiles
 #, fuzzy
@@ -11607,133 +11661,133 @@ msgstr ""
 #: uappstrings.smessageeditunknownword
 #, fuzzy
 msgid "TR4W does not know the word {%0:s}. Use a command from the List of commands, {ROVERCALL} or {ROVERQTH}, and press OK again."
-msgstr ""
+msgstr "TR4W不知道这个词{%0:s} 使用命令列表中的命令 {ROVERCALL} 或 {ROVERQTH} , 再按一次 OK 。"
 
 #: uappstrings.smessageunknownwordskipped
 #, fuzzy
 msgid "The message names {%0:s}, which TR4W does not know. It was skipped and not sent."
-msgstr ""
+msgstr "消息名称{%0:s{\\fn方正黑体简体\\fs18\\b1\\bord1\\shad1\\3cH2F2F2F}TR4W不知道 {\\fn方正黑体简体\\fs18\\b1\\bord1\\shad1\\3cH2F2F}T4W不知道 它被跳过,没有发送。"
 
 #: uappstrings.snewcontesthostareaentrynotasection
 #, fuzzy
 msgid "%s is not an ARRL or RAC section or DX. Enter your section, e.g. WCF or ONE, or DX."
-msgstr ""
+msgstr "%s 不是ARRL或RAC部分或DX。 输入您的区域, 例如 周转基金或一, 或 DX 。"
 
 #: uappstrings.snewcontesthostareaoutsidesectionnotice
 #, fuzzy
 msgid "You are outside %0:s: enter your ARRL or RAC section (e.g. WCF or ONE), or DX. Tick the box if you are in %0:s."
-msgstr ""
+msgstr "你在外面吗? %0:s: 输入您的 ARRL 或 RAC 区域( 如 周转基金或 ONE), 或 DX 。 选中框, 如果您在其中 %0:s。 。 。 。"
 
 #: uappstrings.snewcontesthostareasectionlabel
 #, fuzzy
 msgid "MY SECTION"
-msgstr ""
+msgstr "我的节"
 
 #: usettingscaptions.rs_contest_categorystation
 #, fuzzy
 msgid "Category-Station"
-msgstr ""
+msgstr "类别"
 
 #: uappstrings.scallhistoryinuse
 #, fuzzy
 msgid "it is in use now (%d calls)"
-msgstr ""
+msgstr "它现在正在使用中(%d 电话)"
 
 #: uappstrings.scallhistorynotapplied
 #, fuzzy
 msgid "it was not applied to the running contest (see tr4w.log); any call history already loaded stays in use"
-msgstr ""
+msgstr "它没有被应用到正在运行的比赛中(参见 tr4w.log); 任何已加载的调用历史都保留在使用中"
 
 #: utr4wstrings.tc_trmasterdtadownloadedinuse
 #, fuzzy
 msgid "TRMASTER.DTA downloaded -- Super Check Partial is using it now"
-msgstr ""
+msgstr "TRMASTER. DATA下载 - 超级检查部分正在使用它"
 
 #: utr4wstrings.tc_trmasterdtadownloadednotloaded
 #, fuzzy
 msgid "TRMASTER.DTA downloaded but could not be loaded -- the data in use is unchanged (see tr4w.log)"
-msgstr ""
+msgstr "TRMASTER.DTA已下载但无法装入 -- -- 使用中的数据保持不变(见tr4w.log)"
 
 #: tprefsform.btnchoosefont.caption
 #, fuzzy
 msgid "Choose..."
-msgstr ""
+msgstr "选择..."
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgid "Windows and log"
-msgstr ""
+msgstr "窗口和日志"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "-- dB"
-msgstr ""
+msgstr "-- -- dB"
 
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid ""
 "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.\r\n"
 "Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign."
-msgstr ""
+msgstr "这些在换取时会以多操作器网络发送到其他站点,所以所有位置都同意交换.\rCall, Country, Content, Continent and Zone 比赛成立后读取一次,所以在TR4W下个开赛时,对他们的更改生效. 留乡村空地 TR4W从你的呼号里出来"
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "当WSJT-X支持运行时,TR4W在TCP端口52002上提供一个DX Circuit相容的接口,而DXLab程序与之相接."
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Integrate with DXLab SpotCollector"
-msgstr ""
+msgstr "与 DXLab SpotCollector 合并"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgid "IP port"
-msgstr ""
+msgstr "IP 端口"
 
 #: uappstrings.sbandmaptextsize
 #: tfrmbandmap.mitextsize.caption
 #, fuzzy
 msgid "Text size"
-msgstr ""
+msgstr "文本大小"
 
 #: uappstrings.sbandmaptextlarger
 #: tfrmbandmap.mitextlarger.caption
 #, fuzzy
 msgid "Larger"
-msgstr ""
+msgstr "大一点"
 
 #: uappstrings.sbandmaptextsmaller
 #: tfrmbandmap.mitextsmaller.caption
 #, fuzzy
 msgid "Smaller"
-msgstr ""
+msgstr "小一点"
 
 #: uappstrings.sbandmaptextreset
 #: tfrmbandmap.mitextreset.caption
 #, fuzzy
 msgid "Reset"
-msgstr ""
+msgstr "重设"
 
 #: uappstrings.sloggergridopensite
 #, fuzzy
 msgid "Open web site"
-msgstr ""
+msgstr "开放网站"
 
 #: uappstrings.sloggergridresend
 #, fuzzy
 msgid "Resend QSOs..."
-msgstr ""
+msgstr "重新发送 QSO..."
 
 #: uappstrings.sloggersiterefused
 #, fuzzy
 msgid "Not opened: \"%s\" is not an http or https web address."
-msgstr ""
+msgstr "未打开: \"%s\" 不是https网站地址。"
 
 #: uappstrings.sloggersiteopenfailed
 #, fuzzy
 msgid "The browser could not be started for %s."
-msgstr ""
+msgstr "无法启动浏览器 %s。 。 。 。"
 
 #: uappstrings.sloggerresendbody
 #, fuzzy
@@ -11744,232 +11798,237 @@ msgid ""
 "\n"
 "Resend all: also sends delivered QSOs again as updates of the same remote contact (not for Cloudlog / Wavelog or AC Log, which have no update call). A QSO of unknown outcome is never resent."
 msgstr ""
+"将本次比赛的 QSO 重新发送到 %s 只有这个\n"
+"\n"
+"尚未交付: 队列此日志从未发送过 QSO( 例如, 在发送新 QSO 关闭时已登录) , 并且它拒绝 。 已经交付的、等待的或结果不明的QSO被单独搁置。\n"
+"\n"
+"重新发送全部: 还将发送已发送的QSO再次作为同一远程联系人的更新(不是针对Cloudlog / Wavelog或AC Log,它们没有更新呼叫). 一个未知结果的QSO从不怨恨."
 
 #: uappstrings.sloggerresendundelivered
 #, fuzzy
 msgid "Not yet delivered"
-msgstr ""
+msgstr "尚未交付"
 
 #: uappstrings.sloggerresendall
 #, fuzzy
 msgid "Resend all"
-msgstr ""
+msgstr "全部重新发送"
 
 #: uappstrings.sloggerresendallask
 #, fuzzy
 msgid "Resend all QSOs to %s? A contact that is already at the destination by another route (another definition of this logger, a manual import) cannot be recognised and may appear twice. Delivered contacts are sent again as updates, which uses the service's quota."
-msgstr ""
+msgstr "将所有 QSO 重新发送到 %s联系人已经通过另一路由到达目的地(此日志的另一个定义, 手动导入) 无法识别, 可能出现两次 。 交付的联系人再次作为更新发送,使用服务配额."
 
 #: uappstrings.sloggerresenddone
 #, fuzzy
 msgid "%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations."
-msgstr ""
+msgstr "%s: 已排队 %d QSO(%d 新设, %d ”). 独自一人: %d 交付, %d 等着 %d 需要审查的未知结果, %d 被其他车站登录."
 
 #: uappstrings.sloggerresendrefused
 #, fuzzy
 msgid "Nothing was queued for %s: %s"
-msgstr ""
+msgstr "没有排队 %s数字 : %s"
 
 #: uappstrings.sloggerresendwhynotrunning
 #, fuzzy
 msgid "it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start."
-msgstr ""
+msgstr "它没有运行。 保存首选项, 并重新启动 TR4W, 如果它被添加, 或它的连接设置自启动后更改 。"
 
 #: uappstrings.sloggerresendwhynotactive
 #, fuzzy
 msgid "Send new QSOs is off for it. Switch it on and save Preferences first."
-msgstr ""
+msgstr "发送新的QSO是关闭它。 先打开并保存首选项 。"
 
 #: uappstrings.sloggerresendwhypaused
 #, fuzzy
 msgid "its delivery is paused after a capture failure (see tr4w.log)."
-msgstr ""
+msgstr "其发送在抓取失败后被暂停(见tr4w.log)。"
 
 #: uappstrings.sloggerresendwhysetup
 #, fuzzy
 msgid "its account or logbook is not set up."
-msgstr ""
+msgstr "其账户或日志没有设置。"
 
 #: uappstrings.sloggerresendwhyunsupported
 #, fuzzy
 msgid "it has no delivery queue to resend into."
-msgstr ""
+msgstr "它没有要重发送的发送队列 。"
 
 #: uappstrings.sloggerresendwhynolog
 #, fuzzy
 msgid "no writable contest log is open."
-msgstr ""
+msgstr "没有可写游戏日志 。"
 
 #: uappstrings.sloggerresendwhyfailed
 #, fuzzy
 msgid "the log could not be updated (see tr4w.log). Nothing was changed."
-msgstr ""
+msgstr "无法更新日志(见tr4w.log)。 没有改变。"
 
 #: uappstrings.slogbackupstillfailing
 #, fuzzy
 msgid "Last log backup FAILED: retried every %d min. See tr4w.log."
-msgstr ""
+msgstr "上次日志备份失败: 每一次重试 %d 分钟。 见tr4w.log."
 
 #: uappstrings.slogchangenotsaved
 #, fuzzy
 msgid "NOT SAVED -- the contest log did not take this change. See tr4w.log."
-msgstr ""
+msgstr "Not saveD - 比赛日志没有接受这个更改. 见tr4w.log."
 
 #: uappstrings.speerqsonotsaved
 #, fuzzy
 msgid "A QSO from another station could NOT be saved to this log. It is not lost if the server has it: the next catch-up from the server, or Net > Synchronize, adds it once this log can be written. Further refusals are in tr4w.log."
-msgstr ""
+msgstr "从另一个站点的QSO无法保存到这个日志中. 它不会丢失, 如果服务器有它: 服务器的下一条追赶, 或 Net > 同步, 此日志可写入后添加 。 更多的拒绝出现在tr4w."
 
 #: uappstrings.sentrystatusqsonotsaved
 #, fuzzy
 msgid "QSO not saved"
-msgstr ""
+msgstr "未保存的 QSO"
 
 #: uappstrings.sentrystatuslogreadonly
 #, fuzzy
 msgid "Log read-only"
-msgstr ""
+msgstr "只读日志"
 
 #: uappstrings.sentryfieldexchangename
 #, fuzzy
 msgid "Exchange"
-msgstr ""
+msgstr "交换"
 
 #: uappstrings.sradiopanelactive
 #, fuzzy
 msgid "Active"
-msgstr ""
+msgstr "活动"
 
 #: uappstrings.sradiopanelactivename
 #, fuzzy
 msgid "Active radio"
-msgstr ""
+msgstr "活动电台"
 
 #: usettingscaptions.rs_operating_enforcevalidcallsign
 #, fuzzy
 msgid "Refuse a QSO whose call is not in the country file"
-msgstr ""
+msgstr "拒绝不在国家档案中拨打的QSO"
 
 #: usettingscaptions.rs_bandmap_clickgoestoexchange
 #, fuzzy
 msgid "After tuning to a spot, put the cursor in the exchange window"
-msgstr ""
+msgstr "调色后, 将光标放入交换窗口"
 
 #: uappstrings.scallnotaknownentity
 #, fuzzy
 msgid "%s is not logged: its base call is not in the country file"
-msgstr ""
+msgstr "%s 未登录 : 它的基数调用不在国家文件中"
 
 #: uappstrings.scallwindowcwon
 #, fuzzy
 msgid "CW On"
-msgstr ""
+msgstr "CW 打开"
 
 #: uappstrings.smenutogglevoicekeyer
 #, fuzzy
 msgid "Toggle Voice Keyer"
-msgstr ""
+msgstr "切换语音键"
 
 #: uappstrings.sexchangecountylineoneparty
 #, fuzzy
 msgid "County line %s/%s: the counties must be in one QSO party"
-msgstr ""
+msgstr "县线 %s编号 :%s:各州必须在一个QSO党内"
 
 #: uappstrings.sradiopttbycatnotsupported
 #, fuzzy
 msgid "%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off \"Key the transmitter with a CAT command\"."
-msgstr ""
+msgstr "%s:该收音机不支持通过CAT的PTT. 使用硬件PTT行,或者关闭\"带有CAT命令的传送器键\"."
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenerenabled
 #, fuzzy
 msgid "Accept QSOs from JTDX and JTAlert (N1MM log listener)"
-msgstr ""
+msgstr "接受 JTDX 和 JTalert (N1MM 日志收听器) 的 QSO"
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenaddress
 #, fuzzy
 msgid "Address the N1MM log listener binds to"
-msgstr ""
+msgstr "地址 N1MM 日志监听器绑定"
 
 #: uappstrings.sprefsgroupn1mmlistener
 #, fuzzy
 msgid "N1MM log listener (JTDX, JTAlert)"
-msgstr ""
+msgstr "N1MM 日志收听器( JTDX, JTAlert)"
 
 #: uappstrings.snetstationmissing
 #, fuzzy
 msgid "Missing"
-msgstr ""
+msgstr "失踪"
 
 #: uappstrings.spassneedsname
 #, fuzzy
 msgid "A {PASS} word needs a station or a band, for example {PASS B} or {PASS 14000}. The message was not sent."
-msgstr ""
+msgstr "{PAS}单词需要一个站或带,例如{PAS B}或{PAS 14000}. 消息没有发出。"
 
 #: uappstrings.spassnotaband
 #, fuzzy
 msgid "{PASS %0:s} is not a band. Use a band in kHz, for example 14000. The message was not sent."
-msgstr ""
+msgstr "{ %0:s不是乐队 以kHz为例使用一个带,例如14000. 消息没有发出。"
 
 #: uappstrings.spassbandempty
 #, fuzzy
 msgid "No other station is on the %0:s kHz band, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "没有别的车站了 %0:s kHz 乐队, 所以 {PASS > %0:s无法填入。 消息没有发出。"
 
 #: uappstrings.spassstationabsent
 #, fuzzy
 msgid "Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "车站 %0:s 不在网络上,所以{PASS> %0:s无法填入。 消息没有发出。"
 
 #: uappstrings.spassstationisus
 #, fuzzy
 msgid "{PASS %0:s} names this computer. Name another position. The message was not sent."
-msgstr ""
+msgstr "{ %0:s给这台电脑起名字 说出另一个位置。 消息没有发出。"
 
 #: uappstrings.spassnofrequency
 #, fuzzy
 msgid "Station %0:s is on the network but has not reported a frequency yet. The message was not sent."
-msgstr ""
+msgstr "车站 %0:s 但还没有报告频率。 消息没有发出。"
 
 #: uappstrings.spassnothingpassed
 #, fuzzy
 msgid "{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent."
-msgstr ""
+msgstr "{LASTPASEDFRE}没有发件:还没有通过频率。 使用 {PAS B} 先。 消息没有发出。"
 
 #: uappstrings.slogrestoredeliverynotice
 #, fuzzy
 msgid "The restored log's record of what was sent to external loggers (Club Log, WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may already be at those services but are not in this log, and QSOs the backup had not yet sent will be sent again. Check each service's log."
-msgstr ""
+msgstr "已恢复的日志对寄给外部日志(Club Log,WRL,DXkeeper)的内容的记录与备份一样古老. 备份后登录的QSO可能已经在这些服务中,但没有在本日志中,而备份尚未发送的QSO将会被再次发送. 检查每个服务的日志。"
 
 #: uappstrings.smenucorrectstationfacts
 #, fuzzy
 msgid "Correct Station Facts..."
-msgstr ""
+msgstr "正确站台 事实..."
 
 #: uappstrings.sstationcorrectionbackupfailed
 #, fuzzy
 msgid "Nothing was changed: the log could not be backed up first. %s"
-msgstr ""
+msgstr "没有更改:无法先备份日志 。 %s"
 
 #: uappstrings.sstationcorrectionbadfrom
 #, fuzzy
 msgid "A log record number is a whole number from 1 up."
-msgstr ""
+msgstr "日志记录号是从1起的全数"
 
 #: uappstrings.sstationcorrectioncancelbutton
 #, fuzzy
 msgctxt "uappstrings.sstationcorrectioncancelbutton"
 msgid "Cancel"
-msgstr ""
+msgstr "取消"
 
 #: uappstrings.sstationcorrectionchangebutton
 #, fuzzy
 msgid "Change the QSOs"
-msgstr ""
+msgstr "改变QSO"
 
 #: uappstrings.sstationcorrectionchoosefact
 #, fuzzy
 msgid "Which of your station's values is wrong on the QSOs already logged?"
-msgstr ""
+msgstr "已经登入的QSO中 您所在的哪些值是错误的?"
 
 #: uappstrings.sstationcorrectionconfirm
 #, fuzzy
@@ -11981,6 +12040,12 @@ msgid ""
 "\n"
 "Not changed: %5:d imported, %6:d never recorded (they follow your setting: correct it in Preferences too), %7:d per place (a rover or an in-state party)."
 msgstr ""
+"这个变化 %0:s 改为: \"%1:s\" 打开 %2:d 登录的QSO(s): %3:s。 。 。 。\n"
+"现在他们说: %4:s。 。 。 。\n"
+"\n"
+"日志已经备份了 每一个被修改的QSO随后再次被作为编辑器发送到-到Club Log,WRL和任何其他外部日志器,到多op服务器和作为UDP的替换器,日志被重新计分. %8:d 其中一个是多操作的对等者:这里更正,由该站发送.\n"
+"\n"
+"未更改 : %5:d 进口 %6:d 没有记录, %7:d 每个地方(一个巡回或州内聚会)。"
 
 #: uappstrings.sstationcorrectiondone
 #, fuzzy
@@ -11988,168 +12053,175 @@ msgid ""
 "%0:s is now \"%1:s\" on %2:d logged QSO(s).\n"
 "The log as it was is in %3:s"
 msgstr ""
+"%0:s 现为\".%1:s\" 打开 %2:d 已登录的QSO。\n"
+"原记录 %3:s"
 
 #: uappstrings.sstationcorrectionemptyvalue
 #, fuzzy
 msgid "Type the value the QSOs should have."
-msgstr ""
+msgstr "输入 QSO 应当拥有的值 。"
 
 #: uappstrings.sstationcorrectionfailed
 #, fuzzy
 msgid "Nothing was changed: the contest log did not take the correction. See tr4w.log."
-msgstr ""
+msgstr "无所改变:比赛日志没有接受更正. 见tr4w.log."
 
 #: uappstrings.sstationcorrectionfromprompt
 #, fuzzy
 msgid "Change the QSOs from log record number (1 = every QSO in the log):"
-msgstr ""
+msgstr "将 QSO 从日志记录号(1 = 日志中的每个 QSO) 中更改 :"
 
 #: uappstrings.sstationcorrectionnotallowed
 #, fuzzy
 msgid "%s cannot be changed on logged QSOs."
-msgstr ""
+msgstr "%s 已登录的 QSO 无法更改 。"
 
 #: uappstrings.sstationcorrectionnothing
 #, fuzzy
 msgid "No logged QSO needs changing."
-msgstr ""
+msgstr "已登录的QSO不需要更改 。"
 
 #: uappstrings.sstationcorrectionreadonly
 #, fuzzy
 msgid "Nothing was changed: the contest log is read-only."
-msgstr ""
+msgstr "没有更改:比赛日志只读."
 
 #: uappstrings.sstationcorrectionscopeall
 #, fuzzy
 msgid "ALL PRIOR CONTACTS in the log"
-msgstr ""
+msgstr "日志中的所有优先联系"
 
 #: uappstrings.sstationcorrectionscopefrom
 #, fuzzy
 msgid "every contact from log record %d on"
-msgstr ""
+msgstr "日志记录中的每个联系人 %d 打开"
 
 #: uappstrings.sstationcorrectiontitle
 #, fuzzy
 msgid "Correct station facts on logged QSOs"
-msgstr ""
+msgstr "记录的QSO的正确站点事实"
 
 #: uappstrings.sstationcorrectionvalueprompt
 #, fuzzy
 msgid "The value the QSOs should have for %s:"
-msgstr ""
+msgstr "QSO应具有的价值 %s数字 :"
 
 #: uappstrings.sstationcorrectionzonezero
 #, fuzzy
 msgid "A zone of 0 is not a zone."
-msgstr ""
+msgstr "区为0不是区."
 
 #: uappstrings.sloggergridcreatelogbook
 #, fuzzy
 msgid "Create logbook..."
-msgstr ""
+msgstr "创建日志..."
 
 #: uappstrings.swrlcreatebusy
 #, fuzzy
 msgid "A logbook is already being created for a logger. Wait for it to finish."
-msgstr ""
+msgstr "正在为一个日志创建日志 。 等着它完成。"
 
 #: uappstrings.swrlcreatecaption
 #, fuzzy
 msgid "Create World Radio League logbook"
-msgstr ""
+msgstr "创建世界无线电联盟日志"
 
 #: uappstrings.swrlcreatedone
 #, fuzzy
 msgid "Created logbook \"%s\" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with."
-msgstr ""
+msgstr "创建日志 \"%s\" (编号) %s在世界无线电联盟中选择 %s。保存首选项以保存它。 在您重新启动 TR4W 后使用新的日志: 运行中的日志保存它开始的设置 。"
 
 #: uappstrings.swrlcreatefailed
 #, fuzzy
 msgid "The logbook was not created: %s"
-msgstr ""
+msgstr "未创建日志 : %s"
 
 #: uappstrings.swrlcreatekeymissing
 #, fuzzy
 msgid "This logger has no API key available. Enter the key in the logger's editor (unlock the password vault if it is locked) first."
-msgstr ""
+msgstr "此日志没有可用的 API 密钥 。 先在日志编辑器中输入密钥( 如果锁定, 解锁密码库) 。"
 
 #: uappstrings.swrlcreateprompt
 #, fuzzy
 msgid "Name of the new logbook (up to 100 characters). It is made on the World Radio League web site for the account this API key belongs to:"
-msgstr ""
+msgstr "新日志名称(最多100个字符). 它在世界无线电联盟网站上为API密钥所属的账户所制作:"
 
 #: uappstrings.swrlcreatereplaceask
 #, fuzzy
 msgid "%s already has a logbook chosen. Create a new logbook and use it instead? Contacts already queued for the old logbook are not moved."
-msgstr ""
+msgstr "%s 已经选择了日志 。 创建一个新的日志并使用它? 为旧日志已排队的联系人不移动 。"
 
 #: uappstrings.swrlcreateuncertain
 #, fuzzy
 msgid "World Radio League did not confirm the logbook, so it may have been created. Look at your logbooks on the World Radio League web site (or use Refresh in the logger's editor) before trying again, so you do not make a second one."
-msgstr ""
+msgstr "世界无线电联盟没有确认日志,因此可能已经创建. 看看你在世界无线电联盟网站上的日志(或者在日志编辑器中使用刷新),然后再尝试,所以你不会做第二个."
 
 #: uappstrings.swrlrequestid
 #, fuzzy
 msgid "(request id %s)"
-msgstr ""
+msgstr "(请求编号) %s(中文(简体) )."
 
 #: uappstrings.swrlwhyconflict
 #, fuzzy
 msgid "a logbook with that name may already exist, or World Radio League treated the request as a conflict. Choose the existing logbook in the logger's editor, or use another name."
-msgstr ""
+msgstr "世界无线电联盟将请求视为冲突。 在日志编辑器中选择已有的日志, 或者使用另一个名称 。"
 
 #: uappstrings.swrlwhydown
 #, fuzzy
 msgid "the World Radio League service is not available right now (%s). Try again later."
-msgstr ""
+msgstr "世界无线电联盟服务目前尚未提供。%s) (中文(简体) ). 待会再试"
 
 #: uappstrings.swrlwhyip
 #, fuzzy
 msgid "the key is restricted to other IP addresses than this computer's."
-msgstr ""
+msgstr "该密钥仅限于此计算机之外的其他IP地址."
 
 #: uappstrings.swrlwhykey
 #, fuzzy
 msgid "World Radio League did not accept the API key (it is missing, wrong or revoked). Check the key in the logger's editor."
-msgstr ""
+msgstr "世界无线电联盟没有接受API密钥(它缺失,错误或被撤销). 检查日志编辑器中的密钥 。"
 
 #: uappstrings.swrlwhymembership
 #, fuzzy
 msgid "the key was refused because the account needs a current World Radio League membership."
-msgstr ""
+msgstr "关键被拒绝,因为账户需要 一个当前的世界无线电联盟成员。"
 
 #: uappstrings.swrlwhynamerequired
 #, fuzzy
 msgid "the name is empty."
-msgstr ""
+msgstr "名称为空。"
 
 #: uappstrings.swrlwhynametoolong
 #, fuzzy
 msgid "the name is longer than %d characters."
-msgstr ""
+msgstr "名称比 %d 字符键。"
 
 #: uappstrings.swrlwhyother
 #, fuzzy
 msgid "the request failed (%s)."
-msgstr ""
+msgstr "请求失败( E)%s) (中文(简体) )."
 
 #: uappstrings.swrlwhyrate
 #, fuzzy
 msgid "too many requests just now. Wait a minute and try again."
-msgstr ""
+msgstr "刚才要求太多 等一下 再试一次"
 
 #: uappstrings.swrlwhyscope
 #, fuzzy
 msgid "the key is not allowed to create logbooks. Make a key that may write logbooks."
-msgstr ""
+msgstr "键不允许创建日志。 制作可能写日志的密钥 。"
 
 #: uappstrings.swrlwhyvalidation
 #, fuzzy
 msgid "World Radio League rejected the request: %s"
-msgstr ""
+msgstr "世界无线电联盟拒绝了这一请求: %s"
 
 #: uappstrings.swrlwhyvalidationfield
 #, fuzzy
 msgid "World Radio League rejected the %s: %s"
-msgstr ""
+msgstr "世界无线电联盟拒绝 %s数字 : %s"
+
+#: uappstrings.snetpushedtoservertotal
+#, fuzzy
+msgid "Sent to the server: %d QSO(s) -- %d logged while disconnected, %d it did not have."
+msgstr "发送到服务器 : %d QSO(s) - %d 断开时登录, %d 它没有。"

@@ -12868,3 +12868,8 @@ msgstr ""
 #, fuzzy
 msgid "World Radio League rejected the %s: %s"
 msgstr ""
+
+#: uappstrings.snetpushedtoservertotal
+#, fuzzy
+msgid "Sent to the server: %d QSO(s) -- %d logged while disconnected, %d it did not have."
+msgstr "Trimite pe server: %d QSO (s) -- %d conectată în timp ce este deconectată; %d nu a avut."
