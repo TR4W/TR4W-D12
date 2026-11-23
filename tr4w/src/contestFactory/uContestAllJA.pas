@@ -61,6 +61,14 @@ interface
 uses
    VC, uContestBase;
 
+const
+   (* WHAT THE TWO STARTUP FIELDS TAKE -- whole-value patterns (NY4I,
+      2026-11-23): a JARL prefecture number of DXLog's ALLJA.txt list, 02..48
+      and Hokkaido's 101..114; and one power class letter. Public so a test
+      can pin them. *)
+   ALLJA_PREFECTURE_PATTERN  = '^(0[2-9]|[1-3][0-9]|4[0-8]|10[1-9]|11[0-4])$';
+   ALLJA_POWER_CLASS_PATTERN = '^[HMLP]$';
+
 type
    TContestAllJA = class(TContestBase)
    protected
@@ -90,6 +98,9 @@ type
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
                                            const aCtx: TCabrilloQSOContext): string; override;
+      function EmitADIFExchangeFields(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      aExchangeCarriesRST: boolean): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -101,6 +112,8 @@ type
       (* SET-UP -- see TContestBase.DescribeSession. *)
       procedure DescribeSession(const aStation: TStationContext;
                                 aSession: TSessionDefaults); override;
+      (* THE NEW CONTEST DIALOG -- see TContestBase.DescribeNewContestPrompts. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
@@ -109,9 +122,12 @@ type
 implementation
 
 uses
+   SysUtils,
    uExchangeFields,
    uCabrilloExchange,
-   uADIFExchange,
+   uADIF,           (* EmitADIFField *)
+   uAppStrings,     (* SNewContestEnterPowerClass *)
+   uTR4WStrings,    (* TC_PREFECTURE *)
    uContestRegistry, uContestFixedPoints;
 
 procedure TContestAllJA.CalculateQSOPoints(var aQso: ContestExchange);
@@ -138,9 +154,9 @@ end;
 
 function TContestAllJA.GetCabrilloName: string;
 begin
-   (* The row's CABName is blank; this is the enum's spelling it
-      resolves to. *)
-   Result := 'ALL JA';
+   (* THE SPONSOR'S CONTEST: NAME, ALL-JA (NY4I, 2026-11-23). It was the
+      enum's spelling, 'ALL JA'. Write-only, so no read alias is needed. *)
+   Result := 'ALL-JA';
 end;
 
 function TContestAllJA.GetADIFContestId: string;
@@ -202,24 +218,81 @@ begin
    Result := aParsers.ParseRSTALLJAPrefectureAndPrecedence(aText, aExch);
 end;
 
+(* THE RECEIVED PREFECTURE NUMBER, as the other station sent it. The parser
+   (LOGSTUFF.ProcessRSTAllJAPrefectureAndPrecedenceExchange) leaves 'p' + the
+   digits in QTHString on most of its branches and the bare digits on the
+   two-entry one; FoundDomesticQTH resolves it to allja.dom's key, the number
+   itself, in DomesticQTH. So the resolved key first, else the typed text
+   without the parser's 'p'. *)
+function ReceivedPrefectureNumber(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.DomesticQTH));
+   if Result = '' then
+      begin
+      Result := Trim(string(aQso.QTHString));
+      if (Result <> '') and ((Result[1] = 'p') or (Result[1] = 'P')) then
+         begin
+         Delete(Result, 1, 1);
+         end;
+      end;
+end;
+
+(* THE ALL JA'S STX_STRING (NY4I, 2026-11-23): the prefecture, a space and
+   the power letter -- '12 H'. No RST: the sponsor's log carries none. *)
 function TContestAllJA.GetADIFSentExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentNotImplemented(aMy, aQso);
+   Result := Trim(aMy.MyPrefecture + ' ' + UpperCase(aMy.MyPowerClass));
 end;
 
+(* THE CABRILLO SENT COLUMNS -- DXLog's ALLJA.txt CABRILLO_LINE:
+     SENT STATE{F=R,3} EXCHANGE{F=L,2} ... RCVD1 RCVD2{F=R,3} RECINFO
+   the prefecture right-aligned in three, the power letter left-aligned in
+   two. NO RST in the line. *)
 function TContestAllJA.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange;
                                                const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentNotHandled(aMy, aQso, aCtx);
+   Result := UnicodeFormat('%3s %-2s', [aMy.MyPrefecture, UpperCase(aMy.MyPowerClass)]);
 end;
 
+(* THE CABRILLO RECEIVED COLUMNS: the other station's prefecture number,
+   right-aligned in three, then its power letter (Precedence, where the
+   parser keeps it) left-aligned in two -- the sent layout mirrored.
+   DXLog's line names RCVD1 and RCVD2{F=R,3}; WHAT ITS RCVD2 IS, IS NOT
+   UNDERSTOOD (no sponsor text on file says), so this writes the number and
+   the letter and does not guess a third field. *)
 function TContestAllJA.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                    const aQso: ContestExchange;
                                                    const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedNotHandled(aMy, aQso, aCtx);
+   Result := UnicodeFormat('%3s %-2s', [ReceivedPrefectureNumber(aQso),
+                                        Trim(string(aQso.Precedence))]);
+end;
+
+(* OUR PREFECTURE AND POWER CLASS IN THE ADIF RECORD -- NY4I, 2026-11-23: the
+   prefecture is ADIF's MY_STATE (the Primary Administrative Subdivision), the
+   class letter TR4W's APP_TR4W_POWER_CLASS (ADIF's TX_PWR is watts). Both
+   from the QSO's own row (aMy), written here, ahead of uADIF's station
+   fields, so a recorded my_state never replaces the prefecture. *)
+function TContestAllJA.EmitADIFExchangeFields(const aMy: TMyStationExchange;
+                                              const aQso: ContestExchange;
+                                              aExchangeCarriesRST: boolean): string;
+begin
+   Result := inherited EmitADIFExchangeFields(aMy, aQso, aExchangeCarriesRST) +
+             EmitADIFField('MY_STATE', aMy.MyPrefecture) +
+             EmitADIFField('APP_TR4W_POWER_CLASS', UpperCase(aMy.MyPowerClass));
+end;
+
+(* THE NEW CONTEST DIALOG ASKS FOR THE TWO FIELDS THE EXCHANGE SENDS (NY4I,
+   2026-11-23). The numbers are DXLog's ALLJA.txt list -- 02..48 and
+   Hokkaido's 101..114; allja.dom is a wider superset and stays. *)
+procedure TContestAllJA.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   aPrompts.AddStartUpField(ncfMyPrefecture, 'MY PREFECTURE', TC_PREFECTURE,
+                            ALLJA_PREFECTURE_PATTERN, nitNumeric);
+   aPrompts.AddStartUpField(ncfMyPowerClass, 'MY POWER CLASS', SNewContestEnterPowerClass,
+                            ALLJA_POWER_CLASS_PATTERN, nitAlpha);
 end;
 
 function TContestAllJA.GetFlags: TContestFlags;
@@ -242,6 +315,17 @@ procedure TContestAllJA.DescribeSession(const aStation: TStationContext;
                                         aSession: TSessionDefaults);
 begin
    aSession.Band := Band80;
+   (* THE CW EXCHANGE THE STATION SENDS: RST, prefecture and power class,
+      run together as the sponsor's examples write it (5NN 12H). Stated only
+      when a prefecture is: there is no message to state without one, and
+      the operator's own stays. *)
+   if aStation.MyPrefecture <> '' then
+      begin
+      aSession.CQExchangeCW := ' 5NN ' + aStation.MyPrefecture +
+                               UpperCase(aStation.MyPowerClass);
+      aSession.SPExchangeCW := '5NN ' + aStation.MyPrefecture +
+                               UpperCase(aStation.MyPowerClass);
+      end;
 end;
 
 

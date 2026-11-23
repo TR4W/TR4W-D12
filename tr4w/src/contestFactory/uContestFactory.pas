@@ -403,6 +403,8 @@ begin
    Result.MySection := Settings.My.ResolvedSection;
    Result.MyPrec := Settings.My.ResolvedPrec;
    Result.MyCheck := Settings.My.ResolvedCheck;
+   Result.MyPrefecture := Settings.My.ResolvedPrefecture;
+   Result.MyPowerClass := Settings.My.ResolvedPowerClass;
    Result.MyZoneText := Settings.My.ResolvedZone;
    (* MY LICENSE YEAR, as stated, and this year to read it against -- see
       TStationContext. *)

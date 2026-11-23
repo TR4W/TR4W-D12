@@ -1130,6 +1130,8 @@ begin
    AddRow(aForm.lblMyIOTA,        aForm.edtMyIOTA,        'IOTA:');
    AddRow(aForm.lblMyPark,        aForm.edtMyPark,        'Park:');
    AddRow(aForm.lblMyLicenseYear, aForm.edtMyLicenseYear, 'License year:');
+   AddRow(aForm.lblMyPrefecture,  aForm.edtMyPrefecture,  'Prefecture:');
+   AddRow(aForm.lblMyPowerClass,  aForm.edtMyPowerClass,  'Power class:');
 
    for i := 0 to High(rows) do
       begin

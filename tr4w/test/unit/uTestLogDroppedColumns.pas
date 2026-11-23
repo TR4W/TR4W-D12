@@ -368,6 +368,12 @@ begin
       contentColumns := StringReplace(contentColumns, '|' + string(LOG_V13_QSO_COLUMNS[i].Name),
                                       '', []);
       end;
+   (* And schema 14's two (my_prefecture, my_power_class), last of all. *)
+   for i := Low(LOG_V14_QSO_COLUMNS) to High(LOG_V14_QSO_COLUMNS) do
+      begin
+      contentColumns := StringReplace(contentColumns, '|' + string(LOG_V14_QSO_COLUMNS[i].Name),
+                                      '', []);
+      end;
    db := TLogDatabase.Create;
    try
       db.OpenReadOnly(freshFn);

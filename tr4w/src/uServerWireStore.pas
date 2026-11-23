@@ -97,8 +97,11 @@ const
    (* THE SERVER DATABASE'S SCHEMA VERSION, in meta('schema_version'). Bumped
      whenever the table's shape changes in a way an older file cannot be read
      as. A file carrying another number is REFUSED, never adopted (13.6). It is
-     independent of NET_PROTOCOL_VERSION; W3 may decide to tie them. *)
-   WIRE_STORE_SCHEMA_VERSION = 1;
+     independent of NET_PROTOCOL_VERSION; W3 may decide to tie them.
+     2 SINCE 2026-11-23: the wire gained my_prefecture and my_power_class
+     (protocol 6), so a schema-1 file's qso table is another shape. It was
+     refused already by the column check below; the number says why. *)
+   WIRE_STORE_SCHEMA_VERSION = 2;
    (* 'TR4S': not the station's 'TR4W' ($54523457). *)
    WIRE_STORE_APPLICATION_ID = $54523453;
    (* NOT .db, which the station's Open dialog scans for contests. *)

@@ -376,6 +376,11 @@ begin
       begin
       tail := tail + '|' + string(LOG_V13_QSO_COLUMNS[i].Name);
       end;
+   (* And schema 14's prefecture and power class, last of all. *)
+   for i := Low(LOG_V14_QSO_COLUMNS) to High(LOG_V14_QSO_COLUMNS) do
+      begin
+      tail := tail + '|' + string(LOG_V14_QSO_COLUMNS[i].Name);
+      end;
    (* LAST, IN THIS ORDER -- the order ALTER TABLE ADD COLUMN gives a
      migrated log, so the two cannot differ. *)
    CheckEquals(tail, Copy(names, Length(names) - Length(tail) + 1, MaxInt),

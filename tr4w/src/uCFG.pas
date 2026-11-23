@@ -2161,6 +2161,9 @@ end;
 initialization
    RegisterSettingValueCheck('My.Country', @MyCountryIsAKnownPrefix);
    RegisterSettingValueCheck('My.LicenseYear', @LicenseYearIsDigits);
+   (* Schema 14, the ALL JA: the shapes only (uStationFieldCheck). *)
+   RegisterSettingValueCheck('My.Prefecture', @PrefectureIsAcceptable);
+   RegisterSettingValueCheck('My.PowerClass', @PowerClassIsAcceptable);
    (* AND THE SAME COUNTRY RULE FOR THE STATION PAGE'S FOCUS-LOSS CHECK,
      which is a leaf and cannot read CTY.DAT itself. *)
    RegisterStationCountryCheck(@MyCountryIsAKnownPrefix);

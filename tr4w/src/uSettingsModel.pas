@@ -2448,7 +2448,7 @@ type
      the two cannot drift apart unnoticed. *)
    TStationFact = (sfState, sfSection, sfZone, sfItuZone, sfGrid, sfName,
                    sfFdClass, sfCheck, sfPrec, sfPark, sfIota, sfPostalCode,
-                   sfFocNumber, sfLicenseYear);
+                   sfFocNumber, sfLicenseYear, sfPrefecture, sfPowerClass);
 
    (*
      THE STATION'S OWN FACTS -- the seventeen MY ... commands.
@@ -2492,6 +2492,8 @@ type
       FSection: string;
       FName: string;
       FPostalCode: string;
+      FPrefecture: string;
+      FPowerClass: string;
       FGrid: string;
       FZone: string;
       FZoneWasSet: boolean;
@@ -2566,6 +2568,8 @@ type
       property ResolvedPostalCode: string index Ord(sfPostalCode) read GetResolvedText;
       property ResolvedFocNumber: string index Ord(sfFocNumber) read GetResolvedText;
       property ResolvedLicenseYear: string index Ord(sfLicenseYear) read GetResolvedText;
+      property ResolvedPrefecture: string index Ord(sfPrefecture) read GetResolvedText;
+      property ResolvedPowerClass: string index Ord(sfPowerClass) read GetResolvedText;
       (* MY ITU ZONE resolved; 0 still means "use CTY.DAT". *)
       property ResolvedItuZone: integer read GetResolvedItuZone;
 
@@ -2652,6 +2656,15 @@ type
       property Name: string read FName write FName;
       // Was MyPostalCode in logwind.pas. MY POSTAL CODE.
       property PostalCode: string read FPostalCode write FPostalCode;
+      (* THE JARL PREFECTURE NUMBER THIS STATION SENDS -- MY PREFECTURE. The
+        ALL JA (02..48, 101..114 for Hokkaido's subprefectures), the JIDX and
+        the KCJ exchange. NO RELATIONSHIP TO MY STATE (NY4I, 2026-11-23): a
+        saved state is never copied into it. *)
+      property Prefecture: string read FPrefecture write FPrefecture;
+      (* THE POWER CLASS LETTER THIS STATION SENDS -- MY POWER CLASS: H, M, L
+        or P in the ALL JA. A letter, not watts, so it is never CATEGORY-POWER
+        and never ADIF TX_PWR. *)
+      property PowerClass: string read FPowerClass write FPowerClass;
       (* Was the global MyGrid in LOGGRID -- the operator's own Maidenhead
         locator, used for beam headings, for grid-square distance scoring,
         and as the sent exchange in the VHF and Makrothen contests.
@@ -4611,7 +4624,7 @@ const
    STATION_FACT_PROPERTY: array[TStationFact] of string = (
       'State', 'Section', 'Zone', 'ItuZone', 'Grid', 'Name',
       'FdClass', 'Check', 'Prec', 'Park', 'Iota', 'PostalCode',
-      'FocNumber', 'LicenseYear');
+      'FocNumber', 'LicenseYear', 'Prefecture', 'PowerClass');
 
    (* THE HAMSCORE UPLOAD ADDRESS A NEVER-SET HAMSCORE URL GETS (issue 250,
      NY4I 2026-11-09). It is the direct hamscore.com endpoint, over https, so
@@ -5729,6 +5742,8 @@ begin
    FSection    := '';
    FName       := '';
    FPostalCode := '';
+   FPrefecture := '';
+   FPowerClass := '';
    FGrid       := '';
    FZone          := '';
    FZoneWasSet    := False;
@@ -5837,6 +5852,14 @@ begin
       sfLicenseYear:
          begin
          Result := FLicenseYear;
+         end;
+      sfPrefecture:
+         begin
+         Result := FPrefecture;
+         end;
+      sfPowerClass:
+         begin
+         Result := FPowerClass;
          end;
    end;
 end;

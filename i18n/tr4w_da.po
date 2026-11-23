@@ -3033,6 +3033,7 @@ msgid "Precedence"
 msgstr "Præsentation"
 
 #: tfrmeditqso.lblprefecture.caption
+#: uappstrings.seditqsomyprefecture
 #, fuzzy
 msgid "Prefecture"
 msgstr "Præfektur"
@@ -12666,3 +12667,38 @@ msgstr "World Radio League afviste %s: %s"
 #, fuzzy
 msgid "Sent to the server: %d QSO(s) -- %d logged while disconnected, %d it did not have."
 msgstr "Sendt til serveren: %d QSO (s) -- %d logget mens frakoblet %d det ikke havde."
+
+#: tprefsform.lblmypowerclass.caption
+#, fuzzy
+msgid "Power class:"
+msgstr ""
+
+#: tprefsform.lblmyprefecture.caption
+#, fuzzy
+msgid "Prefecture:"
+msgstr ""
+
+#: uappstrings.seditqsomypowerclass
+#, fuzzy
+msgid "Power class"
+msgstr ""
+
+#: uappstrings.snewcontestenterpowerclass
+#, fuzzy
+msgid "Enter your power class (H, M, L or P):"
+msgstr ""
+
+#: uappstrings.snewcontestfieldvaluerefused
+#, fuzzy
+msgid "The value of %s is not one this contest accepts."
+msgstr ""
+
+#: uappstrings.sstationfieldpowerclass
+#, fuzzy
+msgid "The power class is one letter: H, M, L or P."
+msgstr ""
+
+#: uappstrings.sstationfieldprefecture
+#, fuzzy
+msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
+msgstr ""

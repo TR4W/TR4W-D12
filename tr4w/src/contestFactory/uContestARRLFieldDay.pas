@@ -510,7 +510,11 @@ end;
    changing one changes one. *)
 procedure TContestARRLFieldDay.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.AskField(ncfMyFDClass);
+   (* The class is the number of transmitters and a letter A to F. The
+      contest says what it needs and how to ask; the dialog enforces it. *)
+   aPrompts.AddStartUpField(ncfMyFDClass, 'MY FD CLASS',
+                            'Enter your Field Day class, for example 2A',
+                            '[0-9]{1,2}[A-F]', nitAlphaNumeric);
    aPrompts.AskField(ncfMySection);
 end;
 

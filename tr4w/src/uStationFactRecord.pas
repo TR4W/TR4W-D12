@@ -87,7 +87,9 @@ const
       (* sfIota *)       (Keeping: sfkAsTyped;   Column: 'my_iota';        Reason: ''),
       (* sfPostalCode *) (Keeping: sfkAsTyped;   Column: 'my_postal_code'; Reason: ''),
       (* sfFocNumber *)  (Keeping: sfkAsTyped;   Column: 'my_foc_number';  Reason: ''),
-      (* sfLicenseYear *)(Keeping: sfkAsSent;    Column: 'year_sent';      Reason: ''));
+      (* sfLicenseYear *)(Keeping: sfkAsSent;    Column: 'year_sent';      Reason: ''),
+      (* sfPrefecture *) (Keeping: sfkAsTyped;   Column: 'my_prefecture';  Reason: ''),
+      (* sfPowerClass *) (Keeping: sfkAsTyped;   Column: 'my_power_class'; Reason: ''));
 
 type
    (* ONE CORRECTION OF LOGGED QSOs -- schema 9 phase 2: the rows that sent
@@ -176,7 +178,9 @@ const
       (* sfIota *)        True,
       (* sfPostalCode *)  True,
       (* sfFocNumber *)   True,
-      (* sfLicenseYear *) False);
+      (* sfLicenseYear *) False,
+      (* sfPrefecture *)  True,
+      (* sfPowerClass *)  True);
 
 (* IS aFact's COLUMN AN INTEGER ZONE (my_cq_zone, my_itu_zone)? Every other
   bulk-correctable fact is TEXT. *)
@@ -220,6 +224,8 @@ begin
       sfPostalCode:  Result := SEditQSOMyPostalCode;
       sfFocNumber:   Result := SEditQSOMyFocNumber;
       sfLicenseYear: Result := SStationFactLicenseYear;
+      sfPrefecture:  Result := SEditQSOMyPrefecture;
+      sfPowerClass:  Result := SEditQSOMyPowerClass;
    end;
 end;
 
@@ -421,6 +427,14 @@ begin
          begin
          aFacts.FocNumber := text;
          end;
+      sfPrefecture:
+         begin
+         aFacts.Prefecture := text;
+         end;
+      sfPowerClass:
+         begin
+         aFacts.PowerClass := text;
+         end;
    else
       begin
       (* sfkAsSent or sfkNotPerQso: not this routine's. *)
@@ -475,6 +489,14 @@ begin
       sfFocNumber:
          begin
          Result := UTF8Decode(aFacts.FocNumber);
+         end;
+      sfPrefecture:
+         begin
+         Result := UTF8Decode(aFacts.Prefecture);
+         end;
+      sfPowerClass:
+         begin
+         Result := UTF8Decode(aFacts.PowerClass);
          end;
    else
       begin

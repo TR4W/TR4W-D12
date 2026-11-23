@@ -222,7 +222,9 @@ const
     'MY STATE',
     'MY ZONE',
     'MY POSTAL CODE',
-    'MY LICENSE YEAR'
+    'MY LICENSE YEAR',
+    'MY PREFECTURE',
+    'MY POWER CLASS'
     );
 
 var
@@ -232,6 +234,10 @@ var
     the contest about a row's value by what it IS, not by its caption. Only
     1..NewContestDisplayedCommands are meaningful. *)
   NewContestRowFields                   : array[1..CSAS] of TNewContestField;
+  (* THE WHOLE-VALUE PATTERN THE ROW'S PROMPT STATED ('' is anything) --
+    TNewContestPrompt.Pattern, recorded by RenderPrompt beside the field.
+    Cleared with the row by DisplayInitialCommand. *)
+  NewContestRowPatterns                 : array[1..CSAS] of string;
   (* THE CONTEST'S OWN COMMENT for its rows (the prompt text), kept so a
     refusal shown in the same place can be taken down again -- Q104. *)
   NewContestPromptComment               : string;
@@ -290,16 +296,35 @@ end;
 
 (* ONE STEP OF A CONTEST'S PROMPTS, ON THE FORM -- the five presentation
   helpers this unit always had, chosen by the step's kind. *)
+(* THE PATTERN OF THE ROW HOLDING aField -- the prompt's, once it is rendered,
+  so BeginNewContest can refuse a value the contest's pattern does not take.
+  Every row is found, not only the newest: a comment step reuses the row its
+  field already has. *)
+procedure RecordRowPattern(aField: TNewContestField; const aPattern: string);
+var
+   i: integer;
+begin
+   for i := 1 to NewContestDisplayedCommands do
+      begin
+      if (i <= CSAS) and (NewContestRowFields[i] = aField) then
+         begin
+         NewContestRowPatterns[i] := aPattern;
+         end;
+      end;
+end;
+
 procedure RenderPrompt(const aPrompt: TNewContestPrompt);
 begin
    case aPrompt.Kind of
       npkField:
          begin
          DisplayInitialCommand(aPrompt.Field, aPrompt.RowLabel);
+         RecordRowPattern(aPrompt.Field, aPrompt.Pattern);
          end;
       npkFieldWithComment:
          begin
          SetCommentAndEnableEditControl(aPrompt.Text, aPrompt.Field, aPrompt.RowLabel);
+         RecordRowPattern(aPrompt.Field, aPrompt.Pattern);
          end;
       npkIAmIn:
          begin
@@ -626,6 +651,17 @@ begin
            refusal := ContestIdentity(SelectedContest).NewContestValueRefusal(
                          NewContestRowFields[i], Trim(frmNewContest.RowText(i)));
            end;
+        (* A FILLED ROW ITS PROMPT'S PATTERN DOES NOT TAKE (2026-11-23, the
+          ALL JA's prefecture and power class): refused like the contest's
+          own refusal, naming the row. An empty row is the rule above. *)
+        if (i <= CSAS) and (refusal = '') and
+           (Trim(frmNewContest.RowText(i)) <> '') and
+           (not StartUpFieldValueAccepted(NewContestRowPatterns[i],
+                                          Trim(frmNewContest.RowText(i)))) then
+           begin
+           refusal := UnicodeFormat(SNewContestFieldValueRefused,
+                                    [InitialCommandsSA[NewContestRowFields[i]]]);
+           end;
         end;
      end;
   if refusal <> '' then
@@ -925,6 +961,7 @@ begin
   if NewContestDisplayedCommands <= CSAS then
      begin
      NewContestRowFields[NewContestDisplayedCommands] := Command;
+     NewContestRowPatterns[NewContestDisplayedCommands] := '';
      end;
   if aRowLabel <> '' then
      begin

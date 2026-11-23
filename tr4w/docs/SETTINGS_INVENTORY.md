@@ -221,7 +221,9 @@ comes last, a word run together.
 | `MY NAME` |  | global | `Settings.My.Name` | string |  |
 | `MY PARK` |  | global | `Settings.My.Park` | string |  |
 | `MY POSTAL CODE` |  | global | `Settings.My.PostalCode` | string |  |
+| `MY POWER CLASS` |  | global | `Settings.My.PowerClass` | string |  |
 | `MY PREC` |  | global | `Settings.My.Prec` | string |  |
+| `MY PREFECTURE` |  | global | `Settings.My.Prefecture` | string |  |
 | `MY SECTION` |  | global | `Settings.My.Section` | string |  |
 | `MY STATE` | `MY QTH` | global | `Settings.My.State` | string |  |
 | `MY ZONE` |  | global | `Settings.My.Zone` | string |  |

@@ -240,17 +240,32 @@ begin
    Result := True;
 end;
 
+(* THE PREFECTURE IN THE STATE SLOT, when one is stated (log schema 14): the
+   New Contest row asks for MY PREFECTURE since 2026-11-23, and the KCJ sends
+   the prefecture code, else the CQ zone. A copy of the station half with the
+   one input changed, then the shared helper -- the pattern for a contest
+   that only changes an input. With none stated, MY STATE as before, so a
+   station that typed its code there still sends it. *)
+function WithPrefectureAsState(const aMy: TMyStationExchange): TMyStationExchange;
+begin
+   Result := aMy;
+   if aMy.MyPrefecture <> '' then
+      begin
+      Result.MyState := aMy.MyPrefecture;
+      end;
+end;
+
 function TContestKCJ.GetADIFSentExchange(const aMy: TMyStationExchange;
                                          const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTZoneOrState(aMy, aQso);
+   Result := ADIFSentRSTZoneOrState(WithPrefectureAsState(aMy), aQso);
 end;
 
 function TContestKCJ.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange;
                                              const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTStateOrZone(aMy, aQso, aCtx);
+   Result := CabrilloSentRSTStateOrZone(WithPrefectureAsState(aMy), aQso, aCtx);
 end;
 
 function TContestKCJ.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
@@ -290,7 +305,7 @@ end;
    TContestBase.DescribeNewContestPrompts. *)
 procedure TContestKCJ.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
-   aPrompts.AskFieldWithComment(TC_PREF_OR_CQZONE, ncfMyState);
+   aPrompts.AskFieldWithComment(TC_PREF_OR_CQZONE, ncfMyPrefecture);
 end;
 
 

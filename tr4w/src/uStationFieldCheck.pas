@@ -131,6 +131,16 @@ function IsIOTAReference(const aText: string): boolean;
   registers this function with the settings model. *)
 function LicenseYearIsDigits(const aValue: string): boolean;
 
+(* MY PREFECTURE: nothing, one to three digits (a JARL number -- ALL JA 02..48
+  and 101..114, JIDX 01..48), or two letters (the KCJ's prefecture code, TK).
+  The SHAPE only: which numbers a contest takes is the contest's own pattern
+  (TNewContestPrompt.Pattern). Registered with the settings model by uCFG. *)
+function PrefectureIsAcceptable(const aValue: string): boolean;
+
+(* MY POWER CLASS: nothing, or one of H, M, L, P, either case. Registered
+  with the settings model by uCFG. *)
+function PowerClassIsAcceptable(const aValue: string): boolean;
+
 (* THE MY COUNTRY RULE NEEDS CTY.DAT, which a leaf may not read, so uCFG
   hands its check in here at initialization. Until one is registered, a
   country is not checked. *)
@@ -311,6 +321,35 @@ begin
          Result := False;
          end;
       end;
+end;
+
+function PrefectureIsAcceptable(const aValue: string): boolean;
+var
+   value: string;
+begin
+   value := Trim(aValue);
+   if value = '' then
+      begin
+      Result := True;
+      end
+   else if AllDigits(value) then
+      begin
+      Result := Length(value) <= 3;
+      end
+   else
+      begin
+      Result := (Length(value) = 2) and IsAsciiLetter(value[1]) and
+                IsAsciiLetter(value[2]);
+      end;
+end;
+
+function PowerClassIsAcceptable(const aValue: string): boolean;
+var
+   value: string;
+begin
+   value := UpperCase(Trim(aValue));
+   Result := (value = '') or (value = 'H') or (value = 'M') or (value = 'L') or
+             (value = 'P');
 end;
 
 (* ONE OR MORE PARKS, SEPARATED BY COMMAS -- 'US-1234' or 'US-1234,US-5678'
@@ -537,6 +576,20 @@ begin
       if not LicenseYearIsDigits(text) then
          begin
          Result := SStationFieldLicenseYear;
+         end;
+      end
+   else if command = 'MY PREFECTURE' then
+      begin
+      if not PrefectureIsAcceptable(text) then
+         begin
+         Result := SStationFieldPrefecture;
+         end;
+      end
+   else if command = 'MY POWER CLASS' then
+      begin
+      if not PowerClassIsAcceptable(text) then
+         begin
+         Result := SStationFieldPowerClass;
          end;
       end;
 end;

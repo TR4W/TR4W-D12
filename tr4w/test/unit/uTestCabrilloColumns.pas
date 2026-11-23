@@ -350,7 +350,34 @@ begin
                '579 012 14'],
               aSent, aRec);
          end;
-      DUMMYCONTEST, ALLJA, ARCI, COUNTYHUNTER, FISTS, GRIDLOC, JALONGPREFECT,
+      ALLJA:
+         begin
+         (* DXLog's ALLJA.txt line, 2026-11-23: SENT prefecture {F=R,3} then
+            the power letter {F=L,2}, no RST; RECEIVED the other station's
+            number and letter, the same layout. The shared fixture states no
+            MY PREFECTURE or MY POWER CLASS, so the sent columns are blank
+            (the filled case is uTestCabrilloExchange's); the received number
+            is the QTH text with no resolved DomesticQTH. *)
+         Take(aVariant,
+              ['      ',
+               '      ',
+               '      ',
+               '      ',
+               '      ',
+               '      ',
+               '      ',
+               '      '],
+              [' GA B ',
+               '      ',
+               'ABCDEFGHIJ B ',
+               'TRC B ',
+               ' GA B ',
+               ' GA B ',
+               ' XY B ',
+               '    B '],
+              aSent, aRec);
+         end;
+      DUMMYCONTEST, ARCI, COUNTYHUNTER, FISTS, GRIDLOC, JALONGPREFECT,
       KIDSDAY, POTA, QCWA, QCWAGOLDEN, TENTEN, UA4WCHAMPIONSHIP, WWL,
       XMAS:
          begin
@@ -1704,7 +1731,13 @@ begin
       deletion. *)
    CheckHelper('CabrilloSentRSTStateOrQSONumber', CabrilloSentRSTStateOrQSONumber, ARI_DX, psUS, True);
    CheckHelper('CabrilloSentRSTQSONumberZone', CabrilloSentRSTQSONumberZone, NZFIELDDAY, psUS, True);
-   CheckHelper('CabrilloSentNotHandled', CabrilloSentNotHandled, ALLJA, psUS, True);
+   (* ARCI, not the ALL JA: the ALL JA states its own columns since
+      2026-11-23. *)
+   CheckHelper('CabrilloSentNotHandled', CabrilloSentNotHandled, ARCI, psUS, True);
+   (* No contest's fixture row states a prefecture, so this pins the zone
+      fallback; the prefecture branch is uTestCabrilloExchange's. *)
+   CheckHelper('CabrilloSentRSTPrefectureOrZone', CabrilloSentRSTPrefectureOrZone,
+               EUROPEANHFC, psUS, True);
 
    CheckHelper('CabrilloReceivedGrid', CabrilloReceivedGrid, ARRLDIGI, psUS, False);
    CheckHelper('CabrilloReceivedRSTNameQTH', CabrilloReceivedRSTNameQTH, BWQP, psUS, False);
@@ -1737,7 +1770,7 @@ begin
    CheckHelper('CabrilloReceivedRSTZone', CabrilloReceivedRSTZone, CQWWCW, psUS, False);
    CheckHelper('CabrilloReceivedRSTQTHOrQSONumber', CabrilloReceivedRSTQTHOrQSONumber, ARI_DX, psUS, False);
    CheckHelper('CabrilloReceivedRSTQSONumberZone', CabrilloReceivedRSTQSONumberZone, NZFIELDDAY, psUS, False);
-   CheckHelper('CabrilloReceivedNotHandled', CabrilloReceivedNotHandled, ALLJA, psUS, False);
+   CheckHelper('CabrilloReceivedNotHandled', CabrilloReceivedNotHandled, ARCI, psUS, False);
 end;
 
 (* A CONTEST THAT STATES NOTHING WRITES THE MARKER IN BOTH COLUMNS -- the base,

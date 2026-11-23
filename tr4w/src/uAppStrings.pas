@@ -985,6 +985,9 @@ resourcestring
       'The check is two digits, the last two of the year first licensed: 85.';
    SStationFieldPrec = 'The precedence is one letter: Q, A, B, U, M or S.';
    SStationFieldFOCNumber = 'The FOC number is digits only.';
+   SStationFieldPrefecture =
+      'A prefecture is a JARL number of up to three digits, or a two-letter code.';
+   SStationFieldPowerClass = 'The power class is one letter: H, M, L or P.';
    SStationFieldLicenseYear =
       'The license year is up to four digits: 1985, 85, or a number of years.';
    (* The line under the Station fields when a save is refused because a field
@@ -1016,6 +1019,14 @@ resourcestring
      QTH". The CWT keeps TC_ENTERYOURNAMEANDQTH. *)
    SNewContestEnterNameAndQTH =
       'Enter your name and QTH (US state, Canadian Province or DX country):';
+
+   (* THE ALL JA'S POWER CLASS PROMPT (NY4I, 2026-11-23). *)
+   SNewContestEnterPowerClass =
+      'Enter your power class (H, M, L or P):';
+   (* A STARTUP FIELD WHOSE VALUE ITS CONTEST'S PATTERN REFUSES
+     (uNewContest; TNewContestPrompt.Pattern): %s the row's label. *)
+   SNewContestFieldValueRefused =
+      'The value of %s is not one this contest accepts.';
 
    SNewContestHostAreaInsideNotice =
       'You are in %s: choose your county from the list.';
@@ -1665,7 +1676,9 @@ resourcestring
    SEditQSOMyPrec               = 'Precedence';
    SEditQSOMyPostalCode         = 'Postal code';
    SEditQSOMyFocNumber          = 'FOC number';
-   SEditQSOMyIota               = 'IOTA';
+   SEditQSOMyPrefecture         = 'Prefecture';
+   SEditQSOMyPowerClass         = 'Power class';
+   SEditQSOMyIota             = 'IOTA';
    SStationFactLicenseYear      = 'License year';
    (* A changed value of our station that its field's rule refuses
      (uStationFactRecord.EditedStationFactProblem): %0:s the field's name,

@@ -132,6 +132,10 @@ type
       lblMyFocNumber: TLabel;
     edtMyCheck, edtMyPrec, edtMyFdClass, edtMyName, edtMyPostalCode,
       edtMyFocNumber: TEdit;
+    // SCHEMA 14 (the ALL JA, 2026-11-23): fixed boxes, the same rule as the
+    // schema-9 six. The grid redesign of this group is a later change.
+    lblMyPrefecture, lblMyPowerClass: TLabel;
+    edtMyPrefecture, edtMyPowerClass: TEdit;
 
     // WHERE AN EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, by name,
     // through EditQSOShowDelivery. A label: it raises no OnChange, so it can
@@ -739,6 +743,8 @@ begin
    ShowStationBox(edtMyName,       aContest, sfName,       aFacts.Name);
    ShowStationBox(edtMyPostalCode, aContest, sfPostalCode, aFacts.PostalCode);
    ShowStationBox(edtMyFocNumber,  aContest, sfFocNumber,  aFacts.FocNumber);
+   ShowStationBox(edtMyPrefecture, aContest, sfPrefecture, aFacts.Prefecture);
+   ShowStationBox(edtMyPowerClass, aContest, sfPowerClass, aFacts.PowerClass);
 end;
 
 function TfrmEditQSO.ReadMyFacts(const aShown: TQsoMyFacts): TQsoMyFacts;
@@ -760,6 +766,8 @@ begin
    Result.Name := ReadStationBox(edtMyName, aShown.Name);
    Result.PostalCode := ReadStationBox(edtMyPostalCode, aShown.PostalCode);
    Result.FocNumber := ReadStationBox(edtMyFocNumber, aShown.FocNumber);
+   Result.Prefecture := ReadStationBox(edtMyPrefecture, aShown.Prefecture);
+   Result.PowerClass := ReadStationBox(edtMyPowerClass, aShown.PowerClass);
 end;
 
 procedure EditQSOShowMyFacts(aContest: TContestBase; const aFacts: TQsoMyFacts);
@@ -1213,7 +1221,10 @@ begin
       mine.AddRow([lblMyYearSent, edtMyYearSent, lblMyCheck, edtMyCheck,
                    lblMyPrec,     edtMyPrec,     lblMyFdClass, edtMyFdClass]);
       mine.AddRow([lblMyName,     edtMyName,     lblMyPostalCode, edtMyPostalCode,
-                   lblMyFocNumber, edtMyFocNumber, nil, nil]);
+                   lblMyFocNumber, edtMyFocNumber, lblMyPrefecture, edtMyPrefecture]);
+      (* Schema 14: the power class opens a fifth row. *)
+      mine.AddRow([lblMyPowerClass, edtMyPowerClass, nil, nil,
+                   nil, nil, nil, nil]);
       mine.Measure(Px(6), [Px(52), Px(76), Px(52), Px(76), Px(52), Px(76), Px(52), Px(76)],
                    [0, Px(2), Px(10), Px(2), Px(10), Px(2), Px(10), Px(2)],
                    Px(2), Px(DROPDOWN_CHROME_96));
@@ -1284,6 +1295,8 @@ begin
    aForm.lblMyName.Caption := LclText(StationFactCaption(sfName));
    aForm.lblMyPostalCode.Caption := LclText(StationFactCaption(sfPostalCode));
    aForm.lblMyFocNumber.Caption := LclText(StationFactCaption(sfFocNumber));
+   aForm.lblMyPrefecture.Caption := LclText(StationFactCaption(sfPrefecture));
+   aForm.lblMyPowerClass.Caption := LclText(StationFactCaption(sfPowerClass));
 end;
 
 procedure TfrmEditQSO.HandleShow(Sender: TObject);

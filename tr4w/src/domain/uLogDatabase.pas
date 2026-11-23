@@ -2391,6 +2391,7 @@ var
    rebuildQso: boolean;
    roverQTHMissing: boolean;
    v13Missing: array of integer;
+   v14Missing: array of integer;
    oldQsoColumns: AnsiString;
    blockers: string;
    added: TStringList;
@@ -2612,6 +2613,25 @@ begin
          end;
       end;
 
+   (* v13 -> v14: WHICH OF qso.my_prefecture / my_power_class ARE MISSING --
+     the v13 question, for the same one-transaction reason. A rebuilt table
+     already has both (LOG_QSO_TABLE ends with them). NULL in every existing
+     row: unknown, and nothing is backfilled. *)
+   SetLength(v14Missing, 0);
+   if version < 14 then
+      begin
+      for i := Low(LOG_V14_QSO_COLUMNS) to High(LOG_V14_QSO_COLUMNS) do
+         begin
+         if PragmaAsString(UTF8Encode('SELECT name FROM pragma_table_info(''qso'') ' +
+                           'WHERE name = ''' + string(LOG_V14_QSO_COLUMNS[i].Name) +
+                           '''')) = '' then
+            begin
+            SetLength(v14Missing, Length(v14Missing) + 1);
+            v14Missing[High(v14Missing)] := i;
+            end;
+         end;
+      end;
+
    (* v3 -> v4: IS message.edited MISSING, asked here with the v3 question and
      for the same reason -- before anything changes, so the migration stays
      one transaction. *)
@@ -2824,6 +2844,18 @@ begin
          FConnection.ExecuteDirect(UTF8Encode(
             'ALTER TABLE qso ADD COLUMN ' + string(LOG_V13_QSO_COLUMNS[v13Missing[i]].Name) +
             ' ' + string(LOG_V13_QSO_COLUMNS[v13Missing[i]].Declaration)));
+         end;
+      end;
+
+   (* v13 -> v14: my_prefecture and my_power_class, NULL in every existing
+     row -- after the rebuild, whose new table already ends with them. *)
+   if not rebuildQso then
+      begin
+      for i := 0 to High(v14Missing) do
+         begin
+         FConnection.ExecuteDirect(UTF8Encode(
+            'ALTER TABLE qso ADD COLUMN ' + string(LOG_V14_QSO_COLUMNS[v14Missing[i]].Name) +
+            ' ' + string(LOG_V14_QSO_COLUMNS[v14Missing[i]].Declaration)));
          end;
       end;
 

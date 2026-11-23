@@ -179,6 +179,16 @@ begin
    db := TLogDatabase.Create;
    try
       db.Open(aFileName);
+      if aToVersion < 14 then
+         begin
+         (* Schema 14: the prefecture and power class, the table's last two
+           columns now, so they go before schema 13's. *)
+         for i := High(LOG_V14_QSO_COLUMNS) downto Low(LOG_V14_QSO_COLUMNS) do
+            begin
+            db.Connection.ExecuteDirect(UTF8Encode('ALTER TABLE qso DROP COLUMN ' +
+                                                   string(LOG_V14_QSO_COLUMNS[i].Name)));
+            end;
+         end;
       if aToVersion < 13 then
          begin
          (* Schema 13: the sent unit and the rover's places, the table's

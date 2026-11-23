@@ -1611,7 +1611,9 @@ const
       (* Schema 9 -- uLogSchema.LOG_V9_QSO_COLUMNS, in its order. *)
       'my_name, my_fd_class, my_check, my_prec, my_postal_code, my_foc_number, ' +
       (* Schema 13 -- uLogSchema.LOG_V13_QSO_COLUMNS, in its order. *)
-      'my_sent_unit, my_rover_places';
+      'my_sent_unit, my_rover_places, ' +
+      (* Schema 14 -- uLogSchema.LOG_V14_QSO_COLUMNS, in its order. *)
+      'my_prefecture, my_power_class';
 
    (* Named once. Adding a column means adding it here, in BindRecord and in
      ReadRecord, and the round-trip test fails if the three disagree. *)
@@ -1691,7 +1693,8 @@ const
       ':my_county, :my_grid, :my_state, :my_call, :my_section, :my_park, :my_iota, ' +
       ':my_country, :my_continent, :my_cq_zone, :my_itu_zone, :my_source, :year_sent, ' +
       ':my_name, :my_fd_class, :my_check, :my_prec, :my_postal_code, :my_foc_number, ' +
-      ':my_sent_unit, :my_rover_places';
+      ':my_sent_unit, :my_rover_places, ' +
+      ':my_prefecture, :my_power_class';
 
 (* 'a, b, c' -> 'a = :a, b = :b, c = :c'.
 
@@ -1838,7 +1841,9 @@ type
       qc_my_name, qc_my_fd_class, qc_my_check, qc_my_prec, qc_my_postal_code,
       qc_my_foc_number,
       (* Schema 13. *)
-      qc_my_sent_unit, qc_my_rover_places);
+      qc_my_sent_unit, qc_my_rover_places,
+      (* Schema 14. *)
+      qc_my_prefecture, qc_my_power_class);
 
 const
    QC_PREFIX: AnsiString = 'qc_';
@@ -2591,6 +2596,9 @@ begin
    (* Schema 13: '' is NULL, "as before". *)
    BindText(P('my_sent_unit'), aFacts.SentUnit);
    BindText(P('my_rover_places'), aFacts.RoverPlaces);
+   (* Schema 14: '' is NULL, unknown. *)
+   BindText(P('my_prefecture'), aFacts.Prefecture);
+   BindText(P('my_power_class'), aFacts.PowerClass);
    (* '' for mfsNotCaptured, which BindText stores as NULL. *)
    BindText(P('my_source'), MyFactsSourceToken(aFacts.Source));
    (* THE SENT YEAR (schema 8): NULL when none was sent; 0 is the year 00. *)
@@ -2671,6 +2679,8 @@ begin
    aFacts.FocNumber := S(qc_my_foc_number);
    aFacts.SentUnit := S(qc_my_sent_unit);
    aFacts.RoverPlaces := S(qc_my_rover_places);
+   aFacts.Prefecture := S(qc_my_prefecture);
+   aFacts.PowerClass := S(qc_my_power_class);
 end;
 
 (* PRECONDITION: aQuery was opened by OpenQsoReader, so its fields are

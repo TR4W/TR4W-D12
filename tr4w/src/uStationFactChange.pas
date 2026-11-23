@@ -181,7 +181,8 @@ function StationFactCorrectionOf(aFact: TStationFact;
   IOTA, the zones); False for the six schema 9 added -- name, FD class,
   check, precedence, postal code and FOC number are read only by the sent-
   exchange formatters and the CW messages (grep, 2026-11-17; the schema plan
-  12n) -- and for the sent license year. A correction of a True one is
+  12n) -- for schema 14's prefecture and power class, which no scoring rule
+  reads either -- and for the sent license year. A correction of a True one is
   followed by a rescore. *)
 function StationFactFeedsScoring(aFact: TStationFact): boolean;
 
@@ -380,7 +381,8 @@ function StationFactFeedsScoring(aFact: TStationFact): boolean;
 begin
    (* See the declaration. *)
    Result := not (aFact in [sfName, sfFdClass, sfCheck, sfPrec, sfPostalCode,
-                            sfFocNumber, sfLicenseYear]);
+                            sfFocNumber, sfLicenseYear, sfPrefecture,
+                            sfPowerClass]);
 end;
 
 function StationCorrectionAsks(aScope: TStationFactScope; aOffered: boolean;

@@ -82,7 +82,9 @@ type
                    (* schema 9: the two of the six that ADIF 3.1.6 has a tag
                       for. FD class, check, precedence and FOC number have
                       none -- see MyFactsForImport. *)
-                   mffName, mffPostalCode);
+                   mffName, mffPostalCode,
+                   (* schema 14: the power class, in TR4W's own tag. *)
+                   mffPowerClass);
    TMyFactFields = set of TMyFactField;
 
    TQsoMyFacts = record
@@ -147,6 +149,15 @@ type
                       on a schema-12 rover row, is already NY4I/KIN/QUE. *)
       SentUnit: AnsiString;
       RoverPlaces: AnsiString;
+
+      (* SCHEMA 14 (the ALL JA, NY4I 2026-11-23). They FOLLOW Source like the
+         schema-9 fields; NULL is unknown and no row is backfilled.
+         Prefecture  MY PREFECTURE -- the JARL number this QSO sent (12, 101);
+                     ADIF MY_STATE, written only by a contest that sends it
+         PowerClass  MY POWER CLASS -- the letter this QSO sent (H M L P);
+                     ADIF APP_TR4W_POWER_CLASS *)
+      Prefecture: AnsiString;
+      PowerClass: AnsiString;
    end;
 
    (* WHERE A NEW ROW'S year_sent COMES FROM -- issue 300 (NY4I, 2026-11-13: a
@@ -317,7 +328,7 @@ const
    FIELD_TAGS: array[TMyFactField] of string = (
       'STATION_CALLSIGN', 'MY_GRIDSQUARE', 'MY_STATE', 'MY_CNTY',
       'MY_ARRL_SECT', 'MY_POTA_REF', 'MY_IOTA', 'MY_DXCC', 'MY_CQ_ZONE',
-      'MY_ITU_ZONE', 'MY_NAME', 'MY_POSTAL_CODE');
+      'MY_ITU_ZONE', 'MY_NAME', 'MY_POSTAL_CODE', 'APP_TR4W_POWER_CLASS');
 
 function NotCapturedMyFacts: TQsoMyFacts;
 begin
@@ -379,7 +390,9 @@ begin
              (a.PostalCode <> b.PostalCode) or
              (a.FocNumber <> b.FocNumber) or
              (a.SentUnit <> b.SentUnit)   or
-             (a.RoverPlaces <> b.RoverPlaces);
+             (a.RoverPlaces <> b.RoverPlaces) or
+             (a.Prefecture <> b.Prefecture) or
+             (a.PowerClass <> b.PowerClass);
 end;
 
 function MyFactsYearSentDiffers(const a, b: TQsoMyFacts): boolean;
@@ -418,6 +431,8 @@ begin
    Take(Result.FocNumber, aShown.FocNumber, aTyped.FocNumber);
    Take(Result.SentUnit, aShown.SentUnit, aTyped.SentUnit);
    Take(Result.RoverPlaces, aShown.RoverPlaces, aTyped.RoverPlaces);
+   Take(Result.Prefecture, aShown.Prefecture, aTyped.Prefecture);
+   Take(Result.PowerClass, aShown.PowerClass, aTyped.PowerClass);
    if aTyped.CQZone <> aShown.CQZone then
       begin
       Result.CQZone := aTyped.CQZone;
@@ -519,6 +534,7 @@ begin
       mffITUZone: Result := Zone(aFacts.ITUZone);
       mffName:    Result := aFacts.Name;
       mffPostalCode: Result := aFacts.PostalCode;
+      mffPowerClass: Result := aFacts.PowerClass;
    else
       Result := '';
    end;
@@ -616,6 +632,13 @@ begin
       Result.Check := aContest.Check;
       Result.Prec := aContest.Prec;
       Result.FocNumber := aContest.FocNumber;
+      (* SCHEMA 14: THE PREFECTURE IS THE SAME CASE. Its export tag, MY_STATE,
+         is read into State -- the place -- because the importer cannot tell a
+         JARL number from another country's subdivision code without the
+         contest; so the file names no prefecture, and it is the contest's.
+         The power class has its own tag (APP_TR4W_POWER_CLASS) and stays the
+         file's, as named. *)
+      Result.Prefecture := aContest.Prefecture;
       end
    else
       begin

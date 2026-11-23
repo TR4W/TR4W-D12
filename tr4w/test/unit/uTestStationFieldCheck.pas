@@ -49,6 +49,8 @@ type
       procedure Test_FieldsWithNoRuleAreNotChecked;
       procedure Test_GridIsAGridTheProgramMeasures;
       procedure Test_Zones;
+      procedure Test_PrefectureIsANumberOrATwoLetterCode;
+      procedure Test_PowerClassIsOneOfHMLP;
       procedure Test_SectionIsAnARRLOrRACSectionOrDX;
       procedure Test_CountryIsACTYPrefix;
       procedure Test_ParkIsOneOrMoreReferences;
@@ -112,9 +114,10 @@ end;
 
 procedure TStationFieldCheckTests.Test_EmptyIsAlwaysAllowed;
 const
-   COMMANDS: array[0..12] of string = ('MY GRID', 'MY ZONE', 'MY ITU ZONE',
+   COMMANDS: array[0..14] of string = ('MY GRID', 'MY ZONE', 'MY ITU ZONE',
       'MY SECTION', 'MY COUNTRY', 'MY PARK', 'MY IOTA', 'MY FD CLASS',
-      'MY CHECK', 'MY PREC', 'MY FOC NUMBER', 'MY LICENSE YEAR', 'MY STATE');
+      'MY CHECK', 'MY PREC', 'MY FOC NUMBER', 'MY LICENSE YEAR', 'MY STATE',
+      'MY PREFECTURE', 'MY POWER CLASS');
 var
    i: integer;
 begin
@@ -140,6 +143,28 @@ begin
    Accepted('MY GRID', ['EL88', 'el88', 'EL88PA', 'el88pa', ' EL88pa ']);
    (* Eight characters: LOGGRID would give no distance and no heading. *)
    Refused('MY GRID', ['EL8', 'EL88P', 'EL88PA12', 'SL88', 'ELAA', 'EL88P1', 'K']);
+end;
+
+(* MY PREFECTURE (2026-11-23): the SHAPE only -- up to three digits (a JARL
+  number: ALL JA 02..48 and 101..114, JIDX 01..48) or two letters (the KCJ's
+  code). Which numbers a contest takes is its own pattern, not this rule. *)
+procedure TStationFieldCheckTests.Test_PrefectureIsANumberOrATwoLetterCode;
+begin
+   BeginTest('Test_PrefectureIsANumberOrATwoLetterCode');
+   Accepted('MY PREFECTURE', ['02', '48', '101', '114', '1', 'TK', 'tk', ' 12 ']);
+   Refused('MY PREFECTURE', ['1011', 'T', 'TKO', '1A', 'T1']);
+   CheckEquals(string(SStationFieldPrefecture), StationFieldProblem('MY PREFECTURE', '1011'),
+               'a four-digit prefecture says why');
+end;
+
+(* MY POWER CLASS (2026-11-23): one of H, M, L, P, either case. *)
+procedure TStationFieldCheckTests.Test_PowerClassIsOneOfHMLP;
+begin
+   BeginTest('Test_PowerClassIsOneOfHMLP');
+   Accepted('MY POWER CLASS', ['H', 'M', 'L', 'P', 'h', ' p ']);
+   Refused('MY POWER CLASS', ['X', 'HM', '1', 'Q']);
+   CheckEquals(string(SStationFieldPowerClass), StationFieldProblem('MY POWER CLASS', 'X'),
+               'X is no power class, and says so');
 end;
 
 procedure TStationFieldCheckTests.Test_Zones;
@@ -329,6 +354,8 @@ begin
    Test_FieldsWithNoRuleAreNotChecked;
    Test_GridIsAGridTheProgramMeasures;
    Test_Zones;
+   Test_PrefectureIsANumberOrATwoLetterCode;
+   Test_PowerClassIsOneOfHMLP;
    Test_SectionIsAnARRLOrRACSectionOrDX;
    Test_CountryIsACTYPrefix;
    Test_ParkIsOneOrMoreReferences;

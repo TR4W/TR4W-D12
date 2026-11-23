@@ -2583,6 +2583,8 @@ begin
    Result.MyFOCNumber  := Settings.My.ResolvedFocNumber;
    Result.MyPostalCode := Settings.My.ResolvedPostalCode;
    Result.MyPark       := Settings.My.ResolvedPark;
+   Result.MyPrefecture := Settings.My.ResolvedPrefecture;
+   Result.MyPowerClass := Settings.My.ResolvedPowerClass;
 end;
 
 (* THE EXCHANGE THE OPERATOR IS ABOUT TO SEND, as the main window shows it

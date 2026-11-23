@@ -64,7 +64,7 @@ const
 
      rcvd_extra IS NOT IN uLogRepository's QSO_COLUMNS (no build writes or reads
      it), so the wire reader there SELECTs it after the row id. *)
-   QSO_TABLE_COLUMNS: array[0..95] of TQsoTableColumn = (
+   QSO_TABLE_COLUMNS: array[0..97] of TQsoTableColumn = (
       (Name: 'id';                Numeric: True;  Default: '';    OnWire: False),
       (Name: 'guid';              Numeric: False; Default: '';    OnWire: True),
       (Name: 'exchange_id';       Numeric: False; Default: '';    OnWire: True),
@@ -160,7 +160,10 @@ const
       (Name: 'is_off_contest';    Numeric: True;  Default: '0';   OnWire: True),
       (Name: 'my_rover_qth';      Numeric: False; Default: '';    OnWire: True),
       (Name: 'my_sent_unit';      Numeric: False; Default: '';    OnWire: True),
-      (Name: 'my_rover_places';   Numeric: False; Default: '';    OnWire: True));
+      (Name: 'my_rover_places';   Numeric: False; Default: '';    OnWire: True),
+      (* Schema 14 (the ALL JA), protocol 6. *)
+      (Name: 'my_prefecture';     Numeric: False; Default: '';    OnWire: True),
+      (Name: 'my_power_class';    Numeric: False; Default: '';    OnWire: True));
 
 var
    GQsoWireColumns: TWireColumns = nil;

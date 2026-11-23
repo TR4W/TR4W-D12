@@ -314,7 +314,7 @@ begin
       IsJapaneseEntrant. M11 S9b. *)
    if IsJapaneseEntrant then
       begin
-      Result := ADIFSentRSTZone(aMy, aQso);
+      Result := ADIFSentRSTPrefectureOrZone(aMy, aQso);
       end
    else
       begin
@@ -328,7 +328,7 @@ function TContestJIDXSSB.GetCabrilloSentExchange(const aMy: TMyStationExchange;
 begin
    if IsJapaneseEntrant then
       begin
-      Result := CabrilloSentRSTZone(aMy, aQso, aCtx);
+      Result := CabrilloSentRSTPrefectureOrZone(aMy, aQso, aCtx);
       end
    else
       begin
@@ -389,7 +389,14 @@ end;
    TContestBase.CQExchangeDefault. *)
 function TContestJIDXSSB.CQExchangeDefault(const aStation: TStationContext): string;
 begin
-   if aStation.MyState <> '' then
+   (* MY PREFECTURE FIRST (log schema 14): the New Contest row asks for it
+      since 2026-11-23. MY STATE stays the fallback, so a station that
+      stated its prefecture there before still sends it. *)
+   if aStation.MyPrefecture <> '' then
+      begin
+      Result := ' 5NN ' + aStation.MyPrefecture;
+      end
+   else if aStation.MyState <> '' then
       begin
       Result := ' 5NN ' + aStation.MyState;
       end
@@ -411,7 +418,7 @@ end;
 procedure TContestJIDXSSB.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.OfferIAmIn(TC_JAPAN);
-   aPrompts.AskFieldWithCommentWhenInside(TC_PREFECTURE, ncfMyState);
+   aPrompts.AskFieldWithCommentWhenInside(TC_PREFECTURE, ncfMyPrefecture);
 end;
 
 (* THE "I AM IN JAPAN" BOX IS JA -- issue 167, review M16 (2026-11-16): the

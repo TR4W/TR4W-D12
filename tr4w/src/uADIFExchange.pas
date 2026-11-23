@@ -155,6 +155,11 @@ function ADIFSentRSTPrefecture(const aMy: TMyStationExchange;
 function ADIFSentRSTZone(const aMy: TMyStationExchange;
                          const aQso: ContestExchange): string;
 
+(* '%-3d %-7s' of the RST and MY PREFECTURE when one is stated, else
+   ADIFSentRSTZone (log schema 14: the JIDX's Japanese entrant). *)
+function ADIFSentRSTPrefectureOrZone(const aMy: TMyStationExchange;
+                                     const aQso: ContestExchange): string;
+
 (* The state when there is one, else the zone: '%-3d %-7s' or '%-3d %-7d'. *)
 function ADIFSentRSTZoneOrState(const aMy: TMyStationExchange;
                                 const aQso: ContestExchange): string;
@@ -361,6 +366,19 @@ function ADIFSentRSTZone(const aMy: TMyStationExchange;
                          const aQso: ContestExchange): string;
 begin
   Result := Format('%-3d %-7.2d', [aQso.RSTSent, ClippedZone(aMy)]);
+end;
+
+function ADIFSentRSTPrefectureOrZone(const aMy: TMyStationExchange;
+                                     const aQso: ContestExchange): string;
+begin
+  if aMy.MyPrefecture <> '' then
+     begin
+     Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyPrefecture]);
+     end
+  else
+     begin
+     Result := ADIFSentRSTZone(aMy, aQso);
+     end;
 end;
 
 function ADIFSentRSTZoneOrState(const aMy: TMyStationExchange;

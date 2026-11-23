@@ -244,6 +244,12 @@ function CabrilloSentRSTZone(const aMy: TMyStationExchange;
                              const aQso: ContestExchange;
                              const aCtx: TCabrilloQSOContext): string;
 
+(* RST and MY PREFECTURE when one is stated -- '%-3s %-7s' -- else
+   CabrilloSentRSTZone (log schema 14: the JIDX's Japanese entrant). *)
+function CabrilloSentRSTPrefectureOrZone(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+
 (* RST, serial and the zone, two digits: '%-3s %.*d %.2d'. The Jock White
    Memorial Field Day's "RS(T) plus a serial number plus an NZART Branch
    number", the branch kept in MY ZONE (issue 368). *)
@@ -766,6 +772,20 @@ function CabrilloSentRSTZone(const aMy: TMyStationExchange;
                              const aCtx: TCabrilloQSOContext): string;
 begin
   Result := SysUtils.Format('%-3s %-7.2d', [aCtx.RSTSent, MyZoneNumber(aMy)]);   // 4.51.1 issue#185
+end;
+
+function CabrilloSentRSTPrefectureOrZone(const aMy: TMyStationExchange;
+                                         const aQso: ContestExchange;
+                                         const aCtx: TCabrilloQSOContext): string;
+begin
+  if aMy.MyPrefecture <> '' then
+     begin
+     Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTSent, aMy.MyPrefecture]);
+     end
+  else
+     begin
+     Result := CabrilloSentRSTZone(aMy, aQso, aCtx);
+     end;
 end;
 
 function CabrilloSentRSTQSONumberZone(const aMy: TMyStationExchange;

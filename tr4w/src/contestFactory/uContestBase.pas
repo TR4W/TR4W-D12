@@ -384,6 +384,10 @@ type
       MySection: string;
       MyPrec: string;
       MyCheck: string;
+      (* MY PREFECTURE and MY POWER CLASS, resolved -- the ALL JA's, JIDX's
+         and KCJ's sent exchange (schema 14). '' when unset. *)
+      MyPrefecture: string;
+      MyPowerClass: string;
 
       (* MY ZONE AS THE SETTING HOLDS IT -- the text, not MyZone's integer.
 
@@ -489,6 +493,10 @@ type
       MyFOCNumber : string;
       MyPostalCode: string;
       MyPark      : string;
+      (* MY PREFECTURE and MY POWER CLASS -- the ALL JA, JIDX and KCJ sent
+         exchange (log schema 14). *)
+      MyPrefecture: string;
+      MyPowerClass: string;
    end;
 
    (* WHICH ZONE ONE LOGGED QSO SENDS IN ITS MY ZONE SLOT -- 2026-11-12, the
@@ -617,6 +625,8 @@ type
       (* MY_NAME and MY_POSTAL_CODE -- log schema 9. *)
       MyName: string;
       MyPostalCode: string;
+      (* APP_TR4W_POWER_CLASS -- log schema 14. *)
+      MyPowerClass: string;
 
       FromWSJTX: boolean;
 
@@ -1384,7 +1394,8 @@ type
       reads it. *)
    TNewContestField = (ncfMyCheck, ncfMyFDClass, ncfMyGrid, ncfMyFOC, ncfMyIOTA,
                        ncfMyName, ncfMyPark, ncfMyPrec, ncfMyQTH, ncfMySection,
-                       ncfMyState, ncfMyZone, ncfMyPostalCode, ncfMyLicenseYear);
+                       ncfMyState, ncfMyZone, ncfMyPostalCode, ncfMyLicenseYear,
+                       ncfMyPrefecture, ncfMyPowerClass);
 
    (* WHAT ONE STEP OF A PROMPT DOES, in the dialog's own terms:
         npkField             offer the field's row (the next free one);
@@ -1392,6 +1403,12 @@ type
         npkIAmIn             show the "I am in <region>" box;
         npkIAmInCaption      show the box with this caption as it stands. *)
    TNewContestPromptKind = (npkField, npkFieldWithComment, npkIAmIn, npkIAmInCaption);
+
+   (* WHAT KIND OF VALUE A STARTUP FIELD TAKES -- the dialog picks the control
+      and the keyboard filter from it, and Pattern says what is legal. nitAny
+      is every prompt that stated no type, which is all of them before this
+      type existed. *)
+   TNewContestInputType = (nitAny, nitAlpha, nitNumeric, nitAlphaNumeric);
 
    (* ONE STEP -- the element of TNewContestPrompts' two lists. A RECORD
       BECAUSE IT IS AN INTERFACE PARAMETER, as TSessionMemory is: pure data
@@ -1407,6 +1424,11 @@ type
          what the operator reads: the command queued is still the field's
          (uNewContest.RowCommand), as for the host-area MY COUNTY label. *)
       RowLabel: string;
+      (* WHAT THE OPERATOR MAY TYPE -- a whole-value regular expression, and
+         the kind of value it is. '' and nitAny are "anything", which is what
+         every prompt that predates them means. *)
+      Pattern: string;
+      InputType: TNewContestInputType;
    end;
 
    (* WHAT THE NEW CONTEST DIALOG ASKS FOR WHEN THIS CONTEST IS CHOSEN -- M9a.
@@ -1435,6 +1457,15 @@ type
       procedure AskFieldWithCommentAndLabel(const aComment: string;
                                             aField: TNewContestField;
                                             const aRowLabel: string);
+      (* THE CONTEST STATES EVERYTHING ABOUT ONE STARTUP FIELD: which
+         predefined field the answer lands in, the row's label, the sentence
+         the operator reads, what is legal to type, and what kind of value it
+         is. The fields are all predefined (TNewContestField is a closed set
+         backed by a real variable and a real column); the contest only says
+         which it needs and how to ask for it. *)
+      procedure AddStartUpField(aField: TNewContestField; const aRowLabel,
+                                aPrompt, aPattern: string;
+                                aType: TNewContestInputType);
       (* "I am in <aRegion>" -- the dialog supplies the words around it. *)
       procedure OfferIAmIn(const aRegion: string);
       (* The box with aCaption as it stands (the IOTA's island station). *)
@@ -4869,6 +4900,12 @@ function ContestUsesStationFact(aContest: TContestBase; aFact: TStationFact): bo
 (* THE STATION FACT A NEW CONTEST FIELD IS. *)
 function StationFactOfNewContestField(aField: TNewContestField): TStationFact;
 
+(* DOES aValue MATCH A STARTUP FIELD'S PATTERN AS A WHOLE? '' (no pattern)
+  takes anything. The value is trimmed and upper-cased first, so a power
+  class typed 'h' is the letter H. The one test the New Contest dialog asks
+  (uNewContest.BeginNewContest), so a test can pin a contest's pattern. *)
+function StartUpFieldValueAccepted(const aPattern, aValue: string): boolean;
+
 (* WHAT A RECEIVED DOMESTIC QTH MEANS IN aContest -- see
    TContestBase.DomesticMultiplierFromQTH. nil answers dqaLookUpDomesticFile
    and writes nothing: the classless DUMMYCONTEST runs NoDomesticMults, which
@@ -5253,6 +5290,8 @@ implementation
 uses
    utils_text,
    SysUtils,
+   (* RegexMatches -- StartUpFieldValueAccepted. *)
+   uRegex,
    (* ContestId -- the contest's stored name, which the name fallbacks
       answer (Q108 S2). *)
    uContestRegistry,
@@ -6324,7 +6363,21 @@ const
       sfState,        (* ncfMyState *)
       sfZone,         (* ncfMyZone *)
       sfPostalCode,   (* ncfMyPostalCode *)
-      sfLicenseYear); (* ncfMyLicenseYear *)
+      sfLicenseYear,  (* ncfMyLicenseYear *)
+      sfPrefecture,   (* ncfMyPrefecture *)
+      sfPowerClass);  (* ncfMyPowerClass *)
+
+function StartUpFieldValueAccepted(const aPattern, aValue: string): boolean;
+begin
+   (* See the declaration. The pattern is wrapped in its own anchors, so a
+      pattern written without ^ and $ still has to match the WHOLE value. *)
+   if aPattern = '' then
+      begin
+      Result := True;
+      Exit;
+      end;
+   Result := RegexMatches('^(' + aPattern + ')$', UpperCase(Trim(aValue)));
+end;
 
 function StationFactOfNewContestField(aField: TNewContestField): TStationFact;
 begin
@@ -7220,6 +7273,10 @@ begin
    Result.MyPrec := UTF8Decode(aFacts.Prec);
    Result.MyPostalCode := UTF8Decode(aFacts.PostalCode);
    Result.MyFOCNumber := UTF8Decode(aFacts.FocNumber);
+   (* SCHEMA 14 -- the prefecture and power class this QSO sent (the ALL JA,
+      JIDX, KCJ). The same rule: the row's, empty is unknown. *)
+   Result.MyPrefecture := UTF8Decode(aFacts.Prefecture);
+   Result.MyPowerClass := UTF8Decode(aFacts.PowerClass);
 
    (* A LICENCE YEAR IS NOT A STATION ZONE: the record captured none of it,
       so the session's MY ZONE is sent as stated. *)
@@ -8847,6 +8904,18 @@ begin
    FOnChoice[n].Field := aField;
    FOnChoice[n].Text := aText;
    FOnChoice[n].RowLabel := aRowLabel;
+   FOnChoice[n].Pattern := '';
+   FOnChoice[n].InputType := nitAny;
+end;
+
+procedure TNewContestPrompts.AddStartUpField(aField: TNewContestField;
+                                             const aRowLabel, aPrompt,
+                                             aPattern: string;
+                                             aType: TNewContestInputType);
+begin
+   AddChoice(npkFieldWithComment, aField, aPrompt, aRowLabel);
+   FOnChoice[High(FOnChoice)].Pattern := aPattern;
+   FOnChoice[High(FOnChoice)].InputType := aType;
 end;
 
 procedure TNewContestPrompts.AskField(aField: TNewContestField);

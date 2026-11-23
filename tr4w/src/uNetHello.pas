@@ -88,7 +88,12 @@ const
      row's columns with a record checksum) under three NEW ids, and the server's
      log is a SQLite database. The HELLO stays the same fixed 70 bytes, parsed
      first, so a protocol-4 peer is still refused readably (8330). *)
-   NET_PROTOCOL_VERSION = 5;
+   (* 6 SINCE 2026-11-23 (log schema 14, the ALL JA): the QSO row carries two
+     more columns, my_prefecture and my_power_class (uQsoColumns), last. The
+     column list IS the record checksum's order, so a protocol-5 peer's rows
+     would not verify; it is refused at the HELLO instead. TR4WServerPy moves
+     to 6 with this build. *)
+   NET_PROTOCOL_VERSION = 6;
 
    HELLO_VERSION_CHARS  = 16;
    HELLO_CONTEST_CHARS  = 48;

@@ -120,7 +120,11 @@ type
         MFSK, because ADIF 3.1.6 had no such submode; ADIF 3.1.8 lists JTTY
         and the export writes SUBMODE JTTY now. A file the draft wrote
         still imports. *)
-      tAdifAPP_TR4W_SUBMODE);
+      tAdifAPP_TR4W_SUBMODE,
+      (* OUR POWER CLASS LETTER (H M L P) -- log schema 14, the ALL JA. ADIF has
+        no field for a class letter (TX_PWR is watts), so it is TR4W's own tag,
+        read into the row's my_power_class (MyFactsFromADIF). *)
+      tAdifAPP_TR4W_POWER_CLASS);
 
 // =========================================================================
 // Lexer
@@ -1556,6 +1560,7 @@ begin
    temps.MyITUZone    := '';
    temps.MyName       := '';
    temps.MyPostalCode := '';
+   temps.MyPowerClass := '';
    temps.FromWSJTX  := False;
    temps.UnmatchedContestId := '';
 end;
@@ -1563,7 +1568,7 @@ end;
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..65] of string = (
+   ADIF_FIELD_NAMES : array[0..66] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -1592,7 +1597,9 @@ const
       // Our name and postal code (schema 9) -- order must match the enum
       'MY_NAME', 'MY_POSTAL_CODE',
       // Read only since ADIF 3.1.8 lists JTTY (issue 120) -- order must match
-      'APP_TR4W_SUBMODE');
+      'APP_TR4W_SUBMODE',
+      // Our power class (schema 14) -- order must match the enum
+      'APP_TR4W_POWER_CLASS');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -1773,6 +1780,8 @@ begin
                temps.MyName := fieldValue;
             tAdifMY_POSTAL_CODE:
                temps.MyPostalCode := fieldValue;
+            tAdifAPP_TR4W_POWER_CLASS:
+               temps.MyPowerClass := fieldValue;
 
             tAdifFREQ:
                begin
@@ -2755,7 +2764,8 @@ begin
       (Length(TagText(temps.MyDXCC)) = 0) and
       (Length(TagText(temps.MyCQZone)) = 0) and
       (Length(TagText(temps.MyITUZone)) = 0) and
-      (Length(TagText(temps.MyPostalCode)) = 0) then
+      (Length(TagText(temps.MyPostalCode)) = 0) and
+      (Length(TagText(temps.MyPowerClass)) = 0) then
       begin
       (* MY_NAME IS NOT IN THIS LIST, ON PURPOSE (schema 9): like
         STATION_CALLSIGN it names the OPERATOR, and a general logger writes it
@@ -2790,6 +2800,9 @@ begin
    (* Schema 9: as written -- a name is not upper-cased. *)
    Result.Name := TagText(temps.MyName);
    Result.PostalCode := TagUpper(temps.MyPostalCode);
+   (* Schema 14: the power class letter; a station fact like the postal
+     code, so it counts as naming our station above. *)
+   Result.PowerClass := TagUpper(temps.MyPowerClass);
 end;
 
 function SentExchangeFromADIF(const temps: TADIFRecordTemps): AnsiString;

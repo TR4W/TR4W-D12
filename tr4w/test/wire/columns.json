@@ -87,5 +87,7 @@
   { "name" : "is_off_contest", "num" : true, "def" : "0" },
   { "name" : "my_rover_qth", "num" : false, "def" : "" },
   { "name" : "my_sent_unit", "num" : false, "def" : "" },
-  { "name" : "my_rover_places", "num" : false, "def" : "" }
+  { "name" : "my_rover_places", "num" : false, "def" : "" },
+  { "name" : "my_prefecture", "num" : false, "def" : "" },
+  { "name" : "my_power_class", "num" : false, "def" : "" }
 ]

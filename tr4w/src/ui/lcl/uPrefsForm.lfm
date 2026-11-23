@@ -1493,10 +1493,46 @@ object PrefsForm: TPrefsForm
         FocusControl = edtMyLicenseYear
         TabOrder = 34
       end
+      object edtMyPrefecture: TEdit
+        Left = 496
+        Height = 22
+        Top = 244
+        Width = 150
+        AutoSize = False
+        TabOrder = 37
+      end
+      object lblMyPrefecture: TInputCaption
+        Left = 380
+        Height = 17
+        Top = 248
+        Width = 110
+        AutoSize = False
+        Caption = 'Prefecture:'
+        FocusControl = edtMyPrefecture
+        TabOrder = 36
+      end
+      object edtMyPowerClass: TEdit
+        Left = 496
+        Height = 22
+        Top = 274
+        Width = 150
+        AutoSize = False
+        TabOrder = 39
+      end
+      object lblMyPowerClass: TInputCaption
+        Left = 380
+        Height = 17
+        Top = 278
+        Width = 110
+        AutoSize = False
+        Caption = 'Power class:'
+        FocusControl = edtMyPowerClass
+        TabOrder = 38
+      end
       object lblStationContestNote: TLabel
         Left = 380
         Height = 80
-        Top = 246
+        Top = 306
         Width = 280
         AutoSize = False
         Caption = 'Shown as this contest uses them'
@@ -1507,7 +1543,7 @@ object PrefsForm: TPrefsForm
       object lblStationProblem: TLabel
         Left = 12
         Height = 34
-        Top = 332
+        Top = 392
         Width = 640
         AutoSize = False
         Caption = ''
@@ -1518,7 +1554,7 @@ object PrefsForm: TPrefsForm
       object lblStationHint: TLabel
         Left = 12
         Height = 68
-        Top = 370
+        Top = 430
         Width = 640
         AutoSize = False
         Caption = 'These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.'#13#10'Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign.'
@@ -1529,7 +1565,7 @@ object PrefsForm: TPrefsForm
       object lblMainCallHeading: TLabel
         Left = 12
         Height = 18
-        Top = 450
+        Top = 510
         Width = 640
         AutoSize = False
         Caption = '(set at run time)'
@@ -1539,7 +1575,7 @@ object PrefsForm: TPrefsForm
       object edtMainCallsign: TEdit
         Left = 140
         Height = 22
-        Top = 476
+        Top = 536
         Width = 200
         AutoSize = False
         TabOrder = 21
@@ -1547,7 +1583,7 @@ object PrefsForm: TPrefsForm
       object lblMainCallsign: TInputCaption
         Left = 12
         Height = 17
-        Top = 480
+        Top = 540
         Width = 120
         AutoSize = False
         Caption = '(set at run time)'

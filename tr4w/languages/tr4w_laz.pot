@@ -566,6 +566,7 @@ msgid "Precedence"
 msgstr ""
 
 #: tfrmeditqso.lblprefecture.caption
+#: uappstrings.seditqsomyprefecture
 msgid "Prefecture"
 msgstr ""
 
@@ -2238,8 +2239,16 @@ msgstr ""
 msgid "Postal code:"
 msgstr ""
 
+#: tprefsform.lblmypowerclass.caption
+msgid "Power class:"
+msgstr ""
+
 #: tprefsform.lblmyprec.caption
 msgid "Precedence:"
+msgstr ""
+
+#: tprefsform.lblmyprefecture.caption
+msgid "Prefecture:"
 msgstr ""
 
 #: tprefsform.lblmyradios.caption
@@ -2851,6 +2860,10 @@ msgstr ""
 msgid "the file downloaded but could not be saved under its final name."
 msgstr ""
 
+#: uappstrings.seditqsomypowerclass
+msgid "Power class"
+msgstr ""
+
 #: uappstrings.siniretiredontask
 msgid "Do not ask me about this file again"
 msgstr ""
@@ -2892,6 +2905,23 @@ msgid ""
 "Computer ID %s is already in use by another station on this network.\n"
 "\n"
 "Change COMPUTER ID to a letter no other station is using, then reconnect."
+msgstr ""
+
+#: uappstrings.snewcontestenterpowerclass
+msgid "Enter your power class (H, M, L or P):"
+msgstr ""
+
+#: uappstrings.snewcontestfieldvaluerefused
+#, object-pascal-format
+msgid "The value of %s is not one this contest accepts."
+msgstr ""
+
+#: uappstrings.sstationfieldpowerclass
+msgid "The power class is one letter: H, M, L or P."
+msgstr ""
+
+#: uappstrings.sstationfieldprefecture
+msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
 msgstr ""
 
 #: ulclformhelpers.tc_prefs_activelabel

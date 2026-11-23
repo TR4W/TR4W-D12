@@ -1291,6 +1291,9 @@ begin
    CheckEquals('B01', temps.DOK, 'DARC_DOK');
    ReadTags('<CALL:4>G3AB <APP_TR4W_FOC_NUM:4>1234 <EOR>');
    CheckEquals('1234', temps.FOC_Num, 'APP_TR4W_FOC_NUM');
+   // Log schema 14 (the ALL JA, 2026-11-23): our power class letter.
+   ReadTags('<CALL:5>JA1AB <APP_TR4W_POWER_CLASS:1>H <EOR>');
+   CheckEquals('H', temps.MyPowerClass, 'APP_TR4W_POWER_CLASS');
    // Written before it, and still read.
    ReadTags('<CALL:4>DL1A <DOK:3>B01 <EOR>');
    CheckEquals('B01', temps.DOK, 'the old DOK');

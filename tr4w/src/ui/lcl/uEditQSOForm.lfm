@@ -1,12 +1,12 @@
 object frmEditQSO: TfrmEditQSO
   Left = 0
-  Height = 575
+  Height = 603
   Top = 0
   Width = 584
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Edit QSO'
-  ClientHeight = 575
+  ClientHeight = 603
   ClientWidth = 584
   Position = poMainFormCenter
   LCLVersion = '4.8.0.0'
@@ -653,11 +653,11 @@ object frmEditQSO: TfrmEditQSO
   end
   object grpMyStation: TGroupBox
     Left = 8
-    Height = 136
+    Height = 164
     Top = 410
     Width = 568
     Caption = 'Our station for this QSO'
-    ClientHeight = 118
+    ClientHeight = 146
     ClientWidth = 564
     TabOrder = 27
     object lblMyCall: TLabel
@@ -936,11 +936,49 @@ object frmEditQSO: TfrmEditQSO
       TabOrder = 14
       OnChange = FieldChanged
     end
+    object lblMyPrefecture: TLabel
+      Left = 426
+      Height = 17
+      Top = 86
+      Width = 52
+      AutoSize = False
+      Caption = 'lblMyPrefecture'
+      Layout = tlCenter
+    end
+    object edtMyPrefecture: TEdit
+      Left = 480
+      Height = 21
+      Top = 84
+      Width = 76
+      CharCase = ecUppercase
+      MaxLength = 3
+      TabOrder = 15
+      OnChange = FieldChanged
+    end
+    object lblMyPowerClass: TLabel
+      Left = 6
+      Height = 17
+      Top = 114
+      Width = 52
+      AutoSize = False
+      Caption = 'lblMyPowerClass'
+      Layout = tlCenter
+    end
+    object edtMyPowerClass: TEdit
+      Left = 60
+      Height = 21
+      Top = 112
+      Width = 76
+      CharCase = ecUppercase
+      MaxLength = 1
+      TabOrder = 16
+      OnChange = FieldChanged
+    end
   end
   object lblDelivery: TLabel
     Left = 8
     Height = 17
-    Top = 550
+    Top = 578
     Width = 568
     AutoSize = False
     Caption = 'External logger delivery'

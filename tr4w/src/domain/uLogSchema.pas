@@ -318,7 +318,17 @@ const
      holds NY4I/KIN/QUE, exports exactly as it did. No row is rewritten. Both
      are station facts (QSO_MY_COLUMNS), written at insert and by an edit of
      our station, never by an ordinary update. *)
-   LOG_SCHEMA_VERSION = 13;
+   (* 14 SINCE 2026-11-23 (the ALL JA, NY4I's decision of that day): two my_*
+     columns, LOG_V14_QSO_COLUMNS, last in the CREATE TABLE after
+     my_rover_places.
+       my_prefecture    MY PREFECTURE as this QSO sent it -- the JARL number
+                        (12, 101). ADIF MY_STATE for a contest that sends it.
+       my_power_class   MY POWER CLASS as this QSO sent it -- H, M, L or P.
+                        ADIF APP_TR4W_POWER_CLASS.
+     NULL is UNKNOWN on every older row, and no row is backfilled. Station
+     facts (QSO_MY_COLUMNS) like the rest: written at insert and by an edit
+     of our station. *)
+   LOG_SCHEMA_VERSION = 14;
 
 type
    (* A COLUMN A MIGRATION ADDS to an existing table. *)
@@ -434,6 +444,13 @@ const
    LOG_V13_QSO_COLUMNS: array[0..1] of TLogAddedColumn = (
       (Name: 'my_sent_unit';    Declaration: 'TEXT'),
       (Name: 'my_rover_places'; Declaration: 'TEXT'));
+
+   (* THE qso COLUMNS SCHEMA 14 ADDED (the ALL JA) -- see LOG_SCHEMA_VERSION.
+     Last in the CREATE TABLE, in this order, so ADD COLUMN gives a migrated
+     log the same shape as a new one. *)
+   LOG_V14_QSO_COLUMNS: array[0..1] of TLogAddedColumn = (
+      (Name: 'my_prefecture';  Declaration: 'TEXT'),
+      (Name: 'my_power_class'; Declaration: 'TEXT'));
 
    (* THE qso COLUMNS SCHEMA 11 REMOVED (issue 94). Verified before removal:
      no SQL, no Pascal, no tool and no script in the tree wrote or read any of
@@ -751,7 +768,12 @@ const
       '    is_off_contest    INTEGER NOT NULL DEFAULT 0,'#10 +
       '    my_rover_qth      TEXT,'#10 +
       '    my_sent_unit      TEXT,'#10 +
-      '    my_rover_places   TEXT'#10 +
+      '    my_rover_places   TEXT,'#10 +
+      '    my_prefecture     TEXT,'#10 +
+      '    my_power_class    TEXT'#10 +
+      '    -- SCHEMA 14: my_prefecture and my_power_class, THE ALL JA PREFECTURE'#10 +
+      '    -- NUMBER AND POWER CLASS LETTER THIS QSO SENT. NULL is unknown. See'#10 +
+      '    -- LOG_V14_QSO_COLUMNS.'#10 +
       '    -- SCHEMA 13: my_sent_unit, THE UNIT THE QSO WAS SENT FROM (KIN,'#10 +
       '    -- ALB, KOH), which the sent exchange carries, so my_state is the'#10 +
       '    -- host''s primary subdivision; my_rover_places, EVERY place of the'#10 +

@@ -58,6 +58,9 @@ type
    private
       procedure Test_NewContestPromptsAreTheDialogsArms;
       procedure Test_ARowIsLabelledForWhatItHolds;
+      procedure Test_AddStartUpFieldStoresItsPatternAndType;
+      procedure Test_TheAllJAAsksItsTwoStartUpFields;
+      procedure Test_NoContestAsksTwoFieldsForOneSlot;
       procedure Test_TotalsDisplay;
       procedure Test_ZoneColumnHeading;
       procedure Test_OnlyAYearContestAsksForTheLicenseYear;
@@ -97,6 +100,8 @@ uses
    (* BuildSingleQsoCabrilloLine -- HamScore's one-QSO line (Q54). *)
    uCabrillo,
    uTestContestObjects,
+   (* ALLJA_PREFECTURE_PATTERN, ALLJA_POWER_CLASS_PATTERN -- 2026-11-23. *)
+   uContestAllJA,
    (* ContestsToWalk, ContestWho, ClassStatesItself -- Q108 S1. *)
    uTestRegisteredContests;
 
@@ -367,7 +372,9 @@ begin
          end;
       ARRLFIELDDAY:
          begin
-         Result := StepField(ncfMyFDClass) + StepField(ncfMySection);
+         Result := StepCommentLabelled('Enter your Field Day class, for example 2A',
+                                       ncfMyFDClass, 'MY FD CLASS') +
+                   StepField(ncfMySection);
          end;
       ARRLSSCW:
          begin
@@ -551,7 +558,14 @@ begin
          end;
       KCJ:
          begin
-         Result := StepComment(TC_PREF_OR_CQZONE, ncfMyState);
+         Result := StepComment(TC_PREF_OR_CQZONE, ncfMyPrefecture);
+         end;
+      ALLJA:
+         begin
+         (* AddStartUpField (2026-11-23): each row labelled with its command. *)
+         Result := StepCommentLabelled(TC_PREFECTURE, ncfMyPrefecture, 'MY PREFECTURE') +
+                   StepCommentLabelled(SNewContestEnterPowerClass, ncfMyPowerClass,
+                                       'MY POWER CLASS');
          end;
       KINGOFSPAINCW:
          begin
@@ -925,11 +939,11 @@ begin
          end;
       JIDXCW:
          begin
-         Result := StepComment(TC_PREFECTURE, ncfMyState);
+         Result := StepComment(TC_PREFECTURE, ncfMyPrefecture);
          end;
       JIDXSSB:
          begin
-         Result := StepComment(TC_PREFECTURE, ncfMyState);
+         Result := StepComment(TC_PREFECTURE, ncfMyPrefecture);
          end;
       KINGOFSPAINCW:
          begin
@@ -1164,6 +1178,162 @@ begin
       end;
 end;
 
+(* ADDSTARTUPFIELD STATES THE WHOLE FIELD (2026-11-23): the step is a comment
+  row of that field, with its label, its sentence, its pattern and its kind.
+  Every other way of asking leaves the pattern '' and the kind nitAny. *)
+procedure TContestDisplayTests.Test_AddStartUpFieldStoresItsPatternAndType;
+var
+   prompts: TNewContestPrompts;
+   step: TNewContestPrompt;
+begin
+   BeginTest('Test_AddStartUpFieldStoresItsPatternAndType');
+   prompts := TNewContestPrompts.Create;
+   try
+      prompts.AskFieldWithComment('plain', ncfMyName);
+      prompts.AddStartUpField(ncfMyZone, 'THE LABEL', 'the sentence', '^[0-9]+$',
+                              nitAlphaNumeric);
+      CheckEquals(2, prompts.ChoiceCount, 'two steps');
+      step := prompts.Choice(0);
+      CheckEquals('', step.Pattern, 'a plain step states no pattern');
+      CheckEquals(Ord(nitAny), Ord(step.InputType), 'and no kind');
+      step := prompts.Choice(1);
+      CheckEquals(Ord(npkFieldWithComment), Ord(step.Kind), 'a row with a comment');
+      CheckEquals(Ord(ncfMyZone), Ord(step.Field), 'of its field');
+      CheckEquals('THE LABEL', step.RowLabel, 'its label');
+      CheckEquals('the sentence', step.Text, 'its sentence');
+      CheckEquals('^[0-9]+$', step.Pattern, 'its pattern');
+      CheckEquals(Ord(nitAlphaNumeric), Ord(step.InputType), 'its kind');
+   finally
+      prompts.Free;
+   end;
+end;
+
+(* THE ALL JA ASKS ITS TWO FIELDS WITH THE SPONSOR'S VALUES (NY4I,
+  2026-11-23): the prefecture numbers of DXLog's ALLJA.txt (02..48 and
+  Hokkaido's 101..114), numeric; the power class letter, alphabetic. The
+  dialog's test, StartUpFieldValueAccepted, trims and upper-cases. *)
+procedure TContestDisplayTests.Test_TheAllJAAsksItsTwoStartUpFields;
+const
+   PREF_TAKEN: array[0..5] of string = ('02', '48', '101', '114', '12', ' 25 ');
+   PREF_REFUSED: array[0..8] of string = ('01', '49', '50', '115', 'H', '2', '100',
+                                         '0', '');
+   POWER_TAKEN: array[0..5] of string = ('H', 'M', 'L', 'P', 'h', ' p ');
+   POWER_REFUSED: array[0..4] of string = ('X', 'HM', '1', 'Q', '');
+var
+   obj: TContestBase;
+   prompts: TNewContestPrompts;
+   i: integer;
+begin
+   BeginTest('Test_TheAllJAAsksItsTwoStartUpFields');
+   obj := ContestIdentity(ALLJA);
+   prompts := TNewContestPrompts.Create;
+   try
+      obj.DescribeNewContestPrompts(prompts);
+      CheckEquals(2, prompts.ChoiceCount, 'ALL JA: two steps');
+      if prompts.ChoiceCount = 2 then
+         begin
+         CheckEquals(Ord(ncfMyPrefecture), Ord(prompts.Choice(0).Field), 'the prefecture first');
+         CheckEquals(ALLJA_PREFECTURE_PATTERN, prompts.Choice(0).Pattern, 'its pattern');
+         CheckEquals(Ord(nitNumeric), Ord(prompts.Choice(0).InputType), 'numeric');
+         CheckEquals(Ord(ncfMyPowerClass), Ord(prompts.Choice(1).Field), 'then the power class');
+         CheckEquals(ALLJA_POWER_CLASS_PATTERN, prompts.Choice(1).Pattern, 'its pattern');
+         CheckEquals(Ord(nitAlpha), Ord(prompts.Choice(1).InputType), 'alphabetic');
+         end;
+   finally
+      prompts.Free;
+   end;
+
+   for i := Low(PREF_TAKEN) to High(PREF_TAKEN) do
+      begin
+      CheckTrue(StartUpFieldValueAccepted(ALLJA_PREFECTURE_PATTERN, PREF_TAKEN[i]),
+                'prefecture "' + PREF_TAKEN[i] + '" is taken');
+      end;
+   for i := Low(PREF_REFUSED) to High(PREF_REFUSED) do
+      begin
+      CheckFalse(StartUpFieldValueAccepted(ALLJA_PREFECTURE_PATTERN, PREF_REFUSED[i]),
+                 'prefecture "' + PREF_REFUSED[i] + '" is refused');
+      end;
+   for i := Low(POWER_TAKEN) to High(POWER_TAKEN) do
+      begin
+      CheckTrue(StartUpFieldValueAccepted(ALLJA_POWER_CLASS_PATTERN, POWER_TAKEN[i]),
+                'power class "' + POWER_TAKEN[i] + '" is taken');
+      end;
+   for i := Low(POWER_REFUSED) to High(POWER_REFUSED) do
+      begin
+      CheckFalse(StartUpFieldValueAccepted(ALLJA_POWER_CLASS_PATTERN, POWER_REFUSED[i]),
+                 'power class "' + POWER_REFUSED[i] + '" is refused');
+      end;
+
+   (* No pattern takes anything, and a pattern written without anchors still
+     has to match the WHOLE value. *)
+   CheckTrue(StartUpFieldValueAccepted('', 'anything at all'), 'no pattern: anything');
+   CheckTrue(StartUpFieldValueAccepted('[0-9]+', '123'), 'an unanchored pattern, whole');
+   CheckFalse(StartUpFieldValueAccepted('[0-9]+', '12A'), 'an unanchored pattern is anchored');
+end;
+
+(* NO CONTEST ASKS TWO FIELDS THAT LAND IN ONE SLOT (2026-11-23): two rows
+  editing one station fact would let the second silently overwrite the first.
+  Every step a contest states -- on choosing and on ticking its box -- is
+  mapped to its fact (StationFactOfNewContestField); the same FIELD twice is
+  one row, so only two DIFFERENT fields with one fact fail. Measured when
+  written: no contest asks both ncfMyQTH and ncfMyState (the only two fields
+  sharing a slot, sfState), so there is no recorded exception. *)
+procedure TContestDisplayTests.Test_NoContestAsksTwoFieldsForOneSlot;
+var
+   contests: TContestIdentityList;
+   obj: TContestBase;
+   prompts: TNewContestPrompts;
+   fields: array of TNewContestField;
+   k, i, j: integer;
+   who: string;
+
+   procedure Note(const aStep: TNewContestPrompt);
+   begin
+      if aStep.Kind in [npkField, npkFieldWithComment] then
+         begin
+         SetLength(fields, Length(fields) + 1);
+         fields[High(fields)] := aStep.Field;
+         end;
+   end;
+
+begin
+   BeginTest('Test_NoContestAsksTwoFieldsForOneSlot');
+   contests := ContestsToWalk;
+   for k := 0 to High(contests) do
+      begin
+      obj := contests[k];
+      who := ContestWho(obj);
+      SetLength(fields, 0);
+      prompts := TNewContestPrompts.Create;
+      try
+         obj.DescribeNewContestPrompts(prompts);
+         for i := 0 to prompts.ChoiceCount - 1 do
+            begin
+            Note(prompts.Choice(i));
+            end;
+         for i := 0 to prompts.InsideCount - 1 do
+            begin
+            Note(prompts.Inside(i));
+            end;
+      finally
+         prompts.Free;
+         end;
+      for i := 0 to High(fields) do
+         begin
+         for j := i + 1 to High(fields) do
+            begin
+            if fields[i] <> fields[j] then
+               begin
+               CheckFalse(StationFactOfNewContestField(fields[i]) =
+                          StationFactOfNewContestField(fields[j]),
+                          who + ': fields ' + IntToStr(Ord(fields[i])) + ' and ' +
+                          IntToStr(Ord(fields[j])) + ' land in one slot');
+               end;
+            end;
+         end;
+      end;
+end;
+
 procedure TContestDisplayTests.Test_ARowIsLabelledForWhatItHolds;
 var
    contests: TContestIdentityList;
@@ -1202,6 +1372,14 @@ begin
             end;
          for i := 0 to prompts.ChoiceCount - 1 do
             begin
+            (* THE ALL JA STATES ITS TWO STARTUP FIELDS WHOLE (AddStartUpField,
+              2026-11-23), each labelled with its own command name: pinned by
+              name in Test_TheAllJAAsksItsTwoStartUpFields, not here. *)
+            if IsLegacyContest(obj, ALLJA) or
+               IsLegacyContest(obj, ARRLFIELDDAY) then
+               begin
+               Continue;
+               end;
             if (not labelled) or (i <> labelledStep) then
                begin
                CheckEquals('', prompts.Choice(i).RowLabel,
@@ -2403,6 +2581,9 @@ procedure TContestDisplayTests.RunAllTests;
 begin
    Test_NewContestPromptsAreTheDialogsArms;
    Test_ARowIsLabelledForWhatItHolds;
+   Test_AddStartUpFieldStoresItsPatternAndType;
+   Test_TheAllJAAsksItsTwoStartUpFields;
+   Test_NoContestAsksTwoFieldsForOneSlot;
    Test_TotalsDisplay;
    Test_ZoneColumnHeading;
    Test_OnlyAYearContestAsksForTheLicenseYear;

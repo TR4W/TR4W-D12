@@ -395,6 +395,12 @@ type
       edtMyPark: TEdit;
       lblMyLicenseYear: TInputCaption;
       edtMyLicenseYear: TEdit;
+      (* MY PREFECTURE and MY POWER CLASS (2026-11-23, the ALL JA): contest
+        exchange facts, so the right column, below the license year. *)
+      lblMyPrefecture: TInputCaption;
+      edtMyPrefecture: TEdit;
+      lblMyPowerClass: TInputCaption;
+      edtMyPowerClass: TEdit;
       (* MAIN CALLSIGN, DESIGNED HERE (issue 278). It was the one generated row
         on this page, and a generated row's caption is a TLabel -- no window,
         so UI Automation named the box nothing. Designed, it gets the same
@@ -5454,7 +5460,9 @@ begin
    AddHandWiredToSearchIndex(aN, 'MY NAME',                           edtMyName);
    AddHandWiredToSearchIndex(aN, 'MY PARK',                           edtMyPark);
    AddHandWiredToSearchIndex(aN, 'MY POSTAL CODE',                    edtMyPostalCode);
+   AddHandWiredToSearchIndex(aN, 'MY POWER CLASS',                    edtMyPowerClass);
    AddHandWiredToSearchIndex(aN, 'MY PREC',                           edtMyPrec);
+   AddHandWiredToSearchIndex(aN, 'MY PREFECTURE',                     edtMyPrefecture);
    AddHandWiredToSearchIndex(aN, 'MY SECTION',                        edtMySection);
    AddHandWiredToSearchIndex(aN, 'MY STATE',                          edtMyState);
    AddHandWiredToSearchIndex(aN, 'MY ZONE',                           edtMyZone);
@@ -6949,7 +6957,9 @@ begin
       MakeStationField('MY FOC NUMBER',   edtMyFOCNumber),
       MakeStationField('MY IOTA',         edtMyIOTA),
       MakeStationField('MY PARK',         edtMyPark),
-      MakeStationField('MY LICENSE YEAR', edtMyLicenseYear)
+      MakeStationField('MY LICENSE YEAR', edtMyLicenseYear),
+      MakeStationField('MY PREFECTURE',   edtMyPrefecture),
+      MakeStationField('MY POWER CLASS',  edtMyPowerClass)
    ];
 end;
 

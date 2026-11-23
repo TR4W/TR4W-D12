@@ -657,7 +657,8 @@ begin
       header := BuildSyncHeaderFrame('ARRLDXCW', 0);
       for i := 4 to High(header) do
          begin
-         if (header[i] = Ord('5')) and ((header[i - 1] = Ord(':')) or (header[i - 1] = Ord(' '))) then
+         if (header[i] = Ord(IntToStr(NET_PROTOCOL_VERSION)[1])) and
+            ((header[i - 1] = Ord(':')) or (header[i - 1] = Ord(' '))) then
             begin
             header[i] := Ord('4');
             end;

@@ -40,6 +40,7 @@ type
       procedure Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
       procedure Test_TheOtherSixCountyFilesNameTheirCounties;
       procedure Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;
+      procedure Test_ASchema13LogGainsThePrefectureColumnsInOneCommit;
       procedure Test_AnInStatePartyQSOKeepsTheHostStateAndSendsItsUnit;
       procedure Test_TheCallIsAssembledFromTheSettingAndThePlaces;
       procedure CheckEveryCountyNamed(const aContestId, aFile, aState: string;
@@ -1011,6 +1012,65 @@ begin
    ScrubTestLog(fn);
 end;
 
+(* LOG SCHEMA 14 ON A SCHEMA-13 LOG (the ALL JA, 2026-11-23): my_prefecture
+  and my_power_class added by ALTER, NULL in every row (unknown -- nothing is
+  backfilled), the version stamped, ONE commit; a second open changes
+  nothing. A new log has both, last, after schema 13's two. *)
+procedure TRoverStateTests.Test_ASchema13LogGainsThePrefectureColumnsInOneCommit;
+var
+   fn, dir: string;
+   db: TLogDatabase;
+   i: integer;
+begin
+   BeginTest('Test_ASchema13LogGainsThePrefectureColumnsInOneCommit');
+   dir := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_rover_' + IntToStr(GetProcessID);
+   ForceDirectories(dir);
+   fn := IncludeTrailingPathDelimiter(dir) + 'allja13.db';
+   ScrubTestLog(fn);
+
+   db := TLogDatabase.Create;
+   try
+      db.CreateNew(fn);
+      for i := Low(LOG_V14_QSO_COLUMNS) to High(LOG_V14_QSO_COLUMNS) do
+         begin
+         CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V14_QSO_COLUMNS[i].Name)),
+                   'a new log has ' + string(LOG_V14_QSO_COLUMNS[i].Name));
+         end;
+   finally
+      db.Free;
+   end;
+   DowngradeTestLog(fn, 13, Low(LOG_V3_QSO_COLUMNS));
+   CheckFalse(FileExists(fn + '-wal'), 'precondition: no WAL is left by the fixture');
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(1, CommitFramesInWal(fn + '-wal'), 'both columns and the stamp: ONE commit');
+      CheckEquals(LOG_SCHEMA_VERSION, db.SchemaVersion, 'stamped current');
+      for i := Low(LOG_V14_QSO_COLUMNS) to High(LOG_V14_QSO_COLUMNS) do
+         begin
+         CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V14_QSO_COLUMNS[i].Name)),
+                   string(LOG_V14_QSO_COLUMNS[i].Name) + ' is there');
+         end;
+      for i := Low(LOG_V13_QSO_COLUMNS) to High(LOG_V13_QSO_COLUMNS) do
+         begin
+         CheckTrue(TestLogHasColumn(db, 'qso', string(LOG_V13_QSO_COLUMNS[i].Name)),
+                   string(LOG_V13_QSO_COLUMNS[i].Name) + ' is untouched');
+         end;
+   finally
+      db.Free;
+   end;
+
+   db := TLogDatabase.Create;
+   try
+      db.Open(fn);
+      CheckEquals(0, CommitFramesInWal(fn + '-wal'), 'a second open commits nothing');
+   finally
+      db.Free;
+   end;
+   ScrubTestLog(fn);
+end;
+
 (* NY4I, 2026-11-20 ("since I said I was in state"): an in-state party QSO
   records the HOST state in my_state, the unit it sent in my_sent_unit and
   the unit's ADIF county in my_county -- through the REAL county file (NY,
@@ -1177,6 +1237,7 @@ begin
    Test_EveryFloridaAndTennesseeCountyNamesItsADIFCounty;
    Test_TheOtherSixCountyFilesNameTheirCounties;
    Test_ASchema12LogGainsTheSentUnitColumnsInOneCommit;
+   Test_ASchema13LogGainsThePrefectureColumnsInOneCommit;
    Test_AnInStatePartyQSOKeepsTheHostStateAndSendsItsUnit;
    Test_TheCallIsAssembledFromTheSettingAndThePlaces;
 end;
