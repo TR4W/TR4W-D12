@@ -98,6 +98,15 @@
 .tr4w-more { border-top: 1px solid #bbc9cb; margin-top: 1.8rem; padding-top: .7rem; }
 .tr4w-platforms { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; margin: 1.8rem 0; }
 .tr4w-platforms > div { border-left: 3px solid #d19b42; padding-left: 1rem; }
+.tr4w-latest-line { font-weight: 650; }
+.tr4w-download-file { margin: 0 0 1.1rem; }
+.tr4w-download-what { margin: .6rem 0 .2rem; }
+.tr4w-download-facts { margin: 0 0 .3rem; color: #4a5f6b; font-size: .74rem; }
+.tr4w-download-sha summary { cursor: pointer; font-size: .74rem; }
+.tr4w-download-sha code { display: block; margin-top: .3rem; overflow-wrap: anywhere; font-size: .68rem; }
+.tr4w-download-gap { margin: .4rem 0; font-size: .76rem; }
+.tr4w-download.is-absent { border-left-color: #b4b9bd; opacity: .65; }
+.tr4w-download.is-absent h3 { color: #5d6b73; }
 .tr4w-languages { background: var(--tr4w-ink); color: var(--tr4w-paper); }
 .tr4w-languages .tr4w-eyebrow { color: var(--tr4w-amber); }
 .md-typeset .tr4w-languages a { color: var(--tr4w-amber); }

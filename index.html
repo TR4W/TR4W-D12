@@ -3090,29 +3090,39 @@
 <section class="tr4w-section" id="get-tr4w">
 <div class="tr4w-eyebrow">Get on the air</div>
 <h2 id="choose-your-desktop">Choose your desktop.<a class="headerlink" href="#choose-your-desktop" title="Permanent link">&para;</a></h2>
-<p>TR4W 5.1.0 has native downloads for all three platforms. Choose the package for your operating system and CPU.</p>
+<p>The latest TR4W release has native downloads for all three platforms. Choose the package for your operating system and CPU.</p>
+<p aria-live="polite" class="tr4w-latest-line" hidden="hidden"></p>
 <div class="tr4w-platforms">
-<div>
+<div class="tr4w-download" data-platform="windows-x64">
 <h3 id="windows">Windows<a class="headerlink" href="#windows" title="Permanent link">&para;</a></h3>
 <p>The current 5.x line targets <strong>64-bit Windows</strong>. For a 32-bit Windows station, keep using 4.x.</p>
+<div class="tr4w-download-files">
+<p><a class="tr4w-button" href="https://github.com/TR4W/TR4W-D12/releases/latest">Download from the release page</a></p>
+</div>
 <p><a href="start/install.html">Windows installation →</a></p>
 </div>
-<div>
+<div class="tr4w-download" data-platform="macos-aarch64">
 <h3 id="macos">macOS<a class="headerlink" href="#macos" title="Permanent link">&para;</a></h3>
-<p>Native <strong>Apple Silicon</strong> packages. Choose an installer, disk image, or archive to suit your station.</p>
+<p>Native <strong>Apple Silicon</strong> packages. Choose an installer or a disk image to suit your station.</p>
+<div class="tr4w-download-files">
+<p><a class="tr4w-button" href="https://github.com/TR4W/TR4W-D12/releases/latest">Download from the release page</a></p>
+</div>
 <p><a href="start/install.html">macOS installation →</a></p>
 </div>
-<div>
+<div class="tr4w-download" data-platform="linux-x86_64">
 <h3 id="linux">Linux<a class="headerlink" href="#linux" title="Permanent link">&para;</a></h3>
-<p>Native <strong>x86-64</strong> AppImage and archive packages. Check the package's runtime requirements before installing.</p>
+<p>A native <strong>x86-64</strong> AppImage. Check its runtime requirements before installing.</p>
+<div class="tr4w-download-files">
+<p><a class="tr4w-button" href="https://github.com/TR4W/TR4W-D12/releases/latest">Download from the release page</a></p>
+</div>
 <p><a href="start/install.html">Linux installation →</a></p>
 </div>
 </div>
 <div class="tr4w-actions">
-<p><a class="tr4w-button" href="https://github.com/TR4W/TR4W-D12/releases/tag/v5.1.0">Download TR4W 5.1.0</a>
+<p><a class="tr4w-button" href="https://github.com/TR4W/TR4W-D12/releases/latest">Download the latest TR4W</a>
 <a class="tr4w-text-link" href="https://tr4w.net/">Earlier 4.x downloads ↗</a></p>
 </div>
-<p>Check the assets attached to the chosen release for platform availability. <a href="start/version.html">Choose your version</a> and review the <a href="station/cw.html">CW platform notes</a> before setting up a station.</p>
+<p>Check the assets attached to the release for platform availability; the file list is the authority. <a href="start/version.html">Choose your version</a> and review the <a href="station/cw.html">CW platform notes</a> before setting up a station.</p>
 </section>
 <section class="tr4w-languages tr4w-section">
 <div class="tr4w-eyebrow">One application. Your language.</div>
@@ -3218,6 +3228,8 @@
     
     
       <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="assets/javascripts/downloads.js"></script>
       
     
   </body>
