@@ -25,8 +25,9 @@ type
    (* rwsNeeded: not worked on the window's band and mode (the sheet's bit).
      rwsBackupWanted: worked, and the count is at least 1 and below the
      limit -- drawn in BAND MAP WORKED MULT COLOR.
-     rwsWorked: worked, the count at or above the limit -- drawn as a worked
-     multiplier always was. *)
+     rwsWorked: worked, the count at or above the limit -- a flat cell of the
+     window's text colour (black by default), as RemainingMultCellStyle
+     says. *)
    TRemMultWorkState = (rwsNeeded, rwsBackupWanted, rwsWorked);
 
 (* THE STATE OF ONE CELL. aWorked is the sheet's bit, and it is the
@@ -43,15 +44,19 @@ function RemainingMultWorkState(const aWorked: boolean; const aCount, aLimit: in
 function RemainingMultCellText(const aName: string; const aWorked: boolean; const aCount: integer): string;
 
 (* HOW A CELL LOOKS -- the UI refresh proposal's "Multiplier and related
-  grids" (docs/TR4W_UI_REFRESH_PROPOSAL.md, GRID_RESTYLE_PLAN.md). State is
-  carried by contrast, not by area of colour, and there is no gradient:
+  grids" (docs/TR4W_UI_REFRESH_PROPOSAL.md, GRID_RESTYLE_PLAN.md), and NY4I's
+  ruling of 2026-11-22 on the worked cell. Every fill is FLAT; there is no
+  gradient:
 
-    rwsNeeded       the window's own text on the window: the strongest
-                    foreground, because a needed multiplier is what the
-                    operator is looking for.
-    rwsWorked       muted text (the system's grey text) on the window, no
-                    fill. If the muted colour would not read on the window
-                    (below MIN_MUTED_CONTRAST) the window's own text is used.
+    rwsNeeded       the window's own text on the window, no fill: a needed
+                    multiplier is not highlighted at all.
+    rwsWorked       INVERTED -- a fill of the window's TEXT colour under the
+                    window's own colour: black under white by default, as the
+                    pre-refresh worked cell was (it faded black to white
+                    under white text; NY4I wants the black back, flat). It
+                    follows the window, so a dark theme inverts too. Should
+                    the two colours not read on each other (below
+                    MIN_TEXT_CONTRAST) the text is ReadableTextOn the fill.
     rwsBackupWanted a FLAT fill of BAND MAP WORKED MULT COLOR (orange by
                     default; the band map's orange M, the same meaning and no
                     other), with black or white text, whichever reads better
@@ -62,12 +67,12 @@ function RemainingMultCellText(const aName: string; const aWorked: boolean; cons
   as the gradient code drew nothing for them.
 
   EVERY COLOUR IS A RESOLVED RGB, $00BBGGRR (TColor's byte order): the
-  caller resolves system colours (clWindow, clGrayText, BTNFACE) with
+  caller resolves system colours (clWindow, clWindowText, BTNFACE) with
   Graphics.ColorToRGB first, because a system colour's value is an index with
   the high bit set, not a colour. aBold is the weight; it is False for every
   state today (a 49-px cell clips bold text, unmeasured -- BENCH_QUEUE). *)
 procedure RemainingMultCellStyle(const aState: TRemMultWorkState; const aHiLight: boolean;
-                                 const aWindowRGB, aTextRGB, aMutedRGB, aBackupRGB: longint;
+                                 const aWindowRGB, aTextRGB, aBackupRGB: longint;
                                  out aBackRGB, aForeRGB: longint; out aBold: boolean);
 
 (* WCAG 2 relative luminance of a resolved $00BBGGRR colour: 0 for black,
@@ -86,10 +91,10 @@ function ReadableTextOn(const aBackRGB: longint): longint;
 const
    RGB_BLACK = longint($000000);
    RGB_WHITE = longint($FFFFFF);
-   (* The least contrast muted text may have against the window before the
-     window's own text is used instead -- WCAG's floor for large or
-     secondary text. *)
-   MIN_MUTED_CONTRAST = 3.0;
+   (* The least contrast a worked cell's text may have on its fill before
+     ReadableTextOn chooses it instead -- WCAG AA for body text, which
+     ReadableTextOn itself always reaches. *)
+   MIN_TEXT_CONTRAST = 4.5;
 
 implementation
 
@@ -183,7 +188,7 @@ begin
 end;
 
 procedure RemainingMultCellStyle(const aState: TRemMultWorkState; const aHiLight: boolean;
-                                 const aWindowRGB, aTextRGB, aMutedRGB, aBackupRGB: longint;
+                                 const aWindowRGB, aTextRGB, aBackupRGB: longint;
                                  out aBackRGB, aForeRGB: longint; out aBold: boolean);
 var
    state: TRemMultWorkState;
@@ -203,14 +208,14 @@ begin
          end;
       rwsWorked:
          begin
-         aBackRGB := aWindowRGB;
-         if ContrastRatio(aMutedRGB, aWindowRGB) >= MIN_MUTED_CONTRAST then
+         aBackRGB := aTextRGB;
+         if ContrastRatio(aWindowRGB, aTextRGB) >= MIN_TEXT_CONTRAST then
             begin
-            aForeRGB := aMutedRGB;
+            aForeRGB := aWindowRGB;
             end
          else
             begin
-            aForeRGB := aTextRGB;
+            aForeRGB := ReadableTextOn(aTextRGB);
             end;
          end;
    else

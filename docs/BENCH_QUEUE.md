@@ -301,17 +301,18 @@ The totals grid's cells, its IDLE band headers and the `0 Pts` cell lose the rec
 
 ## Added 2026-11-22 -- THE MULTIPLIER WINDOWS ARE FLAT (UI refresh proposal, "Multiplier and related grids"; lcl-ui)
 
-The remaining-multiplier windows (the generic one and DX / domestic / zone / prefix) no longer gradient a worked cell. In HIGHLIGHT mode: a NEEDED multiplier is the window's own text (black on white by default); a WORKED one is the system's grey text with no fill; a BACKUP WANTED one (worked fewer than BAND MAP WORKED MULT LIMIT times, issue 357) is a FLAT fill of BAND MAP WORKED MULT COLOR (orange by default) under black or white text, whichever reads on that colour. The `Oh 2` count is unchanged. The worked cell's old colour (indexed by the multiplier type's ordinal, item 36) is gone. The grid now draws its own text (`OnPrepareCanvas`; the draw handler is deleted), so the text sits where the LCL puts it rather than 2 px in. The rule is `uRemMultWorkState.RemainingMultCellStyle`, unit tested with a contrast check.
+The remaining-multiplier windows (the generic one and DX / domestic / zone / prefix) no longer gradient a worked cell. In HIGHLIGHT mode: a NEEDED multiplier is the window's own text (black on white by default), no fill; a WORKED one is a FLAT BLACK cell with white text (the window's text colour under the window's colour -- NY4I's ruling of 2026-11-22, the pre-refresh black without its fade; it replaced a first muted-grey treatment); a BACKUP WANTED one (worked fewer than BAND MAP WORKED MULT LIMIT times, issue 357) is a FLAT fill of BAND MAP WORKED MULT COLOR (orange by default) under black or white text, whichever reads on that colour. The `Oh 2` count is unchanged. The worked cell's old colour (indexed by the multiplier type's ordinal, item 36) is gone. The grid now draws its own text (`OnPrepareCanvas`; the draw handler is deleted), so the text sits where the LCL puts it rather than 2 px in. The rule is `uRemMultWorkState.RemainingMultCellStyle`, unit tested with a contrast check.
 
-- [ ] **Empty:** a new contest, nothing worked. Every cell is plain black on white in all five windows; no grey, no orange.
-- [ ] **Partly worked:** work a few. Worked cells turn grey on white and are clearly weaker than the needed ones, but still readable at arm's length. Needed ones stand out.
-- [ ] **Fully worked** (a small domestic list, or a band where everything is worked): the whole window grey; still readable, and nothing looks broken or disabled-and-empty.
-- [ ] **Limit 3:** a multiplier worked once or twice is a flat orange cell with black text (`Oh 2` on the second); the third working turns it grey.
+- [ ] **Empty:** a new contest, nothing worked. Every cell is plain black on white in all five windows; no black cell, no orange.
+- [ ] **Partly worked:** work a few. Worked cells turn to flat black cells with white text, as in the pre-refresh window without the fade. Needed ones stay plain.
+- [ ] **Fully worked** (a small domestic list, or a band where everything is worked): the whole window black cells with white text; say whether that is too heavy.
+- [ ] **Limit 3:** a multiplier worked once or twice is a flat orange cell with black text (`Oh 2` on the second); the third working turns it black.
 - [ ] **A dark custom colour:** set BAND MAP WORKED MULT COLOR to BLUE or BROWN. The backup cells are flat blue/brown with WHITE text. Try BTNFACE and HIGHLIGHT too (system colours).
-- [ ] **ERASE mode:** only needed multipliers, all black; nothing grey or orange.
+- [ ] **ERASE mode:** only needed multipliers, all black text on white; no black cell, no orange.
 - [ ] **Clipping:** the grid clips text to its cell now (the old draw code wrote past it). Look for cut-off text in the 49-px column: `VP2E 12`, a long domestic name with SHOW DOMESTIC MULTIPLIER NAME on.
 - [ ] **A focus mark:** with the grid drawing itself, click into a window. Is there a focus rectangle or a highlighted cell at the top left that was not there before? Say whether it bothers you.
-- [ ] **A dark Windows / gtk2 theme:** the grey follows the system's grey text colour; say whether worked still reads (the code falls back to the window's text below 3:1).
+- [ ] **A dark Windows / gtk2 theme:** the worked fill follows the window's text colour, so on a dark window a worked cell is LIGHT with dark text; say whether that reads (below 4.5:1 the text becomes black or white, whichever reads on the fill).
+- [ ] **The fade:** the pre-refresh worked cell faded black to white; this one is flat. Say if you want the fade back (a follow-up, not built).
 - [ ] **Bold for needed?** Weight is wired but off (a bold name may not fit 49 px). Say if you want to try it.
 - [ ] **Related grids checked together:** dupe sheet, SCP and the band map's orange M beside these windows. They were NOT changed (the band map's mult flag still has its own gradient). Say whether they now look out of step.
 
@@ -5610,14 +5611,14 @@ windows; there are five instances of one form class now. **None seen.**
 - [x] **Open all five.** Remaining mults, and the DX / zone / domestic / prefix
   windows. Each must show ITS OWN multiplier type, and the generic one must
   follow `RemainingMultDisplay` when you swap it (Alt-M or the menu).
-- [ ] *(2026-11-22: worked cells no longer fade -- flat grey text, no fill;
+- [ ] *(2026-11-22: worked cells no longer fade -- a flat black cell, white text;
   see "THE MULTIPLIER WINDOWS ARE FLAT". The ERASE and NONE halves stand.)*
   **Worked multipliers fade, needed ones are plain.** In `HILIGHT` mode all
   multipliers are listed and worked ones are gradiented to white with white
   text. In `ERASE` mode only NEEDED ones are listed at all. `NONE` empties
   the window.
 - [ ] *(2026-11-22: the fade and this question are SUPERSEDED -- the worked
-  cells are flat now, muted text with no fill; see "THE MULTIPLIER WINDOWS
+  cells are a flat black fill with white text; see "THE MULTIPLIER WINDOWS
   ARE FLAT" near the top. Left for you to remove.)*
   **THE FADE COLOUR IS A QUESTION FOR YOU.** The original picks it with
   `tr4wColorsArray[tr4wColors(Ord(rmt))]` -- the MULTIPLIER TYPE's ordinal

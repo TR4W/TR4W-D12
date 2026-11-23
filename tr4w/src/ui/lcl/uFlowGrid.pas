@@ -47,8 +47,9 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   WHAT IS SHARED IS THE MODEL AND THE ARITHMETIC.  What is NOT shared is the
   COLOUR, deliberately: the dupe sheet fills each cell with its district
   colour, SCP fills only the dupes and inverts their text, and a worked
-  remaining multiplier is muted text with no fill.  Those are different
-  windows saying different things; each form sets its own colours in
+  remaining multiplier is a flat fill of the window's text colour.  Those
+  are different windows saying different things; each form sets its own
+  colours in
   OnPrepareCanvas (see uRemMultsForm) and asks this object which entry is in
   the cell.
 

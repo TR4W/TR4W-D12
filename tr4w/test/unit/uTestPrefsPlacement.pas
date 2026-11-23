@@ -265,6 +265,8 @@ begin
                'LOG SUB TITLE belongs with the printed log (answer 5)');
    CheckEquals(NAV_PRINTEDLOG, PlacedPage('appearance.ctrlj.contactsPerPage'),
                'CONTACTS PER PAGE is the other printed-log page setting');
+   CheckEquals(NAV_COLORS,     PlacedPage('bandmap.workedMultColor'),
+               'a colour option belongs on Appearance > Colors, not on the page of the window that uses it (NY4I, 2026-11-22)');
 end;
 
 procedure TPrefsPlacementTests.Test_CWHasOneHome;

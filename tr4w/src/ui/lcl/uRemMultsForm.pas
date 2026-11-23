@@ -94,6 +94,7 @@ type
                                    aState: TGridDrawState);
    private
       FIndex: WindowsType;
+      procedure ApplyGridLineColor;
    public
       Mults: TFlowGrid;
 
@@ -148,6 +149,7 @@ uses
                         the type moved here with the setting *)
    uSpots,            (* WorkedMultColor -- BAND MAP WORKED MULT COLOR, issue 357 *)
    uRemMultWorkState, (* TRemMultWorkState, RemainingMultCellStyle *)
+   uLogGrid,          (* LogSoftRuleColor -- the log's light rule, shared *)
    uLCLFormHelpers;   // LeaveFormUnowned
 
 const
@@ -189,6 +191,25 @@ end;
 procedure TfrmRemMults.HandleCreate(Sender: TObject);
 begin
    Mults := TFlowGrid.Create(grdMults, BASECOLUMNWIDTH, CELL_HEIGHT);   // owns its TRemainingMult cells
+   ApplyGridLineColor;
+end;
+
+(* A LIGHT LINE BETWEEN CELLS (NY4I, 2026-11-22). Two neighbouring backups
+  wanted are flat fills of BAND MAP WORKED MULT COLOR and ran together into one
+  block. The lines themselves are the grid's own (goVertLine ALONE, in the .lfm:
+  vertical only, like the log -- NY4I, 2026-11-22, the horizontal ones went, drawn by the LCL's DrawCellGrid after OnPrepareCanvas's fill); this
+  only picks their colour, from the window colour MultsPrepareCanvas fills a
+  needed cell with, through the main log's rule (uLogGrid.LogSoftRuleColor) so
+  the two windows cannot drift. SHOW GRIDLINES is the main log's setting
+  (Settings.MainWindow) and does not govern this window: the line is always
+  shown here.
+
+  Called at create and again at every show, because the form is hidden and
+  reused (caHide) and the system window colour can change between opens. Never
+  from MultsPrepareCanvas: assigning GridLineColor invalidates the grid. *)
+procedure TfrmRemMults.ApplyGridLineColor;
+begin
+   grdMults.GridLineColor := TColor(LogSoftRuleColor(longint(ColorToRGB(clWindow))));
 end;
 
 procedure TfrmRemMults.HandleDestroy(Sender: TObject);
@@ -287,6 +308,7 @@ end;
 
 procedure TfrmRemMults.HandleShow(Sender: TObject);
 begin
+   ApplyGridLineColor;
    if Assigned(RemMultsOnShow) then
       begin
       RemMultsOnShow;
@@ -311,13 +333,16 @@ end;
   MULTIPLIER TYPE'S ORDINAL (tr4wColorsArray[tr4wColors(Ord(rmt))]) to white,
   under white text -- a colour nobody chose, and the most visual weight on the
   least useful cell. Now (uRemMultWorkState.RemainingMultCellStyle, unit
-  tested): a needed multiplier is the window's own text, a worked one is
-  muted text with no fill, and a backup wanted (issue 357) is a FLAT fill of
-  BAND MAP WORKED MULT COLOR -- the band map's orange M, the same meaning --
-  with black or white text, whichever reads on the operator's colour.
+  tested): a needed multiplier is the window's own text with no fill, a
+  worked one is a FLAT fill of the window's text colour under the window's
+  colour (black under white by default -- NY4I's ruling of 2026-11-22: the
+  pre-refresh black, without the fade), and a backup wanted (issue 357) is a
+  FLAT fill of BAND MAP WORKED MULT COLOR -- the band map's orange M, the
+  same meaning -- with black or white text, whichever reads on the
+  operator's colour.
 
   Every colour is resolved with ColorToRGB before the leaf sees it: clWindow,
-  clGrayText and a BTNFACE or HIGHLIGHT the operator may have picked are
+  clWindowText and a BTNFACE or HIGHLIGHT the operator may have picked are
   system colours, not RGB values.
 
   A cell past the end (idx < 0) is drawn as an empty needed cell: the window,
@@ -353,7 +378,6 @@ begin
                           Settings.RemainingMults.DisplayMode = HiLight,
                           ColorToRGB(clWindow),
                           ColorToRGB(clWindowText),
-                          ColorToRGB(clGrayText),
                           ColorToRGB(tr4wColorsArray[WorkedMultColor]),
                           backRGB, foreRGB, bold);
 

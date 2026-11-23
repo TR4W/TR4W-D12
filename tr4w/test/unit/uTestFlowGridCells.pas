@@ -48,6 +48,7 @@ type
       procedure Test_RemMults_ACellPastTheEndIsNotAMultiplier;
       procedure Test_RemMults_TheTextIsInTheCellsWithItsWorkedFlag;
       procedure Test_RemMults_ARebuildShowsTheSheetAsItStandsThen;
+      procedure Test_RemMults_CellsAreSeparatedByTheLogsLightRule;
    public
       procedure RunAllTests; override;
    end;
@@ -57,6 +58,10 @@ implementation
 uses
    Forms,             (* Application *)
    Controls,          (* alNone -- the reflow test sizes the grid itself *)
+   Graphics,          (* ColorToRGB, clWindow -- the grid line test *)
+   Grids,             (* goVertLine, goHorzLine *)
+   uLogGrid,          (* LogSoftRuleColor, LOG_RULE_MIN_CONTRAST *)
+   uRemMultWorkState, (* ContrastRatio *)
    uMasterForm,
    uRemMultsForm,
    (* The zone-window rebuild, issue 216 -- the builder and the sheet. *)
@@ -630,6 +635,32 @@ begin
    end;
 end;
 
+(* TWO NEIGHBOURING BACKUPS WANTED MUST NOT RUN TOGETHER (NY4I, 2026-11-22).
+  The grid draws its own VERTICAL lines only (like the log), in the main log's light
+  rule derived from the window colour -- one function, so the two windows
+  cannot drift -- and that rule is still told apart from the default BAND MAP
+  WORKED MULT COLOR (ORANGE) fill, not only from the window. *)
+procedure TFlowGridCellTests.Test_RemMults_CellsAreSeparatedByTheLogsLightRule;
+var
+   f: TfrmRemMults;
+   rule: longint;
+begin
+   BeginTest('Remaining mults: cells are separated by the log''s light rule');
+   InitWidgetSet;
+   f := TfrmRemMults.Create(nil);
+   try
+      CheckTrue(goVertLine in f.grdMults.Options, 'vertical lines are on');
+      CheckFalse(goHorzLine in f.grdMults.Options, 'no horizontal lines');
+      rule := LogSoftRuleColor(longint(ColorToRGB(clWindow)));
+      CheckEquals(rule, longint(ColorToRGB(f.grdMults.GridLineColor)),
+                  'the line is the log''s rule on the window colour');
+      CheckTrue(ContrastRatio(rule, longint(tr4wColorsArray[trOrange])) >= LOG_RULE_MIN_CONTRAST,
+                'the line is told apart from the orange backup fill');
+   finally
+      f.Free;
+   end;
+end;
+
 procedure TFlowGridCellTests.RunAllTests;
 begin
    Test_RemMults_EveryCellKeepsItsKindAndIndex;
@@ -637,6 +668,7 @@ begin
    Test_RemMults_ACellPastTheEndIsNotAMultiplier;
    Test_RemMults_TheTextIsInTheCellsWithItsWorkedFlag;
    Test_RemMults_ARebuildShowsTheSheetAsItStandsThen;
+   Test_RemMults_CellsAreSeparatedByTheLogsLightRule;
    Test_DupeSheet_EveryCallKeepsItsDistrict;
    Test_DupeSheet_ARebuildReplacesTheCells;
    Test_DupeSheet_ACellPastTheEndHasNoDistrict;

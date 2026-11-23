@@ -24,7 +24,9 @@ differ in colour because of the order of two unrelated enumerations. Nothing
 states a relationship and there is no reason for one. It was reproduced exactly
 in the LCL version, and **REMOVED 2026-11-22** under the UI refresh proposal's
 "Multiplier and related grids": the remaining-multiplier windows are now flat
-(needed = window text, worked = muted grey text with no fill, backup wanted =
+(needed = window text, worked = a flat fill of the window's text colour under
+the window's colour -- black under white by default, NY4I's ruling of
+2026-11-22 replacing a first muted-grey treatment -- backup wanted =
 a flat BAND MAP WORKED MULT COLOR fill), decided by
 `uRemMultWorkState.RemainingMultCellStyle` and painted through
 `OnPrepareCanvas` -- the first row of the table below, done for that one window

@@ -2500,8 +2500,9 @@ msgid "The color TR4W uses for an alert in the main window: the text of a radio'
 msgstr "색상 TR4W는 주요 창에 경고를 사용합니다 : 라디오가 분리되고있는 동안 라디오의 이름과 주파수의 텍스트, 키 업이 라디오가 전달되지 않기 때문에 억제 될 때 PTT 지표의 배경. 색상 목록에서 선택하십시오. 기본값은 ALERT입니다."
 
 #. Config command: BAND MAP WORKED MULT COLOR   (default: ORANGE)
+#, fuzzy
 msgctxt "TC_HELP_BAND_MAP_WORKED_MULT_COLOR"
-msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window. The default is ORANGE."
+msgid "The color of the M on a band map spot whose multiplier you have already worked, but fewer times than BAND MAP WORKED MULT LIMIT, on a call that is not a dupe. The same color is used for such a spot's line in the DX cluster window and for such a multiplier's cell in the remaining multipliers window. The default is ORANGE."
 msgstr "이미 일한 멀티플레이어의 밴드 맵 스폿에서 M의 색상, 하지만 몇 번 보다 BAND MAP WORKED MULT LIMIT, 중복되지 않은 통화에. 같은 색상은 DX 클러스터 창의 자리 라인에 사용됩니다. 기본값은 ORANGE입니다."
 
 #. Config command: BAND MAP WORKED MULT LIMIT   (default: 1)
