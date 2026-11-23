@@ -279,14 +279,17 @@ function TContestJockWhiteFieldDay.GetCabrilloSentExchange(const aMy: TMyStation
                                                            const aQso: ContestExchange;
                                                            const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentNotHandled(aMy, aQso, aCtx);
+   (* RS(T), serial, branch -- rule 8 (issue 368; NY4I: the sponsor accepts
+      Cabrillo). The sponsor publishes no QSO-line layout, so the order is
+      the rule's own sentence. *)
+   Result := CabrilloSentRSTQSONumberZone(aMy, aQso, aCtx);
 end;
 
 function TContestJockWhiteFieldDay.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                                const aQso: ContestExchange;
                                                                const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedNotHandled(aMy, aQso, aCtx);
+   Result := CabrilloReceivedRSTQSONumberZone(aMy, aQso, aCtx);
 end;
 
 function TContestJockWhiteFieldDay.GetFlags: TContestFlags;

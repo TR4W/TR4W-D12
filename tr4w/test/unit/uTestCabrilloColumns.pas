@@ -326,8 +326,32 @@ begin
    aSent := '<not pinned>';
    aRec := '<not pinned>';
    case aContest of
+      NZFIELDDAY:
+         begin
+         (* RS(T), serial, branch -- issue 368. Serial and zone variants as
+            the CQ WW and APSPRINT rows above: the branch is MY ZONE / the
+            record's zone, two digits. *)
+         Take(aVariant,
+              ['599 007 05',
+               '59  123 00',
+               '599 4567 12',
+               '599 007 05',
+               '599 007 05',
+               '599 -05 05',
+               '599 007 09',
+               '599 007 05'],
+              ['579 012 14',
+               '58  000 00',
+               '579 4567 40',
+               '579 012 14',
+               '579 012 14',
+               '579 4294967295 14',
+               '579 012 14',
+               '579 012 14'],
+              aSent, aRec);
+         end;
       DUMMYCONTEST, ALLJA, ARCI, COUNTYHUNTER, FISTS, GRIDLOC, JALONGPREFECT,
-      KIDSDAY, NZFIELDDAY, POTA, QCWA, QCWAGOLDEN, TENTEN, UA4WCHAMPIONSHIP, WWL,
+      KIDSDAY, POTA, QCWA, QCWAGOLDEN, TENTEN, UA4WCHAMPIONSHIP, WWL,
       XMAS:
          begin
          Take(aVariant,
@@ -1679,6 +1703,7 @@ begin
       + serial. Not pinned here; the helpers are left for a separate
       deletion. *)
    CheckHelper('CabrilloSentRSTStateOrQSONumber', CabrilloSentRSTStateOrQSONumber, ARI_DX, psUS, True);
+   CheckHelper('CabrilloSentRSTQSONumberZone', CabrilloSentRSTQSONumberZone, NZFIELDDAY, psUS, True);
    CheckHelper('CabrilloSentNotHandled', CabrilloSentNotHandled, ALLJA, psUS, True);
 
    CheckHelper('CabrilloReceivedGrid', CabrilloReceivedGrid, ARRLDIGI, psUS, False);
@@ -1711,6 +1736,7 @@ begin
       is not in this table; uTestReceivedYearDisplay pins its widths). *)
    CheckHelper('CabrilloReceivedRSTZone', CabrilloReceivedRSTZone, CQWWCW, psUS, False);
    CheckHelper('CabrilloReceivedRSTQTHOrQSONumber', CabrilloReceivedRSTQTHOrQSONumber, ARI_DX, psUS, False);
+   CheckHelper('CabrilloReceivedRSTQSONumberZone', CabrilloReceivedRSTQSONumberZone, NZFIELDDAY, psUS, False);
    CheckHelper('CabrilloReceivedNotHandled', CabrilloReceivedNotHandled, ALLJA, psUS, False);
 end;
 

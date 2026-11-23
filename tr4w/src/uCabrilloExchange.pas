@@ -74,10 +74,11 @@ unit uCabrilloExchange;
 
   A CONTEST THAT HAS NO COLUMN LAYOUT prints CabrilloExchangeErrorMarker in
   both columns, loudly, rather than blanks (Issue #1043): fifteen registered
-  contests run a shape the machine never had an arm for (ALL JA, ARCI,
+  contests ran a shape the machine never had an arm for (ALL JA, ARCI,
   County Hunter, FISTS, Grid Loc, JA Long Prefecture, Kids Day, NZ Field Day,
   POTA, QCWA, QCWA Golden, TEN-TEN, the UA4W Championship, WWL and Xmas), and
-  so does the classless DUMMYCONTEST. Each registered one states the marker
+  so does the classless DUMMYCONTEST. NZ Field Day left the list with issue
+  368 (CabrilloSentRSTQSONumberZone). Each registered one states the marker
   BY NAME (CabrilloSentNotHandled); the base answers it for a contest that
   states nothing. TContestBase.FormatCabrilloSentExchange logs the Error --
   it knows the contest's name; a helper does not. *)
@@ -242,6 +243,13 @@ function CabrilloSentStateZoneQSONumber(const aMy: TMyStationExchange;
 function CabrilloSentRSTZone(const aMy: TMyStationExchange;
                              const aQso: ContestExchange;
                              const aCtx: TCabrilloQSOContext): string;
+
+(* RST, serial and the zone, two digits: '%-3s %.*d %.2d'. The Jock White
+   Memorial Field Day's "RS(T) plus a serial number plus an NZART Branch
+   number", the branch kept in MY ZONE (issue 368). *)
+function CabrilloSentRSTQSONumberZone(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
 
 (* The previous record's serial received, then our serial: '%-.3u%-7.4d'
    (Radio YOC). *)
@@ -446,6 +454,12 @@ function CabrilloReceivedZoneQSONumber(const aMy: TMyStationExchange;
 function CabrilloReceivedRSTZone(const aMy: TMyStationExchange;
                                  const aQso: ContestExchange;
                                  const aCtx: TCabrilloQSOContext): string;
+
+(* RST, serial and zone, two digits: '%-3s %.*u %.2u' (the Jock White
+   Memorial Field Day's branch number, issue 368). *)
+function CabrilloReceivedRSTQSONumberZone(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aCtx: TCabrilloQSOContext): string;
 
 (* RST and the RECEIVED YEAR of a contest of aKind, from the record's field
    (uContestBase.ReceivedYearTextOf): '%-3s %-7s' -- issue 298, stage 3. A
@@ -752,6 +766,14 @@ function CabrilloSentRSTZone(const aMy: TMyStationExchange;
                              const aCtx: TCabrilloQSOContext): string;
 begin
   Result := SysUtils.Format('%-3s %-7.2d', [aCtx.RSTSent, MyZoneNumber(aMy)]);   // 4.51.1 issue#185
+end;
+
+function CabrilloSentRSTQSONumberZone(const aMy: TMyStationExchange;
+                                      const aQso: ContestExchange;
+                                      const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %.*d %.2d', [aCtx.RSTSent, SentSerialWidth(aQso.NumberSent, 3, aCtx),
+                                               aQso.NumberSent, MyZoneNumber(aMy)]);
 end;
 
 function CabrilloSentQSONumberPreviousQSONumber(const aMy: TMyStationExchange;
@@ -1111,6 +1133,14 @@ var
 begin
   zone := aQso.Zone;
   Result := SysUtils.Format('%-3s %-7.2d', [aCtx.RSTReceived, zone]);   // 4.51.1 issue185
+end;
+
+function CabrilloReceivedRSTQSONumberZone(const aMy: TMyStationExchange;
+                                          const aQso: ContestExchange;
+                                          const aCtx: TCabrilloQSOContext): string;
+begin
+  Result := SysUtils.Format('%-3s %.*u %.2u', [aCtx.RSTReceived, Max(3, aCtx.SerialWidthReceived),
+                                               aQso.NumberReceived, aQso.Zone]);
 end;
 
 function CabrilloReceivedRSTYear(aKind: TReceivedYearKind;
