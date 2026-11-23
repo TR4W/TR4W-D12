@@ -89,7 +89,8 @@ uses
   Windows,
 {$ENDIF}
   Contnrs,
-  SysUtils;
+  SysUtils,
+  uLogTime;       // the ONE source of a log timestamp: UTC, with a Z
 
 const
   Log4DVersion = '1.2.12';
@@ -1579,7 +1580,8 @@ begin
   FError   := Err;
   if TimeStamp = 0 then
      begin
-     FTimeStamp := Now
+     (* UTC, from uLogTime -- the same clock as every other log line. *)
+     FTimeStamp := LogUtcNow
      end
   else
      begin
@@ -2565,7 +2567,7 @@ begin
     '</head>' + CRLF +
     '<body bgcolor="#FFFFFF" topmargin="6" leftmargin="6">' + CRLF +
     '<hr size="1" noshade>' + CRLF +
-    SessionStartMsg + ' ' + DateTimeToStr(Now) + '<br>' + CRLF +
+    SessionStartMsg + ' ' + LogNowText + '<br>' + CRLF +
     '<br>' + CRLF +
     '<table cellspacing="0" cellpadding="4" border="1" ' +
     'bordercolor="#224466" width="100%">' + CRLF +
@@ -2650,7 +2652,11 @@ begin
          SysUtils.Format(FPatternParts[Index], [Event.LoggerName]);
        ppClassName: Result := Result +
          SysUtils.Format(FPatternParts[Index], [ValueUnknownMsg]);
-       ppDate:      Result := Result + FormatDateTime(DateFormat, Now);
+       (* THE EVENT'S OWN UTC TIME, FORMATTED BY uLogTime -- not Now at the
+         moment of formatting, and not a per-layout format: the DateFormat
+         option is ignored on purpose so no appender can write a time the
+         others do not (NY4I, 2026-11-23). *)
+       ppDate:      Result := Result + LogTimeText(Event.TimeStamp);
        ppException: Result := Result +
          SysUtils.Format(FPatternParts[Index], [Event.ErrorMessage]);
        ppFileName:  Result := Result +
@@ -4513,7 +4519,7 @@ end;
 
 initialization
   { Timestamping. }
-  StartTime := Now;
+  StartTime := LogUtcNow;      { the same clock as the events, or "elapsed" is wrong }
   { Synchronisation. }
   InitializeCriticalSection(CriticalNDC);
   { Standard levels. }

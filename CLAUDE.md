@@ -898,6 +898,14 @@ Log4D (`tr4w/include/Log4D.pas` — **not** under `src/`), global `logger: TLogL
 startup has not read since 2026-09-19. Any standalone EXE that links app units must assign
 the `MainUnit` global `logger` or it will AV.
 
+**A LOG TIME IS UTC, WITH A Z, AND IS MADE IN ONE PLACE** (NY4I, 2026-11-23: logs arrive from all over
+the world). `src/uLogTime.pas` -- `LogUtcNow`, `LogTimeText`, `LogNowText` -- is the only source of a log
+timestamp (`2026-11-23 02:58:27.466Z`: ISO order, 24-hour). Log4D's `%d` formats the EVENT's own UTC time
+through it and ignores the `dateFormat` option, `uCrashLog`'s early trace and the Telnet trace call it,
+and `Lint-LogTime` fails the build when a log-writing unit asks the RTL for the time itself. A new log
+writer calls `LogNowText`; it never formats `Now`. `hamlib_trace.log` is HamLib's C output and keeps its
+own clock.
+
 ## Documentation map
 
 The full topic-to-document table is **[`docs/DOCUMENTATION_MAP.md`](docs/DOCUMENTATION_MAP.md)**.

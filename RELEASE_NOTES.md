@@ -44,6 +44,13 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+#### Diagnostics
+
+- **Log times are UTC.** Every line in `tr4w.log` (and the start-up trace, crash reports and the Telnet
+  trace) now carries a UTC time in 24-hour form with a trailing Z, for example `2026-11-23 02:58:27.466Z`,
+  so a log sent from anywhere in the world reads the same. Lines written by earlier versions have no Z
+  and were in local time. `hamlib_trace.log` is HamLib's own and keeps its own time.
+
 ---
 
 ## 5.1.x — November 2026

@@ -45,7 +45,8 @@ uses
   LogRadio,
   uSpots,
   uSpotAge,   // UTCNow
-  uCrashLog,     // RegisterCrashContext -- see TelnetCrashContext
+  uLogTime,   // LogNowText -- the one log timestamp (UTC, with a Z)
+  uCrashLog,    // RegisterCrashContext -- see TelnetCrashContext
   uTelnetTrace,  // the in-memory ring this unit fills and dumps
   LogEdit,
   LogDupe,
@@ -1625,7 +1626,7 @@ begin
     The timestamp is UTC, like everything else a contest operator reads.  It
     costs one concatenation per cluster line and is what makes the dump worth
     reading: "what was happening just before" is a question about time. *)
-  TelnetTraceAdd(FormatDateTime('hh:nn:ss', UTCNow) + ' ' + p);
+  TelnetTraceAdd(LogNowText + ' ' + p);
 
   // The 1023-character cap that stood here is GONE with the reason for it.  It
   // existed because the owner-draw handler read each item back through

@@ -732,6 +732,7 @@ uses
    uCallHistory         in '..\..\src\uCallHistory.pas',
    uCallHistoryDownload in '..\..\src\uCallHistoryDownload.pas',
    uSpotAge             in '..\..\src\uSpotAge.pas',
+   uLogTime             in '..\..\src\uLogTime.pas',
    uSelfSpotRule        in '..\..\src\uSelfSpotRule.pas',
    uTestSelfSpot        in 'uTestSelfSpot.pas',
    uBandMapOrder        in '..\..\src\uBandMapOrder.pas',
@@ -763,6 +764,7 @@ uses
    uTestStartupTaskBar  in 'uTestStartupTaskBar.pas',
    uTestSpotStore      in 'uTestSpotStore.pas',
    uTestTelnetTrace     in 'uTestTelnetTrace.pas',
+   uTestLogTime         in 'uTestLogTime.pas',
    uTestTelnetConsoleKinds in 'uTestTelnetConsoleKinds.pas',
    uTestCrashContext    in 'uTestCrashContext.pas',
    uTestKeychain     in 'uTestKeychain.pas',
@@ -1544,6 +1546,7 @@ begin
    RegisterSuite(TCommandHelpTests.Create('CommandHelp'));
    RegisterSuite(TSpotStoreTests.Create('SpotStore'));
    RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));
+   RegisterSuite(TLogTimeTests.Create('LogTime'));
    RegisterSuite(TTelnetConsoleKindTests.Create('TelnetConsoleKinds'));
    RegisterSuite(TCrashContextTests.Create('CrashContext'));
    RegisterSuite(THPTimerTests.Create('HPTimer'));

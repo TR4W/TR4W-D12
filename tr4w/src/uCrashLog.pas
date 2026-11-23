@@ -239,6 +239,7 @@ uses
    // SysUtils is in the INTERFACE uses -- WriteCrashReport's signature needs
    // TObject there. Naming it twice is a duplicate-identifier error, not a
    // no-op.
+   uLogTime,   // LogNowText -- the early trace's timestamp, the log's own clock
    {$IFDEF UNIX}
    dl,         (* dladdr -- the image base on a position-independent build.
                  FPC's OWN binding, not a new DLL dependency; see
@@ -1383,7 +1384,7 @@ begin
          end;
       try
          WriteLn(f, Format('%s  pid %d  %s',
-                           [FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now),
+                           [LogNowText,
                             GetProcessID, aMessage]));
       finally
          CloseFile(f);

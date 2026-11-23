@@ -278,6 +278,11 @@ $lints = @(
    # replacement; the ratchet holds the one file still waiting for it.
    @{ Name = 'Lint-BareVal'; Arg = $Tr4wDir; NeedsFpc = $false }
 
+   # EVERY LOG TIMESTAMP IS MADE IN uLogTime (NY4I, 2026-11-23): UTC, ISO order,
+   # 24-hour, with a Z. A log-writing unit that asks the RTL for the time itself
+   # is a log that can disagree with the others.
+   @{ Name = 'Lint-LogTime'; Arg = $Tr4wDir; NeedsFpc = $false }
+
    # THE STDIN-BLOCKING HOOK STAYS BLOCKING (issue 289, 2026-11-12).
    # .claude/hooks/block-stdin-readers.py failed open on `python - --version`
    # and nothing tested it. Runs the hook's own test file; fails closed without
