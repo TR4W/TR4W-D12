@@ -148,6 +148,10 @@ type
       FInsertIfAbsent: string;
       FUpdateNewest: string;
       FSelectAll: string;
+      (* The last failed write was a refused write (read-only, I/O error), not
+        a full disk: the connection is replaced before the next write. *)
+      FReopenNeeded: boolean;
+      procedure ReopenConnection;
       procedure BuildStatements;
       procedure Report(const aFormat: string; aLevel: integer; const aArgs: array of const);
       procedure BeginWrite;
@@ -159,6 +163,7 @@ type
       function Judge(aDb: TLogDatabase; out aFresh: boolean; out aWhy: string): boolean;
       function ScalarText(aDb: TLogDatabase; const aSql: string): string;
       function ReadCount: integer;
+      function CountRows(aDb: TLogDatabase): integer;
       function RowsValid(const aValues: TWireValues): boolean;
       procedure BindRow(aQuery: TObject; const aValues: TWireValues);
    public
@@ -209,6 +214,13 @@ type
         destination must not exist. aWhy names the failure. *)
       function BackupTo(const aDestination: string; out aWhy: string): boolean;
 
+      (* THE DISK, FILLED ON PURPOSE: PRAGMA max_page_count on the write
+        connection, so SQLite refuses growth exactly as a full disk does (the
+        way the station's tests fill theirs). SQLite will not set it below the
+        file's present size, so 1 means "exactly as big as it is now"; 0 or less
+        lifts the limit. Per connection: ReopenConnection drops it. *)
+      procedure LimitPages(aPages: integer);
+
       (* Store a row unless its identity is already held. *)
       function Insert(const aValues: TWireValues): TWireInsert;
       (* Rewrite the NEWEST row with this identity as the whole of aValues (last
@@ -255,9 +267,24 @@ function WireStoreCreateTable(aColumns: TWireColumns): string;
 (* The CREATE INDEX statement for the identity. *)
 function WireStoreCreateIndex: string;
 
+(* CAN THE SQLITE LIBRARY BE LOADED AT ALL? Asked at start-up, BEFORE the log is
+  opened, so a missing or wrong-architecture sqlite3.dll is named for what it is
+  instead of surfacing as "cannot open the log" (issue 341, P3). '' when the
+  library loads (a probe handle is taken and released at once; the SQLite
+  binding loads it again by the same name and search).
+
+  The loader looks in the executable's folder first, then the system folders,
+  then PATH: tr4wserver.exe lives in a subfolder of the installation, so a DLL
+  only in the PARENT folder is NOT found -- the text names where the server was
+  started from. aLibraryName and aExeDir are parameters so a test can ask about a
+  library that does not exist. Never raises. *)
+function WireStoreLibraryProblemFor(const aLibraryName, aExeDir: string): string;
+function WireStoreLibraryProblem: string;
+
 implementation
 
 uses
+   dynlibs,
    db,
    sqldb;
 
@@ -341,6 +368,44 @@ end;
 function WireStoreCreateIndex: string;
 begin
    Result := 'CREATE INDEX idx_qso_guid ON qso(' + COL_GUID + ')';
+end;
+
+function WireStoreLibraryProblemFor(const aLibraryName, aExeDir: string): string;
+var
+   handle: TLibHandle;
+begin
+   Result := '';
+   try
+      (* dynlibs is the RTL's own loader wrapper: no new direct DLL call. *)
+      handle := dynlibs.LoadLibrary(aLibraryName);
+      if handle <> NilHandle then
+         begin
+         dynlibs.FreeLibrary(handle);
+         Exit;
+         end;
+      Result := Format('The SQLite library "%s" could not be loaded. The server looked ' +
+                       'beside itself ("%s"), then in the system folders and on PATH. ' +
+                       'tr4wserver.exe is installed in a subfolder, so a copy only in the ' +
+                       'TR4W folder above it is not found: put the library beside ' +
+                       'tr4wserver.exe. ',
+                       [aLibraryName, aExeDir]);
+      {$IFDEF WINDOWS}
+      (* The station's own diagnosis: not found, not a PE file, or the wrong
+        architecture (Windows reports that one as "module not found" too). *)
+      Result := Result + DiagnoseSQLiteLoad(IncludeTrailingPathDelimiter(aExeDir) + aLibraryName);
+      {$ENDIF}
+   except
+      on E: Exception do
+         begin
+         Result := 'The SQLite library could not be checked: ' + E.Message;
+         end;
+   end;
+end;
+
+function WireStoreLibraryProblem: string;
+begin
+   Result := WireStoreLibraryProblemFor(SQLITE_LIBRARY_NAME,
+                                        ExtractFilePath(ParamStr(0)));
 end;
 
 (* --------------------------------------------------------------------------- *)
@@ -502,7 +567,15 @@ begin
    FCount := -1;
    case SQLiteWriteFailure(E) of
       lwfDiskFull: kind := 'the disk is full';
-      lwfWriteError: kind := 'the disk refused a write';
+      lwfWriteError:
+         begin
+         kind := 'the disk refused a write';
+         (* A connection that met SQLITE_READONLY or an I/O error does not
+           reliably recover (the station opens a fresh one; log-database agent,
+           2026-11-18). A full disk does: the rollback frees the page and the
+           next write is the probe. *)
+         FReopenNeeded := True;
+         end;
    else
       kind := E.Message;
    end;
@@ -522,8 +595,55 @@ begin
       begin
       Exit;
       end;
+   if FReopenNeeded then
+      begin
+      ReopenConnection;
+      end;
    FDb.EndTransaction;
    FDb.Transaction.StartTransaction;
+end;
+
+(* A NEW WRITE CONNECTION, after a refused write. The old one is kept until the
+  new one is open, so a failure here leaves a store that still answers reads and
+  raises into the caller's own handler (FailWrite), which reports it; the next
+  write tries again. *)
+procedure TServerWireStore.ReopenConnection;
+var
+   fresh, old: TLogDatabase;
+begin
+   fresh := TLogDatabase.Create;
+   try
+      fresh.OpenWithoutIdentity(FFileName, False);
+   except
+      fresh.Free;
+      raise;
+   end;
+   old := FDb;
+   FDb := fresh;
+   FReopenNeeded := False;
+   try
+      old.Free;
+   except
+      on Exception do
+         begin
+         (* The old connection is abandoned either way. *)
+         end;
+   end;
+   Report('[WireStore] reopened the write connection after a refused write.', LEVEL_WARN, []);
+end;
+
+procedure TServerWireStore.LimitPages(aPages: integer);
+begin
+   if FDb = nil then
+      begin
+      Exit;
+      end;
+   if aPages <= 0 then
+      begin
+      aPages := 1073741823;
+      end;
+   FDb.EndTransaction;
+   FDb.Connection.ExecutePragma(AnsiString('PRAGMA max_page_count = ' + IntToStr(aPages)));
 end;
 
 (* After a read that is not inside a hold. *)
@@ -553,7 +673,13 @@ begin
    finally
       q.Free;
    end;
-   aDb.EndTransaction;
+   (* NOT during a hold: EndTransaction COMMITS, which would end a held run's
+     transaction early (the next insert would then run outside it and Release
+     would find none). Count, Contest and MaxNumberSent read through here. *)
+   if (aDb <> FDb) or (not FHeld) then
+      begin
+      aDb.EndTransaction;
+      end;
 end;
 
 (* IS THIS FILE ONE OF OURS, OF THIS VERSION, WITH THESE COLUMNS? Reads only.
@@ -674,7 +800,14 @@ end;
 
 function TServerWireStore.ReadCount: integer;
 begin
-   Result := StrToIntDef(ScalarText(FDb, 'SELECT COUNT(*) FROM qso'), -1);
+   Result := CountRows(FDb);
+end;
+
+(* The rows of ANY connection's qso table (the backup's copy is counted too), -1
+  when it cannot be read. *)
+function TServerWireStore.CountRows(aDb: TLogDatabase): integer;
+begin
+   Result := StrToIntDef(ScalarText(aDb, 'SELECT COUNT(*) FROM qso'), -1);
 end;
 
 function TServerWireStore.Initialize(out aWhy: string): TWireStoreInit;
@@ -687,6 +820,7 @@ begin
    Result := wsiCannotOpen;
    FreeAndNil(FDb);
    FHeld := False;
+   FReopenNeeded := False;
    existed := FileExists(FFileName);
    fresh := True;
 
@@ -718,6 +852,23 @@ begin
                begin
                Result := wsiRefused;
                Exit;
+               end;
+            (* THE INTEGRITY CHECK IS MADE HERE, ON THE READ-ONLY PEEK, BEFORE
+              THE FILE IS OPENED FOR WRITING (issue 341, P3): a damaged log is
+              refused with not one byte of it written, and never served or added
+              to. It used to run after the read-write open, which had already
+              set the journal mode and replayed the -wal. A fresh file has
+              nothing to check. *)
+            if not fresh then
+               begin
+               integrity := peek.CheckIntegrity;
+               if not integrity.Ok then
+                  begin
+                  aWhy := Format('"%s" failed its integrity check: %s', [FFileName, integrity.Report]);
+                  Result := wsiRefused;
+                  Exit;
+                  end;
+               Report('[WireStore] "%s" passed its integrity check.', LEVEL_INFO, [FFileName]);
                end;
          except
             on E: Exception do
@@ -758,18 +909,6 @@ begin
             end;
          Exit;
          end;
-      end
-   else
-      begin
-      (* A file that was already ours is checked before it is written to. *)
-      integrity := FDb.CheckIntegrity;
-      if not integrity.Ok then
-         begin
-         aWhy := Format('"%s" failed its integrity check: %s', [FFileName, integrity.Report]);
-         FreeAndNil(FDb);
-         Result := wsiRefused;
-         Exit;
-         end;
       end;
 
    if LowerCase(FDb.JournalMode) <> 'wal' then
@@ -790,6 +929,10 @@ begin
       Exit;
       end;
    try
+      if FReopenNeeded then
+         begin
+         ReopenConnection;
+         end;
       FDb.EndTransaction;
       FDb.Transaction.StartTransaction;
       FHeld := True;
@@ -894,6 +1037,10 @@ begin
 end;
 
 function TServerWireStore.BackupTo(const aDestination: string; out aWhy: string): boolean;
+var
+   verify: TLogDatabase;
+   integrity: TIntegrityResult;
+   expected, copied: integer;
 begin
    Result := False;
    aWhy := '';
@@ -903,12 +1050,53 @@ begin
       Exit;
       end;
    try
+      (* A run still held is uncommitted, so the copy would not hold it and the
+        count below could not match: commit it first. *)
+      if not Release then
+         begin
+         aWhy := 'a run of QSOs could not be committed before the backup';
+         Exit;
+         end;
+      expected := ReadCount;
+      if expected < 0 then
+         begin
+         aWhy := 'the log could not be counted before the backup';
+         Exit;
+         end;
       FDb.SnapshotTo(aDestination, False);
-      Result := FileExists(aDestination);
-      if not Result then
+      if not FileExists(aDestination) then
          begin
          aWhy := 'the backup file was not written';
+         Exit;
          end;
+      (* VERIFIED, AS THE STATION VERIFIES ITS OWN: the copy is opened read-only,
+        passes the integrity check and holds as many rows as the log held. A
+        copy that fails either is removed, so no one trusts it later. *)
+      verify := TLogDatabase.Create;
+      try
+         verify.OpenWithoutIdentity(aDestination, True);
+         integrity := verify.CheckIntegrity;
+         if not integrity.Ok then
+            begin
+            aWhy := 'the backup failed its integrity check: ' + integrity.Report;
+            end
+         else
+            begin
+            copied := CountRows(verify);
+            if copied <> expected then
+               begin
+               aWhy := Format('the backup holds %d rows and the log held %d', [copied, expected]);
+               end;
+            end;
+      finally
+         verify.Free;
+      end;
+      if aWhy <> '' then
+         begin
+         DeleteFile(aDestination);
+         Exit;
+         end;
+      Result := True;
    except
       on E: Exception do
          begin

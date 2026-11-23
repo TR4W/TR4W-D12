@@ -203,8 +203,19 @@ begin
         Windows.lstrcat(@MultsFrequenciesFileName, 'MULTS_FREQ.BIN');
         LoadinMultsFrequencies;
 }
-        (* THE OLD FLAT FILE, if there is one, is reported once and left alone. *)
-        ReportUnusedFlatLog;
+        (* THE SQLITE LIBRARY FIRST: a missing or wrong-bitness sqlite3.dll is
+          named (and where the server looked) instead of reading as a log that
+          cannot be opened. The server is installed in a subfolder of the
+          program folder, and the loader starts at the executable's own. *)
+        LogWhy := UnicodeString(WireStoreLibraryProblem);
+        if LogWhy <> '' then
+          begin
+            logger.Error('the SQLite library cannot be loaded: ' + LogWhy);
+            ServerMessageBox('The server cannot start:' + #13#10 + #13#10 + LogWhy,
+                             MB_OK or MB_ICONWARNING);
+            ServerShutDown;
+            Exit;
+          end;
         (* THE LOG IS THE STORE'S (uServerWireStore): Initialize opens or creates
           SERVERLOG.tr4wsrv, REFUSES (untouched, with its reason) a file that is
           not this server's, of another schema, of other columns or damaged, and
@@ -231,6 +242,9 @@ begin
               Exit;
             end;
         end;
+        (* THE OLD FLAT FILE, if there is one, is set aside with a stamp now that
+          the database opened cleanly (never deleted). *)
+        ReportUnusedFlatLog;
         //        SortServerLog;
         ScanLogForSerialsNumbers;
 

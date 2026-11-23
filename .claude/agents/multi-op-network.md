@@ -769,6 +769,26 @@ state follows the server's Clear-server-log or any restart that lost `SERVERLOG.
   `TStubLink`, `WaitWrites` and `NewImage` now live in `uTestNetSupport`. **The real
   two-station check is BENCH_QUEUE ("A SERVER THAT LOST ITS LOG").**
 
+## The server store's integrity rules (issue 341 P3, 2026-11-23; the next section is STALE on "nothing calls it")
+
+`tr4wserverUnit` DOES call `uServerWireStore` since W3+W5; the section below is W2's
+record. What is true now, and not obvious from the code:
+
+- **Integrity check at start runs on the READ-ONLY peek**, before the read-write open
+  (which sets WAL and replays the `-wal`). A damaged or foreign file is refused untouched.
+- **Full disk = roll back, notice once, relay anyway, the NEXT write is the probe**
+  (`NoteServerLogWritten` is the recovery notice). Do not add a second read-only state.
+  `lwfWriteError` (not a full disk) makes the store REOPEN its connection first.
+  `TServerWireStore.LimitPages` is the test's `PRAGMA max_page_count`.
+- **Clear-all (8230, the only live one) backs up with `BackupTo` first and refuses without
+  one.** The copy is verified (integrity + row count) and a log that cannot be COUNTED is
+  refused too (`Count` is -1 then, which once skipped the backup).
+- **`sqlite3.dll` must sit beside `tr4wserver.exe`**: the installer puts the server in
+  `server\`, a level below the app's copy, and the loader starts at the exe's folder.
+  `WireStoreLibraryProblem` names it at start.
+- **No `SERVERLOG.TRW` import or exporter exists, on purpose**: a flat record has no
+  `guid`, the wire's identity. The old file is renamed with a stamp after a clean start.
+
 ## The server's SQLite store EXISTS and nothing calls it yet (W2, 2026-11-22)
 
 `src/uServerWireStore.pas` (`TServerWireStore`, tests `uTestServerWireStore`) is the

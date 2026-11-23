@@ -6,7 +6,57 @@
 > 1-12 are kept as the record of what was read and why; where they disagree with
 > section 13, section 13 governs.
 
-Design note, 2026-11-19. **Nothing here is built.** It answers the open questions
+## STATUS, 2026-11-23: WHAT IS BUILT AND WHAT IS NOT (read this, then section 13)
+
+Sections 1-12 are the 2026-11-19 design note and are history ("Nothing here is
+built" was true then). The in-tree `tr4wserver` keeps its log in
+`SERVERLOG.tr4wsrv`, a SQLite database (`uServerWireStore`, protocol 5 rows), and
+sections 13.6-13.7 describe it. NY4I's rulings of 2026-11-23 adopt the
+recommendations of D1-D10 where section 13 did not already overrule them: D4
+(set the `.TRW` aside with a stamp, never delete), D5 (the `.tr4wsrv` extension and
+`application_id` `'TR4S'`), D6 (no `Forms` or sqldb guard on the search path), D9
+(Clear-all-logs refuses without a backup); D10 (#340) is a separate issue.
+
+**BUILT** (file evidence is in the unit headers; tests in `uTestServerWireStore`):
+
+| item | where |
+| --- | --- |
+| the store, one transaction per QSO, a held OFFLINE run is one transaction, ACKed after `Release` | `uServerWireStore.pas`, `uServerWireFrames.pas` |
+| refusal of a file that is not ours (application id, schema version, columns) on a READ-ONLY peek | `TServerWireStore.Initialize` |
+| **integrity check at start, ON THE PEEK, before the file is opened for writing** (2026-11-23; it used to run after the read-write open) | `Initialize` |
+| the sync port is a snapshot: the header's row count is `Length(rows)` of the ONE `ReadAll(rows, contest)` that also supplies the rows | `uServerWireFrames.SendSyncStream` (design 6.2's race is gone by construction) |
+| full disk: roll back, `OnWriteFailed` -> one intercom notice on the transition, a modal, `LOG NOT SAVING`; the QSO is still relayed; the NEXT write is the recovery probe and `NoteServerLogWritten` sends the recovery notice | `FailWrite`, `tr4wserverUnit.NoteServerLogFailure/Written` |
+| a refused write that is not a full disk (`lwfWriteError`) makes the store open a fresh write connection before its next write | `ReopenConnection` (2026-11-23) |
+| Clear-all-logs (the only live truncating message, `SM_CLEARALLLOGS_MESSAGE` 8230; the 8xxx `SM_CLEARSERVERLOG` arm is in a brace comment) takes a dated `VACUUM INTO` backup first and REFUSES the clear if it cannot; the copy is now VERIFIED (opened read-only, integrity check, same row count; a held run is committed first) and an UNREADABLE log (`Count` = -1) is no longer cleared unbacked | `ClearServerLog`, `BackupTo` |
+| the SQLite library is probed at start (RTL `dynlibs`), and a missing or wrong-bitness `sqlite3.dll` is named with where the server looked | `WireStoreLibraryProblem`, `tr4wserver.lpr` |
+| `sqlite3.dll` ships in `server\` (the loader starts at the EXECUTABLE'S folder and `tr4wserver.exe` is a level below the app's copy), and `Build-Server.ps1` stages it beside the exe | `full.nsi` `secserv`, `Build-Server.ps1` |
+| an existing `SERVERLOG.TRW` is renamed `SERVERLOG before the server log database <stamp>.TRW` after the database opened cleanly; never deleted | `ReportUnusedFlatLog` |
+| the search-path guard on sqldb/fcl-db is retired (its premise was false) | `Get-SearchPaths.ps1` |
+
+**NOT BUILT, and why:**
+
+- **A one-time IMPORT of `SERVERLOG.TRW` and a `--export-trw` exporter.** Blocked,
+  not forgotten. A 376-byte record names its QSO by `(ceQSOID1, ceQSOID2)`; the wire
+  and this store name it by `guid`, and the record-to-column mapping lives in the
+  station's repository, which cannot be linked into the server. An import that gave
+  the rows an empty guid would store them every time and let each station insert
+  them a second time on catch-up; one that made up guids would put a second copy of
+  every QSO in every station. The `.tr4wsrv` file is the interchange now (13.6).
+  QSOs that were only in the old file reach the new log when a station that holds
+  them links and pushes them (restock). NY4I to rule if he still wants a one-way
+  station-side import.
+- **A lint replacing the retired guard.** CLAUDE.md says no substitute guard on the
+  console/LCL boundary is to be invented, and nothing precise about sqldb is worth
+  stating: `uServerWireStore` is meant to be the one server unit that uses sqldb.
+- **A real process kill** is netprobe's (`--case offline-ack`, `catchup`), not a
+  unit test; the unit tests prove commit visibility to a second connection and
+  full-disk behaviour through `PRAGMA max_page_count`.
+- **TR4WServerPy** (another repository) has none of this.
+- **Not driven by a test:** `ReopenConnection` (needs a SQLITE_READONLY inject), the
+  modal and notice wiring in `tr4wserverUnit` (needs the server running), the
+  installer's second `sqlite3.dll`.
+
+Design note, 2026-11-19. It answers the open questions
 in issue TR4W/TR4W-D12 #341 from what was read, says what was only inferred, and
 recommends a phased plan. NY4I's rulings are listed at the end; none is assumed.
 

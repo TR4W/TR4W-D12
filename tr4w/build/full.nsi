@@ -287,6 +287,7 @@ mig_delete:
 	Delete "$OLDDIR\sqlite3.dll"
 	Delete "$OLDDIR\tr4wconvert.exe"
 	Delete "$OLDDIR\server\tr4wserver.exe"
+	Delete "$OLDDIR\server\sqlite3.dll"
 	RMDir "$OLDDIR\server"
 	; The shortcuts point at the deleted exe.  The ones this installer creates
 	; replace them below.
@@ -436,6 +437,12 @@ Section "tr4wserver.exe" secserv
   SectionIn RO
   SetOutPath "$INSTDIR\server"
   File "${SERVERDIR}\tr4wserver.exe"
+  ; THE SERVER'S OWN COPY OF THE SQLITE LIBRARY (issue 341).  The server's log is
+  ; a SQLite database and FPC binds the library at run time by plain name; the
+  ; loader looks in the EXECUTABLE'S folder first, and this exe lives in server\,
+  ; one level below the copy the app uses.  Without this line the server cannot
+  ; open its own log when started from Explorer or a shortcut.  Same 64-bit file.
+  File "${BINDIR}\sqlite3.dll"
   SetOutPath "$INSTDIR"
 SectionEnd
 

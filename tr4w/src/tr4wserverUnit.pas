@@ -375,8 +375,9 @@ procedure NoteServerLogWritten;
 procedure ShowServerProblems;
 (* SAY SO TO EVERY CONNECTED STATION, as the intercom's own line. *)
 procedure SendNoticeToStations(const aText: string);
-(* THE OLD FLAT FILE, SERVERLOG.TRW, beside the new database: said ONCE in the
-  server log and left where it is (never read, never deleted). *)
+(* THE OLD FLAT FILE, SERVERLOG.TRW, beside the new database: renamed with a
+  stamp and said once in the server log (never read, never deleted). Call it
+  only after the database opened cleanly. *)
 procedure ReportUnusedFlatLog;
 (* A WIRE QSO MESSAGE AT ServerBuffer[aAt], handled; returns the bytes it
   occupied (header + payload). *)
@@ -1058,15 +1059,37 @@ end;
 
 procedure ReportUnusedFlatLog;
 var
-  trw: string;
+  trw, stamped: string;
 begin
   trw := ChangeFileExt(string(CharBufferBytes(ServerLogFileName)), '.TRW');
-  if FileExists(trw) then
+  if not FileExists(trw) then
+     begin
+     Exit;
+     end;
+  (* SET ASIDE WITH A STAMP, NEVER DELETED (design D4, NY4I 2026-11-23), and
+    only after the database opened cleanly (the caller). The new name stops the
+    warning repeating on every start and keeps the file as it was, so it is
+    still the rollback for an older server. It is not imported: a flat record
+    has no guid, the identity the wire and this store use (design 13.7). *)
+  stamped := ChangeFileExt(trw, '') + ' before the server log database ' +
+             FormatDateTime('yyyymmdd"T"hhnnss', Now) + '.TRW';
+  if FileExists(stamped) then
      begin
      logger.Warn('[Log] ' + trw + ' (the old flat server log) is not used by this server ' +
-                 '(protocol 5 keeps its log in a SQLite database) and is left where it is. ' +
-                 'It is never read or deleted; QSOs in it reach the new log only when a station ' +
-                 'that holds them links and pushes them.');
+                 'and could not be set aside: ' + stamped + ' already exists. It is left as it is.');
+     Exit;
+     end;
+  if RenameFile(trw, stamped) then
+     begin
+     logger.Warn('[Log] ' + trw + ' (the old flat server log) is not used by this server ' +
+                 '(protocol 5 keeps its log in a SQLite database). It was renamed to ' + stamped +
+                 ' and is never read or deleted; QSOs in it reach the new log only when a ' +
+                 'station that holds them links and pushes them.');
+     end
+  else
+     begin
+     logger.Warn('[Log] ' + trw + ' (the old flat server log) is not used by this server ' +
+                 'and could not be renamed; it is left where it is.');
      end;
 end;
 
@@ -1194,9 +1217,20 @@ end;
 function ClearServerLog: boolean;
 var
   name, backup, why: string;
+  rows: integer;
 begin
   Result := False;
-  if ServerLogStore.Count > 0 then
+  rows := ServerLogStore.Count;
+  if rows < 0 then
+     begin
+     (* A log that cannot even be counted cannot be shown to be empty, so it is
+       not cleared: Count is -1 for an unreadable store and that used to skip
+       the backup and clear anyway. *)
+     logger.Error('[Log] clear all logs REFUSED: the log could not be read, so it cannot be backed up');
+     SendNoticeToStations('Server log NOT cleared: it could not be read to back it up.');
+     Exit;
+     end;
+  if rows > 0 then
      begin
      name := string(CharBufferBytes(ServerLogFileName));
      backup := ChangeFileExt(name, '') + ' before clear ' +

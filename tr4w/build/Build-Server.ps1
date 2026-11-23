@@ -166,5 +166,30 @@ function Test-PEHasDialogId
 # PE resource-directory walking that took real effort to get right, the client
 # still ships dialog resources, and deleting it would mean writing it again.
 
+# -----------------------------------------------------------------------------
+# THE SERVER'S LOG IS A SQLITE DATABASE (issue 341), AND THE LIBRARY IS BOUND AT
+# RUN TIME BY PLAIN NAME, so the loader looks in the EXECUTABLE'S folder first.
+# Stage the 64-bit sqlite3.dll beside the server exe, from redist\ (never from
+# target\), after the same architecture check Build-App uses -- a wrong-bitness
+# DLL is reported by Windows as "module not found". The installer ships its own
+# copy in server\ (full.nsi); this is for running the server from the tree.
+# -----------------------------------------------------------------------------
+$redistDir = Get-Tr4wRedistDir -Tr4wDir $TR4W_DIR
+$sqliteSource = Join-Path $redistDir 'sqlite3.dll'
+if (-not (Test-Path -LiteralPath $sqliteSource))
+   {
+   Write-Host "BUILD FAILED: $sqliteSource is missing, so the server cannot open its log." -ForegroundColor Red
+   exit 1
+   }
+$badArch = @(Get-Tr4wWrongArchDlls -Dir $redistDir)
+if ($badArch.Count -gt 0)
+   {
+   Write-Host 'BUILD FAILED: a runtime DLL in redist is the wrong architecture; nothing was staged.' -ForegroundColor Red
+   $badArch | ForEach-Object { Write-Host "  $_" }
+   exit 1
+   }
+Copy-Item -LiteralPath $sqliteSource -Destination (Join-Path $exeDirectory 'sqlite3.dll') -Force
+Write-Host "  staged sqlite3.dll beside $exe"
+
 Write-Host "BUILD OK -> $exe"
 exit 0

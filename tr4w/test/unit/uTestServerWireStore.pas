@@ -12,9 +12,10 @@ unit uTestServerWireStore;
   opens a SECOND connection to the same file while the first is still open and
   asserts every acknowledged row is visible to it -- that proves each Insert was
   COMMITTED (WAL, synchronous = FULL, both read back and asserted), not that the
-  bytes survived a power cut. A failed write (a full disk) is not injected either:
-  OnWriteFailed is wired and the rollback path is shared by every write, but no
-  test makes SQLite refuse one. *)
+  bytes survived a power cut. A full disk IS injected (issue 341, P3): PRAGMA
+  max_page_count through TServerWireStore.LimitPages, as the station's tests
+  fill theirs. A refused write that is NOT a full disk (SQLITE_READONLY, an I/O
+  error), which makes the store reopen its connection, is not driven here. *)
 
 {$I ..\..\src\tr4w.inc}
 
@@ -44,6 +45,11 @@ type
       procedure Test_AnAcknowledgedQsoIsVisibleToASecondConnection;
       procedure Test_TheDdlIsTheColumnsFile;
       procedure Test_TheCallbacks;
+      procedure Test_ADamagedFileIsRefusedBeforeItIsOpenedForWriting;
+      procedure Test_AFullDiskKeepsEveryAcknowledgedQsoAndRecovers;
+      procedure Test_ARunThatMeetsAFullDiskLeavesNothingOfItself;
+      procedure Test_TheBackupIsAVerifiedCopyOfWhatIsCommitted;
+      procedure Test_AMissingSqliteLibraryIsNamed;
    public
       procedure RunAllTests; override;
    end;
@@ -56,6 +62,7 @@ uses
 
 var
    GWritten, GCountCalls, GFailed, GLastCount: integer;
+   GLastReason: string;
 
 procedure NoteWritten;
 begin
@@ -65,6 +72,7 @@ end;
 procedure NoteFailed(const aReason: string);
 begin
    Inc(GFailed);
+   GLastReason := aReason;
 end;
 
 procedure NoteCountChanged(aCount: integer);
@@ -767,6 +775,246 @@ begin
    end;
 end;
 
+(* A ROW BIG ENOUGH THAT A FEW OF THEM FILL A 4 KB PAGE. *)
+function BigRow(aNumber: integer): TWireValues;
+begin
+   Result := MakeRow(['guid', 'callsign'],
+                     ['big-' + IntToStr(aNumber), StringOfChar('x', 1500)]);
+end;
+
+(* issue 341, P3: a file that passes the header and schema checks but whose
+  pages are damaged is refused on the READ-ONLY peek, so not one byte of it is
+  written -- and the server never carries on over it. *)
+procedure TServerWireStoreTests.Test_ADamagedFileIsRefusedBeforeItIsOpenedForWriting;
+var
+   fn, before, why: string;
+   store: TServerWireStore;
+   i, pageSize: integer;
+   f: TFileStream;
+   hdr: array[0..1] of Byte;
+   junk: array[0..11] of Byte;
+begin
+   BeginTest('Test_ADamagedFileIsRefusedBeforeItIsOpenedForWriting');
+   fn := ScratchFile('damaged' + WIRE_STORE_EXTENSION);
+   store := nil;
+   CheckTrue(OpenStore(fn, store) = wsiReady, 'opens');
+   try
+      for i := 1 to 300 do
+         begin
+         CheckTrue(store.Insert(BigRow(i)) = wiStored, 'row ' + IntToStr(i));
+         end;
+   finally
+      FreeAndNil(store);
+   end;
+   CheckFalse(FileExists(fn + '-wal'), 'the last connection closed, so the data is in the main file');
+
+   (* Overwrite the b-tree PAGE HEADER of a page in the middle of the file (type,
+     first free block, cell count, content start): the rows' text would still
+     look well formed, so damaging the structure is what integrity_check cannot
+     miss. Page 1, with the file header and the schema, is untouched, so only
+     the integrity check (or a read of that page) can see it. The page size is in
+     bytes 16-17 of the file, big-endian; 1 means 65536. *)
+   f := TFileStream.Create(fn, fmOpenReadWrite);
+   try
+      f.Position := 16;
+      f.ReadBuffer(hdr, SizeOf(hdr));
+      pageSize := (Integer(hdr[0]) shl 8) or hdr[1];
+      if pageSize = 1 then
+         begin
+         pageSize := 65536;
+         end;
+      CheckTrue(f.Size > 8 * pageSize, 'the file is big enough to damage a late page');
+      for i := Low(junk) to High(junk) do
+         begin
+         junk[i] := $FF;
+         end;
+      f.Position := Int64(f.Size div pageSize div 2) * pageSize;
+      f.WriteBuffer(junk, 12);
+   finally
+      f.Free;
+   end;
+   before := FileBytes(fn);
+
+   store := TServerWireStore.Create(QsoWireColumns, fn);
+   try
+      CheckTrue(store.Initialize(why) = wsiRefused, 'a damaged log is refused');
+      CheckTrue(why <> '', 'and says why: ' + why);
+   finally
+      store.Free;
+   end;
+   CheckTrue(before = FileBytes(fn), 'and is byte for byte as it was');
+end;
+
+(* issue 341, P3: the disk fills (PRAGMA max_page_count). The refused QSO is
+  reported, nothing acknowledged is lost, the rows that were stored stay
+  readable, and the very next write after space is back is the probe: it commits
+  and the store announces that it is saving again. *)
+procedure TServerWireStoreTests.Test_AFullDiskKeepsEveryAcknowledgedQsoAndRecovers;
+var
+   fn, why: string;
+   store, second: TServerWireStore;
+   i, stored: integer;
+   refused: boolean;
+   back: TWireRows;
+begin
+   BeginTest('Test_AFullDiskKeepsEveryAcknowledgedQsoAndRecovers');
+   fn := ScratchFile('full' + WIRE_STORE_EXTENSION);
+   GWritten := 0;
+   GFailed := 0;
+   GLastReason := '';
+   store := TServerWireStore.Create(QsoWireColumns, fn);
+   second := nil;
+   try
+      store.OnWritten := @NoteWritten;
+      store.OnWriteFailed := @NoteFailed;
+      CheckTrue(store.Initialize(why) = wsiReady, 'opens');
+      stored := 0;
+      for i := 1 to 5 do
+         begin
+         CheckTrue(store.Insert(BigRow(i)) = wiStored, 'room: ' + IntToStr(i));
+         Inc(stored);
+         end;
+
+      (* SQLite will not set the limit below the file's size, so 1 means "no
+        growth from here". Bounded: a disk that never fills fails the test. *)
+      store.LimitPages(1);
+      refused := False;
+      for i := 6 to 3000 do
+         begin
+         if store.Insert(BigRow(i)) <> wiStored then
+            begin
+            refused := True;
+            Break;
+            end;
+         Inc(stored);
+         end;
+      CheckTrue(refused, 'a QSO that needs a new page is refused, not acknowledged');
+      CheckEquals(1, GFailed, 'the server is told once');
+      CheckEquals('the disk is full', GLastReason, 'and that the disk is full');
+      CheckEquals(stored, store.Count, 'the log holds every acknowledged QSO and not the refused one');
+      CheckTrue(store.Insert(BigRow(9001)) = wiFailed, 'a later QSO is refused too');
+
+      (* What a restart would find: another connection sees every acknowledged
+        row, in order. *)
+      CheckTrue(OpenStore(fn, second) = wsiReady, 'the file still opens');
+      CheckEquals(stored, second.Count, 'a second connection counts the same');
+      CheckTrue(second.ReadAll(back) and (Length(back) = stored), 'and reads them');
+      CheckEquals('big-1', ValueOf(back[0], 'guid'), 'in arrival order');
+      FreeAndNil(second);
+
+      (* Space comes back: no restart. The next write is the probe. *)
+      GWritten := 0;
+      store.LimitPages(0);
+      CheckTrue(store.Insert(BigRow(9002)) = wiStored, 'saving resumes on the next QSO');
+      CheckEquals(1, GWritten, 'and the store says it is writing again');
+      CheckEquals(stored + 1, store.Count, 'one more row, none lost');
+   finally
+      second.Free;
+      store.Free;
+   end;
+end;
+
+(* A held run (OFFLINEQSO packets) is ONE transaction: when the disk fills inside
+  it, the whole run is rolled back and no row of it is visible to anyone. *)
+procedure TServerWireStoreTests.Test_ARunThatMeetsAFullDiskLeavesNothingOfItself;
+var
+   fn, why: string;
+   store, second: TServerWireStore;
+   i, before: integer;
+   refused: boolean;
+begin
+   BeginTest('Test_ARunThatMeetsAFullDiskLeavesNothingOfItself');
+   fn := ScratchFile('fullrun' + WIRE_STORE_EXTENSION);
+   store := TServerWireStore.Create(QsoWireColumns, fn);
+   second := nil;
+   try
+      store.OnWriteFailed := @NoteFailed;
+      GFailed := 0;
+      CheckTrue(store.Initialize(why) = wsiReady, 'opens');
+      for i := 1 to 5 do
+         begin
+         store.Insert(BigRow(i));
+         end;
+      before := store.Count;
+      CheckEquals(5, before, 'five rows before the run');
+
+      store.LimitPages(1);
+      store.Hold;
+      refused := False;
+      for i := 100 to 3000 do
+         begin
+         if store.Insert(BigRow(i)) <> wiStored then
+            begin
+            refused := True;
+            Break;
+            end;
+         end;
+      CheckTrue(refused, 'the run meets the full disk');
+      CheckEquals(1, GFailed, 'the failure is reported');
+      store.Release;
+      CheckTrue(OpenStore(fn, second) = wsiReady, 'the file opens');
+      CheckEquals(before, second.Count, 'not one row of the failed run is stored');
+      CheckEquals(before, store.Count, 'the writer agrees');
+   finally
+      second.Free;
+      store.Free;
+   end;
+end;
+
+(* issue 341, D9: the backup that Clear-all-logs takes first is a VERIFIED copy
+  of what is committed, including a run that was still held. *)
+procedure TServerWireStoreTests.Test_TheBackupIsAVerifiedCopyOfWhatIsCommitted;
+var
+   fn, dest, dest2, why: string;
+   store, copyStore: TServerWireStore;
+begin
+   BeginTest('Test_TheBackupIsAVerifiedCopyOfWhatIsCommitted');
+   fn := ScratchFile('tobackup' + WIRE_STORE_EXTENSION);
+   dest := ScratchFile('copy1' + WIRE_STORE_EXTENSION);
+   dest2 := ScratchFile('copy2' + WIRE_STORE_EXTENSION);
+   store := nil;
+   copyStore := nil;
+   try
+      CheckTrue(OpenStore(fn, store) = wsiReady, 'opens');
+      store.Insert(MakeRow(['guid'], ['b-1']));
+      store.Insert(MakeRow(['guid'], ['b-2']));
+      store.Insert(MakeRow(['guid'], ['b-3']));
+      CheckTrue(store.BackupTo(dest, why), 'the backup is taken: ' + why);
+      CheckTrue(FileExists(dest), 'and exists');
+      CheckTrue(OpenStore(dest, copyStore) = wsiReady, 'the copy is a server log');
+      CheckEquals(3, copyStore.Count, 'holding every row');
+      FreeAndNil(copyStore);
+
+      CheckFalse(store.BackupTo(dest, why), 'an existing destination is never overwritten');
+      CheckTrue(why <> '', 'and the reason is given');
+      CheckEquals(3, store.Count, 'the log itself is untouched');
+
+      (* A run still held is committed first, so the copy has it. *)
+      store.Hold;
+      store.Insert(MakeRow(['guid'], ['b-4']));
+      CheckTrue(store.BackupTo(dest2, why), 'a backup with a held run: ' + why);
+      CheckTrue(OpenStore(dest2, copyStore) = wsiReady, 'the second copy opens');
+      CheckEquals(4, copyStore.Count, 'and holds the run');
+   finally
+      copyStore.Free;
+      store.Free;
+   end;
+end;
+
+(* issue 341, P3: a library that cannot be loaded is NAMED, with where the
+  server looked, not reported as a log that cannot be opened. *)
+procedure TServerWireStoreTests.Test_AMissingSqliteLibraryIsNamed;
+var
+   text: string;
+begin
+   BeginTest('Test_AMissingSqliteLibraryIsNamed');
+   CheckEquals('', WireStoreLibraryProblem, 'the library this test binary uses loads');
+   text := WireStoreLibraryProblemFor('tr4w-no-such-sqlite-library.dll',
+                                      'C:\tr4w-no-such-folder\server\');
+   CheckTrue(Pos('tr4w-no-such-sqlite-library.dll', text) > 0, 'it names the library: ' + text);
+   CheckTrue(Pos('tr4w-no-such-folder', text) > 0, 'and where the server looked: ' + text);
+end;
+
 procedure TServerWireStoreTests.RunAllTests;
 begin
    try
@@ -782,6 +1030,11 @@ begin
       Test_AnAcknowledgedQsoIsVisibleToASecondConnection;
       Test_TheDdlIsTheColumnsFile;
       Test_TheCallbacks;
+      Test_ADamagedFileIsRefusedBeforeItIsOpenedForWriting;
+      Test_AFullDiskKeepsEveryAcknowledgedQsoAndRecovers;
+      Test_ARunThatMeetsAFullDiskLeavesNothingOfItself;
+      Test_TheBackupIsAVerifiedCopyOfWhatIsCommitted;
+      Test_AMissingSqliteLibraryIsNamed;
    finally
       CleanUp;
    end;
