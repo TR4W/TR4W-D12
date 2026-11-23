@@ -206,7 +206,9 @@ relay the record whole and read none of it.
 ## Network protocol 5: a QSO is a length-framed JSON row (W3+W5 part 1, 2026-11-22; design 13.7)
 
 `NET_PROTOCOL_VERSION` = **5**. Pascal framing, HELLO 5 and the in-tree `tr4wserver` are DONE; the CLIENT
-(send, receive, catch-up, push) and TR4WServerPy/netprobe are the next steps and are NOT converted.
+(send, receive, catch-up, push) is the other agent's. TR4WServerPy and `tools/netprobe` ARE converted (2026-11-22).
+
+- **netprobe on protocol 5, and the two-server comparison.** `tools/netprobe/netprobe.py` carries a COPY of TR4WServerPy's `wire.py` codec (checked against `tr4w/test/wire/golden_vectors.json` by `--case selftest` and `test_codec.py`: re-copy and re-run if wire.py changes). Cases: `selftest connect spot qso burst edit disc dup serial time hello resend catchup restock badcrc big legacy offline-ack clear`. With `--launch pascal|python --server <exe|py> --workdir <dir>` it starts the server itself, one fresh directory per case, which is what lets `catchup` (kill, restart, same bytes), `offline-ack` (kill at the FIRST ack: every acked row survives) and `clear` (backup file) run. `tools/netprobe/compare.py --pascal <exe> --python <tr4wserver.py> --work <scratch>` runs each case against both servers with the SAME seed and compares the RESULT lines, every column of every row of both `.tr4wsrv` files in seq order, the meta table and the decoded sync stream; every difference is a DIVERGENCE line. The Pascal server spells the sync-stream JSON with spaces (`{ "a" : 1 }`), Python compactly: same values, different bytes (a NOTE, not a divergence; a client must parse, not compare text).
 
 - **Framing (`uNetFraming`).** `NET_WIRE_QSO_ID` 1041, `NET_WIRE_EDIT_ID` 1051, `NET_WIRE_OFFLINE_ID` 1057:
   2-byte LE id, 4-byte LE payload length, payload = 1 sender byte + UTF-8 JSON (`uWireQso`). Cap
@@ -810,7 +812,7 @@ plain callbacks (`NoteServerLogFailure`, `NoteServerLogWritten`, `DisplayServerL
 called at the same points in the sequence as before. `uServerNet.SyncExecute` asks
 `OpenImage` and is otherwise unchanged: **the sync-port snapshot hazard (design 6.2) is
 still there on purpose.** Do not add file access to the server unit again; add a method.
-Oracle: `tools/netprobe/Run-SyncBaseline.ps1`, `Run-TrwRoundTrip.ps1`, `--case all`.
+Oracle: `tools/netprobe/compare.py` (both servers, every case, row-level; see the protocol-5 section) and `netprobe.py --case all`. The byte-oracle scripts (`Run-SyncBaseline.ps1`, `Run-TrwRoundTrip.ps1`, `baselines/`) were removed 2026-11-22: there is no 376-byte image to hash.
 
 ## The transport, and its one sharp edge
 

@@ -514,7 +514,7 @@ trim), (e) a size-mismatch header (refusal).
 TR4WServerPy parity is **not** part of P2; it is decision D2.
 
 **Status 2026-11-19: P0 and P1 are built, uncommitted at the time of writing.**
-P0: `tools/netprobe/Run-SyncBaseline.ps1` and `Run-TrwRoundTrip.ps1`, with
+P0 (RETIRED 2026-11-22 with the 376-byte image; replaced by `tools/netprobe/compare.py`, a row-level comparison of both servers): `tools/netprobe/Run-SyncBaseline.ps1` and `Run-TrwRoundTrip.ps1`, with
 baselines for catchup, restock, edit, dup and serial. **Both servers produce the
 same bytes for all five**, header record included (TR4WServerPy at its
 `c1c6447`, run with `-PyServer`). Two of the five (dup, serial) write no QSOs,

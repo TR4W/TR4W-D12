@@ -1,13 +1,26 @@
-"""netprobe -- speak the TR4W multi-op V1 wire protocol at a server.
+"""netprobe -- speak the TR4W multi-op wire protocol 5 at a server.
 
 Standard library only. Indentation is three spaces, as everywhere in this tree.
 
 What it is for: the in-tree client and tr4wserver agree with each other because
-both compile VC.pas, so a size change in VC.pas (DX spot, 98 -> 106 bytes) breaks
-every other implementation of the protocol and no test here notices. This tool
-is an INDEPENDENT second implementation of the client side: its own size table,
-its own record builders, nothing shared with the Pascal. Point it at any server
-and it says which of the V1 behaviours that server actually has.
+both compile the same units, so a change there changes the wire for everyone
+else and nothing in the build notices. This tool is an INDEPENDENT second
+implementation of the client side: its own framing, its own copy of the row
+codec, nothing shared with the Pascal. Point it at any server and it says which
+behaviours that server actually has.
+
+PROTOCOL 5 (docs/TR4WSERVER_SQLITE_DESIGN.md 13.6 and 13.7): a QSO is a
+length-framed JSON row. The three QSO messages are
+   id (2 bytes LE) + payload length (4 bytes LE) + payload
+with the payload = one sender byte + the UTF-8 JSON row (defaults omitted, member
+"k" the record checksum). Every other message is fixed size, as before.
+
+THE ROW CODEC BELOW (WireCodec) IS A COPY of C:\\projects\\TR4WServerPy\\wire.py
+(the Python server's own, itself checked against the Pascal uWireQso). It is
+copied, not imported, so this tool stays one standalone file. `--case selftest`
+(and test_codec.py beside this file) prove the copy reproduces
+tr4w/test/wire/golden_vectors.json, the independent oracle's output, byte for
+byte, in both directions. If wire.py changes, re-copy and re-run it.
 
 It prints one line per check:
 
@@ -18,27 +31,45 @@ and exits 0 when no check FAILed, 1 when one did, 2 when a case could not run
 
 Every wait has a deadline. Nothing here blocks for ever.
 
+With --launch the tool starts the server ITSELF as a child process (fresh
+directory per case), which is what lets the cases that need a restart or a kill
+(catchup, offline-ack) run, and lets it read the server's .tr4wsrv database and
+its backup files afterwards. Without --launch those checks are SKIPped. Whatever
+it starts it stops again.
+
 See README.md in this folder for the cases and for what each one proves.
 """
 
 import argparse
+import glob
+import json
+import os
+import re
 import select
+import shutil
 import socket
+import sqlite3
 import struct
+import subprocess
 import sys
 import time
+import zlib
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.dirname(os.path.dirname(HERE))
+WIRE_DIR = os.path.join(REPO, 'tr4w', 'test', 'wire')
 
 # --- The wire, as this tool understands it ---------------------------------
-# These are DELIBERATELY typed in again rather than imported from anywhere: a
-# probe that shared the server's table could not find a wrong entry in it.
+# DELIBERATELY typed in again rather than imported from anywhere: a probe that
+# shared the server's table could not find a wrong entry in it.
 
 NET_MESSAGESTATE_ID = 1000
 NET_LOGCOMPARE_ID = 1010
 NET_INTERCOMMESSAGE_ID = 1020
 NET_NETWORKDXSPOT_ID = 1030
-NET_QSOINFO_ID = 1040
-NET_EDITEDQSO_ID = 1050
-NET_OFFLINEQSO_ID = 1055
+NET_WIRE_QSO_ID = 1041
+NET_WIRE_EDIT_ID = 1051
+NET_WIRE_OFFLINE_ID = 1057
 NET_TAKESERVERQSO_ID = 1060
 NET_TIMESYN_ID = 1070
 NET_PARAMETER_ID = 1080
@@ -49,7 +80,15 @@ NET_COMPUTERID_ID = 1130
 NET_SERVERMESSAGE_ID = 1140
 NET_HELLO_ID = 1150
 
-NET_PROTOCOL_VERSION = 4        # protocol 2: the first message is a HELLO; 3 (issue 298): the QSO record carries a received year; 4 (issue 300): and the year its sender sent
+# The protocol 4 ids: deleted, unknown to a protocol 5 server.
+RETIRED_IDS = {1040: 'QSOINFO', 1050: 'EDITEDQSO', 1055: 'OFFLINEQSO'}
+RETIRED_QSO_SIZE = 2 + 376 + 4 + 1 + 1      # what protocol 4 framed them at
+
+VARIABLE_IDS = (NET_WIRE_QSO_ID, NET_WIRE_EDIT_ID, NET_WIRE_OFFLINE_ID)
+WIRE_HEADER = struct.Struct('<HI')
+MAX_WIRE_PAYLOAD = 60000
+
+NET_PROTOCOL_VERSION = 5
 HELLO_VERSION_CHARS = 16
 HELLO_CONTEST_CHARS = 48
 HELLO_SIZE = 2 + 2 + 1 + 1 + HELLO_VERSION_CHARS + HELLO_CONTEST_CHARS     # 70
@@ -58,6 +97,8 @@ SM_CLEARALLLOGS = 8230
 SM_SERVERLOG_CHANGED = 8250
 SM_DISCONECT_CLIENT = 8260
 SM_GETSTATUS = 8270
+SM_CLEAR_DUPESHEET = 8280
+SM_CLEAR_MULTSHEET = 8290
 SM_RECEIVED_UPDATED_QSO = 8300
 SM_SERIAL_NUMBER_CHANGED = 8310
 SM_COMPUTERID_IN_USE = 8320
@@ -66,26 +107,14 @@ SM_PROTOCOL_MISMATCH = 8330
 SNT_FREE = 0
 SNT_RESERVED = 1
 
-CONTEST_EXCHANGE_SIZE = 376     # SizeOf(ContestExchange); pinned in the Pascal tests
-CE_BAND = 6
-CE_MODE = 7
-CE_QSOID1 = 8
-CE_QSOID2 = 12
-CE_FREQUENCY = 16
-CE_CALLSIGN = 44                # string[13]: a length byte and 13 characters
-CE_NUMBER_SENT = 204
-CE_CONTEST = 265                # one byte, a legacy contest handle
+SPOT_RECORD_SIZE = 104          # SizeOf(TSpotRecord)
 
-SPOT_RECORD_SIZE = 104          # SizeOf(TSpotRecord) on i386-win32
-
+# Fixed-size messages only. The QSO messages are variable and handled apart.
 MESSAGE_SIZE = {
    NET_MESSAGESTATE_ID: 64,
    NET_LOGCOMPARE_ID: 19,
    NET_INTERCOMMESSAGE_ID: 84,
    NET_NETWORKDXSPOT_ID: 2 + SPOT_RECORD_SIZE,
-   NET_QSOINFO_ID: 2 + CONTEST_EXCHANGE_SIZE + 4 + 1 + 1,
-   NET_EDITEDQSO_ID: 2 + CONTEST_EXCHANGE_SIZE + 4 + 1 + 1,
-   NET_OFFLINEQSO_ID: 2 + CONTEST_EXCHANGE_SIZE + 4 + 1 + 1,
    NET_TAKESERVERQSO_ID: 382,
    NET_TIMESYN_ID: 20,
    NET_PARAMETER_ID: 514,
@@ -99,7 +128,7 @@ MESSAGE_SIZE = {
 
 MESSAGE_NAME = {
    1000: 'MESSAGESTATE', 1010: 'LOGCOMPARE', 1020: 'INTERCOM',
-   1030: 'DXSPOT', 1040: 'QSOINFO', 1050: 'EDITEDQSO', 1055: 'OFFLINEQSO',
+   1030: 'DXSPOT', 1041: 'WIRE_QSO', 1051: 'WIRE_EDIT', 1057: 'WIRE_OFFLINE',
    1060: 'TAKESERVERQSO', 1070: 'TIMESYN', 1080: 'PARAMETER',
    1090: 'STATIONSTATUS', 1110: 'CLIENTSTATUS', 1120: 'SPOTVIANETWORK',
    1130: 'COMPUTERID', 1140: 'SERVERMESSAGE', 1150: 'HELLO',
@@ -114,46 +143,192 @@ class ProbeError(Exception):
    """The case could not run at all (as opposed to a check that failed)."""
 
 
+class WireError(Exception):
+   """A row that cannot be encoded, or a wire record that cannot be accepted."""
+
+
 def password_on_wire(text):
    """Ten bytes, NUL padded, which is what a TR4W client writes."""
    raw = text.encode('ascii', 'replace')[:PASSWORD_BYTES]
    return raw + b'\x00' * (PASSWORD_BYTES - len(raw))
 
 
-# --- Record builders --------------------------------------------------------
+# --- The row codec: a COPY of TR4WServerPy/wire.py (see the header) ---------
 
-def build_exchange(call, id1, id2, band=3, mode=0, freq=14025000,
-                   contest=1, number_sent=1):
-   """A 376-byte ContestExchange with only the fields a server reads set."""
-   rec = bytearray(CONTEST_EXCHANGE_SIZE)
-   rec[CE_BAND] = band
-   rec[CE_MODE] = mode
-   struct.pack_into('<II', rec, CE_QSOID1, id1, id2)
-   struct.pack_into('<i', rec, CE_FREQUENCY, freq)
-   text = call.encode('ascii')[:13]
-   rec[CE_CALLSIGN] = len(text)
-   rec[CE_CALLSIGN + 1:CE_CALLSIGN + 1 + len(text)] = text
-   struct.pack_into('<I', rec, CE_NUMBER_SENT, number_sent)
-   rec[CE_CONTEST] = contest
-   return bytes(rec)
+_INT64_MIN = -(1 << 63)
+_INT64_MAX = (1 << 63) - 1
+_CANONICAL_INT = re.compile(r'-?[0-9]+', re.ASCII)
+_CRC_TEXT = re.compile(r'[0-9A-Fa-f]{8}', re.ASCII)
+CRC_MEMBER = 'k'
 
 
-def exchange_call(rec):
-   length = rec[CE_CALLSIGN]
-   return rec[CE_CALLSIGN + 1:CE_CALLSIGN + 1 + length].decode('ascii', 'replace')
+def try_canonical_int64(text):
+   """The integer for canonical digits, or None."""
+   if not _CANONICAL_INT.fullmatch(text):
+      return None
+   n = int(text)
+   if n < _INT64_MIN or n > _INT64_MAX:
+      return None
+   return n
 
 
-def build_qso(msg_id, exchange, computer_id, sender=0):
-   """TNetQSOInformation: id, ContestExchange, a Cardinal that tells one run
-   of a station from another, then qiSenderID (the sending station's ordinal
-   1..26, network protocol 2) and one reserved byte."""
-   return struct.pack('<H', msg_id) + exchange + struct.pack('<IBB', computer_id, sender, 0)
+def wire_text(value):
+   """A value as the wire carries it: None is '', and every NUL is removed."""
+   if value is None:
+      return ''
+   return value.replace('\0', '')
+
+
+def crc_text(crc):
+   return '%08X' % crc
+
+
+class WireCodec:
+   """Encode and decode rows over one column list (columns.json's entries). A
+   row is a list of strings, one per column, in column order; NULL is ''."""
+
+   def __init__(self, columns):
+      self.names = [c['name'] for c in columns]
+      self.is_num = [bool(c['num']) for c in columns]
+      self.defaults = [c['def'] for c in columns]
+      self._index = {n: i for i, n in enumerate(self.names)}
+
+   def default_values(self):
+      return list(self.defaults)
+
+   def index(self, name):
+      return self._index[name]
+
+   def canonical(self, values):
+      """The canonical stream: for EVERY column in order, defaults included,
+      the tag (1-based column number), the UTF-8 length (2 bytes LE), the bytes."""
+      if len(values) != len(self.names):
+         raise WireError('a wire row holds %d values for %d columns'
+                         % (len(values), len(self.names)))
+      out = bytearray()
+      for i, value in enumerate(values):
+         b = value.encode('utf-8')
+         if len(b) > 0xFFFF:
+            raise WireError('column %s is %d bytes' % (self.names[i], len(b)))
+         out += bytes([i + 1, len(b) & 0xFF, (len(b) >> 8) & 0xFF])
+         out += b
+      return bytes(out)
+
+   def crc(self, values):
+      return zlib.crc32(self.canonical(values)) & 0xFFFFFFFF
+
+   def encode(self, values, omit=True):
+      """The JSON text of a row with its checksum; a field equal to its
+      default is left out when omit is True."""
+      values = [wire_text(v) for v in values]
+      obj = {}
+      for i, value in enumerate(values):
+         if omit and value == self.defaults[i]:
+            continue
+         if self.is_num[i]:
+            if value == '':
+               obj[self.names[i]] = None
+            else:
+               number = try_canonical_int64(value)
+               if number is None:
+                  raise WireError('column %s is numeric and holds %r'
+                                  % (self.names[i], value))
+               obj[self.names[i]] = number
+         else:
+            obj[self.names[i]] = value
+      obj[CRC_MEMBER] = crc_text(self.crc(values))
+      return json.dumps(obj, ensure_ascii=False, separators=(',', ':'))
+
+   def decode(self, text):
+      """(values, stated checksum or None)."""
+      try:
+         obj = json.loads(text)
+      except (ValueError, RecursionError) as e:
+         raise WireError('a wire record is not JSON: %s' % e)
+      if not isinstance(obj, dict):
+         raise WireError('a wire record is not one JSON object')
+      values = self.default_values()
+      stated = None
+      for name, member in obj.items():
+         if name == CRC_MEMBER:
+            if isinstance(member, str) and _CRC_TEXT.fullmatch(member):
+               stated = int(member, 16)
+            continue
+         at = self._index.get(name)
+         if at is None:
+            continue
+         if member is None:
+            values[at] = ''
+         elif isinstance(member, bool):
+            raise WireError('column %s holds a JSON boolean' % name)
+         elif isinstance(member, str):
+            values[at] = wire_text(member)
+         elif isinstance(member, int):
+            values[at] = str(member)
+         else:
+            raise WireError('column %s holds a %s' % (name, type(member).__name__))
+      for i, value in enumerate(values):
+         if self.is_num[i] and value != '' and try_canonical_int64(value) is None:
+            raise WireError('column %s is numeric and holds %r' % (self.names[i], value))
+      return values, stated
+
+   def decode_verified(self, text):
+      values, stated = self.decode(text)
+      if stated is None:
+         raise WireError('a wire record has no well-formed checksum')
+      if stated != self.crc(values):
+         raise WireError('bad checksum')
+      return values
+
+
+def load_codec(columns_path=None):
+   path = columns_path or os.path.join(WIRE_DIR, 'columns.json')
+   with open(path, 'r', encoding='utf-8') as f:
+      return WireCodec(json.load(f))
+
+
+def selftest(codec, vectors_path=None):
+   """The copy's output against the oracle's golden vectors. Returns a list of
+   (check, ok, detail)."""
+   path = vectors_path or os.path.join(WIRE_DIR, 'golden_vectors.json')
+   with open(path, 'r', encoding='utf-8') as f:
+      vectors = json.load(f)
+   results = []
+   for v in vectors['rows']:
+      values = v['values']
+      ok_canon = codec.canonical(values).hex() == v['canonical_hex']
+      ok_crc = crc_text(codec.crc(values)) == v['crc']
+      ok_json = codec.encode(values) == v['json_omit']
+      back, stated = codec.decode(v['json_omit'])
+      ok_back = back == values and stated == codec.crc(values)
+      results.append((v['label'], ok_canon and ok_crc and ok_json and ok_back,
+                      'canonical=%s crc=%s json=%s back=%s'
+                      % (ok_canon, ok_crc, ok_json, ok_back)))
+   return results
+
+
+# --- Message builders -------------------------------------------------------
+
+def build_wire(msg_id, sender, text):
+   """A QSO message: id, 4-byte payload length, sender byte, UTF-8 JSON."""
+   payload = bytes([sender]) + text.encode('utf-8')
+   return WIRE_HEADER.pack(msg_id, len(payload)) + payload
+
+
+def build_wire_row(codec, msg_id, sender, values):
+   return build_wire(msg_id, sender, codec.encode(values))
+
+
+def parse_wire(frame):
+   """(sender byte, JSON text) of a whole QSO message."""
+   return frame[6], frame[7:].decode('utf-8')
+
+
+def frame_values(codec, frame):
+   return codec.decode_verified(parse_wire(frame)[1])
 
 
 def build_hello(protocol, ordinal, version, contest_id):
-   """THelloMessage (70 bytes): id, protocol, computer id (0 = the server),
-   reserved, 16 bytes of program version and 48 bytes of contest id, each NUL
-   padded."""
    return struct.pack('<HHBB16s48s', NET_HELLO_ID, protocol, ordinal, 0,
                       version.encode('ascii'), contest_id.encode('ascii'))
 
@@ -167,7 +342,6 @@ def parse_hello(msg):
 
 
 def build_spot(call='K1ABC', freq_hz=14025000):
-   """TNetDXSpot: id, then a TSpotRecord of SPOT_RECORD_SIZE bytes."""
    inner = bytearray(SPOT_RECORD_SIZE)
    struct.pack_into('<i', inner, 0, freq_hz)
    struct.pack_into('<d', inner, 8, 46000.5)       # FSysTime, a TDateTime
@@ -184,7 +358,7 @@ def build_intercom(sender_ordinal, text):
 
 
 def build_timesync():
-   """TNetTimeSync: id, SYSTEMTIME (eight Words), two reserved bytes."""
+   """The REMOVED time-sync packet an older station still sends (20 bytes)."""
    now = time.gmtime()
    systemtime = struct.pack('<8H', now.tm_year, now.tm_mon, (now.tm_wday + 1) % 7,
                             now.tm_mday, now.tm_hour, now.tm_min, now.tm_sec, 0)
@@ -197,10 +371,6 @@ def build_server_message(message, param=0):
 
 def build_computer_id(ordinal):
    return struct.pack('<HBB', NET_COMPUTERID_ID, ordinal, 0)
-
-
-def build_client_status(telnet):
-   return struct.pack('<HB', NET_CLIENTSTATUS_ID, 1 if telnet else 0)
 
 
 def server_message_fields(msg):
@@ -248,13 +418,12 @@ class Probe:
       self.sock.sendall(data)
 
    def claim_id(self):
-      """Network protocol 2: the first message is a HELLO, and it carries the
-      computer id (and the contest) that COMPUTERID used to."""
+      """The first message is a HELLO; it carries the computer id and contest."""
       self.send(build_hello(NET_PROTOCOL_VERSION, self.ordinal, 'netprobe',
                             self.contest_id))
 
    def claim_id_v1(self):
-      """What a 4.x station sends first. A protocol 2 server refuses it."""
+      """What a 4.x station sends first. A protocol 2+ server refuses it."""
       self.send(build_computer_id(self.ordinal))
 
    def pump(self, wait):
@@ -265,7 +434,7 @@ class Probe:
       if not ready:
          return
       try:
-         chunk = self.sock.recv(65536)
+         chunk = self.sock.recv(262144)
       except OSError:
          self.eof = True
          return
@@ -278,10 +447,15 @@ class Probe:
    def _frame(self):
       while len(self.buf) >= 2 and self.bad_id is None:
          msg_id = struct.unpack('<H', self.buf[:2])[0]
-         size = MESSAGE_SIZE.get(msg_id)
-         if size is None:
-            self.bad_id = (msg_id, self.buf[:16].hex(' '))
-            return
+         if msg_id in VARIABLE_IDS:
+            if len(self.buf) < WIRE_HEADER.size:
+               return
+            size = WIRE_HEADER.size + WIRE_HEADER.unpack_from(self.buf)[1]
+         else:
+            size = MESSAGE_SIZE.get(msg_id)
+            if size is None:
+               self.bad_id = (msg_id, self.buf[:16].hex(' '))
+               return
          if len(self.buf) < size:
             return
          self.inbox.append((msg_id, self.buf[:size]))
@@ -324,8 +498,8 @@ class Probe:
       return sum(1 for found_id, _ in self.inbox if found_id == msg_id)
 
    def alive(self, wait):
-      """Is the link still usable? Sends an intercom line; every V1 server
-      echoes that to the sender, so an answer proves the read path is alive."""
+      """Is the link still usable? Sends an intercom line; every server echoes
+      that to the sender, so an answer proves the read path is alive."""
       if self.eof:
          return False
       try:
@@ -347,13 +521,28 @@ class Probe:
          return 'the server closed the connection'
       return 'no answer'
 
+   def drop_inbox(self, *ids):
+      self.inbox = [item for item in self.inbox if item[0] not in ids]
 
-# --- The sync port: the only way to see the server's log from outside -------
 
-def fetch_server_log(host, port, password, timeout, send_bytes):
-   """Download the server's log on the sync port. Returns bytes, or None with
-   a reason string. `send_bytes` is how many bytes to write as the password:
-   10 is what the TR4W client writes."""
+# --- The sync port: the server's log as a stream of framed rows -------------
+
+def _read_exact(sock, n, deadline):
+   data = b''
+   while len(data) < n and time.time() < deadline:
+      if select.select([sock], [], [], 0.25)[0]:
+         chunk = sock.recv(min(262144, n - len(data)))
+         if not chunk:
+            break
+         data += chunk
+   return data
+
+
+def fetch_sync_stream(host, port, password, timeout, send_bytes):
+   """Download the sync stream: ten password bytes, then a header frame
+   {"contest","rows","schema"} and `rows` row frames, each a 4-byte LE length and
+   UTF-8 JSON. Returns (raw bytes of the whole stream, why) -- raw is None on a
+   failure, with the reason."""
    try:
       sock = socket.create_connection((host, port + 1), timeout=timeout)
    except OSError as err:
@@ -363,32 +552,158 @@ def fetch_server_log(host, port, password, timeout, send_bytes):
       wire += b'\x00' * max(0, send_bytes - len(wire))
       sock.sendall(wire)
       deadline = time.time() + timeout
-      head = b''
-      while len(head) < 4 and time.time() < deadline:
-         if select.select([sock], [], [], 0.25)[0]:
-            chunk = sock.recv(4 - len(head))
-            if not chunk:
-               break
-            head += chunk
+      head = _read_exact(sock, 4, deadline)
       if len(head) < 4:
-         return None, 'sync port sent no size within %.0f s' % timeout
+         return None, 'sync port sent no header frame within %.0f s' % timeout
       size = struct.unpack('<I', head)[0]
-      if size > 64 * 1024 * 1024:
-         return None, 'sync port size %d is not credible' % size
-      body = b''
-      while len(body) < size and time.time() < deadline:
-         if select.select([sock], [], [], 0.25)[0]:
-            chunk = sock.recv(min(65536, size - len(body)))
-            if not chunk:
-               break
-            body += chunk
+      if size > 1024 * 1024:
+         return None, 'sync header length %d is not credible' % size
+      body = _read_exact(sock, size, deadline)
       if len(body) < size:
-         return None, 'sync port sent %d of %d bytes' % (len(body), size)
-      return body, ''
+         return None, 'sync header: %d of %d bytes' % (len(body), size)
+      try:
+         rows = json.loads(body.decode('utf-8'))['rows']
+      except (ValueError, KeyError, TypeError) as err:
+         return None, 'sync header is not {"contest","rows","schema"}: %s' % err
+      raw = head + body
+      for number in range(rows):
+         length_bytes = _read_exact(sock, 4, deadline)
+         if len(length_bytes) < 4:
+            return None, 'sync port ended after %d of %d rows' % (number, rows)
+         length = struct.unpack('<I', length_bytes)[0]
+         if length > 1024 * 1024:
+            return None, 'sync row length %d is not credible' % length
+         row = _read_exact(sock, length, deadline)
+         if len(row) < length:
+            return None, 'sync row %d: %d of %d bytes' % (number, len(row), length)
+         raw += length_bytes + row
+      return raw, ''
    except OSError as err:
       return None, 'sync port: %s' % err
    finally:
       sock.close()
+
+
+class SyncView:
+   """A downloaded sync stream, decoded: header dict, rows (value lists, each
+   checksum verified) and the raw bytes."""
+
+   def __init__(self, codec, raw):
+      self.raw = raw
+      self.problem = ''
+      self.header = {}
+      self.rows = []
+      self.frames = []
+      at = 0
+      length = struct.unpack_from('<I', raw, at)[0]
+      self.header = json.loads(raw[at + 4:at + 4 + length].decode('utf-8'))
+      at += 4 + length
+      while at < len(raw):
+         length = struct.unpack_from('<I', raw, at)[0]
+         text = raw[at + 4:at + 4 + length].decode('utf-8')
+         self.frames.append(text)
+         try:
+            self.rows.append(codec.decode_verified(text))
+         except WireError as err:
+            self.problem = 'row %d: %s' % (len(self.rows), err)
+            self.rows.append(None)
+         at += 4 + length
+
+   def guids(self, codec):
+      i = codec.index('guid')
+      return [r[i] if r else None for r in self.rows]
+
+
+# --- Launching a server as a child process ----------------------------------
+
+class Launcher:
+   """Starts, kills and restarts one server in a work directory. kind is
+   'pascal' (path = tr4wserver.exe) or 'python' (path = tr4wserver.py)."""
+
+   def __init__(self, kind, path, workdir, port, lockout=False):
+      self.kind = kind
+      self.path = path
+      self.workdir = workdir
+      self.port = port
+      self.lockout = lockout
+      self.proc = None
+      self.logfile = None
+
+   @property
+   def db_path(self):
+      return os.path.join(self.workdir, 'SERVERLOG.tr4wsrv')
+
+   def _port_open(self):
+      c = socket.socket()
+      c.settimeout(0.3)
+      try:
+         c.connect(('127.0.0.1', self.port))
+         return True
+      except OSError:
+         return False
+      finally:
+         c.close()
+
+   def start(self):
+      if self._port_open():
+         raise ProbeError('something already listens on port %d' % self.port)
+      os.makedirs(self.workdir, exist_ok=True)
+      ini = os.path.join(self.workdir, 'TR4WSERVER.INI')
+      with open(ini, 'w', newline='') as f:
+         f.write('[TR4WSERVER]\r\nPORT=%d\r\nSERIAL NUMBER LOCKOUT=%d\r\n'
+                 % (self.port, 1 if self.lockout else 0))
+      self.logfile = open(os.path.join(self.workdir, 'server.out'), 'ab')
+      if self.kind == 'pascal':
+         # The exe is copied beside sqlite3.dll by the caller; its working
+         # directory is the case directory (ini, log, database land there).
+         command = [self.path]
+      else:
+         # No -I: isolated mode would drop the script's own directory from
+         # sys.path and its sibling modules would not import.
+         command = [sys.executable, self.path, '-c', ini]
+      self.proc = subprocess.Popen(command, cwd=self.workdir, stdin=subprocess.DEVNULL,
+                                   stdout=self.logfile, stderr=self.logfile)
+      for _ in range(100):
+         time.sleep(0.2)
+         if self._port_open():
+            return
+         if self.proc.poll() is not None:
+            break
+      raise ProbeError('the %s server did not listen on port %d' % (self.kind, self.port))
+
+   def kill(self):
+      """Terminate the process abruptly (TerminateProcess): no shutdown code."""
+      if self.proc is not None and self.proc.poll() is None:
+         self.proc.kill()
+         try:
+            self.proc.wait(5)
+         except subprocess.TimeoutExpired:
+            pass
+      time.sleep(0.5)
+      if self.logfile is not None:
+         self.logfile.close()
+         self.logfile = None
+
+   def restart(self):
+      self.kill()
+      self.start()
+
+
+def read_database(path):
+   """Every column of every qso row in seq order, and the meta rows, from a
+   .tr4wsrv file, read-only. Returns {'columns': [...], 'rows': [[...]], 'meta':
+   {...}} or None."""
+   if not os.path.exists(path):
+      return None
+   conn = sqlite3.connect('file:%s?mode=ro' % path.replace('\\', '/'), uri=True)
+   try:
+      cursor = conn.execute('SELECT * FROM qso ORDER BY seq')
+      columns = [d[0] for d in cursor.description]
+      rows = [list(r) for r in cursor.fetchall()]
+      meta = {k: v for k, v in conn.execute('SELECT key, value FROM meta')}
+   finally:
+      conn.close()
+   return {'columns': columns, 'rows': rows, 'meta': meta}
 
 
 # --- Reporting --------------------------------------------------------------
@@ -408,6 +723,9 @@ class Report:
       if status == 'FAIL':
          self.failed += 1
 
+   def ok(self, case, check, condition, detail=''):
+      self.add(case, check, 'PASS' if condition else 'FAIL', detail)
+
    def error(self, case, detail):
       self.add(case, 'run', 'ERROR', detail)
       self.errored += 1
@@ -415,19 +733,20 @@ class Report:
 
 # --- The cases --------------------------------------------------------------
 
-# THE QSO IDS A RUN HANDS OUT ARE UNIQUE ACROSS ITS CASES, AND ACROSS RUNS. A
-# server now stores a QSO once whatever number of times it arrives (the pair
-# ceQSOID1/ceQSOID2 is the key), so two cases that happened to reuse an id would
-# find the second one "already held" and every check about it would fail for a
-# reason that has nothing to do with the server. The seed is in milliseconds,
-# so a run that starts seconds after another is past all the ids it used.
+# THE GUIDS A RUN HANDS OUT ARE UNIQUE ACROSS ITS CASES AND ACROSS RUNS. A server
+# stores a QSO once whatever number of times it arrives (the guid is the key), so
+# two cases that reused one would find the second "already held". The default
+# seed is the clock; --seed-ids makes a run repeatable, which the comparison of
+# the two servers needs (the same inputs, so the same rows).
 _NEXT_ID = [int(time.time() * 1000) & 0x7FFFFFF0]
 
 
 class Context:
-   def __init__(self, args, report):
+   def __init__(self, args, report, codec, launcher=None):
       self.args = args
       self.report = report
+      self.codec = codec
+      self.launcher = launcher
       self.probes = []
 
    def probe(self, name, ordinal, claim=True, contest_id=None):
@@ -438,28 +757,92 @@ class Context:
          p.claim_id()
       return p
 
-   def next_ids(self):
-      _NEXT_ID[0] += 2
-      return _NEXT_ID[0], _NEXT_ID[0] + 1
+   def next_n(self):
+      _NEXT_ID[0] += 1
+      return _NEXT_ID[0]
+
+   def row(self, call, n=None, **over):
+      """A deterministic row: the guid and times come from the counter."""
+      if n is None:
+         n = self.next_n()
+      values = self.codec.default_values()
+      fields = {'guid': '%032x' % n, 'callsign': call,
+                'qso_at': str(1700000000 + n % 1000000), 'band': '20',
+                'mode': 'CW', 'computer_id': 'A', 'serial_sent': str(n % 1000),
+                'freq_tx_hz': '14025000', 'exchange_received': '599 05'}
+      fields.update(over)
+      for name, value in fields.items():
+         values[self.codec.index(name)] = value
+      return values
+
+   def msg(self, msg_id, sender, values):
+      return build_wire_row(self.codec, msg_id, sender, values)
 
    def close_all(self):
       for p in self.probes:
          p.close()
       self.probes = []
 
-   def log_records(self):
-      """The server log as a list of 376-byte records (header skipped), or
-      None when the sync port could not be read."""
-      data, why = fetch_server_log(self.args.host, self.args.port,
-                                   self.args.password, self.args.sync_timeout,
-                                   self.args.sync_bytes)
-      if data is None:
+   def view(self):
+      """The server's log through the sync port, or None (reported INFO)."""
+      raw, why = fetch_sync_stream(self.args.host, self.args.port, self.args.password,
+                                   self.args.sync_timeout, self.args.sync_bytes)
+      if raw is None:
          self.report.add('sync', 'log download', 'INFO', why)
          return None
-      body = data[CONTEST_EXCHANGE_SIZE:]
-      return [body[i:i + CONTEST_EXCHANGE_SIZE]
-              for i in range(0, len(body) - CONTEST_EXCHANGE_SIZE + 1,
-                             CONTEST_EXCHANGE_SIZE)]
+      return SyncView(self.codec, raw)
+
+   def rows(self):
+      v = self.view()
+      return None if v is None else v.rows
+
+   def wait_rows(self, count, wait):
+      """Poll the log until it holds `count` rows, or `wait` seconds pass."""
+      deadline = time.time() + wait
+      v = self.view()
+      while v is not None and len(v.rows) < count and time.time() < deadline:
+         time.sleep(0.3)
+         v = self.view()
+      return v
+
+
+def describe_receipt(got, sent, probe):
+   if got is None:
+      return probe.why_dead()
+   if got == sent:
+      return '%d bytes, identical' % len(got)
+   first = next((i for i in range(min(len(got), len(sent))) if got[i] != sent[i]), -1)
+   return '%d bytes, differs from what was sent at byte %d' % (len(got), first)
+
+
+def relayed_equals(ctx, got, sent_values, expect_sender):
+   """A relayed QSO message: the sender byte is the HELLO's station and the row
+   is the one sent (compared as values, so a server that re-encodes the JSON is
+   judged on the row and not on its spelling)."""
+   if got is None:
+      return False, 'nothing received'
+   sender = got[6]
+   try:
+      values = frame_values(ctx.codec, got)
+   except (WireError, UnicodeDecodeError) as err:
+      return False, 'relayed row does not verify: %s' % err
+   if sender != expect_sender:
+      return False, 'sender byte %d, wanted %d' % (sender, expect_sender)
+   if values != sent_values:
+      return False, 'row differs'
+   return True, '%d bytes, sender %d' % (len(got), sender)
+
+
+def log_growth(before, after):
+   if before is None or after is None:
+      return None
+   return len(after) - len(before)
+
+
+def case_selftest(ctx):
+   r = ctx.report
+   for label, ok, detail in selftest(ctx.codec):
+      r.ok('selftest', 'golden vector: %s' % label, ok, detail)
 
 
 def case_connect(ctx):
@@ -468,24 +851,15 @@ def case_connect(ctx):
    admitted = a.settle(0.8)
    ids = [found_id for found_id, _ in admitted]
    r.add('connect', 'banner', 'PASS', 'TR4W')
-   r.add('connect', 'LOGCOMPARE on admit',
-         'PASS' if NET_LOGCOMPARE_ID in ids else 'FAIL',
-         'sizes %s' % [len(d) for _, d in admitted if _ == NET_LOGCOMPARE_ID])
-   r.add('connect', 'link alive', 'PASS' if a.alive(ctx.args.timeout) else 'FAIL',
-         '' if not a.eof else a.why_dead())
-
-
-def describe_receipt(got, sent, probe):
-   """What a receive check saw, in words. A message of the right SIZE with the
-   wrong bytes is reported as such: against a server that frames the spot at
-   98 bytes, B receives 98 spot bytes plus an 8-byte DISCONNECT, which this
-   probe's 106-byte table reads as one spot."""
-   if got is None:
-      return probe.why_dead()
-   if got == sent:
-      return '%d bytes, identical' % len(got)
-   first = next((i for i in range(min(len(got), len(sent))) if got[i] != sent[i]), -1)
-   return '%d bytes, differs from what was sent at byte %d' % (len(got), first)
+   r.ok('connect', 'LOGCOMPARE on admit', NET_LOGCOMPARE_ID in ids,
+        'sizes %s' % [len(d) for i, d in admitted if i == NET_LOGCOMPARE_ID])
+   for i, d in admitted:
+      if i == NET_LOGCOMPARE_ID:
+         _id, crc1, crc2, rows, local, contest = struct.unpack('<HIIIIB', d)
+         r.ok('connect', 'LOGCOMPARE carries the row count, no CRC and no contest',
+              crc1 == 0 and contest == 0, 'rows %d, crc %d, contest %d' % (rows, crc1, contest))
+   r.ok('connect', 'link alive', a.alive(ctx.args.timeout),
+        '' if not a.eof else a.why_dead())
 
 
 def case_spot(ctx):
@@ -498,11 +872,9 @@ def case_spot(ctx):
    r.add('spot', 'size sent', 'INFO', '%d bytes' % len(spot))
    a.send(spot)
    got = b.take(NET_NETWORKDXSPOT_ID, ctx.args.timeout)
-   r.add('spot', 'B receives the spot', 'PASS' if got == spot else 'FAIL',
-         describe_receipt(got, spot, b))
+   r.ok('spot', 'B receives the spot', got == spot, describe_receipt(got, spot, b))
    alive = a.alive(ctx.args.timeout)
-   r.add('spot', 'sender still connected', 'PASS' if alive else 'FAIL',
-         '' if alive else a.why_dead())
+   r.ok('spot', 'sender still connected', alive, '' if alive else a.why_dead())
 
 
 def case_qso(ctx):
@@ -511,28 +883,30 @@ def case_qso(ctx):
    b = ctx.probe('B', 2)
    a.settle(0.5)
    b.settle(0.5)
-   before = ctx.log_records()
-   id1, id2 = ctx.next_ids()
-   exchange = build_exchange('K1QSO', id1, id2)
-   msg = build_qso(NET_QSOINFO_ID, exchange, 1, a.ordinal)
+   before = ctx.rows()
+   values = ctx.row('K1QSO', rcvd_name='José', notes='a note')
+   msg = ctx.msg(NET_WIRE_QSO_ID, 1, values)
    r.add('qso', 'size sent', 'INFO', '%d bytes' % len(msg))
    a.send(msg)
-   got = b.take(NET_QSOINFO_ID, ctx.args.timeout)
-   r.add('qso', 'B receives the QSO', 'PASS' if got == msg else 'FAIL',
-         describe_receipt(got, msg, b))
-   r.add('qso', 'sender not echoed',
-         'PASS' if a.take(NET_QSOINFO_ID, 0.5) is None else 'FAIL')
-   time.sleep(0.5)
-   after = ctx.log_records()
-   if before is None or after is None:
-      r.add('qso', 'server log grew by one record', 'SKIP', 'log not readable')
-   else:
-      grew = len(after) - len(before)
-      r.add('qso', 'server log grew by one record', 'PASS' if grew == 1 else 'FAIL',
-            'records %d -> %d' % (len(before), len(after)))
-      if after and grew == 1:
-         r.add('qso', 'stored record is the one sent',
-               'PASS' if after[-1] == exchange else 'FAIL')
+   got = b.take(NET_WIRE_QSO_ID, ctx.args.timeout)
+   ok, detail = relayed_equals(ctx, got, values, 1)
+   r.ok('qso', 'B receives the QSO, row intact, sender = A', ok, detail)
+   r.ok('qso', 'sender not echoed', a.take(NET_WIRE_QSO_ID, 0.5) is None)
+   # A lies about who it is: the server re-stamps the sender byte from the HELLO.
+   other = ctx.row('K1QSO2')
+   a.send(ctx.msg(NET_WIRE_QSO_ID, 9, other))
+   got = b.take(NET_WIRE_QSO_ID, ctx.args.timeout)
+   ok, detail = relayed_equals(ctx, got, other, 1)
+   r.ok('qso', 'the sender byte is re-stamped from the accepted HELLO', ok, detail)
+   after = ctx.wait_rows((len(before) if before is not None else 0) + 2, 3)
+   grew = log_growth(before, None if after is None else after.rows)
+   if grew is None:
+      r.add('qso', 'server log grew by two rows', 'SKIP', 'log not readable')
+      return
+   r.ok('qso', 'server log grew by two rows', grew == 2, 'rows grew by %d' % grew)
+   r.ok('qso', 'every stored row checksum verifies', after.problem == '', after.problem)
+   r.ok('qso', 'stored rows are the rows sent, in order',
+        after.rows[-2:] == [values, other])
 
 
 def case_burst(ctx):
@@ -542,24 +916,21 @@ def case_burst(ctx):
    b = ctx.probe('B', 2)
    a.settle(0.5)
    b.settle(0.5)
-   before = ctx.log_records()
-   blob = b''
-   for _ in range(count):
-      id1, id2 = ctx.next_ids()
-      blob += build_qso(NET_QSOINFO_ID, build_exchange('K1BST', id1, id2), 1, a.ordinal)
+   before = ctx.rows()
+   sent = [ctx.row('K1BST') for _ in range(count)]
+   blob = b''.join(ctx.msg(NET_WIRE_QSO_ID, 1, v) for v in sent)
    a.send(blob)                       # ONE write: the server sees a coalesced read
    r.add('burst', 'bytes written in one send', 'INFO', str(len(blob)))
-   got = b.count(NET_QSOINFO_ID, count, ctx.args.timeout + 3)
-   r.add('burst', 'B receives all %d' % count, 'PASS' if got == count else 'FAIL',
-         'received %d%s' % (got, '' if b.bad_id is None else '; ' + b.why_dead()))
-   time.sleep(0.5)
-   after = ctx.log_records()
-   if before is None or after is None:
+   got = b.count(NET_WIRE_QSO_ID, count, ctx.args.timeout + 3)
+   r.ok('burst', 'B receives all %d' % count, got == count,
+        'received %d%s' % (got, '' if b.bad_id is None else '; ' + b.why_dead()))
+   after = ctx.wait_rows((len(before) if before is not None else 0) + count, 5)
+   grew = log_growth(before, None if after is None else after.rows)
+   if grew is None:
       r.add('burst', 'server log grew by %d' % count, 'SKIP', 'log not readable')
    else:
-      grew = len(after) - len(before)
-      r.add('burst', 'server log grew by %d' % count,
-            'PASS' if grew == count else 'FAIL', 'grew by %d' % grew)
+      r.ok('burst', 'server log grew by %d' % count, grew == count, 'grew by %d' % grew)
+      r.ok('burst', 'in arrival order, row for row', after.rows[len(before):] == sent)
 
 
 def case_edit(ctx):
@@ -568,31 +939,51 @@ def case_edit(ctx):
    b = ctx.probe('B', 2)
    a.settle(0.5)
    b.settle(0.5)
-   id1, id2 = ctx.next_ids()
-   original = build_exchange('K1OLD', id1, id2)
-   a.send(build_qso(NET_QSOINFO_ID, original, 1, a.ordinal))
-   b.take(NET_QSOINFO_ID, ctx.args.timeout)
-   time.sleep(0.5)
-   before = ctx.log_records()
-   edited = build_exchange('K1NEW', id1, id2)
-   msg = build_qso(NET_EDITEDQSO_ID, edited, 1, a.ordinal)
-   a.send(msg)
-   got = b.take(NET_EDITEDQSO_ID, ctx.args.timeout)
-   r.add('edit', 'B receives the edit', 'PASS' if got == msg else 'FAIL',
-         describe_receipt(got, msg, b))
+   n = ctx.next_n()
+   original = ctx.row('K1OLD', n, rcvd_name='Bob', notes='first')
+   a.send(ctx.msg(NET_WIRE_QSO_ID, 1, original))
+   b.take(NET_WIRE_QSO_ID, ctx.args.timeout)
+   before = ctx.wait_rows(1, 3)
+   edited = ctx.row('K1NEW', n)                 # rcvd_name and notes omitted
+   a.send(ctx.msg(NET_WIRE_EDIT_ID, 1, edited))
+   got = b.take(NET_WIRE_EDIT_ID, ctx.args.timeout)
+   ok, detail = relayed_equals(ctx, got, edited, 1)
+   r.ok('edit', 'B receives the edit', ok, detail)
    ack = a.take(NET_SERVERMESSAGE_ID, ctx.args.timeout, SM_RECEIVED_UPDATED_QSO)
-   r.add('edit', 'sender gets the 8300 ACK', 'PASS' if ack else 'FAIL')
+   r.ok('edit', 'sender gets the 8300 ACK', ack is not None)
    time.sleep(0.5)
-   after = ctx.log_records()
+   after = ctx.view()
    if before is None or after is None:
-      r.add('edit', 'server record rewritten in place', 'SKIP', 'log not readable')
+      r.add('edit', 'server row rewritten in place, whole', 'SKIP', 'log not readable')
    else:
-      same_count = len(before) == len(after)
-      changed = bool(after) and after[-1] == edited
-      r.add('edit', 'server record rewritten in place',
-            'PASS' if (same_count and changed) else 'FAIL',
-            'records %d -> %d, last call %s' %
-            (len(before), len(after), exchange_call(after[-1]) if after else '-'))
+      r.ok('edit', 'server row rewritten in place, whole (an omitted field is its default)',
+           len(after.rows) == len(before.rows) and after.rows[-1] == edited,
+           'rows %d -> %d, last call %s' % (len(before.rows), len(after.rows),
+                                            after.rows[-1][ctx.codec.index('callsign')]))
+   # An edit of a guid the server never held: relayed and ACKed, stores nothing.
+   a.take(NET_SERVERMESSAGE_ID, 0.2, SM_RECEIVED_UPDATED_QSO)
+   stray = ctx.row('K1STRAY')
+   a.send(ctx.msg(NET_WIRE_EDIT_ID, 1, stray))
+   got = b.take(NET_WIRE_EDIT_ID, ctx.args.timeout)
+   r.ok('edit', 'an edit of an unheld guid is relayed', got is not None)
+   ack = a.take(NET_SERVERMESSAGE_ID, ctx.args.timeout, SM_RECEIVED_UPDATED_QSO)
+   r.ok('edit', 'and acknowledged', ack is not None)
+   time.sleep(0.5)
+   final = ctx.view()
+   if final is not None and after is not None:
+      r.ok('edit', 'and stores nothing', len(final.rows) == len(after.rows))
+   # An edit that carries an empty guid changes nothing (13.6 rule 5).
+   anon = ctx.row('K1ANON', guid='')
+   a.send(ctx.msg(NET_WIRE_QSO_ID, 1, anon))
+   b.take(NET_WIRE_QSO_ID, ctx.args.timeout)
+   mid = ctx.wait_rows(len(after.rows) + 1 if after is not None else 1, 3)
+   a.send(ctx.msg(NET_WIRE_EDIT_ID, 1, ctx.row('K1ANON2', guid='')))
+   a.take(NET_SERVERMESSAGE_ID, ctx.args.timeout, SM_RECEIVED_UPDATED_QSO)
+   time.sleep(0.5)
+   end = ctx.view()
+   if mid is not None and end is not None:
+      r.ok('edit', 'an edit with an empty guid changes nothing',
+           end.rows == mid.rows)
 
 
 def case_disc(ctx):
@@ -608,34 +999,51 @@ def case_disc(ctx):
       return
    param = server_message_fields(msg)[1]
    r.add('disc', 'A told that B left', 'PASS', 'param %d' % param)
-   r.add('disc', 'param is the ordinal 1..26 (the client range-checks this)',
-         'PASS' if 1 <= param <= 26 else 'FAIL',
-         'param %d%s' % (param, ' (an ASCII letter)' if 65 <= param <= 90 else ''))
-   r.add('disc', 'param is B\'s ordinal (2)', 'PASS' if param == 2 else 'FAIL')
+   r.ok('disc', 'param is the ordinal 1..26 (the client range-checks this)',
+        1 <= param <= 26, 'param %d' % param)
+   r.ok('disc', "param is B's ordinal (2)", param == 2)
 
 
 def case_dup(ctx):
    r = ctx.report
    a = ctx.probe('A', 1)
+   b = ctx.probe('B', 2)
    a.settle(0.5)
+   b.settle(0.5)
    c = ctx.probe('C', 1)              # a second station claiming ordinal 1
    refusal = c.take(NET_SERVERMESSAGE_ID, ctx.args.timeout, SM_COMPUTERID_IN_USE)
-   r.add('dup', 'second claimant gets 8320', 'PASS' if refusal else 'FAIL',
-         '' if refusal else 'accepted silently')
-   r.add('dup', 'first holder not refused',
-         'PASS' if a.take(NET_SERVERMESSAGE_ID, 0.5, SM_COMPUTERID_IN_USE) is None
-         else 'FAIL')
-   # Only CONNECTED stations count, and a station's own claim is not a clash.
+   r.ok('dup', 'second claimant gets 8320', refusal is not None,
+        '' if refusal else 'accepted silently')
+   r.ok('dup', 'first holder not refused',
+        a.take(NET_SERVERMESSAGE_ID, 0.5, SM_COMPUTERID_IN_USE) is None)
    a.claim_id()
-   r.add('dup', 'a station re-announcing its own id is not refused',
-         'PASS' if a.take(NET_SERVERMESSAGE_ID, 0.5, SM_COMPUTERID_IN_USE) is None
-         else 'FAIL')
+   r.ok('dup', 'a station re-announcing its own id is not refused',
+        a.take(NET_SERVERMESSAGE_ID, 0.5, SM_COMPUTERID_IN_USE) is None)
+
+   # The same row twice (by guid), then the same guid from another station: one
+   # stored, one relayed.
+   before = ctx.rows()
+   values = ctx.row('K1DUP')
+   msg = ctx.msg(NET_WIRE_QSO_ID, 1, values)
+   b.take(NET_HELLO_ID, 0.1)
+   a.send(msg)
+   got = b.take(NET_WIRE_QSO_ID, ctx.args.timeout)
+   r.ok('dup', 'a new row is relayed', got is not None)
+   a.send(msg)
+   b.send(ctx.msg(NET_WIRE_QSO_ID, 2, values))
+   r.ok('dup', 'the same guid again, from A or from B, is not relayed',
+        b.take(NET_WIRE_QSO_ID, 1.0) is None and a.take(NET_WIRE_QSO_ID, 0.3) is None)
+   time.sleep(0.5)
+   after = ctx.rows()
+   grew = log_growth(before, after)
+   if grew is not None:
+      r.ok('dup', 'and is stored once', grew == 1, 'grew by %d' % grew)
+
    a.close()
    time.sleep(1.0)
    d = ctx.probe('D', 1)
-   r.add('dup', 'the id of a station that has left can be taken again',
-         'PASS' if d.take(NET_SERVERMESSAGE_ID, 1.0, SM_COMPUTERID_IN_USE) is None
-         else 'FAIL')
+   r.ok('dup', 'the id of a station that has left can be taken again',
+        d.take(NET_SERVERMESSAGE_ID, 1.0, SM_COMPUTERID_IN_USE) is None)
 
 
 def case_serial(ctx):
@@ -653,21 +1061,38 @@ def case_serial(ctx):
    r.add('serial', '8310 pushed on admit', 'PASS', 'next serial %d' % n0)
    b = ctx.probe('B', 2)
    got = b.take(NET_SERVERMESSAGE_ID, ctx.args.timeout, SM_SERIAL_NUMBER_CHANGED)
-   r.add('serial', 'B is told the same next serial',
-         'PASS' if got and server_message_fields(got)[1] == n0 else 'FAIL',
-         'got %s' % (server_message_fields(got)[1] if got else 'nothing'))
+   r.ok('serial', 'B is told the same next serial',
+        got is not None and server_message_fields(got)[1] == n0,
+        'got %s' % (server_message_fields(got)[1] if got else 'nothing'))
    a.send(build_server_message(SM_SERIAL_NUMBER_CHANGED, SNT_RESERVED))
    bumped = b.take(NET_SERVERMESSAGE_ID, ctx.args.timeout, SM_SERIAL_NUMBER_CHANGED)
-   r.add('serial', 'B sees the next serial advance after A reserves',
-         'PASS' if bumped and server_message_fields(bumped)[1] == n0 + 1 else 'FAIL',
-         'got %s' % (server_message_fields(bumped)[1] if bumped else 'nothing'))
+   r.ok('serial', 'B sees the next serial advance after A reserves',
+        bumped is not None and server_message_fields(bumped)[1] == n0 + 1,
+        'got %s' % (server_message_fields(bumped)[1] if bumped else 'nothing'))
+   # The scan over the log: rows with serial_sent 700..704 are stored, the
+   # server restarts, and the next serial it announces is reported (INFO: the
+   # two servers must agree, which compare.py checks).
+   if ctx.launcher is None:
+      r.add('serial', 'next serial after a restart', 'SKIP', 'needs --launch')
+      return
+   for k in (700, 704, 702):
+      a.send(ctx.msg(NET_WIRE_OFFLINE_ID, 1, ctx.row('K1SER', serial_sent=str(k))))
+   count_acks(a, 3, ctx.args.timeout + 3)
+   ctx.close_all()
+   ctx.launcher.restart()
+   a2 = ctx.probe('A', 1)
+   seen = [server_message_fields(d)[1] for i, d in a2.settle(1.0)
+           if i == NET_SERVERMESSAGE_ID and
+           server_message_fields(d)[0] == SM_SERIAL_NUMBER_CHANGED]
+   r.add('serial', 'next serial after a restart over serials up to 704', 'INFO',
+         '%s' % (seen[-1] if seen else 'none announced'))
 
 
 def case_time(ctx):
-   """"Synchronize time on all computers" was REMOVED (2026-11-03): a station
-   may not set another's clock. An OLDER station still sends the packet, so the
-   server must SKIP its 20 bytes and NOT relay it. The intercom line sent in
-   the SAME write proves the skip landed on a message boundary."""
+   """"Synchronize time on all computers" was REMOVED (2026-11-03). An OLDER
+   station still sends the packet, so the server must SKIP its 20 bytes and NOT
+   relay it. The intercom line in the SAME write proves the skip landed on a
+   message boundary."""
    r = ctx.report
    a = ctx.probe('A', 1)
    b = ctx.probe('B', 2)
@@ -675,15 +1100,13 @@ def case_time(ctx):
    b.settle(0.5)
    a.send(build_timesync() + build_intercom(1, 'after the time sync'))
    behind = b.take(NET_INTERCOMMESSAGE_ID, ctx.args.timeout)
-   r.add('time', 'the message behind a TIMESYN is relayed to B',
-         'PASS' if behind is not None else 'FAIL',
-         'got it' if behind is not None else 'nothing: the framing did not skip 20 bytes')
+   r.ok('time', 'the message behind a TIMESYN is relayed to B', behind is not None,
+        'got it' if behind is not None else 'nothing: the framing did not skip 20 bytes')
    relayed = b.take(NET_TIMESYN_ID, 0.5) is not None
-   r.add('time', 'TIMESYN is not relayed to B', 'FAIL' if relayed else 'PASS',
-         'relayed' if relayed else 'not relayed')
-   a.take(NET_INTERCOMMESSAGE_ID, 0.5)      # the echo of A's own line, if any
-   r.add('time', 'A is still connected after sending it',
-         'PASS' if a.alive(ctx.args.timeout) else 'FAIL', '')
+   r.ok('time', 'TIMESYN is not relayed to B', not relayed,
+        'relayed' if relayed else 'not relayed')
+   a.take(NET_INTERCOMMESSAGE_ID, 0.5)
+   r.ok('time', 'A is still connected after sending it', a.alive(ctx.args.timeout))
 
 
 def hello_of(station):
@@ -700,12 +1123,11 @@ def wait_closed(probe, wait):
 
 
 def case_hello(ctx):
-   """Network protocol 2: the HELLO handshake, the contest id it carries and
-   what a server does with a station that does not speak it."""
+   """The HELLO handshake, the contest id it carries and what a server does
+   with a station that does not speak it (protocol 5)."""
    r = ctx.report
    timeout = ctx.args.timeout
 
-   # --- a good HELLO is admitted and answered ------------------------------
    a = ctx.probe('A', 1, contest_id='ARRL-DX-CW')
    server_hello = a.take(NET_HELLO_ID, timeout, where=hello_of(0))
    if server_hello is None:
@@ -713,125 +1135,114 @@ def case_hello(ctx):
    else:
       protocol, _ordinal, version, contest = parse_hello(server_hello)
       r.add('hello', 'server answers a HELLO with its own', 'PASS',
-            'protocol %d, version "%s"' % (protocol, version))
-      r.add('hello', 'the server speaks protocol %d' % NET_PROTOCOL_VERSION,
-            'PASS' if protocol == NET_PROTOCOL_VERSION else 'FAIL')
-      r.add('hello', "the server's HELLO has a version text",
-            'PASS' if version else 'FAIL')
-      r.add('hello', "the server's HELLO names no contest",
-            'PASS' if contest == '' else 'FAIL', '"%s"' % contest)
+            'protocol %d' % protocol)
+      r.add('hello', "the server's own version text (differs by build)", 'INFO', '"%s"' % version)
+      r.ok('hello', 'the server speaks protocol %d' % NET_PROTOCOL_VERSION,
+           protocol == NET_PROTOCOL_VERSION)
+      r.ok('hello', "the server's HELLO has a version text", bool(version))
+      r.ok('hello', "the server's HELLO names no contest", contest == '', '"%s"' % contest)
    alive = a.alive(timeout)
-   r.add('hello', 'a good HELLO is admitted (link stays up)',
-         'PASS' if alive else 'FAIL', '' if alive else a.why_dead())
+   r.ok('hello', 'a good HELLO is admitted (link stays up)', alive, '' if alive else a.why_dead())
 
-   # --- the contest id reaches the others, byte for byte -------------------
-   # A long id with blanks on purpose: 26 characters of the 48.
    long_id = 'REGION 1 FIELD DAY-RCC-SSB'
    b = ctx.probe('B', 2, contest_id=long_id)
    replay = b.take(NET_HELLO_ID, timeout, where=hello_of(1))
-   r.add('hello', 'a station that joins is told what A announced',
-         'PASS' if replay and parse_hello(replay)[3] == 'ARRL-DX-CW' else 'FAIL',
-         parse_hello(replay)[3] if replay else b.why_dead())
+   r.ok('hello', 'a station that joins is told what A announced',
+        replay is not None and parse_hello(replay)[3] == 'ARRL-DX-CW',
+        parse_hello(replay)[3] if replay else b.why_dead())
    sent_by_b = build_hello(NET_PROTOCOL_VERSION, 2, 'netprobe', long_id)
    relayed = a.take(NET_HELLO_ID, timeout, where=hello_of(2))
-   r.add('hello', 'A is told what B announced, byte for byte',
-         'PASS' if relayed == sent_by_b else 'FAIL',
-         '' if relayed == sent_by_b else
-         (parse_hello(relayed)[3] if relayed else a.why_dead()))
-   r.add('hello', 'a HELLO is not echoed to its sender',
-         'PASS' if b.take(NET_HELLO_ID, 0.5, where=hello_of(2)) is None else 'FAIL')
+   r.ok('hello', 'A is told what B announced, byte for byte', relayed == sent_by_b,
+        '' if relayed == sent_by_b else (parse_hello(relayed)[3] if relayed else a.why_dead()))
+   r.ok('hello', 'a HELLO is not echoed to its sender',
+        b.take(NET_HELLO_ID, 0.5, where=hello_of(2)) is None)
 
-   # --- a change of contest is a second HELLO, relayed ---------------------
    a.send(build_hello(NET_PROTOCOL_VERSION, 1, 'netprobe', 'CQ-WW-CW'))
    again = b.take(NET_HELLO_ID, timeout, where=hello_of(1))
-   r.add('hello', 'a contest change is relayed',
-         'PASS' if again and parse_hello(again)[3] == 'CQ-WW-CW' else 'FAIL',
-         parse_hello(again)[3] if again else b.why_dead())
+   r.ok('hello', 'a contest change is relayed',
+        again is not None and parse_hello(again)[3] == 'CQ-WW-CW',
+        parse_hello(again)[3] if again else b.why_dead())
    c = ctx.probe('C', 3, contest_id='CQ-WW-SSB')
    latest = c.take(NET_HELLO_ID, timeout, where=hello_of(1))
-   r.add('hello', 'a later joiner is told the LATEST contest, not the first',
-         'PASS' if latest and parse_hello(latest)[3] == 'CQ-WW-CW' else 'FAIL',
-         parse_hello(latest)[3] if latest else c.why_dead())
+   r.ok('hello', 'a later joiner is told the LATEST contest, not the first',
+        latest is not None and parse_hello(latest)[3] == 'CQ-WW-CW',
+        parse_hello(latest)[3] if latest else c.why_dead())
    other = c.take(NET_HELLO_ID, timeout, where=hello_of(2))
-   r.add('hello', "and every other station's as well",
-         'PASS' if other and parse_hello(other)[3] == long_id else 'FAIL')
+   r.ok('hello', "and every other station's as well",
+        other is not None and parse_hello(other)[3] == long_id)
 
-   # --- the QSO still flows, and carries the sender --------------------------
-   id1, id2 = ctx.next_ids()
-   qso = build_qso(NET_QSOINFO_ID, build_exchange('K1HLO', id1, id2), 1, a.ordinal)
-   a.send(qso)
-   got = b.take(NET_QSOINFO_ID, timeout)
-   r.add('hello', 'a QSO after the HELLO is relayed with its sender byte intact',
-         'PASS' if got == qso else 'FAIL', describe_receipt(got, qso, b))
+   # The QSO still flows and carries the sender.
+   values = ctx.row('K1HLO')
+   a.send(ctx.msg(NET_WIRE_QSO_ID, 1, values))
+   got = b.take(NET_WIRE_QSO_ID, timeout)
+   ok, detail = relayed_equals(ctx, got, values, 1)
+   r.ok('hello', 'a QSO after the HELLO is relayed with its sender byte intact', ok, detail)
 
-   # --- what is refused ----------------------------------------------------
+   # What is refused.
    v1 = ctx.probe('V1', 4, claim=False)
    v1.claim_id_v1()
-   r.add('hello', "no HELLO first (a 4.x station's COMPUTERID): connection closed",
-         'PASS' if wait_closed(v1, timeout) else 'FAIL')
-   # Only what the server sends on admission (the log-compare packet and, with
-   # the lockout on, a serial number) may be in the inbox: no HELLO, no refusal
-   # message a 4.x station could misread.
+   r.ok('hello', "no HELLO first (a 4.x station's COMPUTERID): connection closed",
+        wait_closed(v1, timeout))
    stray = [MESSAGE_NAME.get(found_id, str(found_id)) for found_id, _data in v1.inbox
             if found_id not in (NET_LOGCOMPARE_ID, NET_SERVERMESSAGE_ID)]
-   r.add('hello', 'and it was answered with no HELLO',
-         'PASS' if not stray else 'FAIL', ', '.join(stray))
+   r.ok('hello', 'and it was answered with no HELLO', not stray, ', '.join(stray))
 
    q = ctx.probe('Q', 5, claim=False)
-   id1, id2 = ctx.next_ids()
-   q.send(build_qso(NET_QSOINFO_ID, build_exchange('K1NOH', id1, id2), 1, 5))
-   r.add('hello', 'a QSO sent before any HELLO: connection closed',
-         'PASS' if wait_closed(q, timeout) else 'FAIL')
-   r.add('hello', 'and it was not relayed',
-         'PASS' if a.take(NET_QSOINFO_ID, 0.5) is None else 'FAIL')
+   q.send(ctx.msg(NET_WIRE_QSO_ID, 5, ctx.row('K1NOH')))
+   r.ok('hello', 'a QSO sent before any HELLO: connection closed', wait_closed(q, timeout))
+   r.ok('hello', 'and it was not relayed', a.take(NET_WIRE_QSO_ID, 0.5) is None)
 
+   # Protocol 4 (the version before this one) must be refused READABLY: its
+   # HELLO is the same 70 bytes, so the server can answer it with an 8330.
    for version, label in ((NET_PROTOCOL_VERSION - 1, 'older'), (NET_PROTOCOL_VERSION + 1, 'newer')):
       p = ctx.probe('P%d' % version, 6, claim=False)
       p.send(build_hello(version, 6, 'netprobe', 'X'))
       refusal = p.take(NET_SERVERMESSAGE_ID, timeout, SM_PROTOCOL_MISMATCH)
-      r.add('hello', 'protocol %d (%s) is refused with 8330' % (version, label),
-            'PASS' if refusal else 'FAIL', '' if refusal else p.why_dead())
+      r.ok('hello', 'protocol %d (%s) is refused with 8330' % (version, label),
+           refusal is not None, '' if refusal else p.why_dead())
       if refusal:
          param = server_message_fields(refusal)[1]
-         r.add('hello', "8330 carries the server's protocol",
-               'PASS' if param == NET_PROTOCOL_VERSION else 'FAIL', 'param %d' % param)
-      r.add('hello', 'protocol %d: connection closed afterwards' % version,
-            'PASS' if wait_closed(p, timeout) else 'FAIL')
-   r.add('hello', 'a refused station is never announced to the others',
-         'PASS' if a.take(NET_HELLO_ID, 0.5, where=hello_of(6)) is None else 'FAIL')
+         r.ok('hello', "8330 carries the server's protocol (%d)" % NET_PROTOCOL_VERSION,
+              param == NET_PROTOCOL_VERSION, 'param %d' % param)
+      r.ok('hello', 'protocol %d: connection closed afterwards' % version,
+           wait_closed(p, timeout))
+   r.ok('hello', 'a refused station is never announced to the others',
+        a.take(NET_HELLO_ID, 0.5, where=hello_of(6)) is None)
 
    dup = ctx.probe('D', 1, claim=False, contest_id='DUP-CONTEST')
    dup.send(build_hello(NET_PROTOCOL_VERSION, 1, 'netprobe', 'DUP-CONTEST'))
    refusal = dup.take(NET_SERVERMESSAGE_ID, timeout, SM_COMPUTERID_IN_USE)
-   r.add('hello', "a HELLO claiming A's id is refused with 8320",
-         'PASS' if refusal else 'FAIL', '' if refusal else 'accepted')
-   r.add('hello', 'and its contest is not announced',
-         'PASS' if b.take(NET_HELLO_ID, 0.5,
-                          where=lambda d: parse_hello(d)[3] == 'DUP-CONTEST') is None
-         else 'FAIL')
+   r.ok('hello', "a HELLO claiming A's id is refused with 8320", refusal is not None,
+        '' if refusal else 'accepted')
+   r.ok('hello', 'and its contest is not announced',
+        b.take(NET_HELLO_ID, 0.5, where=lambda d: parse_hello(d)[3] == 'DUP-CONTEST') is None)
+   # The refused station is still connected but unidentified: a QSO from it must
+   # not be stored or relayed (the contract is silent; this records what each
+   # server does).
+   dup.send(ctx.msg(NET_WIRE_QSO_ID, 1, ctx.row('K1UNID')))
+   got = b.take(NET_WIRE_QSO_ID, 1.0)
+   r.add('hello', 'a QSO from a station refused for its id is relayed', 'INFO',
+         'relayed' if got is not None else 'not relayed')
 
    for bad in (0, 27):
       p = ctx.probe('I%d' % bad, bad, claim=False)
       p.send(build_hello(NET_PROTOCOL_VERSION, bad, 'netprobe', 'X'))
       refusal = p.take(NET_SERVERMESSAGE_ID, timeout, SM_COMPUTERID_IN_USE)
-      r.add('hello', 'computer id %d is refused with 8320' % bad,
-            'PASS' if refusal else 'FAIL')
+      r.ok('hello', 'computer id %d is refused with 8320' % bad, refusal is not None)
 
-
-def log_growth(before, after):
-   """Records added between two downloads of the server log, or None when
-   either could not be read."""
-   if before is None or after is None:
-      return None
-   return len(after) - len(before)
+   # A HELLO with an EMPTY contest (a station with no contest open): admitted;
+   # what the server then holds as its contest is compared by compare.py.
+   e = ctx.probe('E', 7, claim=False)
+   e.send(build_hello(NET_PROTOCOL_VERSION, 7, 'netprobe', ''))
+   r.ok('hello', 'a HELLO with an empty contest is admitted', e.alive(timeout))
 
 
 def case_resend(ctx):
    """A station that was disconnected sends again what it logged meanwhile, and
    one that crashed before it noted what it had sent sends some of it twice.
    The server must store a QSO ONCE however many times it arrives, relay it
-   once, and still tell every sender it has it. A QSO is told from another by
-   the pair (ceQSOID1, ceQSOID2); the pair (0, 0) identifies nothing."""
+   once, and still tell every sender it has it. The guid tells one QSO from
+   another; an empty guid identifies nothing."""
    r = ctx.report
    timeout = ctx.args.timeout
    a = ctx.probe('A', 1)
@@ -839,302 +1250,228 @@ def case_resend(ctx):
    a.settle(0.5)
    b.settle(0.5)
 
-   # 1. A new QSO is relayed and stored, as ever.
-   before = ctx.log_records()
-   id1, id2 = ctx.next_ids()
-   exchange = build_exchange('K1RS1', id1, id2)
-   first = build_qso(NET_QSOINFO_ID, exchange, 1, a.ordinal)
+   before = ctx.rows()
+   n = ctx.next_n()
+   values = ctx.row('K1RS1', n)
+   first = ctx.msg(NET_WIRE_QSO_ID, 1, values)
    a.send(first)
-   got = b.take(NET_QSOINFO_ID, timeout)
-   r.add('resend', 'a new QSO is relayed', 'PASS' if got == first else 'FAIL',
-         describe_receipt(got, first, b))
-   time.sleep(0.5)
-   held = ctx.log_records()
-   grew = log_growth(before, held)
+   got = b.take(NET_WIRE_QSO_ID, timeout)
+   ok, detail = relayed_equals(ctx, got, values, 1)
+   r.ok('resend', 'a new QSO is relayed', ok, detail)
+   held = ctx.wait_rows((len(before) if before is not None else 0) + 1, 3)
+   grew = log_growth(before, None if held is None else held.rows)
    if grew is None:
       r.add('resend', 'a new QSO is stored once', 'SKIP', 'log not readable')
    else:
-      r.add('resend', 'a new QSO is stored once', 'PASS' if grew == 1 else 'FAIL',
-            'grew by %d' % grew)
+      r.ok('resend', 'a new QSO is stored once', grew == 1, 'grew by %d' % grew)
+   held_rows = None if held is None else held.rows
 
-   # 2. The same QSO as QSOINFO again: neither stored nor relayed.
    a.send(first)
-   again = b.take(NET_QSOINFO_ID, 1.5)
-   r.add('resend', 'a second QSOINFO of a held QSO is not relayed',
-         'PASS' if again is None else 'FAIL',
-         '' if again is None else 'B received it again')
+   again = b.take(NET_WIRE_QSO_ID, 1.5)
+   r.ok('resend', 'a second NEW of a held QSO is not relayed', again is None,
+        '' if again is None else 'B received it again')
    time.sleep(0.5)
-   after = ctx.log_records()
-   grew = log_growth(held, after)
+   after = ctx.rows()
+   grew = log_growth(held_rows, after)
    if grew is None:
-      r.add('resend', 'a second QSOINFO of a held QSO is not stored', 'SKIP',
-            'log not readable')
+      r.add('resend', 'a second NEW of a held QSO is not stored', 'SKIP', 'log not readable')
    else:
-      r.add('resend', 'a second QSOINFO of a held QSO is not stored',
-            'PASS' if grew == 0 else 'FAIL', 'grew by %d' % grew)
-   r.add('resend', 'the sender stays connected', 'PASS' if a.alive(timeout) else 'FAIL')
+      r.ok('resend', 'a second NEW of a held QSO is not stored', grew == 0, 'grew by %d' % grew)
+   r.ok('resend', 'the sender stays connected', a.alive(timeout))
 
-   # 3. The same QSO as OFFLINEQSO: not stored, but acknowledged.
+   # The same QSO as OFFLINE: not stored, but acknowledged.
    a.take(NET_SERVERMESSAGE_ID, 0.2, SM_RECEIVED_UPDATED_QSO)
-   a.send(build_qso(NET_OFFLINEQSO_ID, exchange, 1, a.ordinal))
+   a.send(ctx.msg(NET_WIRE_OFFLINE_ID, 1, values))
    ack = a.take(NET_SERVERMESSAGE_ID, timeout, SM_RECEIVED_UPDATED_QSO)
-   r.add('resend', 'an OFFLINEQSO of a held QSO is acknowledged',
-         'PASS' if ack else 'FAIL')
+   r.ok('resend', 'an OFFLINE row of a held QSO is acknowledged', ack is not None)
    time.sleep(0.5)
-   grew = log_growth(held, ctx.log_records())
-   if grew is None:
-      r.add('resend', 'an OFFLINEQSO of a held QSO is not stored', 'SKIP',
-            'log not readable')
-   else:
-      r.add('resend', 'an OFFLINEQSO of a held QSO is not stored',
-            'PASS' if grew == 0 else 'FAIL', 'grew by %d' % grew)
+   grew = log_growth(held_rows, ctx.rows())
+   if grew is not None:
+      r.ok('resend', 'an OFFLINE row of a held QSO is not stored', grew == 0, 'grew by %d' % grew)
 
-   # 4. An OFFLINEQSO the server has never seen is stored and acknowledged. It
-   #    is not relayed: that is why the client resends as QSOINFO.
-   n1, n2 = ctx.next_ids()
-   new_offline = build_qso(NET_OFFLINEQSO_ID, build_exchange('K1RS2', n1, n2), 1, a.ordinal)
-   a.send(new_offline)
+   # An OFFLINE row the server has never seen: stored and acknowledged, not
+   # relayed (which is why the client resends as NEW).
+   fresh = ctx.row('K1RS2')
+   a.send(ctx.msg(NET_WIRE_OFFLINE_ID, 1, fresh))
    ack = a.take(NET_SERVERMESSAGE_ID, timeout, SM_RECEIVED_UPDATED_QSO)
-   r.add('resend', 'a new OFFLINEQSO is acknowledged', 'PASS' if ack else 'FAIL')
+   r.ok('resend', 'a new OFFLINE row is acknowledged', ack is not None)
    time.sleep(0.5)
-   grew = log_growth(held, ctx.log_records())
-   if grew is None:
-      r.add('resend', 'a new OFFLINEQSO is stored', 'SKIP', 'log not readable')
-   else:
-      r.add('resend', 'a new OFFLINEQSO is stored', 'PASS' if grew == 1 else 'FAIL',
-            'grew by %d' % grew)
-   relayed = b.take(NET_OFFLINEQSO_ID, 1.0) or b.take(NET_QSOINFO_ID, 0.2)
-   r.add('resend', 'an OFFLINEQSO is not relayed (the client resends as QSOINFO)',
-         'INFO', 'relayed' if relayed else 'not relayed')
+   now = ctx.rows()
+   grew = log_growth(held_rows, now)
+   if grew is not None:
+      r.ok('resend', 'a new OFFLINE row is stored', grew == 1, 'grew by %d' % grew)
+   relayed = b.take(NET_WIRE_OFFLINE_ID, 1.0) or b.take(NET_WIRE_QSO_ID, 0.2)
+   r.ok('resend', 'an OFFLINE row is not relayed', relayed is None,
+        'relayed' if relayed else 'not relayed')
 
-   # 5. The pair (0, 0) identifies nothing: such a QSO is never a duplicate.
-   held = ctx.log_records()
-   anon = build_qso(NET_QSOINFO_ID, build_exchange('K1RS3', 0, 0), 1, a.ordinal)
-   a.send(anon)
-   a.send(anon)
-   got = b.count(NET_QSOINFO_ID, 2, timeout)
+   # An empty guid identifies nothing: never a duplicate.
+   held_rows = ctx.rows()
+   anon = ctx.row('K1RS3', guid='')
+   a.send(ctx.msg(NET_WIRE_QSO_ID, 1, anon))
+   a.send(ctx.msg(NET_WIRE_QSO_ID, 1, anon))
+   got = b.count(NET_WIRE_QSO_ID, 2, timeout)
    time.sleep(0.5)
-   grew = log_growth(held, ctx.log_records())
-   r.add('resend', 'a QSO with ids (0, 0) is relayed every time',
-         'PASS' if got >= 2 else 'FAIL', 'B has %d QSOINFO' % got)
-   if grew is None:
-      r.add('resend', 'a QSO with ids (0, 0) is stored every time', 'SKIP',
-            'log not readable')
-   else:
-      r.add('resend', 'a QSO with ids (0, 0) is stored every time',
-            'PASS' if grew == 2 else 'FAIL', 'grew by %d' % grew)
+   grew = log_growth(held_rows, ctx.rows())
+   r.ok('resend', 'a row with an empty guid is relayed every time', got >= 2,
+        'B has %d' % got)
+   if grew is not None:
+      r.ok('resend', 'a row with an empty guid is stored every time', grew == 2,
+           'grew by %d' % grew)
 
-   # 6. An edit of a held QSO is still relayed and applied.
-   held = ctx.log_records()
-   edited = build_exchange('K1RS1X', id1, id2)
-   edit = build_qso(NET_EDITEDQSO_ID, edited, 1, a.ordinal)
-   a.send(edit)
-   got = b.take(NET_EDITEDQSO_ID, timeout)
-   r.add('resend', 'an edit of a held QSO is relayed', 'PASS' if got == edit else 'FAIL',
-         describe_receipt(got, edit, b))
+   # An edit of a held QSO is relayed and applied.
+   held_rows = ctx.rows()
+   edited = ctx.row('K1RS1X', n)
+   a.send(ctx.msg(NET_WIRE_EDIT_ID, 1, edited))
+   got = b.take(NET_WIRE_EDIT_ID, timeout)
+   ok, detail = relayed_equals(ctx, got, edited, 1)
+   r.ok('resend', 'an edit of a held QSO is relayed', ok, detail)
    time.sleep(0.5)
-   after = ctx.log_records()
-   if held is None or after is None:
-      r.add('resend', 'an edit of a held QSO is applied in place', 'SKIP',
-            'log not readable')
-   else:
-      applied = edited in after and exchange not in after
-      r.add('resend', 'an edit of a held QSO is applied in place',
-            'PASS' if (applied and len(after) == len(held)) else 'FAIL',
-            'records %d -> %d' % (len(held), len(after)))
+   after = ctx.rows()
+   if held_rows is not None and after is not None:
+      r.ok('resend', 'an edit of a held QSO is applied in place',
+           edited in after and values not in after and len(after) == len(held_rows),
+           'rows %d -> %d' % (len(held_rows), len(after)))
 
-   # 7. A whole burst sent twice -- a station that lost the link half way
-   #    through a catch-up and sent all of it again -- is relayed and stored once.
+   # A whole burst sent twice is relayed and stored once.
    count = ctx.args.burst
-   held = ctx.log_records()
-   blob = b''
-   for _ in range(count):
-      b1, b2 = ctx.next_ids()
-      blob += build_qso(NET_QSOINFO_ID, build_exchange('K1RS4', b1, b2), 1, a.ordinal)
-   b.inbox = [item for item in b.inbox if item[0] != NET_QSOINFO_ID]   # count only this burst
+   held_rows = ctx.rows()
+   burst = [ctx.row('K1RS4') for _ in range(count)]
+   blob = b''.join(ctx.msg(NET_WIRE_QSO_ID, 1, v) for v in burst)
+   b.drop_inbox(NET_WIRE_QSO_ID)
    a.send(blob)
-   got = b.count(NET_QSOINFO_ID, count, timeout + 3)
-   r.add('resend', 'a burst of %d is relayed whole' % count,
-         'PASS' if got >= count else 'FAIL', 'B has %d' % got)
-   have = sum(1 for found_id, _ in b.inbox if found_id == NET_QSOINFO_ID)
+   got = b.count(NET_WIRE_QSO_ID, count, timeout + 3)
+   r.ok('resend', 'a burst of %d is relayed whole' % count, got >= count, 'B has %d' % got)
+   have = sum(1 for found_id, _ in b.inbox if found_id == NET_WIRE_QSO_ID)
    a.send(blob)
    time.sleep(1.5)
    b.pump(0.5)
-   now = sum(1 for found_id, _ in b.inbox if found_id == NET_QSOINFO_ID)
-   r.add('resend', 'the same burst sent again is not relayed again',
-         'PASS' if now == have else 'FAIL', 'B went from %d to %d' % (have, now))
+   now = sum(1 for found_id, _ in b.inbox if found_id == NET_WIRE_QSO_ID)
+   r.ok('resend', 'the same burst sent again is not relayed again', now == have,
+        'B went from %d to %d' % (have, now))
    time.sleep(0.5)
-   grew = log_growth(held, ctx.log_records())
-   if grew is None:
-      r.add('resend', 'the same burst sent again is stored once', 'SKIP',
-            'log not readable')
-   else:
-      r.add('resend', 'the same burst sent again is stored once',
-            'PASS' if grew == count else 'FAIL',
-            'grew by %d, wanted %d' % (grew, count))
-   r.add('resend', 'both stations still connected',
-         'PASS' if (a.alive(timeout) and b.alive(timeout)) else 'FAIL')
-
-
-def parse_log_compare(msg):
-   """(server CRC32, local CRC32, server log size, local log size, contest) of
-   the 19-byte LOGCOMPARE a server sends on admit. Only the server log size is
-   still meaningful: it is the size of the file the sync port will send."""
-   _id, server_crc, local_crc, server_size, local_size, contest = \
-      struct.unpack('<HIIIIB', msg)
-   return server_crc, local_crc, server_size, local_size, contest
-
-
-def records_of(data):
-   """The 376-byte records of a downloaded server log (the header is one slot
-   long), and whether the file is a whole number of them."""
-   body = data[CONTEST_EXCHANGE_SIZE:]
-   whole = len(body) % CONTEST_EXCHANGE_SIZE == 0
-   return ([body[i:i + CONTEST_EXCHANGE_SIZE]
-            for i in range(0, len(body) - CONTEST_EXCHANGE_SIZE + 1, CONTEST_EXCHANGE_SIZE)],
-           whole)
-
-
-def record_key(rec):
-   return struct.unpack_from('<II', rec, CE_QSOID1)
+   grew = log_growth(held_rows, ctx.rows())
+   if grew is not None:
+      r.ok('resend', 'the same burst sent again is stored once', grew == count,
+           'grew by %d, wanted %d' % (grew, count))
+   r.ok('resend', 'both stations still connected', a.alive(timeout) and b.alive(timeout))
 
 
 def case_catchup(ctx):
    """A station that comes up in the middle of a contest fetches the server's log
-   on the sync port and adds the QSOs it lacks (Phase 1, C6). From outside the
-   server that is: what a late joiner is and is not told on connect, and that the
-   download is exactly the file LOGCOMPARE announced, whole, in arrival order,
-   every QSO byte for byte, and the same twice. It speaks the client's own
-   framing (ten password bytes, a four-byte size, then that many bytes)."""
+   on the sync port. From outside the server that is: what a late joiner is and
+   is not told on connect, and that the download is the header frame and one
+   framed row per QSO, in arrival order, every row verifying, the same twice,
+   and (with --launch) the same after the server is killed and restarted."""
    r = ctx.report
    timeout = ctx.args.timeout
    count = ctx.args.burst
    a = ctx.probe('A', 1)
    a.settle(0.5)
 
-   # --- A logs QSOs while nobody else is here -------------------------------
-   ours = []
-   blob = b''
-   for _ in range(count):
-      id1, id2 = ctx.next_ids()
-      exchange = build_exchange('K1CU%d' % (len(ours) % 10), id1, id2)
-      ours.append(exchange)
-      blob += build_qso(NET_QSOINFO_ID, exchange, 1, a.ordinal)
-   a.send(blob)
+   ours = [ctx.row('K1CU%d' % (i % 10), rcvd_name='Zoë %d' % i) for i in range(count)]
+   a.send(b''.join(ctx.msg(NET_WIRE_QSO_ID, 1, v) for v in ours))
    r.add('catchup', 'QSOs logged while the joiner is away', 'INFO', str(count))
-
-   # Wait until the server has them all, rather than for a fixed time.
-   keys = [record_key(e) for e in ours]
-   deadline = time.time() + timeout + 6
-   data = None
-   while time.time() < deadline:
-      data, why = fetch_server_log(ctx.args.host, ctx.args.port, ctx.args.password,
-                                   ctx.args.sync_timeout, ctx.args.sync_bytes)
-      if data is not None:
-         held, _ = records_of(data)
-         have = set(record_key(rec) for rec in held)
-         if all(k in have for k in keys):
-            break
-      time.sleep(0.3)
-   if data is None:
-      r.add('catchup', 'the server log can be downloaded on the sync port', 'FAIL', why)
+   guid_at = ctx.codec.index('guid')
+   keys = [v[guid_at] for v in ours]
+   view = ctx.wait_rows(count, timeout + 6)
+   if view is None:
+      r.add('catchup', 'the server log can be downloaded on the sync port', 'FAIL', 'no download')
       return
 
-   # --- the late joiner arrives ----------------------------------------------
    c = ctx.probe('C', 3)
    admitted = c.settle(1.0)
-   announced = [data_ for found_id, data_ in admitted if found_id == NET_LOGCOMPARE_ID]
-   data, why = fetch_server_log(ctx.args.host, ctx.args.port, ctx.args.password,
-                                ctx.args.sync_timeout, ctx.args.sync_bytes)
-   if data is None:
-      r.add('catchup', 'the server log can be downloaded on the sync port', 'FAIL', why)
+   announced = [d for found_id, d in admitted if found_id == NET_LOGCOMPARE_ID]
+   view = ctx.view()
+   if view is None:
+      r.add('catchup', 'the server log can be downloaded on the sync port', 'FAIL', 'no download')
       return
    r.add('catchup', 'the server log can be downloaded on the sync port', 'PASS',
-         '%d bytes' % len(data))
-
+         '%d rows' % len(view.rows))
+   r.ok('catchup', 'the header frame is {contest, rows, schema} and agrees with the rows',
+        view.header.get('rows') == len(view.rows) and view.header.get('schema') == 5
+        and set(view.header.keys()) == {'contest', 'rows', 'schema'},
+        'header %s' % json.dumps(view.header, sort_keys=True))
+   r.ok('catchup', 'the header names the contest the first station announced',
+        view.header.get('contest') == ctx.args.contest,
+        '"%s"' % view.header.get('contest'))
    if announced:
-      announced_size = parse_log_compare(announced[0])[2]
-      r.add('catchup', 'LOGCOMPARE announced the size of the file that was sent',
-            'PASS' if announced_size == len(data) else 'FAIL',
-            'announced %d, downloaded %d' % (announced_size, len(data)))
+      rows_announced = struct.unpack('<HIIIIB', announced[0])[3]
+      r.ok('catchup', 'LOGCOMPARE announced the ROW COUNT of the log',
+           rows_announced == len(view.rows),
+           'announced %d, downloaded %d' % (rows_announced, len(view.rows)))
    else:
-      r.add('catchup', 'LOGCOMPARE announced the size of the file that was sent',
-            'FAIL', 'no LOGCOMPARE on admit')
-
-   held, whole = records_of(data)
-   r.add('catchup', 'the file is a header and a whole number of records',
-         'PASS' if whole and len(data) >= CONTEST_EXCHANGE_SIZE else 'FAIL',
-         '%d bytes, %d records' % (len(data), len(held)))
-
-   by_key = {}
-   repeats = 0
-   for rec in held:
-      k = record_key(rec)
-      if k in by_key and k != (0, 0):
-         repeats += 1
-      by_key[k] = rec
-   missing = [k for k in keys if k not in by_key]
-   r.add('catchup', 'every QSO logged meanwhile is in the download',
-         'PASS' if not missing else 'FAIL',
-         '%d of %d present' % (count - len(missing), count))
-   different = [k for k, e in zip(keys, ours) if by_key.get(k) != e]
-   r.add('catchup', 'and each is byte for byte what was sent',
-         'PASS' if not different else 'FAIL', '%d differ' % len(different))
-   positions = [next((i for i, rec in enumerate(held) if record_key(rec) == k), -1)
-                for k in keys]
-   r.add('catchup', 'in the order they arrived',
-         'PASS' if positions == sorted(positions) and -1 not in positions else 'FAIL')
-   r.add('catchup', 'no QSO appears twice in the file',
-         'PASS' if repeats == 0 else 'FAIL', '%d repeated' % repeats)
-
-   # --- what the joiner is NOT told ------------------------------------------
-   r.add('catchup', 'the joiner is not sent the earlier QSOs on admit (so it must fetch)',
-         'PASS' if c.take(NET_QSOINFO_ID, 1.0) is None else 'FAIL')
+      r.add('catchup', 'LOGCOMPARE announced the ROW COUNT of the log', 'FAIL', 'no LOGCOMPARE on admit')
+   r.ok('catchup', 'every row checksum verifies', view.problem == '', view.problem)
+   got_guids = view.guids(ctx.codec)
+   missing = [k for k in keys if k not in got_guids]
+   r.ok('catchup', 'every QSO logged meanwhile is in the download', not missing,
+        '%d of %d present' % (count - len(missing), count))
+   r.ok('catchup', 'and each is the row that was sent', view.rows[-count:] == ours)
+   positions = [got_guids.index(k) if k in got_guids else -1 for k in keys]
+   r.ok('catchup', 'in the order they arrived',
+        positions == sorted(positions) and -1 not in positions)
+   r.ok('catchup', 'no guid appears twice in the download',
+        len(set(g for g in got_guids if g)) == len([g for g in got_guids if g]))
+   r.ok('catchup', 'the joiner is not sent the earlier QSOs on admit (so it must fetch)',
+        c.take(NET_WIRE_QSO_ID, 1.0) is None)
    latest = c.take(NET_HELLO_ID, timeout, where=hello_of(1))
-   r.add('catchup', 'it is told what contest the others announced (the judge needs it)',
-         'PASS' if latest and parse_hello(latest)[3] == ctx.args.contest else 'FAIL',
-         parse_hello(latest)[3] if latest else c.why_dead())
+   r.ok('catchup', 'it is told what contest the others announced',
+        latest is not None and parse_hello(latest)[3] == ctx.args.contest,
+        parse_hello(latest)[3] if latest else c.why_dead())
+   again = ctx.view()
+   r.ok('catchup', 'a second download is the same bytes',
+        again is not None and again.raw == view.raw)
 
-   # --- the same twice, and an edit is in place ------------------------------
-   again, why = fetch_server_log(ctx.args.host, ctx.args.port, ctx.args.password,
-                                 ctx.args.sync_timeout, ctx.args.sync_bytes)
-   r.add('catchup', 'a second download is the same file',
-         'PASS' if again == data else 'FAIL', why)
-
-   edited = build_exchange('K1CUEDIT', keys[0][0], keys[0][1])
-   a.send(build_qso(NET_EDITEDQSO_ID, edited, 1, a.ordinal))
+   edited = ctx.row('K1CUEDIT', int(keys[0], 16))
+   a.send(ctx.msg(NET_WIRE_EDIT_ID, 1, edited))
    a.take(NET_SERVERMESSAGE_ID, timeout, SM_RECEIVED_UPDATED_QSO)
    time.sleep(0.5)
-   after, why = fetch_server_log(ctx.args.host, ctx.args.port, ctx.args.password,
-                                 ctx.args.sync_timeout, ctx.args.sync_bytes)
-   if after is None:
-      r.add('catchup', 'an edit shows in the download', 'SKIP', why)
+   edit_view = ctx.view()
+   if edit_view is None:
+      r.add('catchup', 'an edit shows in the download, in place', 'SKIP', 'no download')
    else:
-      held_after, _ = records_of(after)
-      same_size = len(after) == len(data)
-      in_place = (len(held_after) == len(held) and
-                  held_after[positions[0]] == edited)
-      r.add('catchup', "the server's copy of an edited QSO is the edited record, in place",
-            'PASS' if (same_size and in_place) else 'FAIL',
-            'size %d -> %d' % (len(data), len(after)))
-   r.add('catchup', 'both stations still connected',
-         'PASS' if (a.alive(timeout) and c.alive(timeout)) else 'FAIL')
+      p0 = positions[0]
+      r.ok('catchup', "the server's copy of an edited QSO is the edited row, in place",
+           len(edit_view.rows) == len(view.rows) and edit_view.rows[p0] == edited)
+   r.ok('catchup', 'both stations still connected', a.alive(timeout) and c.alive(timeout))
+
+   # THE RESTART: a server killed and started again holds every row it held.
+   if ctx.launcher is None:
+      r.add('catchup', 'after a kill and restart the download is the same bytes', 'SKIP',
+            'needs --launch')
+      return
+   ctx.close_all()
+   ctx.launcher.restart()
+   restarted = ctx.view()
+   r.ok('catchup', 'after a kill and restart the download is the same bytes',
+        restarted is not None and edit_view is not None and restarted.raw == edit_view.raw,
+        'rows %s' % (len(restarted.rows) if restarted else 'unreadable'))
+   if restarted is not None:
+      r.ok('catchup', 'and the contest survives the restart',
+           restarted.header.get('contest') == ctx.args.contest,
+           '"%s"' % restarted.header.get('contest'))
+   # A catch-up is OPENED by a connection: the joiner on the restarted server.
+   late = ctx.probe('C', 3)
+   admitted = late.settle(1.0)
+   announced = [d for found_id, d in admitted if found_id == NET_LOGCOMPARE_ID]
+   if announced and restarted is not None:
+      r.ok('catchup', 'LOGCOMPARE after the restart still counts the rows',
+           struct.unpack('<HIIIIB', announced[0])[3] == len(restarted.rows))
 
 
 def count_acks(probe, wanted, wait):
    """Wait up to `wait` seconds for `wanted` acknowledgements (8300) and return
    how many have arrived."""
-   deadline = time.time() + wait
-   while time.time() < deadline and not probe.eof and probe.bad_id is None:
-      have = sum(1 for found_id, data in probe.inbox
+   def acks():
+      return sum(1 for found_id, data in probe.inbox
                  if found_id == NET_SERVERMESSAGE_ID and
                  server_message_fields(data)[0] == SM_RECEIVED_UPDATED_QSO)
-      if have >= wanted:
+   deadline = time.time() + wait
+   while time.time() < deadline and not probe.eof and probe.bad_id is None:
+      if acks() >= wanted:
          break
       probe.pump(0.1)
-   return sum(1 for found_id, data in probe.inbox
-              if found_id == NET_SERVERMESSAGE_ID and
-              server_message_fields(data)[0] == SM_RECEIVED_UPDATED_QSO)
+   return acks()
 
 
 def forget_acks(probe):
@@ -1143,112 +1480,363 @@ def forget_acks(probe):
                           server_message_fields(item[1])[0] == SM_RECEIVED_UPDATED_QSO)]
 
 
-def restock_round(ctx, a, b, count, tag, big):
+def restock_round(ctx, a, b, count, tag):
    """One restock of `count` QSOs: a station whose log holds QSOs the server
-   lacks sends them all as OFFLINEQSO in one write. Checks that every one is
-   acknowledged, that nobody else is sent any (it is a restock, not news), that
-   the server's log grew by exactly those records, byte for byte, once each and
-   in order at the end of the file, and that sending the same set again adds
-   nothing."""
+   lacks sends them all as OFFLINE in one write. Every one is acknowledged,
+   nobody else is sent any, the server's log grows by exactly those rows, once
+   each and in order, and sending the same set again adds nothing."""
    r = ctx.report
    timeout = ctx.args.timeout
    wait = timeout + 6 + count * 0.05
-
-   before = ctx.log_records()
-   ours = []
-   blob = b''
-   for i in range(count):
-      id1, id2 = ctx.next_ids()
-      exchange = build_exchange('K1%s%d' % (tag, i % 10), id1, id2)
-      ours.append(exchange)
-      blob += build_qso(NET_OFFLINEQSO_ID, exchange, 1, a.ordinal)
+   before = ctx.rows()
+   ours = [ctx.row('K1%s%d' % (tag, i % 10)) for i in range(count)]
+   blob = b''.join(ctx.msg(NET_WIRE_OFFLINE_ID, 1, v) for v in ours)
    forget_acks(a)
-   b.inbox = [item for item in b.inbox if item[0] not in (NET_QSOINFO_ID, NET_OFFLINEQSO_ID)]
+   b.drop_inbox(NET_WIRE_QSO_ID, NET_WIRE_OFFLINE_ID)
 
    started = time.time()
    a.send(blob)                       # ONE write: the server sees a coalesced read
    acks = count_acks(a, count, wait)
    took = time.time() - started
    r.add(tag, 'bytes written in one send', 'INFO', '%d (%d QSOs)' % (len(blob), count))
-   r.add(tag, 'every OFFLINEQSO is acknowledged (8300)',
-         'PASS' if acks == count else 'FAIL',
-         '%d of %d in %.2f s (%.1f ms each)' % (acks, count, took, 1000.0 * took / max(count, 1)))
+   r.ok(tag, 'every OFFLINE row is acknowledged (8300)', acks == count, '%d of %d' % (acks, count))
+   r.add(tag, 'timing', 'INFO', '%.2f s (%.1f ms each)' % (took, 1000.0 * took / max(count, 1)))
 
-   # NOT RELAYED: a restock must not flood the stations that are connected.
    b.pump(1.0)
-   relayed = sum(1 for found_id, _ in b.inbox if found_id in (NET_QSOINFO_ID, NET_OFFLINEQSO_ID))
-   r.add(tag, 'a second connected station receives NONE of them (not relayed)',
-         'PASS' if relayed == 0 else 'FAIL', 'B received %d' % relayed)
+   relayed = sum(1 for found_id, _ in b.inbox if found_id in (NET_WIRE_QSO_ID, NET_WIRE_OFFLINE_ID))
+   r.ok(tag, 'a second connected station receives NONE of them (not relayed)',
+        relayed == 0, 'B received %d' % relayed)
 
-   # STORED WHOLE, ONCE EACH, IN ORDER.
-   deadline = time.time() + wait
-   after = None
-   while time.time() < deadline:
-      after = ctx.log_records()
-      if after is not None and before is not None and len(after) - len(before) >= count:
-         break
-      time.sleep(0.3)
+   after = ctx.wait_rows((len(before) if before is not None else 0) + count, wait)
    if before is None or after is None:
-      r.add(tag, 'the download holds exactly the pushed records', 'SKIP', 'log not readable')
+      r.add(tag, 'the download holds exactly the pushed rows', 'SKIP', 'log not readable')
    else:
-      added = after[len(before):]
-      r.add(tag, 'the server log grew by exactly %d records' % count,
-            'PASS' if len(added) == count else 'FAIL', 'grew by %d' % len(added))
-      r.add(tag, 'the new records are what was sent, byte for byte, in order',
-            'PASS' if added == ours else 'FAIL',
-            '%d of %d identical' % (sum(1 for x, y in zip(added, ours) if x == y), count))
-      keys = [record_key(rec) for rec in after]
-      repeated = len(keys) - len(set(k for k in keys if k != (0, 0))) - keys.count((0, 0))
-      r.add(tag, 'no QSO appears twice in the log', 'PASS' if repeated == 0 else 'FAIL',
-            '%d repeated' % repeated)
+      added = after.rows[len(before):]
+      r.ok(tag, 'the server log grew by exactly %d rows' % count, len(added) == count,
+           'grew by %d' % len(added))
+      r.ok(tag, 'the new rows are what was sent, in order', added == ours,
+           '%d of %d identical' % (sum(1 for x, y in zip(added, ours) if x == y), count))
+      guids = [g for g in after.guids(ctx.codec) if g]
+      r.ok(tag, 'no guid appears twice in the log', len(guids) == len(set(guids)))
 
-   # THE SAME SET AGAIN ADDS NOTHING, and is still acknowledged.
-   held = after
+   held = None if after is None else after.rows
    forget_acks(a)
    a.send(blob)
    acks = count_acks(a, count, wait)
-   r.add(tag, 'the same set sent again is still acknowledged',
-         'PASS' if acks == count else 'FAIL', '%d of %d' % (acks, count))
+   r.ok(tag, 'the same set sent again is still acknowledged', acks == count,
+        '%d of %d' % (acks, count))
    time.sleep(0.5)
-   again = ctx.log_records()
-   grew = log_growth(held, again)
-   if grew is None:
-      r.add(tag, 'the same set sent again adds none', 'SKIP', 'log not readable')
-   else:
-      r.add(tag, 'the same set sent again adds none', 'PASS' if grew == 0 else 'FAIL',
-            'grew by %d' % grew)
+   grew = log_growth(held, ctx.rows())
+   if grew is not None:
+      r.ok(tag, 'the same set sent again adds none', grew == 0, 'grew by %d' % grew)
    b.pump(0.5)
-   relayed = sum(1 for found_id, _ in b.inbox if found_id in (NET_QSOINFO_ID, NET_OFFLINEQSO_ID))
-   r.add(tag, 'and still relays nothing', 'PASS' if relayed == 0 else 'FAIL',
-         'B received %d' % relayed)
-   r.add(tag, 'both stations still connected',
-         'PASS' if (a.alive(timeout) and b.alive(timeout)) else 'FAIL')
+   relayed = sum(1 for found_id, _ in b.inbox if found_id in (NET_WIRE_QSO_ID, NET_WIRE_OFFLINE_ID))
+   r.ok(tag, 'and still relays nothing', relayed == 0, 'B received %d' % relayed)
+   r.ok(tag, 'both stations still connected', a.alive(timeout) and b.alive(timeout))
 
 
 def case_restock(ctx):
    """A server that lost its log is restocked by a station that still has the
-   QSOs: the station's rows are already marked sent, so only the server's log
-   (fetched on the sync port) says what it lacks, and the station sends exactly
-   that as NET_OFFLINEQSO. The checks are about the SERVER: both servers store an
-   OFFLINEQSO, acknowledge it, do not relay it (so connected stations are not
-   flooded; a station that lacks some catches up on its next connect), and do not
-   store a pair they already hold. Run it against an empty server for NY4I's case;
-   against a used one the checks are relative (the log GROWS by exactly the set).
-   --burst QSOs in the first round, --restock-big in the second (0 skips it)."""
-   r = ctx.report
+   QSOs: it sends exactly what the server lacks as OFFLINE rows. Both servers
+   store an OFFLINE row, acknowledge it, do not relay it, and do not store a guid
+   they already hold. --burst rows in the first round, --restock-big in a
+   second (0 skips it)."""
    a = ctx.probe('A', 1)
    b = ctx.probe('B', 2)
    a.settle(0.5)
    b.settle(0.5)
-   start = ctx.log_records()
-   r.add('restock', 'records in the server log at the start', 'INFO',
-         'unreadable' if start is None else str(len(start)))
-   restock_round(ctx, a, b, ctx.args.burst, 'restock', False)
+   restock_round(ctx, a, b, ctx.args.burst, 'restock')
    if ctx.args.restock_big > 0:
-      restock_round(ctx, a, b, ctx.args.restock_big, 'restockbig', True)
+      restock_round(ctx, a, b, ctx.args.restock_big, 'restockbig')
+
+
+def case_badcrc(ctx):
+   """A row the server cannot accept is refused: not stored, not relayed, and
+   THE LINK STAYS UP (the frame was whole, so framing is intact). Each refusal is
+   followed by a good row on the same connection, which must arrive: that proves
+   the bad frame was consumed."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+   a = ctx.probe('A', 1)
+   b = ctx.probe('B', 2)
+   a.settle(0.5)
+   b.settle(0.5)
+   before = ctx.rows()
+   codec = ctx.codec
+
+   def refused(label, frame):
+      b.drop_inbox(NET_WIRE_QSO_ID)
+      a.send(frame)
+      good = ctx.row('K1GOOD')
+      a.send(ctx.msg(NET_WIRE_QSO_ID, 1, good))
+      got = b.take(NET_WIRE_QSO_ID, timeout)
+      ok, detail = relayed_equals(ctx, got, good, 1)
+      r.ok('badcrc', '%s: not relayed, and the good row behind it is' % label, ok, detail)
+      extra = b.take(NET_WIRE_QSO_ID, 0.3)
+      r.ok('badcrc', '%s: nothing else was relayed' % label, extra is None)
+      r.ok('badcrc', '%s: the link stays up' % label, a.alive(timeout))
+      return good
+
+   goods = []
+   values = ctx.row('K1BAD')
+   text = codec.encode(values)
+   wrong = json.loads(text)
+   wrong['k'] = '%08X' % ((int(wrong['k'], 16) + 1) & 0xFFFFFFFF)
+   goods.append(refused('a wrong checksum', build_wire(NET_WIRE_QSO_ID, 1, json.dumps(wrong, separators=(',', ':')))))
+   changed = json.loads(text)
+   changed['callsign'] = 'K1ALTERED'
+   goods.append(refused('a field changed after the checksum', build_wire(NET_WIRE_QSO_ID, 1, json.dumps(changed, separators=(',', ':')))))
+   missing = json.loads(text)
+   del missing['k']
+   goods.append(refused('no checksum', build_wire(NET_WIRE_QSO_ID, 1, json.dumps(missing, separators=(',', ':')))))
+   goods.append(refused('JSON that is not JSON', build_wire(NET_WIRE_QSO_ID, 1, '{"guid": oops')))
+   goods.append(refused('JSON that is not an object', build_wire(NET_WIRE_QSO_ID, 1, '[1,2,3]')))
+   numeric = json.loads(text)
+   numeric['freq_tx_hz'] = '0x1F'
+   goods.append(refused('a numeric column holding 0x1F', build_wire(NET_WIRE_QSO_ID, 1, json.dumps(numeric, separators=(',', ':')))))
+   decimal = json.loads(text)
+   decimal['freq_tx_hz'] = 14.025
+   goods.append(refused('a numeric column holding 14.025', build_wire(NET_WIRE_QSO_ID, 1, json.dumps(decimal, separators=(',', ':')))))
+   goods.append(refused('a payload that is not UTF-8',
+                        WIRE_HEADER.pack(NET_WIRE_QSO_ID, 4) + bytes([1, 0xFF, 0xFE, 0xFD])))
+   goods.append(refused('a payload of the sender byte alone',
+                        WIRE_HEADER.pack(NET_WIRE_QSO_ID, 1) + bytes([1])))
+   goods.append(refused('an EDIT with a wrong checksum', build_wire(NET_WIRE_EDIT_ID, 1, json.dumps(wrong, separators=(',', ':')))))
+   # A bad row inside an OFFLINE run: the good ones around it are acknowledged,
+   # the bad one is not (it was refused before it reached the store).
+   forget_acks(a)
+   run = [ctx.row('K1RUN1'), None, ctx.row('K1RUN2')]
+   blob = (ctx.msg(NET_WIRE_OFFLINE_ID, 1, run[0]) +
+           build_wire(NET_WIRE_OFFLINE_ID, 1, json.dumps(wrong, separators=(',', ':'))) +
+           ctx.msg(NET_WIRE_OFFLINE_ID, 1, run[2]))
+   a.send(blob)
+   acks = count_acks(a, 3, timeout + 1)
+   r.add('badcrc', 'an OFFLINE run of good, bad, good: acknowledgements', 'INFO', '%d' % acks)
+   time.sleep(0.5)
+   after = ctx.rows()
+   if before is not None and after is not None:
+      stored = after[len(before):]
+      expected = goods + [run[0], run[2]]
+      r.ok('badcrc', 'the log holds exactly the good rows (%d), none of the bad' % len(expected),
+           stored == expected, 'grew by %d' % len(stored))
+
+
+def case_big(ctx):
+   """A legal row near the 60000-byte cap travels whole; a payload exactly at the
+   cap is accepted; a declaration over the cap disconnects the sender, which is
+   then not trusted to be in step (the bytes behind it cannot be framed)."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+   a = ctx.probe('A', 1)
+   b = ctx.probe('B', 2)
+   a.settle(0.5)
+   b.settle(0.5)
+   before = ctx.rows()
+
+   n = ctx.next_n()
+   big = ctx.row('K1BIG', n, notes='x' * 58000)
+   msg = ctx.msg(NET_WIRE_QSO_ID, 1, big)
+   r.add('big', 'size of the big message', 'INFO', '%d bytes' % len(msg))
+   a.send(msg)
+   got = b.take(NET_WIRE_QSO_ID, timeout + 5)
+   ok, detail = relayed_equals(ctx, got, big, 1)
+   r.ok('big', 'a row of about 58000 bytes is relayed whole', ok, detail)
+
+   # Exactly the cap: payload (sender byte + JSON) = 60000.
+   n = ctx.next_n()
+   size = 58000
+   for _ in range(3):
+      exact = ctx.row('K1CAP', n, notes='y' * size)
+      payload = 1 + len(ctx.codec.encode(exact).encode('utf-8'))
+      if payload == MAX_WIRE_PAYLOAD:
+         break
+      size += MAX_WIRE_PAYLOAD - payload
+   msg = ctx.msg(NET_WIRE_QSO_ID, 1, exact)
+   r.add('big', 'payload of the at-cap message', 'INFO', '%d' % (len(msg) - 6))
+   a.send(msg)
+   got = b.take(NET_WIRE_QSO_ID, timeout + 5)
+   ok, detail = relayed_equals(ctx, got, exact, 1)
+   r.ok('big', 'a payload of exactly %d bytes is accepted and relayed' % MAX_WIRE_PAYLOAD, ok, detail)
+   after = ctx.wait_rows((len(before) if before is not None else 0) + 2, 5)
+   if before is not None and after is not None:
+      r.ok('big', 'both are stored whole', after.rows[len(before):] == [big, exact],
+           'grew by %d' % (len(after.rows) - len(before)))
+      big_frames = [len(f.encode('utf-8')) for f in after.frames[-2:]]
+      r.ok('big', 'and the sync stream carries them as frames of the same size',
+           all(s > 57000 for s in big_frames))
+      r.add('big', 'sync frame sizes (the server spells the JSON its own way)', 'INFO', '%s' % big_frames)
+   r.ok('big', 'A is still connected', a.alive(timeout))
+
+   # Over the cap, declared in the header alone: decided from six bytes.
+   b.drop_inbox(NET_WIRE_QSO_ID)
+   c = ctx.probe('C', 3)
+   c.settle(0.3)
+   c.send(WIRE_HEADER.pack(NET_WIRE_QSO_ID, MAX_WIRE_PAYLOAD + 1))
+   r.ok('big', 'a payload declared as %d (over the cap): the sender is disconnected' % (MAX_WIRE_PAYLOAD + 1),
+        wait_closed(c, timeout + 2))
+   r.ok('big', 'and the other stations are untouched', b.alive(timeout))
+   d = ctx.probe('D', 4)
+   d.settle(0.3)
+   d.send(WIRE_HEADER.pack(NET_WIRE_EDIT_ID, 0xFFFFFFFF))
+   r.ok('big', 'a payload declared as 4 GB: the sender is disconnected',
+        wait_closed(d, timeout + 2))
+   r.ok('big', 'nothing was relayed', b.take(NET_WIRE_QSO_ID, 0.3) is None)
+
+
+def case_legacy(ctx):
+   """Protocol 4's fixed-size QSO frames (1040, 1050, 1055) are unknown ids now:
+   logged, and the connection is dropped (the bytes cannot be framed)."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+   b = ctx.probe('B', 2)
+   b.settle(0.5)
+   for number, (old_id, name) in enumerate(sorted(RETIRED_IDS.items())):
+      a = ctx.probe('A%d' % number, 1 + number)
+      a.settle(0.3)
+      a.send(struct.pack('<H', old_id) + b'\x00' * (RETIRED_QSO_SIZE - 2))
+      r.ok('legacy', 'an old %s frame (id %d): connection closed' % (name, old_id),
+           wait_closed(a, timeout + 2))
+      r.ok('legacy', 'and it was not relayed', b.take(NET_WIRE_QSO_ID, 0.3) is None and
+           not any(i == old_id for i, _ in b.inbox))
+   r.ok('legacy', 'the other station is untouched', b.alive(timeout))
+   # An id nobody knows at all is the same.
+   z = ctx.probe('Z', 9)
+   z.settle(0.3)
+   z.send(struct.pack('<H', 4242) + b'\x00' * 40)
+   r.ok('legacy', 'an unknown id (4242): connection closed', wait_closed(z, timeout + 2))
+
+
+def case_offline_ack(ctx):
+   """An OFFLINE run is acknowledged only after it is durable: the moment the
+   FIRST acknowledgement arrives the server process is killed (no shutdown
+   code), restarted, and every acknowledged row must still be there."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+   if ctx.launcher is None:
+      r.add('offline-ack', 'acknowledged rows survive a kill', 'SKIP', 'needs --launch')
+      return
+   count = ctx.args.burst
+   a = ctx.probe('A', 1)
+   a.settle(0.5)
+   rows = [ctx.row('K1OFF%d' % (i % 10), rcvd_name='Zoë') for i in range(count)]
+   a.send(b''.join(ctx.msg(NET_WIRE_OFFLINE_ID, 1, v) for v in rows))
+   first = a.take(NET_SERVERMESSAGE_ID, timeout + 5, SM_RECEIVED_UPDATED_QSO)
+   r.ok('offline-ack', 'the first acknowledgement arrives', first is not None)
+   # Kill at once: everything the server has acknowledged must already be on disk.
+   ctx.launcher.kill()
+   acks = count_acks(a, count, 0.3)
+   r.add('offline-ack', 'timing', 'INFO',
+         'acknowledgements seen before the kill took effect: %d of %d' % (acks, count))
+   ctx.close_all()
+   ctx.launcher.start()
+   view = ctx.view()
+   if view is None:
+      r.add('offline-ack', 'acknowledged rows survive a kill', 'FAIL', 'no download')
+      return
+   # Every row of the run is acknowledged together after ONE commit, so the
+   # first ack means all of them are durable.
+   r.ok('offline-ack', 'after the kill and restart the log holds every row of the run',
+        view.rows[-count:] == rows if len(view.rows) >= count else False,
+        '%d rows held, %d sent' % (len(view.rows), count))
+   r.ok('offline-ack', 'and every stored row verifies', view.problem == '', view.problem)
+   # A run that is cut mid-write must leave nothing half-stored: send half of the
+   # next run's last frame, kill, restart.
+   b = ctx.probe('B', 1)
+   b.settle(0.5)
+   second = [ctx.row('K1CUT%d' % i) for i in range(5)]
+   blob = b''.join(ctx.msg(NET_WIRE_OFFLINE_ID, 1, v) for v in second)
+   b.send(blob[:-20])                 # the last frame is incomplete
+   count_acks(b, 4, timeout)
+   ctx.launcher.kill()
+   ctx.close_all()
+   ctx.launcher.start()
+   after = ctx.view()
+   if after is not None:
+      r.add('offline-ack', 'a run cut mid-frame: rows stored after the restart', 'INFO',
+            '%d of 4 whole frames' % (len(after.rows) - len(view.rows)))
+      r.ok('offline-ack', 'and the cut frame is not stored', second[4] not in after.rows)
+
+
+def newest_backup(workdir):
+   found = [p for p in glob.glob(os.path.join(workdir, '*.tr4wsrv'))
+            if os.path.basename(p).upper() != 'SERVERLOG.TR4WSRV']
+   return sorted(found)
+
+
+def case_clear(ctx):
+   """Clear-all-logs copies the database to a dated backup FIRST, then clears;
+   a new contest is accepted afterwards (the server forgot the old one)."""
+   r = ctx.report
+   timeout = ctx.args.timeout
+   a = ctx.probe('A', 1, contest_id='OLD-CONTEST')
+   b = ctx.probe('B', 2, contest_id='OLD-CONTEST')
+   a.settle(0.5)
+   b.settle(0.5)
+   rows = [ctx.row('K1CLR%d' % i, clear_dupe_sheet='0') for i in range(3)]
+   for v in rows:
+      a.send(ctx.msg(NET_WIRE_QSO_ID, 1, v))
+   b.count(NET_WIRE_QSO_ID, 3, timeout + 2)
+   view = ctx.wait_rows(3, 5)
+   r.ok('clear', 'three rows are held', view is not None and len(view.rows) >= 3)
+   r.ok('clear', 'the server contest is the first one announced',
+        view is not None and view.header.get('contest') == 'OLD-CONTEST')
+   held = len(view.rows) if view is not None else 3
+
+   # The two flag clears are rewrites of the held rows, relayed to the others.
+   a.send(build_server_message(SM_CLEAR_DUPESHEET))
+   got = b.take(NET_SERVERMESSAGE_ID, timeout, SM_CLEAR_DUPESHEET)
+   r.add('clear', 'set-dupesheet is relayed to the other station', 'INFO',
+         'relayed' if got else 'not relayed')
+   time.sleep(0.5)
+   flagged = ctx.view()
+   if flagged is not None:
+      i = ctx.codec.index('clear_dupe_sheet')
+      r.ok('clear', 'set-dupesheet sets clear_dupe_sheet = 1 on every QSO row',
+           all(row[i] == '1' for row in flagged.rows), '%s' % sorted(set(row[i] for row in flagged.rows)))
+   a.send(build_server_message(SM_CLEAR_MULTSHEET))
+   time.sleep(0.5)
+   flagged = ctx.view()
+   if flagged is not None:
+      i = ctx.codec.index('clear_mult_sheet')
+      r.ok('clear', 'clear-mults sets clear_mult_sheet = 1 on every QSO row',
+           all(row[i] == '1' for row in flagged.rows))
+
+   a.send(build_server_message(SM_CLEARALLLOGS))
+   got = b.take(NET_SERVERMESSAGE_ID, timeout + 2, SM_CLEARALLLOGS)
+   r.ok('clear', 'the other station is told the log was cleared', got is not None)
+   time.sleep(0.5)
+   cleared = ctx.view()
+   r.ok('clear', 'the log is empty afterwards', cleared is not None and len(cleared.rows) == 0,
+        '' if cleared is None else '%d rows' % len(cleared.rows))
+   if ctx.launcher is not None:
+      backups = newest_backup(ctx.launcher.workdir)
+      r.ok('clear', 'a dated backup of the database exists beside it', len(backups) == 1,
+           '%d file(s)' % len(backups))
+      if backups:
+         snap = read_database(backups[0])
+         r.ok('clear', 'and it holds every row the log held before the clear',
+              snap is not None and len(snap['rows']) == held,
+              '%s rows' % (len(snap['rows']) if snap else 'unreadable'))
+   else:
+      r.add('clear', 'a dated backup of the database exists beside it', 'SKIP', 'needs --launch')
+
+   # A new contest is then accepted: the HELLO names it, the next row is stored.
+   a.send(build_hello(NET_PROTOCOL_VERSION, 1, 'netprobe', 'NEW-CONTEST'))
+   time.sleep(0.5)
+   fresh = ctx.row('K1NEWC')
+   a.send(ctx.msg(NET_WIRE_QSO_ID, 1, fresh))
+   got = b.take(NET_WIRE_QSO_ID, timeout)
+   r.ok('clear', 'a row of the new contest is relayed', got is not None)
+   time.sleep(0.5)
+   final = ctx.view()
+   if final is not None:
+      r.ok('clear', 'and stored', final.rows == [fresh], '%d rows' % len(final.rows))
+      r.ok('clear', 'and the server now holds the NEW contest',
+           final.header.get('contest') == 'NEW-CONTEST', '"%s"' % final.header.get('contest'))
 
 
 CASES = {
+   'selftest': case_selftest,
    'connect': case_connect,
    'spot': case_spot,
    'qso': case_qso,
@@ -1262,39 +1850,66 @@ CASES = {
    'resend': case_resend,
    'catchup': case_catchup,
    'restock': case_restock,
+   'badcrc': case_badcrc,
+   'big': case_big,
+   'legacy': case_legacy,
+   'offline-ack': case_offline_ack,
+   'clear': case_clear,
 }
 
+# What `all` runs: every case that talks to a server.
+ALL_CASES = [name for name in CASES if name != 'selftest']
 
-def dump_sync_stream(args, report, name):
-   """P0 oracle (docs/TR4WSERVER_SQLITE_DESIGN.md section 9): write the sync-port
-   stream exactly as a station receives it -- the 4-byte native-order size, then
-   that many bytes (the header record and the QSO records) -- to --dump-sync.
-   The caller names a path per case; byte-comparing two of them is the check."""
-   data, why = fetch_server_log(args.host, args.port, args.password,
-                                args.sync_timeout, args.sync_bytes)
-   if data is None:
-      report.add(name, 'sync dump', 'FAIL', why)
+
+def save_artifacts(args, report, codec, launcher, name):
+   """With --launch: the sync stream and the database as the case left them,
+   for compare.py. The database is read after the server is stopped, so its
+   write-ahead log is folded in."""
+   out = launcher.workdir
+   raw, why = fetch_sync_stream(args.host, args.port, args.password, args.sync_timeout,
+                                args.sync_bytes)
+   if raw is not None:
+      with open(os.path.join(out, 'final-sync.bin'), 'wb') as f:
+         f.write(raw)
+   else:
+      report.add(name, 'final sync stream', 'INFO', why)
+   launcher.kill()
+   snapshot = read_database(launcher.db_path)
+   if snapshot is None:
+      report.add(name, 'final database', 'INFO', 'no database file')
       return
-   with open(args.dump_sync, 'wb') as out:
-      out.write(struct.pack('<I', len(data)) + data)
-   report.add(name, 'sync dump', 'INFO',
-              '%d bytes after the size, written to %s' % (len(data), args.dump_sync))
+   with open(os.path.join(out, 'final-db.json'), 'w', encoding='utf-8') as f:
+      json.dump(snapshot, f, ensure_ascii=False)
 
 
-def run_case(name, args, report):
-   ctx = Context(args, report)
+def run_case(name, args, report, codec):
+   launcher = None
+   if args.launch:
+      workdir = os.path.join(args.workdir, name)
+      if os.path.isdir(workdir):
+         shutil.rmtree(workdir)
+      launcher = Launcher(args.launch, args.server, workdir, args.port,
+                          lockout=(name == 'serial'))
+   ctx = Context(args, report, codec, launcher)
    try:
+      if launcher is not None:
+         launcher.start()
       CASES[name](ctx)
+      if launcher is not None and name != 'selftest':
+         ctx.close_all()
+         save_artifacts(args, report, codec, launcher, name)
    except ProbeError as err:
       report.error(name, str(err))
    except (OSError, socket.timeout) as err:
       report.error(name, 'socket: %s' % err)
    finally:
       ctx.close_all()
+      if launcher is not None:
+         launcher.kill()
 
 
 def parse_args(argv):
-   p = argparse.ArgumentParser(description='Speak TR4W multi-op V1 at a server.')
+   p = argparse.ArgumentParser(description='Speak TR4W multi-op protocol 5 at a server.')
    p.add_argument('--case', default='all',
                   help='one of %s, or all (default)' % ', '.join(CASES))
    p.add_argument('--host', default='127.0.0.1')
@@ -1310,38 +1925,45 @@ def parse_args(argv):
    p.add_argument('--sync-bytes', type=int, default=PASSWORD_BYTES,
                   help='bytes written as the password on the sync port')
    p.add_argument('--burst', type=int, default=30,
-                  help='QSOs in the burst case')
-   p.add_argument('--restock-big', type=int, default=5000,
-                  help='QSOs in the second, large round of the restock case (0 skips it)')
+                  help='QSOs in the burst, resend, catchup, offline-ack cases and the first restock round')
+   p.add_argument('--restock-big', type=int, default=0,
+                  help='QSOs in the second, large round of the restock case (default 0 = skip; '
+                       'the in-tree server takes about 45 ms per OFFLINE row)')
    p.add_argument('--contest', default='ARRL-DX-CW',
                   help='the contest id the probes announce in their HELLO')
    p.add_argument('--seed-ids', type=int, default=None,
-                  help='first QSO id the run hands out (default: the clock, so '
+                  help='first row number the run hands out (default: the clock, so '
                        'a run is unique; give a number for a repeatable run)')
-   p.add_argument('--dump-sync', default=None, metavar='FILE',
-                  help='after the cases, write the sync-port stream (4-byte '
-                       'size + file) to FILE; use with ONE --case')
+   p.add_argument('--columns', default=None,
+                  help='columns.json (default tr4w/test/wire/columns.json)')
+   p.add_argument('--launch', choices=('pascal', 'python'), default=None,
+                  help='start this kind of server as a child process, one fresh '
+                       'directory per case, and stop it after')
+   p.add_argument('--server', default=None,
+                  help='with --launch: tr4wserver.exe (pascal) or tr4wserver.py (python)')
+   p.add_argument('--workdir', default=None,
+                  help='with --launch: the directory the case directories go in')
    return p.parse_args(argv)
 
 
 def main(argv):
    args = parse_args(argv)
-   # 'none' runs no case: only the --dump-sync download (the .TRW round trip).
-   names = list(CASES) if args.case == 'all' else [args.case]
-   if args.case == 'none':
-      names = []
+   names = ALL_CASES if args.case == 'all' else [args.case]
    for name in names:
       if name not in CASES:
          print('unknown case %r; choose from %s' % (name, ', '.join(CASES)))
          return 2
+   if args.launch and not (args.server and args.workdir):
+      print('--launch needs --server and --workdir')
+      return 2
    if args.seed_ids is not None:
       _NEXT_ID[0] = args.seed_ids
+   codec = load_codec(args.columns)
    report = Report(args.label)
    for name in names:
-      run_case(name, args, report)
-      time.sleep(1.0)                 # let the server notice the closed sockets
-   if args.dump_sync:
-      dump_sync_stream(args, report, args.case)
+      run_case(name, args, report, codec)
+      if name != 'selftest':
+         time.sleep(1.0)              # let the server notice the closed sockets
    print('SUMMARY %s: %d failed, %d could not run' %
          (args.label, report.failed, report.errored), flush=True)
    if report.errored:
