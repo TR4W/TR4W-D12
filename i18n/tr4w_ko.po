@@ -4942,7 +4942,7 @@ msgstr "메인 창"
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
-msgstr ""
+msgstr "글꼴은 메인 대회 창에 적용됩니다. 둘 다 TR4W 다음 시작 때 효력을 가지고 가십시오."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "이 설정 메뉴의 외관 항목에 있었다. 그 창은 ROW COUNT와 WINDOW 크기가 여기에 가입하면됩니다."
 #: tprefsform.lblappearmenunote.caption
@@ -5206,7 +5206,7 @@ msgstr "특성 속도:"
 #, fuzzy
 #| msgid "Size:"
 msgid "Font size step:"
-msgstr ""
+msgstr "글꼴 크기 단계:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -9584,42 +9584,42 @@ msgstr "연도"
 #: uappstrings.snewcontestfileslastqso
 #, fuzzy
 msgid "Last QSO"
-msgstr ""
+msgstr "마지막 QSO"
 
 #: uappstrings.snewcontestfilesqsos
 #, fuzzy
 msgid "QSOs"
-msgstr ""
+msgstr "사이트맵"
 
 #: uappstrings.sbackupdestinationreachable
 #, fuzzy
 msgid "Backup destination %s is reachable."
-msgstr ""
+msgstr "백업 대상 %s 적용 가능한."
 
 #: uappstrings.sbackupcopyfailed
 #, fuzzy
 msgid "Backups are NOT reaching %s: %s. Logging continues, and TR4W keeps trying."
-msgstr ""
+msgstr "백업은 도달하지 않습니다. %s:: %s. 로깅이 계속되고 TR4W는 시도합니다."
 
 #: uappstrings.sbackupcopyrecovered
 #, fuzzy
 msgid "Backups are reaching %s again."
-msgstr ""
+msgstr "백업은 도달 %s 다시."
 
 #: uappstrings.sbackupdestinationdialogtitle
 #, fuzzy
 msgid "Backup destination folder"
-msgstr ""
+msgstr "백업 대상 폴더"
 
 #: uappstrings.sbackupcopyingtodestination
 #, fuzzy
 msgid "Log backed up; copying to %s ..."
-msgstr ""
+msgstr "로그 백업; 복사 %s ·"
 
 #: uappstrings.sbackupcopiedto
 #, fuzzy
 msgid "Backup copied to %s."
-msgstr ""
+msgstr "백업에 복사 %s·"
 
 #: uappstrings.sdomincludenotread
 #, fuzzy
@@ -9635,194 +9635,200 @@ msgstr ""
 #: uappstrings.sdomincludetoodeep
 #, fuzzy
 msgid "The domestic file %s nests INCLUDE FILE more than %d deep, on the line \"%s\". That line was not followed: the files probably include one another in a circle."
-msgstr ""
+msgstr "국내 파일 %s 배열 INCLUDE FILE 이상 %d 깊은, 선에 \"%s· 그 라인은 다음되지 않았습니다. 아마 한 원에 다른 파일을 포함합니다."
 
 #: uappstrings.snewcontestontarioqpcountyorlocation
 #, fuzzy
 msgid "Enter your Ontario county code (e.g. TOR) if you are in Ontario. Enter your state or Canadian province if outside Ontario; leave it empty if you are DX (your country prefix is sent):"
-msgstr ""
+msgstr "온타리오 카운티 코드(예: TOR)를 입력하세요. 온타리오 외의 경우 주 또는 캐나다 지방을 입력하십시오. DX (당신의 국가 접두사는 전송됩니다) 인 경우 빈번하게하십시오."
 
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
+msgstr "Quebec 관리 지역 코드를 입력하십시오 (예 : MTL) 퀘벡에 있다면. 퀘벡 외의 경우 주 또는 캐나다 지방을 입력하십시오. DX (DX가 전송되는 경우 비어있는 경우) :"
 
 #: uappstrings.stxinhibitedstatus
 #, fuzzy
 msgid "TX INHIBITED: %s"
-msgstr ""
+msgstr "지불 조건: %s"
 
 #: uappstrings.snetnohelloanswer
 #, fuzzy
 msgid "The multi-op server closed the connection without answering. It is probably older than this TR4W (which speaks network protocol %d). Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "Multi-op 서버는 응답 없이 연결을 닫았습니다. 이것은 아마 이 TR4W (네트워크 프로토콜을 말하는 %d). TR4 업데이트 서버 컴퓨터에 WServer, 다음 Net 메뉴에 연결."
 
 #: uappstrings.snetserverprotocolnewer
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, which is newer than the protocol %d this TR4W speaks. Update TR4W on this computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "Multi-op 서버는 네트워크 프로토콜을 말합니다. %d프로토콜보다 더 새로운 것 %d 이 TR4W는 말합니다. 이 컴퓨터에 TR4W를 업데이트하면 Net 메뉴에 연결하십시오."
 
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "Multi-op 서버는 네트워크 프로토콜을 말합니다. %d, 그러나 이 TR4W 필요 의정서 %d. TR4 업데이트 서버 컴퓨터에 WServer, 다음 Net 메뉴에 연결."
 
 #: uappstrings.snetmenureconnect
 #, fuzzy
 msgid "Reconnect"
-msgstr ""
+msgstr "연결하기"
 
 #: uappstrings.snetmenushowwindow
 #, fuzzy
 msgid "Show Network window"
-msgstr ""
+msgstr "네트워크 창"
 
 #: tprefsform.chknetautoconnect.caption
 #: usettingscaptions.rs_network_autoconnect
 #, fuzzy
 msgid "Connect to the multi-op server when TR4W starts"
-msgstr ""
+msgstr "TR4W가 시작될 때 Multi-op 서버에 연결하십시오"
 
 #: usettingscaptions.rs_appearance_alertcolor
 #, fuzzy
 msgid "Alert Color"
-msgstr ""
+msgstr "경고 색깔"
 
 #: usettingscaptions.rs_appearance_language
 #, fuzzy
 msgid "Language"
-msgstr ""
+msgstr "* 이름"
 
 #: usettingscaptions.rs_appearance_language_system
 #, fuzzy
 msgid "System default"
-msgstr ""
+msgstr "시스템 기본"
 
 #: usettingscaptions.rs_cluster_ctrlj_consolelines
 #, fuzzy
 msgid "Telnet Console Lines"
-msgstr ""
+msgstr "Telnet 콘솔 라인"
 
 #: usettingscaptions.rs_operating_standardeditkeys
 #, fuzzy
 msgid "Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A edit the field outside the main window"
-msgstr ""
+msgstr "Ctrl+C, Ctrl+V, Ctrl+X 및 Ctrl+A 메인 창 밖에 필드를 편집"
 
 #: usettingscaptions.rs_ptt_txinhibitbeep
 #, fuzzy
 msgid "Beep when keying a radio that will not transmit"
-msgstr ""
+msgstr "전송하지 않을 라디오를 키링 할 때 Beep"
 
 #: uappstrings.scatchupask
 #, fuzzy
 msgid "The server holds %d QSO(s) that this log does not have. Add them to this log now? Nothing already in this log is changed or removed, and a backup of the log is taken first."
-msgstr ""
+msgstr "서버 보유 %d QSO(s) 이 로그는 없습니다. 이 로그에 추가? 이 로그에 이미 아무것도 변경 또는 제거, 그리고 로그의 백업은 먼저 촬영."
 
 #: uappstrings.scatchupfetchfailed
 #, fuzzy
 msgid "Could not read the server's log to catch up: %s"
-msgstr ""
+msgstr "서버의 로그를 읽을 수 없습니다. %s"
 
 #: uappstrings.scatchupmergefailed
 #, fuzzy
 msgid "Nothing was added to the log: %s"
-msgstr ""
+msgstr "로그인에 추가되지 않았습니다: %s"
 
 #: uappstrings.scatchupskipped
 #, fuzzy
 msgid "%d QSO(s) on the server belong to another contest and were not added."
-msgstr ""
+msgstr "%d 서버의 QSO(s)는 다른 대회에 속하며 추가되지 않았습니다."
 
 #: uappstrings.snetcaughtup
 #, fuzzy
 msgid "Caught up from the server: %d QSO(s) added."
-msgstr ""
+msgstr "서버에서 잡힌: %d QSO(s) 추가."
 
 #: uappstrings.snetresent
 #, fuzzy
 msgid "Resent to the server what was logged while disconnected: %d QSO(s), %d edit(s)."
-msgstr ""
+msgstr "연결되는 동안 기록된 서버에 대한 책임: %d QSO (s), %d 편집(s)."
 
 #: uappstrings.sserverlogadd
 #: tfrmserverlog.btnaddmissing.caption
 #, fuzzy
 msgid "Add missing QSOs"
-msgstr ""
+msgstr "누락된 QSOs 추가"
 
 #: uappstrings.sserverlogaddmissing
 #, fuzzy
 msgid "Add %d missing QSO(s)"
-msgstr ""
+msgstr "기타 %d 누락된 QSO(s)"
 
 #: uappstrings.snetmenuserverlog
 #, fuzzy
 msgid "Synchronize with the server..."
-msgstr ""
+msgstr "서버와 동기화 ..."
 
 #: uappstrings.sserverlogtitle
 #: tfrmserverlog.caption
 #, fuzzy
 msgid "Synchronize with the server"
-msgstr ""
+msgstr "서버 동기화"
 
 #: uappstrings.snetpushedtoserver
 #, fuzzy
 msgid "Sent to the server: %d QSO(s) it did not have."
-msgstr ""
+msgstr "서버로 전송: %d QSO(s)는 없습니다."
 
 #: uappstrings.spushask
 #, fuzzy
 msgid "The server lacks %d QSO(s) of yours. Send them to the server now? Nothing in this log is changed, and the server ignores any QSO it already holds."
-msgstr ""
+msgstr "서버 부족 %d 너의 것의 QSO (s). 서버로 보내기? 이 로그는 변경되지 않으며 서버는 이미 QSO를 무시합니다."
 
 #: tfrmserverlog.btnsendmissing.caption
 #: uappstrings.sserverlogsend
 #, fuzzy
 msgid "Send QSOs to the server"
-msgstr ""
+msgstr "서버로 QSOs 전송"
 
 #: uappstrings.sserverlogsendcount
 #, fuzzy
 msgid "Send %d QSO(s) to the server"
-msgstr ""
+msgstr "지원하다 %d 서버로 QSO(s)"
 
 #: uappstrings.ssyncaskboth
 #, fuzzy
 msgid "The server holds %d QSO(s) this log lacks and lacks %d of yours. Add the first to this log and send the second to the server now? Nothing already in this log is changed or removed, and a backup of the log is taken first."
-msgstr ""
+msgstr "서버 보유 %d QSO(s) 이 로그 부족과 부족 %d 너의 것. 이 로그에 먼저 추가하고 이제 서버에 두 번째를 보내? 이 로그에 이미 아무것도 변경 또는 제거, 그리고 로그의 백업은 먼저 촬영."
 
 #: tprefsform.chknetsharespots.caption
 #: usettingscaptions.rs_network_sharespots
 #, fuzzy
 msgid "Share DX spots around the network"
-msgstr ""
+msgstr "네트워크의 DX 스팟 공유"
 
 #: tprefsform.lblhamscorehttpnote.caption
 #: uappstrings.shamscoreplainhttpnote
 #, fuzzy
 msgid "Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it."
-msgstr ""
+msgstr "일반 http : HamScore 암호는 암호화되지 않습니다. https://hamscore.com/postxml/ 서버가 지원하면 됩니다."
 
 #: uappstrings.shamscoreresynccaption
 #: tfrmhamscore.btnresync.caption
 #, fuzzy
 msgid "Re-send Log to HamScore..."
-msgstr ""
+msgstr "HamScore에 로그인 ..."
 
 #: uappstrings.shamscoreresyncbody
 #, fuzzy
-msgid "Re-send only: uploads every QSO in this log again, each with its original ID. Nothing is deleted on the HamScore server, so a QSO you have deleted from this log will still be there.\n\nDelete and re-send: first deletes the HamScore server's log for this contest (%s), then uploads every QSO. This cannot be undone on the server, and scores on the HamScore site are empty or incomplete until the upload finishes. Use it when the server shows QSOs that are no longer in this log."
+msgid ""
+"Re-send only: uploads every QSO in this log again, each with its original ID. Nothing is deleted on the HamScore server, so a QSO you have deleted from this log will still be there.\n"
+"\n"
+"Delete and re-send: first deletes the HamScore server's log for this contest (%s), then uploads every QSO. This cannot be undone on the server, and scores on the HamScore site are empty or incomplete until the upload finishes. Use it when the server shows QSOs that are no longer in this log."
 msgstr ""
+"Re-send 만: 이 로그에서 모든 QSO를 다시 업로드, 각각의 원래 ID. HamScore 서버에서 삭제되지 않습니다. 이 로그에서 삭제 된 QSO가 여전히 있습니다.\n"
+"\n"
+"삭제 및 환불: 먼저 HamScore 서버의 로그를 삭제합니다. (%s), 다음 각 QSO를 업로드합니다. 이 서버에 undone이 될 수 없으며 HamScore 사이트에 점수가 비어 있거나 업로드 완료 될 때까지 불완전합니다. 서버가 이 로그에 더 이상 없다는 QSOs를 보여줍니다."
 
 #: uappstrings.shamscoreresynconly
 #, fuzzy
 msgid "Re-send only"
-msgstr ""
+msgstr "계정 관리"
 
 #: uappstrings.shamscoreresyncdeletefirst
 #, fuzzy
 msgid "Delete and re-send"
-msgstr ""
+msgstr "삭제 및 취소"
 
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
@@ -9833,348 +9839,348 @@ msgstr "에 게시하거나 해제, 주소, 사용자 이름 및 암호는 TR4W 
 #: uappstrings.slogsearchcallhint
 #, fuzzy
 msgid "Call or part of one"
-msgstr ""
+msgstr "전화 또는 1 부"
 
 #: uappstrings.slogsearchlogunreadable
 #, fuzzy
 msgid "The log could not be read"
-msgstr ""
+msgstr "로그는 읽을 수 없습니다."
 
 #: uappstrings.sloggerfieldhost
 #, fuzzy
 msgid "Host / IP address"
-msgstr ""
+msgstr "호스트 / IP 주소"
 
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr ""
+msgstr "항구 항구"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
 msgid "Club Log callsign"
-msgstr ""
+msgstr "클럽 로그인 callsign"
 
 #: uappstrings.sloggerfieldclublogtoken
 #, fuzzy
 msgid "Club Log API token"
-msgstr ""
+msgstr "클럽 로그 API 토큰"
 
 #: uappstrings.sloggerfieldwrlkey
 #, fuzzy
 msgid "WRL API key"
-msgstr ""
+msgstr "WRL API 키"
 
 #: uappstrings.sloggerfieldwrllogbook
 #, fuzzy
 msgid "Logbook"
-msgstr ""
+msgstr "로그북"
 
 #: uappstrings.sloggerfieldrequired
 #, fuzzy
 msgid "Enter %s"
-msgstr ""
+msgstr "이름 * %s"
 
 #: uappstrings.sloggerchoicerequired
 #, fuzzy
 msgid "Choose %s from the list"
-msgstr ""
+msgstr "제품 정보 %s 목록에서"
 
 #: uappstrings.sloggerchoiceneedskey
 #, fuzzy
 msgid "Enter the API key and load the list before choosing %s"
-msgstr ""
+msgstr "API 키를 입력하고 선택하기 전에 목록을로드하십시오. %s"
 
 #: uappstrings.sloggerportrange
 #, fuzzy
 msgid "External logger port must be between 1 and 65535"
-msgstr ""
+msgstr "외부 로거 항구는 1과 65535 사이에서 있어야 합니다"
 
 #: uappstrings.sloggerchoicerefresh
 #, fuzzy
 msgid "Refresh"
-msgstr ""
+msgstr "새로 고침"
 
 #: uappstrings.sloggerchoiceloading
 #, fuzzy
 msgid "Loading..."
-msgstr ""
+msgstr "로드 중 ..."
 
 #: uappstrings.sloggerchoicefailed
 #, fuzzy
 msgid "The list could not be loaded: %s. The saved choice is kept."
-msgstr ""
+msgstr "목록은 적재될 수 없습니다: %s. 저장된 선택은 지켜집니다."
 
 #: uappstrings.sloggerchoicesaved
 #, fuzzy
 msgid "Saved choice (refresh to see its name)"
-msgstr ""
+msgstr "저장된 선택 (refresh 이름을 참조)"
 
 #: uappstrings.sloggergridenabled
 #, fuzzy
 msgid "Enabled"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.sloggerstatedisabled
 #, fuzzy
 msgid "Disabled"
-msgstr ""
+msgstr "지원하다"
 
 #: uappstrings.sloggerstaterestart
 #, fuzzy
 msgid "Restart TR4W to apply"
-msgstr ""
+msgstr "Restart TR4W를 적용"
 
 #: uappstrings.sloggerstateidle
 #, fuzzy
 msgid "Idle"
-msgstr ""
+msgstr "아이들"
 
 #: uappstrings.sloggerstatesending
 #, fuzzy
 msgid "Sending (%d pending)"
-msgstr ""
+msgstr "이름 (필수)%d 종료)"
 
 #: uappstrings.sloggerstateretrying
 #, fuzzy
 msgid "Retrying: %s"
-msgstr ""
+msgstr "공급 능력: %s"
 
 #: uappstrings.sloggerstatepaused
 #, fuzzy
 msgid "Paused: %s"
-msgstr ""
+msgstr "사용 : %s"
 
 #: uappstrings.sloggerstatefailed
 #, fuzzy
 msgid "Failed: %s"
-msgstr ""
+msgstr "실패: %s"
 
 #: uappstrings.sloggerstatecounts
 #, fuzzy
 msgid "%s (%d uncertain, %d failed)"
-msgstr ""
+msgstr "%s (주)%d 불확실한, %d 실패)"
 
 #: uappstrings.smenuopenlog
 #, fuzzy
 msgid "Open Log..."
-msgstr ""
+msgstr "공지사항"
 
 #: uappstrings.sopenlogswitchtitle
 #, fuzzy
 msgid "Switch to another contest (TR4W restarts on the one you choose)"
-msgstr ""
+msgstr "다른 대회로 전환하십시오 (TR4W는 당신이 선택하는 것에 재시작합니다)"
 
 #: uappstrings.sopenloghandofffailed
 #, fuzzy
 msgid "Open Log was not done: the new contest could not be saved for the restart. The reason is in tr4w.log."
-msgstr ""
+msgstr "오픈 로그가 수행되지 않았습니다 : 새로운 대회는 재시작을 위해 저장되지 않을 수 있습니다. 이유는 tr4w.log입니다."
 
 #: uappstrings.sopenlogrefusedkeyed
 #, fuzzy
 msgid "Open Log was not done: a radio is transmitting. Unkey it, then choose File > Open Log again."
-msgstr ""
+msgstr "오픈 로그가 수행되지 않았습니다 : 라디오가 전송됩니다. 언키, 그런 다음 파일을 선택 > 다시 로그를 엽니 다."
 
 #: uappstrings.sopenlogrefusedsendingcw
 #, fuzzy
 msgid "Open Log was not done: a CW message is still being sent. Let it finish, then choose File > Open Log again."
-msgstr ""
+msgstr "오픈 로그가 수행되지 않았습니다: CW 메시지는 여전히 전송됩니다. 완료하자, 다음 파일을 선택 > 다시 로그를 엽니 다."
 
 #: uappstrings.sopenlogalreadyopen
 #, fuzzy
 msgid "That log is already open."
-msgstr ""
+msgstr "그것은 이미 열려 있습니다."
 
 #: uappstrings.sopenlognotacontestlog
 #, fuzzy
 msgid "Not a TR4W contest log, so it was not opened: %s"
-msgstr ""
+msgstr "TR4W 콘테스트 로그가 아닙니다. %s"
 
 #: uappstrings.sprefsnavmessages
 #, fuzzy
 msgid "Messages"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.sprefsnavcwwhileoperating
 #, fuzzy
 msgid "While operating"
-msgstr ""
+msgstr "영업 시간"
 
 #: uappstrings.sprefsnavcwspeedandcharacters
 #, fuzzy
 msgid "Speed and characters"
-msgstr ""
+msgstr "속도 및 문자"
 
 #: uappstrings.sprefsnavprintedlog
 #, fuzzy
 msgid "Printed log"
-msgstr ""
+msgstr "인쇄 로그"
 
 #: uappstrings.sprefsprintedlognote
 #, fuzzy
 msgid "This version of TR4W does not print the log, so these two settings are kept but have no effect yet."
-msgstr ""
+msgstr "TR4W의이 버전은 로그를 인쇄하지 않습니다, 그래서이 두 설정은 유지되지만 아직 효과가 없습니다."
 
 #: uappstrings.sprefsycccboxheading
 #, fuzzy
 msgid "YCCC SO2R box"
-msgstr ""
+msgstr "YCCC SO2R 상자"
 
 #: uappstrings.sprefsinitialexchangefilterheading
 #, fuzzy
 msgid "Initial exchange filter"
-msgstr ""
+msgstr "초기 교환 필터"
 
 #: uappstrings.sprefsoperatinginfo
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings."
-msgstr ""
+msgstr "로그인이 진행 중입니다. Band map, bands, message, scoring 및 two-radio 설정은 아래 페이지에 있습니다. CW 설정 아래입니다."
 
 #: uappstrings.sprefsnaventryanddupechecking
 #, fuzzy
 msgid "Entry and dupe checking"
-msgstr ""
+msgstr "입장 및 dupe 검사"
 
 #: uappstrings.sprefsnavlogdisplay
 #, fuzzy
 msgid "Log display"
-msgstr ""
+msgstr "로그 표시"
 
 #: uappstrings.sprefsnavfilesandupdates
 #, fuzzy
 msgid "Files and updates"
-msgstr ""
+msgstr "파일 및 업데이트"
 
 #: uappstrings.sprefsnavbandmapwindow
 #, fuzzy
 msgid "Window and tuning"
-msgstr ""
+msgstr "창과 튜닝"
 
 #: uappstrings.sprefsnavclusterspots
 #, fuzzy
 msgid "Spots and console"
-msgstr ""
+msgstr "스팟 및 콘솔"
 
 #: uappstrings.sprefsgroupbandsandfrequencies
 #, fuzzy
 msgid "Starting band and mode, and frequency memory"
-msgstr ""
+msgstr "밴드 및 모드 시작, 주파수 메모리"
 
 #: uappstrings.sprefsgroupdupechecking
 #, fuzzy
 msgid "Dupe checking"
-msgstr ""
+msgstr "Dupe 검사"
 
 #: uappstrings.sprefsgroupsearchandpounce
 #, fuzzy
 msgid "Search and pounce"
-msgstr ""
+msgstr "검색 및 pounce"
 
 #: uappstrings.sprefsgrouptyping
 #, fuzzy
 msgid "Typing"
-msgstr ""
+msgstr "뚱 베어"
 
 #: uappstrings.sprefsgroupwhatislogged
 #, fuzzy
 msgid "What a QSO records"
-msgstr ""
+msgstr "QSO 레코드"
 
 #: uappstrings.sprefsgrouphandlog
 #, fuzzy
 msgid "Entering a log by hand"
-msgstr ""
+msgstr "손으로 로그인"
 
 #: uappstrings.sprefsgrouptuningotherradio
 #, fuzzy
 msgid "Tuning the other radio"
-msgstr ""
+msgstr "다른 라디오를 조정"
 
 #: uappstrings.sprefsgroupbandmapwindow
 #, fuzzy
 msgid "Band map window"
-msgstr ""
+msgstr "Band 지도 창"
 
 #: uappstrings.sprefsgroupspottuning
 #, fuzzy
 msgid "Tuning to a spot"
-msgstr ""
+msgstr "위치 조정"
 
 #: uappstrings.sprefsgroupradiopolling
 #, fuzzy
 msgid "Radio polling - one rate for every radio"
-msgstr ""
+msgstr "Radio polling - 모든 라디오에 대한 하나의 비율"
 
 #: uappstrings.sprefsgroupstationcallsign
 #, fuzzy
 msgid "Your own callsign, remembered for New Contest"
-msgstr ""
+msgstr "당신의 자신의 호출, 새로운 경연에 대한 기억"
 
 #: uappstrings.sprefsgroupsuggestedcalls
 #, fuzzy
 msgid "Suggested-call keys"
-msgstr ""
+msgstr "제안 통화 키"
 
 #: uappstrings.sprefsgroupnetworkstations
 #, fuzzy
 msgid "Stations and the Network window"
-msgstr ""
+msgstr "역 및 네트워크 창"
 
 #: uappstrings.sprefsgroupratedisplay
 #, fuzzy
 msgid "Rate display"
-msgstr ""
+msgstr "비율 표시"
 
 #: uappstrings.sprefsgrouplogwindow
 #, fuzzy
 msgid "Log window"
-msgstr ""
+msgstr "로그 창"
 
 #: uappstrings.sprefsgroupuserinfo
 #, fuzzy
 msgid "Information shown under the call window"
-msgstr ""
+msgstr "본문내용 바로가기"
 
 #: uappstrings.sprefsgroupalerts
 #, fuzzy
 msgid "Alerts"
-msgstr ""
+msgstr "지원하다"
 
 #: uappstrings.sprefsgroupvoicekeyer
 #, fuzzy
 msgid "Voice keyer"
-msgstr ""
+msgstr "음성 keyer"
 
 #: uappstrings.sprefsgroupmodes
 #, fuzzy
 msgid "Modes"
-msgstr ""
+msgstr "모드"
 
 #: uappstrings.sprefsgroupinitialexchange
 #, fuzzy
 msgid "Initial exchange"
-msgstr ""
+msgstr "초기 교환"
 
 #: uappstrings.sprefsgroupmultiplierdata
 #, fuzzy
 msgid "Multiplier data"
-msgstr ""
+msgstr "Multiplier 자료"
 
 #: uappstrings.sprefsbandplanrow
 #, fuzzy
 msgid "Band plan (cutoff frequencies and memories)"
-msgstr ""
+msgstr "밴드 플랜 (정비 및 기억)"
 
 #: uappstrings.sprefsbandplanedit
 #, fuzzy
 msgid "Edit..."
-msgstr ""
+msgstr "편집..."
 
 #: uappstrings.sradioeditbadpollrate
 #, fuzzy
 msgid "The frequency poll rate must be a whole number of milliseconds from %d to %d."
-msgstr ""
+msgstr "주파수 조사율은 밀리 초의 전체 수를해야합니다. %d 으로 %d·"
 
 #: uappstrings.sprefsbrowse
 #, fuzzy
@@ -10184,107 +10190,107 @@ msgstr "더 보기."
 #: uappstrings.smenudownloadcallhistory
 #, fuzzy
 msgid "Download call history for this contest"
-msgstr ""
+msgstr "이 대회에 대한 통화 내역을 다운로드"
 
 #: uappstrings.scallhistorydownloading
 #, fuzzy
 msgid "Downloading call history..."
-msgstr ""
+msgstr "다운로드 통화 기록 ..."
 
 #: uappstrings.scallhistorynosource
 #, fuzzy
 msgid "This contest has no call history download"
-msgstr ""
+msgstr "이 콘테스트는 통화 기록 다운로드가 없습니다"
 
 #: uappstrings.scallhistorybusy
 #, fuzzy
 msgid "A call history download is already running"
-msgstr ""
+msgstr "통화 기록 다운로드는 이미 실행"
 
 #: uappstrings.scallhistoryupdated
 #, fuzzy
 msgid "Call history updated (%d entries, %s); it takes effect the next time the contest is opened"
-msgstr ""
+msgstr "Call History 업데이트 (%d 항목, %s); 그것은 대회가 열릴 다음 시간이 걸립니다."
 
 #: uappstrings.scallhistorycurrent
 #, fuzzy
 msgid "Call history already current"
-msgstr ""
+msgstr "현재 위치"
 
 #: uappstrings.scallhistorynotavailable
 #, fuzzy
 msgid "No call history file for this contest on supercheckhistory.com"
-msgstr ""
+msgstr "Supercheckhistory.com에서이 대회에 대한 전화 기록 파일 없음"
 
 #: uappstrings.scallhistoryfailed
 #, fuzzy
 msgid "Download failed (%s); the previous file was kept"
-msgstr ""
+msgstr "다운로드 실패 (다운로드)%s); 이전 파일이 보관되었습니다."
 
 #: uappstrings.scallhistoryrefused
 #, fuzzy
 msgid "Server refused (HTTP %d); the previous file was kept"
-msgstr ""
+msgstr "서버 거부 (HTTPS) %d); 이전 파일이 보관되었습니다."
 
 #: uappstrings.scallhistoryotherfile
 #, fuzzy
 msgid "CALL HISTORY FILENAME is \"%s\", so the downloaded file is not the one in use"
-msgstr ""
+msgstr "CALL HISTORY FILENAME은 \"%s\", 그래서 다운로드 된 파일은 사용 중 하나입니다"
 
 #: uappstrings.scallhistoryreasonhtml
 #, fuzzy
 msgid "the server sent a web page, not a call history file"
-msgstr ""
+msgstr "서버는 웹 페이지를 전송, 전화 기록 파일"
 
 #: uappstrings.scallhistoryreasontoosmall
 #, fuzzy
 msgid "the file is too small to be a call history"
-msgstr ""
+msgstr "파일이 너무 작습니다. 통화 기록"
 
 #: uappstrings.scallhistoryreasontoolarge
 #, fuzzy
 msgid "the file is larger than expected"
-msgstr ""
+msgstr "파일은 예상보다 크다"
 
 #: uappstrings.scallhistoryreasontoofewrows
 #, fuzzy
 msgid "the file has too few usable rows"
-msgstr ""
+msgstr "파일에는 너무 몇몇 쓸모 있는 줄이 있습니다"
 
 #: uappstrings.scallhistoryreasonsmaller
 #, fuzzy
 msgid "the new file is much smaller than the one held"
-msgstr ""
+msgstr "새 파일은 한 개보다 훨씬 작습니다."
 
 #: uappstrings.scallhistoryreasonwrite
 #, fuzzy
 msgid "the file could not be saved"
-msgstr ""
+msgstr "파일을 저장할 수 없습니다"
 
 #: uappstrings.sprefsnavqtc
 #, fuzzy
 msgid "QTC"
-msgstr ""
+msgstr "사이트맵"
 
 #: uappstrings.sprefsnavqsosettings
 #, fuzzy
 msgid "QSO settings"
-msgstr ""
+msgstr "QSO 설정"
 
 #: uappstrings.sprefsnavquickqsl
 #, fuzzy
 msgid "Quick QSL"
-msgstr ""
+msgstr "빠른 QSL"
 
 #: uappstrings.sprefsnavcabrilloheadings
 #, fuzzy
 msgid "Cabrillo headings"
-msgstr ""
+msgstr "Cabrillo 머리"
 
 #: uappstrings.sprefsnavcontestrules
 #, fuzzy
 msgid "Contest rules"
-msgstr ""
+msgstr "대회 규칙"
 
 
 #: uappstrings.surltestbutton
@@ -10293,97 +10299,97 @@ msgstr ""
 #: tprefsform.btnscorereadtest.caption
 #, fuzzy
 msgid "Test"
-msgstr ""
+msgstr "제품정보"
 
 #: uappstrings.surltestrunning
 #, fuzzy
 msgid "Asking..."
-msgstr ""
+msgstr "기타..."
 
 #: uappstrings.surltestnothing
 #, fuzzy
 msgid "Nothing to test: the address box is empty."
-msgstr ""
+msgstr "테스트 할 수 없습니다 : 주소 상자가 비어 있습니다."
 
 #: uappstrings.surltestanswered
 #, fuzzy
 msgid "Answered %d"
-msgstr ""
+msgstr "이름 * %d"
 
 #: uappstrings.surltestansweredfrom
 #, fuzzy
 msgid "Answered %d from %s"
-msgstr ""
+msgstr "이름 * %d 이름 * %s"
 
 #: uappstrings.surltestnoanswerscheme
 #, fuzzy
 msgid "No answer: the address does not start with http:// or https://"
-msgstr ""
+msgstr "답변 없음: 주소는 http:// 또는 https://로 시작하지 않습니다."
 
 #: uappstrings.surltestnoanswerplain
 #, fuzzy
 msgid "No answer: a plain http:// address was not sent"
-msgstr ""
+msgstr "답변 없음: 일반 http:// 주소는 전송되지 않았습니다"
 
 #: uappstrings.surltestnoanswertls
 #, fuzzy
 msgid "No answer: the OpenSSL libraries could not be loaded"
-msgstr ""
+msgstr "대답 없음: OpenSSL 도서관은 적재될 수 없었습니다"
 
 #: uappstrings.surltestnoanswertlslib
 #, fuzzy
 msgid "No answer: the TLS library stopped while connecting"
-msgstr ""
+msgstr "답변 없음 : 연결 중에 TLS 라이브러리가 중지되었습니다."
 
 #: uappstrings.surltestnoanswertrust
 #, fuzzy
 msgid "No answer: the certificate file cacert.pem could not be used"
-msgstr ""
+msgstr "대답 없음: 인증서 파일 cacert. pem는 사용될 수 없었습니다"
 
 #: uappstrings.surltestnoanswerverify
 #, fuzzy
 msgid "No answer: server certificates cannot be checked on this machine"
-msgstr ""
+msgstr "대답 없음: 서버 인증서는 이 기계에 검사될 수 없습니다"
 
 #: uappstrings.surltestnoanswercert
 #, fuzzy
 msgid "No answer: the server's certificate was not accepted"
-msgstr ""
+msgstr "답변 없음: 서버의 인증서는 허용되지 않았습니다"
 
 #: uappstrings.surltestnoanswername
 #, fuzzy
 msgid "No answer: the host name was not found"
-msgstr ""
+msgstr "답변 없음: 호스트 이름은 찾을 수 없습니다"
 
 #: uappstrings.surltestnoanswerconnect
 #, fuzzy
 msgid "No answer: could not connect"
-msgstr ""
+msgstr "대답 없음: 연결할 수 없습니다"
 
 #: uappstrings.surltestnoanswerconntime
 #, fuzzy
 msgid "No answer: timed out connecting"
-msgstr ""
+msgstr "답변 없음 : 연결 시간"
 
 #: uappstrings.surltestnoansweriotime
 #, fuzzy
 msgid "No answer: timed out waiting for the server"
-msgstr ""
+msgstr "답변 없음 : 서버의 대기 시간"
 
 #: uappstrings.surltestnoanswerlost
 #, fuzzy
 msgid "No answer: the connection was lost"
-msgstr ""
+msgstr "대답 없음: 연결은 잃었습니다"
 
 #: uappstrings.surltestnoanswercancelled
 #, fuzzy
 msgid "No answer: the request was cancelled"
-msgstr ""
+msgstr "답변 없음 : 요청이 취소되었습니다."
 
 #: uappstrings.surltestnoanswerother
 #, fuzzy
 msgid "No answer"
-msgstr ""
+msgstr "답변 없음"
 
 #: uappstrings.sverifyservercaption
 #: usettingscaptions.rs_scoring_board_verifyserver
@@ -10392,56 +10398,56 @@ msgstr ""
 #: tprefsform.chkscoreverify.caption
 #, fuzzy
 msgid "Verify the server's certificate"
-msgstr ""
+msgstr "서버 인증서 검증"
 
 #: uappstrings.sverifyserveroffwarning
 #: tprefsform.lblscoreverifynote.caption
 #, fuzzy
 msgid "The server's identity is not checked; anyone between you and it can read what you send."
-msgstr ""
+msgstr "서버의 정체성은 검사되지 않습니다; 당신 사이 누구와 당신이 보내는 것을 읽을 수 있습니다."
 
 #: uappstrings.sprefsnavcwkeyers
 #, fuzzy
 msgid "CW keyers"
-msgstr ""
+msgstr "CW 키"
 
 #: uappstrings.sprefshardwareinfo
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers."
-msgstr ""
+msgstr "역 넓은 기계설비. 1개의 라디오에 속하는 조정은 라디오의 밑에 있습니다; 회전 장치는 회전자의 밑에 있습니다; WinKeyer와 YCCC SO2R+ 열쇠는 CW 열쇠의 밑에 있습니다."
 
 #: uappstrings.sprefscwkeyerspointer
 #: tprefsform.lblcwkeyerspointer.caption
 #, fuzzy
 msgid "WinKeyer and YCCC SO2R+ keyers, and their settings, are under Hardware > CW keyers."
-msgstr ""
+msgstr "WinKeyer와 YCCC SO2R+ 열쇠, 그리고 그들의 조정은 기계설비 > CW 열쇠의 밑에 있습니다."
 
 #: uappstrings.sprefskeyerscwpointer
 #: tprefsform.lblkeyerscwpointer.caption
 #, fuzzy
 msgid "The CW TR4W sends, and the paddle and serial-line keying it does itself, are under CW Settings."
-msgstr ""
+msgstr "CW TR4W는 CW 설정 아래 자체를 사용하여 패들 및 직렬 라인 키링을 보냅니다."
 
 #: uappstrings.sprefssearchcwkeyers
 #, fuzzy
 msgid "WinKeyer and YCCC SO2R+ keyers"
-msgstr ""
+msgstr "WinKeyer와 YCCC SO2R+ 열쇠"
 
 #: uappstrings.sprefssearchwinkeyersettings
 #, fuzzy
 msgid "Keyer mode, Sidetone, Weight, Dit/dah ratio, Switchpoint, Lead-in, Tail, Compensation, First extension, Auto space, CT spacing, Ignore speed pot, Sidetone on, Paddle-only sidetone, Swap paddles"
-msgstr ""
+msgstr "중요한 형태, Sidetone, 무게, Dit/dah 비율, 스위치 포인트, 지도에서, 꼬리, 보상, 첫번째 연장, 자동 공간, CT 간격, Ignore 속도 남비, Sidetone에, Paddle-only sidetone, Swap 패들"
 
 #: tprefsform.chkbandmapfilterdigital.caption
 #, fuzzy
 msgid "Hide digital spots"
-msgstr ""
+msgstr "디지털 스팟"
 
 #: uappstrings.snewlognametakentitle
 #, fuzzy
 msgid "This contest already has a log"
-msgstr ""
+msgstr "이 대회는 이미 로그가 있습니다."
 
 #: uappstrings.snewlognametakenbody
 #, fuzzy
@@ -10451,62 +10457,62 @@ msgstr ""
 #: uappstrings.snewlogcreatenumbered
 #, fuzzy
 msgid "Create new log"
-msgstr ""
+msgstr "새 로그 만들기"
 
 #: uappstrings.snewlogopenexisting
 #, fuzzy
 msgid "Open existing log"
-msgstr ""
+msgstr "비밀번호"
 
 #: uappstrings.snewcontestlicenseyearlabel
 #, fuzzy
 msgid "MY LICENSE YEAR"
-msgstr ""
+msgstr "내 라이센스 년"
 
 #: uappstrings.sexchangenonamefound
 #, fuzzy
 msgid "No name found!!"
-msgstr ""
+msgstr "이름 찾기!!"
 
 #: uappstrings.snewcontestqthormemberlabel
 #, fuzzy
 msgid "MY QTH OR MEMBER NO"
-msgstr ""
+msgstr "나의 QTH 또는 회원 없음"
 
 #: uappstrings.snewcontesthostareacountylabel
 #, fuzzy
 msgid "MY COUNTY"
-msgstr ""
+msgstr "내 계정"
 
 #: uappstrings.snewcontesthostareastatelabel
 #, fuzzy
 msgid "MY STATE"
-msgstr ""
+msgstr "내 계정"
 
 #: uappstrings.snewcontesthostareainsidenotice
 #, fuzzy
 msgid "You are in %s: choose your county from the list."
-msgstr ""
+msgstr "현재 위치 %s: 목록에서 카운티를 선택합니다."
 
 #: uappstrings.snewcontesthostareaoutsidenotice
 #, fuzzy
 msgid "You are outside %0:s: enter your US state or Canadian province (two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s."
-msgstr ""
+msgstr "너 밖에서 %0:s: 미국 국가 또는 캐나다 지방 (두 글자, 예를 들어 GA 또는 ON), 또는 DX를 입력하십시오. 당신이 안으로 있는 경우에 상자를 Tick %0:s·"
 
 #: uappstrings.snewcontesthostareaentryisinside
 #, fuzzy
 msgid "%0:s is inside %1:s: tick the box and choose your county from the list."
-msgstr ""
+msgstr "%0:s 내 계정 %1:s: 상자를 떼어보고 목록에서 카운티를 선택합니다."
 
 #: uappstrings.snewcontesthostareaentrynotastate
 #, fuzzy
 msgid "%s is not a US state, a Canadian province or DX. Enter the two-letter code, e.g. GA or ON, or DX."
-msgstr ""
+msgstr "%s 미국 국가, 캐나다성 또는 DX가 아닙니다. 두 개의 터미널 코드를 입력, 예를 들어 GA 또는 ON, 또는 DX."
 
 #: uappstrings.stotalscallsignmults
 #, fuzzy
 msgid "Calls"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.snewlognametakenopenbody
 #, fuzzy
@@ -10516,181 +10522,181 @@ msgstr ""
 #: uappstrings.sexchangenolicenseyear
 #, fuzzy
 msgid "No license year found!!"
-msgstr ""
+msgstr "저작권이 없습니다!"
 
 #: uappstrings.sexchangeimproperlicenseyear
 #, fuzzy
 msgid "Improper license year!!"
-msgstr ""
+msgstr "Improper 라이센스 년!!"
 
 #: uappstrings.stotalslicenseyearmults
 #, fuzzy
 msgid "Years"
-msgstr ""
+msgstr "10 년"
 
 #: tprefsform.lblmylicenseyear.caption
 #, fuzzy
 msgid "License year:"
-msgstr ""
+msgstr "면허 년:"
 
 #: uappstrings.sreadinessmylicenseyearmissing
 #, fuzzy
 msgid "MY LICENSE YEAR is empty and this contest sends the year you were first licensed."
-msgstr ""
+msgstr "내 라이센스 년은 비어 있으며이 대회는 첫 번째 라이센스를 받았습니다."
 
 #: uappstrings.snewcontestenternameandqth
 #, fuzzy
 msgid "Enter your name and QTH (US state, Canadian Province or DX country):"
-msgstr ""
+msgstr "당신의 이름과 QTH (미국 국가, 캐나다성 또는 DX 국가)를 입력하십시오:"
 
 #: uappstrings.snewcontestbranchnumberlabel
 #, fuzzy
 msgid "MY BRANCH NUMBER"
-msgstr ""
+msgstr "MY 브랜치 번호"
 
 #: uappstrings.scabundlemissingnotice
 #, fuzzy
 msgid "The certificate file cacert.pem was not found (looked in: %0:s); uploads to %1:s are paused until it is available."
-msgstr ""
+msgstr "인증서 파일 cacert.pem 발견되지 않았습니다 (에서 보기) %0:s); 업로드 %1:s 사용할 때까지 일시 중지됩니다."
 
 #: uappstrings.seditqsodeliveryfailed
 #, fuzzy
 msgid "failed"
-msgstr ""
+msgstr "실패한"
 
 #: uappstrings.seditqsodeliveryfailedwithcode
 #, fuzzy
 msgid "failed (%s)"
-msgstr ""
+msgstr "실패 (%s·"
 
 #: uappstrings.seditqsodeliverylastsent
 #, fuzzy
 msgid "Last sent %s UTC"
-msgstr ""
+msgstr "견적 요청 %s UTC의 경우"
 
 #: uappstrings.seditqsodeliveryline
 #, fuzzy
 msgid "External logger %s: %s. %s"
-msgstr ""
+msgstr "외부 로거 %s:: %s· %s"
 
 #: uappstrings.seditqsodeliveryneversent
 #, fuzzy
 msgid "Not sent yet"
-msgstr ""
+msgstr "아직 전송되지 않음"
 
 #: uappstrings.seditqsodeliverypending
 #, fuzzy
 msgid "pending"
-msgstr ""
+msgstr "뚱 베어"
 
 #: uappstrings.seditqsodeliverysending
 #, fuzzy
 msgid "sending"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.seditqsodeliverysynced
 #, fuzzy
 msgid "up to date"
-msgstr ""
+msgstr "현재 위치"
 
 #: uappstrings.seditqsodeliveryuncertain
 #, fuzzy
 msgid "uncertain"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.seditqsomycall
 #, fuzzy
 msgctxt "uappstrings.seditqsomycall"
 msgid "Call"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.seditqsomycounty
 #: tfrmeditqso.lblmycounty.caption
 #, fuzzy
 msgid "County"
-msgstr ""
+msgstr "(주)"
 
 #: uappstrings.seditqsomycqzone
 #: tfrmeditqso.lblmycqzone.caption
 #, fuzzy
 msgid "CQ zone"
-msgstr ""
+msgstr "CQ 지역"
 
 #: uappstrings.seditqsomygrid
 #: tfrmeditqso.lblmygrid.caption
 #, fuzzy
 msgid "Grid"
-msgstr ""
+msgstr "제품정보"
 
 #: uappstrings.seditqsomyituzone
 #: tfrmeditqso.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone"
-msgstr ""
+msgstr "ITU 지역"
 
 #: uappstrings.seditqsomypark
 #: tfrmeditqso.lblmypark.caption
 #, fuzzy
 msgid "Park"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.seditqsomysection
 #: tfrmeditqso.lblmysection.caption
 #, fuzzy
 msgid "Section"
-msgstr ""
+msgstr "제품정보"
 
 #: uappstrings.seditqsomystate
 #: tfrmeditqso.lblmystate.caption
 #, fuzzy
 msgid "State"
-msgstr ""
+msgstr "주요 특징"
 
 #: uappstrings.seditqsomystation
 #: tfrmeditqso.grpmystation.caption
 #, fuzzy
 msgid "Our station for this QSO"
-msgstr ""
+msgstr "이 QSO의 역"
 
 #: uappstrings.seditqsomystationassumed
 #, fuzzy
 msgid "Our station for this QSO (assumed: a network QSO)"
-msgstr ""
+msgstr "이 QSO를 위한 우리의 역 (assumed: 네트워크 QSO)"
 
 #: uappstrings.seditqsomystationnotrecorded
 #, fuzzy
 msgid "Our station for this QSO (not recorded)"
-msgstr ""
+msgstr "이 QSO의 역 (기록되지 않음)"
 
 #: uappstrings.sexchangeambiguousserial
 #, fuzzy
 msgid "Ambiguous exchange - enter %s or %s to resolve"
-msgstr ""
+msgstr "Ambiguous 교환 - 입력 %s 또는 %s 해결하기"
 
 #: uappstrings.sexchangecallorexchange
 #, fuzzy
 msgid "Ambiguous entry - %s may be a callsign or an exchange. For the exchange, enter %s; for the call, type it in the call window"
-msgstr ""
+msgstr "Ambiguous 입장 - %s 호출 또는 교환이 될 수 있습니다. 교환의 경우, 입력 %s; 호출의 경우, 호출 창에서 입력"
 
 #: uappstrings.sexchangechecknottwodigits
 #, fuzzy
 msgid "Check must be two digits (%s)"
-msgstr ""
+msgstr "2개의 숫자가 있어야 합니다 (%s·"
 
 #: uappstrings.sexchangenocheck
 #, fuzzy
 msgid "Missing check (two digits)"
-msgstr ""
+msgstr "미스링 체크 (2 자리)"
 
 #: uappstrings.sexchangenosection
 #, fuzzy
 msgid "Missing section"
-msgstr ""
+msgstr "연락처"
 
 #: uappstrings.shamscorenobundlestatus
 #, fuzzy
 msgid "Not sent: cacert.pem not found (looked in: %0:s) -- %1:d QSO(s) retained"
-msgstr ""
+msgstr "보내지 않음: cacert.pem 찾을 수 없습니다 (에서 전망: %0:s) -- %1:d QSO(s) 유지"
 
 #: uappstrings.slogbusynotsaved
 #, fuzzy
@@ -10699,129 +10705,132 @@ msgid ""
 "\n"
 "If this was a QSO, it is still in the entry window: log it again. If this keeps happening, run Tools > Run Verification Checks."
 msgstr ""
+"대회 로그는 다른 프로그램에 의해 잠겨졌다 동안 %s, 그래서 변경은 저장되지 않았다. 로그 자체는 손상되지 않으며 TR4W는 열 수 없습니다.\n"
+"\n"
+"QSO가 된 경우 항목 창에 여전히 있습니다. 다시 로그인하십시오. 이런 일이 일어나면 도구 > Run Verification Check를 실행하십시오."
 
 #: uappstrings.sloggereditorcounts
 #, fuzzy
 msgid "Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d"
-msgstr ""
+msgstr "관련 기사 %d | 연락처 %d | 동기화 %d | 인증 %d | 실패 %d"
 
 #: uappstrings.sloggereditornocounts
 #, fuzzy
 msgid "Delivery status unavailable"
-msgstr ""
+msgstr "납품 상태 unavailable"
 
 #: uappstrings.sloggereditornolog
 #, fuzzy
 msgid "No contest log is open."
-msgstr ""
+msgstr "대회 로그가 없습니다."
 
 #: uappstrings.sloggereditornote
 #, fuzzy
 msgid "Save to Preferences returns this logger to the Preferences window. Click Save there to store it; Active takes effect then, with no restart. A logger added since TR4W started, or a changed key, host or logbook, applies after you restart TR4W. Each logger sends independently."
-msgstr ""
+msgstr "Preferences로 저장하면 이 로그를 Preferences 창에 반환합니다. 저장하려면 저장하십시오. 활성 효과는 다시 시작하지 않습니다. TR4W가 시작되거나 변경된 키, 호스트 또는 로그북이가 TR4W를 다시 시작합니다. 각 로거는 독립적으로 보냅니다."
 
 #: uappstrings.sloggerfieldcloudlogkey
 #, fuzzy
 msgid "Cloudlog / Wavelog API key"
-msgstr ""
+msgstr "Cloudlog / Wavelog API 키"
 
 #: uappstrings.sloggerfieldcloudlogprofile
 #, fuzzy
 msgid "Station profile ID"
-msgstr ""
+msgstr "역 프로필 ID"
 
 #: uappstrings.sloggerfieldcloudlogurl
 #, fuzzy
 msgid "Cloudlog / Wavelog address (https://...)"
-msgstr ""
+msgstr "Cloudlog / 파로그 주소 (https://...)"
 
 #: uappstrings.sloggergridadd
 #: tprefsform.btnaddexternallogger.caption
 #, fuzzy
 msgid "Add..."
-msgstr ""
+msgstr "더 보기"
 
 #: uappstrings.sloggergridchanged
 #, fuzzy
 msgid "Logger definitions changed. Save Preferences to apply Enabled and Order now; connection changes apply after a restart."
-msgstr ""
+msgstr "Logger 정의 변경. 지금 Enabled 및 Order를 적용하려면 Preferences를 저장하십시오. 연결 변경은 재시작 후 적용됩니다."
 
 #: uappstrings.sloggergridedit
 #, fuzzy
 msgctxt "uappstrings.sloggergridedit"
 msgid "Edit..."
-msgstr ""
+msgstr "편집..."
 
 #: uappstrings.sloggergridhint
 #, fuzzy
 msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences to apply Enabled and Order now; a new logger, or changed connection settings, applies after a restart."
-msgstr ""
+msgstr "편집하려면 logger를 마우스 오른쪽 버튼으로 클릭하고 새 QSO를 변경하거나 이동하거나 제거하십시오. 주문 셀을 드래그하십시오. Active loggers는 순서에서 보냅니다. 지금 Enabled 및 Order를 적용하려면 Preferences를 저장하십시오. 새로운 logger 또는 변경된 연결 설정은 재시작 후 적용됩니다."
 
 #: uappstrings.sloggergridlogger
 #, fuzzy
 msgid "Logger"
-msgstr ""
+msgstr "로그인"
 
 #: uappstrings.sloggergridmovedown
 #, fuzzy
 msgid "Move down"
-msgstr ""
+msgstr "맨 위로"
 
 #: uappstrings.sloggergridmoveup
 #, fuzzy
 msgid "Move up"
-msgstr ""
+msgstr "맨 위로"
 
 #: uappstrings.sloggergridno
 #, fuzzy
 msgid "No"
-msgstr ""
+msgstr "아니오(N)"
 
 #: uappstrings.sloggergridnone
 #, fuzzy
 msgid "No loggers configured"
-msgstr ""
+msgstr "구성되지 않음"
 
 #: uappstrings.sloggergridorder
 #, fuzzy
 msgid "Order"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.sloggergridprovider
 #: texternalloggersform.lblprovider.caption
 #, fuzzy
 msgid "Provider"
-msgstr ""
+msgstr "회사 소개"
 
 #: uappstrings.sloggergridremove
 #, fuzzy
 msgid "Remove..."
-msgstr ""
+msgstr "제거 ..."
 
 #: uappstrings.sloggergridremoveask
 #, fuzzy
 msgid "Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition."
-msgstr ""
+msgstr "logger 정의 제거? 배송은 콘테스트 로그에 유지하고 다른 정의로 리디렉션되지 않습니다."
 
 #: uappstrings.sloggergridsavedrestart
 #, fuzzy
 msgid "Saved. Enabled and Order are in effect. %d logger(s) with new or changed connection settings apply after you restart TR4W."
-msgstr ""
+msgstr "다운로드 Enabled와 순서는 효력에서 입니다. %d logger(s) 와 new or changes connection settings apply after you restart TR4W."
 
 #: uappstrings.sloggergridsend
 #, fuzzy
 msgid "Send new QSOs"
-msgstr ""
+msgstr "새로운 QSOs를 보내십시오"
 
 #: uappstrings.sloggergridyes
 #, fuzzy
 msgid "Yes"
-msgstr ""
+msgstr "예(Y)"
 
 #: uappstrings.sloggerstateapplyonsave
 #, fuzzy
 msgid "Applies on Save"
-msgstr ""
+msgstr "자주 묻는 질문"
 
 #: uappstrings.sloglockedbody
 #, fuzzy
@@ -10839,32 +10848,32 @@ msgstr ""
 #: uappstrings.sloglockedheldelsewhere
 #, fuzzy
 msgid "Another program is holding it -- most likely another TR4W, or one that crashed and is still waiting at an error dialog; or a backup, cloud sync (OneDrive, Dropbox) or antivirus program reading the file."
-msgstr ""
+msgstr "또 다른 프로그램은 그것을 유지 -- 가장 가능성이 다른 TR4W, 또는 충돌하고 여전히 오류 대화 상자에서 기다리고 있습니다; 또는 백업, 클라우드 동기화 (OneDrive, Dropbox) 또는 바이러스 백신 프로그램 파일 읽기."
 
 #: uappstrings.sloglockedheldhere
 #, fuzzy
 msgid "This TR4W's own background connection is holding it: %s."
-msgstr ""
+msgstr "이 TR4W의 자신의 배경 연결은 유지: %s·"
 
 #: uappstrings.sloglockedquit
 #, fuzzy
 msgid "Quit TR4W"
-msgstr ""
+msgstr "열쇠 TR4W"
 
 #: uappstrings.sloglockedreadonly
 #, fuzzy
 msgid "Open read-only (no logging)"
-msgstr ""
+msgstr "Open read-only (로그 없음)"
 
 #: uappstrings.sloglockedretry
 #, fuzzy
 msgid "Retry"
-msgstr ""
+msgstr "재시도(R)"
 
 #: uappstrings.sloglockedtitle
 #, fuzzy
 msgid "Contest log is locked"
-msgstr ""
+msgstr "대회 기록은 잠깁니다"
 
 #: uappstrings.slogreadonlyrefused
 #, fuzzy
@@ -10878,140 +10887,140 @@ msgstr ""
 #: uappstrings.snettailcatfailed
 #, fuzzy
 msgid "The link to the multi-op server through Tailcat could not be opened: %s. TR4W keeps trying."
-msgstr ""
+msgstr "Tailcat을 통해 멀티-op 서버의 링크가 열 수 없습니다. %s. TR4W는 시도합니다."
 
 #: uappstrings.sprefsgroupinternet
 #, fuzzy
 msgid "Internet downloads and uploads"
-msgstr ""
+msgstr "인터넷 다운로드 및 업로드"
 
 #: uappstrings.sprefsnettailcatcaption
 #: tprefsform.lblnettailcat.caption
 #, fuzzy
 msgid "Tailcat address:"
-msgstr ""
+msgstr "Tailcat 주소:"
 
 #: uappstrings.sprefsnettailcathint
 #: tprefsform.lblnettailcathint.caption
 #, fuzzy
 msgid "To reach a server on another network, paste the address its operator gave you and tick Use Tailcat. Server above is then not used. Treat the address like a password."
-msgstr ""
+msgstr "다른 네트워크에 서버를 도달하려면, 해당 연산자를 붙여 넣기하고 tailcat을 사용. 위의 서버는 사용되지 않습니다. 비밀번호와 같은 주소를 치료합니다."
 
 #: uappstrings.sprefsnetusetailcat
 #: tprefsform.chknetusetailcat.caption
 #, fuzzy
 msgid "Use Tailcat"
-msgstr ""
+msgstr "Tailcat 사용"
 
 #: uappstrings.swrldeliveryissue
 #, fuzzy
 msgid "World Radio League delivery needs attention. %s. Local logging continues; check the TR4W log and WRL delivery records."
-msgstr ""
+msgstr "월드 라디오 리그 납품은 주의해야 합니다. %s. 로컬 로깅 계속; TR4W 로그 및 WRL 배달 레코드를 확인하십시오."
 
 #: uappstrings.swrlstatusunavailable
 #, fuzzy
 msgid "WRL delivery status is unavailable for the current log."
-msgstr ""
+msgstr "WRL 배송 상태는 현재 로그에 사용할 수 없습니다."
 
 #: uappstrings.swrlsummary
 #, fuzzy
 msgid "WRL delivery: pending %d; sending %d; up to date %d; uncertain %d; failed %d. Reopen Preferences to refresh."
-msgstr ""
+msgstr "WRL 납품: 보류 %d; 보내기 %d; 날짜까지 %d; 불확실한 %d; 실패 %d. 새로 고침 Preferences."
 
 #: ulclformhelpers.tc_prefs_ports_unavailable
 #, fuzzy
 msgid "(port list not available on this platform)"
-msgstr ""
+msgstr "(이 플랫폼에서 사용할 수없는 포트 목록)"
 
 #: ulclformhelpers.tc_prefs_port_not_present
 #, fuzzy
 msgid "(not present)"
-msgstr ""
+msgstr "(현재)"
 
 #: ulclformhelpers.tc_prefs_port_unsupported
 #, fuzzy
 msgid "(not selectable yet)"
-msgstr ""
+msgstr "(선택할 수 없음)"
 
 #: usettingscaptions.rs_bandmap_workedmultcolor
 #, fuzzy
 msgid "Color of the M on a spot whose multiplier wants a backup"
-msgstr ""
+msgstr "Multiplier가 백업을 원하는 자리에 M의 색상"
 
 #: usettingscaptions.rs_bandmap_workedmultlimit
 #, fuzzy
 msgid "Workings of a multiplier before its spot shows no M"
-msgstr ""
+msgstr "그것의 반점의 앞에 multiplier의 일은 M를 보여줍니다"
 
 #: usettingscaptions.rs_cluster_ctrlj_spotcommentmultiplier
 #, fuzzy
 msgid "Spot Comment Multiplier"
-msgstr ""
+msgstr "스팟 코멘트 Multiplier"
 
 #: usettingscaptions.rs_files_ctrlj_callhistoryfilename
 #, fuzzy
 msgid "Call History Filename"
-msgstr ""
+msgstr "본문 바로가기"
 
 #: usettingscaptions.rs_files_ctrlj_usecallhistoryfile
 #, fuzzy
 msgid "Use Call History File"
-msgstr ""
+msgstr "Call History 파일"
 
 #: usettingscaptions.rs_network_httptransport
 #, fuzzy
 msgid "How downloads and uploads connect (generic, auto or platform)"
-msgstr ""
+msgstr "다운로드 및 업로드 연결 방법 (일반, 자동 또는 플랫폼)"
 
 #: utr4wstrings.tc_improperdomesticqthhostonly
 #, fuzzy
 msgid "(%s: work %s stations only)"
-msgstr ""
+msgstr "(주)%s: 일 %s 역 전용)"
 
 #: utr4wstrings.tc_improperdomesticqthnoqth
 #, fuzzy
 msgid "(no QTH)"
-msgstr ""
+msgstr "(QTH 없음)"
 
 #: utr4wstrings.tc_improperdomesticqthnotinfile
 #, fuzzy
 msgid "(%s not in %s)"
-msgstr ""
+msgstr "(주)%s 뚱 베어 %s·"
 
 #: utr4wstrings.tc_improperdomesticqthunknown
 #, fuzzy
 msgid "(%s not known)"
-msgstr ""
+msgstr "(주)%s 아니다)"
 
 #: utr4wstrings.tc_invalidarrlsection
 #, fuzzy
 msgid "Invalid ARRL Section"
-msgstr ""
+msgstr "잘못된 ARRL 섹션"
 
 #: utr4wstrings.tc_qsonumberzeronotvalid
 #, fuzzy
 msgid "QSO number 0 is not valid in this contest."
-msgstr ""
+msgstr "QSO 번호 0 이 대회에서 유효하지 않습니다."
 
 #: utr4wstrings.tc_tciserverportusedbytciradio
 #, fuzzy
 msgid "The TCI server cannot use port %d: your TCI radio '%s' connects to the SDR on that port on this PC. Choose a different port for the TCI server (default %d) or turn the TCI server off."
-msgstr ""
+msgstr "TCI 서버는 포트를 사용할 수 없습니다. %d: TCI 라디오 '%s'이 PC에 그 포트에 SDR에 연결. TCI 서버의 다른 포트 선택 (기본값 %d) 또는 TCI 서버를 끄십시오."
 
 #: utr4wstrings.tc_toomanycounties
 #, fuzzy
 msgid "Too many counties for this contest (maximum %d)!!"
-msgstr ""
+msgstr "이 대회를 위한 너무 많은 군 (maximum %d·"
 
 #: uappstrings.sprefspagehasnosettingsyet
 #, fuzzy
 msgid "There are no settings on this page yet."
-msgstr ""
+msgstr "이 페이지의 설정은 아직 없습니다."
 
 #: uappstrings.slicenseyearscopealsocontest
 #, fuzzy
 msgid "Also this contest"
-msgstr ""
+msgstr "이 대회"
 
 #: uappstrings.slicenseyearscopebody
 #, fuzzy
@@ -11024,133 +11033,140 @@ msgid ""
 "\n"
 "QSOs already logged do not store the year they sent: an export sends this contest's year for all of them."
 msgstr ""
+"역의 기본 라이센스 년은 이제 %0:s·\n"
+"\n"
+"%1:s 면허 년을 보내고, 보냅니다 %2:s 현재 위치\n"
+"\n"
+"이 대회가 새해를 보내야합니까?\n"
+"\n"
+"QSOs 이미 기록 된 년을 저장하지 않습니다. 수출은이 대회의 해를 그들 모두를 위해 보냅니다."
 
 #: uappstrings.slicenseyearscopecontestandqsos
 #, fuzzy
 msgid "This contest and its existing QSOs"
-msgstr ""
+msgstr "이 대회와 기존 QSOs"
 
 #: uappstrings.slicenseyearscopestationonly
 #, fuzzy
 msgid "Station default only"
-msgstr ""
+msgstr "역 기본적으로만"
 
 #: uappstrings.slicenseyearscopetitle
 #, fuzzy
 msgid "License year"
-msgstr ""
+msgstr "면허 년"
 
 #: uappstrings.smessageeditcaptiontoolong
 #, fuzzy
 msgid "The caption is %0:d bytes long and a caption holds %1:d. Shorten it and press OK again."
-msgstr ""
+msgstr "캡션은 %0:d 긴 바이트 및 캡션 보유 %1:d. 그것을 단축하고 OK를 다시 누릅니다."
 
 #: uappstrings.smessageedittexttoolong
 #, fuzzy
 msgid "The message is %0:d bytes long and a message holds %1:d. Shorten it and press OK again."
-msgstr ""
+msgstr "메시지는 %0:d 긴 바이트와 메시지 보유 %1:d. 그것을 단축하고 OK를 다시 누릅니다."
 
 #: uappstrings.snetparametertoolong
 #, fuzzy
 msgid "%0:s was not sent to the other stations: it is %1:d bytes and the network carries %2:d."
-msgstr ""
+msgstr "%0:s 다른 역에 보내지 않았습니다: 그것은 입니다 %1:d 바이트 및 네트워크 운반 %2:d·"
 
 #: uappstrings.sexchangehintage
 #, fuzzy
 msgid "age"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.sexchangehintand
 #, fuzzy
 msgid "%0:s and %1:s"
-msgstr ""
+msgstr "%0:s 그리고 %1:s"
 
 #: uappstrings.sexchangehintchapter
 #, fuzzy
 msgid "chapter"
-msgstr ""
+msgstr "한국어"
 
 #: uappstrings.sexchangehintcheck
 #, fuzzy
 msgid "check"
-msgstr ""
+msgstr "(주)"
 
 #: uappstrings.sexchangehintclass
 #, fuzzy
 msgid "class"
-msgstr ""
+msgstr "수업시간"
 
 #: uappstrings.sexchangehintfocnumber
 #: tfrmeditqso.lblmyfocnumber.caption
 #, fuzzy
 msgid "FOC number"
-msgstr ""
+msgstr "FOC 번호"
 
 #: uappstrings.sexchangehintlicenseyear
 #, fuzzy
 msgid "license year"
-msgstr ""
+msgstr "라이센스 년"
 
 #: uappstrings.sexchangehintname
 #, fuzzy
 msgid "name"
-msgstr ""
+msgstr "이름"
 
 #: uappstrings.sexchangehintpower
 #, fuzzy
 msgid "power"
-msgstr ""
+msgstr "힘 힘"
 
 #: uappstrings.sexchangehintprecedence
 #, fuzzy
 msgid "precedence"
-msgstr ""
+msgstr "지원하다"
 
 #: uappstrings.sexchangehintrandomchars
 #, fuzzy
 msgid "random characters"
-msgstr ""
+msgstr "무작위 문자"
 
 #: uappstrings.sexchangehintserialnumber
 #, fuzzy
 msgid "serial number"
-msgstr ""
+msgstr "일련 번호"
 
 #: uappstrings.sexchangehintsignalreport
 #, fuzzy
 msgid "signal report"
-msgstr ""
+msgstr "신호 보고"
 
 #: uappstrings.sexchangehinttentennumber
 #, fuzzy
 msgid "10-10 number"
-msgstr ""
+msgstr "10-10 번호"
 
 #: uappstrings.sexchangehintyearslicensed
 #, fuzzy
 msgid "years licensed"
-msgstr ""
+msgstr "라이센스"
 
 #: uappstrings.sexchangehintzone
 #, fuzzy
 msgid "zone"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.sexchangehintzoneorsociety
 #, fuzzy
 msgid "zone or society"
-msgstr ""
+msgstr "지역 또는 사회"
 
 #: uappstrings.seditqsomyyearsent
 #: tfrmeditqso.lblmyyearsent.caption
 #, fuzzy
 msgid "Year sent"
-msgstr ""
+msgstr "배달 시간"
 
 #: uappstrings.seditqsoimpropersentyear
 #, fuzzy
 msgid "Improper license year sent!!"
-msgstr ""
+msgstr "임플란트 라이센스 년 보내!!"
 
 #: uappstrings.slicenseyearscopebodystored
 #, fuzzy
@@ -11163,11 +11179,18 @@ msgid ""
 "\n"
 "QSOs already logged keep the year they sent."
 msgstr ""
+"역의 기본 라이센스 년은 이제 %0:s·\n"
+"\n"
+"%1:s 면허 년을 보내고, 보냅니다 %2:s 현재 위치\n"
+"\n"
+"이 대회가 새해를 보내야합니까?\n"
+"\n"
+"QSOs 이미 기록 된 해 그들은 전송."
 
 #: uappstrings.slicenseyearcorrecttitle
 #, fuzzy
 msgid "Correct logged QSOs?"
-msgstr ""
+msgstr "로그인 QSOs?"
 
 #: uappstrings.slicenseyearcorrectbody
 #, fuzzy
@@ -11178,11 +11201,16 @@ msgid ""
 "\n"
 "Answer Yes only if %1:s was a mistake. A QSO logged with %1:s on the air sent %1:s, and its log should say so."
 msgstr ""
+"%0:d QSO (s) 이미이 대회에 로그인 한 것은 라이센스 연도를 보냈습니다. %1:s·\n"
+"\n"
+"더 보기 %2:s·\n"
+"\n"
+"이름 * 견적 요청 %1:s 실수였다. QSO 로그인 %1:s 공기에 전송 %1:s, 그 로그는 이렇게 말해야 한다."
 
 #: uappstrings.swizback
 #, fuzzy
 msgid "< Back"
-msgstr ""
+msgstr "< 뒤로"
 
 #: uappstrings.swizcallodd
 #, fuzzy
@@ -11191,11 +11219,14 @@ msgid ""
 "\n"
 "Use it anyway?"
 msgstr ""
+"·%s\"은 정규 통화표처럼 보이지 않습니다.\n"
+"\n"
+"어쨌든 사용?"
 
 #: uappstrings.swizcallrequired
 #, fuzzy
 msgid "Enter your callsign to continue."
-msgstr ""
+msgstr "계속 통화를 입력하세요."
 
 #: uappstrings.swizcancel
 #: tfrmcabrillosummary.btncancel.caption
@@ -11204,28 +11235,28 @@ msgstr ""
 #: tfrmrover.btncancel.caption
 #, fuzzy
 msgid "Cancel"
-msgstr ""
+msgstr "취소"
 
 #: uappstrings.swizchecklistheading
 #, fuzzy
 msgid "What else would you like to set up now?"
-msgstr ""
+msgstr "지금 설정하시겠습니까?"
 
 #: uappstrings.swizchecklistintro
 #, fuzzy
 msgid "Tick what you have. Anything left unticked can be set up later in Preferences."
-msgstr ""
+msgstr "당신이 무엇을 가지고. 아무것도 왼쪽 unticked 나중에 설정할 수 있습니다."
 
 #: uappstrings.swizclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
-msgstr ""
+msgstr "닫기(C)"
 
 #: uappstrings.swizclusterheading
 #, fuzzy
 msgid "DX cluster"
-msgstr ""
+msgstr "DX 클러스터"
 
 #: uappstrings.swizclusterintro
 #, fuzzy
@@ -11235,109 +11266,109 @@ msgstr "목록에서 클러스터를 선택하거나 호스트 이름 또는 IP 
 #: uappstrings.swizclusterlogin
 #, fuzzy
 msgid "Login callsign:"
-msgstr ""
+msgstr "로그인 callsign:"
 
 #: uappstrings.swizclusterneeded
 #, fuzzy
 msgid "Enter a cluster server, or go back and untick it."
-msgstr ""
+msgstr "클러스터 서버를 입력하거나 다시 이동하고 untick it."
 
 #: uappstrings.swizclusterpassword
 #, fuzzy
 msgid "Password:"
-msgstr ""
+msgstr "비밀번호:"
 
 #: uappstrings.swizclusterserver
 #, fuzzy
 msgid "Server:"
-msgstr ""
+msgstr "서버:"
 
 #: uappstrings.swizcreate
 #, fuzzy
 msgid "Create configuration"
-msgstr ""
+msgstr "설정 만들기"
 
 #: uappstrings.swizderivednote
 #, fuzzy
 msgid "CQ zone, ITU zone, country and continent are filled in from the callsign. Correct any that are wrong."
-msgstr ""
+msgstr "CQ 지역, ITU 지역, 국가 및 대륙은 콜sign에서 채워집니다. 잘못된 것을 부정한다."
 
 #: uappstrings.swizitemcluster
 #, fuzzy
 msgid "A DX cluster"
-msgstr ""
+msgstr "DX 클러스터"
 
 #: uappstrings.swizitemclusterhint
 #, fuzzy
 msgid "DX spots in the band map."
-msgstr ""
+msgstr "밴드 맵의 DX 스팟."
 
 #: uappstrings.swizitemkeyer
 #, fuzzy
 msgid "A WinKeyer"
-msgstr ""
+msgstr "윈키어"
 
 #: uappstrings.swizitemkeyerhint
 #, fuzzy
 msgid "A WinKeyer CW keyer on its own port."
-msgstr ""
+msgstr "자체 포트에 WinKeyer CW keyer."
 
 #: uappstrings.swizitemradio
 #, fuzzy
 msgid "A radio (rig control)"
-msgstr ""
+msgstr "라디오 (rig 통제)"
 
 #: uappstrings.swizitemradiohint
 #, fuzzy
 msgid "TR4W reads and sets the frequency and mode."
-msgstr ""
+msgstr "TR4W는 빈도와 형태를 읽고 놓습니다."
 
 #: uappstrings.swizkeyerheading
 #: uappstrings.sdefaultkeyername
 #, fuzzy
 msgid "WinKeyer"
-msgstr ""
+msgstr "윈키어"
 
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr ""
+msgstr "WinKeyer 포트를 선택합니다. WinKeyer는 자체 포트를 필요로하며 라디오가 아닙니다."
 
 #: uappstrings.swizmenu
 #, fuzzy
 msgid "Setup Wizard..."
-msgstr ""
+msgstr "설정 마법사 ..."
 
 #: uappstrings.swiznext
 #, fuzzy
 msgid "Next >"
-msgstr ""
+msgstr "다음 >"
 
 #: uappstrings.swiznocountry
 #, fuzzy
 msgid "The country file does not know this callsign, so nothing was filled in from it."
-msgstr ""
+msgstr "국가 파일은이 호출을 알 수 없습니다, 그래서 아무것도에서 채워졌다."
 
 #: uappstrings.swizprefsopen
 #, fuzzy
 msgid "Close Preferences first, so the setup wizard and Preferences do not overwrite each other's changes."
-msgstr ""
+msgstr "Preferences first, 그래서 설정 마법사 및 설정은 서로의 변경을 덮지 않습니다."
 
 #: uappstrings.swizradioheading
 #: uappstrings.sdefaultradioname
 #, fuzzy
 msgid "Radio"
-msgstr ""
+msgstr "라디오"
 
 #: uappstrings.swizradiointro
 #, fuzzy
 msgid "Choose your radio and how it is connected. These are the same settings Preferences uses. TR4W connects to it when you create the configuration."
-msgstr ""
+msgstr "라디오를 선택하고 연결되는 방법. 이 같은 설정 Preferences 사용. TR4W는 구성을 만들 때 연결합니다."
 
 #: uappstrings.swizresapplyfailed
 #, fuzzy
 msgid "Saved, but not put into use: %s. Restart TR4W or use Activate in Preferences."
-msgstr ""
+msgstr "저장하지만 사용되지 않음 : %s. 나머지 TR4W 또는 사용 설정에서 활성화."
 
 #: uappstrings.swizrescluster
 #, fuzzy
@@ -11347,7 +11378,7 @@ msgstr "DX 클러스터 \"%0:s\": %1:s, 로 로그인 %2:s·"
 #: uappstrings.swizresclusterfailed
 #, fuzzy
 msgid "The DX cluster was not saved. Set it up in Preferences > DX Cluster."
-msgstr ""
+msgstr "DX 클러스터가 저장되지 않았습니다. 설정 > DX 클러스터."
 
 #: uappstrings.swizreskeyer
 #, fuzzy
@@ -11357,12 +11388,12 @@ msgstr "WinKeyer \"%0:s\" %1:s, 라디오에 CW에 사용 1."
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
 msgid "The WinKeyer was not saved: %s. Set it up in Preferences."
-msgstr ""
+msgstr "WinKeyer는 저장되지 않았습니다: %s. Preferences에서 설정한다."
 
 #: uappstrings.swizresnotsaved
 #, fuzzy
 msgid "The radio, keyer and cluster were not saved: %s"
-msgstr ""
+msgstr "라디오, 열쇠 및 클러스터는 저장되지 않았습니다: %s"
 
 #: uappstrings.swizresportwarning
 #, fuzzy
@@ -11370,6 +11401,8 @@ msgid ""
 "Check these ports:\n"
 "%s"
 msgstr ""
+"이 항구를 검사하십시오:\n"
+"%s"
 
 #: uappstrings.swizresradio
 #, fuzzy
@@ -11379,82 +11412,82 @@ msgstr "라디오 1: %0:s %1:s. 이름: \"%2:s\"."
 #: uappstrings.swizresradiofailed
 #, fuzzy
 msgid "The radio was not saved: %s. Set it up in Preferences > Radios."
-msgstr ""
+msgstr "라디오는 저장되지 않았습니다: %s. 설정 > 라디오."
 
 #: uappstrings.swizresrefused
 #, fuzzy
 msgid "%0:s \"%1:s\" was not accepted. Set it in Preferences > Station."
-msgstr ""
+msgstr "%0:s ·%1:s\"은 허용되지 않았습니다. 설정 > 역."
 
 #: uappstrings.swizresstation
 #, fuzzy
 msgid "Station %s saved."
-msgstr ""
+msgstr "역대역 %s 저장."
 
 #: uappstrings.swizresultheading
 #, fuzzy
 msgid "Done"
-msgstr ""
+msgstr "한국어"
 
 #: uappstrings.swizresultintro
 #, fuzzy
 msgid "This is what was saved. All of it can be changed later in Preferences."
-msgstr ""
+msgstr "이것은 저장 된 것입니다. 모두 Preferences에서 나중에 변경할 수 있습니다."
 
 #: uappstrings.swizstationheading
 #, fuzzy
 msgid "Your station"
-msgstr ""
+msgstr "당신의 역"
 
 #: uappstrings.swizstationintro
 #, fuzzy
 msgid "Who you are and where you are. Only the callsign is required, and all of this can be changed later in Preferences > Station."
-msgstr ""
+msgstr "당신이 누구인지 어디인지. 호출은 필수이며, 모두 Preferences > Station에서 나중에 변경할 수 있습니다."
 
 #: uappstrings.swizstepof
 #, fuzzy
 msgid "Step %0:d of %1:d"
-msgstr ""
+msgstr "한국어 %0:d 이름 * %1:d"
 
 #: uappstrings.swiztitle
 #, fuzzy
 msgid "TR4W setup"
-msgstr ""
+msgstr "TR4W 설정"
 
 #: uappstrings.swizresprofile
 #, fuzzy
 msgid "The station profile \"%s\" now holds the hardware you set up. You can refine it in Preferences > Hardware."
-msgstr ""
+msgstr "역 프로필 \"%s\" 이제 하드웨어를 보유하고 있습니다. Preferences 에서 수정할 수 있습니다 > 하드웨어."
 
 #: uappstrings.swizstartupprompt
 #, fuzzy
 msgid "This looks like a new installation. Would you like to run the Setup Wizard first?"
-msgstr ""
+msgstr "새로운 설치처럼 보입니다. Setup Wizard를 먼저 실행하시겠습니까?"
 
 #: uappstrings.swizctymissing
 #, fuzzy
 msgid "There is no country file yet, so the zones and country cannot be filled in from the callsign."
-msgstr ""
+msgstr "국가 파일이 아직 없습니다, 그래서 영역과 국가는 호출에서 채워질 수 없습니다."
 
 #: uappstrings.swizctydownload
 #, fuzzy
 msgid "Download country file"
-msgstr ""
+msgstr "국가 파일"
 
 #: uappstrings.swizctydownloading
 #, fuzzy
 msgid "Downloading the country file..."
-msgstr ""
+msgstr "국가 파일 다운로드 ..."
 
 #: uappstrings.swizctydone
 #, fuzzy
 msgid "The country file was downloaded."
-msgstr ""
+msgstr "국가 파일은 다운로드되었습니다."
 
 #: uappstrings.swizctyfailed
 #, fuzzy
 msgid "The country file could not be downloaded. tr4w.log says why. You can try again, or continue without it."
-msgstr ""
+msgstr "국가 파일은 다운로드 할 수 없습니다. tr4w.log는 왜 말한다. 다시 시도 할 수 있습니다, 또는 그것을하지 않고 계속."
 
 #: uappstrings.swizradiocwbycat
 #, fuzzy
@@ -11648,297 +11681,309 @@ msgstr "당신에 의해 훔쳐 %s·"
 #: uappstrings.snewcontestmembernumberlabel
 #, fuzzy
 msgid "MY MEMBER NO"
-msgstr ""
+msgstr "내 회원 번호"
 
 #: uappstrings.sexchangenotasignalreport
 #, fuzzy
 msgid "%s is not a signal report"
-msgstr ""
+msgstr "%s 신호 보고서는 아닙니다"
 
 #: uappstrings.snetservernotavailable
 #, fuzzy
 msgid "Connection to the TR4WServer is not available"
-msgstr ""
+msgstr "TR4WServer에 연결은 사용할 수 없습니다"
 
 #: tfrmaltp.btnedit.caption
 #: tfrmfileview.mnuedit.caption
 #, fuzzy
 msgid "Edit"
-msgstr ""
+msgstr "편집"
 
 #: tfrmeditqso.lbldelivery.caption
 #, fuzzy
 msgid "External logger delivery"
-msgstr ""
+msgstr "외부 로거 납품"
 
 #: texternalloggersform.lblname.caption
 #: uappstrings.seditqsomyname
 #: tfrmeditqso.lblmyname.caption
 #, fuzzy
 msgid "Name"
-msgstr ""
+msgstr "이름"
 
 #: texternalloggersform.chkactive.caption
 #, fuzzy
 msgid "Active (send newly logged QSOs)"
-msgstr ""
+msgstr "Active ( 새로 로그인 된 QSO)"
 
 #: texternalloggersform.btnok.caption
 #, fuzzy
 msgid "Save to Preferences"
-msgstr ""
+msgstr "Preferences에 저장"
 
 #: tfrmfileview.mnuopenineditor.caption
 #, fuzzy
 msgid "Open in text editor"
-msgstr ""
+msgstr "본문 바로가기"
 
 #: tfrmfileview.mnuexplore.caption
 #, fuzzy
 msgid "Explore"
-msgstr ""
+msgstr "기타 제품"
 
 #: tfrmfileview.mnucopy.caption
 #, fuzzy
 msgid "Copy"
-msgstr ""
+msgstr "복사"
 
 #: tfrmfileview.mnuselectall.caption
 #, fuzzy
 msgid "Select all"
-msgstr ""
+msgstr "모두 선택"
 
 #: tfrmlogedit.caption
 #, fuzzy
 msgid "View / Edit Log"
-msgstr ""
+msgstr "공지사항"
 
 #: tfrmlogsearch.caption
 #, fuzzy
 msgid "Search Log"
-msgstr ""
+msgstr "비밀번호"
 
 #: tfrmlogsearch.lblcall.caption
 #: tfrmqtcreceive.lblcallsign.caption
 #, fuzzy
 msgid "Callsign"
-msgstr ""
+msgstr "비밀번호"
 
 #: tfrmlogsearch.lblmode.caption
 #, fuzzy
 msgid "Mode"
-msgstr ""
+msgstr "주요 특징"
 
 #: tfrmlogsearch.lblband.caption
 #, fuzzy
 msgid "Band"
-msgstr ""
+msgstr "언어: 한국어"
 
 #: tfrmlogsearch.lbloperator.caption
 #, fuzzy
 msgid "Operator"
-msgstr ""
+msgstr "회사연혁"
 
 #: ttr4wmainform.pnlmasterstatus.caption
 #, fuzzy
 msgid "MASTER"
-msgstr ""
+msgstr "주 메뉴"
 
 #: ttr4wmainform.pnlnewmultstatus.caption
 #, fuzzy
 msgid "MULT"
-msgstr ""
+msgstr "사이트맵"
 
 #: ttr4wmainform.pnlopmode.caption
 #, fuzzy
 msgid "CQ"
-msgstr ""
+msgstr "사이트맵"
 
 #: ttr4wmainform.pnlpttstatus.caption
 #, fuzzy
 msgid "OFF"
-msgstr ""
+msgstr "이름 *"
 
 #: ttr4wmainform.pnlqsob4status.caption
 #, fuzzy
 msgid "QSOB4"
-msgstr ""
+msgstr "사이트맵"
 
 #: ttr4wmainform.pnlwinkey.caption
 #, fuzzy
 msgid "WK"
-msgstr ""
+msgstr "사이트맵"
 
 #: tfrmqtcreceive.lblmaxqtcs.caption
 #, fuzzy
 msgid "Enter QTC"
-msgstr ""
+msgstr "QTC 소개"
 
 #: uappstrings.snewcontestiaminchecktitle
 #, fuzzy
 msgid "Check your location"
-msgstr ""
+msgstr "자주 묻는 질문"
 
 #: uappstrings.snewcontestiamintickedoutside
 #, fuzzy
-msgid "You ticked \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
+msgid ""
+"You ticked \"I am in %0:s\", but your callsign %1:s is in %2:s.\n"
+"\n"
+"Create the contest as entered? Choose No to go back and change it."
 msgstr ""
+"당신은 \"나는에서 %0:s\",하지만 당신의 호출 %1:s 로그인 %2:s·\n"
+"\n"
+"대회를 입력했습니까? 돌아가고 변경할 수 없습니다."
 
 #: uappstrings.snewcontestiaminclearedinside
 #, fuzzy
-msgid "You did not tick \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
+msgid ""
+"You did not tick \"I am in %0:s\", but your callsign %1:s is in %2:s.\n"
+"\n"
+"Create the contest as entered? Choose No to go back and change it."
 msgstr ""
+"당신은 \"내가 %0:s\",하지만 당신의 호출 %1:s 로그인 %2:s·\n"
+"\n"
+"대회를 입력했습니까? 돌아가고 변경할 수 없습니다."
 
 #: uappstrings.sloggerfieldqrzcall
 #, fuzzy
 msgid "QRZ logbook callsign"
-msgstr ""
+msgstr "QRZ 로그북 호출"
 
 #: uappstrings.sloggerfieldqrzkey
 #, fuzzy
 msgid "QRZ logbook API key"
-msgstr ""
+msgstr "QRZ 로그북 API 키"
 
 #: uappstrings.sbandmapcenteronradio
 #: tfrmbandmap.micenteronradio.caption
 #, fuzzy
 msgid "Center on radio frequency"
-msgstr ""
+msgstr "무선 주파수의 중심"
 
 #: uappstrings.sbandmapsortbybeam
 #: tfrmbandmap.misortbybeam.caption
 #, fuzzy
 msgid "Sort by beam heading"
-msgstr ""
+msgstr "카테고리"
 
 #: tprefsform.chkbandmapcenteronradio.caption
 #, fuzzy
 msgid "Keep the band map centered on the radio frequency"
-msgstr ""
+msgstr "라디오 주파수에 중심의 밴드 맵 유지"
 
 #: tprefsform.chkbandmapsortbybeam.caption
 #, fuzzy
 msgid "Sort the band map by beam heading, nearest the beam first"
-msgstr ""
+msgstr "광속 heading, 가장 가까운 광속에 의하여 밴드 지도를 분류하십시오"
 
 #: utr4wstrings.tc_winkeyerdidnotopen
 msgctxt "TC_WINKEYERDIDNOTOPEN"
 msgid "WinKeyer on %s did not open (see tr4w.log)"
-msgstr ""
+msgstr "WinKeyer에 %s 오픈하지 않았다 ( tr4w.log 참조)"
 
 #: uappstrings.sexchangenopostcode
 #, fuzzy
 msgid "No postcode in the exchange"
-msgstr ""
+msgstr "교환에 우편 번호"
 
 #: uappstrings.sdefaultclustername
 #, fuzzy
 msgid "Cluster"
-msgstr ""
+msgstr "댓글 RSS"
 
 #: uappstrings.sstationfieldgrid
 #, fuzzy
 msgid "A grid square is two letters A to R and two digits, optionally followed by two letters: EL88 or EL88PA."
-msgstr ""
+msgstr "그리드 스퀘어는 두 개의 문자 A에서 R 및 두 개의 숫자로 선택적으로 두 개의 문자로 이어집니다. EL88 또는 EL88PA."
 
 #: uappstrings.sstationfieldzone
 #, fuzzy
 msgid "A CQ zone is a number from 1 to 40."
-msgstr ""
+msgstr "CQ 영역은 1에서 40까지의 숫자입니다."
 
 #: uappstrings.sstationfieldituzone
 #, fuzzy
 msgid "An ITU zone is a number from 1 to 90, or 0 to use the zone CTY.DAT gives."
-msgstr ""
+msgstr "ITU 영역은 1에서 90까지의 숫자, 또는 0 영역 CTY.DAT 제공을 사용."
 
 #: uappstrings.sstationfieldsection
 #, fuzzy
 msgid "This is not an ARRL or RAC section. A station outside the US and Canada enters DX."
-msgstr ""
+msgstr "이것은 ARRL 또는 RAC 섹션이 아닙니다. 미국과 캐나다 이외의 역은 DX를 입력합니다."
 
 #: uappstrings.sstationfieldcountry
 #, fuzzy
 msgid "This is not a CTY.DAT country prefix. The United States is K."
-msgstr ""
+msgstr "이것은 CTY.DAT 국가 접두사 아닙니다. 미국은 K입니다."
 
 #: uappstrings.sstationfieldpark
 #, fuzzy
 msgid "A park reference is two letters, a hyphen and four or five digits: US-1234. Separate several parks with commas."
-msgstr ""
+msgstr "공원 참고는 두 개의 문자, 하이픈 및 4 또는 5 자리입니다. 미국 - 1234. 몇몇 공원을 commas로 분리하십시오."
 
 #: uappstrings.sstationfieldiota
 #, fuzzy
 msgid "An IOTA reference is two letters, a hyphen and three digits: NA-001."
-msgstr ""
+msgstr "IOTA 참조는 두 글자, 하이픈과 세 자리입니다. NA-001."
 
 #: uappstrings.sstationfieldfdclass
 #, fuzzy
 msgid "A Field Day class is the number of transmitters and one letter: 2A, or 2H for Winter Field Day."
-msgstr ""
+msgstr "필드 데이 클래스는 송신기와 한 글자의 수입니다: 2A, 또는 2H 겨울 필드 데이."
 
 #: uappstrings.sstationfieldcheck
 #, fuzzy
 msgid "The check is two digits, the last two of the year first licensed: 85."
-msgstr ""
+msgstr "체크인은 2 자리, 첫 번째 라이센스의 마지막 2입니다 : 85."
 
 #: uappstrings.sstationfieldprec
 #, fuzzy
 msgid "The precedence is one letter: Q, A, B, U, M or S."
-msgstr ""
+msgstr "선행은 1개의 편지입니다: Q, A, B, U, M 또는 S."
 
 #: uappstrings.sstationfieldfocnumber
 #, fuzzy
 msgid "The FOC number is digits only."
-msgstr ""
+msgstr "FOC 번호는 숫자만 있습니다."
 
 #: uappstrings.sstationfieldlicenseyear
 #, fuzzy
 msgid "The license year is up to four digits: 1985, 85, or a number of years."
-msgstr ""
+msgstr "라이센스 년은 4 자리까지입니다 : 1985, 85, 또는 수 년."
 
 #: uappstrings.sstationpagenotsaved
 #, fuzzy
 msgid "Station settings not saved. %s"
-msgstr ""
+msgstr "역 설정은 저장되지 않습니다. %s"
 
 #: uappstrings.sstationfieldstate
 #, fuzzy
 msgid "Two letters must be a US state, DC, a US territory or a Canadian province or territory. A county, grid or other QTH may be longer."
-msgstr ""
+msgstr "두 글자는 미국 국가, DC, 미국 영토 또는 캐나다성 또는 영토이어야 합니다. 군, 격자 또는 다른 QTH는 더 길지도 모릅니다."
 
 #: uappstrings.snewcontestsoonestfirst
 #, fuzzy
 msgid "Upcoming contests first"
-msgstr ""
+msgstr "다가오는 대회"
 
 #: uappstrings.snewcontestrunningnow
 #, fuzzy
 msgid "running now"
-msgstr ""
+msgstr "지금 시작"
 
 #: uappstrings.seditqsomycheck
 #, fuzzy
 msgctxt "uappstrings.seditqsomycheck"
 msgid "Check"
-msgstr ""
+msgstr "기타"
 
 #: uappstrings.seditqsomyfdclass
 #: tfrmeditqso.lblmyfdclass.caption
 #, fuzzy
 msgid "FD class"
-msgstr ""
+msgstr "FD 클래스"
 
 #: uappstrings.seditqsomyfocnumber
 #, fuzzy
 msgctxt "uappstrings.seditqsomyfocnumber"
 msgid "FOC number"
-msgstr ""
+msgstr "FOC 번호"
 
 #: uappstrings.seditqsomypostalcode
 #: tfrmeditqso.lblmypostalcode.caption
 #, fuzzy
 msgid "Postal code"
-msgstr ""
+msgstr "Postal 코드"
 
 #: uappstrings.seditqsostationvaluerefused
 #, fuzzy
@@ -11947,6 +11992,9 @@ msgid ""
 "\n"
 "%2:s"
 msgstr ""
+"%0:s ·%1:s\"저장할 수 없습니다.\n"
+"\n"
+"%2:s"
 
 #: uappstrings.sstationcorrectbody
 #, fuzzy
@@ -11963,13 +12011,13 @@ msgstr ""
 #: uappstrings.sstationcorrectline
 #, fuzzy
 msgid "%0:s: %1:d QSO(s) sent %2:s, now %3:s"
-msgstr ""
+msgstr "%0:s:: %1:d QSO(s) 전송 %2:s, 지금 %3:s"
 
 #: uappstrings.sstationfactlicenseyear
 #, fuzzy
 msgctxt "uappstrings.sstationfactlicenseyear"
 msgid "License year"
-msgstr ""
+msgstr "면허 년"
 
 #: uappstrings.sstationscopebody
 #, fuzzy
@@ -11986,17 +12034,17 @@ msgstr ""
 #: uappstrings.sstationscopeline
 #, fuzzy
 msgid "%0:s: %1:s (this contest: %2:s)"
-msgstr ""
+msgstr "%0:s:: %1:s (이 대회 : %2:s·"
 
 #: uappstrings.sstationscopetitle
 #, fuzzy
 msgid "Station values"
-msgstr ""
+msgstr "역 값"
 
 #: uappstrings.sstationcontestnote
 #, fuzzy
 msgid "Shown as %0:s uses them: this contest states its own value for some of these. Station defaults: %1:s."
-msgstr ""
+msgstr "이름 * %0:s 그들을 사용: 이 대회는 이러한 일부에 대한 자신의 가치를 주장. 역 과태: %1:s·"
 
 #: uappstrings.sstationcontestnoteitem
 #, fuzzy
@@ -12006,238 +12054,238 @@ msgstr ""
 #: uappstrings.sstationscopestationonlynote
 #, fuzzy
 msgid "\"Station default only\" keeps this contest's own value, and the page shows it again."
-msgstr ""
+msgstr "\"Station default only\" 이 콘테스트의 자신의 값을 유지하고, 페이지는 다시 보여줍니다."
 
 #: tprefsform.lblstationcontestnote.caption
 #, fuzzy
 msgid "Shown as this contest uses them"
-msgstr ""
+msgstr "이 경연은 그들을 사용"
 
 #: uappstrings.sradioeditusehamlibhint
 #, fuzzy
 msgid "Drive this radio through the HamLib library instead of TR4W's own driver. HamLib version: %s"
-msgstr ""
+msgstr "TR4W의 자신의 드라이버 대신 HamLib 라이브러리를 통해이 라디오를 구동하십시오. HamLib 버전: %s"
 
 #: uappstrings.sradioedithamlibnotavailable
 #, fuzzy
 msgid "not available"
-msgstr ""
+msgstr "이용안내"
 
 #: uappstrings.snewcontesthawaiiqpdistrictorlocation
 #, fuzzy
 msgid "Enter your Hawaii district (e.g. HON) if you are in Hawaii. Enter your state or Canadian province if outside Hawaii, or DX:"
-msgstr ""
+msgstr "하와이에 있는 경우 하와이 지구(e.g. HON)를 입력하십시오. 하와이, 또는 DX 외의 경우 주 또는 캐나다 지방을 입력하십시오."
 
 #: uappstrings.snewcontesthostareadistrictlabel
 #, fuzzy
 msgid "MY DISTRICT"
-msgstr ""
+msgstr "내 DISTRICT"
 
 #: uappstrings.snewcontesthostareainsidedistrictnotice
 #, fuzzy
 msgid "You are in %s: choose your district from the list."
-msgstr ""
+msgstr "현재 위치 %s: 목록에서 지역을 선택하십시오."
 
 #: uappstrings.stotalsgridmults
 #, fuzzy
 msgid "Grids"
-msgstr ""
+msgstr "사이트맵"
 
 #: uappstrings.snewcontestcpqpdistrictorlocation
 #, fuzzy
 msgid "Enter your federal electoral district (e.g. AIR) if you are in Alberta, Saskatchewan or Manitoba. Enter your state or Canadian province if outside the prairies, or DX:"
-msgstr ""
+msgstr "Alberta, Saskatchewan 또는 Manitoba에있는 경우 연방 선거구 (e.g. AIR)를 입력하십시오. prairies, 또는 DX 이외의 경우 국가 또는 캐나다 지방을 입력하십시오."
 
 #: uappstrings.stotalsprovincemults
 #, fuzzy
 msgid "Provinces"
-msgstr ""
+msgstr "주요 특징"
 
 #: uappstrings.snewcontestacqpcountyorlocation
 #, fuzzy
 msgid "Enter your five-letter county or division code (e.g. NSHRM) if you are in New Brunswick, Nova Scotia, Prince Edward Island or Newfoundland and Labrador. Enter your state or Canadian province if outside Atlantic Canada, or DX:"
-msgstr ""
+msgstr "New Brunswick, Nova Scotia, Prince Edward Island 또는 Newfoundland 및 Labrador에 위치한 경우 다섯 개의 터미널 카운티 또는 부서 코드를 입력하십시오. 애틀랜틱 캐나다 또는 DX 외의 경우 주 또는 캐나다 지방을 입력하십시오."
 
 #: uappstrings.sdefaultrotatorname
 #, fuzzy
 msgctxt "uappstrings.sdefaultrotatorname"
 msgid "Rotator"
-msgstr ""
+msgstr "회전 장치"
 
 #: uappstrings.swizitemlogger
 #, fuzzy
 msgid "An external logger"
-msgstr ""
+msgstr "외부 로거"
 
 #: uappstrings.swizitemloggerhint
 #, fuzzy
 msgid "Each QSO also goes to DXKeeper, Club Log, QRZ, Cloudlog/Wavelog or another logbook."
-msgstr ""
+msgstr "각 QSO는 DXKeeper, Club Log, QRZ, Cloudlog/Wavelog 또는 다른 로그북으로도 진행됩니다."
 
 #: uappstrings.swizitemrotator
 #, fuzzy
 msgid "An antenna rotator"
-msgstr ""
+msgstr "안테나 rotator"
 
 #: uappstrings.swizitemrotatorhint
 #, fuzzy
 msgid "TR4W turns the antenna toward the station you are working."
-msgstr ""
+msgstr "TR4W는 역에 안테나를 전환하여 작업하고 있습니다."
 
 #: uappstrings.swizitemwsjtx
 #, fuzzy
 msgctxt "uappstrings.swizitemwsjtx"
 msgid "WSJT-X"
-msgstr ""
+msgstr "사이트맵"
 
 #: uappstrings.swizitemwsjtxhint
 #, fuzzy
 msgid "Decodes and logged QSOs come in from WSJT-X over UDP."
-msgstr ""
+msgstr "암호 및 로그 QSOs는 UDP에 WSJT-X에서 온다."
 
 #: uappstrings.swizloggerintro
 #, fuzzy
 msgid "Choose the program or service that should receive your QSOs, and how to reach it. These are the same settings Preferences uses. Keys and passwords are kept in the system's credential store."
-msgstr ""
+msgstr "QSOs를 받아야하는 프로그램 또는 서비스를 선택하고 도달하는 방법. 이 같은 설정 Preferences 사용. 열쇠와 암호는 체계의 credential 상점에서 지켜집니다."
 
 #: uappstrings.swizloggerloading
 #, fuzzy
 msgid "The logbook list is still loading. Wait for it, then press Next again."
-msgstr ""
+msgstr "로그북 목록은 여전히 로딩됩니다. 다음을 다시 누릅니다."
 
 #: uappstrings.swizresdefaultaddress
 #, fuzzy
 msgid "at the default address"
-msgstr ""
+msgstr "기본 주소에서"
 
 #: uappstrings.swizresloggeractive
 #, fuzzy
 msgid "External logger \"%0:s\" (%1:s) receives each new QSO."
-msgstr ""
+msgstr "외부 로거 \"%0:s·%1:s)는 각 새로운 QSO를 받습니다."
 
 #: uappstrings.swizresloggerfailed
 #, fuzzy
 msgid "The external logger was not saved: %s"
-msgstr ""
+msgstr "외부 로거는 저장되지 않았습니다: %s"
 
 #: uappstrings.swizresloggerinactive
 #, fuzzy
 msgid "External logger \"%0:s\" (%1:s) is saved but not switched on. Switch it on in Preferences."
-msgstr ""
+msgstr "외부 로거 \"%0:s·%1:s)는 저장되고 그러나 위에 전환되지 않습니다. Preferences에서 전환합니다."
 
 #: uappstrings.swizresloggerrestart
 #, fuzzy
 msgid "The external logger starts sending the next time TR4W starts."
-msgstr ""
+msgstr "외부 로거는 다음 시간을 보낼 시작 TR4W 시작."
 
 #: uappstrings.swizresrotator
 #, fuzzy
 msgid "Rotator \"%0:s\": %1:s %2:s, turning for every band."
-msgstr ""
+msgstr "회전자 \"%0:s\": %1:s %2:s, 각 밴드를 위해 도는."
 
 #: uappstrings.swizresrotatorfailed
 #, fuzzy
 msgid "The rotator was not saved. Set it up in Preferences > Rotators."
-msgstr ""
+msgstr "로터는 저장되지 않았습니다. 설정 > 회전 장치."
 
 #: uappstrings.swizreswsjtxoff
 #, fuzzy
 msgid "WSJT-X: the integration is off."
-msgstr ""
+msgstr "WSJT-X: 통합은 떨어져 있습니다."
 
 #: uappstrings.swizreswsjtxon
 #, fuzzy
 msgid "WSJT-X: TR4W listens on UDP port %s."
-msgstr ""
+msgstr "WSJT-X: TR4W는 UDP 항구에 듣습니다 %s·"
 
 #: uappstrings.swizreswsjtxrestart
 #, fuzzy
 msgid "The WSJT-X change takes effect the next time TR4W starts."
-msgstr ""
+msgstr "WSJT-X 변경은 다음 시간 TR4W가 시작됩니다."
 
 #: uappstrings.swizrotatorheading
 #, fuzzy
 msgctxt "uappstrings.swizrotatorheading"
 msgid "Rotator"
-msgstr ""
+msgstr "회전 장치"
 
 #: uappstrings.swizrotatorintro
 #, fuzzy
 msgid "Choose your rotator and how it is connected. It turns for every band; Preferences > Rotators can limit it to some."
-msgstr ""
+msgstr "rotator를 선택하고 어떻게 연결됩니다. 모든 밴드에 대한 회전; 설정 > 회전 장치는 일부에 제한 할 수 있습니다."
 
 #: uappstrings.swizrotatorneedsport
 #, fuzzy
 msgid "Choose the serial port the rotator is on, or go back and untick it."
-msgstr ""
+msgstr "직렬 포트를 선택 rotator에, 또는 다시 이동 하 고 그것을 untick."
 
 #: uappstrings.swizrotatorneedstype
 #, fuzzy
 msgid "Choose the rotator type, or go back and untick it."
-msgstr ""
+msgstr "rotator 유형 선택, 또는 다시 이동하고 untick 그것."
 
 #: uappstrings.swizrotatorport
 #, fuzzy
 msgid "Serial port:"
-msgstr ""
+msgstr "직렬 포트:"
 
 #: uappstrings.swizrotatorudpport
 #, fuzzy
 msgctxt "uappstrings.swizrotatorudpport"
 msgid "UDP port:"
-msgstr ""
+msgstr "UDP 항구:"
 
 #: uappstrings.swizrotatorudpportbad
 #, fuzzy
 msgid "The UDP port must be a number from 1 to 65535, or blank."
-msgstr ""
+msgstr "UDP 포트는 1 ~ 65535 또는 공백에서 숫자가 있어야합니다."
 
 #: uappstrings.swizwsjtxenable
 #, fuzzy
 msgid "Use WSJT-X with TR4W"
-msgstr ""
+msgstr "TR4W를 가진 WSJT-X를 사용하십시오"
 
 #: uappstrings.swizwsjtxheading
 #, fuzzy
 msgctxt "uappstrings.swizwsjtxheading"
 msgid "WSJT-X"
-msgstr ""
+msgstr "사이트맵"
 
 #: uappstrings.swizwsjtxintro
 #, fuzzy
 msgid "TR4W can take decodes and logged QSOs from WSJT-X and mark the calls you still need. In WSJT-X, set Settings > Reporting > UDP Server to 127.0.0.1 and the port below."
-msgstr ""
+msgstr "TR4W는 데코드를 취할 수 있으며 WSJT-X에서 QSOs를 기록하고 여전히 필요한 통화를 표시 할 수 있습니다. WSJT-X에서 설정 설정 > 보고 > UDP 서버에서 127.0.0.1 이하 포트."
 
 #: uappstrings.swizwsjtxport
 #, fuzzy
 msgctxt "uappstrings.swizwsjtxport"
 msgid "UDP port:"
-msgstr ""
+msgstr "UDP 항구:"
 
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr ""
+msgstr "항구는 1에서 65535까지 수 있어야 합니다."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
 msgid "Backup to %s FAILED: the disk is full."
-msgstr ""
+msgstr "백업하기 %s FAILED: 디스크가 가득합니다."
 
 #: uappstrings.sbackupcopyfailedfoldermissing
 #, fuzzy
 msgid "Backup to %s FAILED: the folder is not there."
-msgstr ""
+msgstr "백업하기 %s FAILED: 폴더가 없습니다."
 
 #: uappstrings.sbackupcopyfailednoaccess
 #, fuzzy
 msgid "Backup to %s FAILED: access denied."
-msgstr ""
+msgstr "백업하기 %s FAILED: 접근 거부."
 
 #: uappstrings.sbackupcopyfailedother
 #, fuzzy
 msgid "Backup to %s FAILED."
-msgstr ""
+msgstr "백업하기 %s 연락처"
 
 #: uappstrings.slognotsavedreadonly
 #, fuzzy
@@ -12252,187 +12300,187 @@ msgstr ""
 #: uappstrings.slogreadonlyfixdiskfull
 #, fuzzy
 msgid "Free at least %d MB on %s, then press Enter again."
-msgstr ""
+msgstr "무료 적어도 %d MB에서 %s, 다음 Enter를 다시 누릅니다."
 
 #: uappstrings.slogreadonlyfixwriteerror
 #, fuzzy
 msgid "Check the drive the log is on, then press Enter again. Details are in tr4w.log."
-msgstr ""
+msgstr "로그인을 확인한 다음 Enter를 다시 누릅니다. 세부 사항은 tr4w.log에 있습니다."
 
 #: uappstrings.slogreadonlyreasondiskfull
 #, fuzzy
 msgid "disk full"
-msgstr ""
+msgstr "디스크 전체"
 
 #: uappstrings.slogreadonlyreasonwriteerror
 #, fuzzy
 msgid "write error"
-msgstr ""
+msgstr "오류 수정"
 
 #: uappstrings.slogreadonlyreasonlocked
 #, fuzzy
 msgid "locked"
-msgstr ""
+msgstr "뚱 베어"
 
 #: uappstrings.slogreadonlynotsaved
 #, fuzzy
 msgid "Log is read-only (%s): not saved."
-msgstr ""
+msgstr "로그는 읽기 전용입니다 (%s): 저장되지 않습니다."
 
 #: uappstrings.seditqsonoqsoselected
 #, fuzzy
 msgid "No QSO selected."
-msgstr ""
+msgstr "선택 없음."
 
 #: uappstrings.seditqsologunreadable
 #, fuzzy
 msgid "The contest log cannot be read: see tr4w.log."
-msgstr ""
+msgstr "대회 로그는 읽을 수 없습니다 : tr4w.log를 참조하십시오."
 
 #: uappstrings.seditqsonosuchqso
 #, fuzzy
 msgid "That QSO is not in the log any more."
-msgstr ""
+msgstr "QSO는 더 이상 로그인하지 않습니다."
 
 #: uappstrings.seditqsocannotread
 #, fuzzy
 msgid "That QSO could not be read from the log: see tr4w.log."
-msgstr ""
+msgstr "즉 QSO는 로그에서 읽을 수 없습니다. tr4w.log를 참조하십시오."
 
 #: uappstrings.seditqsonoteditable
 #, fuzzy
 msgid "A deleted QSO, or a record that is not a QSO, cannot be edited here."
-msgstr ""
+msgstr "삭제 된 QSO 또는 QSO가 아닌 기록은 여기에서 편집 할 수 없습니다."
 
 #: uappstrings.slogwritableagain
 #, fuzzy
 msgid "The log is writable again."
-msgstr ""
+msgstr "로그는 다시 쓸 수 있습니다."
 
 #: uappstrings.slogreadonlynotsaveddiskfull
 #, fuzzy
 msgid "Log is read-only (disk full): free %d MB on %s, then Enter."
-msgstr ""
+msgstr "로그는 읽기 전용 (disk full) : 무료 %d MB에서 %s, 다음 입력."
 
 #: uappstrings.swizwsjtxhighlightshint
 #, fuzzy
 msgid "WSJT-X colours the calls in its decode list that are dupes or new multipliers, in TR4W's colours."
-msgstr ""
+msgstr "WSJT-X 색상은 TR4W의 색상에서 듀 페스 또는 새로운 멀티 플라이어가있는 디코딩 목록의 통화입니다."
 
 #: uappstrings.swizwsjtxradiocontrolhint
 #, fuzzy
 msgid "TR4W then offers a DX Commander compatible interface on TCP port %d, and that is what WSJT-X connects to when DX Commander is chosen as its radio."
-msgstr ""
+msgstr "TR4W는 TCP 포트에서 DX Commander 호환 인터페이스를 제공합니다. %d, 그리고 WSJT-X가 DX 사령관이 라디오로 선택되었을 때 연결되는 것입니다."
 
 #: uappstrings.swizwsjtxmulticasthint
 #, fuzzy
 msgid "Advanced. Leave it blank unless WSJT-X is configured to use a multicast group."
-msgstr ""
+msgstr "고급. WSJT-X가 멀티캐스트 그룹을 사용하도록 구성되지 않는 한 공백을 남기십시오."
 
 #: uappstrings.swizreswsjtxradiocontrol
 #, fuzzy
 msgid "WSJT-X can control the radio through TCP port %d."
-msgstr ""
+msgstr "WSJT-X는 TCP 포트를 통해 라디오를 제어할 수 있습니다. %d·"
 
 #: uappstrings.swizreswsjtxhighlights
 #, fuzzy
 msgid "WSJT-X: TR4W sends it callsign highlighting."
-msgstr ""
+msgstr "WSJT-X: TR4W는 그것을 호출합니다 강조를 보냅니다."
 
 #: uappstrings.swizreswsjtxmulticast
 #, fuzzy
 msgid "WSJT-X: TR4W joins multicast group %s."
-msgstr ""
+msgstr "WSJT-X: TR4W는 멀티캐스트 그룹에 합류 %s·"
 
 #: uappstrings.scmdmenuadif
 #, fuzzy
 msgid "ADIF - export the log as ADIF"
-msgstr ""
+msgstr "ADIF - ADIF로 로그 내보내기"
 
 #: uappstrings.scmdmenucab
 #, fuzzy
 msgid "CAB - export the log as Cabrillo"
-msgstr ""
+msgstr "CAB - Cabrillo로 로그 내보내기"
 
 #: uappstrings.scmdmenucmd
 #, fuzzy
 msgid "CMD - open a command prompt"
-msgstr ""
+msgstr "CMD - 명령 프롬프트를 엽니다"
 
 #: uappstrings.scmdmenucol
 #, fuzzy
 msgid "COL - colours"
-msgstr ""
+msgstr "COL - 색상"
 
 #: uappstrings.scmdmenucommands
 #, fuzzy
 msgid "Commands"
-msgstr ""
+msgstr "이름 *"
 
 #: uappstrings.scmdmenucwoff
 #, fuzzy
 msgid "CWOFF - turn CW off"
-msgstr ""
+msgstr "CWOFF - CW를 꺼"
 
 #: uappstrings.scmdmenucwon
 #, fuzzy
 msgid "CWON - turn CW on"
-msgstr ""
+msgstr "CWON - CW를 켜십시오"
 
 #: uappstrings.scmdmenuexit
 #, fuzzy
 msgid "EXIT - exit TR4W"
-msgstr ""
+msgstr "출구 TR4W"
 
 #: uappstrings.scmdmenunote
 #, fuzzy
 msgid "NOTE - add a note to the log"
-msgstr ""
+msgstr "NOTE - 로그에 메모를 추가"
 
 #: uappstrings.scmdmenuopon
 #, fuzzy
 msgid "OPON - operator log-in"
-msgstr ""
+msgstr "OPON - 운영자 로그인"
 
 #: uappstrings.scmdmenupref
 #, fuzzy
 msgid "PREF - Preferences"
-msgstr ""
+msgstr "PREF - 설정"
 
 #: uappstrings.scmdmenurover
 #, fuzzy
 msgid "ROVER - where this station is roving"
-msgstr ""
+msgstr "ROVER -이 역이 향상되는 곳"
 
 #: uappstrings.scmdmenuscore
 #, fuzzy
 msgid "SCORE - send the score by UDP"
-msgstr ""
+msgstr "SCORE - UDP의 점수를 보냅니다"
 
 #: uappstrings.scmdmenusum
 #, fuzzy
 msgid "SUM - summary sheet"
-msgstr ""
+msgstr "SUM - 요약 시트"
 
 #: uappstrings.scmdmenuudp
 #, fuzzy
 msgid "UDP - send the whole log by UDP"
-msgstr ""
+msgstr "UDP - 전체 로그를 UDP로 전송"
 
 #: uappstrings.scmdmenuwcy
 #, fuzzy
 msgid "WCY - ask the cluster for SH/WCY"
-msgstr ""
+msgstr "WCY - SH / WCY 용 클러스터 요청"
 
 #: uappstrings.scmdmenuwwv
 #, fuzzy
 msgid "WWV - ask the cluster for SH/WWV"
-msgstr ""
+msgstr "WWV - SH/WWV 클러스터 요청"
 
 #: uappstrings.smenuselfspot
 #, fuzzy
 msgid "Self-spot"
-msgstr ""
+msgstr "셀프스팟"
 
 #: uappstrings.snewcontestboxclearedinside
 #, fuzzy
@@ -12441,16 +12489,19 @@ msgid ""
 "\n"
 "If you are operating from somewhere else, choose Yes. Choose No to go back and change it."
 msgstr ""
+"당신은 틱하지 않았다 \"%0:s\",하지만 당신의 호출 %1:s 로그인 %2:s, 그리고 역이 대회에 그것을 보낼.\n"
+"\n"
+"다른 곳에서 동작하는 경우 예를 선택하십시오. 돌아가고 변경할 수 없습니다."
 
 #: uappstrings.snewcontestboxsendsarrlorracsection
 #, fuzzy
 msgid "&I send an ARRL/RAC section"
-msgstr ""
+msgstr "나는 ARRL/RAC 단면도를 보냅니다(&I)"
 
 #: uappstrings.snewcontestboxsendsstateorprovince
 #, fuzzy
 msgid "&I send a state or province"
-msgstr ""
+msgstr "나는 국가 또는 지방을 보냅니다(&I)"
 
 #: uappstrings.snewcontestboxtickedoutside
 #, fuzzy
@@ -12459,235 +12510,238 @@ msgid ""
 "\n"
 "If you are operating from a place that does, choose Yes. Choose No to go back and change it."
 msgstr ""
+"당신은 \"%0:s\",하지만 당신의 호출 %1:s 로그인 %2:s, 역은이 대회에서 그것을 보낼 수 없습니다.\n"
+"\n"
+"그 자리에서 작동한다면, 예를 선택하십시오. 돌아가고 변경할 수 없습니다."
 
 #: uappstrings.speeronanotherversion
 #, fuzzy
 msgid "Station %s runs TR4W %s, this station runs %s. All stations should run the same version."
-msgstr ""
+msgstr "역대역 %s TR4W 실행 %s,이 역 실행 %s. 모든 역은 동일한 버전을 실행해야 합니다."
 
 #: uappstrings.spostredirected
 #, fuzzy
 msgid "the server answered the upload with a redirect (status %d) to %s. TR4W does not follow a redirect on an upload, and the upload was not repeated. This is unexpected: please file an issue at %s and include this message."
-msgstr ""
+msgstr "서버는 리다이렉트로 업로드 (status) %d)에 %s. TR4W는 업로드에 리디렉션을 따르지 않으며 업로드가 반복되지 않았습니다. 이것은 예기치 않은 : 문제 파일을 보내주십시오. %s 이 메시지를 포함합니다."
 
 #: uappstrings.sprefsgroupbandmapcolors
 #, fuzzy
 msgid "Band map colors"
-msgstr ""
+msgstr "밴드 맵 색상"
 
 #: uappstrings.sroverdialogcancel
 #, fuzzy
 msgctxt "uappstrings.sroverdialogcancel"
 msgid "Cancel"
-msgstr ""
+msgstr "취소"
 
 #: uappstrings.sroverdialogoff
 #, fuzzy
 msgctxt "uappstrings.sroverdialogoff"
 msgid "Rover off"
-msgstr ""
+msgstr "Rover 오프"
 
 #: uappstrings.sroverdialogprompt
 #, fuzzy
 msgid "Where this station operates now (one place, or several at a county line, separated by a space, a comma or a dash)"
-msgstr ""
+msgstr "이 역이 지금 작동 (하나 장소, 또는 카운티 선에서 여러, 공간에 의해 분리, comma 또는 돌진)"
 
 #: uappstrings.sroverdialogtitle
 #: tfrmrover.caption
 #, fuzzy
 msgid "Rover"
-msgstr ""
+msgstr "로버"
 
 #: uappstrings.srovernoplaces
 #, fuzzy
 msgid "This contest has no places to rove"
-msgstr ""
+msgstr "이 대회는 rove에 장소가 없습니다"
 
 #: uappstrings.srovernounit
 #, fuzzy
 msgid "No place was given"
-msgstr ""
+msgstr "위치가 주어진"
 
 #: uappstrings.sroverstatus
 #, fuzzy
 msgid "ROVER %0:s"
-msgstr ""
+msgstr "제품정보 %0:s"
 
 #: uappstrings.srovertoomanyunits
 #, fuzzy
 msgid "This contest allows at most %0:d places at once"
-msgstr ""
+msgstr "이 대회는 대부분의 경우 %0:d 한 번에"
 
 #: uappstrings.sroverturnedoff
 #, fuzzy
 msgctxt "uappstrings.sroverturnedoff"
 msgid "Rover off"
-msgstr ""
+msgstr "Rover 오프"
 
 #: uappstrings.sroverunknownunit
 #, fuzzy
 msgid "%0:s is not one of this contest's places"
-msgstr ""
+msgstr "%0:s 이 대회 장소 중 하나가 아닙니다."
 
 #: uappstrings.sscoreparthint
 #, fuzzy
 msgid "%0:s: %1:d QSOs, %2:d points, %3:d mults, score %4:d"
-msgstr ""
+msgstr "%0:s:: %1:d 사이트맵 %2:d 포인트, %3:d mults, 점수 %4:d"
 
 #: uappstrings.sselfspotnocall
 #, fuzzy
 msgid "Self-spot refused: there is no station call set. Nothing sent."
-msgstr ""
+msgstr "Self-spot 거부 : 역 통화가 없습니다. 견적 요청"
 
 #: uappstrings.sselfspotnofrequency
 #, fuzzy
 msgid "Self-spot refused: the radio has not reported a frequency. Nothing sent."
-msgstr ""
+msgstr "Self-spot 거부 : 라디오는 주파수를보고하지 않았습니다. 견적 요청"
 
 #: uappstrings.sselfspotnolink
 #, fuzzy
 msgid "Self-spot refused: neither the DX cluster nor the network is connected. Nothing sent."
-msgstr ""
+msgstr "Self-spot 거부 : DX 클러스터 및 네트워크가 연결되지 않습니다. 견적 요청"
 
 #: uappstrings.sselfspotnotallowed
 #, fuzzy
 msgid "Self-spot refused: this contest's rules do not allow spotting yourself. Nothing sent."
-msgstr ""
+msgstr "Self-spot 거부 :이 콘테스트의 규칙은 자신을 스포팅 할 수 없습니다. 견적 요청"
 
 #: uappstrings.sselfspotnotmoved
 #, fuzzy
 msgid "Self-spot refused: the VFO has not moved %d Hz since the last self-spot. Nothing sent."
-msgstr ""
+msgstr "Self-spot 거부 : VFO는 이동하지 않았습니다. %d 마지막 셀프스팟 이후 Hz. 견적 요청"
 
 #: uappstrings.sselfspotsearchandpounce
 #, fuzzy
 msgid "Self-spot refused: not in Search & Pounce mode. Nothing sent."
-msgstr ""
+msgstr "Self-spot 거부 : 검색 및 Pounce 모드에서. 견적 요청"
 
 #: uappstrings.sselfspotsent
 #, fuzzy
 msgid "Self-spot sent: %0:s on %1:s."
-msgstr ""
+msgstr "셀프스팟 전송: %0:s 으로 %1:s·"
 
 #: uappstrings.sselfspottoosoon
 #, fuzzy
 msgid "Self-spot refused: the last one was sent less than %d minutes ago. Nothing sent."
-msgstr ""
+msgstr "Self-spot 거부 : 마지막 사람은 덜 전송되었다 %d 몇 분 전에. 견적 요청"
 
 #: uappstrings.stotalsclubstationmults
 #, fuzzy
 msgid "Clubs"
-msgstr ""
+msgstr "호텔소개"
 
 #: uappstrings.svermontclubfilenoyear
 #, fuzzy
 msgid "%0:s states no contest year (a line YEAR 2027), so its Vermont QSO Party club stations will not count. Get a current list from %1:s"
-msgstr ""
+msgstr "%0:s 국가 대회 년 없음 (라인 년 2027), 그래서 Vermont QSO 파티 클럽 스테이션은 계산되지 않습니다. 현재 목록 받기 %1:s"
 
 #: uappstrings.svermontclubfilestale
 #, fuzzy
 msgid "%0:s is the Vermont QSO Party club-station list for %1:d: it appears to be last year's. Club stations will not count until you get a current list from %2:s"
-msgstr ""
+msgstr "%0:s Vermont QSO 파티 클럽 역 목록입니다. %1:d: 작년에 나타납니다. 클럽 역은 현재 목록을 얻을 때까지 계산되지 않습니다 %2:s"
 
 #: usettingscaptions.rs_bandmap_activebandcolor
 #, fuzzy
 msgid "Band map frequency on the active band"
-msgstr ""
+msgstr "활성 밴드의 밴드 맵 주파수"
 
 #: usettingscaptions.rs_bandmap_dupecolor
 #, fuzzy
 msgid "Band map fill behind a dupe's D"
-msgstr ""
+msgstr "Band 지도 채우기 뒤에 dupe's D"
 
 #: usettingscaptions.rs_bandmap_multcolor
 #, fuzzy
 msgid "Band map fill behind a multiplier's M"
-msgstr ""
+msgstr "멀티 플라이어 M 뒤에 밴드 맵 채우기"
 
 #: usettingscaptions.rs_bandmap_otherbandcolor
 #, fuzzy
 msgid "Band map frequency on another band"
-msgstr ""
+msgstr "다른 밴드에 밴드 지도 빈도"
 
 #: usettingscaptions.rs_bandmap_selectioncolor
 #, fuzzy
 msgid "Band map selected spot"
-msgstr ""
+msgstr "Band 지도 선택"
 
 #: usettingscaptions.rs_bandmap_vfomarkercolor
 #, fuzzy
 msgid "Band map VFO marker (nearest spot and guard band)"
-msgstr ""
+msgstr "밴드 맵 VFO 마커 (가장 좋은 자리와 가드 밴드)"
 
 #: usettingscaptions.rs_cluster_ctrlj_autoselfspot
 #, fuzzy
 msgid "Auto Self Spot"
-msgstr ""
+msgstr "자동 셀프 스팟"
 
 #: usettingscaptions.rs_cluster_ctrlj_selfspotinterval
 #, fuzzy
 msgid "Self Spot Interval (minutes)"
-msgstr ""
+msgstr "셀프 스폿 간격 (분)"
 
 #: utr4wstrings.tc_distinctadifnotincabrillo
 #, fuzzy
 msgid "The Cabrillo leaves out %d %s QSO(s): this contest takes them as an ADIF file of their own, written by the ADIF export (%s)."
-msgstr ""
+msgstr "Cabrillo 잎 %d %s QSO(s): 이 콘테스트는 ADIF 수출에 의해 작성된 자체의 ADIF 파일로 진행됩니다 (%s)."
 
 #: utr4wstrings.tc_distinctadifprompt
 #, fuzzy
 msgid "This contest takes its %s QSOs as an ADIF file of their own, and its Cabrillo leaves them out. Also write the %d such QSO(s) to %s?"
-msgstr ""
+msgstr "이 대회는 %s QSOs는 자신의 ADIF 파일로, 그리고 그것의 Cabrillo는 그(것)들을 나타냈습니다. 또한 쓰기 %d 그런 QSO (s)에 %s·"
 
 #: tfrmrover.lblunits.caption
 #, fuzzy
 msgid "Where this station operates now"
-msgstr ""
+msgstr "이 역은 지금 작동합니다."
 
 #: tfrmrover.btnoff.caption
 #, fuzzy
 msgid "Rover off"
-msgstr ""
+msgstr "Rover 오프"
 
 #: uappstrings.spostrepostrefused
 #, fuzzy
 msgid "the server answered the upload with a redirect (status %d) to %s and it was not repeated: %s"
-msgstr ""
+msgstr "서버는 리다이렉트로 업로드 (status) %d)에 %s 그리고 그것은 반복되지 않았습니다: %s"
 
 #: uappstrings.srepostbadlocation
 #, fuzzy
 msgid "the redirect address is not usable."
-msgstr ""
+msgstr "리디렉션 주소는 유용하지 않습니다."
 
 #: uappstrings.srepostdowngrade
 #, fuzzy
 msgid "the redirect leads from https to plain http, which is never followed."
-msgstr ""
+msgstr "리디렉션은 https에서 일반 http로 리드합니다."
 
 #: uappstrings.srepostnolocation
 #, fuzzy
 msgid "the redirect named no address."
-msgstr ""
+msgstr "이름의 리디렉션"
 
 #: uappstrings.srepostotherhost
 #, fuzzy
 msgid "the redirect leads to a different host or port, and the upload carries a key that only the original server may see."
-msgstr ""
+msgstr "리디렉션은 다른 호스트 또는 포트로 리드하고, 업로드는 원래 서버만 볼 수 있는 키가 나옵니다."
 
 #: uappstrings.srepostseeother
 #, fuzzy
 msgid "status 303 means the upload was handled and the result is at that address; TR4W does not send it again."
-msgstr ""
+msgstr "상태 303는 업로드가 처리되고 결과가 그 주소에 있습니다. TR4W는 다시 보내지 않습니다."
 
 #: uappstrings.sreposttoomany
 #, fuzzy
 msgid "the server redirected the upload more than %d times."
-msgstr ""
+msgstr "서버는 업로드를 더 이상 리디렉션 %d 시간."
 
 #: utr4wstrings.tc_cabrilloperactivation
 #, fuzzy
 msgid "This contest takes a separate Cabrillo log for each activation: %d files were written (%s). Each claims the whole log's score."
-msgstr ""
+msgstr "이 콘테스트는 각 활성화에 대한 별도의 Cabrillo 로그가 걸립니다. %d 파일이 작성되었습니다 (%s). 각 청구는 전체 로그의 점수입니다."
 
 #: uappstrings.sdiagnosticlogunavailable
 #, fuzzy
@@ -12720,7 +12774,7 @@ msgstr ""
 #: uappstrings.swritablerootcopied
 #, fuzzy
 msgid "Copied from the install folder's settings: %s"
-msgstr ""
+msgstr "install 폴더의 설정에서 복사: %s"
 
 #: uappstrings.swritablerootmoved
 #, fuzzy
@@ -12737,7 +12791,7 @@ msgstr ""
 #: uappstrings.swritablerootoldlogs
 #, fuzzy
 msgid "Contest logs already in the install folder were left where they are. To keep logging in one, copy it (with any file of the same name ending -wal or -shm) into the folder above."
-msgstr ""
+msgstr "대회는 설치 폴더에 이미 로그가 남아있었습니다. 로깅을 계속하려면 위의 폴더에 (같은 이름의 파일과 함께 -wal 또는 -shm)을 복사하십시오."
 
 #: uappstrings.swritablerootmovedprogramfiles
 #, fuzzy
@@ -12754,133 +12808,133 @@ msgstr ""
 #: uappstrings.smessageeditunknownword
 #, fuzzy
 msgid "TR4W does not know the word {%0:s}. Use a command from the List of commands, {ROVERCALL} or {ROVERQTH}, and press OK again."
-msgstr ""
+msgstr "TR4W는 단어를 알 수 없습니다 {%0:s}. 명령, {ROVERCALL} 또는 {ROVERQTH} 목록에서 명령을 사용하여 다시 확인하십시오."
 
 #: uappstrings.smessageunknownwordskipped
 #, fuzzy
 msgid "The message names {%0:s}, which TR4W does not know. It was skipped and not sent."
-msgstr ""
+msgstr "메시지 이름 {%0:sTR4W는 알고 있지 않습니다. 그것은 건너 뛰고 보내지 않았습니다."
 
 #: uappstrings.snewcontesthostareaentrynotasection
 #, fuzzy
 msgid "%s is not an ARRL or RAC section or DX. Enter your section, e.g. WCF or ONE, or DX."
-msgstr ""
+msgstr "%s ARRL 또는 RAC 섹션 또는 DX가 아닙니다. 섹션을 입력, 예를 들어 WCF 또는 ONE, 또는 DX."
 
 #: uappstrings.snewcontesthostareaoutsidesectionnotice
 #, fuzzy
 msgid "You are outside %0:s: enter your ARRL or RAC section (e.g. WCF or ONE), or DX. Tick the box if you are in %0:s."
-msgstr ""
+msgstr "너 밖에서 %0:s: ARRL 또는 RAC 섹션 (예 : WCF 또는 ONE) 또는 DX를 입력하십시오. 당신이 안으로 있는 경우에 상자를 Tick %0:s·"
 
 #: uappstrings.snewcontesthostareasectionlabel
 #, fuzzy
 msgid "MY SECTION"
-msgstr ""
+msgstr "내 수정"
 
 #: usettingscaptions.rs_contest_categorystation
 #, fuzzy
 msgid "Category-Station"
-msgstr ""
+msgstr "카테고리"
 
 #: uappstrings.scallhistoryinuse
 #, fuzzy
 msgid "it is in use now (%d calls)"
-msgstr ""
+msgstr "그것은 지금 사용 (%d 전화)"
 
 #: uappstrings.scallhistorynotapplied
 #, fuzzy
 msgid "it was not applied to the running contest (see tr4w.log); any call history already loaded stays in use"
-msgstr ""
+msgstr "실행 대회에 적용되지 않았습니다 ( tr4w.log 참조); 이미 사용중인 모든 통화 기록"
 
 #: utr4wstrings.tc_trmasterdtadownloadedinuse
 #, fuzzy
 msgid "TRMASTER.DTA downloaded -- Super Check Partial is using it now"
-msgstr ""
+msgstr "TRMASTER.DTA 다운로드 -- 슈퍼 체크 Partial 지금 사용"
 
 #: utr4wstrings.tc_trmasterdtadownloadednotloaded
 #, fuzzy
 msgid "TRMASTER.DTA downloaded but could not be loaded -- the data in use is unchanged (see tr4w.log)"
-msgstr ""
+msgstr "TRMASTER.DTA 다운로드했지만로드 할 수 없습니다 -- 사용 데이터는 변경되지 않습니다 ( tr4w.log 참조)"
 
 #: tprefsform.btnchoosefont.caption
 #, fuzzy
 msgid "Choose..."
-msgstr ""
+msgstr "더 보기"
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgid "Windows and log"
-msgstr ""
+msgstr "Windows 및 로그"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "-- dB"
-msgstr ""
+msgstr "-- dB의"
 
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid ""
 "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.\r\n"
 "Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign."
-msgstr ""
+msgstr "이것은 당신이 그들을 변경할 때 다 가동자 네트워크에 있는 다른 역에 보내집니다, 그래서 모든 위치는 교환에 동의합니다.\rCall, Country, Continent and Zone은 대회가 설정되면 한번 읽습니다. 따라서 TR4W가 시작될 때 변경이 발생합니다. 국가를 비우고 TR4W는 호출에서 작동합니다."
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "TR4W는 WSJT-X 지원이 실행될 때마다 TCP 포트 52002에 DX Commander 호환 인터페이스를 제공하며 DXLab 프로그램은 그에 연결됩니다."
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Integrate with DXLab SpotCollector"
-msgstr ""
+msgstr "DXLab SpotCollector와 통합"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgid "IP port"
-msgstr ""
+msgstr "IP 포트"
 
 #: uappstrings.sbandmaptextsize
 #: tfrmbandmap.mitextsize.caption
 #, fuzzy
 msgid "Text size"
-msgstr ""
+msgstr "글자 크기"
 
 #: uappstrings.sbandmaptextlarger
 #: tfrmbandmap.mitextlarger.caption
 #, fuzzy
 msgid "Larger"
-msgstr ""
+msgstr "더 많은"
 
 #: uappstrings.sbandmaptextsmaller
 #: tfrmbandmap.mitextsmaller.caption
 #, fuzzy
 msgid "Smaller"
-msgstr ""
+msgstr "더 보기"
 
 #: uappstrings.sbandmaptextreset
 #: tfrmbandmap.mitextreset.caption
 #, fuzzy
 msgid "Reset"
-msgstr ""
+msgstr "지원하다"
 
 #: uappstrings.sloggergridopensite
 #, fuzzy
 msgid "Open web site"
-msgstr ""
+msgstr "웹 사이트 열기"
 
 #: uappstrings.sloggergridresend
 #, fuzzy
 msgid "Resend QSOs..."
-msgstr ""
+msgstr "QSOs를 ..."
 
 #: uappstrings.sloggersiterefused
 #, fuzzy
 msgid "Not opened: \"%s\" is not an http or https web address."
-msgstr ""
+msgstr "오픈: \"%s\"은 http 또는 https 웹 주소가 아닙니다."
 
 #: uappstrings.sloggersiteopenfailed
 #, fuzzy
 msgid "The browser could not be started for %s."
-msgstr ""
+msgstr "브라우저가 시작할 수 없습니다. %s·"
 
 #: uappstrings.sloggerresendbody
 #, fuzzy
@@ -12891,232 +12945,237 @@ msgid ""
 "\n"
 "Resend all: also sends delivered QSOs again as updates of the same remote contact (not for Cloudlog / Wavelog or AC Log, which have no update call). A QSO of unknown outcome is never resent."
 msgstr ""
+"이 대회의 QSOs를 %s 이름 *\n"
+"\n"
+"아직 전달되지 않음: QSOs 이 로거는 결코 전송되지 않았습니다 (예를 들어 새로운 QSOs가 꺼졌는지) 그리고 어떤 거부. QSOs 이미 전달, 대기, 또는 알 수없는 결과가 혼자 남아있다.\n"
+"\n"
+"모든 것을 말하십시오: 또한 동일한 먼 접촉의 갱신으로 배달된 QSOs를 다시 보냅니다 (클라우드로그/파로그 또는 AC 통나무를 위해 아닙니다, 갱신 외침 없음). 알 수없는 결과의 QSO는 결코 의존하지 않습니다."
 
 #: uappstrings.sloggerresendundelivered
 #, fuzzy
 msgid "Not yet delivered"
-msgstr ""
+msgstr "아직 배달되지 않음"
 
 #: uappstrings.sloggerresendall
 #, fuzzy
 msgid "Resend all"
-msgstr ""
+msgstr "모든 것"
 
 #: uappstrings.sloggerresendallask
 #, fuzzy
 msgid "Resend all QSOs to %s? A contact that is already at the destination by another route (another definition of this logger, a manual import) cannot be recognised and may appear twice. Delivered contacts are sent again as updates, which uses the service's quota."
-msgstr ""
+msgstr "모든 QSOs를 %s? 다른 경로 (이로거의 다른 정의, 매뉴얼 가져 오기)가 인식 될 수 있으며 두 번 나타날 수있다. 서비스 할당량을 사용하는 업데이트로 다시 전송됩니다."
 
 #: uappstrings.sloggerresenddone
 #, fuzzy
 msgid "%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations."
-msgstr ""
+msgstr "%s: 견적 요청 %d QSO (주)%d 새로운, %d 다시 전송). 혼자 왼쪽 : %d 배달, %d 대기, %d 알 수없는 결과, %d 다른 역에 의해 로그인."
 
 #: uappstrings.sloggerresendrefused
 #, fuzzy
 msgid "Nothing was queued for %s: %s"
-msgstr ""
+msgstr "아무것도 할 수 없었다 %s:: %s"
 
 #: uappstrings.sloggerresendwhynotrunning
 #, fuzzy
 msgid "it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start."
-msgstr ""
+msgstr "그것은 실행되지 않습니다. Preferences를 저장하고 TR4W를 다시 시작합니다."
 
 #: uappstrings.sloggerresendwhynotactive
 #, fuzzy
 msgid "Send new QSOs is off for it. Switch it on and save Preferences first."
-msgstr ""
+msgstr "새로운 QSOs가 그것을 위해 꺼집니다. 그것을 켜고 Preferences를 첫째로 저장하십시오."
 
 #: uappstrings.sloggerresendwhypaused
 #, fuzzy
 msgid "its delivery is paused after a capture failure (see tr4w.log)."
-msgstr ""
+msgstr "그 배송은 캡처 실패 후 일시 중지됩니다 ( tr4w.log 참조)."
 
 #: uappstrings.sloggerresendwhysetup
 #, fuzzy
 msgid "its account or logbook is not set up."
-msgstr ""
+msgstr "계정 또는 로그북을 설정하지 않습니다."
 
 #: uappstrings.sloggerresendwhyunsupported
 #, fuzzy
 msgid "it has no delivery queue to resend into."
-msgstr ""
+msgstr "그것은에 resend 납품 수 없습니다."
 
 #: uappstrings.sloggerresendwhynolog
 #, fuzzy
 msgid "no writable contest log is open."
-msgstr ""
+msgstr "writable 대회 로그가 열리지 않습니다."
 
 #: uappstrings.sloggerresendwhyfailed
 #, fuzzy
 msgid "the log could not be updated (see tr4w.log). Nothing was changed."
-msgstr ""
+msgstr "로그를 업데이트 할 수 없습니다 ( tr4w.log 참조). 변경되지 않았습니다."
 
 #: uappstrings.slogbackupstillfailing
 #, fuzzy
 msgid "Last log backup FAILED: retried every %d min. See tr4w.log."
-msgstr ""
+msgstr "마지막 로그인 백업 FAILED: 모든 것을 retried %d 분. tr4w.log를 참조하십시오."
 
 #: uappstrings.slogchangenotsaved
 #, fuzzy
 msgid "NOT SAVED -- the contest log did not take this change. See tr4w.log."
-msgstr ""
+msgstr "SAVED -- 대회 로그는이 변경을하지 않았다. tr4w.log를 참조하십시오."
 
 #: uappstrings.speerqsonotsaved
 #, fuzzy
 msgid "A QSO from another station could NOT be saved to this log. It is not lost if the server has it: the next catch-up from the server, or Net > Synchronize, adds it once this log can be written. Further refusals are in tr4w.log."
-msgstr ""
+msgstr "다른 역에서 QSO는이 로그에 저장 할 수 없습니다. 서버가 있는 경우 손실되지 않습니다: 서버에서 다음 캐치업, 또는 Net > 동기화, 이 로그를 한 번 추가 할 수 있습니다. 더 많은 refusals는 tr4w.log에 있습니다."
 
 #: uappstrings.sentrystatusqsonotsaved
 #, fuzzy
 msgid "QSO not saved"
-msgstr ""
+msgstr "QSO 저장되지 않음"
 
 #: uappstrings.sentrystatuslogreadonly
 #, fuzzy
 msgid "Log read-only"
-msgstr ""
+msgstr "로그 읽기 전용"
 
 #: uappstrings.sentryfieldexchangename
 #, fuzzy
 msgid "Exchange"
-msgstr ""
+msgstr "계정 만들기"
 
 #: uappstrings.sradiopanelactive
 #, fuzzy
 msgid "Active"
-msgstr ""
+msgstr "지원하다"
 
 #: uappstrings.sradiopanelactivename
 #, fuzzy
 msgid "Active radio"
-msgstr ""
+msgstr "활동 라디오"
 
 #: usettingscaptions.rs_operating_enforcevalidcallsign
 #, fuzzy
 msgid "Refuse a QSO whose call is not in the country file"
-msgstr ""
+msgstr "국가 파일에 해당되는 QSO를 수정합니다."
 
 #: usettingscaptions.rs_bandmap_clickgoestoexchange
 #, fuzzy
 msgid "After tuning to a spot, put the cursor in the exchange window"
-msgstr ""
+msgstr "튜닝 후, 교환 창에서 커서를 넣어"
 
 #: uappstrings.scallnotaknownentity
 #, fuzzy
 msgid "%s is not logged: its base call is not in the country file"
-msgstr ""
+msgstr "%s 기록되지 않습니다 : 기본 통화는 국가 파일에 없습니다."
 
 #: uappstrings.scallwindowcwon
 #, fuzzy
 msgid "CW On"
-msgstr ""
+msgstr "CW에"
 
 #: uappstrings.smenutogglevoicekeyer
 #, fuzzy
 msgid "Toggle Voice Keyer"
-msgstr ""
+msgstr "콘텐츠 바로가기"
 
 #: uappstrings.sexchangecountylineoneparty
 #, fuzzy
 msgid "County line %s/%s: the counties must be in one QSO party"
-msgstr ""
+msgstr "카운티 라인 %s/ 한국어%s: 군은 한 QSO 파티에 있어야합니다."
 
 #: uappstrings.sradiopttbycatnotsupported
 #, fuzzy
 msgid "%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off \"Key the transmitter with a CAT command\"."
-msgstr ""
+msgstr "%s: CAT를 통한 PTT는 이 라디오에 의해 지원되지 않습니다. 하드웨어 PTT 라인을 사용하거나 \"키를 CAT 명령으로 전송합니다."
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenerenabled
 #, fuzzy
 msgid "Accept QSOs from JTDX and JTAlert (N1MM log listener)"
-msgstr ""
+msgstr "JTDX 및 JTAlert (N1MM 로그 듣기)에서 QSO를 수락"
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenaddress
 #, fuzzy
 msgid "Address the N1MM log listener binds to"
-msgstr ""
+msgstr "N1MM 로그 리스너가 묶음"
 
 #: uappstrings.sprefsgroupn1mmlistener
 #, fuzzy
 msgid "N1MM log listener (JTDX, JTAlert)"
-msgstr ""
+msgstr "N1MM 로그 리스너 (JTDX, JTAlert)"
 
 #: uappstrings.snetstationmissing
 #, fuzzy
 msgid "Missing"
-msgstr ""
+msgstr "뚱 베어"
 
 #: uappstrings.spassneedsname
 #, fuzzy
 msgid "A {PASS} word needs a station or a band, for example {PASS B} or {PASS 14000}. The message was not sent."
-msgstr ""
+msgstr "{PASS} 단어는 역 또는 밴드가 필요합니다. 예를 들어 {PASS B} 또는 {PASS 14000}. 메시지가 전송되지 않았습니다."
 
 #: uappstrings.spassnotaband
 #, fuzzy
 msgid "{PASS %0:s} is not a band. Use a band in kHz, for example 14000. The message was not sent."
-msgstr ""
+msgstr "이름 * %0:s자주 묻는 질문 kHz의 밴드를 사용하여 예를 들어 14000. 메시지가 전송되지 않았습니다."
 
 #: uappstrings.spassbandempty
 #, fuzzy
 msgid "No other station is on the %0:s kHz band, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "다른 역은 없습니다 %0:s kHz 밴드, 그래서 {PASS %0:s자주 묻는 질문 메시지가 전송되지 않았습니다."
 
 #: uappstrings.spassstationabsent
 #, fuzzy
 msgid "Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "역대역 %0:s 네트워크에 있지 않다, 그래서 {PASS %0:s자주 묻는 질문 메시지가 전송되지 않았습니다."
 
 #: uappstrings.spassstationisus
 #, fuzzy
 msgid "{PASS %0:s} names this computer. Name another position. The message was not sent."
-msgstr ""
+msgstr "이름 * %0:s이 컴퓨터의 이름. 이름 다른 위치. 메시지가 전송되지 않았습니다."
 
 #: uappstrings.spassnofrequency
 #, fuzzy
 msgid "Station %0:s is on the network but has not reported a frequency yet. The message was not sent."
-msgstr ""
+msgstr "역대역 %0:s 네트워크에 있지만 아직 주파수를보고하지 않았습니다. 메시지가 전송되지 않았습니다."
 
 #: uappstrings.spassnothingpassed
 #, fuzzy
 msgid "{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent."
-msgstr ""
+msgstr "{LASTPASSEDFREQ}는 보내지 않습니다. 주파수가 아직 통과되지 않았습니다. {PASS B}를 먼저 사용하십시오. 메시지가 전송되지 않았습니다."
 
 #: uappstrings.slogrestoredeliverynotice
 #, fuzzy
 msgid "The restored log's record of what was sent to external loggers (Club Log, WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may already be at those services but are not in this log, and QSOs the backup had not yet sent will be sent again. Check each service's log."
-msgstr ""
+msgstr "복원 된 로그의 외부 로그 (Club Log, WRL, DXKeeper)에 전송 된 내용은 백업으로 이전됩니다. QSOs는 백업이 이미 그 서비스에있을 수 있지만이 로그에 있지 않으며 QSOs 백업이 아직 전송되지 않았습니다. 각 서비스 로그를 확인합니다."
 
 #: uappstrings.smenucorrectstationfacts
 #, fuzzy
 msgid "Correct Station Facts..."
-msgstr ""
+msgstr "정확한 역 사실 ..."
 
 #: uappstrings.sstationcorrectionbackupfailed
 #, fuzzy
 msgid "Nothing was changed: the log could not be backed up first. %s"
-msgstr ""
+msgstr "변경되지 않았습니다: 로그가 먼저 백업 될 수 없습니다. %s"
 
 #: uappstrings.sstationcorrectionbadfrom
 #, fuzzy
 msgid "A log record number is a whole number from 1 up."
-msgstr ""
+msgstr "로그 기록 번호는 1에서 전체 번호입니다."
 
 #: uappstrings.sstationcorrectioncancelbutton
 #, fuzzy
 msgctxt "uappstrings.sstationcorrectioncancelbutton"
 msgid "Cancel"
-msgstr ""
+msgstr "취소"
 
 #: uappstrings.sstationcorrectionchangebutton
 #, fuzzy
 msgid "Change the QSOs"
-msgstr ""
+msgstr "QSOs 변경"
 
 #: uappstrings.sstationcorrectionchoosefact
 #, fuzzy
 msgid "Which of your station's values is wrong on the QSOs already logged?"
-msgstr ""
+msgstr "역의 값은 이미 QSOs에 잘못되었습니까?"
 
 #: uappstrings.sstationcorrectionconfirm
 #, fuzzy
@@ -13128,6 +13187,12 @@ msgid ""
 "\n"
 "Not changed: %5:d imported, %6:d never recorded (they follow your setting: correct it in Preferences too), %7:d per place (a rover or an in-state party)."
 msgstr ""
+"이 변화 %0:s 에 \"%1:s\"에 %2:d 로그인 QSO(s): %3:s·\n"
+"그들은 지금 말한다: %4:s·\n"
+"\n"
+"로그는 백업 FIRST입니다. 각 변경된 QSO는 클럽 로그, WRL 및 기타 외부 로거에 대한 편집으로 다시 전송되며 UDP 대신 -- 및 로그가 다시 저장됩니다. %8:d 그들 중에는 다 op 동료가 있습니다: 여기에서 수정, 그 역에 의해 보내.\n"
+"\n"
+"변경되지 않음: %5:d 수입, %6:d 기록되지 않음 (설정을 따르십시오 : 설정에서 수정하십시오), %7:d 위 (Rover 또는 in-state 파티) 당."
 
 #: uappstrings.sstationcorrectiondone
 #, fuzzy
@@ -13135,171 +13200,173 @@ msgid ""
 "%0:s is now \"%1:s\" on %2:d logged QSO(s).\n"
 "The log as it was is in %3:s"
 msgstr ""
+"%0:s 현재 위치%1:s\"에 %2:d 로그아웃\n"
+"로그인 %3:s"
 
 #: uappstrings.sstationcorrectionemptyvalue
 #, fuzzy
 msgid "Type the value the QSOs should have."
-msgstr ""
+msgstr "QSOs 값을 입력해야 합니다."
 
 #: uappstrings.sstationcorrectionfailed
 #, fuzzy
 msgid "Nothing was changed: the contest log did not take the correction. See tr4w.log."
-msgstr ""
+msgstr "변경되지 않았습니다: 콘테스트 로그는 보정을하지 않았다. tr4w.log를 참조하십시오."
 
 #: uappstrings.sstationcorrectionfromprompt
 #, fuzzy
 msgid "Change the QSOs from log record number (1 = every QSO in the log):"
-msgstr ""
+msgstr "로그 레코드 번호에서 QSO를 변경 (1 = 각 QSO 로그에서):"
 
 #: uappstrings.sstationcorrectionnotallowed
 #, fuzzy
 msgid "%s cannot be changed on logged QSOs."
-msgstr ""
+msgstr "%s 로그인 QSOs에서 변경할 수 없습니다."
 
 #: uappstrings.sstationcorrectionnothing
 #, fuzzy
 msgid "No logged QSO needs changing."
-msgstr ""
+msgstr "QSO가 변경되는 것은 없습니다."
 
 #: uappstrings.sstationcorrectionreadonly
 #, fuzzy
 msgid "Nothing was changed: the contest log is read-only."
-msgstr ""
+msgstr "변경되지 않았습니다: 콘테스트 로그는 읽기 전용입니다."
 
 #: uappstrings.sstationcorrectionscopeall
 #, fuzzy
 msgid "ALL PRIOR CONTACTS in the log"
-msgstr ""
+msgstr "로그에 모든 PRIOR 접촉"
 
 #: uappstrings.sstationcorrectionscopefrom
 #, fuzzy
 msgid "every contact from log record %d on"
-msgstr ""
+msgstr "로그인 기록의 각 연락처 %d 으로"
 
 #: uappstrings.sstationcorrectiontitle
 #, fuzzy
 msgid "Correct station facts on logged QSOs"
-msgstr ""
+msgstr "정확한 역 사실은 QSOs에 기록"
 
 #: uappstrings.sstationcorrectionvalueprompt
 #, fuzzy
 msgid "The value the QSOs should have for %s:"
-msgstr ""
+msgstr "QSOs 값은 %s::"
 
 #: uappstrings.sstationcorrectionzonezero
 #, fuzzy
 msgid "A zone of 0 is not a zone."
-msgstr ""
+msgstr "0의 영역은 영역이 아닙니다."
 
 #: uappstrings.sloggergridcreatelogbook
 #, fuzzy
 msgid "Create logbook..."
-msgstr ""
+msgstr "로그북 만들기 ..."
 
 #: uappstrings.swrlcreatebusy
 #, fuzzy
 msgid "A logbook is already being created for a logger. Wait for it to finish."
-msgstr ""
+msgstr "logbook은 이미 로그에 생성됩니다. 끝내기 위하여 그것을 기다리십시오."
 
 #: uappstrings.swrlcreatecaption
 #, fuzzy
 msgid "Create World Radio League logbook"
-msgstr ""
+msgstr "World Radio League로그북 만들기"
 
 #: uappstrings.swrlcreatedone
 #, fuzzy
 msgid "Created logbook \"%s\" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with."
-msgstr ""
+msgstr "로그 북 만들기 \"%s₢ 킹 %s) 세계 라디오 리그에서 그것을 선택 %s. 그것을 지키는 Preferences를 저장하십시오. 새로운 로그북은 TR4W를 다시 시작 한 후 사용됩니다. 실행 로그는 설정이 시작되었습니다."
 
 #: uappstrings.swrlcreatefailed
 #, fuzzy
 msgid "The logbook was not created: %s"
-msgstr ""
+msgstr "로그북이 생성되지 않았습니다: %s"
 
 #: uappstrings.swrlcreatekeymissing
 #, fuzzy
 msgid "This logger has no API key available. Enter the key in the logger's editor (unlock the password vault if it is locked) first."
-msgstr ""
+msgstr "이 로거에는 API 키가 없습니다. logger의 편집기에서 키 입력 (잠금된 경우 암호 vault를 잠금 해제) 먼저."
 
 #: uappstrings.swrlcreateprompt
 #, fuzzy
 msgid "Name of the new logbook (up to 100 characters). It is made on the World Radio League web site for the account this API key belongs to:"
-msgstr ""
+msgstr "새로운 로그 북의 이름 (최대 100 문자). 이 API 키에 속한 계정의 World Radio League 웹 사이트에 있습니다."
 
 #: uappstrings.swrlcreatereplaceask
 #, fuzzy
 msgid "%s already has a logbook chosen. Create a new logbook and use it instead? Contacts already queued for the old logbook are not moved."
-msgstr ""
+msgstr "%s 이미 선택한 로그북이 있습니다. 새로운 로그 북을 만들고 대신 사용? 이전 로그북에 대한 이미 누락 된 연락처는 이동되지 않습니다."
 
 #: uappstrings.swrlcreateuncertain
 #, fuzzy
 msgid "World Radio League did not confirm the logbook, so it may have been created. Look at your logbooks on the World Radio League web site (or use Refresh in the logger's editor) before trying again, so you do not make a second one."
-msgstr ""
+msgstr "World Radio League는 로그북을 확인하지 않았으므로 만들 수 있습니다. World Radio League 웹 사이트 (또는 Logger 's 편집기에서 새로 고침)에 로그인하십시오. 다시 시도하기 전에 두 번째 것을하지 마십시오."
 
 #: uappstrings.swrlrequestid
 #, fuzzy
 msgid "(request id %s)"
-msgstr ""
+msgstr "(레퀘스트 ID) %s·"
 
 #: uappstrings.swrlwhyconflict
 #, fuzzy
 msgid "a logbook with that name may already exist, or World Radio League treated the request as a conflict. Choose the existing logbook in the logger's editor, or use another name."
-msgstr ""
+msgstr "그 이름을 가진 로그북은 이미 존재하거나 World Radio League는 분쟁으로 요청을 처리했습니다. logger의 편집기에서 기존 로그북을 선택하거나 다른 이름을 사용하십시오."
 
 #: uappstrings.swrlwhydown
 #, fuzzy
 msgid "the World Radio League service is not available right now (%s). Try again later."
-msgstr ""
+msgstr "세계 라디오 리그 서비스는 현재 사용할 수 없습니다 (%s). 나중에 다시 시도하십시오."
 
 #: uappstrings.swrlwhyip
 #, fuzzy
 msgid "the key is restricted to other IP addresses than this computer's."
-msgstr ""
+msgstr "키는 이 컴퓨터보다 다른 IP 주소로 제한됩니다."
 
 #: uappstrings.swrlwhykey
 #, fuzzy
 msgid "World Radio League did not accept the API key (it is missing, wrong or revoked). Check the key in the logger's editor."
-msgstr ""
+msgstr "세계 라디오 리그는 API 키를 받아 들지 않았습니다 (그것은 누락, 잘못 또는 개정). logger의 편집기에서 키 확인."
 
 #: uappstrings.swrlwhymembership
 #, fuzzy
 msgid "the key was refused because the account needs a current World Radio League membership."
-msgstr ""
+msgstr "계정이 현재 World Radio League 회원을 필요로하기 때문에 열쇠가 거부되었습니다."
 
 #: uappstrings.swrlwhynamerequired
 #, fuzzy
 msgid "the name is empty."
-msgstr ""
+msgstr "이름은 비어 있습니다."
 
 #: uappstrings.swrlwhynametoolong
 #, fuzzy
 msgid "the name is longer than %d characters."
-msgstr ""
+msgstr "이름은 더 이상 %d 문자."
 
 #: uappstrings.swrlwhyother
 #, fuzzy
 msgid "the request failed (%s)."
-msgstr ""
+msgstr "요청이 실패했습니다 (%s)."
 
 #: uappstrings.swrlwhyrate
 #, fuzzy
 msgid "too many requests just now. Wait a minute and try again."
-msgstr ""
+msgstr "너무 많은 요청은 지금. 잠시 후 다시 시도하십시오."
 
 #: uappstrings.swrlwhyscope
 #, fuzzy
 msgid "the key is not allowed to create logbooks. Make a key that may write logbooks."
-msgstr ""
+msgstr "key는 로그북을 만들 수 없습니다. 로그북을 쓸 수 있는 열쇠를 만듭니다."
 
 #: uappstrings.swrlwhyvalidation
 #, fuzzy
 msgid "World Radio League rejected the request: %s"
-msgstr ""
+msgstr "World Radio League는 요청을 거부했습니다. %s"
 
 #: uappstrings.swrlwhyvalidationfield
 #, fuzzy
 msgid "World Radio League rejected the %s: %s"
-msgstr ""
+msgstr "세계 라디오 리그는 거부 %s:: %s"
 
 #: uappstrings.snetpushedtoservertotal
 #, fuzzy

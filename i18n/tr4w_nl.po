@@ -4946,7 +4946,7 @@ msgstr "Hoofdvenster"
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
-msgstr ""
+msgstr "Het lettertype is van toepassing op het hoofdvenster. Beide worden van kracht wanneer TR4W de volgende start."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Deze stonden in het menu Instellingen. Dat raam gaat weg zodra ROW COUNT en WINDOW SITE zich hier bij hen voegen."
 #: tprefsform.lblappearmenunote.caption
@@ -5210,7 +5210,7 @@ msgstr "Tekensnelheid:"
 #, fuzzy
 #| msgid "Size:"
 msgid "Font size step:"
-msgstr ""
+msgstr "Lettergrootte stap:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -9601,42 +9601,42 @@ msgstr "Jaar"
 #: uappstrings.snewcontestfileslastqso
 #, fuzzy
 msgid "Last QSO"
-msgstr ""
+msgstr "Laatste QSO"
 
 #: uappstrings.snewcontestfilesqsos
 #, fuzzy
 msgid "QSOs"
-msgstr ""
+msgstr "QSO's"
 
 #: uappstrings.sbackupdestinationreachable
 #, fuzzy
 msgid "Backup destination %s is reachable."
-msgstr ""
+msgstr "Reservekopiedoel %s is bereikbaar."
 
 #: uappstrings.sbackupcopyfailed
 #, fuzzy
 msgid "Backups are NOT reaching %s: %s. Logging continues, and TR4W keeps trying."
-msgstr ""
+msgstr "Backups bereiken NIET %s: %s. Logging gaat door, en TR4W blijft proberen."
 
 #: uappstrings.sbackupcopyrecovered
 #, fuzzy
 msgid "Backups are reaching %s again."
-msgstr ""
+msgstr "Backups bereiken %s Alweer."
 
 #: uappstrings.sbackupdestinationdialogtitle
 #, fuzzy
 msgid "Backup destination folder"
-msgstr ""
+msgstr "Backup van doelmap"
 
 #: uappstrings.sbackupcopyingtodestination
 #, fuzzy
 msgid "Log backed up; copying to %s ..."
-msgstr ""
+msgstr "Log back-up; kopiëren naar %s ..."
 
 #: uappstrings.sbackupcopiedto
 #, fuzzy
 msgid "Backup copied to %s."
-msgstr ""
+msgstr "Backup gekopieerd naar %s."
 
 #: uappstrings.sdomincludenotread
 #, fuzzy
@@ -9652,194 +9652,200 @@ msgstr ""
 #: uappstrings.sdomincludetoodeep
 #, fuzzy
 msgid "The domestic file %s nests INCLUDE FILE more than %d deep, on the line \"%s\". That line was not followed: the files probably include one another in a circle."
-msgstr ""
+msgstr "Het binnenlandse dossier %s nesten INCLUSIEF BESTAND meer dan %d diep, op de lijn \"%s\". Die regel werd niet gevolgd: de bestanden bevatten elkaar waarschijnlijk in een cirkel."
 
 #: uappstrings.snewcontestontarioqpcountyorlocation
 #, fuzzy
 msgid "Enter your Ontario county code (e.g. TOR) if you are in Ontario. Enter your state or Canadian province if outside Ontario; leave it empty if you are DX (your country prefix is sent):"
-msgstr ""
+msgstr "Voer uw Ontario County code in (bijv. TOR) als u in Ontario bent. Voer uw staat of Canadese provincie als buiten Ontario; laat het leeg als u DX (uw land prefix wordt verzonden):"
 
 #: uappstrings.snewcontestquebecqpregionorlocation
 #, fuzzy
 msgid "Enter your Quebec administrative region code (e.g. MTL) if you are in Quebec. Enter your state or Canadian province if outside Quebec; leave it empty if you are DX (DX is sent):"
-msgstr ""
+msgstr "Voer uw code voor de administratieve regio Quebec in (bijv. MTL) als u in Quebec bent. Voer uw staat of Canadese provincie als buiten Quebec; laat het leeg als je DX (DX wordt verzonden):"
 
 #: uappstrings.stxinhibitedstatus
 #, fuzzy
 msgid "TX INHIBITED: %s"
-msgstr ""
+msgstr "TX GENOEMD: %s"
 
 #: uappstrings.snetnohelloanswer
 #, fuzzy
 msgid "The multi-op server closed the connection without answering. It is probably older than this TR4W (which speaks network protocol %d). Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "De multi-op server sloot de verbinding zonder te antwoorden. Het is waarschijnlijk ouder dan deze TR4W (die spreekt netwerk protocol %d). TR4 bijwerken WServer op de server computer, kies vervolgens Connect op het Net menu."
 
 #: uappstrings.snetserverprotocolnewer
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, which is newer than the protocol %d this TR4W speaks. Update TR4W on this computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "De multi-op server spreekt netwerkprotocol %d, dat is nieuwer dan het protocol %d Deze TR4W spreekt. Update TR4W op deze computer, kies vervolgens Connect op het Net menu."
 
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr ""
+msgstr "De multi-op server spreekt netwerkprotocol %d, maar deze TR4W heeft protocol nodig %d. Bijwerken TR4 WServer op de server computer, kies vervolgens Connect op het Net menu."
 
 #: uappstrings.snetmenureconnect
 #, fuzzy
 msgid "Reconnect"
-msgstr ""
+msgstr "Herverbinden"
 
 #: uappstrings.snetmenushowwindow
 #, fuzzy
 msgid "Show Network window"
-msgstr ""
+msgstr "Netwerkvenster tonen"
 
 #: tprefsform.chknetautoconnect.caption
 #: usettingscaptions.rs_network_autoconnect
 #, fuzzy
 msgid "Connect to the multi-op server when TR4W starts"
-msgstr ""
+msgstr "Verbinden met de multi-op server wanneer TR4W wordt gestart"
 
 #: usettingscaptions.rs_appearance_alertcolor
 #, fuzzy
 msgid "Alert Color"
-msgstr ""
+msgstr "Waarschuwingskleur"
 
 #: usettingscaptions.rs_appearance_language
 #, fuzzy
 msgid "Language"
-msgstr ""
+msgstr "Taal"
 
 #: usettingscaptions.rs_appearance_language_system
 #, fuzzy
 msgid "System default"
-msgstr ""
+msgstr "Systeemstandaard"
 
 #: usettingscaptions.rs_cluster_ctrlj_consolelines
 #, fuzzy
 msgid "Telnet Console Lines"
-msgstr ""
+msgstr "Telnet Console Lines"
 
 #: usettingscaptions.rs_operating_standardeditkeys
 #, fuzzy
 msgid "Ctrl+C, Ctrl+V, Ctrl+X and Ctrl+A edit the field outside the main window"
-msgstr ""
+msgstr "Ctrl+C, Ctrl+V, Ctrl+X en Ctrl+A bewerken het veld buiten het hoofdvenster"
 
 #: usettingscaptions.rs_ptt_txinhibitbeep
 #, fuzzy
 msgid "Beep when keying a radio that will not transmit"
-msgstr ""
+msgstr "Piep bij het intoetsen van een radio die niet zal verzenden"
 
 #: uappstrings.scatchupask
 #, fuzzy
 msgid "The server holds %d QSO(s) that this log does not have. Add them to this log now? Nothing already in this log is changed or removed, and a backup of the log is taken first."
-msgstr ""
+msgstr "De server bevat %d QSO(s) die dit logboek niet heeft. Ze nu aan dit logboek toevoegen? Niets al in dit logboek wordt gewijzigd of verwijderd, en een backup van het logboek wordt eerst genomen."
 
 #: uappstrings.scatchupfetchfailed
 #, fuzzy
 msgid "Could not read the server's log to catch up: %s"
-msgstr ""
+msgstr "Kon het logboek van de server niet lezen om in te halen: %s"
 
 #: uappstrings.scatchupmergefailed
 #, fuzzy
 msgid "Nothing was added to the log: %s"
-msgstr ""
+msgstr "Er is niets toegevoegd aan het logboek: %s"
 
 #: uappstrings.scatchupskipped
 #, fuzzy
 msgid "%d QSO(s) on the server belong to another contest and were not added."
-msgstr ""
+msgstr "%d QSO(s) op de server behoren tot een andere wedstrijd en zijn niet toegevoegd."
 
 #: uappstrings.snetcaughtup
 #, fuzzy
 msgid "Caught up from the server: %d QSO(s) added."
-msgstr ""
+msgstr "Gevangen van de server: %d QSO(s) toegevoegd."
 
 #: uappstrings.snetresent
 #, fuzzy
 msgid "Resent to the server what was logged while disconnected: %d QSO(s), %d edit(s)."
-msgstr ""
+msgstr "Opnieuw verzenden naar de server wat is gelogd terwijl de verbinding verbroken is: %d QSO(s), %d edit(s)."
 
 #: uappstrings.sserverlogadd
 #: tfrmserverlog.btnaddmissing.caption
 #, fuzzy
 msgid "Add missing QSOs"
-msgstr ""
+msgstr "Vermiste QSO's toevoegen"
 
 #: uappstrings.sserverlogaddmissing
 #, fuzzy
 msgid "Add %d missing QSO(s)"
-msgstr ""
+msgstr "Voeg toe %d ontbrekende QSO(s)"
 
 #: uappstrings.snetmenuserverlog
 #, fuzzy
 msgid "Synchronize with the server..."
-msgstr ""
+msgstr "Synchroniseren met de server..."
 
 #: uappstrings.sserverlogtitle
 #: tfrmserverlog.caption
 #, fuzzy
 msgid "Synchronize with the server"
-msgstr ""
+msgstr "Synchroniseren met de server"
 
 #: uappstrings.snetpushedtoserver
 #, fuzzy
 msgid "Sent to the server: %d QSO(s) it did not have."
-msgstr ""
+msgstr "Naar de server gestuurd: %d Dat had het niet."
 
 #: uappstrings.spushask
 #, fuzzy
 msgid "The server lacks %d QSO(s) of yours. Send them to the server now? Nothing in this log is changed, and the server ignores any QSO it already holds."
-msgstr ""
+msgstr "De server mist %d QSO(s) van jou. Stuur ze nu naar de server? Niets in dit log wordt gewijzigd, en de server negeert elke QSO die het al heeft."
 
 #: tfrmserverlog.btnsendmissing.caption
 #: uappstrings.sserverlogsend
 #, fuzzy
 msgid "Send QSOs to the server"
-msgstr ""
+msgstr "QSO's naar de server sturen"
 
 #: uappstrings.sserverlogsendcount
 #, fuzzy
 msgid "Send %d QSO(s) to the server"
-msgstr ""
+msgstr "Verzenden %d QSO(s) naar de server"
 
 #: uappstrings.ssyncaskboth
 #, fuzzy
 msgid "The server holds %d QSO(s) this log lacks and lacks %d of yours. Add the first to this log and send the second to the server now? Nothing already in this log is changed or removed, and a backup of the log is taken first."
-msgstr ""
+msgstr "De server bevat %d QSO(s) dit log ontbreekt en mist %d Van jou. Voeg de eerste toe aan dit logboek en stuur de tweede nu naar de server? Niets al in dit logboek wordt gewijzigd of verwijderd, en een backup van het logboek wordt eerst genomen."
 
 #: tprefsform.chknetsharespots.caption
 #: usettingscaptions.rs_network_sharespots
 #, fuzzy
 msgid "Share DX spots around the network"
-msgstr ""
+msgstr "DX-spots delen in het netwerk"
 
 #: tprefsform.lblhamscorehttpnote.caption
 #: uappstrings.shamscoreplainhttpnote
 #, fuzzy
 msgid "Plain http: your HamScore password is sent unencrypted. Use https://hamscore.com/postxml/ if the server supports it."
-msgstr ""
+msgstr "Normaal http: uw HamScore-wachtwoord wordt ongecodeerd verzonden. Gebruik https://hamscore.com/postxml/ als de server het ondersteunt."
 
 #: uappstrings.shamscoreresynccaption
 #: tfrmhamscore.btnresync.caption
 #, fuzzy
 msgid "Re-send Log to HamScore..."
-msgstr ""
+msgstr "Log opnieuw versturen naar HamScore..."
 
 #: uappstrings.shamscoreresyncbody
 #, fuzzy
-msgid "Re-send only: uploads every QSO in this log again, each with its original ID. Nothing is deleted on the HamScore server, so a QSO you have deleted from this log will still be there.\n\nDelete and re-send: first deletes the HamScore server's log for this contest (%s), then uploads every QSO. This cannot be undone on the server, and scores on the HamScore site are empty or incomplete until the upload finishes. Use it when the server shows QSOs that are no longer in this log."
+msgid ""
+"Re-send only: uploads every QSO in this log again, each with its original ID. Nothing is deleted on the HamScore server, so a QSO you have deleted from this log will still be there.\n"
+"\n"
+"Delete and re-send: first deletes the HamScore server's log for this contest (%s), then uploads every QSO. This cannot be undone on the server, and scores on the HamScore site are empty or incomplete until the upload finishes. Use it when the server shows QSOs that are no longer in this log."
 msgstr ""
+"Alleen opnieuw verzenden: uploadt elke QSO in dit logboek opnieuw, elk met zijn originele ID. Er wordt niets verwijderd op de HamScore server, dus een QSO die je uit dit logboek hebt verwijderd zal er nog steeds zijn.\n"
+"\n"
+"Verwijderen en opnieuw verzenden: verwijdert eerst het logboek van de HamScore-server voor deze wedstrijd (%s), uploadt dan elke QSO. Dit kan niet ongedaan gemaakt worden op de server, en scores op de HamScore site zijn leeg of onvolledig totdat de upload voltooid is. Gebruik het wanneer de server QSO's toont die niet meer in dit logboek staan."
 
 #: uappstrings.shamscoreresynconly
 #, fuzzy
 msgid "Re-send only"
-msgstr ""
+msgstr "Alleen opnieuw versturen"
 
 #: uappstrings.shamscoreresyncdeletefirst
 #, fuzzy
 msgid "Delete and re-send"
-msgstr ""
+msgstr "Verwijderen en opnieuw verzenden"
 
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
@@ -9850,348 +9856,348 @@ msgstr "Het posten in of uit, het adres, gebruikersnaam en wachtwoord van kracht
 #: uappstrings.slogsearchcallhint
 #, fuzzy
 msgid "Call or part of one"
-msgstr ""
+msgstr "Oproep of deel van een"
 
 #: uappstrings.slogsearchlogunreadable
 #, fuzzy
 msgid "The log could not be read"
-msgstr ""
+msgstr "Het logboek kon niet worden gelezen"
 
 #: uappstrings.sloggerfieldhost
 #, fuzzy
 msgid "Host / IP address"
-msgstr ""
+msgstr "Host / IP-adres"
 
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr ""
+msgstr "Haven"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
 msgid "Club Log callsign"
-msgstr ""
+msgstr "Clublog oproepteken"
 
 #: uappstrings.sloggerfieldclublogtoken
 #, fuzzy
 msgid "Club Log API token"
-msgstr ""
+msgstr "Clublog API token"
 
 #: uappstrings.sloggerfieldwrlkey
 #, fuzzy
 msgid "WRL API key"
-msgstr ""
+msgstr "WRL API sleutel"
 
 #: uappstrings.sloggerfieldwrllogbook
 #, fuzzy
 msgid "Logbook"
-msgstr ""
+msgstr "Logboek"
 
 #: uappstrings.sloggerfieldrequired
 #, fuzzy
 msgid "Enter %s"
-msgstr ""
+msgstr "Enter %s"
 
 #: uappstrings.sloggerchoicerequired
 #, fuzzy
 msgid "Choose %s from the list"
-msgstr ""
+msgstr "Kies %s uit de lijst"
 
 #: uappstrings.sloggerchoiceneedskey
 #, fuzzy
 msgid "Enter the API key and load the list before choosing %s"
-msgstr ""
+msgstr "Voer de API-toets in en laad de lijst voordat u kiest %s"
 
 #: uappstrings.sloggerportrange
 #, fuzzy
 msgid "External logger port must be between 1 and 65535"
-msgstr ""
+msgstr "Externe loggerpoort moet tussen 1 en 65535 zijn"
 
 #: uappstrings.sloggerchoicerefresh
 #, fuzzy
 msgid "Refresh"
-msgstr ""
+msgstr "Verversen"
 
 #: uappstrings.sloggerchoiceloading
 #, fuzzy
 msgid "Loading..."
-msgstr ""
+msgstr "Laden..."
 
 #: uappstrings.sloggerchoicefailed
 #, fuzzy
 msgid "The list could not be loaded: %s. The saved choice is kept."
-msgstr ""
+msgstr "De lijst kon niet geladen worden: %s. De bewaarde keuze wordt behouden."
 
 #: uappstrings.sloggerchoicesaved
 #, fuzzy
 msgid "Saved choice (refresh to see its name)"
-msgstr ""
+msgstr "Opgeslagen keuze (verversen om de naam te zien)"
 
 #: uappstrings.sloggergridenabled
 #, fuzzy
 msgid "Enabled"
-msgstr ""
+msgstr "Ingeschakeld"
 
 #: uappstrings.sloggerstatedisabled
 #, fuzzy
 msgid "Disabled"
-msgstr ""
+msgstr "Uitgeschakeld"
 
 #: uappstrings.sloggerstaterestart
 #, fuzzy
 msgid "Restart TR4W to apply"
-msgstr ""
+msgstr "Herstart TR4W om toe te passen"
 
 #: uappstrings.sloggerstateidle
 #, fuzzy
 msgid "Idle"
-msgstr ""
+msgstr "Inactief"
 
 #: uappstrings.sloggerstatesending
 #, fuzzy
 msgid "Sending (%d pending)"
-msgstr ""
+msgstr "Verzenden (%d in behandeling)"
 
 #: uappstrings.sloggerstateretrying
 #, fuzzy
 msgid "Retrying: %s"
-msgstr ""
+msgstr "Opnieuw proberen: %s"
 
 #: uappstrings.sloggerstatepaused
 #, fuzzy
 msgid "Paused: %s"
-msgstr ""
+msgstr "Gepauzeerd: %s"
 
 #: uappstrings.sloggerstatefailed
 #, fuzzy
 msgid "Failed: %s"
-msgstr ""
+msgstr "Fout: %s"
 
 #: uappstrings.sloggerstatecounts
 #, fuzzy
 msgid "%s (%d uncertain, %d failed)"
-msgstr ""
+msgstr "%s (%d onzeker, %d faalde)"
 
 #: uappstrings.smenuopenlog
 #, fuzzy
 msgid "Open Log..."
-msgstr ""
+msgstr "Logboek openen..."
 
 #: uappstrings.sopenlogswitchtitle
 #, fuzzy
 msgid "Switch to another contest (TR4W restarts on the one you choose)"
-msgstr ""
+msgstr "Schakel over naar een andere wedstrijd (TR4W herstart op degene die u kiest)"
 
 #: uappstrings.sopenloghandofffailed
 #, fuzzy
 msgid "Open Log was not done: the new contest could not be saved for the restart. The reason is in tr4w.log."
-msgstr ""
+msgstr "Open Log is niet gedaan: de nieuwe wedstrijd kon niet worden opgeslagen voor de herstart. De reden is in tr4w.log."
 
 #: uappstrings.sopenlogrefusedkeyed
 #, fuzzy
 msgid "Open Log was not done: a radio is transmitting. Unkey it, then choose File > Open Log again."
-msgstr ""
+msgstr "Open Log is niet gedaan: een radio zendt uit. Maak het los en kies vervolgens Bestand > Openen Log opnieuw."
 
 #: uappstrings.sopenlogrefusedsendingcw
 #, fuzzy
 msgid "Open Log was not done: a CW message is still being sent. Let it finish, then choose File > Open Log again."
-msgstr ""
+msgstr "Open Log is niet gedaan: er wordt nog steeds een CW bericht verstuurd. Laat het eindigen en kies vervolgens Bestand > Open Log opnieuw."
 
 #: uappstrings.sopenlogalreadyopen
 #, fuzzy
 msgid "That log is already open."
-msgstr ""
+msgstr "Dat logboek is al open."
 
 #: uappstrings.sopenlognotacontestlog
 #, fuzzy
 msgid "Not a TR4W contest log, so it was not opened: %s"
-msgstr ""
+msgstr "Geen TR4W wedstrijd log, dus het werd niet geopend: %s"
 
 #: uappstrings.sprefsnavmessages
 #, fuzzy
 msgid "Messages"
-msgstr ""
+msgstr "Berichten"
 
 #: uappstrings.sprefsnavcwwhileoperating
 #, fuzzy
 msgid "While operating"
-msgstr ""
+msgstr "Tijdens het gebruik"
 
 #: uappstrings.sprefsnavcwspeedandcharacters
 #, fuzzy
 msgid "Speed and characters"
-msgstr ""
+msgstr "Snelheid en karakters"
 
 #: uappstrings.sprefsnavprintedlog
 #, fuzzy
 msgid "Printed log"
-msgstr ""
+msgstr "Gedrukt logboek"
 
 #: uappstrings.sprefsprintedlognote
 #, fuzzy
 msgid "This version of TR4W does not print the log, so these two settings are kept but have no effect yet."
-msgstr ""
+msgstr "Deze versie van TR4W drukt het logboek niet af, dus deze twee instellingen worden bewaard maar hebben nog geen effect."
 
 #: uappstrings.sprefsycccboxheading
 #, fuzzy
 msgid "YCCC SO2R box"
-msgstr ""
+msgstr "YCCC SO2R doos"
 
 #: uappstrings.sprefsinitialexchangefilterheading
 #, fuzzy
 msgid "Initial exchange filter"
-msgstr ""
+msgstr "Initiële uitwisselingsfilter"
 
 #: uappstrings.sprefsoperatinginfo
 #: tprefsform.lbloperatinginfo.caption
 #, fuzzy
 msgid "How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings."
-msgstr ""
+msgstr "Hoe het logboek zich gedraagt tijdens de wedstrijd. Band map, banden, berichten, scoren en twee-radio instellingen zijn op de onderstaande pagina's; CW is onder CW Instellingen."
 
 #: uappstrings.sprefsnaventryanddupechecking
 #, fuzzy
 msgid "Entry and dupe checking"
-msgstr ""
+msgstr "Controle van binnenkomst en dupe"
 
 #: uappstrings.sprefsnavlogdisplay
 #, fuzzy
 msgid "Log display"
-msgstr ""
+msgstr "Logweergave"
 
 #: uappstrings.sprefsnavfilesandupdates
 #, fuzzy
 msgid "Files and updates"
-msgstr ""
+msgstr "Bestanden en updates"
 
 #: uappstrings.sprefsnavbandmapwindow
 #, fuzzy
 msgid "Window and tuning"
-msgstr ""
+msgstr "Venster en stemming"
 
 #: uappstrings.sprefsnavclusterspots
 #, fuzzy
 msgid "Spots and console"
-msgstr ""
+msgstr "Vlekken en console"
 
 #: uappstrings.sprefsgroupbandsandfrequencies
 #, fuzzy
 msgid "Starting band and mode, and frequency memory"
-msgstr ""
+msgstr "Beginband en -modus en frequentiegeheugen"
 
 #: uappstrings.sprefsgroupdupechecking
 #, fuzzy
 msgid "Dupe checking"
-msgstr ""
+msgstr "Dupe-controle"
 
 #: uappstrings.sprefsgroupsearchandpounce
 #, fuzzy
 msgid "Search and pounce"
-msgstr ""
+msgstr "Zoeken en stuiteren"
 
 #: uappstrings.sprefsgrouptyping
 #, fuzzy
 msgid "Typing"
-msgstr ""
+msgstr "Typen"
 
 #: uappstrings.sprefsgroupwhatislogged
 #, fuzzy
 msgid "What a QSO records"
-msgstr ""
+msgstr "Wat een QSO registreert"
 
 #: uappstrings.sprefsgrouphandlog
 #, fuzzy
 msgid "Entering a log by hand"
-msgstr ""
+msgstr "Een logboek handmatig invoeren"
 
 #: uappstrings.sprefsgrouptuningotherradio
 #, fuzzy
 msgid "Tuning the other radio"
-msgstr ""
+msgstr "De andere radio instellen"
 
 #: uappstrings.sprefsgroupbandmapwindow
 #, fuzzy
 msgid "Band map window"
-msgstr ""
+msgstr "Bandkaartvenster"
 
 #: uappstrings.sprefsgroupspottuning
 #, fuzzy
 msgid "Tuning to a spot"
-msgstr ""
+msgstr "Afstellen op een plek"
 
 #: uappstrings.sprefsgroupradiopolling
 #, fuzzy
 msgid "Radio polling - one rate for every radio"
-msgstr ""
+msgstr "Radiopeiling - één tarief voor elke radio"
 
 #: uappstrings.sprefsgroupstationcallsign
 #, fuzzy
 msgid "Your own callsign, remembered for New Contest"
-msgstr ""
+msgstr "Je eigen oproepteken, herinnerd voor Nieuwe Contest"
 
 #: uappstrings.sprefsgroupsuggestedcalls
 #, fuzzy
 msgid "Suggested-call keys"
-msgstr ""
+msgstr "Aanbevolen belsleutels"
 
 #: uappstrings.sprefsgroupnetworkstations
 #, fuzzy
 msgid "Stations and the Network window"
-msgstr ""
+msgstr "Stations en het netwerkvenster"
 
 #: uappstrings.sprefsgroupratedisplay
 #, fuzzy
 msgid "Rate display"
-msgstr ""
+msgstr "Rate display"
 
 #: uappstrings.sprefsgrouplogwindow
 #, fuzzy
 msgid "Log window"
-msgstr ""
+msgstr "Logvenster"
 
 #: uappstrings.sprefsgroupuserinfo
 #, fuzzy
 msgid "Information shown under the call window"
-msgstr ""
+msgstr "Informatie getoond onder het oproepvenster"
 
 #: uappstrings.sprefsgroupalerts
 #, fuzzy
 msgid "Alerts"
-msgstr ""
+msgstr "Waarschuwingen"
 
 #: uappstrings.sprefsgroupvoicekeyer
 #, fuzzy
 msgid "Voice keyer"
-msgstr ""
+msgstr "Voice keyer"
 
 #: uappstrings.sprefsgroupmodes
 #, fuzzy
 msgid "Modes"
-msgstr ""
+msgstr "Modi"
 
 #: uappstrings.sprefsgroupinitialexchange
 #, fuzzy
 msgid "Initial exchange"
-msgstr ""
+msgstr "Eerste uitwisseling"
 
 #: uappstrings.sprefsgroupmultiplierdata
 #, fuzzy
 msgid "Multiplier data"
-msgstr ""
+msgstr "Multipliergegevens"
 
 #: uappstrings.sprefsbandplanrow
 #, fuzzy
 msgid "Band plan (cutoff frequencies and memories)"
-msgstr ""
+msgstr "Bandplan (afsluitfrequenties en geheugens)"
 
 #: uappstrings.sprefsbandplanedit
 #, fuzzy
 msgid "Edit..."
-msgstr ""
+msgstr "Bewerken..."
 
 #: uappstrings.sradioeditbadpollrate
 #, fuzzy
 msgid "The frequency poll rate must be a whole number of milliseconds from %d to %d."
-msgstr ""
+msgstr "De frequentie poll rate moet een heel aantal milliseconden van %d tot %d."
 
 #: uappstrings.sprefsbrowse
 #, fuzzy
@@ -10201,107 +10207,107 @@ msgstr "Bladeren..."
 #: uappstrings.smenudownloadcallhistory
 #, fuzzy
 msgid "Download call history for this contest"
-msgstr ""
+msgstr "Download callgeschiedenis voor deze wedstrijd"
 
 #: uappstrings.scallhistorydownloading
 #, fuzzy
 msgid "Downloading call history..."
-msgstr ""
+msgstr "Gespreksgeschiedenis wordt gedownload..."
 
 #: uappstrings.scallhistorynosource
 #, fuzzy
 msgid "This contest has no call history download"
-msgstr ""
+msgstr "Deze wedstrijd heeft geen callgeschiedenisdownload"
 
 #: uappstrings.scallhistorybusy
 #, fuzzy
 msgid "A call history download is already running"
-msgstr ""
+msgstr "Er wordt al een callgeschiedenis gedownload"
 
 #: uappstrings.scallhistoryupdated
 #, fuzzy
 msgid "Call history updated (%d entries, %s); it takes effect the next time the contest is opened"
-msgstr ""
+msgstr "Gespreksgeschiedenis bijgewerkt (%d vermeldingen, %s); het wordt van kracht de volgende keer dat de wedstrijd wordt geopend"
 
 #: uappstrings.scallhistorycurrent
 #, fuzzy
 msgid "Call history already current"
-msgstr ""
+msgstr "Oproepgeschiedenis is al actief"
 
 #: uappstrings.scallhistorynotavailable
 #, fuzzy
 msgid "No call history file for this contest on supercheckhistory.com"
-msgstr ""
+msgstr "Geen aanroepgeschiedenisbestand voor deze wedstrijd op supercheckhistory.com"
 
 #: uappstrings.scallhistoryfailed
 #, fuzzy
 msgid "Download failed (%s); the previous file was kept"
-msgstr ""
+msgstr "Downloaden mislukt (%s); het vorige bestand werd bewaard"
 
 #: uappstrings.scallhistoryrefused
 #, fuzzy
 msgid "Server refused (HTTP %d); the previous file was kept"
-msgstr ""
+msgstr "Server geweigerd (HTTP %d); het vorige bestand werd bewaard"
 
 #: uappstrings.scallhistoryotherfile
 #, fuzzy
 msgid "CALL HISTORY FILENAME is \"%s\", so the downloaded file is not the one in use"
-msgstr ""
+msgstr "CALL HISTORY FILENAME is \"%s\", dus het gedownloade bestand is niet degene in gebruik"
 
 #: uappstrings.scallhistoryreasonhtml
 #, fuzzy
 msgid "the server sent a web page, not a call history file"
-msgstr ""
+msgstr "de server stuurde een webpagina, geen aanroepgeschiedenisbestand"
 
 #: uappstrings.scallhistoryreasontoosmall
 #, fuzzy
 msgid "the file is too small to be a call history"
-msgstr ""
+msgstr "het bestand is te klein om een aanroepgeschiedenis te zijn"
 
 #: uappstrings.scallhistoryreasontoolarge
 #, fuzzy
 msgid "the file is larger than expected"
-msgstr ""
+msgstr "het bestand is groter dan verwacht"
 
 #: uappstrings.scallhistoryreasontoofewrows
 #, fuzzy
 msgid "the file has too few usable rows"
-msgstr ""
+msgstr "het bestand heeft te weinig bruikbare rijen"
 
 #: uappstrings.scallhistoryreasonsmaller
 #, fuzzy
 msgid "the new file is much smaller than the one held"
-msgstr ""
+msgstr "het nieuwe bestand is veel kleiner dan het bestand"
 
 #: uappstrings.scallhistoryreasonwrite
 #, fuzzy
 msgid "the file could not be saved"
-msgstr ""
+msgstr "het bestand kon niet worden opgeslagen"
 
 #: uappstrings.sprefsnavqtc
 #, fuzzy
 msgid "QTC"
-msgstr ""
+msgstr "QTc"
 
 #: uappstrings.sprefsnavqsosettings
 #, fuzzy
 msgid "QSO settings"
-msgstr ""
+msgstr "QSO-instellingen"
 
 #: uappstrings.sprefsnavquickqsl
 #, fuzzy
 msgid "Quick QSL"
-msgstr ""
+msgstr "Snel QSL"
 
 #: uappstrings.sprefsnavcabrilloheadings
 #, fuzzy
 msgid "Cabrillo headings"
-msgstr ""
+msgstr "Rubrieken Cabrillo"
 
 #: uappstrings.sprefsnavcontestrules
 #, fuzzy
 msgid "Contest rules"
-msgstr ""
+msgstr "Wedstrijdregels"
 
 
 #: uappstrings.surltestbutton
@@ -10310,97 +10316,97 @@ msgstr ""
 #: tprefsform.btnscorereadtest.caption
 #, fuzzy
 msgid "Test"
-msgstr ""
+msgstr "Test"
 
 #: uappstrings.surltestrunning
 #, fuzzy
 msgid "Asking..."
-msgstr ""
+msgstr "Vragen..."
 
 #: uappstrings.surltestnothing
 #, fuzzy
 msgid "Nothing to test: the address box is empty."
-msgstr ""
+msgstr "Niets te testen: het adresvak is leeg."
 
 #: uappstrings.surltestanswered
 #, fuzzy
 msgid "Answered %d"
-msgstr ""
+msgstr "Antwoord %d"
 
 #: uappstrings.surltestansweredfrom
 #, fuzzy
 msgid "Answered %d from %s"
-msgstr ""
+msgstr "Antwoord %d van %s"
 
 #: uappstrings.surltestnoanswerscheme
 #, fuzzy
 msgid "No answer: the address does not start with http:// or https://"
-msgstr ""
+msgstr "Geen antwoord: het adres begint niet met http:// of https://"
 
 #: uappstrings.surltestnoanswerplain
 #, fuzzy
 msgid "No answer: a plain http:// address was not sent"
-msgstr ""
+msgstr "Geen antwoord: een gewoon http:// adres is niet verstuurd"
 
 #: uappstrings.surltestnoanswertls
 #, fuzzy
 msgid "No answer: the OpenSSL libraries could not be loaded"
-msgstr ""
+msgstr "Geen antwoord: de OpenSSL-bibliotheken konden niet geladen worden"
 
 #: uappstrings.surltestnoanswertlslib
 #, fuzzy
 msgid "No answer: the TLS library stopped while connecting"
-msgstr ""
+msgstr "Geen antwoord: de TLS-bibliotheek stopte tijdens het verbinden"
 
 #: uappstrings.surltestnoanswertrust
 #, fuzzy
 msgid "No answer: the certificate file cacert.pem could not be used"
-msgstr ""
+msgstr "Geen antwoord: het certificaatbestand cacert. pem kon niet gebruikt worden"
 
 #: uappstrings.surltestnoanswerverify
 #, fuzzy
 msgid "No answer: server certificates cannot be checked on this machine"
-msgstr ""
+msgstr "Geen antwoord: servercertificaten kunnen niet worden gecontroleerd op deze machine"
 
 #: uappstrings.surltestnoanswercert
 #, fuzzy
 msgid "No answer: the server's certificate was not accepted"
-msgstr ""
+msgstr "Geen antwoord: het certificaat van de server is niet geaccepteerd"
 
 #: uappstrings.surltestnoanswername
 #, fuzzy
 msgid "No answer: the host name was not found"
-msgstr ""
+msgstr "Geen antwoord: de hostnaam is niet gevonden"
 
 #: uappstrings.surltestnoanswerconnect
 #, fuzzy
 msgid "No answer: could not connect"
-msgstr ""
+msgstr "Geen antwoord: kon geen verbinding maken"
 
 #: uappstrings.surltestnoanswerconntime
 #, fuzzy
 msgid "No answer: timed out connecting"
-msgstr ""
+msgstr "Geen antwoord: timed out verbinding"
 
 #: uappstrings.surltestnoansweriotime
 #, fuzzy
 msgid "No answer: timed out waiting for the server"
-msgstr ""
+msgstr "Geen antwoord: timed out wachten op de server"
 
 #: uappstrings.surltestnoanswerlost
 #, fuzzy
 msgid "No answer: the connection was lost"
-msgstr ""
+msgstr "Geen antwoord: de verbinding is verbroken"
 
 #: uappstrings.surltestnoanswercancelled
 #, fuzzy
 msgid "No answer: the request was cancelled"
-msgstr ""
+msgstr "Geen antwoord: het verzoek is geannuleerd"
 
 #: uappstrings.surltestnoanswerother
 #, fuzzy
 msgid "No answer"
-msgstr ""
+msgstr "Geen antwoord"
 
 #: uappstrings.sverifyservercaption
 #: usettingscaptions.rs_scoring_board_verifyserver
@@ -10409,56 +10415,56 @@ msgstr ""
 #: tprefsform.chkscoreverify.caption
 #, fuzzy
 msgid "Verify the server's certificate"
-msgstr ""
+msgstr "Het certificaat van de server verifiëren"
 
 #: uappstrings.sverifyserveroffwarning
 #: tprefsform.lblscoreverifynote.caption
 #, fuzzy
 msgid "The server's identity is not checked; anyone between you and it can read what you send."
-msgstr ""
+msgstr "De identiteit van de server wordt niet gecontroleerd; iedereen tussen u en het kan lezen wat u verzendt."
 
 #: uappstrings.sprefsnavcwkeyers
 #, fuzzy
 msgid "CW keyers"
-msgstr ""
+msgstr "CW-sleutels"
 
 #: uappstrings.sprefshardwareinfo
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers."
-msgstr ""
+msgstr "Station-brede hardware. Instellingen die behoren tot één radio zijn onder Radios; rotators zijn onder Roators; WinKeyer en YCCC SO2R+ Keyers staan onder CW keyers."
 
 #: uappstrings.sprefscwkeyerspointer
 #: tprefsform.lblcwkeyerspointer.caption
 #, fuzzy
 msgid "WinKeyer and YCCC SO2R+ keyers, and their settings, are under Hardware > CW keyers."
-msgstr ""
+msgstr "WinKeyer en YCCC SO2R+ keyers, en hun instellingen, zijn onder Hardware > CW keyers."
 
 #: uappstrings.sprefskeyerscwpointer
 #: tprefsform.lblkeyerscwpointer.caption
 #, fuzzy
 msgid "The CW TR4W sends, and the paddle and serial-line keying it does itself, are under CW Settings."
-msgstr ""
+msgstr "De CW TR4W stuurt, en de paddle en seriële-line keying doet het zelf, staan onder CW Instellingen."
 
 #: uappstrings.sprefssearchcwkeyers
 #, fuzzy
 msgid "WinKeyer and YCCC SO2R+ keyers"
-msgstr ""
+msgstr "WinKeyer en YCCC SO2R+ sleutels"
 
 #: uappstrings.sprefssearchwinkeyersettings
 #, fuzzy
 msgid "Keyer mode, Sidetone, Weight, Dit/dah ratio, Switchpoint, Lead-in, Tail, Compensation, First extension, Auto space, CT spacing, Ignore speed pot, Sidetone on, Paddle-only sidetone, Swap paddles"
-msgstr ""
+msgstr "Keyer mode, Sidetone, Gewicht, Dit/dah ratio, Switchpoint, Lead-in, Tail, Compensation, Eerste uitbreiding, Auto ruimte, CT afstand, Negeer snelheid pot, Sidetone op, Paddle-only sidetone, Swap paddles"
 
 #: tprefsform.chkbandmapfilterdigital.caption
 #, fuzzy
 msgid "Hide digital spots"
-msgstr ""
+msgstr "Digitale plekken verbergen"
 
 #: uappstrings.snewlognametakentitle
 #, fuzzy
 msgid "This contest already has a log"
-msgstr ""
+msgstr "Deze wedstrijd heeft al een log"
 
 #: uappstrings.snewlognametakenbody
 #, fuzzy
@@ -10468,62 +10474,62 @@ msgstr ""
 #: uappstrings.snewlogcreatenumbered
 #, fuzzy
 msgid "Create new log"
-msgstr ""
+msgstr "Nieuw logboek aanmaken"
 
 #: uappstrings.snewlogopenexisting
 #, fuzzy
 msgid "Open existing log"
-msgstr ""
+msgstr "Bestaande log openen"
 
 #: uappstrings.snewcontestlicenseyearlabel
 #, fuzzy
 msgid "MY LICENSE YEAR"
-msgstr ""
+msgstr "MIJN LICENSE JAAR"
 
 #: uappstrings.sexchangenonamefound
 #, fuzzy
 msgid "No name found!!"
-msgstr ""
+msgstr "Geen naam gevonden!!"
 
 #: uappstrings.snewcontestqthormemberlabel
 #, fuzzy
 msgid "MY QTH OR MEMBER NO"
-msgstr ""
+msgstr "MIJN QTH OF LID GEEN"
 
 #: uappstrings.snewcontesthostareacountylabel
 #, fuzzy
 msgid "MY COUNTY"
-msgstr ""
+msgstr "Mijn telling"
 
 #: uappstrings.snewcontesthostareastatelabel
 #, fuzzy
 msgid "MY STATE"
-msgstr ""
+msgstr "MIJN STAAT"
 
 #: uappstrings.snewcontesthostareainsidenotice
 #, fuzzy
 msgid "You are in %s: choose your county from the list."
-msgstr ""
+msgstr "Je bent binnen. %s: kies uw provincie uit de lijst."
 
 #: uappstrings.snewcontesthostareaoutsidenotice
 #, fuzzy
 msgid "You are outside %0:s: enter your US state or Canadian province (two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s."
-msgstr ""
+msgstr "Je bent buiten. %0:s: voer uw Amerikaanse staat of Canadese provincie in (twee letters, bijvoorbeeld GA of ON), of DX. Vink de doos aan als u in %0:s."
 
 #: uappstrings.snewcontesthostareaentryisinside
 #, fuzzy
 msgid "%0:s is inside %1:s: tick the box and choose your county from the list."
-msgstr ""
+msgstr "%0:s is binnen %1:s: vink het vakje aan en kies uw provincie uit de lijst."
 
 #: uappstrings.snewcontesthostareaentrynotastate
 #, fuzzy
 msgid "%s is not a US state, a Canadian province or DX. Enter the two-letter code, e.g. GA or ON, or DX."
-msgstr ""
+msgstr "%s is geen Amerikaanse staat, een Canadese provincie of DX. Voer de tweelettercode in, bijvoorbeeld GA of ON, of DX."
 
 #: uappstrings.stotalscallsignmults
 #, fuzzy
 msgid "Calls"
-msgstr ""
+msgstr "Oproepen"
 
 #: uappstrings.snewlognametakenopenbody
 #, fuzzy
@@ -10533,181 +10539,181 @@ msgstr ""
 #: uappstrings.sexchangenolicenseyear
 #, fuzzy
 msgid "No license year found!!"
-msgstr ""
+msgstr "Geen rijbewijs jaar gevonden!!"
 
 #: uappstrings.sexchangeimproperlicenseyear
 #, fuzzy
 msgid "Improper license year!!"
-msgstr ""
+msgstr "Onjuist rijbewijs jaar!!"
 
 #: uappstrings.stotalslicenseyearmults
 #, fuzzy
 msgid "Years"
-msgstr ""
+msgstr "Jaren"
 
 #: tprefsform.lblmylicenseyear.caption
 #, fuzzy
 msgid "License year:"
-msgstr ""
+msgstr "Licentiejaar:"
 
 #: uappstrings.sreadinessmylicenseyearmissing
 #, fuzzy
 msgid "MY LICENSE YEAR is empty and this contest sends the year you were first licensed."
-msgstr ""
+msgstr "MIJN LICENSE JAAR is leeg en deze wedstrijd stuurt het jaar dat jullie eerste licentie kregen."
 
 #: uappstrings.snewcontestenternameandqth
 #, fuzzy
 msgid "Enter your name and QTH (US state, Canadian Province or DX country):"
-msgstr ""
+msgstr "Geef uw naam en QTH (VS-staat, Canadese provincie of DX-land):"
 
 #: uappstrings.snewcontestbranchnumberlabel
 #, fuzzy
 msgid "MY BRANCH NUMBER"
-msgstr ""
+msgstr "MIJN BRANDKANTNUMMER"
 
 #: uappstrings.scabundlemissingnotice
 #, fuzzy
 msgid "The certificate file cacert.pem was not found (looked in: %0:s); uploads to %1:s are paused until it is available."
-msgstr ""
+msgstr "Het certificaatbestand cacert.pem is niet gevonden (ingezien: %0:s); uploads naar %1:s worden gepauzeerd totdat het beschikbaar is."
 
 #: uappstrings.seditqsodeliveryfailed
 #, fuzzy
 msgid "failed"
-msgstr ""
+msgstr "mislukt"
 
 #: uappstrings.seditqsodeliveryfailedwithcode
 #, fuzzy
 msgid "failed (%s)"
-msgstr ""
+msgstr "mislukt (%s)"
 
 #: uappstrings.seditqsodeliverylastsent
 #, fuzzy
 msgid "Last sent %s UTC"
-msgstr ""
+msgstr "Laatst verzonden %s UTC"
 
 #: uappstrings.seditqsodeliveryline
 #, fuzzy
 msgid "External logger %s: %s. %s"
-msgstr ""
+msgstr "Externe logger %s: %s. %s"
 
 #: uappstrings.seditqsodeliveryneversent
 #, fuzzy
 msgid "Not sent yet"
-msgstr ""
+msgstr "Nog niet verzonden"
 
 #: uappstrings.seditqsodeliverypending
 #, fuzzy
 msgid "pending"
-msgstr ""
+msgstr "in behandeling"
 
 #: uappstrings.seditqsodeliverysending
 #, fuzzy
 msgid "sending"
-msgstr ""
+msgstr "verzenden"
 
 #: uappstrings.seditqsodeliverysynced
 #, fuzzy
 msgid "up to date"
-msgstr ""
+msgstr "up to date"
 
 #: uappstrings.seditqsodeliveryuncertain
 #, fuzzy
 msgid "uncertain"
-msgstr ""
+msgstr "onzeker"
 
 #: uappstrings.seditqsomycall
 #, fuzzy
 msgctxt "uappstrings.seditqsomycall"
 msgid "Call"
-msgstr ""
+msgstr "Oproep"
 
 #: uappstrings.seditqsomycounty
 #: tfrmeditqso.lblmycounty.caption
 #, fuzzy
 msgid "County"
-msgstr ""
+msgstr "Land"
 
 #: uappstrings.seditqsomycqzone
 #: tfrmeditqso.lblmycqzone.caption
 #, fuzzy
 msgid "CQ zone"
-msgstr ""
+msgstr "CQ-zone"
 
 #: uappstrings.seditqsomygrid
 #: tfrmeditqso.lblmygrid.caption
 #, fuzzy
 msgid "Grid"
-msgstr ""
+msgstr "Raster"
 
 #: uappstrings.seditqsomyituzone
 #: tfrmeditqso.lblmyituzone.caption
 #, fuzzy
 msgid "ITU zone"
-msgstr ""
+msgstr "ITU-zone"
 
 #: uappstrings.seditqsomypark
 #: tfrmeditqso.lblmypark.caption
 #, fuzzy
 msgid "Park"
-msgstr ""
+msgstr "Parkeren"
 
 #: uappstrings.seditqsomysection
 #: tfrmeditqso.lblmysection.caption
 #, fuzzy
 msgid "Section"
-msgstr ""
+msgstr "Sectie"
 
 #: uappstrings.seditqsomystate
 #: tfrmeditqso.lblmystate.caption
 #, fuzzy
 msgid "State"
-msgstr ""
+msgstr "Staat"
 
 #: uappstrings.seditqsomystation
 #: tfrmeditqso.grpmystation.caption
 #, fuzzy
 msgid "Our station for this QSO"
-msgstr ""
+msgstr "Ons station voor deze QSO"
 
 #: uappstrings.seditqsomystationassumed
 #, fuzzy
 msgid "Our station for this QSO (assumed: a network QSO)"
-msgstr ""
+msgstr "Ons station voor deze QSO (verondersteld: een netwerk QSO)"
 
 #: uappstrings.seditqsomystationnotrecorded
 #, fuzzy
 msgid "Our station for this QSO (not recorded)"
-msgstr ""
+msgstr "Ons station voor deze QSO (niet opgenomen)"
 
 #: uappstrings.sexchangeambiguousserial
 #, fuzzy
 msgid "Ambiguous exchange - enter %s or %s to resolve"
-msgstr ""
+msgstr "Ambitieuze uitwisseling - enter %s of %s oplossen"
 
 #: uappstrings.sexchangecallorexchange
 #, fuzzy
 msgid "Ambiguous entry - %s may be a callsign or an exchange. For the exchange, enter %s; for the call, type it in the call window"
-msgstr ""
+msgstr "Dubbele ingang - %s kan een oproepteken of een uitwisseling zijn. Voor de uitwisseling, voer %s; voor de oproep, typ het in het aanroepvenster"
 
 #: uappstrings.sexchangechecknottwodigits
 #, fuzzy
 msgid "Check must be two digits (%s)"
-msgstr ""
+msgstr "Controle moet twee cijfers zijn (%s)"
 
 #: uappstrings.sexchangenocheck
 #, fuzzy
 msgid "Missing check (two digits)"
-msgstr ""
+msgstr "Ontbrekende controle (twee cijfers)"
 
 #: uappstrings.sexchangenosection
 #, fuzzy
 msgid "Missing section"
-msgstr ""
+msgstr "Ontbrekende sectie"
 
 #: uappstrings.shamscorenobundlestatus
 #, fuzzy
 msgid "Not sent: cacert.pem not found (looked in: %0:s) -- %1:d QSO(s) retained"
-msgstr ""
+msgstr "Niet verzonden: cacert.pem niet gevonden (ingezien: %0:s) - %1:d QSO(s) behouden"
 
 #: uappstrings.slogbusynotsaved
 #, fuzzy
@@ -10716,129 +10722,132 @@ msgid ""
 "\n"
 "If this was a QSO, it is still in the entry window: log it again. If this keeps happening, run Tools > Run Verification Checks."
 msgstr ""
+"De wedstrijd log werd vergrendeld door een ander programma terwijl %s, zodat die verandering NIET werd opgeslagen. Het logboek zelf is niet beschadigd en TR4W houdt het open.\n"
+"\n"
+"Als dit een QSO was, is het nog steeds in het invoervenster: log opnieuw. Als dit blijft gebeuren, voer Hulpmiddelen > Controles uitvoeren."
 
 #: uappstrings.sloggereditorcounts
 #, fuzzy
 msgid "Pending %d | Sending %d | Synced %d | Uncertain %d | Failed %d"
-msgstr ""
+msgstr "In afwachting %d Verzenden %d Gesynchroniseerd %d Onzeker %d Fout %d"
 
 #: uappstrings.sloggereditornocounts
 #, fuzzy
 msgid "Delivery status unavailable"
-msgstr ""
+msgstr "Leveringsstatus niet beschikbaar"
 
 #: uappstrings.sloggereditornolog
 #, fuzzy
 msgid "No contest log is open."
-msgstr ""
+msgstr "Er is geen wedstrijdlogboek geopend."
 
 #: uappstrings.sloggereditornote
 #, fuzzy
 msgid "Save to Preferences returns this logger to the Preferences window. Click Save there to store it; Active takes effect then, with no restart. A logger added since TR4W started, or a changed key, host or logbook, applies after you restart TR4W. Each logger sends independently."
-msgstr ""
+msgstr "Opslaan naar Voorkeuren geeft deze logger terug naar het Voorkeurenvenster. Klik hier op opslaan om het op te slaan; Active wordt dan van kracht, zonder herstart. Een logger toegevoegd sinds TR4W is gestart, of een gewijzigde sleutel, host of logboek, is van toepassing nadat u TR4W herstart. Elke logger stuurt onafhankelijk."
 
 #: uappstrings.sloggerfieldcloudlogkey
 #, fuzzy
 msgid "Cloudlog / Wavelog API key"
-msgstr ""
+msgstr "Cloudlog / Wavelog API sleutel"
 
 #: uappstrings.sloggerfieldcloudlogprofile
 #, fuzzy
 msgid "Station profile ID"
-msgstr ""
+msgstr "Stationprofiel-ID"
 
 #: uappstrings.sloggerfieldcloudlogurl
 #, fuzzy
 msgid "Cloudlog / Wavelog address (https://...)"
-msgstr ""
+msgstr "Cloudlog / Wavelog adres (https://...)"
 
 #: uappstrings.sloggergridadd
 #: tprefsform.btnaddexternallogger.caption
 #, fuzzy
 msgid "Add..."
-msgstr ""
+msgstr "Voeg toe..."
 
 #: uappstrings.sloggergridchanged
 #, fuzzy
 msgid "Logger definitions changed. Save Preferences to apply Enabled and Order now; connection changes apply after a restart."
-msgstr ""
+msgstr "Logger definities veranderd. Voorkeuren opslaan om Ingeschakeld en Bestellen nu toe te passen; wijzigingen in de verbinding zijn van toepassing na een herstart."
 
 #: uappstrings.sloggergridedit
 #, fuzzy
 msgctxt "uappstrings.sloggergridedit"
 msgid "Edit..."
-msgstr ""
+msgstr "Bewerken..."
 
 #: uappstrings.sloggergridhint
 #, fuzzy
 msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it; drag the Order cell to reorder. Active loggers send in Order. Save Preferences to apply Enabled and Order now; a new logger, or changed connection settings, applies after a restart."
-msgstr ""
+msgstr "Klik met de rechtermuisknop op een logger om het te bewerken, wijzigen Stuur nieuwe QSO's, verplaatsen of verwijderen; sleep de Bestelcel om te herschikken. Actieve loggers sturen in orde. Voorkeuren opslaan om Ingeschakeld en Bestellen nu toe te passen; een nieuwe logger, of gewijzigde verbindingsinstellingen, is van toepassing na een herstart."
 
 #: uappstrings.sloggergridlogger
 #, fuzzy
 msgid "Logger"
-msgstr ""
+msgstr "Logger"
 
 #: uappstrings.sloggergridmovedown
 #, fuzzy
 msgid "Move down"
-msgstr ""
+msgstr "Omlaag"
 
 #: uappstrings.sloggergridmoveup
 #, fuzzy
 msgid "Move up"
-msgstr ""
+msgstr "Omhoog"
 
 #: uappstrings.sloggergridno
 #, fuzzy
 msgid "No"
-msgstr ""
+msgstr "Nee"
 
 #: uappstrings.sloggergridnone
 #, fuzzy
 msgid "No loggers configured"
-msgstr ""
+msgstr "Geen loggers ingesteld"
 
 #: uappstrings.sloggergridorder
 #, fuzzy
 msgid "Order"
-msgstr ""
+msgstr "Beschikking"
 
 #: uappstrings.sloggergridprovider
 #: texternalloggersform.lblprovider.caption
 #, fuzzy
 msgid "Provider"
-msgstr ""
+msgstr "Aanbieder"
 
 #: uappstrings.sloggergridremove
 #, fuzzy
 msgid "Remove..."
-msgstr ""
+msgstr "Verwijder..."
 
 #: uappstrings.sloggergridremoveask
 #, fuzzy
 msgid "Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition."
-msgstr ""
+msgstr "Loggerdefinitie verwijderen? In afwachting van leveringen blijven in de wedstrijd log en zal niet worden doorgestuurd naar een andere definitie."
 
 #: uappstrings.sloggergridsavedrestart
 #, fuzzy
 msgid "Saved. Enabled and Order are in effect. %d logger(s) with new or changed connection settings apply after you restart TR4W."
-msgstr ""
+msgstr "Gered. Ingeschakeld en Orde zijn van kracht. %d logger(s) met nieuwe of gewijzigde verbindingsinstellingen gelden nadat u TR4W herstart."
 
 #: uappstrings.sloggergridsend
 #, fuzzy
 msgid "Send new QSOs"
-msgstr ""
+msgstr "Nieuwe QSO's versturen"
 
 #: uappstrings.sloggergridyes
 #, fuzzy
 msgid "Yes"
-msgstr ""
+msgstr "Ja"
 
 #: uappstrings.sloggerstateapplyonsave
 #, fuzzy
 msgid "Applies on Save"
-msgstr ""
+msgstr "Geldt voor opslaan"
 
 #: uappstrings.sloglockedbody
 #, fuzzy
@@ -10856,32 +10865,32 @@ msgstr ""
 #: uappstrings.sloglockedheldelsewhere
 #, fuzzy
 msgid "Another program is holding it -- most likely another TR4W, or one that crashed and is still waiting at an error dialog; or a backup, cloud sync (OneDrive, Dropbox) or antivirus program reading the file."
-msgstr ""
+msgstr "Een ander programma houdt het vast -- waarschijnlijk een andere TR4W, of een die crashte en nog steeds wacht op een fout dialoog; of een back-up, cloud sync (OneDrive, Dropbox) of antivirusprogramma dat het bestand leest."
 
 #: uappstrings.sloglockedheldhere
 #, fuzzy
 msgid "This TR4W's own background connection is holding it: %s."
-msgstr ""
+msgstr "Deze TR4W's eigen achtergrondverbinding houdt het vast: %s."
 
 #: uappstrings.sloglockedquit
 #, fuzzy
 msgid "Quit TR4W"
-msgstr ""
+msgstr "TR4W afsluiten"
 
 #: uappstrings.sloglockedreadonly
 #, fuzzy
 msgid "Open read-only (no logging)"
-msgstr ""
+msgstr "Alleen-lezen openen (geen loggen)"
 
 #: uappstrings.sloglockedretry
 #, fuzzy
 msgid "Retry"
-msgstr ""
+msgstr "Opnieuw"
 
 #: uappstrings.sloglockedtitle
 #, fuzzy
 msgid "Contest log is locked"
-msgstr ""
+msgstr "Contest log is vergrendeld"
 
 #: uappstrings.slogreadonlyrefused
 #, fuzzy
@@ -10895,140 +10904,140 @@ msgstr ""
 #: uappstrings.snettailcatfailed
 #, fuzzy
 msgid "The link to the multi-op server through Tailcat could not be opened: %s. TR4W keeps trying."
-msgstr ""
+msgstr "De link naar de multi-op server via Tailcat kon niet worden geopend: %sTR4W blijft het proberen."
 
 #: uappstrings.sprefsgroupinternet
 #, fuzzy
 msgid "Internet downloads and uploads"
-msgstr ""
+msgstr "Internetdownloads en uploads"
 
 #: uappstrings.sprefsnettailcatcaption
 #: tprefsform.lblnettailcat.caption
 #, fuzzy
 msgid "Tailcat address:"
-msgstr ""
+msgstr "Tailcat adres:"
 
 #: uappstrings.sprefsnettailcathint
 #: tprefsform.lblnettailcathint.caption
 #, fuzzy
 msgid "To reach a server on another network, paste the address its operator gave you and tick Use Tailcat. Server above is then not used. Treat the address like a password."
-msgstr ""
+msgstr "Om een server op een ander netwerk te bereiken, plakt u het adres dat de operator u gaf en tikt u op Use Tailcat. Server hierboven wordt dan niet gebruikt. Behandel het adres als een wachtwoord."
 
 #: uappstrings.sprefsnetusetailcat
 #: tprefsform.chknetusetailcat.caption
 #, fuzzy
 msgid "Use Tailcat"
-msgstr ""
+msgstr "Tailcat gebruiken"
 
 #: uappstrings.swrldeliveryissue
 #, fuzzy
 msgid "World Radio League delivery needs attention. %s. Local logging continues; check the TR4W log and WRL delivery records."
-msgstr ""
+msgstr "World Radio League heeft aandacht nodig. %s. Lokale logging gaat door; controleer de TR4W log en WRL leveringsrecords."
 
 #: uappstrings.swrlstatusunavailable
 #, fuzzy
 msgid "WRL delivery status is unavailable for the current log."
-msgstr ""
+msgstr "WRL-leveringsstatus is niet beschikbaar voor het huidige logboek."
 
 #: uappstrings.swrlsummary
 #, fuzzy
 msgid "WRL delivery: pending %d; sending %d; up to date %d; uncertain %d; failed %d. Reopen Preferences to refresh."
-msgstr ""
+msgstr "WRL-levering: in behandeling %d; verzenden %d; bijgewerkt %d; onzeker %d; mislukt %d. Heropenen Voorkeuren om te vernieuwen."
 
 #: ulclformhelpers.tc_prefs_ports_unavailable
 #, fuzzy
 msgid "(port list not available on this platform)"
-msgstr ""
+msgstr "(havenlijst niet beschikbaar op dit platform)"
 
 #: ulclformhelpers.tc_prefs_port_not_present
 #, fuzzy
 msgid "(not present)"
-msgstr ""
+msgstr "(niet aanwezig)"
 
 #: ulclformhelpers.tc_prefs_port_unsupported
 #, fuzzy
 msgid "(not selectable yet)"
-msgstr ""
+msgstr "(nog niet te selecteren)"
 
 #: usettingscaptions.rs_bandmap_workedmultcolor
 #, fuzzy
 msgid "Color of the M on a spot whose multiplier wants a backup"
-msgstr ""
+msgstr "Kleur van de M op een plek waarvan de multiplier wil een back-up"
 
 #: usettingscaptions.rs_bandmap_workedmultlimit
 #, fuzzy
 msgid "Workings of a multiplier before its spot shows no M"
-msgstr ""
+msgstr "Werken van een multiplier voordat de plaats toont geen M"
 
 #: usettingscaptions.rs_cluster_ctrlj_spotcommentmultiplier
 #, fuzzy
 msgid "Spot Comment Multiplier"
-msgstr ""
+msgstr "Spot Comment Multiplier"
 
 #: usettingscaptions.rs_files_ctrlj_callhistoryfilename
 #, fuzzy
 msgid "Call History Filename"
-msgstr ""
+msgstr "Oproepgeschiedenis bestandsnaam"
 
 #: usettingscaptions.rs_files_ctrlj_usecallhistoryfile
 #, fuzzy
 msgid "Use Call History File"
-msgstr ""
+msgstr "Gespreksgeschiedenisbestand gebruiken"
 
 #: usettingscaptions.rs_network_httptransport
 #, fuzzy
 msgid "How downloads and uploads connect (generic, auto or platform)"
-msgstr ""
+msgstr "Hoe downloads en uploads verbinden (generiek, auto of platform)"
 
 #: utr4wstrings.tc_improperdomesticqthhostonly
 #, fuzzy
 msgid "(%s: work %s stations only)"
-msgstr ""
+msgstr "(%sWerk %s uitsluitend stations)"
 
 #: utr4wstrings.tc_improperdomesticqthnoqth
 #, fuzzy
 msgid "(no QTH)"
-msgstr ""
+msgstr "(geen QTH)"
 
 #: utr4wstrings.tc_improperdomesticqthnotinfile
 #, fuzzy
 msgid "(%s not in %s)"
-msgstr ""
+msgstr "(%s niet in %s)"
 
 #: utr4wstrings.tc_improperdomesticqthunknown
 #, fuzzy
 msgid "(%s not known)"
-msgstr ""
+msgstr "(%s niet bekend)"
 
 #: utr4wstrings.tc_invalidarrlsection
 #, fuzzy
 msgid "Invalid ARRL Section"
-msgstr ""
+msgstr "Ongeldige ARRL-sectie"
 
 #: utr4wstrings.tc_qsonumberzeronotvalid
 #, fuzzy
 msgid "QSO number 0 is not valid in this contest."
-msgstr ""
+msgstr "QSO nummer 0 is niet geldig in deze wedstrijd."
 
 #: utr4wstrings.tc_tciserverportusedbytciradio
 #, fuzzy
 msgid "The TCI server cannot use port %d: your TCI radio '%s' connects to the SDR on that port on this PC. Choose a different port for the TCI server (default %d) or turn the TCI server off."
-msgstr ""
+msgstr "De TCI-server kan poort niet gebruiken %d: uw TCI radio '%s' verbindt met de SDR op die poort op deze PC. Kies een andere poort voor de TCI-server (standaard %d) of zet de TCI-server uit."
 
 #: utr4wstrings.tc_toomanycounties
 #, fuzzy
 msgid "Too many counties for this contest (maximum %d)!!"
-msgstr ""
+msgstr "Te veel provincies voor deze wedstrijd (maximaal %d)!"
 
 #: uappstrings.sprefspagehasnosettingsyet
 #, fuzzy
 msgid "There are no settings on this page yet."
-msgstr ""
+msgstr "Er zijn nog geen instellingen op deze pagina."
 
 #: uappstrings.slicenseyearscopealsocontest
 #, fuzzy
 msgid "Also this contest"
-msgstr ""
+msgstr "Ook deze wedstrijd"
 
 #: uappstrings.slicenseyearscopebody
 #, fuzzy
@@ -11041,133 +11050,140 @@ msgid ""
 "\n"
 "QSOs already logged do not store the year they sent: an export sends this contest's year for all of them."
 msgstr ""
+"Het standaard licentiejaar van het station is nu %0:s.\n"
+"\n"
+"%1:s stuurt het licentiejaar, en stuurt %2:s Nu.\n"
+"\n"
+"Moet deze wedstrijd het nieuwe jaar ook sturen?\n"
+"\n"
+"QSO's die al zijn ingelogd slaan het jaar dat ze verzonden niet op: een export stuurt het jaar van deze wedstrijd voor alle van hen."
 
 #: uappstrings.slicenseyearscopecontestandqsos
 #, fuzzy
 msgid "This contest and its existing QSOs"
-msgstr ""
+msgstr "Deze wedstrijd en haar bestaande QSO's"
 
 #: uappstrings.slicenseyearscopestationonly
 #, fuzzy
 msgid "Station default only"
-msgstr ""
+msgstr "Alleen standaardstation"
 
 #: uappstrings.slicenseyearscopetitle
 #, fuzzy
 msgid "License year"
-msgstr ""
+msgstr "Licentiejaar"
 
 #: uappstrings.smessageeditcaptiontoolong
 #, fuzzy
 msgid "The caption is %0:d bytes long and a caption holds %1:d. Shorten it and press OK again."
-msgstr ""
+msgstr "Het bijschrift is %0:d bytes lang en een bijschrift bevat %1:dVerkort het en druk nogmaals op OK."
 
 #: uappstrings.smessageedittexttoolong
 #, fuzzy
 msgid "The message is %0:d bytes long and a message holds %1:d. Shorten it and press OK again."
-msgstr ""
+msgstr "Het bericht is %0:d bytes lang en een bericht bevat %1:dVerkort het en druk nogmaals op OK."
 
 #: uappstrings.snetparametertoolong
 #, fuzzy
 msgid "%0:s was not sent to the other stations: it is %1:d bytes and the network carries %2:d."
-msgstr ""
+msgstr "%0:s werd niet naar de andere stations gestuurd: het is %1:d bytes en het netwerk draagt %2:d."
 
 #: uappstrings.sexchangehintage
 #, fuzzy
 msgid "age"
-msgstr ""
+msgstr "leeftijd"
 
 #: uappstrings.sexchangehintand
 #, fuzzy
 msgid "%0:s and %1:s"
-msgstr ""
+msgstr "%0:s en %1:s"
 
 #: uappstrings.sexchangehintchapter
 #, fuzzy
 msgid "chapter"
-msgstr ""
+msgstr "hoofdstuk"
 
 #: uappstrings.sexchangehintcheck
 #, fuzzy
 msgid "check"
-msgstr ""
+msgstr "controleren"
 
 #: uappstrings.sexchangehintclass
 #, fuzzy
 msgid "class"
-msgstr ""
+msgstr "klasse"
 
 #: uappstrings.sexchangehintfocnumber
 #: tfrmeditqso.lblmyfocnumber.caption
 #, fuzzy
 msgid "FOC number"
-msgstr ""
+msgstr "FOC-nummer"
 
 #: uappstrings.sexchangehintlicenseyear
 #, fuzzy
 msgid "license year"
-msgstr ""
+msgstr "licentiejaar"
 
 #: uappstrings.sexchangehintname
 #, fuzzy
 msgid "name"
-msgstr ""
+msgstr "Naam"
 
 #: uappstrings.sexchangehintpower
 #, fuzzy
 msgid "power"
-msgstr ""
+msgstr "vermogen"
 
 #: uappstrings.sexchangehintprecedence
 #, fuzzy
 msgid "precedence"
-msgstr ""
+msgstr "voorrang"
 
 #: uappstrings.sexchangehintrandomchars
 #, fuzzy
 msgid "random characters"
-msgstr ""
+msgstr "willekeurige tekens"
 
 #: uappstrings.sexchangehintserialnumber
 #, fuzzy
 msgid "serial number"
-msgstr ""
+msgstr "serienummer"
 
 #: uappstrings.sexchangehintsignalreport
 #, fuzzy
 msgid "signal report"
-msgstr ""
+msgstr "signaalrapport"
 
 #: uappstrings.sexchangehinttentennumber
 #, fuzzy
 msgid "10-10 number"
-msgstr ""
+msgstr "10-10 nummer"
 
 #: uappstrings.sexchangehintyearslicensed
 #, fuzzy
 msgid "years licensed"
-msgstr ""
+msgstr "jaren licentie"
 
 #: uappstrings.sexchangehintzone
 #, fuzzy
 msgid "zone"
-msgstr ""
+msgstr "zone"
 
 #: uappstrings.sexchangehintzoneorsociety
 #, fuzzy
 msgid "zone or society"
-msgstr ""
+msgstr "zone of samenleving"
 
 #: uappstrings.seditqsomyyearsent
 #: tfrmeditqso.lblmyyearsent.caption
 #, fuzzy
 msgid "Year sent"
-msgstr ""
+msgstr "Jaar verzonden"
 
 #: uappstrings.seditqsoimpropersentyear
 #, fuzzy
 msgid "Improper license year sent!!"
-msgstr ""
+msgstr "Onjuiste licentiejaar verzonden!!"
 
 #: uappstrings.slicenseyearscopebodystored
 #, fuzzy
@@ -11180,11 +11196,18 @@ msgid ""
 "\n"
 "QSOs already logged keep the year they sent."
 msgstr ""
+"Het standaard licentiejaar van het station is nu %0:s.\n"
+"\n"
+"%1:s stuurt het licentiejaar, en stuurt %2:s Nu.\n"
+"\n"
+"Moet deze wedstrijd het nieuwe jaar ook sturen?\n"
+"\n"
+"QSO's hebben het jaar dat ze verstuurden al geregistreerd."
 
 #: uappstrings.slicenseyearcorrecttitle
 #, fuzzy
 msgid "Correct logged QSOs?"
-msgstr ""
+msgstr "Correct gelogde QSO's?"
 
 #: uappstrings.slicenseyearcorrectbody
 #, fuzzy
@@ -11195,11 +11218,16 @@ msgid ""
 "\n"
 "Answer Yes only if %1:s was a mistake. A QSO logged with %1:s on the air sent %1:s, and its log should say so."
 msgstr ""
+"%0:d QSO(s) al aangemeld in deze wedstrijd stuurde het licentiejaar %1:s.\n"
+"\n"
+"Verander ze in %2:s?\n"
+"\n"
+"Antwoord Ja alleen als %1:s Het was een vergissing. Een QSO aangemeld met %1:s in de lucht verzonden %1:s, en het logboek zou dat moeten zeggen."
 
 #: uappstrings.swizback
 #, fuzzy
 msgid "< Back"
-msgstr ""
+msgstr "< Terug"
 
 #: uappstrings.swizcallodd
 #, fuzzy
@@ -11208,11 +11236,14 @@ msgid ""
 "\n"
 "Use it anyway?"
 msgstr ""
+"\"%s\" lijkt niet op een gewone roepnaam.\n"
+"\n"
+"Gebruik het toch?"
 
 #: uappstrings.swizcallrequired
 #, fuzzy
 msgid "Enter your callsign to continue."
-msgstr ""
+msgstr "Voer uw oproep in om door te gaan."
 
 #: uappstrings.swizcancel
 #: tfrmcabrillosummary.btncancel.caption
@@ -11221,28 +11252,28 @@ msgstr ""
 #: tfrmrover.btncancel.caption
 #, fuzzy
 msgid "Cancel"
-msgstr ""
+msgstr "Annuleer"
 
 #: uappstrings.swizchecklistheading
 #, fuzzy
 msgid "What else would you like to set up now?"
-msgstr ""
+msgstr "Wat wil je nog meer opzetten?"
 
 #: uappstrings.swizchecklistintro
 #, fuzzy
 msgid "Tick what you have. Anything left unticked can be set up later in Preferences."
-msgstr ""
+msgstr "Tik wat je hebt. Alles wat niet aangeraakt is kan later ingesteld worden in Voorkeuren."
 
 #: uappstrings.swizclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
-msgstr ""
+msgstr "Sluiten"
 
 #: uappstrings.swizclusterheading
 #, fuzzy
 msgid "DX cluster"
-msgstr ""
+msgstr "DX cluster"
 
 #: uappstrings.swizclusterintro
 #, fuzzy
@@ -11252,109 +11283,109 @@ msgstr "Kies een cluster uit de lijst, of typ zijn hostnaam of IP-adres en zijn 
 #: uappstrings.swizclusterlogin
 #, fuzzy
 msgid "Login callsign:"
-msgstr ""
+msgstr "Aanmeldaanroepteken:"
 
 #: uappstrings.swizclusterneeded
 #, fuzzy
 msgid "Enter a cluster server, or go back and untick it."
-msgstr ""
+msgstr "Voer een clusterserver in, of ga terug en verwijder het."
 
 #: uappstrings.swizclusterpassword
 #, fuzzy
 msgid "Password:"
-msgstr ""
+msgstr "Wachtwoord:"
 
 #: uappstrings.swizclusterserver
 #, fuzzy
 msgid "Server:"
-msgstr ""
+msgstr "Server:"
 
 #: uappstrings.swizcreate
 #, fuzzy
 msgid "Create configuration"
-msgstr ""
+msgstr "Configuratie maken"
 
 #: uappstrings.swizderivednote
 #, fuzzy
 msgid "CQ zone, ITU zone, country and continent are filled in from the callsign. Correct any that are wrong."
-msgstr ""
+msgstr "CQ zone, ITU zone, land en continent zijn ingevuld vanaf de oproep. Corrigeer alles wat fout is."
 
 #: uappstrings.swizitemcluster
 #, fuzzy
 msgid "A DX cluster"
-msgstr ""
+msgstr "Een DX cluster"
 
 #: uappstrings.swizitemclusterhint
 #, fuzzy
 msgid "DX spots in the band map."
-msgstr ""
+msgstr "DX spots in de bandkaart."
 
 #: uappstrings.swizitemkeyer
 #, fuzzy
 msgid "A WinKeyer"
-msgstr ""
+msgstr "Een WinKeyer"
 
 #: uappstrings.swizitemkeyerhint
 #, fuzzy
 msgid "A WinKeyer CW keyer on its own port."
-msgstr ""
+msgstr "Een WinKeyer CW keyer op zijn eigen poort."
 
 #: uappstrings.swizitemradio
 #, fuzzy
 msgid "A radio (rig control)"
-msgstr ""
+msgstr "A radio (rig control)"
 
 #: uappstrings.swizitemradiohint
 #, fuzzy
 msgid "TR4W reads and sets the frequency and mode."
-msgstr ""
+msgstr "TR4W leest en stelt de frequentie en modus in."
 
 #: uappstrings.swizkeyerheading
 #: uappstrings.sdefaultkeyername
 #, fuzzy
 msgid "WinKeyer"
-msgstr ""
+msgstr "WinKeyer"
 
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr ""
+msgstr "Kies de poort waar uw WinKeyer op staat. Een WinKeyer heeft zijn eigen poort nodig, niet die van de radio."
 
 #: uappstrings.swizmenu
 #, fuzzy
 msgid "Setup Wizard..."
-msgstr ""
+msgstr "Wizard instellen..."
 
 #: uappstrings.swiznext
 #, fuzzy
 msgid "Next >"
-msgstr ""
+msgstr "Volgende >"
 
 #: uappstrings.swiznocountry
 #, fuzzy
 msgid "The country file does not know this callsign, so nothing was filled in from it."
-msgstr ""
+msgstr "Het landbestand kent deze oproepnaam niet, dus er is niets ingevuld."
 
 #: uappstrings.swizprefsopen
 #, fuzzy
 msgid "Close Preferences first, so the setup wizard and Preferences do not overwrite each other's changes."
-msgstr ""
+msgstr "Voorkeuren eerst sluiten, zodat de wizard en voorkeuren elkaars wijzigingen niet overschrijven."
 
 #: uappstrings.swizradioheading
 #: uappstrings.sdefaultradioname
 #, fuzzy
 msgid "Radio"
-msgstr ""
+msgstr "Radio"
 
 #: uappstrings.swizradiointro
 #, fuzzy
 msgid "Choose your radio and how it is connected. These are the same settings Preferences uses. TR4W connects to it when you create the configuration."
-msgstr ""
+msgstr "Kies uw radio en hoe deze verbonden is. Dit zijn dezelfde instellingen Voorkeuren gebruikt. TR4W verbindt ermee wanneer u de configuratie aanmaakt."
 
 #: uappstrings.swizresapplyfailed
 #, fuzzy
 msgid "Saved, but not put into use: %s. Restart TR4W or use Activate in Preferences."
-msgstr ""
+msgstr "Opgeslagen, maar niet in gebruik genomen: %s. Herstart TR4W of gebruik Activeer in Voorkeuren."
 
 #: uappstrings.swizrescluster
 #, fuzzy
@@ -11364,7 +11395,7 @@ msgstr "DX-cluster \"%0:s\": %1:s, aanmelden als %2:s."
 #: uappstrings.swizresclusterfailed
 #, fuzzy
 msgid "The DX cluster was not saved. Set it up in Preferences > DX Cluster."
-msgstr ""
+msgstr "De DX cluster is niet opgeslagen. Instellen in Voorkeuren > DX Cluster."
 
 #: uappstrings.swizreskeyer
 #, fuzzy
@@ -11374,12 +11405,12 @@ msgstr "WinKeyer \"%0:s\" op %1:s, gebruikt voor CW op radio 1."
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
 msgid "The WinKeyer was not saved: %s. Set it up in Preferences."
-msgstr ""
+msgstr "De WinKeyer is niet opgeslagen: %s. Zet het in Voorkeuren."
 
 #: uappstrings.swizresnotsaved
 #, fuzzy
 msgid "The radio, keyer and cluster were not saved: %s"
-msgstr ""
+msgstr "De radio, keyer en cluster werden niet opgeslagen: %s"
 
 #: uappstrings.swizresportwarning
 #, fuzzy
@@ -11387,6 +11418,8 @@ msgid ""
 "Check these ports:\n"
 "%s"
 msgstr ""
+"Controleer deze poorten:\n"
+"%s"
 
 #: uappstrings.swizresradio
 #, fuzzy
@@ -11396,82 +11429,82 @@ msgstr "Radio 1: %0:s %1:s. Naam: \"%2:s\""
 #: uappstrings.swizresradiofailed
 #, fuzzy
 msgid "The radio was not saved: %s. Set it up in Preferences > Radios."
-msgstr ""
+msgstr "De radio is niet opgeslagen: %s. Instellen in Voorkeuren > Radio's."
 
 #: uappstrings.swizresrefused
 #, fuzzy
 msgid "%0:s \"%1:s\" was not accepted. Set it in Preferences > Station."
-msgstr ""
+msgstr "%0:s \"%1:s\" werd niet geaccepteerd. Zet het in Voorkeuren > Station."
 
 #: uappstrings.swizresstation
 #, fuzzy
 msgid "Station %s saved."
-msgstr ""
+msgstr "Post %s gered."
 
 #: uappstrings.swizresultheading
 #, fuzzy
 msgid "Done"
-msgstr ""
+msgstr "Klaar"
 
 #: uappstrings.swizresultintro
 #, fuzzy
 msgid "This is what was saved. All of it can be changed later in Preferences."
-msgstr ""
+msgstr "Dit is wat gered is. Alles kan later in Voorkeuren worden gewijzigd."
 
 #: uappstrings.swizstationheading
 #, fuzzy
 msgid "Your station"
-msgstr ""
+msgstr "Uw station"
 
 #: uappstrings.swizstationintro
 #, fuzzy
 msgid "Who you are and where you are. Only the callsign is required, and all of this can be changed later in Preferences > Station."
-msgstr ""
+msgstr "Wie je bent en waar je bent. Alleen de roepnaam is vereist, en dit alles kan later gewijzigd worden in Voorkeuren > Station."
 
 #: uappstrings.swizstepof
 #, fuzzy
 msgid "Step %0:d of %1:d"
-msgstr ""
+msgstr "Stap %0:d van %1:d"
 
 #: uappstrings.swiztitle
 #, fuzzy
 msgid "TR4W setup"
-msgstr ""
+msgstr "TR4W setup"
 
 #: uappstrings.swizresprofile
 #, fuzzy
 msgid "The station profile \"%s\" now holds the hardware you set up. You can refine it in Preferences > Hardware."
-msgstr ""
+msgstr "Het profiel van het station \"%s\" nu houdt de hardware die je hebt opgezet. U kunt het verfijnen in Voorkeuren > Hardware."
 
 #: uappstrings.swizstartupprompt
 #, fuzzy
 msgid "This looks like a new installation. Would you like to run the Setup Wizard first?"
-msgstr ""
+msgstr "Dit lijkt op een nieuwe installatie. Wilt u eerst de Setup Wizard draaien?"
 
 #: uappstrings.swizctymissing
 #, fuzzy
 msgid "There is no country file yet, so the zones and country cannot be filled in from the callsign."
-msgstr ""
+msgstr "Er is nog geen landdossier, dus de zones en het land kunnen niet worden ingevuld van de oproep."
 
 #: uappstrings.swizctydownload
 #, fuzzy
 msgid "Download country file"
-msgstr ""
+msgstr "Landbestand downloaden"
 
 #: uappstrings.swizctydownloading
 #, fuzzy
 msgid "Downloading the country file..."
-msgstr ""
+msgstr "Het landbestand wordt gedownload..."
 
 #: uappstrings.swizctydone
 #, fuzzy
 msgid "The country file was downloaded."
-msgstr ""
+msgstr "Het land bestand is gedownload."
 
 #: uappstrings.swizctyfailed
 #, fuzzy
 msgid "The country file could not be downloaded. tr4w.log says why. You can try again, or continue without it."
-msgstr ""
+msgstr "Het landbestand kon niet worden gedownload. tr4w.log zegt waarom. Je kunt het opnieuw proberen, of doorgaan zonder."
 
 #: uappstrings.swizradiocwbycat
 #, fuzzy
@@ -11672,297 +11705,309 @@ msgstr "Je bent gezien door %s."
 #: uappstrings.snewcontestmembernumberlabel
 #, fuzzy
 msgid "MY MEMBER NO"
-msgstr ""
+msgstr "Mijn lid nee"
 
 #: uappstrings.sexchangenotasignalreport
 #, fuzzy
 msgid "%s is not a signal report"
-msgstr ""
+msgstr "%s is geen signaalrapport"
 
 #: uappstrings.snetservernotavailable
 #, fuzzy
 msgid "Connection to the TR4WServer is not available"
-msgstr ""
+msgstr "Verbinding met de TR4WServer is niet beschikbaar"
 
 #: tfrmaltp.btnedit.caption
 #: tfrmfileview.mnuedit.caption
 #, fuzzy
 msgid "Edit"
-msgstr ""
+msgstr "Bewerken"
 
 #: tfrmeditqso.lbldelivery.caption
 #, fuzzy
 msgid "External logger delivery"
-msgstr ""
+msgstr "Externe loggerlevering"
 
 #: texternalloggersform.lblname.caption
 #: uappstrings.seditqsomyname
 #: tfrmeditqso.lblmyname.caption
 #, fuzzy
 msgid "Name"
-msgstr ""
+msgstr "Naam"
 
 #: texternalloggersform.chkactive.caption
 #, fuzzy
 msgid "Active (send newly logged QSOs)"
-msgstr ""
+msgstr "Actief (nieuw ingelogde QSO's versturen)"
 
 #: texternalloggersform.btnok.caption
 #, fuzzy
 msgid "Save to Preferences"
-msgstr ""
+msgstr "Opslaan naar voorkeuren"
 
 #: tfrmfileview.mnuopenineditor.caption
 #, fuzzy
 msgid "Open in text editor"
-msgstr ""
+msgstr "In tekstbewerker openen"
 
 #: tfrmfileview.mnuexplore.caption
 #, fuzzy
 msgid "Explore"
-msgstr ""
+msgstr "Verkennen"
 
 #: tfrmfileview.mnucopy.caption
 #, fuzzy
 msgid "Copy"
-msgstr ""
+msgstr "Kopiëren"
 
 #: tfrmfileview.mnuselectall.caption
 #, fuzzy
 msgid "Select all"
-msgstr ""
+msgstr "Selecteer alles"
 
 #: tfrmlogedit.caption
 #, fuzzy
 msgid "View / Edit Log"
-msgstr ""
+msgstr "Weergeven - Log bewerken"
 
 #: tfrmlogsearch.caption
 #, fuzzy
 msgid "Search Log"
-msgstr ""
+msgstr "Zoeklog"
 
 #: tfrmlogsearch.lblcall.caption
 #: tfrmqtcreceive.lblcallsign.caption
 #, fuzzy
 msgid "Callsign"
-msgstr ""
+msgstr "Aanroepteken"
 
 #: tfrmlogsearch.lblmode.caption
 #, fuzzy
 msgid "Mode"
-msgstr ""
+msgstr "Modus"
 
 #: tfrmlogsearch.lblband.caption
 #, fuzzy
 msgid "Band"
-msgstr ""
+msgstr "Band"
 
 #: tfrmlogsearch.lbloperator.caption
 #, fuzzy
 msgid "Operator"
-msgstr ""
+msgstr "Exploitant"
 
 #: ttr4wmainform.pnlmasterstatus.caption
 #, fuzzy
 msgid "MASTER"
-msgstr ""
+msgstr "MASTER"
 
 #: ttr4wmainform.pnlnewmultstatus.caption
 #, fuzzy
 msgid "MULT"
-msgstr ""
+msgstr "MULT"
 
 #: ttr4wmainform.pnlopmode.caption
 #, fuzzy
 msgid "CQ"
-msgstr ""
+msgstr "CQ"
 
 #: ttr4wmainform.pnlpttstatus.caption
 #, fuzzy
 msgid "OFF"
-msgstr ""
+msgstr "UIT"
 
 #: ttr4wmainform.pnlqsob4status.caption
 #, fuzzy
 msgid "QSOB4"
-msgstr ""
+msgstr "QSOB4"
 
 #: ttr4wmainform.pnlwinkey.caption
 #, fuzzy
 msgid "WK"
-msgstr ""
+msgstr "WK"
 
 #: tfrmqtcreceive.lblmaxqtcs.caption
 #, fuzzy
 msgid "Enter QTC"
-msgstr ""
+msgstr "Geef QTc"
 
 #: uappstrings.snewcontestiaminchecktitle
 #, fuzzy
 msgid "Check your location"
-msgstr ""
+msgstr "Controleer uw locatie"
 
 #: uappstrings.snewcontestiamintickedoutside
 #, fuzzy
-msgid "You ticked \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
+msgid ""
+"You ticked \"I am in %0:s\", but your callsign %1:s is in %2:s.\n"
+"\n"
+"Create the contest as entered? Choose No to go back and change it."
 msgstr ""
+"Je tikte \"Ik ben in %0:s\" maar je roepnaam %1:s is %2:s.\n"
+"\n"
+"Maak de wedstrijd zoals ingevoerd? Kies Nee om terug te gaan en het te veranderen."
 
 #: uappstrings.snewcontestiaminclearedinside
 #, fuzzy
-msgid "You did not tick \"I am in %0:s\", but your callsign %1:s is in %2:s.\n\nCreate the contest as entered? Choose No to go back and change it."
+msgid ""
+"You did not tick \"I am in %0:s\", but your callsign %1:s is in %2:s.\n"
+"\n"
+"Create the contest as entered? Choose No to go back and change it."
 msgstr ""
+"Je tikte niet \"Ik ben in %0:s\" maar je roepnaam %1:s is %2:s.\n"
+"\n"
+"Maak de wedstrijd zoals ingevoerd? Kies Nee om terug te gaan en het te veranderen."
 
 #: uappstrings.sloggerfieldqrzcall
 #, fuzzy
 msgid "QRZ logbook callsign"
-msgstr ""
+msgstr "QRZ logboek roepnaam"
 
 #: uappstrings.sloggerfieldqrzkey
 #, fuzzy
 msgid "QRZ logbook API key"
-msgstr ""
+msgstr "QRZ logboek API sleutel"
 
 #: uappstrings.sbandmapcenteronradio
 #: tfrmbandmap.micenteronradio.caption
 #, fuzzy
 msgid "Center on radio frequency"
-msgstr ""
+msgstr "Centrum voor radiofrequentie"
 
 #: uappstrings.sbandmapsortbybeam
 #: tfrmbandmap.misortbybeam.caption
 #, fuzzy
 msgid "Sort by beam heading"
-msgstr ""
+msgstr "Sorteer op straalrichting"
 
 #: tprefsform.chkbandmapcenteronradio.caption
 #, fuzzy
 msgid "Keep the band map centered on the radio frequency"
-msgstr ""
+msgstr "Houd de bandkaart gericht op de radiofrequentie"
 
 #: tprefsform.chkbandmapsortbybeam.caption
 #, fuzzy
 msgid "Sort the band map by beam heading, nearest the beam first"
-msgstr ""
+msgstr "Sorteer de bandkaart op richting van de bundel, het dichtst bij de bundel eerst"
 
 #: utr4wstrings.tc_winkeyerdidnotopen
 msgctxt "TC_WINKEYERDIDNOTOPEN"
 msgid "WinKeyer on %s did not open (see tr4w.log)"
-msgstr ""
+msgstr "WinKeyer op %s niet geopend (zie tr4w.log)"
 
 #: uappstrings.sexchangenopostcode
 #, fuzzy
 msgid "No postcode in the exchange"
-msgstr ""
+msgstr "Geen postcode in de uitwisseling"
 
 #: uappstrings.sdefaultclustername
 #, fuzzy
 msgid "Cluster"
-msgstr ""
+msgstr "Cluster"
 
 #: uappstrings.sstationfieldgrid
 #, fuzzy
 msgid "A grid square is two letters A to R and two digits, optionally followed by two letters: EL88 or EL88PA."
-msgstr ""
+msgstr "Een raster vierkant is twee letters A tot R en twee cijfers, optioneel gevolgd door twee letters: EL88 of EL88PA."
 
 #: uappstrings.sstationfieldzone
 #, fuzzy
 msgid "A CQ zone is a number from 1 to 40."
-msgstr ""
+msgstr "Een CQ zone is een getal van 1 tot 40."
 
 #: uappstrings.sstationfieldituzone
 #, fuzzy
 msgid "An ITU zone is a number from 1 to 90, or 0 to use the zone CTY.DAT gives."
-msgstr ""
+msgstr "Een ITU zone is een getal van 1 tot 90, of 0 om de zone CTY.DAT geeft te gebruiken."
 
 #: uappstrings.sstationfieldsection
 #, fuzzy
 msgid "This is not an ARRL or RAC section. A station outside the US and Canada enters DX."
-msgstr ""
+msgstr "Dit is geen ARRL of RAC sectie. Een station buiten de VS en Canada komt DX binnen."
 
 #: uappstrings.sstationfieldcountry
 #, fuzzy
 msgid "This is not a CTY.DAT country prefix. The United States is K."
-msgstr ""
+msgstr "Dit is geen CTY.DAT land voorvoegsel. De Verenigde Staten is K."
 
 #: uappstrings.sstationfieldpark
 #, fuzzy
 msgid "A park reference is two letters, a hyphen and four or five digits: US-1234. Separate several parks with commas."
-msgstr ""
+msgstr "Een park referentie is twee letters, een koppelteken en vier of vijf cijfers: US-1234. Scheid verschillende parken met komma's."
 
 #: uappstrings.sstationfieldiota
 #, fuzzy
 msgid "An IOTA reference is two letters, a hyphen and three digits: NA-001."
-msgstr ""
+msgstr "Een IOTA-referentie is twee letters, een koppelteken en drie cijfers: NA-001."
 
 #: uappstrings.sstationfieldfdclass
 #, fuzzy
 msgid "A Field Day class is the number of transmitters and one letter: 2A, or 2H for Winter Field Day."
-msgstr ""
+msgstr "Een velddagklasse is het aantal zenders en één letter: 2A, of 2H voor Wintervelddag."
 
 #: uappstrings.sstationfieldcheck
 #, fuzzy
 msgid "The check is two digits, the last two of the year first licensed: 85."
-msgstr ""
+msgstr "De controle is twee cijfers, de laatste twee van het jaar eerste gelicentieerd: 85."
 
 #: uappstrings.sstationfieldprec
 #, fuzzy
 msgid "The precedence is one letter: Q, A, B, U, M or S."
-msgstr ""
+msgstr "De voorrang is één letter: Q, A, B, U, M of S."
 
 #: uappstrings.sstationfieldfocnumber
 #, fuzzy
 msgid "The FOC number is digits only."
-msgstr ""
+msgstr "Het FOC-nummer is alleen cijfers."
 
 #: uappstrings.sstationfieldlicenseyear
 #, fuzzy
 msgid "The license year is up to four digits: 1985, 85, or a number of years."
-msgstr ""
+msgstr "Het licentiejaar is maximaal vier cijfers: 1985, 85, of een aantal jaren."
 
 #: uappstrings.sstationpagenotsaved
 #, fuzzy
 msgid "Station settings not saved. %s"
-msgstr ""
+msgstr "Stationinstellingen niet opgeslagen. %s"
 
 #: uappstrings.sstationfieldstate
 #, fuzzy
 msgid "Two letters must be a US state, DC, a US territory or a Canadian province or territory. A county, grid or other QTH may be longer."
-msgstr ""
+msgstr "Twee letters moeten een Amerikaanse staat, DC, een Amerikaans grondgebied of een Canadese provincie of gebied zijn. Een district, raster of andere QTH kan langer zijn."
 
 #: uappstrings.snewcontestsoonestfirst
 #, fuzzy
 msgid "Upcoming contests first"
-msgstr ""
+msgstr "Aankomende wedstrijden eerst"
 
 #: uappstrings.snewcontestrunningnow
 #, fuzzy
 msgid "running now"
-msgstr ""
+msgstr "nu draaien"
 
 #: uappstrings.seditqsomycheck
 #, fuzzy
 msgctxt "uappstrings.seditqsomycheck"
 msgid "Check"
-msgstr ""
+msgstr "Controleren"
 
 #: uappstrings.seditqsomyfdclass
 #: tfrmeditqso.lblmyfdclass.caption
 #, fuzzy
 msgid "FD class"
-msgstr ""
+msgstr "FD-klasse"
 
 #: uappstrings.seditqsomyfocnumber
 #, fuzzy
 msgctxt "uappstrings.seditqsomyfocnumber"
 msgid "FOC number"
-msgstr ""
+msgstr "FOC-nummer"
 
 #: uappstrings.seditqsomypostalcode
 #: tfrmeditqso.lblmypostalcode.caption
 #, fuzzy
 msgid "Postal code"
-msgstr ""
+msgstr "Postcode"
 
 #: uappstrings.seditqsostationvaluerefused
 #, fuzzy
@@ -11971,6 +12016,9 @@ msgid ""
 "\n"
 "%2:s"
 msgstr ""
+"%0:s \"%1:s\" kan niet gered worden.\n"
+"\n"
+"%2:s"
 
 #: uappstrings.sstationcorrectbody
 #, fuzzy
@@ -11987,13 +12035,13 @@ msgstr ""
 #: uappstrings.sstationcorrectline
 #, fuzzy
 msgid "%0:s: %1:d QSO(s) sent %2:s, now %3:s"
-msgstr ""
+msgstr "%0:s: %1:d QSO(s) verzonden %2:s, nu %3:s"
 
 #: uappstrings.sstationfactlicenseyear
 #, fuzzy
 msgctxt "uappstrings.sstationfactlicenseyear"
 msgid "License year"
-msgstr ""
+msgstr "Licentiejaar"
 
 #: uappstrings.sstationscopebody
 #, fuzzy
@@ -12010,17 +12058,17 @@ msgstr ""
 #: uappstrings.sstationscopeline
 #, fuzzy
 msgid "%0:s: %1:s (this contest: %2:s)"
-msgstr ""
+msgstr "%0:s: %1:s (deze wedstrijd: %2:s)"
 
 #: uappstrings.sstationscopetitle
 #, fuzzy
 msgid "Station values"
-msgstr ""
+msgstr "Stationwaarden"
 
 #: uappstrings.sstationcontestnote
 #, fuzzy
 msgid "Shown as %0:s uses them: this contest states its own value for some of these. Station defaults: %1:s."
-msgstr ""
+msgstr "Getoond als %0:s gebruikt ze: deze wedstrijd geeft zijn eigen waarde voor sommige van deze. Standaardinstellingen: %1:s."
 
 #: uappstrings.sstationcontestnoteitem
 #, fuzzy
@@ -12030,238 +12078,238 @@ msgstr ""
 #: uappstrings.sstationscopestationonlynote
 #, fuzzy
 msgid "\"Station default only\" keeps this contest's own value, and the page shows it again."
-msgstr ""
+msgstr "\"Station default only\" houdt de eigen waarde van deze wedstrijd, en de pagina toont het opnieuw."
 
 #: tprefsform.lblstationcontestnote.caption
 #, fuzzy
 msgid "Shown as this contest uses them"
-msgstr ""
+msgstr "Getoond als deze wedstrijd gebruikt hen"
 
 #: uappstrings.sradioeditusehamlibhint
 #, fuzzy
 msgid "Drive this radio through the HamLib library instead of TR4W's own driver. HamLib version: %s"
-msgstr ""
+msgstr "Rij deze radio door de HamLib bibliotheek in plaats van de eigen chauffeur van TR4W. HamLib versie: %s"
 
 #: uappstrings.sradioedithamlibnotavailable
 #, fuzzy
 msgid "not available"
-msgstr ""
+msgstr "niet beschikbaar"
 
 #: uappstrings.snewcontesthawaiiqpdistrictorlocation
 #, fuzzy
 msgid "Enter your Hawaii district (e.g. HON) if you are in Hawaii. Enter your state or Canadian province if outside Hawaii, or DX:"
-msgstr ""
+msgstr "Gaat uw district Hawaï binnen (bv. HON) als u in Hawaï bent. Voer uw staat of Canadese provincie als buiten Hawaii, of DX:"
 
 #: uappstrings.snewcontesthostareadistrictlabel
 #, fuzzy
 msgid "MY DISTRICT"
-msgstr ""
+msgstr "Mijn probleem."
 
 #: uappstrings.snewcontesthostareainsidedistrictnotice
 #, fuzzy
 msgid "You are in %s: choose your district from the list."
-msgstr ""
+msgstr "Je bent binnen. %s: kies uw district uit de lijst."
 
 #: uappstrings.stotalsgridmults
 #, fuzzy
 msgid "Grids"
-msgstr ""
+msgstr "Rasters"
 
 #: uappstrings.snewcontestcpqpdistrictorlocation
 #, fuzzy
 msgid "Enter your federal electoral district (e.g. AIR) if you are in Alberta, Saskatchewan or Manitoba. Enter your state or Canadian province if outside the prairies, or DX:"
-msgstr ""
+msgstr "Gaat uw federale kiesdistrict binnen (bv. AIR) als u in Alberta, Saskatchewan of Manitoba bent. Voer uw provincie of Canadese provincie als buiten de prairies, of DX:"
 
 #: uappstrings.stotalsprovincemults
 #, fuzzy
 msgid "Provinces"
-msgstr ""
+msgstr "Provincies"
 
 #: uappstrings.snewcontestacqpcountyorlocation
 #, fuzzy
 msgid "Enter your five-letter county or division code (e.g. NSHRM) if you are in New Brunswick, Nova Scotia, Prince Edward Island or Newfoundland and Labrador. Enter your state or Canadian province if outside Atlantic Canada, or DX:"
-msgstr ""
+msgstr "Voer uw vijfletterige county of divisiecode in (bv. NSHRM) als u in New Brunswick, Nova Scotia, Prince Edward Island of Newfoundland en Labrador bent. Voer uw staat of Canadese provincie als buiten Atlantic Canada, of DX:"
 
 #: uappstrings.sdefaultrotatorname
 #, fuzzy
 msgctxt "uappstrings.sdefaultrotatorname"
 msgid "Rotator"
-msgstr ""
+msgstr "Rotator"
 
 #: uappstrings.swizitemlogger
 #, fuzzy
 msgid "An external logger"
-msgstr ""
+msgstr "Een externe logger"
 
 #: uappstrings.swizitemloggerhint
 #, fuzzy
 msgid "Each QSO also goes to DXKeeper, Club Log, QRZ, Cloudlog/Wavelog or another logbook."
-msgstr ""
+msgstr "Elke QSO gaat ook naar DXKeeper, Club Log, QRZ, Cloudlog/Wavelog of een ander logboek."
 
 #: uappstrings.swizitemrotator
 #, fuzzy
 msgid "An antenna rotator"
-msgstr ""
+msgstr "Een antenne rotator"
 
 #: uappstrings.swizitemrotatorhint
 #, fuzzy
 msgid "TR4W turns the antenna toward the station you are working."
-msgstr ""
+msgstr "TR4W draait de antenne naar het station waar u werkt."
 
 #: uappstrings.swizitemwsjtx
 #, fuzzy
 msgctxt "uappstrings.swizitemwsjtx"
 msgid "WSJT-X"
-msgstr ""
+msgstr "WSJT-X"
 
 #: uappstrings.swizitemwsjtxhint
 #, fuzzy
 msgid "Decodes and logged QSOs come in from WSJT-X over UDP."
-msgstr ""
+msgstr "Decoden en ingelogde QSO's komen van WSJT-X via UDP."
 
 #: uappstrings.swizloggerintro
 #, fuzzy
 msgid "Choose the program or service that should receive your QSOs, and how to reach it. These are the same settings Preferences uses. Keys and passwords are kept in the system's credential store."
-msgstr ""
+msgstr "Kies het programma of de dienst die uw QSO's moet ontvangen, en hoe het te bereiken. Dit zijn dezelfde instellingen Voorkeuren gebruikt. Sleutels en wachtwoorden worden bewaard in de credential store van het systeem."
 
 #: uappstrings.swizloggerloading
 #, fuzzy
 msgid "The logbook list is still loading. Wait for it, then press Next again."
-msgstr ""
+msgstr "De logboeklijst is nog aan het laden. Wacht, druk dan op Next."
 
 #: uappstrings.swizresdefaultaddress
 #, fuzzy
 msgid "at the default address"
-msgstr ""
+msgstr "op het standaardadres"
 
 #: uappstrings.swizresloggeractive
 #, fuzzy
 msgid "External logger \"%0:s\" (%1:s) receives each new QSO."
-msgstr ""
+msgstr "Extern logger \"%0:s\" (%1:s) ontvangt elke nieuwe QSO."
 
 #: uappstrings.swizresloggerfailed
 #, fuzzy
 msgid "The external logger was not saved: %s"
-msgstr ""
+msgstr "De externe logger is niet opgeslagen: %s"
 
 #: uappstrings.swizresloggerinactive
 #, fuzzy
 msgid "External logger \"%0:s\" (%1:s) is saved but not switched on. Switch it on in Preferences."
-msgstr ""
+msgstr "Extern logger \"%0:s\" (%1:s) is opgeslagen maar niet ingeschakeld. Zet het aan in Voorkeuren."
 
 #: uappstrings.swizresloggerrestart
 #, fuzzy
 msgid "The external logger starts sending the next time TR4W starts."
-msgstr ""
+msgstr "De externe logger begint de volgende keer dat TR4W begint."
 
 #: uappstrings.swizresrotator
 #, fuzzy
 msgid "Rotator \"%0:s\": %1:s %2:s, turning for every band."
-msgstr ""
+msgstr "Rotator \"%0:s\": %1:s %2:s, draaien voor elke band."
 
 #: uappstrings.swizresrotatorfailed
 #, fuzzy
 msgid "The rotator was not saved. Set it up in Preferences > Rotators."
-msgstr ""
+msgstr "De rotator is niet gered. Instellen in Voorkeuren > Draaiers."
 
 #: uappstrings.swizreswsjtxoff
 #, fuzzy
 msgid "WSJT-X: the integration is off."
-msgstr ""
+msgstr "WSJT-X: de integratie is uitgeschakeld."
 
 #: uappstrings.swizreswsjtxon
 #, fuzzy
 msgid "WSJT-X: TR4W listens on UDP port %s."
-msgstr ""
+msgstr "WSJT-X: TR4W luistert op UDP-poort %s."
 
 #: uappstrings.swizreswsjtxrestart
 #, fuzzy
 msgid "The WSJT-X change takes effect the next time TR4W starts."
-msgstr ""
+msgstr "De WSJT-X verandering treedt in werking zodra TR4W begint."
 
 #: uappstrings.swizrotatorheading
 #, fuzzy
 msgctxt "uappstrings.swizrotatorheading"
 msgid "Rotator"
-msgstr ""
+msgstr "Rotator"
 
 #: uappstrings.swizrotatorintro
 #, fuzzy
 msgid "Choose your rotator and how it is connected. It turns for every band; Preferences > Rotators can limit it to some."
-msgstr ""
+msgstr "Kies uw rotator en hoe deze verbonden is. Het draait voor elke band; Voorkeuren > Roators kunnen het beperken tot sommige."
 
 #: uappstrings.swizrotatorneedsport
 #, fuzzy
 msgid "Choose the serial port the rotator is on, or go back and untick it."
-msgstr ""
+msgstr "Kies de seriële poort die de rotator aanstaat, of ga terug en verwijder hem."
 
 #: uappstrings.swizrotatorneedstype
 #, fuzzy
 msgid "Choose the rotator type, or go back and untick it."
-msgstr ""
+msgstr "Kies het rotatortype, of ga terug en verwijder het."
 
 #: uappstrings.swizrotatorport
 #, fuzzy
 msgid "Serial port:"
-msgstr ""
+msgstr "Seriepoort:"
 
 #: uappstrings.swizrotatorudpport
 #, fuzzy
 msgctxt "uappstrings.swizrotatorudpport"
 msgid "UDP port:"
-msgstr ""
+msgstr "UDP-poort:"
 
 #: uappstrings.swizrotatorudpportbad
 #, fuzzy
 msgid "The UDP port must be a number from 1 to 65535, or blank."
-msgstr ""
+msgstr "De UDP-poort moet een getal zijn van 1 tot 65535, of leeg."
 
 #: uappstrings.swizwsjtxenable
 #, fuzzy
 msgid "Use WSJT-X with TR4W"
-msgstr ""
+msgstr "Gebruik WSJT-X met TR4W"
 
 #: uappstrings.swizwsjtxheading
 #, fuzzy
 msgctxt "uappstrings.swizwsjtxheading"
 msgid "WSJT-X"
-msgstr ""
+msgstr "WSJT-X"
 
 #: uappstrings.swizwsjtxintro
 #, fuzzy
 msgid "TR4W can take decodes and logged QSOs from WSJT-X and mark the calls you still need. In WSJT-X, set Settings > Reporting > UDP Server to 127.0.0.1 and the port below."
-msgstr ""
+msgstr "TR4W kan decodes nemen en QSO's loggen van WSJT-X en de oproepen markeren die je nog nodig hebt. Stel in WSJT-X instellingen in > Rapportage > UDP-server aan 127.0.0.1 en de onderstaande poort."
 
 #: uappstrings.swizwsjtxport
 #, fuzzy
 msgctxt "uappstrings.swizwsjtxport"
 msgid "UDP port:"
-msgstr ""
+msgstr "UDP-poort:"
 
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr ""
+msgstr "De haven moet een nummer zijn van 1 tot 65535."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
 msgid "Backup to %s FAILED: the disk is full."
-msgstr ""
+msgstr "Reservekopie naar %s De schijf is vol."
 
 #: uappstrings.sbackupcopyfailedfoldermissing
 #, fuzzy
 msgid "Backup to %s FAILED: the folder is not there."
-msgstr ""
+msgstr "Reservekopie naar %s FOUT: de map is er niet."
 
 #: uappstrings.sbackupcopyfailednoaccess
 #, fuzzy
 msgid "Backup to %s FAILED: access denied."
-msgstr ""
+msgstr "Reservekopie naar %s Geen toegang."
 
 #: uappstrings.sbackupcopyfailedother
 #, fuzzy
 msgid "Backup to %s FAILED."
-msgstr ""
+msgstr "Reservekopie naar %s Verloor."
 
 #: uappstrings.slognotsavedreadonly
 #, fuzzy
@@ -12276,187 +12324,187 @@ msgstr ""
 #: uappstrings.slogreadonlyfixdiskfull
 #, fuzzy
 msgid "Free at least %d MB on %s, then press Enter again."
-msgstr ""
+msgstr "Ten minste vrij %d MB op %s, druk dan op Enter opnieuw."
 
 #: uappstrings.slogreadonlyfixwriteerror
 #, fuzzy
 msgid "Check the drive the log is on, then press Enter again. Details are in tr4w.log."
-msgstr ""
+msgstr "Controleer het station waar de log staat en druk vervolgens op Enter opnieuw. Details staan in tr4w.log."
 
 #: uappstrings.slogreadonlyreasondiskfull
 #, fuzzy
 msgid "disk full"
-msgstr ""
+msgstr "schijf vol"
 
 #: uappstrings.slogreadonlyreasonwriteerror
 #, fuzzy
 msgid "write error"
-msgstr ""
+msgstr "schrijffout"
 
 #: uappstrings.slogreadonlyreasonlocked
 #, fuzzy
 msgid "locked"
-msgstr ""
+msgstr "vergrendeld"
 
 #: uappstrings.slogreadonlynotsaved
 #, fuzzy
 msgid "Log is read-only (%s): not saved."
-msgstr ""
+msgstr "Log is alleen-lezen (%s): niet gered."
 
 #: uappstrings.seditqsonoqsoselected
 #, fuzzy
 msgid "No QSO selected."
-msgstr ""
+msgstr "Geen QSO geselecteerd."
 
 #: uappstrings.seditqsologunreadable
 #, fuzzy
 msgid "The contest log cannot be read: see tr4w.log."
-msgstr ""
+msgstr "Het wedstrijdlogboek kan niet gelezen worden: zie tr4w.log."
 
 #: uappstrings.seditqsonosuchqso
 #, fuzzy
 msgid "That QSO is not in the log any more."
-msgstr ""
+msgstr "Dat QSO niet meer in het logboek staat."
 
 #: uappstrings.seditqsocannotread
 #, fuzzy
 msgid "That QSO could not be read from the log: see tr4w.log."
-msgstr ""
+msgstr "Dat QSO niet kon worden gelezen uit het logboek: zie tr4w.log."
 
 #: uappstrings.seditqsonoteditable
 #, fuzzy
 msgid "A deleted QSO, or a record that is not a QSO, cannot be edited here."
-msgstr ""
+msgstr "Een verwijderde QSO, of een record die geen QSO is, kan hier niet worden bewerkt."
 
 #: uappstrings.slogwritableagain
 #, fuzzy
 msgid "The log is writable again."
-msgstr ""
+msgstr "Het logboek is weer beschrijfbaar."
 
 #: uappstrings.slogreadonlynotsaveddiskfull
 #, fuzzy
 msgid "Log is read-only (disk full): free %d MB on %s, then Enter."
-msgstr ""
+msgstr "Log is alleen-lezen (schijf vol): gratis %d MB op %sKom binnen."
 
 #: uappstrings.swizwsjtxhighlightshint
 #, fuzzy
 msgid "WSJT-X colours the calls in its decode list that are dupes or new multipliers, in TR4W's colours."
-msgstr ""
+msgstr "WSJT-X kleurt de aanroepen in de decodeerlijst die dupes of nieuwe multipliers zijn, in TR4W's kleuren."
 
 #: uappstrings.swizwsjtxradiocontrolhint
 #, fuzzy
 msgid "TR4W then offers a DX Commander compatible interface on TCP port %d, and that is what WSJT-X connects to when DX Commander is chosen as its radio."
-msgstr ""
+msgstr "TR4W biedt vervolgens een DX Commander compatibele interface op TCP-poort %d, en dat is waar WSJT-X verbinding mee maakt wanneer DX Commander wordt gekozen als zijn radio."
 
 #: uappstrings.swizwsjtxmulticasthint
 #, fuzzy
 msgid "Advanced. Leave it blank unless WSJT-X is configured to use a multicast group."
-msgstr ""
+msgstr "Geavanceerd. Laat het leeg tenzij WSJT-X is geconfigureerd om een multicast groep te gebruiken."
 
 #: uappstrings.swizreswsjtxradiocontrol
 #, fuzzy
 msgid "WSJT-X can control the radio through TCP port %d."
-msgstr ""
+msgstr "WSJT-X kan de radio bedienen via TCP poort %d."
 
 #: uappstrings.swizreswsjtxhighlights
 #, fuzzy
 msgid "WSJT-X: TR4W sends it callsign highlighting."
-msgstr ""
+msgstr "WSJT-X: TR4W stuurt het oproeptekenmarkering."
 
 #: uappstrings.swizreswsjtxmulticast
 #, fuzzy
 msgid "WSJT-X: TR4W joins multicast group %s."
-msgstr ""
+msgstr "WSJT-X: TR4W sluit zich aan bij multicast groep %s."
 
 #: uappstrings.scmdmenuadif
 #, fuzzy
 msgid "ADIF - export the log as ADIF"
-msgstr ""
+msgstr "ADIF - exporteer het logboek als ADIF"
 
 #: uappstrings.scmdmenucab
 #, fuzzy
 msgid "CAB - export the log as Cabrillo"
-msgstr ""
+msgstr "CAB - exporteer het logboek als Cabrillo"
 
 #: uappstrings.scmdmenucmd
 #, fuzzy
 msgid "CMD - open a command prompt"
-msgstr ""
+msgstr "CMD - open een opdrachtprompt"
 
 #: uappstrings.scmdmenucol
 #, fuzzy
 msgid "COL - colours"
-msgstr ""
+msgstr "COL - kleuren"
 
 #: uappstrings.scmdmenucommands
 #, fuzzy
 msgid "Commands"
-msgstr ""
+msgstr "Commando's"
 
 #: uappstrings.scmdmenucwoff
 #, fuzzy
 msgid "CWOFF - turn CW off"
-msgstr ""
+msgstr "CWOFF - zet CW uit"
 
 #: uappstrings.scmdmenucwon
 #, fuzzy
 msgid "CWON - turn CW on"
-msgstr ""
+msgstr "CWON - zet CW aan"
 
 #: uappstrings.scmdmenuexit
 #, fuzzy
 msgid "EXIT - exit TR4W"
-msgstr ""
+msgstr "EXIT - exit TR4W"
 
 #: uappstrings.scmdmenunote
 #, fuzzy
 msgid "NOTE - add a note to the log"
-msgstr ""
+msgstr "OPMERKING - voeg een noot toe aan het logboek"
 
 #: uappstrings.scmdmenuopon
 #, fuzzy
 msgid "OPON - operator log-in"
-msgstr ""
+msgstr "OPON - operator log-in"
 
 #: uappstrings.scmdmenupref
 #, fuzzy
 msgid "PREF - Preferences"
-msgstr ""
+msgstr "PREF - Voorkeuren"
 
 #: uappstrings.scmdmenurover
 #, fuzzy
 msgid "ROVER - where this station is roving"
-msgstr ""
+msgstr "ROVER - waar dit station rondzwerft"
 
 #: uappstrings.scmdmenuscore
 #, fuzzy
 msgid "SCORE - send the score by UDP"
-msgstr ""
+msgstr "SCORE - stuur de score door UDP"
 
 #: uappstrings.scmdmenusum
 #, fuzzy
 msgid "SUM - summary sheet"
-msgstr ""
+msgstr "SUM - samenvatting"
 
 #: uappstrings.scmdmenuudp
 #, fuzzy
 msgid "UDP - send the whole log by UDP"
-msgstr ""
+msgstr "UDP - stuur het hele logboek door UDP"
 
 #: uappstrings.scmdmenuwcy
 #, fuzzy
 msgid "WCY - ask the cluster for SH/WCY"
-msgstr ""
+msgstr "WCY - vraag het cluster om SH/WCY"
 
 #: uappstrings.scmdmenuwwv
 #, fuzzy
 msgid "WWV - ask the cluster for SH/WWV"
-msgstr ""
+msgstr "WWV - vraag het cluster voor SH/WWV"
 
 #: uappstrings.smenuselfspot
 #, fuzzy
 msgid "Self-spot"
-msgstr ""
+msgstr "Zelfvlek"
 
 #: uappstrings.snewcontestboxclearedinside
 #, fuzzy
@@ -12465,16 +12513,19 @@ msgid ""
 "\n"
 "If you are operating from somewhere else, choose Yes. Choose No to go back and change it."
 msgstr ""
+"Je hebt niet aangevinkt.%0:s\" maar je roepnaam %1:s is %2:s, en stations daar sturen dat in deze wedstrijd.\n"
+"\n"
+"Als je ergens anders werkt, kies dan Ja. Kies Nee om terug te gaan en het te veranderen."
 
 #: uappstrings.snewcontestboxsendsarrlorracsection
 #, fuzzy
 msgid "&I send an ARRL/RAC section"
-msgstr ""
+msgstr "&Ik stuur een ARRL/RAC sectie"
 
 #: uappstrings.snewcontestboxsendsstateorprovince
 #, fuzzy
 msgid "&I send a state or province"
-msgstr ""
+msgstr "&Ik stuur een staat of provincie"
 
 #: uappstrings.snewcontestboxtickedoutside
 #, fuzzy
@@ -12483,235 +12534,238 @@ msgid ""
 "\n"
 "If you are operating from a place that does, choose Yes. Choose No to go back and change it."
 msgstr ""
+"Je tikte \"%0:s\" maar je roepnaam %1:s is %2:s, en stations daar sturen dat niet in deze wedstrijd.\n"
+"\n"
+"Als u werkt vanuit een plaats die dat doet, kies Ja. Kies Nee om terug te gaan en het te veranderen."
 
 #: uappstrings.speeronanotherversion
 #, fuzzy
 msgid "Station %s runs TR4W %s, this station runs %s. All stations should run the same version."
-msgstr ""
+msgstr "Post %s draait TR4W %s, dit station loopt %sAlle stations zouden dezelfde versie moeten draaien."
 
 #: uappstrings.spostredirected
 #, fuzzy
 msgid "the server answered the upload with a redirect (status %d) to %s. TR4W does not follow a redirect on an upload, and the upload was not repeated. This is unexpected: please file an issue at %s and include this message."
-msgstr ""
+msgstr "de server beantwoordde de upload met een redirect (status %d) naar %s. TR4W volgt geen redirect op een upload, en de upload werd niet herhaald. Dit is onverwacht: vul een probleem in bij %s en voeg dit bericht bij."
 
 #: uappstrings.sprefsgroupbandmapcolors
 #, fuzzy
 msgid "Band map colors"
-msgstr ""
+msgstr "Bandkaartkleuren"
 
 #: uappstrings.sroverdialogcancel
 #, fuzzy
 msgctxt "uappstrings.sroverdialogcancel"
 msgid "Cancel"
-msgstr ""
+msgstr "Annuleer"
 
 #: uappstrings.sroverdialogoff
 #, fuzzy
 msgctxt "uappstrings.sroverdialogoff"
 msgid "Rover off"
-msgstr ""
+msgstr "Rover uit"
 
 #: uappstrings.sroverdialogprompt
 #, fuzzy
 msgid "Where this station operates now (one place, or several at a county line, separated by a space, a comma or a dash)"
-msgstr ""
+msgstr "Waar dit station nu werkt (één plaats, of meerdere op een provinciale lijn, gescheiden door een ruimte, een komma of een streepje)"
 
 #: uappstrings.sroverdialogtitle
 #: tfrmrover.caption
 #, fuzzy
 msgid "Rover"
-msgstr ""
+msgstr "Rover"
 
 #: uappstrings.srovernoplaces
 #, fuzzy
 msgid "This contest has no places to rove"
-msgstr ""
+msgstr "Deze wedstrijd heeft geen plaats om te roven"
 
 #: uappstrings.srovernounit
 #, fuzzy
 msgid "No place was given"
-msgstr ""
+msgstr "Geen plaats gegeven"
 
 #: uappstrings.sroverstatus
 #, fuzzy
 msgid "ROVER %0:s"
-msgstr ""
+msgstr "ROVER %0:s"
 
 #: uappstrings.srovertoomanyunits
 #, fuzzy
 msgid "This contest allows at most %0:d places at once"
-msgstr ""
+msgstr "Deze wedstrijd staat maximaal %0:d Plaatsen tegelijk"
 
 #: uappstrings.sroverturnedoff
 #, fuzzy
 msgctxt "uappstrings.sroverturnedoff"
 msgid "Rover off"
-msgstr ""
+msgstr "Rover uit"
 
 #: uappstrings.sroverunknownunit
 #, fuzzy
 msgid "%0:s is not one of this contest's places"
-msgstr ""
+msgstr "%0:s is niet een van de plaatsen van deze wedstrijd"
 
 #: uappstrings.sscoreparthint
 #, fuzzy
 msgid "%0:s: %1:d QSOs, %2:d points, %3:d mults, score %4:d"
-msgstr ""
+msgstr "%0:s: %1:d QSO's, %2:d punten, %3:d mults, score %4:d"
 
 #: uappstrings.sselfspotnocall
 #, fuzzy
 msgid "Self-spot refused: there is no station call set. Nothing sent."
-msgstr ""
+msgstr "Zelf-spot geweigerd: er is geen oproep ingesteld. Niets gestuurd."
 
 #: uappstrings.sselfspotnofrequency
 #, fuzzy
 msgid "Self-spot refused: the radio has not reported a frequency. Nothing sent."
-msgstr ""
+msgstr "Zelfvlek geweigerd: de radio heeft geen frequentie gerapporteerd. Niets gestuurd."
 
 #: uappstrings.sselfspotnolink
 #, fuzzy
 msgid "Self-spot refused: neither the DX cluster nor the network is connected. Nothing sent."
-msgstr ""
+msgstr "Zelf-spot geweigerd: noch de DX cluster noch het netwerk is aangesloten. Niets gestuurd."
 
 #: uappstrings.sselfspotnotallowed
 #, fuzzy
 msgid "Self-spot refused: this contest's rules do not allow spotting yourself. Nothing sent."
-msgstr ""
+msgstr "Zelfvlek geweigerd: de regels van deze wedstrijd staan niet toe dat je jezelf ziet. Niets gestuurd."
 
 #: uappstrings.sselfspotnotmoved
 #, fuzzy
 msgid "Self-spot refused: the VFO has not moved %d Hz since the last self-spot. Nothing sent."
-msgstr ""
+msgstr "Zelfvlek geweigerd: de VFO is niet verplaatst %d Hz sinds de laatste zelfvlek. Niets gestuurd."
 
 #: uappstrings.sselfspotsearchandpounce
 #, fuzzy
 msgid "Self-spot refused: not in Search & Pounce mode. Nothing sent."
-msgstr ""
+msgstr "Zelf-spot geweigerd: niet in zoekmodus. Niets gestuurd."
 
 #: uappstrings.sselfspotsent
 #, fuzzy
 msgid "Self-spot sent: %0:s on %1:s."
-msgstr ""
+msgstr "Zelfvlek verzonden: %0:s op %1:s."
 
 #: uappstrings.sselfspottoosoon
 #, fuzzy
 msgid "Self-spot refused: the last one was sent less than %d minutes ago. Nothing sent."
-msgstr ""
+msgstr "Zelfvlek geweigerd: de laatste werd minder dan %d Een paar minuten geleden. Niets gestuurd."
 
 #: uappstrings.stotalsclubstationmults
 #, fuzzy
 msgid "Clubs"
-msgstr ""
+msgstr "Clubs"
 
 #: uappstrings.svermontclubfilenoyear
 #, fuzzy
 msgid "%0:s states no contest year (a line YEAR 2027), so its Vermont QSO Party club stations will not count. Get a current list from %1:s"
-msgstr ""
+msgstr "%0:s staat geen wedstrijdjaar (een lijn jaar 2027), dus de Vermont QSO Party club stations zal niet tellen. Een huidige lijst ophalen van %1:s"
 
 #: uappstrings.svermontclubfilestale
 #, fuzzy
 msgid "%0:s is the Vermont QSO Party club-station list for %1:d: it appears to be last year's. Club stations will not count until you get a current list from %2:s"
-msgstr ""
+msgstr "%0:s is de Vermont QSO Party club-station lijst voor %1:d: het lijkt van vorig jaar te zijn. Club stations zullen niet tellen totdat u een huidige lijst van %2:s"
 
 #: usettingscaptions.rs_bandmap_activebandcolor
 #, fuzzy
 msgid "Band map frequency on the active band"
-msgstr ""
+msgstr "Bandkaartfrequentie op de actieve band"
 
 #: usettingscaptions.rs_bandmap_dupecolor
 #, fuzzy
 msgid "Band map fill behind a dupe's D"
-msgstr ""
+msgstr "Band map vullen achter een dupe's D"
 
 #: usettingscaptions.rs_bandmap_multcolor
 #, fuzzy
 msgid "Band map fill behind a multiplier's M"
-msgstr ""
+msgstr "Band kaart vul achter een multiplier's M"
 
 #: usettingscaptions.rs_bandmap_otherbandcolor
 #, fuzzy
 msgid "Band map frequency on another band"
-msgstr ""
+msgstr "Bandkaartfrequentie op een andere band"
 
 #: usettingscaptions.rs_bandmap_selectioncolor
 #, fuzzy
 msgid "Band map selected spot"
-msgstr ""
+msgstr "Bandkaart geselecteerd spot"
 
 #: usettingscaptions.rs_bandmap_vfomarkercolor
 #, fuzzy
 msgid "Band map VFO marker (nearest spot and guard band)"
-msgstr ""
+msgstr "Bandkaart VFO-markering (naastgelegen plek en beschermband)"
 
 #: usettingscaptions.rs_cluster_ctrlj_autoselfspot
 #, fuzzy
 msgid "Auto Self Spot"
-msgstr ""
+msgstr "Auto Zelfvlek"
 
 #: usettingscaptions.rs_cluster_ctrlj_selfspotinterval
 #, fuzzy
 msgid "Self Spot Interval (minutes)"
-msgstr ""
+msgstr "Self Spot Interval (minuten)"
 
 #: utr4wstrings.tc_distinctadifnotincabrillo
 #, fuzzy
 msgid "The Cabrillo leaves out %d %s QSO(s): this contest takes them as an ADIF file of their own, written by the ADIF export (%s)."
-msgstr ""
+msgstr "De Cabrillo vertrekt. %d %s QSO(s): deze wedstrijd neemt hen als een eigen ADIF-bestand, geschreven door de ADIF export (%s)."
 
 #: utr4wstrings.tc_distinctadifprompt
 #, fuzzy
 msgid "This contest takes its %s QSOs as an ADIF file of their own, and its Cabrillo leaves them out. Also write the %d such QSO(s) to %s?"
-msgstr ""
+msgstr "Deze wedstrijd neemt zijn %s QSO's als een ADIF bestand van hun eigen, en zijn Cabrillo laat ze buiten. Schrijf ook de %d dergelijke QSO(s) aan %s?"
 
 #: tfrmrover.lblunits.caption
 #, fuzzy
 msgid "Where this station operates now"
-msgstr ""
+msgstr "Waar dit station nu werkt"
 
 #: tfrmrover.btnoff.caption
 #, fuzzy
 msgid "Rover off"
-msgstr ""
+msgstr "Rover uit"
 
 #: uappstrings.spostrepostrefused
 #, fuzzy
 msgid "the server answered the upload with a redirect (status %d) to %s and it was not repeated: %s"
-msgstr ""
+msgstr "de server beantwoordde de upload met een redirect (status %d) naar %s En het werd niet herhaald: %s"
 
 #: uappstrings.srepostbadlocation
 #, fuzzy
 msgid "the redirect address is not usable."
-msgstr ""
+msgstr "het omleidingsadres is niet bruikbaar."
 
 #: uappstrings.srepostdowngrade
 #, fuzzy
 msgid "the redirect leads from https to plain http, which is never followed."
-msgstr ""
+msgstr "de omleiding leidt van https naar gewoon http, dat nooit wordt gevolgd."
 
 #: uappstrings.srepostnolocation
 #, fuzzy
 msgid "the redirect named no address."
-msgstr ""
+msgstr "de omleiding zonder adres."
 
 #: uappstrings.srepostotherhost
 #, fuzzy
 msgid "the redirect leads to a different host or port, and the upload carries a key that only the original server may see."
-msgstr ""
+msgstr "de redirect leidt naar een andere host of poort, en de upload draagt een sleutel die alleen de originele server mag zien."
 
 #: uappstrings.srepostseeother
 #, fuzzy
 msgid "status 303 means the upload was handled and the result is at that address; TR4W does not send it again."
-msgstr ""
+msgstr "status 303 betekent dat de upload is afgehandeld en het resultaat is op dat adres; TR4W stuurt het niet opnieuw."
 
 #: uappstrings.sreposttoomany
 #, fuzzy
 msgid "the server redirected the upload more than %d times."
-msgstr ""
+msgstr "de server heeft de upload meer omgeleid dan %d tijden."
 
 #: utr4wstrings.tc_cabrilloperactivation
 #, fuzzy
 msgid "This contest takes a separate Cabrillo log for each activation: %d files were written (%s). Each claims the whole log's score."
-msgstr ""
+msgstr "Deze wedstrijd neemt een aparte Cabrillo log voor elke activering: %d bestanden zijn geschreven (%s). Ze eisen de score van het hele logboek."
 
 #: uappstrings.sdiagnosticlogunavailable
 #, fuzzy
@@ -12744,7 +12798,7 @@ msgstr ""
 #: uappstrings.swritablerootcopied
 #, fuzzy
 msgid "Copied from the install folder's settings: %s"
-msgstr ""
+msgstr "Kopiëren van de instellingen van de installatiemap: %s"
 
 #: uappstrings.swritablerootmoved
 #, fuzzy
@@ -12761,7 +12815,7 @@ msgstr ""
 #: uappstrings.swritablerootoldlogs
 #, fuzzy
 msgid "Contest logs already in the install folder were left where they are. To keep logging in one, copy it (with any file of the same name ending -wal or -shm) into the folder above."
-msgstr ""
+msgstr "Wedstrijd logs al in de installatie map werden gelaten waar ze zijn. Om in te loggen, kopieer het (met een bestand met dezelfde naam en eindigend -wal of -shm) in de map hierboven."
 
 #: uappstrings.swritablerootmovedprogramfiles
 #, fuzzy
@@ -12778,133 +12832,133 @@ msgstr ""
 #: uappstrings.smessageeditunknownword
 #, fuzzy
 msgid "TR4W does not know the word {%0:s}. Use a command from the List of commands, {ROVERCALL} or {ROVERQTH}, and press OK again."
-msgstr ""
+msgstr "TR4W kent het woord niet {%0:sGebruik een commando uit de Lijst van commando's, {ROVERCALL} of {ROVERQTH}, en druk nogmaals op OK."
 
 #: uappstrings.smessageunknownwordskipped
 #, fuzzy
 msgid "The message names {%0:s}, which TR4W does not know. It was skipped and not sent."
-msgstr ""
+msgstr "De naam van het bericht {%0:sWat TR4W niet weet. Het is overgeslagen en niet verstuurd."
 
 #: uappstrings.snewcontesthostareaentrynotasection
 #, fuzzy
 msgid "%s is not an ARRL or RAC section or DX. Enter your section, e.g. WCF or ONE, or DX."
-msgstr ""
+msgstr "%s is geen ARRL of RAC sectie of DX. Voer uw sectie in, bijvoorbeeld BWF of ONE, of DX."
 
 #: uappstrings.snewcontesthostareaoutsidesectionnotice
 #, fuzzy
 msgid "You are outside %0:s: enter your ARRL or RAC section (e.g. WCF or ONE), or DX. Tick the box if you are in %0:s."
-msgstr ""
+msgstr "Je bent buiten. %0:s: voer uw ARRL- of RAC-sectie in (bijv. WCF of ONE), of DX. Vink de doos aan als u in %0:s."
 
 #: uappstrings.snewcontesthostareasectionlabel
 #, fuzzy
 msgid "MY SECTION"
-msgstr ""
+msgstr "MIJN AFDELING"
 
 #: usettingscaptions.rs_contest_categorystation
 #, fuzzy
 msgid "Category-Station"
-msgstr ""
+msgstr "Categoriestation"
 
 #: uappstrings.scallhistoryinuse
 #, fuzzy
 msgid "it is in use now (%d calls)"
-msgstr ""
+msgstr "het nu in gebruik is (%d oproepen)"
 
 #: uappstrings.scallhistorynotapplied
 #, fuzzy
 msgid "it was not applied to the running contest (see tr4w.log); any call history already loaded stays in use"
-msgstr ""
+msgstr "het werd niet toegepast op de lopende wedstrijd (zie tr4w.log); een reeds geladen aanroepgeschiedenis blijft in gebruik"
 
 #: utr4wstrings.tc_trmasterdtadownloadedinuse
 #, fuzzy
 msgid "TRMASTER.DTA downloaded -- Super Check Partial is using it now"
-msgstr ""
+msgstr "TRMASTER.DTA gedownload - Super Check Partial gebruikt het nu"
 
 #: utr4wstrings.tc_trmasterdtadownloadednotloaded
 #, fuzzy
 msgid "TRMASTER.DTA downloaded but could not be loaded -- the data in use is unchanged (see tr4w.log)"
-msgstr ""
+msgstr "TRMASTER.DTA gedownload maar kon niet geladen worden -- de gebruikte gegevens zijn ongewijzigd (zie tr4w.log)"
 
 #: tprefsform.btnchoosefont.caption
 #, fuzzy
 msgid "Choose..."
-msgstr ""
+msgstr "Kies..."
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgid "Windows and log"
-msgstr ""
+msgstr "Vensters en log"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "-- dB"
-msgstr ""
+msgstr "-- dB"
 
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid ""
 "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.\r\n"
 "Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign."
-msgstr ""
+msgstr "Deze worden verzonden naar de andere stations in een multi-operator netwerk wanneer u ze verandert, dus alle posities zijn het eens over de uitwisseling.\rCall, Country, Continent and Zone worden één keer gelezen wanneer de wedstrijd wordt opgezet, dus een verandering in hen wordt van kracht wanneer TR4W volgende begint. Laat Country leeg en TR4W werkt het uit van uw oproep."
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "TR4W biedt een DX Commander compatibele interface op TCP poort 52002 wanneer de WSJT-X ondersteuning wordt uitgevoerd, en DXLab programma's verbinden zich daarmee."
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Integrate with DXLab SpotCollector"
-msgstr ""
+msgstr "Integreren met DXLab SpotCollector"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgid "IP port"
-msgstr ""
+msgstr "IP-poort"
 
 #: uappstrings.sbandmaptextsize
 #: tfrmbandmap.mitextsize.caption
 #, fuzzy
 msgid "Text size"
-msgstr ""
+msgstr "Tekstgrootte"
 
 #: uappstrings.sbandmaptextlarger
 #: tfrmbandmap.mitextlarger.caption
 #, fuzzy
 msgid "Larger"
-msgstr ""
+msgstr "Groter"
 
 #: uappstrings.sbandmaptextsmaller
 #: tfrmbandmap.mitextsmaller.caption
 #, fuzzy
 msgid "Smaller"
-msgstr ""
+msgstr "Kleiner"
 
 #: uappstrings.sbandmaptextreset
 #: tfrmbandmap.mitextreset.caption
 #, fuzzy
 msgid "Reset"
-msgstr ""
+msgstr "Reset"
 
 #: uappstrings.sloggergridopensite
 #, fuzzy
 msgid "Open web site"
-msgstr ""
+msgstr "Website openen"
 
 #: uappstrings.sloggergridresend
 #, fuzzy
 msgid "Resend QSOs..."
-msgstr ""
+msgstr "QSO's opnieuw versturen..."
 
 #: uappstrings.sloggersiterefused
 #, fuzzy
 msgid "Not opened: \"%s\" is not an http or https web address."
-msgstr ""
+msgstr "Niet geopend: \"%s\" is geen http- of https-webadres."
 
 #: uappstrings.sloggersiteopenfailed
 #, fuzzy
 msgid "The browser could not be started for %s."
-msgstr ""
+msgstr "De browser kon niet worden gestart voor %s."
 
 #: uappstrings.sloggerresendbody
 #, fuzzy
@@ -12915,232 +12969,237 @@ msgid ""
 "\n"
 "Resend all: also sends delivered QSOs again as updates of the same remote contact (not for Cloudlog / Wavelog or AC Log, which have no update call). A QSO of unknown outcome is never resent."
 msgstr ""
+"Verstuur QSO's van deze wedstrijd naar %s Alleen.\n"
+"\n"
+"Nog niet geleverd: wachtrijen van de QSO's die deze logger nooit verstuurd heeft (bijvoorbeeld die welke gelogd zijn terwijl de nieuwe QSO's verzonden zijn) en welke het ook geweigerd heeft. QSO's die al geleverd, wachten, of van onbekende uitkomst worden met rust gelaten.\n"
+"\n"
+"Alles opnieuw verzenden: ook geleverd QSO's weer als updates van hetzelfde externe contact (niet voor Cloudlog / Wavelog of AC Log, die geen updategesprek hebben). Een QSO van onbekende uitkomst is nooit wrok."
 
 #: uappstrings.sloggerresendundelivered
 #, fuzzy
 msgid "Not yet delivered"
-msgstr ""
+msgstr "Tot op heden niet uitgebracht"
 
 #: uappstrings.sloggerresendall
 #, fuzzy
 msgid "Resend all"
-msgstr ""
+msgstr "Alles opnieuw verzenden"
 
 #: uappstrings.sloggerresendallask
 #, fuzzy
 msgid "Resend all QSOs to %s? A contact that is already at the destination by another route (another definition of this logger, a manual import) cannot be recognised and may appear twice. Delivered contacts are sent again as updates, which uses the service's quota."
-msgstr ""
+msgstr "Alle QSO's opnieuw versturen naar %s? Een contact dat al op de bestemming is via een andere route (een andere definitie van deze logger, een handmatige import) kan niet worden herkend en kan tweemaal verschijnen. Bezorgde contacten worden opnieuw verzonden als updates, die gebruik maken van het quotum van de dienst."
 
 #: uappstrings.sloggerresenddone
 #, fuzzy
 msgid "%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations."
-msgstr ""
+msgstr "%s: wachtrij %d QSO's (%d nieuw, %d opnieuw verzonden). Alleen gelaten: %d geleverd, %d wachtend, %d van onbekende resultaten die moeten worden herzien, %d Gelogd door andere stations."
 
 #: uappstrings.sloggerresendrefused
 #, fuzzy
 msgid "Nothing was queued for %s: %s"
-msgstr ""
+msgstr "Er stond niets in de wachtrij %s: %s"
 
 #: uappstrings.sloggerresendwhynotrunning
 #, fuzzy
 msgid "it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start."
-msgstr ""
+msgstr "Hij loopt niet. Voorkeuren opslaan en TR4W herstarten als deze is toegevoegd of de verbindingsinstellingen zijn gewijzigd sinds het starten."
 
 #: uappstrings.sloggerresendwhynotactive
 #, fuzzy
 msgid "Send new QSOs is off for it. Switch it on and save Preferences first."
-msgstr ""
+msgstr "Stuur nieuwe QSO's. Schakel het in en sla eerst voorkeuren op."
 
 #: uappstrings.sloggerresendwhypaused
 #, fuzzy
 msgid "its delivery is paused after a capture failure (see tr4w.log)."
-msgstr ""
+msgstr "de levering wordt onderbroken na een vangstfout (zie tr4w.log)."
 
 #: uappstrings.sloggerresendwhysetup
 #, fuzzy
 msgid "its account or logbook is not set up."
-msgstr ""
+msgstr "haar rekening of logboek niet is opgesteld."
 
 #: uappstrings.sloggerresendwhyunsupported
 #, fuzzy
 msgid "it has no delivery queue to resend into."
-msgstr ""
+msgstr "het heeft geen wachtrij om in te verzenden."
 
 #: uappstrings.sloggerresendwhynolog
 #, fuzzy
 msgid "no writable contest log is open."
-msgstr ""
+msgstr "er is geen beschrijfbaar wedstrijdlogboek geopend."
 
 #: uappstrings.sloggerresendwhyfailed
 #, fuzzy
 msgid "the log could not be updated (see tr4w.log). Nothing was changed."
-msgstr ""
+msgstr "het logbestand kon niet worden bijgewerkt (zie tr4w.log). Er is niets veranderd."
 
 #: uappstrings.slogbackupstillfailing
 #, fuzzy
 msgid "Last log backup FAILED: retried every %d min. See tr4w.log."
-msgstr ""
+msgstr "Laatste log back-up mislukt: elke opgehaald %d min. Zie tr4w.log."
 
 #: uappstrings.slogchangenotsaved
 #, fuzzy
 msgid "NOT SAVED -- the contest log did not take this change. See tr4w.log."
-msgstr ""
+msgstr "NOT SAVED -- het wedstrijdlogboek nam deze wijziging niet aan. Zie tr4w.log."
 
 #: uappstrings.speerqsonotsaved
 #, fuzzy
 msgid "A QSO from another station could NOT be saved to this log. It is not lost if the server has it: the next catch-up from the server, or Net > Synchronize, adds it once this log can be written. Further refusals are in tr4w.log."
-msgstr ""
+msgstr "Een QSO van een ander station kon NIET in dit logboek worden opgeslagen. Het is niet verloren als de server het heeft: de volgende catch-up van de server, of Net > Synchroniseren, voegt het toe zodra dit logboek kan worden geschreven. Verdere weigeringen zijn in tr4w.log."
 
 #: uappstrings.sentrystatusqsonotsaved
 #, fuzzy
 msgid "QSO not saved"
-msgstr ""
+msgstr "QSO niet opgeslagen"
 
 #: uappstrings.sentrystatuslogreadonly
 #, fuzzy
 msgid "Log read-only"
-msgstr ""
+msgstr "Alleen-lezen loggen"
 
 #: uappstrings.sentryfieldexchangename
 #, fuzzy
 msgid "Exchange"
-msgstr ""
+msgstr "Beurs"
 
 #: uappstrings.sradiopanelactive
 #, fuzzy
 msgid "Active"
-msgstr ""
+msgstr "Actief"
 
 #: uappstrings.sradiopanelactivename
 #, fuzzy
 msgid "Active radio"
-msgstr ""
+msgstr "Actieve radio"
 
 #: usettingscaptions.rs_operating_enforcevalidcallsign
 #, fuzzy
 msgid "Refuse a QSO whose call is not in the country file"
-msgstr ""
+msgstr "Weiger een QSO wiens oproep niet in het landbestand staat"
 
 #: usettingscaptions.rs_bandmap_clickgoestoexchange
 #, fuzzy
 msgid "After tuning to a spot, put the cursor in the exchange window"
-msgstr ""
+msgstr "Plaats de cursor in het uitwisselingsvenster na het afstemmen op een plek"
 
 #: uappstrings.scallnotaknownentity
 #, fuzzy
 msgid "%s is not logged: its base call is not in the country file"
-msgstr ""
+msgstr "%s is niet gelogd: de basisoproep is niet in het landbestand"
 
 #: uappstrings.scallwindowcwon
 #, fuzzy
 msgid "CW On"
-msgstr ""
+msgstr "Aan"
 
 #: uappstrings.smenutogglevoicekeyer
 #, fuzzy
 msgid "Toggle Voice Keyer"
-msgstr ""
+msgstr "Voice Keyer aan/uit"
 
 #: uappstrings.sexchangecountylineoneparty
 #, fuzzy
 msgid "County line %s/%s: the counties must be in one QSO party"
-msgstr ""
+msgstr "County lijn %s'%s: de provincies moeten in één QSO-partij zijn"
 
 #: uappstrings.sradiopttbycatnotsupported
 #, fuzzy
 msgid "%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off \"Key the transmitter with a CAT command\"."
-msgstr ""
+msgstr "%s: PTT via CAT wordt niet ondersteund door deze radio. Gebruik een hardware PTT-lijn, of zet \"Key the transmitter with a CAT command\" uit."
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenerenabled
 #, fuzzy
 msgid "Accept QSOs from JTDX and JTAlert (N1MM log listener)"
-msgstr ""
+msgstr "QSO's van JTDX en JTAlert (N1MM log listener) accepteren"
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenaddress
 #, fuzzy
 msgid "Address the N1MM log listener binds to"
-msgstr ""
+msgstr "Adres van de N1MM log luisteraar bindt aan"
 
 #: uappstrings.sprefsgroupn1mmlistener
 #, fuzzy
 msgid "N1MM log listener (JTDX, JTAlert)"
-msgstr ""
+msgstr "N1MM log listener (JTDX, JTAlert)"
 
 #: uappstrings.snetstationmissing
 #, fuzzy
 msgid "Missing"
-msgstr ""
+msgstr "Ontbrekend"
 
 #: uappstrings.spassneedsname
 #, fuzzy
 msgid "A {PASS} word needs a station or a band, for example {PASS B} or {PASS 14000}. The message was not sent."
-msgstr ""
+msgstr "Een {PASS} woord heeft een station of een band nodig, bijvoorbeeld {PASS B} of {PASS 14000}. Het bericht is niet verzonden."
 
 #: uappstrings.spassnotaband
 #, fuzzy
 msgid "{PASS %0:s} is not a band. Use a band in kHz, for example 14000. The message was not sent."
-msgstr ""
+msgstr "PASS %0:sHet is geen band. Gebruik een band in kHz, bijvoorbeeld 14000. Het bericht is niet verzonden."
 
 #: uappstrings.spassbandempty
 #, fuzzy
 msgid "No other station is on the %0:s kHz band, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "Geen ander station is op de %0:s kHz-band, dus {PASS %0:s} kan niet ingevuld worden. Het bericht is niet verzonden."
 
 #: uappstrings.spassstationabsent
 #, fuzzy
 msgid "Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "Post %0:s is niet op het netwerk, dus {PASS %0:s} kan niet ingevuld worden. Het bericht is niet verzonden."
 
 #: uappstrings.spassstationisus
 #, fuzzy
 msgid "{PASS %0:s} names this computer. Name another position. The message was not sent."
-msgstr ""
+msgstr "PASS %0:sNoem deze computer. Noem een andere positie. Het bericht is niet verzonden."
 
 #: uappstrings.spassnofrequency
 #, fuzzy
 msgid "Station %0:s is on the network but has not reported a frequency yet. The message was not sent."
-msgstr ""
+msgstr "Post %0:s is op het netwerk, maar heeft nog geen frequentie gerapporteerd. Het bericht is niet verzonden."
 
 #: uappstrings.spassnothingpassed
 #, fuzzy
 msgid "{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent."
-msgstr ""
+msgstr "{LASPASSEDFREQ} heeft niets te versturen: er is nog geen frequentie doorgegeven. Gebruik eerst {PASS B}. Het bericht is niet verzonden."
 
 #: uappstrings.slogrestoredeliverynotice
 #, fuzzy
 msgid "The restored log's record of what was sent to external loggers (Club Log, WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may already be at those services but are not in this log, and QSOs the backup had not yet sent will be sent again. Check each service's log."
-msgstr ""
+msgstr "Het herstelde logboek van wat naar externe loggers is verzonden (Club Log, WRL, DXKeeper) is zo oud als de back-up. QSO's ingelogd nadat de back-up al op die diensten, maar zijn niet in dit logboek, en QSO's de back-up nog niet was verzonden zal opnieuw worden verzonden. Controleer het logboek van elke dienst."
 
 #: uappstrings.smenucorrectstationfacts
 #, fuzzy
 msgid "Correct Station Facts..."
-msgstr ""
+msgstr "Verbeter de gegevens van het station..."
 
 #: uappstrings.sstationcorrectionbackupfailed
 #, fuzzy
 msgid "Nothing was changed: the log could not be backed up first. %s"
-msgstr ""
+msgstr "Er werd niets veranderd: het log kon niet eerst worden opgeslagen. %s"
 
 #: uappstrings.sstationcorrectionbadfrom
 #, fuzzy
 msgid "A log record number is a whole number from 1 up."
-msgstr ""
+msgstr "Een log record nummer is een heel getal vanaf 1 tot en met."
 
 #: uappstrings.sstationcorrectioncancelbutton
 #, fuzzy
 msgctxt "uappstrings.sstationcorrectioncancelbutton"
 msgid "Cancel"
-msgstr ""
+msgstr "Annuleer"
 
 #: uappstrings.sstationcorrectionchangebutton
 #, fuzzy
 msgid "Change the QSOs"
-msgstr ""
+msgstr "De QSO's wijzigen"
 
 #: uappstrings.sstationcorrectionchoosefact
 #, fuzzy
 msgid "Which of your station's values is wrong on the QSOs already logged?"
-msgstr ""
+msgstr "Welke van de waarden van uw station is verkeerd op de reeds geregistreerde QSO's?"
 
 #: uappstrings.sstationcorrectionconfirm
 #, fuzzy
@@ -13152,6 +13211,12 @@ msgid ""
 "\n"
 "Not changed: %5:d imported, %6:d never recorded (they follow your setting: correct it in Preferences too), %7:d per place (a rover or an in-state party)."
 msgstr ""
+"Deze veranderingen %0:s naar \"%1:s\"op %2:d Logged QSO(s): %3:s.\n"
+"Ze zeggen nu: %4:s.\n"
+"\n"
+"Het logboek is als eerste gebacked. Elke gewijzigde QSO wordt dan opnieuw als een bewerking -- naar Club Log, WRL en elke andere externe logger, naar de multi-op server en als UDP vervanging -- gestuurd en de log wordt gerecord. %8:d Hier gecorrigeerd, gestuurd door dat station.\n"
+"\n"
+"Niet gewijzigd: %5:d ingevoerd, %6:d nooit opgenomen (ze volgen uw instelling: corrigeer het ook in Voorkeuren), %7:d per plaats (een rover of een in-state partij)."
 
 #: uappstrings.sstationcorrectiondone
 #, fuzzy
@@ -13159,171 +13224,173 @@ msgid ""
 "%0:s is now \"%1:s\" on %2:d logged QSO(s).\n"
 "The log as it was is in %3:s"
 msgstr ""
+"%0:s is nu \"%1:s\"op %2:d logged QSO(s).\n"
+"Het logboek zoals het was is in %3:s"
 
 #: uappstrings.sstationcorrectionemptyvalue
 #, fuzzy
 msgid "Type the value the QSOs should have."
-msgstr ""
+msgstr "Typ de waarde van de QSO's."
 
 #: uappstrings.sstationcorrectionfailed
 #, fuzzy
 msgid "Nothing was changed: the contest log did not take the correction. See tr4w.log."
-msgstr ""
+msgstr "Er is niets veranderd: het wedstrijdlogboek heeft de correctie niet overgenomen. Zie tr4w.log."
 
 #: uappstrings.sstationcorrectionfromprompt
 #, fuzzy
 msgid "Change the QSOs from log record number (1 = every QSO in the log):"
-msgstr ""
+msgstr "Wijzig de QSO's van log recordnummer (1 = elke QSO in het logboek):"
 
 #: uappstrings.sstationcorrectionnotallowed
 #, fuzzy
 msgid "%s cannot be changed on logged QSOs."
-msgstr ""
+msgstr "%s kan niet worden gewijzigd bij ingelogde QSO's."
 
 #: uappstrings.sstationcorrectionnothing
 #, fuzzy
 msgid "No logged QSO needs changing."
-msgstr ""
+msgstr "Geen gelogde QSO hoeft te worden gewijzigd."
 
 #: uappstrings.sstationcorrectionreadonly
 #, fuzzy
 msgid "Nothing was changed: the contest log is read-only."
-msgstr ""
+msgstr "Er is niets veranderd: het logboek is alleen-lezen."
 
 #: uappstrings.sstationcorrectionscopeall
 #, fuzzy
 msgid "ALL PRIOR CONTACTS in the log"
-msgstr ""
+msgstr "ALLE PRIOR CONTACTEN IN HET log"
 
 #: uappstrings.sstationcorrectionscopefrom
 #, fuzzy
 msgid "every contact from log record %d on"
-msgstr ""
+msgstr "elk contact uit logrecord %d op"
 
 #: uappstrings.sstationcorrectiontitle
 #, fuzzy
 msgid "Correct station facts on logged QSOs"
-msgstr ""
+msgstr "Correcte stationsfeiten op ingelogde QSO's"
 
 #: uappstrings.sstationcorrectionvalueprompt
 #, fuzzy
 msgid "The value the QSOs should have for %s:"
-msgstr ""
+msgstr "De waarde die de QSO's moeten hebben voor %s:"
 
 #: uappstrings.sstationcorrectionzonezero
 #, fuzzy
 msgid "A zone of 0 is not a zone."
-msgstr ""
+msgstr "Een zone van 0 is geen zone."
 
 #: uappstrings.sloggergridcreatelogbook
 #, fuzzy
 msgid "Create logbook..."
-msgstr ""
+msgstr "Logboek maken..."
 
 #: uappstrings.swrlcreatebusy
 #, fuzzy
 msgid "A logbook is already being created for a logger. Wait for it to finish."
-msgstr ""
+msgstr "Er wordt al een logboek gemaakt voor een logger. Wacht tot het klaar is."
 
 #: uappstrings.swrlcreatecaption
 #, fuzzy
 msgid "Create World Radio League logbook"
-msgstr ""
+msgstr "Logboek van World Radio League aanmaken"
 
 #: uappstrings.swrlcreatedone
 #, fuzzy
 msgid "Created logbook \"%s\" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with."
-msgstr ""
+msgstr "Aangemaakt logboek \"%s\" (id %s) bij World Radio League en koos het voor %s. Voorkeuren opslaan om het te behouden. Het nieuwe logboek wordt gebruikt na het herstarten van TR4W: een lopende logger behoudt de instellingen waarmee het is gestart."
 
 #: uappstrings.swrlcreatefailed
 #, fuzzy
 msgid "The logbook was not created: %s"
-msgstr ""
+msgstr "Het logboek is niet aangemaakt: %s"
 
 #: uappstrings.swrlcreatekeymissing
 #, fuzzy
 msgid "This logger has no API key available. Enter the key in the logger's editor (unlock the password vault if it is locked) first."
-msgstr ""
+msgstr "Deze logger heeft geen API sleutel beschikbaar. Voer eerst de sleutel in in de loggers editor (ontgrendel de wachtwoordkluis als deze is vergrendeld)."
 
 #: uappstrings.swrlcreateprompt
 #, fuzzy
 msgid "Name of the new logbook (up to 100 characters). It is made on the World Radio League web site for the account this API key belongs to:"
-msgstr ""
+msgstr "Naam van het nieuwe logboek (maximaal 100 tekens). Het is gemaakt op de World Radio League website voor de account deze API sleutel behoort tot:"
 
 #: uappstrings.swrlcreatereplaceask
 #, fuzzy
 msgid "%s already has a logbook chosen. Create a new logbook and use it instead? Contacts already queued for the old logbook are not moved."
-msgstr ""
+msgstr "%s heeft al een logboek gekozen. Een nieuw logboek aanmaken en gebruiken? Contacten die al in de wachtrij staan voor het oude logboek worden niet verplaatst."
 
 #: uappstrings.swrlcreateuncertain
 #, fuzzy
 msgid "World Radio League did not confirm the logbook, so it may have been created. Look at your logbooks on the World Radio League web site (or use Refresh in the logger's editor) before trying again, so you do not make a second one."
-msgstr ""
+msgstr "World Radio League heeft het logboek niet bevestigd, dus het kan zijn gemaakt. Bekijk uw logboeken op de website van World Radio League (of gebruik Refresh in de logger's editor) voordat u het opnieuw probeert, dus maak geen tweede."
 
 #: uappstrings.swrlrequestid
 #, fuzzy
 msgid "(request id %s)"
-msgstr ""
+msgstr "(verzoek id %s)"
 
 #: uappstrings.swrlwhyconflict
 #, fuzzy
 msgid "a logbook with that name may already exist, or World Radio League treated the request as a conflict. Choose the existing logbook in the logger's editor, or use another name."
-msgstr ""
+msgstr "een logboek met die naam kan al bestaan, of World Radio League behandelde het verzoek als een conflict. Kies het bestaande logboek in de logger-editor, of gebruik een andere naam."
 
 #: uappstrings.swrlwhydown
 #, fuzzy
 msgid "the World Radio League service is not available right now (%s). Try again later."
-msgstr ""
+msgstr "de World Radio League service is nu niet beschikbaar (%s). Probeer het later nog eens."
 
 #: uappstrings.swrlwhyip
 #, fuzzy
 msgid "the key is restricted to other IP addresses than this computer's."
-msgstr ""
+msgstr "de sleutel is beperkt tot andere IP-adressen dan die van deze computer."
 
 #: uappstrings.swrlwhykey
 #, fuzzy
 msgid "World Radio League did not accept the API key (it is missing, wrong or revoked). Check the key in the logger's editor."
-msgstr ""
+msgstr "World Radio League heeft de API-sleutel niet geaccepteerd (het ontbreekt, is fout of wordt ingetrokken). Controleer de sleutel in de loggers editor."
 
 #: uappstrings.swrlwhymembership
 #, fuzzy
 msgid "the key was refused because the account needs a current World Radio League membership."
-msgstr ""
+msgstr "De sleutel werd geweigerd omdat de account een huidig World Radio League lidmaatschap nodig heeft."
 
 #: uappstrings.swrlwhynamerequired
 #, fuzzy
 msgid "the name is empty."
-msgstr ""
+msgstr "de naam is leeg."
 
 #: uappstrings.swrlwhynametoolong
 #, fuzzy
 msgid "the name is longer than %d characters."
-msgstr ""
+msgstr "de naam is langer dan %d karakters."
 
 #: uappstrings.swrlwhyother
 #, fuzzy
 msgid "the request failed (%s)."
-msgstr ""
+msgstr "het verzoek is mislukt (%s)."
 
 #: uappstrings.swrlwhyrate
 #, fuzzy
 msgid "too many requests just now. Wait a minute and try again."
-msgstr ""
+msgstr "Te veel verzoeken net. Wacht even en probeer het opnieuw."
 
 #: uappstrings.swrlwhyscope
 #, fuzzy
 msgid "the key is not allowed to create logbooks. Make a key that may write logbooks."
-msgstr ""
+msgstr "de sleutel mag geen logboeken aanmaken. Maak een sleutel die logboeken kan schrijven."
 
 #: uappstrings.swrlwhyvalidation
 #, fuzzy
 msgid "World Radio League rejected the request: %s"
-msgstr ""
+msgstr "World Radio League heeft het verzoek afgewezen: %s"
 
 #: uappstrings.swrlwhyvalidationfield
 #, fuzzy
 msgid "World Radio League rejected the %s: %s"
-msgstr ""
+msgstr "De World Radio League heeft de %s: %s"
 
 #: uappstrings.snetpushedtoservertotal
 #, fuzzy

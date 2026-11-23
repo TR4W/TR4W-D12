@@ -4260,7 +4260,7 @@ msgstr "Κύριο παράθυρο"
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
-msgstr ""
+msgstr "Η γραμματοσειρά εφαρμόζεται στο κύριο παράθυρο του διαγωνισμού. Και τα δύο ενεργοποιούνται όταν αρχίσει η επόμενη TR4W."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Αυτά ήταν στο αντικείμενο εμφάνισης του μενού Settings. Αυτό το παράθυρο θα φύγει μόλις έρθει ο ROW COUNT και η WINDOW ΜΕΓΕΘΟΣ."
 #: tprefsform.lblappearmenunote.caption
@@ -4524,7 +4524,7 @@ msgstr "Ταχύτητα χαρακτήρων:"
 #, fuzzy
 #| msgid "Size:"
 msgid "Font size step:"
-msgstr ""
+msgstr "Βήμα μεγέθους γραμματοσειράς:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -12166,83 +12166,83 @@ msgstr "TRMASTER.DTA μεταφορτώνεται αλλά δεν μπορεί �
 #: tprefsform.btnchoosefont.caption
 #, fuzzy
 msgid "Choose..."
-msgstr ""
+msgstr "Επιλογή..."
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgid "Windows and log"
-msgstr ""
+msgstr "Παράθυρα και καταγραφή"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "-- dB"
-msgstr ""
+msgstr "-- dB"
 
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid ""
 "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.\r\n"
 "Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign."
-msgstr ""
+msgstr "Αυτά στέλνονται στους άλλους σταθμούς σε ένα πολυ-λειτουργικό δίκτυο όταν τους αλλάζετε, οπότε όλες οι θέσεις συμφωνούν στην ανταλλαγή.\rΗ κλήση, η Χώρα, η Ήπειρος και η Ζώνη διαβάζονται μία φορά όταν ο διαγωνισμός έχει συσταθεί, έτσι μια αλλαγή σε αυτούς αρχίζει να ισχύει όταν αρχίζει η επόμενη TR4W. Αφήστε την Χώρα άδεια και TR4W λειτουργεί έξω από το σήμα κλήσης σας."
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "Το TR4W προσφέρει μια συμβατή διεπαφή DX Commander στη θύρα TCP 52002 όποτε η υποστήριξη WSJT-X εκτελείται, και τα προγράμματα DXLab συνδέονται με αυτό."
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Integrate with DXLab SpotCollector"
-msgstr ""
+msgstr "Ενσωμάτωση με DXLab SpotCollector"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgid "IP port"
-msgstr ""
+msgstr "Θύρα IP"
 
 #: uappstrings.sbandmaptextsize
 #: tfrmbandmap.mitextsize.caption
 #, fuzzy
 msgid "Text size"
-msgstr ""
+msgstr "Μέγεθος κειμένου"
 
 #: uappstrings.sbandmaptextlarger
 #: tfrmbandmap.mitextlarger.caption
 #, fuzzy
 msgid "Larger"
-msgstr ""
+msgstr "Μεγαλύτερο"
 
 #: uappstrings.sbandmaptextsmaller
 #: tfrmbandmap.mitextsmaller.caption
 #, fuzzy
 msgid "Smaller"
-msgstr ""
+msgstr "Μικρότερο"
 
 #: uappstrings.sbandmaptextreset
 #: tfrmbandmap.mitextreset.caption
 #, fuzzy
 msgid "Reset"
-msgstr ""
+msgstr "Επαναφορά"
 
 #: uappstrings.sloggergridopensite
 #, fuzzy
 msgid "Open web site"
-msgstr ""
+msgstr "Άνοιγμα ιστοσελίδας"
 
 #: uappstrings.sloggergridresend
 #, fuzzy
 msgid "Resend QSOs..."
-msgstr ""
+msgstr "Αποστολή QSO..."
 
 #: uappstrings.sloggersiterefused
 #, fuzzy
 msgid "Not opened: \"%s\" is not an http or https web address."
-msgstr ""
+msgstr "Μη ανοιγμένο: \"%s\" δεν είναι διαδικτυακή διεύθυνση http ή https."
 
 #: uappstrings.sloggersiteopenfailed
 #, fuzzy
 msgid "The browser could not be started for %s."
-msgstr ""
+msgstr "Αδύνατη η εκκίνηση του περιηγητή %s."
 
 #: uappstrings.sloggerresendbody
 #, fuzzy
@@ -12253,232 +12253,237 @@ msgid ""
 "\n"
 "Resend all: also sends delivered QSOs again as updates of the same remote contact (not for Cloudlog / Wavelog or AC Log, which have no update call). A QSO of unknown outcome is never resent."
 msgstr ""
+"Αποστολή QSOs αυτού του διαγωνισμού σε %s Μόνο.\n"
+"\n"
+"Δεν έχει ακόμη παραδοθεί: ουρές το QSOs αυτός ο καταγραφέας δεν στάλθηκε ποτέ (για παράδειγμα αυτοί που καταχωρήθηκαν ενώ η αποστολή νέων QSOs ήταν εκτός) και οποιοδήποτε αρνήθηκε. QSOs ήδη παραδοθεί, αναμονή, ή άγνωστη έκβαση αφήνονται μόνο.\n"
+"\n"
+"Επανααποστολή όλων: στέλνει επίσης παραδοθεί QSOs και πάλι ως ενημερώσεις της ίδιας απομακρυσμένης επαφής (όχι για Cloudlog / Wavelog ή AC Log, οι οποίες δεν έχουν update call). Ένα QSO άγνωστης έκβασης ποτέ δεν δυσανασχετεί."
 
 #: uappstrings.sloggerresendundelivered
 #, fuzzy
 msgid "Not yet delivered"
-msgstr ""
+msgstr "Δεν έχει ακόμη εκδοθεί"
 
 #: uappstrings.sloggerresendall
 #, fuzzy
 msgid "Resend all"
-msgstr ""
+msgstr "Αποστολή όλων"
 
 #: uappstrings.sloggerresendallask
 #, fuzzy
 msgid "Resend all QSOs to %s? A contact that is already at the destination by another route (another definition of this logger, a manual import) cannot be recognised and may appear twice. Delivered contacts are sent again as updates, which uses the service's quota."
-msgstr ""
+msgstr "Επαναφορά όλων των QSO σε %s; Μια επαφή που βρίσκεται ήδη στον προορισμό με άλλη διαδρομή (ένας άλλος ορισμός αυτού του καταγραφέα, μια χειροκίνητη εισαγωγή) δεν μπορεί να αναγνωριστεί και μπορεί να εμφανιστεί δύο φορές. Οι παρεχόμενες επαφές αποστέλλονται ξανά ως ενημερώσεις, οι οποίες χρησιμοποιούν την ποσόστωση της υπηρεσίας."
 
 #: uappstrings.sloggerresenddone
 #, fuzzy
 msgid "%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations."
-msgstr ""
+msgstr "%s: σε αναμονή %d QSOs (%d νέα, %d έστειλε και πάλι). Μείναμε μόνοι. %d Παραδίδεται, %d Περιμένω, %d άγνωστης έκβασης που χρειάζεται επανεξέταση, %d Είναι συνδεδεμένο με άλλους σταθμούς."
 
 #: uappstrings.sloggerresendrefused
 #, fuzzy
 msgid "Nothing was queued for %s: %s"
-msgstr ""
+msgstr "Τίποτα δεν ήταν στην ουρά για %s: %s"
 
 #: uappstrings.sloggerresendwhynotrunning
 #, fuzzy
 msgid "it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start."
-msgstr ""
+msgstr "Δεν τρέχει. Αποθήκευση Προτιμήσεων, και επανεκκίνηση TR4W αν προστέθηκε ή οι ρυθμίσεις σύνδεσής του άλλαξαν από την αρχή."
 
 #: uappstrings.sloggerresendwhynotactive
 #, fuzzy
 msgid "Send new QSOs is off for it. Switch it on and save Preferences first."
-msgstr ""
+msgstr "Αποστολή νέων QSOs είναι μακριά για αυτό. Άνοιξέ το και σώσε τις Προτιμήσεις πρώτα."
 
 #: uappstrings.sloggerresendwhypaused
 #, fuzzy
 msgid "its delivery is paused after a capture failure (see tr4w.log)."
-msgstr ""
+msgstr "η παράδοσή του διακόπτεται μετά από αποτυχία σύλληψης (βλέπε tr4w.log)."
 
 #: uappstrings.sloggerresendwhysetup
 #, fuzzy
 msgid "its account or logbook is not set up."
-msgstr ""
+msgstr "ο λογαριασμός ή το ημερολόγιό του δεν έχει συσταθεί."
 
 #: uappstrings.sloggerresendwhyunsupported
 #, fuzzy
 msgid "it has no delivery queue to resend into."
-msgstr ""
+msgstr "δεν έχει ουρά παράδοσης για να ξαναστείλει."
 
 #: uappstrings.sloggerresendwhynolog
 #, fuzzy
 msgid "no writable contest log is open."
-msgstr ""
+msgstr "Δεν είναι ανοιχτό το αρχείο καταγραφής του διαγωνισμού."
 
 #: uappstrings.sloggerresendwhyfailed
 #, fuzzy
 msgid "the log could not be updated (see tr4w.log). Nothing was changed."
-msgstr ""
+msgstr "το ημερολόγιο δεν ήταν δυνατό να ενημερωθεί (βλέπε tr4w.log). Τίποτα δεν άλλαξε."
 
 #: uappstrings.slogbackupstillfailing
 #, fuzzy
 msgid "Last log backup FAILED: retried every %d min. See tr4w.log."
-msgstr ""
+msgstr "Το τελευταίο αντίγραφο ασφαλείας καταγραφής απέτυχε: ξαναδοκίμασε κάθε %d ελάχιστο Βλέπε tr4w.log."
 
 #: uappstrings.slogchangenotsaved
 #, fuzzy
 msgid "NOT SAVED -- the contest log did not take this change. See tr4w.log."
-msgstr ""
+msgstr "ΔΕΝ Σώθηκε -- το ημερολόγιο του διαγωνισμού δεν πήρε αυτή την αλλαγή. Βλέπε tr4w.log."
 
 #: uappstrings.speerqsonotsaved
 #, fuzzy
 msgid "A QSO from another station could NOT be saved to this log. It is not lost if the server has it: the next catch-up from the server, or Net > Synchronize, adds it once this log can be written. Further refusals are in tr4w.log."
-msgstr ""
+msgstr "Ένα QSO από άλλο σταθμό δεν μπόρεσε να αποθηκευτεί σε αυτό το αρχείο καταγραφής. Δεν χάνεται αν ο διακομιστής το έχει: το επόμενο catch-up από τον εξυπηρετητή, ή Net > Συγχρονίστε, το προσθέτει μόλις αυτό το ημερολόγιο μπορεί να γραφτεί. Περαιτέρω αρνήσεις είναι σε tr4w.log."
 
 #: uappstrings.sentrystatusqsonotsaved
 #, fuzzy
 msgid "QSO not saved"
-msgstr ""
+msgstr "Το QSO δεν αποθηκεύτηκε"
 
 #: uappstrings.sentrystatuslogreadonly
 #, fuzzy
 msgid "Log read-only"
-msgstr ""
+msgstr "Καταγραφή μόνο για ανάγνωση"
 
 #: uappstrings.sentryfieldexchangename
 #, fuzzy
 msgid "Exchange"
-msgstr ""
+msgstr "Χρηματιστήριο"
 
 #: uappstrings.sradiopanelactive
 #, fuzzy
 msgid "Active"
-msgstr ""
+msgstr "Ενεργό"
 
 #: uappstrings.sradiopanelactivename
 #, fuzzy
 msgid "Active radio"
-msgstr ""
+msgstr "Ενεργό radio"
 
 #: usettingscaptions.rs_operating_enforcevalidcallsign
 #, fuzzy
 msgid "Refuse a QSO whose call is not in the country file"
-msgstr ""
+msgstr "Αρνηθείτε ένα QSO του οποίου η κλήση δεν βρίσκεται στο αρχείο της χώρας"
 
 #: usettingscaptions.rs_bandmap_clickgoestoexchange
 #, fuzzy
 msgid "After tuning to a spot, put the cursor in the exchange window"
-msgstr ""
+msgstr "Μετά το συντονισμό σε ένα σημείο, βάλτε το δρομέα στο παράθυρο ανταλλαγής"
 
 #: uappstrings.scallnotaknownentity
 #, fuzzy
 msgid "%s is not logged: its base call is not in the country file"
-msgstr ""
+msgstr "%s δεν είναι συνδεδεμένο: η βασική κλήση του δεν είναι στο αρχείο χώρας"
 
 #: uappstrings.scallwindowcwon
 #, fuzzy
 msgid "CW On"
-msgstr ""
+msgstr "CW σε"
 
 #: uappstrings.smenutogglevoicekeyer
 #, fuzzy
 msgid "Toggle Voice Keyer"
-msgstr ""
+msgstr "Εναλλαγή πληκτρολογίου φωνής"
 
 #: uappstrings.sexchangecountylineoneparty
 #, fuzzy
 msgid "County line %s/%s: the counties must be in one QSO party"
-msgstr ""
+msgstr "Νομαρχιακή γραμμή %s/%s: οι κομητείες πρέπει να είναι σε ένα κόμμα QSO"
 
 #: uappstrings.sradiopttbycatnotsupported
 #, fuzzy
 msgid "%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off \"Key the transmitter with a CAT command\"."
-msgstr ""
+msgstr "%s: PTT μέσω CAT δεν υποστηρίζεται από αυτό το radio. Χρησιμοποιήστε μια γραμμή PTT υλικού, ή να απενεργοποιήσετε \"Κλειδώστε τον πομπό με μια εντολή CAT."
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenerenabled
 #, fuzzy
 msgid "Accept QSOs from JTDX and JTAlert (N1MM log listener)"
-msgstr ""
+msgstr "Αποδοχή QSOs από JTDX και JTAlert (N1MM log lister)"
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenaddress
 #, fuzzy
 msgid "Address the N1MM log listener binds to"
-msgstr ""
+msgstr "Απευθυνθείτε στον ακροατή καταγραφής N1MM που συνδέεται με"
 
 #: uappstrings.sprefsgroupn1mmlistener
 #, fuzzy
 msgid "N1MM log listener (JTDX, JTAlert)"
-msgstr ""
+msgstr "Ακρόαση καταγραφής N1MM (JTDX, JTAlert)"
 
 #: uappstrings.snetstationmissing
 #, fuzzy
 msgid "Missing"
-msgstr ""
+msgstr "Λείπει."
 
 #: uappstrings.spassneedsname
 #, fuzzy
 msgid "A {PASS} word needs a station or a band, for example {PASS B} or {PASS 14000}. The message was not sent."
-msgstr ""
+msgstr "Μια λέξη {PASS} χρειάζεται ένα σταθμό ή μια ζώνη, για παράδειγμα {PASS B} ή {PASS 14000}. Το μήνυμα δεν στάλθηκε."
 
 #: uappstrings.spassnotaband
 #, fuzzy
 msgid "{PASS %0:s} is not a band. Use a band in kHz, for example 14000. The message was not sent."
-msgstr ""
+msgstr "{PASS} %0:sΔεν είναι συγκρότημα. Χρησιμοποιήστε μια ζώνη σε kHz, για παράδειγμα 14000. Το μήνυμα δεν στάλθηκε."
 
 #: uappstrings.spassbandempty
 #, fuzzy
 msgid "No other station is on the %0:s kHz band, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "Κανένας άλλος σταθμός δεν είναι στο %0:s Ζώνη kHz, οπότε {PASS %0:s} δεν μπορεί να συμπληρωθεί. Το μήνυμα δεν στάλθηκε."
 
 #: uappstrings.spassstationabsent
 #, fuzzy
 msgid "Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "Σταθμός %0:s δεν είναι στο δίκτυο, έτσι {PASS %0:s} δεν μπορεί να συμπληρωθεί. Το μήνυμα δεν στάλθηκε."
 
 #: uappstrings.spassstationisus
 #, fuzzy
 msgid "{PASS %0:s} names this computer. Name another position. The message was not sent."
-msgstr ""
+msgstr "{PASS} %0:sΟνόμασε αυτόν τον υπολογιστή. Πες μου άλλη θέση. Το μήνυμα δεν στάλθηκε."
 
 #: uappstrings.spassnofrequency
 #, fuzzy
 msgid "Station %0:s is on the network but has not reported a frequency yet. The message was not sent."
-msgstr ""
+msgstr "Σταθμός %0:s είναι στο δίκτυο αλλά δεν έχει αναφερθεί ακόμη συχνότητα. Το μήνυμα δεν στάλθηκε."
 
 #: uappstrings.spassnothingpassed
 #, fuzzy
 msgid "{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent."
-msgstr ""
+msgstr "Η συχνότητα δεν έχει περάσει ακόμα. Χρησιμοποιήστε το {PASS B} πρώτα. Το μήνυμα δεν στάλθηκε."
 
 #: uappstrings.slogrestoredeliverynotice
 #, fuzzy
 msgid "The restored log's record of what was sent to external loggers (Club Log, WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may already be at those services but are not in this log, and QSOs the backup had not yet sent will be sent again. Check each service's log."
-msgstr ""
+msgstr "Το αρχείο καταγραφής που αποκαταστάθηκε για το τι στάλθηκε σε εξωτερικούς καταγραφείς (Club Log, WRL, DXKeeper) είναι τόσο παλιό όσο το αντίγραφο ασφαλείας. Οι QSOs που έχουν καταγραφεί μετά το αντίγραφο ασφαλείας μπορεί να είναι ήδη σε αυτές τις υπηρεσίες αλλά δεν είναι σε αυτό το αρχείο καταγραφής, και QSOs το αντίγραφο ασφαλείας δεν είχε ακόμα αποσταλεί θα σταλεί και πάλι. Ελέγξτε το ημερολόγιο κάθε υπηρεσίας."
 
 #: uappstrings.smenucorrectstationfacts
 #, fuzzy
 msgid "Correct Station Facts..."
-msgstr ""
+msgstr "Σωστά γεγονότα..."
 
 #: uappstrings.sstationcorrectionbackupfailed
 #, fuzzy
 msgid "Nothing was changed: the log could not be backed up first. %s"
-msgstr ""
+msgstr "Τίποτα δεν άλλαξε: το αρχείο καταγραφής δεν μπορούσε να υποστηρίζεται πρώτα. %s"
 
 #: uappstrings.sstationcorrectionbadfrom
 #, fuzzy
 msgid "A log record number is a whole number from 1 up."
-msgstr ""
+msgstr "Ένας αριθμός αρχείου καταγραφής είναι ένας ολόκληρος αριθμός από το 1 μέχρι."
 
 #: uappstrings.sstationcorrectioncancelbutton
 #, fuzzy
 msgctxt "uappstrings.sstationcorrectioncancelbutton"
 msgid "Cancel"
-msgstr ""
+msgstr "Ακύρωση"
 
 #: uappstrings.sstationcorrectionchangebutton
 #, fuzzy
 msgid "Change the QSOs"
-msgstr ""
+msgstr "Αλλαγή των QSO"
 
 #: uappstrings.sstationcorrectionchoosefact
 #, fuzzy
 msgid "Which of your station's values is wrong on the QSOs already logged?"
-msgstr ""
+msgstr "Ποια από τις αξίες του σταθμού σας είναι λάθος στα QSOs ήδη καταχωρημένα;"
 
 #: uappstrings.sstationcorrectionconfirm
 #, fuzzy
@@ -12490,6 +12495,12 @@ msgid ""
 "\n"
 "Not changed: %5:d imported, %6:d never recorded (they follow your setting: correct it in Preferences too), %7:d per place (a rover or an in-state party)."
 msgstr ""
+"Αυτό ΑΛΛΑΓΕΙ %0:s σε \"%1:s\" την %2:d συνδεδεμένο QSO( α): %3:s.\n"
+"Τώρα λένε: %4:s.\n"
+"\n"
+"Το ημερολόγιο είναι πίσω από την πρώτη. Κάθε αλλαγμένο QSO αποστέλλεται στη συνέχεια και πάλι ως επεξεργασία -- στο Club Log, WRL και σε οποιοδήποτε άλλο εξωτερικό καταγραφέα, στον πολυ-op server και ως UDP αντικατάσταση -- και το αρχείο καταγραφής επανασυντάχθηκε. %8:d Από αυτά είναι ένα multi-op peer's: διορθώνεται εδώ, αποστέλλονται από αυτό το σταθμό.\n"
+"\n"
+"Δεν έχει αλλάξει: %5:d εισαγόμενο, %6:d δεν καταγράφηκε ποτέ (ακολουθούν τη ρύθμιση σας: διορθώστε το και στις Προτιμήσεις), %7:d ανά τόπο (ενός rover ή ενός in-state κόμματος)."
 
 #: uappstrings.sstationcorrectiondone
 #, fuzzy
@@ -12497,171 +12508,173 @@ msgid ""
 "%0:s is now \"%1:s\" on %2:d logged QSO(s).\n"
 "The log as it was is in %3:s"
 msgstr ""
+"%0:s είναι τώρα -%1:s\" την %2:d logged QSO( ές).\n"
+"Το ημερολόγιο όπως ήταν %3:s"
 
 #: uappstrings.sstationcorrectionemptyvalue
 #, fuzzy
 msgid "Type the value the QSOs should have."
-msgstr ""
+msgstr "Πληκτρολογήστε την τιμή που θα έπρεπε να έχουν οι QSO."
 
 #: uappstrings.sstationcorrectionfailed
 #, fuzzy
 msgid "Nothing was changed: the contest log did not take the correction. See tr4w.log."
-msgstr ""
+msgstr "Τίποτα δεν άλλαξε: το ημερολόγιο του διαγωνισμού δεν έλαβε τη διόρθωση. Βλέπε tr4w.log."
 
 #: uappstrings.sstationcorrectionfromprompt
 #, fuzzy
 msgid "Change the QSOs from log record number (1 = every QSO in the log):"
-msgstr ""
+msgstr "Αλλαγή των QSOs από αριθμό αρχείου καταγραφής (1 = κάθε QSO στο αρχείο καταγραφής):"
 
 #: uappstrings.sstationcorrectionnotallowed
 #, fuzzy
 msgid "%s cannot be changed on logged QSOs."
-msgstr ""
+msgstr "%s δεν μπορεί να αλλαχθεί σε συνδεδεμένους QSOs."
 
 #: uappstrings.sstationcorrectionnothing
 #, fuzzy
 msgid "No logged QSO needs changing."
-msgstr ""
+msgstr "Καμία καταγεγραμμένη QSO δεν χρειάζεται αλλαγή."
 
 #: uappstrings.sstationcorrectionreadonly
 #, fuzzy
 msgid "Nothing was changed: the contest log is read-only."
-msgstr ""
+msgstr "Τίποτα δεν άλλαξε: το ημερολόγιο του διαγωνισμού είναι μόνο για ανάγνωση."
 
 #: uappstrings.sstationcorrectionscopeall
 #, fuzzy
 msgid "ALL PRIOR CONTACTS in the log"
-msgstr ""
+msgstr "ΟΛΕΣ ΟΙ ΠΡΙΝ ΕΠΑΦΕΣ στο ημερολόγιο"
 
 #: uappstrings.sstationcorrectionscopefrom
 #, fuzzy
 msgid "every contact from log record %d on"
-msgstr ""
+msgstr "κάθε επαφή από αρχείο καταγραφής %d Εμπρός"
 
 #: uappstrings.sstationcorrectiontitle
 #, fuzzy
 msgid "Correct station facts on logged QSOs"
-msgstr ""
+msgstr "Σωστός σταθμός γεγονότων σε συνδεδεμένους QSO"
 
 #: uappstrings.sstationcorrectionvalueprompt
 #, fuzzy
 msgid "The value the QSOs should have for %s:"
-msgstr ""
+msgstr "Η τιμή που θα πρέπει να έχουν οι QSO για %s:"
 
 #: uappstrings.sstationcorrectionzonezero
 #, fuzzy
 msgid "A zone of 0 is not a zone."
-msgstr ""
+msgstr "Μια ζώνη 0 δεν είναι ζώνη."
 
 #: uappstrings.sloggergridcreatelogbook
 #, fuzzy
 msgid "Create logbook..."
-msgstr ""
+msgstr "Δημιουργία ημερολογίου..."
 
 #: uappstrings.swrlcreatebusy
 #, fuzzy
 msgid "A logbook is already being created for a logger. Wait for it to finish."
-msgstr ""
+msgstr "Ένα ημερολόγιο έχει ήδη δημιουργηθεί για έναν καταγραφέα. Περίμενε να τελειώσει."
 
 #: uappstrings.swrlcreatecaption
 #, fuzzy
 msgid "Create World Radio League logbook"
-msgstr ""
+msgstr "Δημιουργία ημερολογίου World Radio League"
 
 #: uappstrings.swrlcreatedone
 #, fuzzy
 msgid "Created logbook \"%s\" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with."
-msgstr ""
+msgstr "Δημιουργία ημερολογίου \"%s\" (δ) %s) στο World Radio League και το επέλεξε για %sΑποθήκευση Προτιμήσεων για να το κρατήσει. Το νέο ημερολόγιο χρησιμοποιείται μετά την επανεκκίνηση του TR4W: ένας τρέχων καταγραφέας διατηρεί τις ρυθμίσεις με τις οποίες ξεκίνησε."
 
 #: uappstrings.swrlcreatefailed
 #, fuzzy
 msgid "The logbook was not created: %s"
-msgstr ""
+msgstr "Το ημερολόγιο δεν δημιουργήθηκε: %s"
 
 #: uappstrings.swrlcreatekeymissing
 #, fuzzy
 msgid "This logger has no API key available. Enter the key in the logger's editor (unlock the password vault if it is locked) first."
-msgstr ""
+msgstr "Αυτός ο καταγραφέας δεν έχει διαθέσιμο κλειδί API. Εισάγετε πρώτα το κλειδί στον επεξεργαστή του καταγραφέα (ξεκλειδώστε το χρηματοκιβώτιο του κωδικού πρόσβασης αν είναι κλειδωμένο)."
 
 #: uappstrings.swrlcreateprompt
 #, fuzzy
 msgid "Name of the new logbook (up to 100 characters). It is made on the World Radio League web site for the account this API key belongs to:"
-msgstr ""
+msgstr "Όνομα του νέου ημερολογίου (μέχρι 100 χαρακτήρες). Είναι κατασκευασμένο στην ιστοσελίδα World Radio League για το λογαριασμό αυτό το κλειδί API ανήκει σε:"
 
 #: uappstrings.swrlcreatereplaceask
 #, fuzzy
 msgid "%s already has a logbook chosen. Create a new logbook and use it instead? Contacts already queued for the old logbook are not moved."
-msgstr ""
+msgstr "%s έχει ήδη επιλεγεί ημερολόγιο. Δημιουργία νέου ημερολογίου και χρησιμοποίησή του; Οι επαφές που έχουν ήδη τεθεί σε αναμονή για το παλιό ημερολόγιο δεν μετακινούνται."
 
 #: uappstrings.swrlcreateuncertain
 #, fuzzy
 msgid "World Radio League did not confirm the logbook, so it may have been created. Look at your logbooks on the World Radio League web site (or use Refresh in the logger's editor) before trying again, so you do not make a second one."
-msgstr ""
+msgstr "Το World Radio League δεν επιβεβαίωσε το ημερολόγιο, οπότε μπορεί να δημιουργήθηκε. Δείτε τα ημερολόγιά σας στην ιστοσελίδα του World Radio League (ή χρησιμοποιήστε Refresh στον επεξεργαστή του logger) πριν προσπαθήσετε ξανά, έτσι δεν κάνετε ένα δεύτερο."
 
 #: uappstrings.swrlrequestid
 #, fuzzy
 msgid "(request id %s)"
-msgstr ""
+msgstr "(αίτηση id %s)"
 
 #: uappstrings.swrlwhyconflict
 #, fuzzy
 msgid "a logbook with that name may already exist, or World Radio League treated the request as a conflict. Choose the existing logbook in the logger's editor, or use another name."
-msgstr ""
+msgstr "ένα ημερολόγιο με αυτό το όνομα μπορεί να υπάρχει ήδη, ή World Radio League αντιμετωπίζει το αίτημα ως σύγκρουση. Επιλέξτε το υπάρχον ημερολόγιο στον επεξεργαστή του καταγραφέα ή χρησιμοποιήστε άλλο όνομα."
 
 #: uappstrings.swrlwhydown
 #, fuzzy
 msgid "the World Radio League service is not available right now (%s). Try again later."
-msgstr ""
+msgstr "η υπηρεσία World Radio League δεν είναι διαθέσιμη αυτή τη στιγμή (%s). Προσπάθησε ξανά αργότερα."
 
 #: uappstrings.swrlwhyip
 #, fuzzy
 msgid "the key is restricted to other IP addresses than this computer's."
-msgstr ""
+msgstr "το κλειδί περιορίζεται σε άλλες διευθύνσεις IP από αυτόν τον υπολογιστή."
 
 #: uappstrings.swrlwhykey
 #, fuzzy
 msgid "World Radio League did not accept the API key (it is missing, wrong or revoked). Check the key in the logger's editor."
-msgstr ""
+msgstr "Το World Radio League δεν δέχτηκε το κλειδί API (λείπει, λάθος ή ανακαλείται). Ελέγξτε το κλειδί στον επεξεργαστή του καταγραφέα."
 
 #: uappstrings.swrlwhymembership
 #, fuzzy
 msgid "the key was refused because the account needs a current World Radio League membership."
-msgstr ""
+msgstr "Το κλειδί απορρίφθηκε επειδή ο λογαριασμός χρειάζεται μια τρέχουσα συμμετοχή στο World Radio League."
 
 #: uappstrings.swrlwhynamerequired
 #, fuzzy
 msgid "the name is empty."
-msgstr ""
+msgstr "Το όνομα είναι άδειο."
 
 #: uappstrings.swrlwhynametoolong
 #, fuzzy
 msgid "the name is longer than %d characters."
-msgstr ""
+msgstr "το όνομα είναι μεγαλύτερο από %d χαρακτήρες."
 
 #: uappstrings.swrlwhyother
 #, fuzzy
 msgid "the request failed (%s)."
-msgstr ""
+msgstr "η αίτηση απέτυχε (%s)."
 
 #: uappstrings.swrlwhyrate
 #, fuzzy
 msgid "too many requests just now. Wait a minute and try again."
-msgstr ""
+msgstr "Πάρα πολλά αιτήματα μόλις τώρα. Περίμενε ένα λεπτό και προσπάθησε ξανά."
 
 #: uappstrings.swrlwhyscope
 #, fuzzy
 msgid "the key is not allowed to create logbooks. Make a key that may write logbooks."
-msgstr ""
+msgstr "το κλειδί δεν επιτρέπεται να δημιουργεί ημερολόγια. Κάντε ένα κλειδί που μπορεί να γράψει ημερολόγια."
 
 #: uappstrings.swrlwhyvalidation
 #, fuzzy
 msgid "World Radio League rejected the request: %s"
-msgstr ""
+msgstr "Το World Radio League απέρριψε το αίτημα: %s"
 
 #: uappstrings.swrlwhyvalidationfield
 #, fuzzy
 msgid "World Radio League rejected the %s: %s"
-msgstr ""
+msgstr "Η Παγκόσμια Leagueφωνία απέρριψε την %s: %s"
 
 #: uappstrings.snetpushedtoservertotal
 #, fuzzy

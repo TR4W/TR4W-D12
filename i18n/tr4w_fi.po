@@ -4260,7 +4260,7 @@ msgstr "Pääikkuna"
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblappearhint.caption
 msgid "The font applies to the main contest window.  Both take effect when TR4W next starts."
-msgstr ""
+msgstr "Kirjasin koskee pääkilpailun ikkunaa. Molemmat tulevat voimaan, kun TR4W alkaa."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "Nämä olivat asetusvalikossa. Tuo ikkuna katoaa, kun ROW COUNT ja WINDOW KOKO liittyvät heihin täällä."
 #: tprefsform.lblappearmenunote.caption
@@ -4524,7 +4524,7 @@ msgstr "Merkkinopeus:"
 #, fuzzy
 #| msgid "Size:"
 msgid "Font size step:"
-msgstr ""
+msgstr "Kirjasinkoko:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblhamlibrestart.caption
@@ -12165,83 +12165,83 @@ msgstr "TRMASTER.DTA ladattu, mutta ei voitu ladata -- käytössä olevat tiedot
 #: tprefsform.btnchoosefont.caption
 #, fuzzy
 msgid "Choose..."
-msgstr ""
+msgstr "Valitse"
 
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgid "Windows and log"
-msgstr ""
+msgstr "Ikkunat ja loki"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
 msgid "-- dB"
-msgstr ""
+msgstr "-- dB"
 
 #: tprefsform.lblstationhint.caption
 #, fuzzy
 msgid ""
 "These are sent to the other stations in a multi-operator network when you change them, so all positions agree on the exchange.\r\n"
 "Call, Country, Continent and Zone are read once when the contest is set up, so a change to them takes effect when TR4W next starts. Leave Country empty and TR4W works it out from your callsign."
-msgstr ""
+msgstr "Nämä lähetetään muille asemille monitoimiverkossa, kun vaihdat niitä, joten kaikki kannat sopivat vaihdosta.\rCall, Country, Continent ja Zone luetaan kerran, kun kilpailu on perustettu, joten muutos niihin tulee voimaan, kun TR4W seuraava alkaa. Jätä Country tyhjä ja TR4W selvittää sen puhelumerkin."
 
 #: tprefsform.lbldxlabinfo.caption
 #, fuzzy
 msgid "TR4W offers a DX Commander compatible interface on TCP port 52002 whenever the WSJT-X support is running, and DXLab programs connect to that."
-msgstr ""
+msgstr "TR4W tarjoaa DX Command -yhteensopivan käyttöliittymän TCP-portissa 52002 aina kun WSJT-X-tuki on käynnissä, ja DXLab-ohjelmat liittyvät siihen."
 
 #: tprefsform.chkspotcollector.caption
 #, fuzzy
 msgid "Integrate with DXLab SpotCollector"
-msgstr ""
+msgstr "Integroida DXLab Spot Collector"
 
 #: tradioeditform.lbltcpport.caption
 #, fuzzy
 msgid "IP port"
-msgstr ""
+msgstr "IP-portti"
 
 #: uappstrings.sbandmaptextsize
 #: tfrmbandmap.mitextsize.caption
 #, fuzzy
 msgid "Text size"
-msgstr ""
+msgstr "Tekstikoko"
 
 #: uappstrings.sbandmaptextlarger
 #: tfrmbandmap.mitextlarger.caption
 #, fuzzy
 msgid "Larger"
-msgstr ""
+msgstr "Suurempi"
 
 #: uappstrings.sbandmaptextsmaller
 #: tfrmbandmap.mitextsmaller.caption
 #, fuzzy
 msgid "Smaller"
-msgstr ""
+msgstr "Pienempi"
 
 #: uappstrings.sbandmaptextreset
 #: tfrmbandmap.mitextreset.caption
 #, fuzzy
 msgid "Reset"
-msgstr ""
+msgstr "Nollaa"
 
 #: uappstrings.sloggergridopensite
 #, fuzzy
 msgid "Open web site"
-msgstr ""
+msgstr "Avaa verkkosivusto"
 
 #: uappstrings.sloggergridresend
 #, fuzzy
 msgid "Resend QSOs..."
-msgstr ""
+msgstr "Resend QSOs..."
 
 #: uappstrings.sloggersiterefused
 #, fuzzy
 msgid "Not opened: \"%s\" is not an http or https web address."
-msgstr ""
+msgstr "Ei avattu: \"%s\" ei ole http- tai https://www-osoite."
 
 #: uappstrings.sloggersiteopenfailed
 #, fuzzy
 msgid "The browser could not be started for %s."
-msgstr ""
+msgstr "Selainta ei voitu käynnistää %s."
 
 #: uappstrings.sloggerresendbody
 #, fuzzy
@@ -12252,232 +12252,237 @@ msgid ""
 "\n"
 "Resend all: also sends delivered QSOs again as updates of the same remote contact (not for Cloudlog / Wavelog or AC Log, which have no update call). A QSO of unknown outcome is never resent."
 msgstr ""
+"Suosittele tämän kilpailun QSOs %s Vain.\n"
+"\n"
+"Ei vielä toimitettu: jonottaa QSO:t tätä kirjautujaa ei koskaan lähetetty (esimerkiksi ne kirjautuneet, kun Lähetä uudet QSO:t oli pois päältä) ja kaikki se kieltäytyi. QSO:t, jotka on jo toimitettu, jotka odottavat tai joiden lopputulos on tuntematon, jätetään yksin.\n"
+"\n"
+"Resend all: lähettää myös toimitettu QSOs uudelleen päivityksiä samasta etäyhteyden (ei Cloudlog / Wavelog tai AC Log, joilla ei ole päivityspuhelu). QSO, jonka lopputulos on tuntematon, ei ole koskaan vihainen."
 
 #: uappstrings.sloggerresendundelivered
 #, fuzzy
 msgid "Not yet delivered"
-msgstr ""
+msgstr "Ei vielä toimitettu"
 
 #: uappstrings.sloggerresendall
 #, fuzzy
 msgid "Resend all"
-msgstr ""
+msgstr "Residenssi"
 
 #: uappstrings.sloggerresendallask
 #, fuzzy
 msgid "Resend all QSOs to %s? A contact that is already at the destination by another route (another definition of this logger, a manual import) cannot be recognised and may appear twice. Delivered contacts are sent again as updates, which uses the service's quota."
-msgstr ""
+msgstr "Suosittele kaikkia QSO:ita %s? Kontaktia, joka on jo määränpäässä toisella reitillä (toinen määritelmä tästä kirjautujasta, manuaalinen tuonti) ei voida tunnistaa ja voi esiintyä kahdesti. Toimitetut yhteystiedot lähetetään päivityksenä, joka käyttää palvelun kiintiötä."
 
 #: uappstrings.sloggerresenddone
 #, fuzzy
 msgid "%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations."
-msgstr ""
+msgstr "%s: jonossa %d QSO (%d uusi, %d lähetetty uudelleen). Yksin jätetty: %d toimitettu, %d Odotetaan. %d tuntemattomasta tuloksesta, joka on tarkistettava, %d Muilla asemilla."
 
 #: uappstrings.sloggerresendrefused
 #, fuzzy
 msgid "Nothing was queued for %s: %s"
-msgstr ""
+msgstr "Mitään ei ollut jonossa %s: %s"
 
 #: uappstrings.sloggerresendwhynotrunning
 #, fuzzy
 msgid "it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start."
-msgstr ""
+msgstr "Se ei ole käynnissä. Tallenna asetukset ja käynnistä TR4W uudelleen, jos se on lisätty tai sen yhteysasetukset ovat muuttuneet alusta lähtien."
 
 #: uappstrings.sloggerresendwhynotactive
 #, fuzzy
 msgid "Send new QSOs is off for it. Switch it on and save Preferences first."
-msgstr ""
+msgstr "Lähettäkää uudet QSO:t. Laita se päälle ja tallenna asetukset ensin."
 
 #: uappstrings.sloggerresendwhypaused
 #, fuzzy
 msgid "its delivery is paused after a capture failure (see tr4w.log)."
-msgstr ""
+msgstr "sen toimitus keskeytetään kiinniottohäiriön jälkeen (ks. pr4w.log)."
 
 #: uappstrings.sloggerresendwhysetup
 #, fuzzy
 msgid "its account or logbook is not set up."
-msgstr ""
+msgstr "sen tiliä tai kalastuspäiväkirjaa ei ole perustettu."
 
 #: uappstrings.sloggerresendwhyunsupported
 #, fuzzy
 msgid "it has no delivery queue to resend into."
-msgstr ""
+msgstr "sillä ei ole toimitusjonoa lähetettävänä."
 
 #: uappstrings.sloggerresendwhynolog
 #, fuzzy
 msgid "no writable contest log is open."
-msgstr ""
+msgstr "Mikään kilpailuloki ei ole auki."
 
 #: uappstrings.sloggerresendwhyfailed
 #, fuzzy
 msgid "the log could not be updated (see tr4w.log). Nothing was changed."
-msgstr ""
+msgstr "lokia ei voitu päivittää (ks. pt4w.log). Mikään ei muuttunut."
 
 #: uappstrings.slogbackupstillfailing
 #, fuzzy
 msgid "Last log backup FAILED: retried every %d min. See tr4w.log."
-msgstr ""
+msgstr "Viimeisin loki varmuuskopio FAILED: etsi kaikki %d vähintään Ks. pr4w.log."
 
 #: uappstrings.slogchangenotsaved
 #, fuzzy
 msgid "NOT SAVED -- the contest log did not take this change. See tr4w.log."
-msgstr ""
+msgstr "NOT SAVED -- kilpailun loki ei ottanut tätä muutosta. Ks. pr4w.log."
 
 #: uappstrings.speerqsonotsaved
 #, fuzzy
 msgid "A QSO from another station could NOT be saved to this log. It is not lost if the server has it: the next catch-up from the server, or Net > Synchronize, adds it once this log can be written. Further refusals are in tr4w.log."
-msgstr ""
+msgstr "QSO toiselta asemalta EI voitu tallentaa tähän lokiin. Se ei mene hukkaan, jos palvelimella on se: seuraava kiinni palvelimelta, tai Net > Synkronisoi, lisää se, kun tämä loki voidaan kirjoittaa. Lisäkieltäytymiset ovat pr4w.logissa."
 
 #: uappstrings.sentrystatusqsonotsaved
 #, fuzzy
 msgid "QSO not saved"
-msgstr ""
+msgstr "QSO ei tallentunut"
 
 #: uappstrings.sentrystatuslogreadonly
 #, fuzzy
 msgid "Log read-only"
-msgstr ""
+msgstr "Vain lokiluku"
 
 #: uappstrings.sentryfieldexchangename
 #, fuzzy
 msgid "Exchange"
-msgstr ""
+msgstr "Pörssi"
 
 #: uappstrings.sradiopanelactive
 #, fuzzy
 msgid "Active"
-msgstr ""
+msgstr "Aktiivinen"
 
 #: uappstrings.sradiopanelactivename
 #, fuzzy
 msgid "Active radio"
-msgstr ""
+msgstr "Aktiivinen radio"
 
 #: usettingscaptions.rs_operating_enforcevalidcallsign
 #, fuzzy
 msgid "Refuse a QSO whose call is not in the country file"
-msgstr ""
+msgstr "Jätä QSO, jonka puhelu ei ole maatiedostossa"
 
 #: usettingscaptions.rs_bandmap_clickgoestoexchange
 #, fuzzy
 msgid "After tuning to a spot, put the cursor in the exchange window"
-msgstr ""
+msgstr "Aseta kohdistin vaihto-ikkunaan."
 
 #: uappstrings.scallnotaknownentity
 #, fuzzy
 msgid "%s is not logged: its base call is not in the country file"
-msgstr ""
+msgstr "%s ei ole kirjautunut: sen peruspuhelu ei ole maatiedostossa"
 
 #: uappstrings.scallwindowcwon
 #, fuzzy
 msgid "CW On"
-msgstr ""
+msgstr "CW On"
 
 #: uappstrings.smenutogglevoicekeyer
 #, fuzzy
 msgid "Toggle Voice Keyer"
-msgstr ""
+msgstr "Vaihda ääniavain"
 
 #: uappstrings.sexchangecountylineoneparty
 #, fuzzy
 msgid "County line %s/%s: the counties must be in one QSO party"
-msgstr ""
+msgstr "Maakuntalinja %s/%s: läänien on oltava yhdessä QSO-puolueessa"
 
 #: uappstrings.sradiopttbycatnotsupported
 #, fuzzy
 msgid "%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off \"Key the transmitter with a CAT command\"."
-msgstr ""
+msgstr "%s: PTT CAT ei tue tätä radiota. Käytä laitteiston PTT-linjaa tai sammuta \"Avain lähetin CAT-komennolla.\""
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenerenabled
 #, fuzzy
 msgid "Accept QSOs from JTDX and JTAlert (N1MM log listener)"
-msgstr ""
+msgstr "Hyväksy QSO:t JTDX:ltä ja JTAlertilta (N1MM:n log-kuulija)"
 
 #: usettingscaptions.rs_wsjtx_n1mmlistenaddress
 #, fuzzy
 msgid "Address the N1MM log listener binds to"
-msgstr ""
+msgstr "Osoite:"
 
 #: uappstrings.sprefsgroupn1mmlistener
 #, fuzzy
 msgid "N1MM log listener (JTDX, JTAlert)"
-msgstr ""
+msgstr "N1MM loki kuuntelija (JTDX, JTAlert)"
 
 #: uappstrings.snetstationmissing
 #, fuzzy
 msgid "Missing"
-msgstr ""
+msgstr "Puuttuu"
 
 #: uappstrings.spassneedsname
 #, fuzzy
 msgid "A {PASS} word needs a station or a band, for example {PASS B} or {PASS 14000}. The message was not sent."
-msgstr ""
+msgstr "{PASS} sana tarvitsee aseman tai bändin, esimerkiksi {PASS B} tai {PASS 14000}. Viestiä ei lähetetty."
 
 #: uappstrings.spassnotaband
 #, fuzzy
 msgid "{PASS %0:s} is not a band. Use a band in kHz, for example 14000. The message was not sent."
-msgstr ""
+msgstr "{PASSI %0:sEi ole bändi. Käytä taajuusaluetta kHz:ssä, esimerkiksi 14000. Viestiä ei lähetetty."
 
 #: uappstrings.spassbandempty
 #, fuzzy
 msgid "No other station is on the %0:s kHz band, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "Mitään muuta asemaa ei ole %0:s kHz-kaista, joten %0:sEi voi täyttää. Viestiä ei lähetetty."
 
 #: uappstrings.spassstationabsent
 #, fuzzy
 msgid "Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr ""
+msgstr "Asema %0:s ei ole verkossa, joten {PASSI %0:sEi voi täyttää. Viestiä ei lähetetty."
 
 #: uappstrings.spassstationisus
 #, fuzzy
 msgid "{PASS %0:s} names this computer. Name another position. The message was not sent."
-msgstr ""
+msgstr "{PASSI %0:sNimeä tämä tietokone. Nimeä toinen paikka. Viestiä ei lähetetty."
 
 #: uappstrings.spassnofrequency
 #, fuzzy
 msgid "Station %0:s is on the network but has not reported a frequency yet. The message was not sent."
-msgstr ""
+msgstr "Asema %0:s on verkossa, mutta ei ole ilmoittanut taajuus. Viestiä ei lähetetty."
 
 #: uappstrings.spassnothingpassed
 #, fuzzy
 msgid "{LASTPASSEDFREQ} has nothing to send: no frequency has been passed yet. Use {PASS B} first. The message was not sent."
-msgstr ""
+msgstr "{LASTPASSEDFREQ} ei ole mitään lähetettävää: taajuus ei ole vielä ohitettu. Käytä {PASS B} ensin. Viestiä ei lähetetty."
 
 #: uappstrings.slogrestoredeliverynotice
 #, fuzzy
 msgid "The restored log's record of what was sent to external loggers (Club Log, WRL, DXKeeper) is as old as the backup. QSOs logged after the backup may already be at those services but are not in this log, and QSOs the backup had not yet sent will be sent again. Check each service's log."
-msgstr ""
+msgstr "Restauroitu lokikirja on yhtä vanha kuin varmuuskopio. QSO:t, jotka on kirjattu varmuuskopion jälkeen, voivat olla jo kyseisissä palveluissa, mutta eivät tässä lokissa, ja varmuuskopiot, joita ei ollut vielä lähetetty, lähetetään uudelleen. Tarkista jokaisen palvelun loki."
 
 #: uappstrings.smenucorrectstationfacts
 #, fuzzy
 msgid "Correct Station Facts..."
-msgstr ""
+msgstr "Oikeita asematietoja..."
 
 #: uappstrings.sstationcorrectionbackupfailed
 #, fuzzy
 msgid "Nothing was changed: the log could not be backed up first. %s"
-msgstr ""
+msgstr "Mikään ei muuttunut: lokia ei voitu vahvistaa ensin. %s"
 
 #: uappstrings.sstationcorrectionbadfrom
 #, fuzzy
 msgid "A log record number is a whole number from 1 up."
-msgstr ""
+msgstr "Lokitietueen numero on koko numero yhdestä ylöspäin."
 
 #: uappstrings.sstationcorrectioncancelbutton
 #, fuzzy
 msgctxt "uappstrings.sstationcorrectioncancelbutton"
 msgid "Cancel"
-msgstr ""
+msgstr "Peru"
 
 #: uappstrings.sstationcorrectionchangebutton
 #, fuzzy
 msgid "Change the QSOs"
-msgstr ""
+msgstr "Muuta QSO:ita"
 
 #: uappstrings.sstationcorrectionchoosefact
 #, fuzzy
 msgid "Which of your station's values is wrong on the QSOs already logged?"
-msgstr ""
+msgstr "Mikä asemasi arvoista on väärä QSO:ssa?"
 
 #: uappstrings.sstationcorrectionconfirm
 #, fuzzy
@@ -12489,6 +12494,12 @@ msgid ""
 "\n"
 "Not changed: %5:d imported, %6:d never recorded (they follow your setting: correct it in Preferences too), %7:d per place (a rover or an in-state party)."
 msgstr ""
+"MUUTOKSET %0:s \"%1:s\" %2:d Kirjatut QSO:t: %3:s.\n"
+"He sanovat: %4:s.\n"
+"\n"
+"Lokikirja on täytetty ensin. Jokainen muuttunut QSO lähetetään sitten uudelleen edit -- Club Log, WRL ja muut ulkoiset kirjautumiset, Multi-op-palvelimelle ja UDP korvata -- ja loki on uudelleen. %8:d Niistä on monitoiminen vertaisryhmä. Korjattu täällä.\n"
+"\n"
+"Ei muutettu: %5:d tuonti, %6:d ei koskaan tallennettu (ne seuraavat asetusta: korjata sen asetukset liian), %7:d Paikkaa kohti (maasturi tai valtiollinen puolue)."
 
 #: uappstrings.sstationcorrectiondone
 #, fuzzy
@@ -12496,171 +12507,173 @@ msgid ""
 "%0:s is now \"%1:s\" on %2:d logged QSO(s).\n"
 "The log as it was is in %3:s"
 msgstr ""
+"%0:s on nyt \"%1:s\" %2:d Kirjattu QSO(s).\n"
+"Loki sellaisena kuin se oli %3:s"
 
 #: uappstrings.sstationcorrectionemptyvalue
 #, fuzzy
 msgid "Type the value the QSOs should have."
-msgstr ""
+msgstr "Kirjoita QSO:iden tarvitsema arvo."
 
 #: uappstrings.sstationcorrectionfailed
 #, fuzzy
 msgid "Nothing was changed: the contest log did not take the correction. See tr4w.log."
-msgstr ""
+msgstr "Mikään ei muuttunut: kilpailuloki ei ottanut korjausta. Ks. pr4w.log."
 
 #: uappstrings.sstationcorrectionfromprompt
 #, fuzzy
 msgid "Change the QSOs from log record number (1 = every QSO in the log):"
-msgstr ""
+msgstr "Muuta QSO:t lokitietueen numerosta (1 = jokainen QSO lokissa):"
 
 #: uappstrings.sstationcorrectionnotallowed
 #, fuzzy
 msgid "%s cannot be changed on logged QSOs."
-msgstr ""
+msgstr "%s ei voida muuttaa kirjatuilla QSO:illa."
 
 #: uappstrings.sstationcorrectionnothing
 #, fuzzy
 msgid "No logged QSO needs changing."
-msgstr ""
+msgstr "QSO:ta ei tarvitse muuttaa."
 
 #: uappstrings.sstationcorrectionreadonly
 #, fuzzy
 msgid "Nothing was changed: the contest log is read-only."
-msgstr ""
+msgstr "Mikään ei muuttunut: kilpailun loki on vain lukea."
 
 #: uappstrings.sstationcorrectionscopeall
 #, fuzzy
 msgid "ALL PRIOR CONTACTS in the log"
-msgstr ""
+msgstr "Kaikki PRIORIN YHTEYSTIEDOT lokissa"
 
 #: uappstrings.sstationcorrectionscopefrom
 #, fuzzy
 msgid "every contact from log record %d on"
-msgstr ""
+msgstr "kaikki tiedot lokitiedoista %d on"
 
 #: uappstrings.sstationcorrectiontitle
 #, fuzzy
 msgid "Correct station facts on logged QSOs"
-msgstr ""
+msgstr "Oikeat asematiedot kirjatuilla QSO:illa"
 
 #: uappstrings.sstationcorrectionvalueprompt
 #, fuzzy
 msgid "The value the QSOs should have for %s:"
-msgstr ""
+msgstr "QSO:iden arvo %s:"
 
 #: uappstrings.sstationcorrectionzonezero
 #, fuzzy
 msgid "A zone of 0 is not a zone."
-msgstr ""
+msgstr "Nollan vyöhyke ei ole vyöhyke."
 
 #: uappstrings.sloggergridcreatelogbook
 #, fuzzy
 msgid "Create logbook..."
-msgstr ""
+msgstr "Luo lokikirja..."
 
 #: uappstrings.swrlcreatebusy
 #, fuzzy
 msgid "A logbook is already being created for a logger. Wait for it to finish."
-msgstr ""
+msgstr "Lokikirjaa ollaan jo luomassa. Odota, että se valmistuu."
 
 #: uappstrings.swrlcreatecaption
 #, fuzzy
 msgid "Create World Radio League logbook"
-msgstr ""
+msgstr "Luo maailman radioliigan lokikirja"
 
 #: uappstrings.swrlcreatedone
 #, fuzzy
 msgid "Created logbook \"%s\" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with."
-msgstr ""
+msgstr "Luotu kalastuspäiväkirja \"%s\" (id) %s) World Radio League ja valitsi sen %sTallenna asetukset pitää se. Uutta lokikirjaa käytetään TR4W:n uudelleenkäynnistämisen jälkeen: käynnissä oleva lokikone säilyttää sen aloittamat asetukset."
 
 #: uappstrings.swrlcreatefailed
 #, fuzzy
 msgid "The logbook was not created: %s"
-msgstr ""
+msgstr "Kalastuspäiväkirjaa ei luotu: %s"
 
 #: uappstrings.swrlcreatekeymissing
 #, fuzzy
 msgid "This logger has no API key available. Enter the key in the logger's editor (unlock the password vault if it is locked) first."
-msgstr ""
+msgstr "Tällä lokiajalla ei ole API-näppäintä saatavilla. Syötä avain kirjautumiseditoriin (avaa salasanaholvi, jos se on lukittu) ensin."
 
 #: uappstrings.swrlcreateprompt
 #, fuzzy
 msgid "Name of the new logbook (up to 100 characters). It is made on the World Radio League web site for the account this API key belongs to:"
-msgstr ""
+msgstr "Uuden kalastuspäiväkirjan nimi (enintään 100 merkkiä). Se on tehty World Radio League verkkosivuilla tilin tämä API avain kuuluu:"
 
 #: uappstrings.swrlcreatereplaceask
 #, fuzzy
 msgid "%s already has a logbook chosen. Create a new logbook and use it instead? Contacts already queued for the old logbook are not moved."
-msgstr ""
+msgstr "%s Lokikirja on jo valittu. Luoda uusi lokikirja ja käyttää sen sijaan? Jonossa olevia yhteystietoja ei siirretä."
 
 #: uappstrings.swrlcreateuncertain
 #, fuzzy
 msgid "World Radio League did not confirm the logbook, so it may have been created. Look at your logbooks on the World Radio League web site (or use Refresh in the logger's editor) before trying again, so you do not make a second one."
-msgstr ""
+msgstr "Maailman radioliiga ei vahvistanut kalastuspäiväkirjaa, joten se on ehkä luotu. Katso lokikirjoja World Radio League verkkosivuilla (tai käytä Päivitä logger n editor) ennen kuin yrität uudelleen, joten et tee toista."
 
 #: uappstrings.swrlrequestid
 #, fuzzy
 msgid "(request id %s)"
-msgstr ""
+msgstr "(pyynnön tunniste) %s)"
 
 #: uappstrings.swrlwhyconflict
 #, fuzzy
 msgid "a logbook with that name may already exist, or World Radio League treated the request as a conflict. Choose the existing logbook in the logger's editor, or use another name."
-msgstr ""
+msgstr "Kalastuspäiväkirja, jonka nimi on jo olemassa, tai World Radio League piti pyyntöä ristiriitana. Valitse nykyinen lokikirja kirjautumiseditorissa tai käytä muuta nimeä."
 
 #: uappstrings.swrlwhydown
 #, fuzzy
 msgid "the World Radio League service is not available right now (%s). Try again later."
-msgstr ""
+msgstr "Maailman radioliigan palvelu ei ole saatavilla juuri nyt (%s) Yritä uudelleen myöhemmin."
 
 #: uappstrings.swrlwhyip
 #, fuzzy
 msgid "the key is restricted to other IP addresses than this computer's."
-msgstr ""
+msgstr "avain on rajoitettu muihin IP-osoitteisiin kuin tämän tietokoneen."
 
 #: uappstrings.swrlwhykey
 #, fuzzy
 msgid "World Radio League did not accept the API key (it is missing, wrong or revoked). Check the key in the logger's editor."
-msgstr ""
+msgstr "Maailman radioliiga ei hyväksynyt API avain (se puuttuu, väärin tai peruutettu). Tarkista avain kirjailijan editorista."
 
 #: uappstrings.swrlwhymembership
 #, fuzzy
 msgid "the key was refused because the account needs a current World Radio League membership."
-msgstr ""
+msgstr "avain hylättiin, koska tili tarvitsee nykyisen Maailman radioliigan jäsenyyden."
 
 #: uappstrings.swrlwhynamerequired
 #, fuzzy
 msgid "the name is empty."
-msgstr ""
+msgstr "Nimi on tyhjä."
 
 #: uappstrings.swrlwhynametoolong
 #, fuzzy
 msgid "the name is longer than %d characters."
-msgstr ""
+msgstr "nimi on pidempi kuin %d merkkiä."
 
 #: uappstrings.swrlwhyother
 #, fuzzy
 msgid "the request failed (%s)."
-msgstr ""
+msgstr "pyyntö epäonnistui (%s)"
 
 #: uappstrings.swrlwhyrate
 #, fuzzy
 msgid "too many requests just now. Wait a minute and try again."
-msgstr ""
+msgstr "Liikaa pyyntöjä juuri nyt. Yritä uudestaan."
 
 #: uappstrings.swrlwhyscope
 #, fuzzy
 msgid "the key is not allowed to create logbooks. Make a key that may write logbooks."
-msgstr ""
+msgstr "avain ei saa luoda lokikirjoja. Tee avain, joka voi kirjoittaa lokikirjoja."
 
 #: uappstrings.swrlwhyvalidation
 #, fuzzy
 msgid "World Radio League rejected the request: %s"
-msgstr ""
+msgstr "Maailman radioliitto hylkäsi pyynnön: %s"
 
 #: uappstrings.swrlwhyvalidationfield
 #, fuzzy
 msgid "World Radio League rejected the %s: %s"
-msgstr ""
+msgstr "Maailman radioliitto hylkäsi %s: %s"
 
 #: uappstrings.snetpushedtoservertotal
 #, fuzzy
