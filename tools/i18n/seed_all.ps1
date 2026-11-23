@@ -54,10 +54,16 @@
 .PARAMETER DryRun
    Pass --dry-run to mt_seed: report what would be seeded, write nothing.
 
+.PARAMETER Only
+   Pass --only <key> to mt_seed: seed just the one entry (the reference as
+   mt_seed prints it, for example uappstrings.snetpushedtoservertotal), in every
+   language. For a single new string, instead of every empty entry.
+
 .EXAMPLE
    powershell -File tools\i18n\seed_all.ps1 -DryRun -Lang GER
    powershell -File tools\i18n\seed_all.ps1
    powershell -File tools\i18n\seed_all.ps1 -Catalog tr4w -Lang CHN,JPN,KOR
+   powershell -File tools\i18n\seed_all.ps1 -Catalog tr4w -Only uappstrings.snetpushedtoservertotal
 #>
 [CmdletBinding()]
 param(
@@ -66,6 +72,7 @@ param(
    [string] $Url = 'http://docker.bettersoftwaresolutions.com:5000',
    [string[]] $Lang = @(),
    [int] $TimeoutMinutes = 45,
+   [string] $Only = '',
    [switch] $DryRun
 )
 
@@ -192,6 +199,10 @@ foreach ($l in $langs)
       $log = "$base.log"
 
       $argList = @('tools\i18n\mt_seed.py', '--lang', $l, '--catalog', $c, '--url', $Url)
+      if ($Only -ne '')
+         {
+         $argList += @('--only', $Only)
+         }
       if ($DryRun)
          {
          $argList += '--dry-run'
