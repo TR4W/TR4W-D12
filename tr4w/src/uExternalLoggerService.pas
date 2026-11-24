@@ -4,7 +4,7 @@ unit uExternalLoggerService;
 interface
 
 uses
-   VC, uQsoDispatcher, uLogDatabase, uLogRepository, uExternalDelivery,
+   VC, uQsoDispatcher, uLogDatabase, uLogRepository, uExternalDelivery, uQsoMyFacts,
    uExternalLoggerConfig, uExternalLoggerActions;
 
 type
@@ -77,16 +77,28 @@ type
       function ApplyConfiguration(const aConfig: TExternalLoggerConfig): integer; virtual;
       procedure SetActive(aActive: boolean); virtual;
       function QueuesCommands: boolean; virtual;
+      (* aFacts and aRecordedSent are the QSO's own station and recorded sent
+         exchange, as the ADIF export reads them (a QSO logged now: the session's
+         capture and ''). A service that embeds ADIF builds it from them. *)
       procedure PrepareMessage(const aMessage: TQsoMessage;
-                               const ce: ContestExchange); virtual;
+                               const ce: ContestExchange;
+                               const aFacts: TQsoMyFacts;
+                               const aRecordedSent: AnsiString); virtual;
       procedure SubmitMessage(const aMessage: TQsoMessage); virtual;
       function PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
+                         const aFacts: TQsoMyFacts; const aRecordedSent: AnsiString;
                          out aCommand1: string; out aCommand2: string): TQsoExternalOp;
                          virtual; abstract;
       procedure SubmitOp(const aOp: TQsoExternalOp; const aCommand1: string;
                          const aCommand2: string; const aDescription: string);
                          virtual; abstract;
       function LookupCallsign(ce: ContestExchange): integer; virtual; abstract;
+      (* SubmitOp, told which destination and which QSO the op is for, so a
+         service that keeps no durable outbox can still leave a delivery
+         record. Dispatcher thread, like SubmitOp, which is all this does. *)
+      procedure SubmitOpFor(const aDeliveryId: string; aSessionId, aSessionSeq: Int64;
+                            const aOp: TQsoExternalOp; const aCommand1: string;
+                            const aCommand2: string; const aDescription: string); virtual;
       (* Main-thread database hook. The row is saved but not committed yet.
          TCP loggers retain their dispatcher path; durable loggers override. *)
       procedure CaptureSavedQso(aDatabase: TLogDatabase; aRepository: TLogRepository;
@@ -250,9 +262,10 @@ begin
 end;
 
 procedure TExternalLoggerService.PrepareMessage(const aMessage: TQsoMessage;
-   const ce: ContestExchange);
+   const ce: ContestExchange; const aFacts: TQsoMyFacts;
+   const aRecordedSent: AnsiString);
 begin
-   aMessage.ExtOp := PrepareOp(aMessage.Kind, ce,
+   aMessage.ExtOp := PrepareOp(aMessage.Kind, ce, aFacts, aRecordedSent,
       aMessage.ExtCommand1, aMessage.ExtCommand2);
 end;
 
@@ -260,6 +273,13 @@ procedure TExternalLoggerService.SubmitMessage(const aMessage: TQsoMessage);
 begin
    SubmitOp(aMessage.ExtOp, aMessage.ExtCommand1, aMessage.ExtCommand2,
       aMessage.Description);
+end;
+
+procedure TExternalLoggerService.SubmitOpFor(const aDeliveryId: string;
+   aSessionId, aSessionSeq: Int64; const aOp: TQsoExternalOp; const aCommand1: string;
+   const aCommand2: string; const aDescription: string);
+begin
+   SubmitOp(aOp, aCommand1, aCommand2, aDescription);
 end;
 
 procedure TExternalLoggerService.CaptureSavedQso(aDatabase: TLogDatabase;

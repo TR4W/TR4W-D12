@@ -33,6 +33,12 @@ Type
       Cmd1: string;          // single command, or the delete (for eloReplace)
       Cmd2: string;          // the re-log (for eloReplace); unused for eloSingle
       Description: string;   // human-readable, for logging
+      (* WHICH CONTACT, for the delivery record Edit QSO's window lists: the
+         destination's delivery id and the QSO's (session_id, session_seq),
+         copied when the op was queued. (0, 0), or no id, means no record. *)
+      DeliveryId: string;
+      SessionId: Int64;
+      SessionSeq: Int64;
    end;
 
 
@@ -164,6 +170,12 @@ Type
       // DXKeeper overrides it with a connect-per-command transport (Issue #957).
       function DeliverCommand(const cmd: string): boolean; virtual;
 
+      (* Called ON THE SENDER THREAD once an op has settled for good: aDelivered
+         is True when every command of it was written, False with a fixed code
+         when one was not (after the retries). It does nothing here. *)
+      procedure OpSettled(aOp: TExternalLogOp; aDelivered: boolean;
+                          const aErrorCode: string); virtual;
+
       (* The one place the socket's Connect is called (issue #102).  A seam so
         a test can count attempts; ConnectGuarded holds FConnectLock around it. *)
       procedure DoSocketConnect; virtual;
@@ -183,8 +195,12 @@ Type
       procedure FillSnapshot(var aSnapshot: TExternalLoggerSnapshot); override;
 
       // Issue #957 -- enqueue from the main thread (cheap; returns immediately).
-      procedure QueueSingleCommand(const cmd, description: string);
-      procedure QueueReplace(const deleteCmd, relogCmd, description: string);
+      procedure QueueSingleCommand(const cmd, description: string;
+                                   const aDeliveryId: string = '';
+                                   aSessionId: Int64 = 0; aSessionSeq: Int64 = 0);
+      procedure QueueReplace(const deleteCmd, relogCmd, description: string;
+                             const aDeliveryId: string = '';
+                             aSessionId: Int64 = 0; aSessionSeq: Int64 = 0);
       procedure ShutdownDrain(timeoutMs: integer);
 
       procedure SendToLogger(s: string); overload;
@@ -730,7 +746,9 @@ begin
       end;
 end;
 
-procedure TExternalLoggerBase.QueueSingleCommand(const cmd, description: string);
+procedure TExternalLoggerBase.QueueSingleCommand(const cmd, description: string;
+                                                 const aDeliveryId: string;
+                                                 aSessionId, aSessionSeq: Int64);
 var op: TExternalLogOp;
 begin
    if FShuttingDown then
@@ -742,6 +760,9 @@ begin
    op.Kind := eloSingle;
    op.Cmd1 := cmd;
    op.Description := description;
+   op.DeliveryId := aDeliveryId;
+   op.SessionId := aSessionId;
+   op.SessionSeq := aSessionSeq;
    FQueueLock.Enter;
    try
       FOpQueue.Add(op);
@@ -753,7 +774,9 @@ begin
    logger.Debug('[ExternalLogger] Queued: %s', [description]);
 end;
 
-procedure TExternalLoggerBase.QueueReplace(const deleteCmd, relogCmd, description: string);
+procedure TExternalLoggerBase.QueueReplace(const deleteCmd, relogCmd, description: string;
+                                           const aDeliveryId: string;
+                                           aSessionId, aSessionSeq: Int64);
 var op: TExternalLogOp;
 begin
    if FShuttingDown then
@@ -766,6 +789,9 @@ begin
    op.Cmd1 := deleteCmd;
    op.Cmd2 := relogCmd;
    op.Description := description;
+   op.DeliveryId := aDeliveryId;
+   op.SessionId := aSessionId;
+   op.SessionSeq := aSessionSeq;
    FQueueLock.Enter;
    try
       FOpQueue.Add(op);
@@ -832,15 +858,25 @@ begin
       end;
 end;
 
+procedure TExternalLoggerBase.OpSettled(aOp: TExternalLogOp; aDelivered: boolean;
+                                        const aErrorCode: string);
+begin
+end;
+
 procedure TExternalLoggerBase.ProcessOp(op: TExternalLogOp);
 begin
    case op.Kind of
       eloSingle:
          begin
-         if not DeliverWithRetry(op.Cmd1) then
+         if DeliverWithRetry(op.Cmd1) then
+            begin
+            OpSettled(op, True, '');
+            end
+         else
             begin
             logger.Error('[ExternalLogger] FAILED to deliver to external log after %d attempts: %s',
                          [SEND_MAX_ATTEMPTS, op.Description]);
+            OpSettled(op, False, 'NOT_DELIVERED');
             end;
          end;
       eloReplace:
@@ -852,11 +888,17 @@ begin
             begin
             logger.Error('[ExternalLogger] Replace ABORTED -- delete failed, re-log NOT sent (%s). '
                          + 'The external log may still hold the ORIGINAL QSO.', [op.Description]);
+            OpSettled(op, False, 'REPLACE_NOT_SENT');
             end
          else if not DeliverWithRetry(op.Cmd2) then
             begin
             logger.Error('[ExternalLogger] Replace HALF-DONE -- delete succeeded but re-log FAILED (%s). '
                          + 'The QSO is now MISSING from the external log and must be re-entered there.', [op.Description]);
+            OpSettled(op, False, 'REPLACE_HALF_DONE');
+            end
+         else
+            begin
+            OpSettled(op, True, '');
             end;
          end;
    end;

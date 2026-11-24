@@ -1,0 +1,52 @@
+object frmDeliveryStatus: TfrmDeliveryStatus
+  Left = 0
+  Height = 200
+  Top = 0
+  Width = 520
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsDialog
+  Caption = '(assigned at run time)'
+  ClientHeight = 200
+  ClientWidth = 520
+  Constraints.MinHeight = 140
+  Constraints.MinWidth = 320
+  Position = poOwnerFormCenter
+  LCLVersion = '4.8.0.0'
+  object grdDeliveries: TStringGrid
+    Left = 8
+    Height = 144
+    Top = 8
+    Width = 504
+    Align = alClient
+    BorderSpacing.Around = 8
+    ColCount = 3
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goSmoothScroll, goThumbTracking]
+    RowCount = 1
+    ScrollBars = ssAutoVertical
+    TabOrder = 0
+  end
+  object pnlButtons: TPanel
+    Left = 0
+    Height = 40
+    Top = 160
+    Width = 520
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 40
+    ClientWidth = 520
+    TabOrder = 1
+    object btnClose: TButton
+      Left = 422
+      Height = 25
+      Top = 6
+      Width = 90
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = '(assigned at run time)'
+      Default = True
+      ModalResult = 11
+      TabOrder = 0
+    end
+  end
+end

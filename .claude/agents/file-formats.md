@@ -289,7 +289,8 @@ multipliers, CTY.DAT, band lookup and CRC32.
   `ContestIdentity(c)` for the `QSO:` layout, and `ExchangeContest` for the
   two Cabrillo columns and the `STX_STRING`, and the tail asks `EmitADIFContestFields` for the worked
   station's fields (ARRL_SECT, CLASS, DOK, IOTA, APP_TR4W_HQ, GRIDSQUARE);
-  `uADIF.EmitADIFRecord` asks `ADIFPowerTag` (RX_PWR / FOC_NUM) and
+  `uADIF.EmitADIFRecord` asks `ADIFPowerTag` (RX_PWR / APP_TR4W_FOC_NUM /
+  the ALL JA's APP_TR4W_RCVD_POWER_CLASS, each read back into Power) and
   `WritesADIFContestId`. **Do not put a contest test back in these units** --
   the `Lint-ContestNameTests` ceiling for both exchange units is 0 now. POTA
   and ARRL 160 are the two contests the tail still names, with the reason

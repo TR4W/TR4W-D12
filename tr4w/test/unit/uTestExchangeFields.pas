@@ -224,7 +224,7 @@ begin
       RSTALLJAPrefectureAndPrecedenceExchange:
          begin
          Result.RST := True;
-         Result.Precedence := True;
+         Result.Power := True;
          Result.QTH := True;
          end;
       RSTPossibleDomesticQTHAndPower:
@@ -540,7 +540,9 @@ begin
          end;
       ALLJA:
          begin
-         Result := 'Precedence QTH RST';
+         (* The power class is the Power field since 2026-11-24, not a
+            Precedence. *)
+         Result := 'Power QTH RST';
          end;
       RADIOYOC:
          begin
@@ -568,8 +570,10 @@ const
       every roster station: the machine's 28 for the shapes registered
       contests run, the empty set among them -- 27 since Q136 (2026-10-22):
       RADIO-YOC was the one contest whose set was the serial alone
-      (ExchangeFieldsQSONumber), and it receives age + serial now. *)
-   DISTINCT_SETS = 27;
+      (ExchangeFieldsQSONumber), and it receives age + serial now. 26 since
+      2026-11-24: the ALL JA receives its power class in Power, so its set is
+      ARCI's (ExchangeFieldsRSTQTHPower) and the Precedence one is gone. *)
+   DISTINCT_SETS = 26;
 var
    s: TPinStation;
    c: ContestType;
@@ -667,7 +671,6 @@ begin
    Check1('Age QTH RST', ExchangeFieldsRSTAgeQTH, 'ExchangeFieldsRSTAgeQTH');
    Check1('Name QTH RST', ExchangeFieldsRSTNameQTH, 'ExchangeFieldsRSTNameQTH');
    Check1('Power RST', ExchangeFieldsRSTPower, 'ExchangeFieldsRSTPower');
-   Check1('Precedence QTH RST', ExchangeFieldsRSTPrecedenceQTH, 'ExchangeFieldsRSTPrecedenceQTH');
    Check1('QSONumber RST', ExchangeFieldsRSTQSONumber, 'ExchangeFieldsRSTQSONumber');
    Check1('QSONumber QTH RST', ExchangeFieldsRSTQSONumberQTH, 'ExchangeFieldsRSTQSONumberQTH');
    Check1('QSONumber RandomChars RST', ExchangeFieldsRSTQSONumberRandomChars, 'ExchangeFieldsRSTQSONumberRandomChars');

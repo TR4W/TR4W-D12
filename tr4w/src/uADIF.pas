@@ -124,7 +124,11 @@ type
       (* OUR POWER CLASS LETTER (H M L P) -- log schema 14, the ALL JA. ADIF has
         no field for a class letter (TX_PWR is watts), so it is TR4W's own tag,
         read into the row's my_power_class (MyFactsFromADIF). *)
-      tAdifAPP_TR4W_POWER_CLASS);
+      tAdifAPP_TR4W_POWER_CLASS,
+      (* THE OTHER STATION'S POWER CLASS LETTER -- the ALL JA's ADIFPowerTag
+        since 2026-11-24 (it was written as PRECEDENCE). Read into Power, as
+        RX_PWR is. *)
+      tAdifAPP_TR4W_RCVD_POWER_CLASS);
 
 // =========================================================================
 // Lexer
@@ -1568,7 +1572,7 @@ end;
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..66] of string = (
+   ADIF_FIELD_NAMES : array[0..67] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -1599,7 +1603,9 @@ const
       // Read only since ADIF 3.1.8 lists JTTY (issue 120) -- order must match
       'APP_TR4W_SUBMODE',
       // Our power class (schema 14) -- order must match the enum
-      'APP_TR4W_POWER_CLASS');
+      'APP_TR4W_POWER_CLASS',
+      // The other station's power class (the ALL JA) -- order must match
+      'APP_TR4W_RCVD_POWER_CLASS');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -1849,7 +1855,7 @@ begin
                exch.RSTSent := StrToIntDef(tempRST, 599);
                end;
 
-            tAdifRX_PWR:
+            tAdifRX_PWR, tAdifAPP_TR4W_RCVD_POWER_CLASS:
                exch.Power := fieldValue;
 
             tAdifSRX:
@@ -2633,7 +2639,7 @@ begin
       end;
 
    (* THE WORKED STATION'S EXCHANGE -- QTH, PRECEDENCE, CHECK, NAME, the
-      power tag (RX_PWR, FOC_NUM for the FOC Marathon), SRX, STX, TEN_TEN and
+      power tag (the contest's ADIFPowerTag, RX_PWR by default), SRX, STX, TEN_TEN and
       AGE -- IS THE CONTEST'S TO WRITE (2026-10-17, NY4I: "Shouldn't the uADIF
       exporter be calling the contest class to ask for the specific fields it
       wants to include?"). Each is written only where the contest's own

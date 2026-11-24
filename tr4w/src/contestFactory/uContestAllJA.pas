@@ -69,6 +69,20 @@ const
    ALLJA_PREFECTURE_PATTERN  = '^(0[2-9]|[1-3][0-9]|4[0-8]|10[1-9]|11[0-4])$';
    ALLJA_POWER_CLASS_PATTERN = '^[HMLP]$';
 
+(* THE ADIF PRIMARY ADMINISTRATIVE SUBDIVISION for an ALL JA prefecture number
+   (NY4I, 2026-11-24): the ALL JA's Hokkaido regions 101..114 all fall under
+   ADIF's single Hokkaido, '01'; every other number is its own code. Public so
+   a test can pin it. *)
+function ADIFPrefectureCode(const aPrefecture: string): string;
+
+(* THE RECEIVED POWER CLASS LETTER (H M L P) of a logged ALL JA QSO -- the
+   ONE answer every reader asks (the Cabrillo column, the ADIF tag, the
+   remembered exchange). It is the record's Power field (rcvd_power) since
+   2026-11-24; a QSO logged before then carries it in Precedence, the
+   Sweepstakes slot the parser reused, so that is read when Power is empty.
+   '' when neither holds one. *)
+function AllJAReceivedPowerClass(const aQso: ContestExchange): string;
+
 type
    TContestAllJA = class(TContestBase)
    protected
@@ -87,6 +101,7 @@ type
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
       function GetReceivedExchangeFields: ExchangeInformationRecord; override;
+      function GetADIFPowerTag: string; override;
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
@@ -101,6 +116,7 @@ type
       function EmitADIFExchangeFields(const aMy: TMyStationExchange;
                                       const aQso: ContestExchange;
                                       aExchangeCarriesRST: boolean): string; override;
+      function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
@@ -114,6 +130,8 @@ type
                                 aSession: TSessionDefaults); override;
       (* THE NEW CONTEST DIALOG -- see TContestBase.DescribeNewContestPrompts. *)
       procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* THE RECEIVED FIELDS, plus an older log's power class -- see the body. *)
+      function EmitADIFReceivedFields(const aQso: ContestExchange): string; override;
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
@@ -128,7 +146,29 @@ uses
    uADIF,           (* EmitADIFField *)
    uAppStrings,     (* SNewContestEnterPowerClass *)
    uTR4WStrings,    (* TC_PREFECTURE *)
-   uContestRegistry, uContestFixedPoints;
+   uContestRegistry, uContestFixedPoints,
+   utils_text;      (* ValChecked *)
+
+function ADIFPrefectureCode(const aPrefecture: string): string;
+var
+   number, code: integer;
+begin
+   Result := Trim(aPrefecture);
+   ValChecked(Result, number, code);
+   if (code = 0) and (number >= 101) and (number <= 114) then
+      begin
+      Result := '01';
+      end;
+end;
+
+function AllJAReceivedPowerClass(const aQso: ContestExchange): string;
+begin
+   Result := Trim(string(aQso.Power));
+   if (Result = '') and (aQso.Precedence <> #0) then
+      begin
+      Result := string(aQso.Precedence);
+      end;
+end;
 
 procedure TContestAllJA.CalculateQSOPoints(var aQso: ContestExchange);
 begin
@@ -208,7 +248,18 @@ end;
 
 function TContestAllJA.GetReceivedExchangeFields: ExchangeInformationRecord;
 begin
-   Result := ExchangeFieldsRSTPrecedenceQTH;
+   (* THE POWER CLASS IS THE POWER FIELD (2026-11-24): it was declared as a
+      Precedence, the Sweepstakes slot, and so exported as ADIF's PRECEDENCE,
+      which ADIF defines for Sweepstakes alone. *)
+   Result := ExchangeFieldsRSTQTHPower;
+end;
+
+(* THE RECEIVED POWER CLASS IS A LETTER (H M L P), NOT WATTS, so it is not
+   ADIF's RX_PWR (a number) but TR4W's own tag, beside the sent class's
+   APP_TR4W_POWER_CLASS. uADIF's import reads it back into Power. *)
+function TContestAllJA.GetADIFPowerTag: string;
+begin
+   Result := 'APP_TR4W_RCVD_POWER_CLASS';
 end;
 
 function TContestAllJA.ParseReceivedExchangeFormat(const aText: string;
@@ -219,11 +270,12 @@ begin
 end;
 
 (* THE RECEIVED PREFECTURE NUMBER, as the other station sent it. The parser
-   (LOGSTUFF.ProcessRSTAllJAPrefectureAndPrecedenceExchange) leaves 'p' + the
-   digits in QTHString on most of its branches and the bare digits on the
-   two-entry one; FoundDomesticQTH resolves it to allja.dom's key, the number
-   itself, in DomesticQTH. So the resolved key first, else the typed text
-   without the parser's 'p'. *)
+   (LOGSTUFF.ProcessRSTAllJAPrefectureAndPrecedenceExchange) leaves the bare
+   digits in QTHString and FoundDomesticQTH resolves them to allja.dom's key
+   ('2' is '02') in DomesticQTH. So the resolved key first, else the typed
+   text. The parser wrote 'p' + the digits until 2026-11-24, and such an
+   entry was never found in allja.dom, so no logged QSO carries one; the 'p'
+   is still dropped here for a QTH that arrived some other way. *)
 function ReceivedPrefectureNumber(const aQso: ContestExchange): string;
 begin
    Result := Trim(string(aQso.DomesticQTH));
@@ -259,8 +311,9 @@ begin
 end;
 
 (* THE CABRILLO RECEIVED COLUMNS: the other station's prefecture number,
-   right-aligned in three, then its power letter (Precedence, where the
-   parser keeps it) left-aligned in two -- the sent layout mirrored.
+   right-aligned in three, then its power letter (AllJAReceivedPowerClass:
+   Power, else an older log's Precedence) left-aligned in two -- the sent
+   layout mirrored.
    DXLog's line names RCVD1 and RCVD2{F=R,3}; WHAT ITS RCVD2 IS, IS NOT
    UNDERSTOOD (no sponsor text on file says), so this writes the number and
    the letter and does not guess a third field. *)
@@ -269,7 +322,7 @@ function TContestAllJA.GetCabrilloReceivedExchange(const aMy: TMyStationExchange
                                                    const aCtx: TCabrilloQSOContext): string;
 begin
    Result := UnicodeFormat('%3s %-2s', [ReceivedPrefectureNumber(aQso),
-                                        Trim(string(aQso.Precedence))]);
+                                        AllJAReceivedPowerClass(aQso)]);
 end;
 
 (* OUR PREFECTURE AND POWER CLASS IN THE ADIF RECORD -- NY4I, 2026-11-23: the
@@ -282,8 +335,40 @@ function TContestAllJA.EmitADIFExchangeFields(const aMy: TMyStationExchange;
                                               aExchangeCarriesRST: boolean): string;
 begin
    Result := inherited EmitADIFExchangeFields(aMy, aQso, aExchangeCarriesRST) +
-             EmitADIFField('MY_STATE', aMy.MyPrefecture) +
+             EmitADIFField('MY_STATE', ADIFPrefectureCode(aMy.MyPrefecture)) +
              EmitADIFField('APP_TR4W_POWER_CLASS', UpperCase(aMy.MyPowerClass));
+end;
+
+(* A QSO LOGGED BEFORE 2026-11-24 holds the received class in Precedence and
+   an empty Power, so the base, which writes the declared Power field only
+   when it is not empty, writes nothing for it. Its letter is written here,
+   under the same tag, so an older log loses no class -- and never as
+   PRECEDENCE, which this contest no longer declares. *)
+function TContestAllJA.EmitADIFReceivedFields(const aQso: ContestExchange): string;
+begin
+   Result := inherited EmitADIFReceivedFields(aQso);
+   if (aQso.Power = '') and
+      (AllJAReceivedPowerClass(aQso) <> '') then
+      begin
+      Result := Result + EmitADIFField(ADIFPowerTag, AllJAReceivedPowerClass(aQso));
+      end;
+end;
+
+(* THE WORKED STATION'S ADIF STATE (NY4I, 2026-11-24): its prefecture as
+   ADIF's Primary Administrative Subdivision for Japan, '01'..'47'; Hokkaido's
+   regions 101..114 are '01' (ADIFPrefectureCode). A number ADIF's list does
+   not have (48, which allja.dom and the entry check still accept) writes no
+   STATE rather than an invalid one. *)
+function TContestAllJA.ADIFWorkedStationState(const aQso: ContestExchange): string;
+var
+   number, code: integer;
+begin
+   Result := ADIFPrefectureCode(ReceivedPrefectureNumber(aQso));
+   ValChecked(Result, number, code);
+   if (code <> 0) or (number < 1) or (number > 47) then
+      begin
+      Result := '';
+      end;
 end;
 
 (* THE NEW CONTEST DIALOG ASKS FOR THE TWO FIELDS THE EXCHANGE SENDS (NY4I,

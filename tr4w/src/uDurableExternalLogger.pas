@@ -49,6 +49,7 @@ type
                          aComputerId: AnsiChar; aEnabled: boolean);
       destructor Destroy; override;
       function PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
+                         const aFacts: TQsoMyFacts; const aRecordedSent: AnsiString;
                          out aCommand1: string; out aCommand2: string): TQsoExternalOp; override;
       procedure SubmitOp(const aOp: TQsoExternalOp; const aCommand1: string;
                          const aCommand2: string; const aDescription: string); override;
@@ -93,7 +94,8 @@ begin
 end;
 
 function TDurableExternalLogger.PrepareOp(const aKind: TQsoMessageKind;
-   const ce: ContestExchange; out aCommand1: string; out aCommand2: string): TQsoExternalOp;
+   const ce: ContestExchange; const aFacts: TQsoMyFacts; const aRecordedSent: AnsiString;
+   out aCommand1: string; out aCommand2: string): TQsoExternalOp;
 begin
    aCommand1 := '';
    aCommand2 := '';

@@ -937,6 +937,16 @@ the target shape, the M-step migration order and the open questions.
   A class with a rule of its own overrides either method; one that only moves
   the power to another tag states `ADIFPowerTag`. Pinned by
   `uTestADIFReceivedFields` over the registry -- no row to add per contest.
+  **A contest field never rides in another contest's field** (NY4I): the ALL
+  JA's received power class (H M L P) is `Power` (`rcvd_power`) since
+  2026-11-24, exported as `APP_TR4W_RCVD_POWER_CLASS` (its `ADIFPowerTag`;
+  uADIF reads it back into Power) -- it was the Sweepstakes `Precedence` and
+  went out as ADIF's PRECEDENCE. An older log's letter is still in
+  Precedence: `uContestAllJA.AllJAReceivedPowerClass` (Power, else
+  Precedence) is the ONE answer the Cabrillo column, the ADIF fallback
+  (`EmitADIFReceivedFields`) and LOGDUPE's remembered exchange ask. A new
+  `APP_TR4W_` power tag joins `uTestADIFReceivedFields.EXCHANGE_TAGS`, or the
+  registry walks cannot see it.
 - **A contest owns its identity, and everyone asks it** (M1, 2026-10-01).
   `uContestRegistry.ContestIdentity(h)` answers for EVERY contest handle --
   the class, else a plain `TContestBase` (only NoContest, and a byte that names

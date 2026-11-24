@@ -82,7 +82,7 @@ uses
   LCLType,
   uTR4WStrings,
   uQsoMyFacts,   // TQsoMyFacts -- our station as recorded for the QSO
-  uExternalDelivery,  // TDeliveryStatus -- the read-only delivery line
+  uExternalDelivery,  // TDeliveryStatusList -- the deliveries btnDeliveries shows
   uContestBase;  // TContestBase -- ShowZoneBoxFor asks the QSO's contest (issue 298)
 
 type
@@ -137,10 +137,11 @@ type
     lblMyPrefecture, lblMyPowerClass: TLabel;
     edtMyPrefecture, edtMyPowerClass: TEdit;
 
-    // WHERE AN EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, by name,
-    // through EditQSOShowDelivery. A label: it raises no OnChange, so it can
+    // WHERE EACH EXTERNAL LOGGER STANDS WITH THIS QSO -- a button, shown only
+    // when the QSO has a delivery row (EditQSOShowDeliveries), that opens the
+    // read-only uDeliveryStatusForm. A button raises no OnChange, so it can
     // never enable Save, which is this dialog's dirty flag.
-    lblDelivery: TLabel;
+    btnDeliveries: TButton;
 
     btnSave, btnCancel: TButton;
 
@@ -152,6 +153,7 @@ type
     procedure CallsignChanged(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
+    procedure btnDeliveriesClick(Sender: TObject);
   public
     (* LAY THE FIELDS OUT FROM WHAT THE TEXT AND THE CONTROLS MEASURE -- see
        "THE LAYOUT IS MEASURED" in the implementation. Idempotent: every
@@ -159,8 +161,7 @@ type
        form is hidden and reused) moves nothing that already fits. Public for
        the layout test, which calls it on a form shown off screen. *)
     procedure FitLayout;
-    (* The form's height follows its last visible control: the our-station
-       group, or the delivery line under it when that is shown. *)
+    (* The form's height follows its last control, the our-station group. *)
     procedure FitHeightToContent;
     (* THE BAND AND MODE LISTS, REPLACED -- never appended to (issue 237). The
        load calls this on every open, through EditQSOFillBandAndModeLists. *)
@@ -189,6 +190,9 @@ type
     FZoneDesignCaptured: boolean;
     FZoneDesignCaption: TCaption;
     FZoneDesignMaxLength: integer;
+    (* The loaded QSO's deliveries, for btnDeliveries -- replaced on every
+       load (EditQSOShowDeliveries), because the form is reused. *)
+    FDeliveries: TDeliveryStatusList;
   end;
 
 (* The room a drop-down's chrome takes beside its text is
@@ -317,12 +321,11 @@ function  EditQSOSentYearText: string;
 // form (issue 298). A no-op when the form is not up.
 procedure EditQSOShowZoneBox(aContest: TContestBase);
 
-// THE EXTERNAL-LOGGER DELIVERY LINE, under the our-station group. Shown only
-// when the QSO has a delivery row (aStatus.Logger <> ''), hidden otherwise,
-// and the form's height follows it. A no-op when the form is not up.
-procedure EditQSOShowDelivery(const aStatus: TDeliveryStatus);
-// What that line says -- pure, so the tests pin every state.
-function  EditQSODeliveryText(const aStatus: TDeliveryStatus): string;
+// THE EXTERNAL-LOGGER DELIVERIES of the loaded QSO: kept for the "External
+// loggers..." button, which is shown only when there is at least one and
+// hidden otherwise. The row texts are uDeliveryStatusForm.DeliveryRowCells.
+// A no-op when the form is not up.
+procedure EditQSOShowDeliveries(const aStatuses: TDeliveryStatusList);
 // The window a message box should be parented on. 0 when the form is not up,
 // which is what MessageBox wants for "no owner" anyway.
 
@@ -358,9 +361,9 @@ implementation
 uses
   // FIRST, so every unit below still wins any name it shares (this tree
   // resolves a name to the LAST unit declaring it).
-  uAppStrings,        // SEditQSODelivery*, SEditQSOMy* -- the our-station group
+  uAppStrings,        // SEditQSODeliveriesButton, SEditQSOMy* -- the our-station group
   Math,               // Max -- the measured layout
-  DateUtils,         // UnixToDateTime -- the delivery line's time
+  uDeliveryStatusForm, // ShowDeliveryStatus -- the delivery window
   uEditQSO,           // the load and save halves, which stayed put
   uLCLFormHelpers,    // ShowModalOverWin32Parent; TextWidthInFont, WidestText
   MainUnit,           // logger
@@ -857,67 +860,7 @@ begin
 end;
 
 // --------------------------------------------- the external-logger delivery
-// The stored state words (uLogSchema's CHECK) in the operator's words -- the
-// same ones the Preferences delivery summary uses. A state this build does
-// not know is shown as stored rather than hidden.
-function DeliveryStateText(const aStatus: TDeliveryStatus): string;
-begin
-   if aStatus.State = 'pending' then
-      begin
-      Result := SEditQSODeliveryPending;
-      end
-   else if aStatus.State = 'inflight' then
-      begin
-      Result := SEditQSODeliverySending;
-      end
-   else if aStatus.State = 'synced' then
-      begin
-      Result := SEditQSODeliverySynced;
-      end
-   else if aStatus.State = 'uncertain' then
-      begin
-      Result := SEditQSODeliveryUncertain;
-      end
-   else if aStatus.State = 'failed' then
-      begin
-      if aStatus.ErrorCode <> '' then
-         begin
-         Result := UnicodeFormat(SEditQSODeliveryFailedWithCode, [aStatus.ErrorCode]);
-         end
-      else
-         begin
-         Result := SEditQSODeliveryFailed;
-         end;
-      end
-   else
-      begin
-      Result := aStatus.State;
-      end;
-end;
-
-// LastSent is Unix seconds UTC; UnixToDateTime converts nothing by default,
-// so the time shown is UTC and says so. The colon is QUOTED: a bare ':' in
-// FormatDateTime is the locale's TimeSeparator, which is '.' on some
-// stations, and a UTC stamp should read the same everywhere.
-function EditQSODeliveryText(const aStatus: TDeliveryStatus): string;
-var
-  sent: string;
-begin
-   if aStatus.LastSent > 0 then
-      begin
-      sent := UnicodeFormat(SEditQSODeliveryLastSent,
-         [string(FormatDateTime('yyyy-mm-dd hh":"nn',
-                                DateUtils.UnixToDateTime(aStatus.LastSent)))]);
-      end
-   else
-      begin
-      sent := SEditQSODeliveryNeverSent;
-      end;
-   Result := UnicodeFormat(SEditQSODeliveryLine,
-                           [aStatus.Logger, DeliveryStateText(aStatus), sent]);
-end;
-
-procedure EditQSOShowDelivery(const aStatus: TDeliveryStatus);
+procedure EditQSOShowDeliveries(const aStatuses: TDeliveryStatusList);
 begin
    if frmEditQSO = nil then
       begin
@@ -925,16 +868,14 @@ begin
       end;
 
    // SET EVERY TIME, shown or hidden: the form is hidden on close and reused,
-   // so a line left from the previous QSO would otherwise describe this one.
-   frmEditQSO.lblDelivery.Visible := aStatus.Logger <> '';
-   if frmEditQSO.lblDelivery.Visible then
-      begin
-      // UTF8Encode: the LCL's caption is a UTF-8 AnsiString, and an implicit
-      // UTF-16 to Ansi conversion is a narrowing the build counts.
-      frmEditQSO.lblDelivery.Caption := UTF8Encode(EditQSODeliveryText(aStatus));
-      end;
+   // so a button left from the previous QSO would otherwise open its rows.
+   frmEditQSO.FDeliveries := Copy(aStatuses);
+   frmEditQSO.btnDeliveries.Visible := Length(aStatuses) > 0;
+end;
 
-   frmEditQSO.FitHeightToContent;
+procedure TfrmEditQSO.btnDeliveriesClick(Sender: TObject);
+begin
+   ShowDeliveryStatus(FDeliveries, Self);
 end;
 
 // ------------------------------------------------------- the measured layout
@@ -1147,18 +1088,9 @@ begin
 end;
 
 procedure TfrmEditQSO.FitHeightToContent;
-var
-  bottom: integer;
 begin
-   bottom := grpMyStation.Top + grpMyStation.Height;
-   if lblDelivery.Visible then
-      begin
-      bottom := lblDelivery.Top + lblDelivery.Height;
-      end;
-
-   // The designed margin below the group (498 - 490), kept under whichever
-   // control is last, so a QSO without a delivery row gets no empty band.
-   ClientHeight := bottom + Scale96ToForm(8);
+   // The designed margin below the group (498 - 490).
+   ClientHeight := grpMyStation.Top + grpMyStation.Height + Scale96ToForm(8);
 end;
 
 procedure TfrmEditQSO.FitLayout;
@@ -1196,7 +1128,10 @@ begin
       fields.AddRow([lblCheck,      edtCheck,          lblPrefecture,  edtPrefecture,    chkXQSO]);
       fields.AddRow([lblClass,      edtClass,          lblTenTen,      edtTenTen,        nil]);
       fields.AddRow([lblNumberSent, edtNumberSent,     lblRSTSent,     edtRSTSent,       nil]);
-      fields.AddRow([lblNumberRcvd, edtNumberReceived, lblRSTReceived, edtRSTReceived,   nil]);
+      (* The deliveries button sits in the indicator column above Save. It is
+         measured whether or not it is shown, so a QSO with deliveries and one
+         without lay out the same. *)
+      fields.AddRow([lblNumberRcvd, edtNumberReceived, lblRSTReceived, edtRSTReceived,   btnDeliveries]);
       fields.AddRow([lblOperator,   edtOperator,       nil,            nil,              btnSave]);
       fields.AddRow([nil,           nil,               nil,            nil,              btnCancel]);
 
@@ -1242,8 +1177,6 @@ begin
 
       grpMyStation.SetBounds(Px(8), fields.Bottom + Px(8), ClientWidth - Px(16),
                              mine.Bottom + Px(9) + frameH);
-      lblDelivery.SetBounds(Px(8), grpMyStation.Top + grpMyStation.Height + Px(4),
-                            ClientWidth - Px(16), Px(17));
       FitHeightToContent;
 
       widths := UnicodeFormat('%d/%d/%d/%d/%d', [fields.ColWidth[0], fields.ColWidth[1],
@@ -1302,6 +1235,9 @@ end;
 procedure TfrmEditQSO.HandleShow(Sender: TObject);
 begin
    AssignMyStationCaptions(Self);
+   (* The .lfm text is a placeholder: the catalogue is the one route. Before
+      FitLayout, which measures it. *)
+   btnDeliveries.Caption := SEditQSODeliveriesButton;
 
    // LoadQSOIntoEditForm answers False for the records this dialog refuses to
    // edit -- a note, a skipped QSO, anything that is not rkQSO, or a log that

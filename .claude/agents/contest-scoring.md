@@ -750,7 +750,8 @@ and the matrix's `active.exchange` line.** Do not add a new rule test of
 `ContestSession.Exchange`; add a class answer. **S9e PART 1 IS DONE
 (2026-10-15):** `SetColumnsWidth`'s SS columns ask the field list
 (`uExchangeFields.ExchangeFieldsShowPrecedenceColumn` = precedence AND
-check, so ALL JA still shows none; `...ShowCheckColumn`; F15/F15a);
+check -- Sweepstakes alone; the ALL JA's power class is its Power field
+since 2026-11-24, so it shows the PWR column; `...ShowCheckColumn`; F15/F15a);
 LOGDUPE's dead FISTS log-line parse and its dead chain (`LogBackCopy`,
 `PushLogStringIntoEditableLogAndLogPopedQSO`, `PutContactIntoLogFile`,
 LOGSTUFF's `ProcessPartialCallAndInitialExchange`) are DELETED (F29);

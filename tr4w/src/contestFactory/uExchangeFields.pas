@@ -80,7 +80,6 @@ function ExchangeFieldsRSTAge: ExchangeInformationRecord;
 function ExchangeFieldsRSTAgeQTH: ExchangeInformationRecord;
 function ExchangeFieldsRSTNameQTH: ExchangeInformationRecord;
 function ExchangeFieldsRSTPower: ExchangeInformationRecord;
-function ExchangeFieldsRSTPrecedenceQTH: ExchangeInformationRecord;
 function ExchangeFieldsRSTQSONumber: ExchangeInformationRecord;
 function ExchangeFieldsRSTQSONumberQTH: ExchangeInformationRecord;
 function ExchangeFieldsRSTQSONumberRandomChars: ExchangeInformationRecord;
@@ -106,13 +105,12 @@ function ExchangeFieldsText(const aInfo: ExchangeInformationRecord): string;
    (ExchangeFieldsQSONumberPrecedenceCheckQTH) marks it, so this is the old
    test exactly.
 
-   THE PRECEDENCE COLUMN IS NOT THE PRECEDENCE FIELD ALONE, ON PURPOSE. ALL
-   JA's set (ExchangeFieldsRSTPrecedenceQTH) marks a precedence and no check,
-   and its log never showed the column -- asking the field alone would show
-   it, a behaviour change that is NY4I's to make (F15a). So it asks for the
-   precedence AND the check: the old test's contests, Sweepstakes alone.
-   Pinned for every contest at every roster station by
-   uTestExchangeKindReaders. *)
+   THE PRECEDENCE COLUMN ASKS FOR THE PRECEDENCE AND THE CHECK: the old
+   test's contests, Sweepstakes alone. It was written so because the ALL JA's
+   set marked a precedence and no check (F15a); since 2026-11-24 the ALL JA's
+   power class is its Power field (ExchangeFieldsRSTQTHPower, the log's PWR
+   column), and only the Sweepstakes set marks a precedence. Pinned for every
+   contest at every roster station by uTestExchangeKindReaders. *)
 function ExchangeFieldsShowPrecedenceColumn(const aInfo: ExchangeInformationRecord): boolean;
 function ExchangeFieldsShowCheckColumn(const aInfo: ExchangeInformationRecord): boolean;
 
@@ -252,14 +250,6 @@ begin
    Result.Power := True;
 end;
 
-function ExchangeFieldsRSTPrecedenceQTH: ExchangeInformationRecord;
-begin
-   Result := ExchangeFieldsNone;
-   Result.RST := True;
-   Result.Precedence := True;
-   Result.QTH := True;
-end;
-
 function ExchangeFieldsRSTQSONumber: ExchangeInformationRecord;
 begin
    Result := ExchangeFieldsNone;
@@ -365,7 +355,7 @@ end;
 
 function ExchangeFieldsShowPrecedenceColumn(const aInfo: ExchangeInformationRecord): boolean;
 begin
-   (* Not ALL JA's precedence -- see the declaration. *)
+   (* The precedence AND the check -- see the declaration. *)
    Result := aInfo.Precedence and aInfo.Check;
 end;
 

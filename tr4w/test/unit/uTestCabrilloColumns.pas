@@ -367,14 +367,18 @@ begin
                '       ',
                '       ',
                '       '],
-              [' GA B ',
+              (* The received class is the record's Power field since
+                 2026-11-24 (the fixture's '100', '123456'), no longer its
+                 Precedence ('B'); Precedence is read only when Power is
+                 empty, and variant 1 has neither. *)
+              [' GA 100',
                '      ',
-               'ABCDEFGHIJ B ',
-               'TRC B ',
-               ' GA B ',
-               ' GA B ',
-               ' XY B ',
-               '    B '],
+               'ABCDEFGHIJ 123456',
+               'TRC 100',
+               ' GA 100',
+               ' GA 100',
+               ' XY 100',
+               '    100'],
               aSent, aRec);
          end;
       DUMMYCONTEST, ARCI, COUNTYHUNTER, FISTS, GRIDLOC, JALONGPREFECT,

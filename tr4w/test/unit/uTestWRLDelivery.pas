@@ -35,6 +35,8 @@ type
       procedure TestMinimalPatch;
       procedure TestLastSent;
       procedure TestStatusOfQso;
+      procedure TestDeliveryRowsNameTheirLoggers;
+      procedure TestHandOffRecords;
       procedure TestLastSentMigration;
    public
       procedure RunAllTests; override;
@@ -45,11 +47,12 @@ implementation
 uses
    (* FIRST, so every unit below still wins a name it shares.
       DateUtils: DateTimeToUnix. uLogSchema: the v5 index DDL.
-      uEditQSOForm: EditQSODeliveryText, the Edit QSO delivery line. *)
-   Classes, DateUtils, uLogSchema, uEditQSOForm,
+      uDeliveryStatusForm: DeliveryRowCells, the Edit QSO delivery window.
+      uExternalLoggerConfig: the definitions that name a delivery. *)
+   Classes, DateUtils, uLogSchema, uDeliveryStatusForm, uExternalLoggerConfig,
    fpjson, uJSON, uWRLContact, uWRLExternalLogger, uLogRepository,
    uSettingsModel, VC, LogDupe, SyncObjs, uWRLWorker, uQsoMyFacts,
-   uContestRegistry, Tree;
+   uContestRegistry, Tree, uExternalLoggerRegistry;
 
 type
    TStubRequest = class(THttpRequest)
@@ -881,9 +884,9 @@ begin
    end;
 end;
 
-(* EDIT QSO'S READ: the delivery of a qso row, joined through its guid, read
-  from the FILE on its own connection -- so only what is committed -- and the
-  line it becomes, in every state. *)
+(* EDIT QSO'S READ: EVERY delivery of a qso row, joined through its guid, read
+  from the FILE on its own connection -- so only what is committed -- in key
+  order, and the row texts the delivery window shows, in every state. *)
 procedure TWRLDeliveryTests.TestStatusOfQso;
 var
    repository: TLogRepository;
@@ -891,13 +894,16 @@ var
    tracked, untracked: Int64;
    guid: string;
    q: TSQLQuery;
+   statuses: TDeliveryStatusList;
    status: TDeliveryStatus;
    job: TDeliveryJob;
    other: TDeliveryKey;
+   cells: TStringList;
 begin
-   BeginTest('Edit QSO reads one QSO''s delivery through its guid');
+   BeginTest('Edit QSO reads every delivery of one QSO through its guid');
    OpenFixture;
    repository := TLogRepository.Create(FDatabase);
+   cells := TStringList.Create;
    try
       rec := Default(ContestExchange);
       rec.Callsign := 'W1AW';
@@ -917,53 +923,252 @@ begin
          q.Free;
       end;
       FDelivery.Enqueue(Key(guid), '{}', False);
-      CheckFalse(ExternalDeliveryStatusOfQso(FFileName, tracked, status),
+      CheckFalse(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses),
          'an uncommitted row is not shown');
+      CheckEquals(0, Length(statuses));
       FDatabase.Transaction.Commit;
 
-      CheckTrue(ExternalDeliveryStatusOfQso(FFileName, tracked, status));
-      CheckEquals('WRL', status.Logger);
-      CheckEquals('pending', status.State);
-      CheckTrue(status.LastSent = 0, 'never answered');
-      CheckEquals('External logger WRL: pending. Not sent yet', EditQSODeliveryText(status));
+      CheckTrue(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses));
+      CheckEquals(1, Length(statuses));
+      CheckEquals('WRL', statuses[0].Logger);
+      CheckEquals('account', statuses[0].Account);
+      CheckEquals('book', statuses[0].Logbook);
+      CheckEquals('pending', statuses[0].State);
+      CheckTrue(statuses[0].LastSent = 0, 'never answered');
+      (* A bare 'WRL' key (a log from before definitions) is named by the
+         provider's registered DisplayName. *)
+      DeliveryRowCells(statuses[0], nil, cells);
+      CheckEquals(DELIVERY_COLUMNS, cells.Count);
+      CheckEquals('World Radio League', string(cells[DELIVERY_COL_LOGGER]));
+      CheckEquals('pending', string(cells[DELIVERY_COL_STATUS]));
+      CheckEquals('Not sent yet', string(cells[DELIVERY_COL_LAST_SENT]));
 
-      CheckFalse(ExternalDeliveryStatusOfQso(FFileName, untracked, status),
+      CheckFalse(ExternalDeliveryStatusesOfQso(FFileName, untracked, statuses),
          'a QSO with no delivery row has none');
-      CheckEquals('', status.Logger, 'and the line is hidden');
+      CheckEquals(0, Length(statuses), 'and the button is hidden');
 
       CheckTrue(FDelivery.Claim('WRL', 'account', 0, job));
       FDelivery.Complete(job, doFailed, '', 'BAD_CALL', 'request', 0);
       FDatabase.Connection.ExecuteDirect('UPDATE external_delivery SET last_sent = 1793458800');
       FDatabase.Transaction.Commit;
-      CheckTrue(ExternalDeliveryStatusOfQso(FFileName, tracked, status));
-      CheckEquals('failed', status.State);
-      CheckEquals('BAD_CALL', status.ErrorCode);
+      CheckTrue(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses));
+      CheckEquals('failed', statuses[0].State);
+      CheckEquals('BAD_CALL', statuses[0].ErrorCode);
       (* 1793458800 is 2026-10-31 15:00:00 UTC, shown as UTC on any machine. *)
-      CheckEquals('External logger WRL: failed (BAD_CALL). Last sent 2026-10-31 15:00 UTC',
-         EditQSODeliveryText(status));
+      DeliveryRowCells(statuses[0], nil, cells);
+      CheckEquals('failed (BAD_CALL)', string(cells[DELIVERY_COL_STATUS]));
+      CheckEquals('2026-10-31 15:00', string(cells[DELIVERY_COL_LAST_SENT]));
 
+      (* A SECOND DESTINATION of the same QSO: both rows come back, in key
+         order (logger, account, logbook) -- 'book' before 'new-book' --
+         whichever answered last. The old read returned one of them. *)
       other := Key(guid);
       other.Logbook := 'new-book';
       FDelivery.Enqueue(other, '{}', False);
       FDatabase.Connection.ExecuteDirect('UPDATE external_delivery SET state = ''synced'', ' +
          'last_sent = 1793462400 WHERE logbook = ''new-book''');
       FDatabase.Transaction.Commit;
-      CheckTrue(ExternalDeliveryStatusOfQso(FFileName, tracked, status));
-      CheckEquals('synced', status.State, 'of two destinations, the one answered last');
-      CheckEquals('External logger WRL: up to date. Last sent 2026-10-31 16:00 UTC',
-         EditQSODeliveryText(status));
+      CheckTrue(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses));
+      CheckEquals(2, Length(statuses), 'every destination, not the one answered last');
+      CheckEquals('book', statuses[0].Logbook);
+      CheckEquals('failed', statuses[0].State);
+      CheckEquals('new-book', statuses[1].Logbook);
+      CheckEquals('synced', statuses[1].State);
+      DeliveryRowCells(statuses[1], nil, cells);
+      CheckEquals('up to date', string(cells[DELIVERY_COL_STATUS]));
+      CheckEquals('2026-10-31 16:00', string(cells[DELIVERY_COL_LAST_SENT]));
 
+      status := statuses[1];
       status.State := 'inflight';
-      CheckEquals('External logger WRL: sending. Last sent 2026-10-31 16:00 UTC',
-         EditQSODeliveryText(status));
+      CheckEquals('sending', DeliveryStateText(status));
       status.State := 'uncertain';
-      CheckEquals('External logger WRL: uncertain. Last sent 2026-10-31 16:00 UTC',
-         EditQSODeliveryText(status));
+      CheckEquals('uncertain', DeliveryStateText(status));
       status.State := 'failed';
       status.ErrorCode := '';
-      CheckEquals('External logger WRL: failed. Last sent 2026-10-31 16:00 UTC',
-         EditQSODeliveryText(status));
+      CheckEquals('failed', DeliveryStateText(status));
+      status.State := 'someday';
+      CheckEquals('someday', DeliveryStateText(status), 'an unknown state is shown as stored');
    finally
+      cells.Free;
+      repository.Free;
+      CloseFixture;
+   end;
+end;
+
+(* A DESTINATION THAT GIVES NO REPLY (DXKeeper, AC Log) STILL APPEARS in Edit
+  QSO's window, and says only what is known: 'handed off (not confirmed)', or
+  the failure's code -- never 'up to date'. The row is made from the QSO's
+  network key (session_id, session_seq), which is all the sender thread holds,
+  and a key that names no QSO, or (0, 0), writes nothing. A 'pending' row that
+  carries a code is a retry. The same stored state 'synced' reads 'up to date'
+  for a destination that does confirm. *)
+procedure TWRLDeliveryTests.TestHandOffRecords;
+var
+   repository: TLogRepository;
+   rec: ContestExchange;
+   tracked, other: Int64;
+   handOff: TExternalHandOff;
+   statuses: TDeliveryStatusList;
+   status: TDeliveryStatus;
+   registration: TExternalLoggerRegistration;
+begin
+   BeginTest('A destination with no reply leaves a hand-off record, worded as a hand-off');
+   OpenFixture;
+   repository := TLogRepository.Create(FDatabase);
+   handOff := TExternalHandOff.Create;
+   try
+      rec := Default(ContestExchange);
+      rec.Callsign := 'W1AW';
+      rec.ceRecordKind := rkQSO;
+      rec.ceQSOID1 := 1111;
+      rec.ceQSOID2 := 2222;
+      tracked := repository.SaveQSO(rec);
+      rec.ceQSOID2 := 3333;
+      other := repository.SaveQSO(rec);
+
+      handOff.Logger := 'DXKEEPER/definition/fingerprint';
+      handOff.Account := 'localhost';
+      handOff.Logbook := '52001';
+      handOff.SessionId := 1111;
+      handOff.SessionSeq := 2222;
+      handOff.Delivered := True;
+      CheckTrue(FDelivery.RecordHandOff(handOff), 'the QSO is found by its key');
+      FDatabase.Transaction.Commit;
+      CheckTrue(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses));
+      CheckEquals(1, Length(statuses));
+      CheckEquals('synced', statuses[0].State);
+      CheckEquals('', statuses[0].ErrorCode);
+      CheckTrue(statuses[0].LastSent > 0, 'the command was written just now');
+      CheckFalse(ExternalDeliveryStatusesOfQso(FFileName, other, statuses),
+         'the other QSO of the session has no row');
+      CheckTrue(FindExternalLoggerRegistration('DXKEEPER', registration));
+      CheckTrue(registration.HandOffOnly, 'DXKeeper declares itself hand-off only');
+      CheckTrue(FindExternalLoggerRegistration('ACLOG', registration));
+      CheckTrue(registration.HandOffOnly, 'AC Log declares itself hand-off only');
+      CheckTrue(FindExternalLoggerRegistration('WRL', registration));
+      CheckFalse(registration.HandOffOnly, 'a confirming destination does not');
+
+      CheckTrue(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses));
+      status := statuses[0];
+      CheckEquals('handed off (not confirmed)', DeliveryStateText(status));
+      status.Logger := 'ACLOG/definition/fingerprint';
+      CheckEquals('handed off (not confirmed)', DeliveryStateText(status));
+      status.Logger := 'WRL';
+      CheckEquals('up to date', DeliveryStateText(status),
+         'the same stored state, a destination that confirms');
+      status.State := 'pending';
+      status.ErrorCode := 'WRL_RATE_LIMITED';
+      CheckEquals('retrying (WRL_RATE_LIMITED)', DeliveryStateText(status));
+      status.ErrorCode := '';
+      CheckEquals('pending', DeliveryStateText(status));
+
+      (* A second hand-off of the same QSO and destination UPDATES the row. *)
+      handOff.Delivered := False;
+      handOff.ErrorCode := 'DXKEEPER_NOT_DELIVERED';
+      CheckTrue(FDelivery.RecordHandOff(handOff));
+      FDatabase.Transaction.Commit;
+      CheckTrue(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses));
+      CheckEquals(1, Length(statuses), 'one row per QSO and destination');
+      CheckEquals('failed', statuses[0].State);
+      CheckEquals('failed (DXKEEPER_NOT_DELIVERED)', DeliveryStateText(statuses[0]));
+
+      handOff.SessionSeq := 9999;
+      CheckFalse(FDelivery.RecordHandOff(handOff), 'no QSO carries that key');
+      handOff.SessionId := 0;
+      handOff.SessionSeq := 0;
+      CheckFalse(FDelivery.RecordHandOff(handOff), '(0, 0) names no QSO');
+      FDatabase.Transaction.Commit;
+   finally
+      handOff.Free;
+      repository.Free;
+      CloseFixture;
+   end;
+end;
+
+(* TWO LOGGERS ON ONE QSO, as the delivery window names them: each row's key
+  is <provider>/<definition id>/<fingerprint>, and the window shows the NAME
+  the operator gave that definition. A definition since removed falls back
+  to the provider's DisplayName, an unregistered provider to its id. *)
+procedure TWRLDeliveryTests.TestDeliveryRowsNameTheirLoggers;
+var
+   repository: TLogRepository;
+   rec: ContestExchange;
+   tracked: Int64;
+   guid: string;
+   q: TSQLQuery;
+   statuses: TDeliveryStatusList;
+   config: TExternalLoggerConfig;
+   wrl, clublog: TExternalLoggerDefinition;
+   first, second: TDeliveryKey;
+   cells: TStringList;
+   removedId: string;
+begin
+   BeginTest('The delivery window lists two loggers by their names');
+   OpenFixture;
+   repository := TLogRepository.Create(FDatabase);
+   config := TExternalLoggerConfig.Create;
+   cells := TStringList.Create;
+   try
+      wrl := TExternalLoggerDefinition.Create;
+      wrl.Name := 'WRL contest log';
+      wrl.ProviderId := 'WRL';
+      config.Definitions.Add(wrl);
+      clublog := TExternalLoggerDefinition.Create;
+      clublog.Name := 'Club Log main';
+      clublog.ProviderId := 'CLUBLOG';
+      config.Definitions.Add(clublog);
+
+      rec := Default(ContestExchange);
+      rec.Callsign := 'W1AW';
+      rec.ceRecordKind := rkQSO;
+      tracked := repository.SaveQSO(rec);
+      q := TSQLQuery.Create(nil);
+      try
+         q.Database := FDatabase.Connection;
+         q.Transaction := FDatabase.Transaction;
+         q.SQL.Text := 'SELECT guid FROM qso WHERE id = :id';
+         q.ParamByName('id').AsLargeInt := tracked;
+         q.Open;
+         guid := UTF8Decode(q.Fields[0].AsUTF8String);
+         q.Close;
+      finally
+         q.Free;
+      end;
+
+      first := Key(guid);
+      first.Logger := wrl.DeliveryId;
+      second := Key(guid);
+      second.Logger := clublog.DeliveryId;
+      FDelivery.Enqueue(first, '{}', False);
+      FDelivery.Enqueue(second, '{}', False);
+      FDatabase.Transaction.Commit;
+
+      CheckTrue(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses));
+      CheckEquals(2, Length(statuses), 'one row per logger');
+      (* Key order: the logger column, so 'CLUBLOG/...' before 'WRL/...'. *)
+      CheckEquals(clublog.DeliveryId, statuses[0].Logger);
+      CheckEquals(wrl.DeliveryId, statuses[1].Logger);
+
+      DeliveryRowCells(statuses[0], config, cells);
+      CheckEquals('Club Log main', string(cells[DELIVERY_COL_LOGGER]));
+      DeliveryRowCells(statuses[1], config, cells);
+      CheckEquals('WRL contest log', string(cells[DELIVERY_COL_LOGGER]));
+      CheckEquals('pending', string(cells[DELIVERY_COL_STATUS]));
+
+      CheckEquals('WRL contest log', DeliveryLoggerName(wrl.DeliveryId, config));
+      CheckEquals('World Radio League', DeliveryLoggerName(wrl.DeliveryId, nil),
+         'no definitions: the provider''s name');
+      removedId := wrl.Id;
+      config.RemoveDefinition(removedId);
+      CheckEquals('World Radio League', DeliveryLoggerName(statuses[1].Logger, config),
+         'a removed definition: the provider''s name');
+      CheckEquals('World Radio League', DeliveryLoggerName('WRL', config),
+         'a bare provider key from an older log');
+      CheckEquals('NOSUCH', DeliveryLoggerName('NOSUCH/def/fp', config),
+         'an unregistered provider: its id');
+   finally
+      cells.Free;
+      config.Free;
       repository.Free;
       CloseFixture;
    end;
@@ -1067,6 +1272,8 @@ begin
    TestMinimalPatch;
    TestLastSent;
    TestStatusOfQso;
+   TestDeliveryRowsNameTheirLoggers;
+   TestHandOffRecords;
    TestLastSentMigration;
 end;
 

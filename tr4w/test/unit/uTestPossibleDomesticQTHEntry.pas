@@ -69,6 +69,13 @@ type
       procedure Test_TenTenRefusesADomesticEntryWithNoQTHAndWritesNothing;
       procedure Test_FISTSRefusesAnUnlistedQTHWithAMessageAndWritesNothing;
       procedure Test_FISTSReadsTheReportAsValidRSTDoes;
+      procedure AllJAAccepted(const aText: string; const aExpectQTH: string;
+                              const aExpectDomMult: string; aExpectPower: AnsiChar);
+      procedure AllJARefused(const aText: string; const aExpectMessage: string);
+      procedure Test_AllJAAcceptsEveryEntryShapeInEachMode;
+      procedure Test_AllJARefusesWithAReasonAndWritesNothing;
+      procedure Test_AllJAPrefectureRangeIsThePromptPattern;
+      procedure Test_AllJAHokkaidoRegionsAreADIFHokkaido;
       procedure UseDomesticFile(const aFileName: string);
    end;
 
@@ -93,6 +100,10 @@ uses
    LogDom,
    (* Contest -- the active contest's handle. *)
    PostUnit,
+   (* ALLJA_PREFECTURE_PATTERN -- the prompt's prefecture list. *)
+   uContestAllJA,
+   (* RegexMatches -- the New Contest dialog's whole-value match. *)
+   uRegex,
    LOGSTUFF;
 
 const
@@ -476,6 +487,194 @@ begin
       end;
 end;
 
+(* THE ALL JA (NY4I's bench, 2026-11-24): JA3WED on DIGI, 20 m, typed
+   '101 H' and Enter did nothing, with no message -- and '02 H' and '102 H'
+   the same. The parser wrote 'p' + the digits for every one-word prefecture,
+   allja.dom keys on the bare number, so FoundDomesticQTH never found it.
+   '599 12H' (two words, no 'p') worked. Called directly: the exchange is a
+   ShortString, not the Str80 FParser takes. *)
+procedure TPossibleDomesticQTHEntryTests.AllJAAccepted(const aText: string;
+   const aExpectQTH: string; const aExpectDomMult: string; aExpectPower: AnsiChar);
+var
+   rx: ContestExchange;
+   ok: boolean;
+   what: string;
+begin
+   what := '"' + aText + '" (mode ' + IntToStr(Ord(ActiveMode)) + ')';
+   rx := Default(ContestExchange);
+   ExchangeErrorMessage := '';
+   ok := ProcessRSTAllJAPrefectureAndPrecedenceExchange(ShortString(aText), rx);
+   CheckTrue(ok, what + ' is accepted: ' + string(ExchangeErrorMessage));
+   CheckEquals('', string(ExchangeErrorMessage), what + ' no message');
+   CheckEquals(aExpectQTH, string(rx.QTHString), what + ' QTH: the bare number, no p');
+   CheckEquals(aExpectDomMult, UpperCase(string(rx.DomMultQTH)),
+               what + ' domestic multiplier');
+   (* The power class is the Power field (rcvd_power) since 2026-11-24; the
+      Sweepstakes precedence slot it rode in is left alone. *)
+   CheckEquals(string(aExpectPower), string(rx.Power), what + ' power letter in Power');
+   CheckTrue(rx.Precedence = #0, what + ' no power letter in Precedence');
+end;
+
+procedure TPossibleDomesticQTHEntryTests.AllJARefused(const aText: string;
+   const aExpectMessage: string);
+var
+   rx: ContestExchange;
+   ok: boolean;
+   what: string;
+begin
+   what := '"' + aText + '" (mode ' + IntToStr(Ord(ActiveMode)) + ')';
+   rx := Default(ContestExchange);
+   rx.QTHString := SENTINEL_QTH;
+   rx.DomesticQTH := SENTINEL_DOMESTIC_QTH;
+   rx.DomMultQTH := SENTINEL_DOMESTIC_MULT;
+   rx.RSTReceived := SENTINEL_RST;
+   (* A power letter the RECORD already holds must not pass for one typed:
+      the old final test, Precedence <> '', read the record (and was always
+      True for an AnsiChar). Both slots are seeded: Power, where the letter
+      is stored, and Precedence, where a log saved before 2026-11-24 has it. *)
+   rx.Power := 'H';
+   rx.Precedence := 'H';
+   ExchangeErrorMessage := '';
+   ok := ProcessRSTAllJAPrefectureAndPrecedenceExchange(ShortString(aText), rx);
+   CheckFalse(ok, what + ' is refused');
+   CheckEquals(aExpectMessage, string(ExchangeErrorMessage), what + ' message');
+   CheckEquals(SENTINEL_QTH, string(rx.QTHString), what + ' QTH untouched');
+   CheckEquals(SENTINEL_DOMESTIC_QTH, string(rx.DomesticQTH),
+               what + ' domestic QTH untouched');
+   CheckEquals(SENTINEL_DOMESTIC_MULT, string(rx.DomMultQTH),
+               what + ' domestic multiplier untouched');
+   CheckEquals(SENTINEL_RST, Integer(rx.RSTReceived), what + ' RS(T) untouched');
+   CheckEquals('H', string(rx.Power), what + ' power letter untouched');
+   CheckEquals('H', string(rx.Precedence), what + ' precedence untouched');
+end;
+
+(* Every shape in CW, Phone and Digital (the bench was DIGI, which takes the
+   parser's non-CW branch). 102 is Rumoi, inside 101..114 and in the prompt's
+   pattern, so '102 H' is ACCEPTED -- the bench report listed it as invalid,
+   which the sponsor's list (as the pattern carries it) does not support. *)
+procedure TPossibleDomesticQTHEntryTests.Test_AllJAAcceptsEveryEntryShapeInEachMode;
+const
+   MODES: array[0..2] of ModeType = (CW, Phone, Digital);
+var
+   savedMode: ModeType;
+   savedDefault: Word;
+   i: integer;
+begin
+   BeginTest('Test_AllJAAcceptsEveryEntryShapeInEachMode');
+   savedMode := ActiveMode;
+   savedDefault := DefaultRST;
+   try
+      for i := Low(MODES) to High(MODES) do
+         begin
+         ActiveMode := MODES[i];
+         if ActiveMode = CW then
+            begin
+            DefaultRST := 599;
+            end
+         else
+            begin
+            DefaultRST := 59;
+            end;
+         AllJAAccepted('101 H', '101', '101', 'H');
+         AllJAAccepted(' 101 H', '101', '101', 'H');
+         AllJAAccepted('02 H', '02', '02', 'H');
+         AllJAAccepted('12 H', '12', '12', 'H');
+         AllJAAccepted('102 H', '102', '102', 'H');
+         AllJAAccepted('599 12H', '12', '12', 'H');
+         AllJAAccepted('599 101 H', '101', '101', 'H');
+         AllJAAccepted('114 P', '114', '114', 'P');
+         AllJAAccepted('48 L', '48', '48', 'L');
+         AllJAAccepted('12M', '12', '12', 'M');
+         end;
+   finally
+      ActiveMode := savedMode;
+      DefaultRST := savedDefault;
+      end;
+end;
+
+(* A missing power letter names the letters; a number outside 02..48 and
+   101..114 (49, 50 and 115..118 are in allja.dom but not on the list) or no
+   number at all names the range. Nothing is written. *)
+procedure TPossibleDomesticQTHEntryTests.Test_AllJARefusesWithAReasonAndWritesNothing;
+const
+   MODES: array[0..2] of ModeType = (CW, Phone, Digital);
+var
+   savedMode: ModeType;
+   savedDefault: Word;
+   i: integer;
+begin
+   BeginTest('Test_AllJARefusesWithAReasonAndWritesNothing');
+   savedMode := ActiveMode;
+   savedDefault := DefaultRST;
+   try
+      for i := Low(MODES) to High(MODES) do
+         begin
+         ActiveMode := MODES[i];
+         if ActiveMode = CW then
+            begin
+            DefaultRST := 599;
+            end
+         else
+            begin
+            DefaultRST := 59;
+            end;
+         AllJARefused('12', SExchangeAllJAPower);
+         AllJARefused('599 12', SExchangeAllJAPower);
+         AllJARefused('101', SExchangeAllJAPower);
+         AllJARefused('49 H', SExchangeAllJAPrefecture);
+         AllJARefused('50 H', SExchangeAllJAPrefecture);
+         (* In CW '115' is no prefecture. In phone and digital a three-digit
+            word is D7's shorthand -- one strength digit and a two-digit
+            prefecture -- so '115 H' is accepted there as 1 and 15. *)
+         if ActiveMode = CW then
+            begin
+            AllJARefused('115 H', SExchangeAllJAPrefecture);
+            end;
+         AllJARefused('01 H', SExchangeAllJAPrefecture);
+         AllJARefused('H', SExchangeAllJAPrefecture);
+         AllJARefused('599 H', SExchangeAllJAPrefecture);
+         end;
+   finally
+      ActiveMode := savedMode;
+      DefaultRST := savedDefault;
+      end;
+end;
+
+(* ONE LIST: what we may receive is what the New Contest dialog lets us send
+   (uContestAllJA.ALLJA_PREFECTURE_PATTERN). Every number 0..200, written as
+   the dialog would take it (two digits at least). *)
+procedure TPossibleDomesticQTHEntryTests.Test_AllJAPrefectureRangeIsThePromptPattern;
+var
+   n: integer;
+   text: string;
+begin
+   BeginTest('Test_AllJAPrefectureRangeIsThePromptPattern');
+   for n := 0 to 200 do
+      begin
+      text := Format('%.2d', [n]);
+      CheckTrue(RegexMatches(ALLJA_PREFECTURE_PATTERN, text) =
+                ValidAllJAPrefecture(Str20(text)),
+                'prefecture ' + text + ': the parser and the prompt agree');
+      end;
+end;
+
+(* ADIF HAS ONE HOKKAIDO ('01'); the ALL JA's regions 101..114 roll into it
+   (NY4I, 2026-11-24). Every other number is its own code, unchanged. *)
+procedure TPossibleDomesticQTHEntryTests.Test_AllJAHokkaidoRegionsAreADIFHokkaido;
+var
+   n: integer;
+begin
+   BeginTest('Test_AllJAHokkaidoRegionsAreADIFHokkaido');
+   for n := 101 to 114 do
+      begin
+      CheckEquals('01', ADIFPrefectureCode(IntToStr(n)), 'region ' + IntToStr(n));
+      end;
+   CheckEquals('02', ADIFPrefectureCode('02'), 'Aomori');
+   CheckEquals('12', ADIFPrefectureCode('12'), 'Chiba');
+   CheckEquals('47', ADIFPrefectureCode('47'), 'Okinawa');
+   CheckEquals('', ADIFPrefectureCode(''), 'nothing in, nothing out');
+end;
+
 procedure TPossibleDomesticQTHEntryTests.UseDomesticFile(const aFileName: string);
 begin
    Settings.Contest.DomesticFilename := aFileName;
@@ -546,6 +745,14 @@ begin
       ReleaseActiveContest;
       Test_JAPrefectureOneWordRefusesWithAMessageAndWritesNothing;
       Test_JAPrefectureSeveralWordsReadsTheReportAsValidRSTDoes;
+
+      UseDomesticFile('allja.dom');
+      Contest := ContestHandleOf(ALLJA);
+      ReleaseActiveContest;
+      Test_AllJAAcceptsEveryEntryShapeInEachMode;
+      Test_AllJARefusesWithAReasonAndWritesNothing;
+      Test_AllJAPrefectureRangeIsThePromptPattern;
+      Test_AllJAHokkaidoRegionsAreADIFHokkaido;
 
       (* TEN-TEN AND FISTS ASK DomesticCountryCall: a K call is domestic, as
          FoundContest sets it up for both. The list is restored. *)

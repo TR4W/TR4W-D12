@@ -3,7 +3,7 @@ unit uExternalLogger;
 
 interface
 uses uExternalLoggerBase, StrUtils, SysUtils, Math, TF, VC, LOGSUBS2, LogWind, LogDupe, Tree, uCFG, PostUnit,
-     IdTCPClient, uQsoDispatcher, uHostResolve;
+     IdTCPClient, uQsoDispatcher, uHostResolve, uQsoMyFacts;
 
 
 Type TExternalLogger = class(TExternalLoggerBase)
@@ -16,7 +16,9 @@ Type TExternalLogger = class(TExternalLoggerBase)
 
       // DXKeeper -- these now BUILD and return the DXKeeper message; the actual
       // send is queued (one connect-per-command op on the sender thread). Issue #957.
-      function BuildDXKeeperLogMessage(ce: ContestExchange): string;
+      function BuildDXKeeperLogMessage(const ce: ContestExchange;
+                                       const aFacts: TQsoMyFacts;
+                                       const aRecordedSent: AnsiString): string;
       function BuildDXKeeperDeleteMessage(ce: ContestExchange): string; // These functions should be changed to an interface so we just call one based on the interface (by log type). ny4i
       function LookupCallsignToDXKeeper(ce: ContestExchange): integer;
 
@@ -32,6 +34,11 @@ Type TExternalLogger = class(TExternalLoggerBase)
       // DXKeeper transport: one connect -> send one command -> let DXKeeper close
       // (its by-design model; confirmed with AA6YQ). Issue #957.
       function DeliverCommand(const cmd: string): boolean; override;
+      (* The sender thread: leaves the hand-off record Edit QSO's delivery
+         window lists. DXKeeper replies with nothing, so a delivered op means
+         "written to DXKeeper", never "DXKeeper accepted it". *)
+      procedure OpSettled(aOp: TExternalLogOp; aDelivered: boolean;
+                          const aErrorCode: string); override;
 
    public
       Constructor Create(); overload;
@@ -43,6 +50,9 @@ Type TExternalLogger = class(TExternalLoggerBase)
       function DeleteQSO(ce: ContestExchange): integer;
       function ReplaceQSO(ce: ContestExchange): integer;   // Issue #957 -- edit = atomic delete + re-log
       function LookupCallsign(ce:ContestExchange): integer; override;
+      procedure SubmitOpFor(const aDeliveryId: string; aSessionId, aSessionSeq: Int64;
+                            const aOp: TQsoExternalOp; const aCommand1: string;
+                            const aCommand2: string; const aDescription: string); override;
 
       (* THE SAME OPERATIONS, SPLIT AT THE THREAD BOUNDARY (2026-10-24).
 
@@ -52,6 +62,7 @@ Type TExternalLogger = class(TExternalLoggerBase)
         queue, so the QSO dispatcher thread calls it. LogQSO, DeleteQSO and
         ReplaceQSO are Prepare + Submit in a row. *)
       function PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
+                         const aFacts: TQsoMyFacts; const aRecordedSent: AnsiString;
                          out aCommand1: string; out aCommand2: string): TQsoExternalOp; override;
       procedure SubmitOp(const aOp: TQsoExternalOp; const aCommand1: string;
                          const aCommand2: string; const aDescription: string); override;
@@ -60,7 +71,9 @@ end;
 
 
 (* THE ARRL_SECT THE DXKEEPER HAND-OFF SENDS, or '' for none -- issue 266,
-  2026-11-10.
+  2026-11-10. (SINCE 2026-11-24 THE DXKEEPER RECORD IS THE ADIF EXPORT'S, built
+  by the contest class, which writes ARRL_SECT by this same rule; this function
+  is now the N1MM UDP <section>'s.)
 
   IN A CONTEST WHOSE QTH IS AN ARRL SECTION (uContestBase.
   ContestQTHIsAnARRLSection: both Sweepstakes, both Field Days, ARRL 160) it
@@ -87,7 +100,10 @@ implementation
 Uses
    uExternalLoggerRegistry, uExternalLoggerConfig, uExternalLoggerService,
    uAppStrings,
-   uADIF,          // ResolveADIFModeSubmode, ADIFSectionOf
+   Forms,            // Application.QueueAsyncCall -- the hand-off record
+   uExternalDelivery, // TExternalHandOff
+   uLogStore,        // LogStoreRecordExternalHandOff
+   uADIF,         // ADIFSectionOf (ExternalLoggerARRLSection)
    uSettingsModel,   // Settings.My.Call
    MainUnit,
    uContestBase,     // ContestQTHIsAnARRLSection
@@ -243,6 +259,7 @@ begin
 end;
 
 function TExternalLogger.PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
+                                   const aFacts: TQsoMyFacts; const aRecordedSent: AnsiString;
                                    out aCommand1: string; out aCommand2: string): TQsoExternalOp;
 begin
    aCommand1 := '';
@@ -256,7 +273,7 @@ begin
    case aKind of
       qmNew:
          begin
-         aCommand1 := Self.BuildDXKeeperLogMessage(ce);
+         aCommand1 := Self.BuildDXKeeperLogMessage(ce, aFacts, aRecordedSent);
          Result := xoSingle;
          end;
       qmDeleted:
@@ -268,8 +285,92 @@ begin
          begin
          // Delete of the original first, then the re-log: see ReplaceQSO.
          aCommand1 := Self.BuildDXKeeperDeleteMessage(ce);
-         aCommand2 := Self.BuildDXKeeperLogMessage(ce);
+         aCommand2 := Self.BuildDXKeeperLogMessage(ce, aFacts, aRecordedSent);
          Result := xoReplace;
+         end;
+   end;
+end;
+
+type
+   (* The main-thread end of the hand-off record. A method because
+      QueueAsyncCall takes one; it holds nothing of any logger, so a job that
+      outlives its service is still safe to run. *)
+   TDXKeeperHandOffRelay = class(TObject)
+   public
+      procedure Run(aData: PtrInt);
+   end;
+
+var
+   GHandOffRelay: TDXKeeperHandOffRelay = nil;
+
+procedure TDXKeeperHandOffRelay.Run(aData: PtrInt);
+var
+   job: TExternalHandOff;
+begin
+   job := TExternalHandOff(aData);
+   try
+      LogStoreRecordExternalHandOff(job);
+   finally
+      job.Free;
+   end;
+end;
+
+procedure TExternalLogger.OpSettled(aOp: TExternalLogOp; aDelivered: boolean;
+                                    const aErrorCode: string);
+var
+   job: TExternalHandOff;
+begin
+   (* A lookup, a delete, or a QSO with no network key names no row. *)
+   if (aOp.DeliveryId = '') or ((aOp.SessionId = 0) and (aOp.SessionSeq = 0)) then
+      begin
+      Exit;
+      end;
+   job := TExternalHandOff.Create;
+   job.Logger := aOp.DeliveryId;
+   job.Account := Self.loggerAddress;
+   job.Logbook := IntToStr(Self.loggerPort);
+   job.SessionId := aOp.SessionId;
+   job.SessionSeq := aOp.SessionSeq;
+   job.Delivered := aDelivered;
+   if aDelivered then
+      begin
+      job.ErrorCode := '';
+      end
+   else
+      begin
+      job.ErrorCode := 'DXKEEPER_' + aErrorCode;
+      end;
+   (* The sender thread never touches the log: the main thread writes. QueueAsyncCall
+      RAISES on a shut-down queue; the record is then simply not made. *)
+   try
+      if (Application = nil) or Application.Terminated then
+         begin
+         job.Free;
+         Exit;
+         end;
+      Application.QueueAsyncCall(GHandOffRelay.Run, PtrInt(job));
+   except
+      on E: Exception do
+         begin
+         job.Free;
+         logger.Warn('[DXKeeper] could not queue the delivery record for %s: %s',
+                     [aOp.Description, E.ClassName]);
+         end;
+   end;
+end;
+
+procedure TExternalLogger.SubmitOpFor(const aDeliveryId: string; aSessionId, aSessionSeq: Int64;
+                                      const aOp: TQsoExternalOp; const aCommand1: string;
+                                      const aCommand2: string; const aDescription: string);
+begin
+   case aOp of
+      xoSingle:
+         begin
+         Self.QueueSingleCommand(aCommand1, aDescription, aDeliveryId, aSessionId, aSessionSeq);
+         end;
+      xoReplace:
+         begin
+         Self.QueueReplace(aCommand1, aCommand2, aDescription, aDeliveryId, aSessionId, aSessionSeq);
          end;
    end;
 end;
@@ -301,7 +402,8 @@ begin
          end;
       lt_DxKeeper:
          begin
-         Self.SubmitOp(Self.PrepareOp(qmNew, ce, cmd1, cmd2), cmd1, cmd2, 'Log ' + ce.Callsign);
+         Self.SubmitOp(Self.PrepareOp(qmNew, ce, NotCapturedMyFacts, '', cmd1, cmd2),
+                       cmd1, cmd2, 'Log ' + ce.Callsign);
          Result := 0;
          end;
       lt_HRD: Result := Self.LogQSOToHRD(ce);
@@ -327,7 +429,8 @@ begin
          end;
       lt_DxKeeper:
          begin
-         Self.SubmitOp(Self.PrepareOp(qmDeleted, ce, cmd1, cmd2), cmd1, cmd2, 'Delete ' + ce.Callsign);
+         Self.SubmitOp(Self.PrepareOp(qmDeleted, ce, NotCapturedMyFacts, '', cmd1, cmd2),
+                       cmd1, cmd2, 'Delete ' + ce.Callsign);
          Result := 0;
          end;
       //lt_HRD: Result := Self.LogQSOToHRD(ce);
@@ -350,7 +453,8 @@ begin
          end;
       lt_DxKeeper:
          begin
-         Self.SubmitOp(Self.PrepareOp(qmEdited, ce, cmd1, cmd2), cmd1, cmd2, 'Replace ' + ce.Callsign);
+         Self.SubmitOp(Self.PrepareOp(qmEdited, ce, NotCapturedMyFacts, '', cmd1, cmd2),
+                       cmd1, cmd2, 'Replace ' + ce.Callsign);
          Result := 0;
          end;
       else
@@ -388,21 +492,16 @@ begin
    end;
 end;
 
-function TExternalLogger.BuildDXKeeperLogMessage(ce: ContestExchange): string;
+function TExternalLogger.BuildDXKeeperLogMessage(const ce: ContestExchange;
+                                                 const aFacts: TQsoMyFacts;
+                                                 const aRecordedSent: AnsiString): string;
 var sCoreADIF: string;
-    //n: integer;
-    sMode: string;
-    sOperator: string;
     nCoreADIFLength: integer;
     sOptions: string;
     nOptionsLength: integer;
     sMessage: string;
-    sSubMode: string;
-    sTemp: string;
-    sSection: string;
-    saveDecimalSeparator: char;
 begin
-{   This is the example from https://www.dxlabsuite.com/Interoperation.htm
+(*   This is the example from https://www.dxlabsuite.com/Interoperation.htm
 <command:11>externallog<parameters:341><ExternalLogADIF:187><CALL:4>P5DX <RST_SENT:3>599
 <RST_RCVD:3>599 <FREQ:6>14.004 <BAND:3>20M <MODE:2>CW <QSO_DATE:8>20220411 <TIME_ON:6>072800
 <STATION_CALLSIGN:5>AA6YQ <TX_PWR:4>1000 <GRIDSQUARE:4>PM29 <EOR><UploadeQSL:1>Y
@@ -414,104 +513,23 @@ This is all we need to send as we DO NOT want to send every contact to any of th
 <RST_RCVD:3>599 <FREQ:6>14.004 <BAND:3>20M <MODE:2>CW <QSO_DATE:8>20220411 <TIME_ON:6>072800
 <STATION_CALLSIGN:5>AA6YQ <TX_PWR:4>1000 <GRIDSQUARE:4>PM29 <EOR><UploadeQSL:1>N
 <UploadLoTW:1>N<UploadClubLog:1>N<DeduceMissing:1>Y<QueryCallbook:1>Y<UpdateeQSL:1>N<UpdateLoTW:1>N<CheckOverrides:1>Y
+*)
+   (* THE RECORD IS THE ADIF EXPORT'S, NOT ANOTHER ONE (NY4I, 2026-11-24: "the
+      contest class hook should be building the adif record ... The same
+      contest class adif generator should be what is used to export the adif.
+      This ensures the adif process does not diverge."). ADIFContactForExternal
+      is what the durable loggers (Club Log, WRL, Cloudlog, QRZ, ACLog) hand
+      their payload through: uADIF.EmitADIFContact with the export's tail and
+      the QSO's own station and sent exchange. NO FIELD IS BUILT HERE -- a field
+      that is missing from a DXKeeper record is missing from the contest class's
+      emitter, and is fixed there for the export too.
 
-}
-   if CurrentOperator[0] = #0 then
-      begin
-      sOperator := Settings.My.Call;
-      end
-   else
-      begin
-      sOperator := ce.ceOperator;
-      end;
-
-   (* The same (MODE, SUBMODE) pair the ADIF export writes -- ADIF's names,
-      never VC.ExtendedModeStringArray's (DATA, CW-R, D-STAR ...). *)
-   ResolveADIFModeSubmode(ce, sMode, sSubMode);
-
-  sCoreADIF :=   AddADIFField('CALL',ce.Callsign)
-               + AddADIFField('RST_SENT',ce.RSTSent)
-               + AddADIFField('RST_RCVD',ce.RSTReceived);
-  if ce.Frequency <> 0 then //14149280  or 7025000
-     begin
-     saveDecimalSeparator := FormatSettings.DecimalSeparator;
-        try
-           FormatSettings.DecimalSeparator := '.';
-           sTemp := FloatToStr((ce.Frequency/1000000));
-           sCoreADIF := sCoreADIF + AddADIFField('FREQ',sTemp);
-        finally
-           FormatSettings.DecimalSeparator := saveDecimalSeparator;
-        end;
-     end;
-     sCoreADIF :=   sCoreADIF
-                  + AddADIFField('BAND',ADIFBANDSTRINGSARRAY[ce.Band])
-                  + ADDADIFField('MODE',sMode)
-                  (* THE CONTEST'S ADIF id, the one TR4W's own export writes
-                     -- M1. This sent the ENUM'S SPELLING, a fifth answer
-                     to "what is this contest's CONTEST_ID" that disagreed
-                     with export for every contest whose ADIF id is not its
-                     spelling -- 34 of them, e.g. ARRL Field Day sent
-                     'ARRL-FD' where export writes 'ARRL-FIELD-DAY'. *)
-                  + AddADIFField('CONTEST_ID',ContestIdentity(ce.ceContest).ADIFContestId)
-                  + AddADIFField('QSO_DATE',SysUtils.format('20%0.2d%0.2d%0.2d',
-                                                            [ce.tSysTime.qtYear,
-                                                             ce.tSysTime.qtMonth,
-                                                             ce.tSysTime.qtDay]))
-                  + AddADIFField('TIME_ON',SysUtils.format('%0.2d%0.2d%0.2d',
-                                                          [ce.tSysTime.qtHour,
-                                                           ce.tSysTime.qtMinute,
-                                                           ce.tSysTime.qtSecond]))
-                  + AddADIFField('STATION_CALLSIGN',Settings.My.Call)
-                  + AddADIFField('OPERATOR',sOperator)
-
-                  + AddADIFField('SRX_STRING', ce.ExchString)
-                  + AddADIFField( 'STX_STRING',Trim(DeleteRepeatedSpaces(GetMyExchangeForExport)))
-
-
-
-                  ;
-  if ExchangeInformation.QSONumber then
-     begin
-     if ce.NumberReceived <> -1 then
-        begin
-        sCoreADIF := sCoreADIF + AddADIFField('SRX',IntToStr(ce.NumberReceived));
-        end;
-     if ce.NumberSent <> -1 then
-        begin
-        sCoreADIF := sCoreADIF + AddADIFField('STX',IntToStr(ce.NumberSent));
-        end;
-     end;
-
-  if ce.Age <> 0 then
-     begin
-     sCoreADIF := sCoreADIF + AddADIFField('AGE',IntToStr( ce.Age));
-     end;
-
-  if sSubMode <> '' then
-     begin
-     sCoreADIF := sCoreADIF + AddADIFField('SUBMODE',sSubMode);
-     end;
-  if LooksLikeAGrid(ce.QTHString) then
-     begin
-     sCoreADIF := sCoreADIF + AddADIFField('GRIDSQUARE',ce.QTHString);
-     end
-  else if LooksLikeAGrid(ce.ExchString) then
-     begin
-     sCoreADIF := sCoreADIF + AddADIFField('GRIDSQUARE',ce.ExchString);
-     end
-  else if LooksLikeAGrid(ce.DomesticQTH) then
-     begin
-     sCoreADIF := sCoreADIF + AddADIFField('GRIDSQUARE',ce.DomesticQTH);
-     end;
-  sSection := ExternalLoggerARRLSection(ce);
-  if sSection <> '' then
-     begin
-     sCoreADIF := sCoreADIF + AddADIFField('ARRL_SECT', sSection);
-     end;
-  sCoreADIF := sCoreADIF + '<EOR>';
-  nCoreADIFLength := length(sCoreADIF);
-  sCoreADIF := '<ExternalLogADIF:' + IntToStr(nCoreADIFLength) + '>' + sCoreADIF;
-  nCoreADIFLength := length(sCoreADIF); // Update to include the ExternalLogADIF field
+      Only the record's closing CR LF is dropped: it ends in <EOR>, and the
+      framing below counts exactly what DXKeeper is sent. *)
+   sCoreADIF := TrimRight(ADIFContactForExternal(ce, aFacts, aRecordedSent));
+   nCoreADIFLength := length(sCoreADIF);
+   sCoreADIF := '<ExternalLogADIF:' + IntToStr(nCoreADIFLength) + '>' + sCoreADIF;
+   nCoreADIFLength := length(sCoreADIF); // Update to include the ExternalLogADIF field
   // Issue #957 -- option flags for the externallog command.
   // Enrichment + membership lookups are ON (Y): DeduceMissing, QueryCallbook,
   // CheckOverrides, UpdateeQSL, UpdateLoTW.  These only fill in or annotate
@@ -616,6 +634,14 @@ begin
    aFields.AddPort(LF_PORT, SLoggerFieldPort);
 end;
 initialization
+   GHandOffRelay := TDXKeeperHandOffRelay.Create;
    RegisterExternalLogger('DXKEEPER', 'DXKeeper', CreateDXKeeper, DeclareDXKeeperFields,
-      DXKEEPER_DEFAULT_PORT);
+      DXKEEPER_DEFAULT_PORT, True);
+finalization
+   (* Calls still queued must not reach a freed relay. *)
+   if (Application <> nil) and (GHandOffRelay <> nil) then
+      begin
+      Application.RemoveAsyncCalls(GHandOffRelay);
+      end;
+   FreeAndNil(GHandOffRelay);
 end.

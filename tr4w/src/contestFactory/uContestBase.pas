@@ -3601,7 +3601,8 @@ type
            Precedence     PRECEDENCE
            Check          CHECK
            Name           NAME
-           Power          ADIFPowerTag (RX_PWR; FOC_NUM for the FOC Marathon)
+           Power          ADIFPowerTag (RX_PWR; APP_TR4W_FOC_NUM for the FOC
+                          Marathon, APP_TR4W_RCVD_POWER_CLASS for the ALL JA)
            QSONumber      SRX
            TenTenNum      TEN_TEN
            Age            AGE
@@ -3623,7 +3624,7 @@ type
 
          A class with a rule of its own overrides either one and says so in the
          override; one that only changes the tag a field goes to (the FOC
-         Marathon) states ADIFPowerTag. *)
+         Marathon, the ALL JA) states ADIFPowerTag. *)
       function EmitADIFReportFields(const aQso: ContestExchange): string; virtual;
       function EmitADIFReceivedFields(const aQso: ContestExchange): string; virtual;
 
@@ -8234,10 +8235,12 @@ begin
       end;
 
    (* WHICH TAG THE POWER FIELD GOES TO IS THE CONTEST'S: it holds the FOC
-      membership number for the FOC Marathon, a power for everything else. *)
+      membership number for the FOC Marathon, the power class letter for the
+      ALL JA, a power for everything else. *)
    (* RX_PWR IS AN ADIF NUMBER (watts). A power that is a word -- ARRL DX's
       'K' and 'KW' -- is not one and is left out: it is already in SRX_STRING.
-      The membership number is the contest's own and is not so restricted. *)
+      A contest's own APP_ tag (the membership number, the class letter) is
+      not so restricted. *)
    if declared.Power and
       (aQso.Power <> '') and
       ((ADIFPowerTag <> 'RX_PWR') or IsADIFNumber(string(aQso.Power))) then

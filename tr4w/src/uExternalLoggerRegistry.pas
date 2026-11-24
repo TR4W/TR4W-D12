@@ -85,12 +85,16 @@ type
       Declare: TLoggerFieldDeclarer;
       (* The port a new definition of this provider starts with; 0 = none. *)
       DefaultPort: integer;
+      (* True for a provider whose destination gives no reply (AC Log,
+         DXKeeper): its 'synced' means HANDED OFF, never confirmed, and Edit
+         QSO's delivery window says so. *)
+      HandOffOnly: boolean;
       (* A fresh list the caller frees; empty when the provider declares none. *)
       function CreateFields: TLoggerFieldList;
    end;
 procedure RegisterExternalLogger(const aId, aDisplayName: string;
    aConstructor: TExternalLoggerConstructor; aDeclarer: TLoggerFieldDeclarer = nil;
-   aDefaultPort: integer = 0);
+   aDefaultPort: integer = 0; aHandOffOnly: boolean = False);
 (* nil when aId is not registered. The registry owns the result. *)
 function FindExternalLoggerRegistration(const aId: string;
    out aRegistration: TExternalLoggerRegistration): boolean;
@@ -212,7 +216,7 @@ end;
 
 procedure RegisterExternalLogger(const aId, aDisplayName: string;
    aConstructor: TExternalLoggerConstructor; aDeclarer: TLoggerFieldDeclarer;
-   aDefaultPort: integer);
+   aDefaultPort: integer; aHandOffOnly: boolean);
 var
    i: integer;
    registration: TExternalLoggerRegistration;
@@ -234,6 +238,7 @@ begin
    registration.Construct := aConstructor;
    registration.Declare := aDeclarer;
    registration.DefaultPort := aDefaultPort;
+   registration.HandOffOnly := aHandOffOnly;
    Providers.Add(registration);
 end;
 function FindExternalLoggerRegistration(const aId: string;

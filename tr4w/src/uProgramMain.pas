@@ -302,6 +302,7 @@ uses
   uServerLogForm,
   uCT1BOHForm,
   uBeaconsForm,
+  uDeliveryStatusForm,
   uEditQSOForm,
   uPanelUpdate,
   uMainThreadWork,

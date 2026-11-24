@@ -323,7 +323,19 @@ begin
          end;
       npkFieldWithComment:
          begin
-         SetCommentAndEnableEditControl(aPrompt.Text, aPrompt.Field, aPrompt.RowLabel);
+         (* The dialog has ONE comment line. A contest declaring several
+            startup fields (ALL JA: prefecture, then power class) would show
+            only the last prompt, even with the caret in the first row, so a
+            patterned prompt is added to the line rather than replacing it. *)
+         if (aPrompt.Pattern <> '') and (NewContestPromptComment <> '') then
+            begin
+            SetCommentAndEnableEditControl(NewContestPromptComment + ' ' + aPrompt.Text,
+                                           aPrompt.Field, aPrompt.RowLabel);
+            end
+         else
+            begin
+            SetCommentAndEnableEditControl(aPrompt.Text, aPrompt.Field, aPrompt.RowLabel);
+            end;
          RecordRowPattern(aPrompt.Field, aPrompt.Pattern);
          end;
       npkIAmIn:

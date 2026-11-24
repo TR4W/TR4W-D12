@@ -24,12 +24,32 @@ type
       Pending, InFlight, Synced, Uncertain, Failed: Int64;
    end;
 
-   (* ONE QSO'S DELIVERY, as Edit QSO shows it -- a value, so nothing of sqldb
-     leaves this unit. Logger = '' means the QSO has no delivery row.
-     LastSent is Unix seconds UTC, 0 when the destination never answered. *)
+   (* ONE DESTINATION'S DELIVERY OF ONE QSO -- one external_delivery row, as
+     Edit QSO's delivery window shows it; a value, so nothing of sqldb leaves
+     this unit. Logger is the delivery key
+     (TExternalLoggerDefinition.DeliveryId, or a bare provider id in a log
+     written before definitions existed). LastSent is Unix seconds UTC, 0 when
+     the destination never answered. *)
    TDeliveryStatus = record
-      Logger, State, ErrorCode: string;
+      Logger, Account, Logbook, State, ErrorCode: string;
       LastSent: Int64;
+   end;
+
+   (* Every destination of one QSO, in key order (logger, account, logbook).
+     Empty when the QSO has no delivery row. *)
+   TDeliveryStatusList = array of TDeliveryStatus;
+
+   (* WHAT A DESTINATION THAT GIVES NO REPLY (DXKeeper) REPORTS ABOUT ONE QSO:
+     the command was written (Delivered), or it never was (ErrorCode says
+     why). The QSO is named by its network key, which is all the sender knew
+     when it was queued. Logger is the delivery key; Account and Logbook are
+     fixed placeholders the key needs. A plain value built on the sender thread
+     and consumed on the main thread. *)
+   TExternalHandOff = class(TObject)
+   public
+      Logger, Account, Logbook, ErrorCode: string;
+      SessionId, SessionSeq: Int64;
+      Delivered: boolean;
    end;
 
 (* An on-demand, read-only snapshot. Never commits a caller's live connection
@@ -37,14 +57,14 @@ type
 function ExternalDeliveryCounts(const aFileName, aLogger: string): TDeliveryCounts;
 function ExternalDeliveryGapKey(const aLogger: string): string;
 
-(* The delivery of qso row aRowId -- TExternalDelivery.StatusOfQso, through its
-  own short-lived read-only connection for the same reason as the counts: the
-  caller's live connection may hold a read transaction from an earlier read,
-  and its snapshot would not show what the worker has written since. False,
-  with Logger = '', when the QSO has no delivery row. Raises if the file will
-  not open. *)
-function ExternalDeliveryStatusOfQso(const aFileName: string; aRowId: Int64;
-                                     out aStatus: TDeliveryStatus): boolean;
+(* Every delivery of qso row aRowId -- TExternalDelivery.StatusesOfQso,
+  through its own short-lived read-only connection for the same reason as the
+  counts: the caller's live connection may hold a read transaction from an
+  earlier read, and its snapshot would not show what the worker has written
+  since. False, with an empty list, when the QSO has no delivery row. Raises
+  if the file will not open. *)
+function ExternalDeliveryStatusesOfQso(const aFileName: string; aRowId: Int64;
+                                       out aStatuses: TDeliveryStatusList): boolean;
 
 type
 
@@ -80,13 +100,21 @@ type
          aUnsafeUpdates: boolean = False);
       procedure MigrateLogger(const aOldLogger, aNewLogger, aAccount, aLogbook: string);
       function NextAttempt(const aLogger, aAccount: string): Int64;
-      (* The delivery of the qso row aRowId, joined through qso.guid (the
-         contact key). The key allows more than one destination row per
-         contact, though CaptureSavedQso keeps edits on the first binding, so
-         a second row today comes only from a hand edit or future code; the
-         one answered most recently is returned. False, with Logger = '',
-         when none. *)
-      function StatusOfQso(aRowId: Int64; out aStatus: TDeliveryStatus): boolean;
+      (* EVERY delivery of the qso row aRowId, joined through qso.guid (the
+         contact key): one element per external_delivery row, so a QSO sent
+         to three loggers answers three. Ordered by the rest of the primary
+         key (logger, account, logbook), so the order is stable between
+         reads. False, with an empty list, when none. *)
+      function StatusesOfQso(aRowId: Int64;
+                             out aStatuses: TDeliveryStatusList): boolean;
+      (* UPSERTS the one row of the QSO aHandOff names: 'synced' when the
+         command was written, 'failed' (with its code) when it was not, and
+         last_sent set to now either way. A hand-off is NEVER 'pending' or
+         'inflight': nothing here will send it again, and a pending row would
+         count as work waiting in Preferences for ever. Does not commit. False,
+         nothing written, when no QSO row carries the key (or it has no guid,
+         or the key is (0, 0), which is every QSO that never had one). *)
+      function RecordHandOff(aHandOff: TExternalHandOff): boolean;
    end;
 
 implementation
@@ -167,19 +195,19 @@ begin
    end;
 end;
 
-function ExternalDeliveryStatusOfQso(const aFileName: string; aRowId: Int64;
-                                     out aStatus: TDeliveryStatus): boolean;
+function ExternalDeliveryStatusesOfQso(const aFileName: string; aRowId: Int64;
+                                       out aStatuses: TDeliveryStatusList): boolean;
 var
    database: TLogDatabase;
    delivery: TExternalDelivery;
 begin
-   aStatus := Default(TDeliveryStatus);
+   aStatuses := nil;
    database := TLogDatabase.Create;
    delivery := nil;
    try
       database.OpenReadOnly(aFileName);
       delivery := TExternalDelivery.Create(database);
-      Result := delivery.StatusOfQso(aRowId, aStatus);
+      Result := delivery.StatusesOfQso(aRowId, aStatuses);
    finally
       delivery.Free;
       database.Free;
@@ -415,27 +443,95 @@ begin
    end;
 end;
 
-function TExternalDelivery.StatusOfQso(aRowId: Int64;
-                                       out aStatus: TDeliveryStatus): boolean;
+function TExternalDelivery.RecordHandOff(aHandOff: TExternalHandOff): boolean;
 var
    q: TSQLQuery;
+   key: TDeliveryKey;
+   stateText: string;
 begin
-   aStatus := Default(TDeliveryStatus);
-   q := Query('SELECT d.logger, d.state, d.error_code, d.last_sent ' +
+   Result := False;
+   if (aHandOff.SessionId = 0) and (aHandOff.SessionSeq = 0) then
+      begin
+      Exit;
+      end;
+   key.Logger := aHandOff.Logger;
+   key.Account := aHandOff.Account;
+   key.Logbook := aHandOff.Logbook;
+   key.Contact := '';
+   (* The contact key is the QSO's guid; the same lookup UpdateQSOBySessionIds
+      makes (the newest row of the pair). *)
+   q := Query('SELECT guid FROM qso WHERE session_id = :sid ' +
+      'AND session_seq = :sseq ORDER BY id DESC LIMIT 1');
+   try
+      q.ParamByName('sid').AsLargeInt := aHandOff.SessionId;
+      q.ParamByName('sseq').AsLargeInt := aHandOff.SessionSeq;
+      q.Open;
+      if not q.EOF then
+         begin
+         key.Contact := UTF8Decode(q.Fields[0].AsUTF8String);
+         end;
+   finally
+      q.Free;
+   end;
+   if (key.Contact = '') or (key.Logger = '') or (key.Account = '') or
+      (key.Logbook = '') then
+      begin
+      Exit;
+      end;
+   if aHandOff.Delivered then
+      begin
+      stateText := 'synced';
+      end
+   else
+      begin
+      stateText := 'failed';
+      end;
+   q := KeyedQuery('INSERT INTO external_delivery ' +
+      '(logger, account, logbook, contact, revision, payload, state, error_code, last_sent) ' +
+      'VALUES (:logger, :account, :logbook, :contact, 1, '''', :state, :error, ' +
+      'CAST(strftime(''%s'', ''now'') AS INTEGER)) ' +
+      'ON CONFLICT(logger, account, logbook, contact) DO UPDATE SET ' +
+      'revision = revision + 1, state = excluded.state, ' +
+      'error_code = excluded.error_code, last_sent = excluded.last_sent', key);
+   try
+      q.ParamByName('state').AsUTF8String := UTF8Encode(stateText);
+      q.ParamByName('error').AsUTF8String := UTF8Encode(aHandOff.ErrorCode);
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+   Result := True;
+end;
+
+function TExternalDelivery.StatusesOfQso(aRowId: Int64;
+                                         out aStatuses: TDeliveryStatusList): boolean;
+var
+   q: TSQLQuery;
+   n: integer;
+begin
+   aStatuses := nil;
+   q := Query('SELECT d.logger, d.account, d.logbook, d.state, d.error_code, ' +
+      'd.last_sent ' +
       'FROM external_delivery d JOIN qso ON qso.guid = d.contact ' +
       'WHERE qso.id = :id ' +
-      'ORDER BY d.last_sent DESC, d.logger, d.account, d.logbook LIMIT 1');
+      'ORDER BY d.logger, d.account, d.logbook');
    try
       q.ParamByName('id').AsLargeInt := aRowId;
       q.Open;
-      Result := not q.EOF;
-      if Result then
+      n := 0;
+      while not q.EOF do
          begin
-         aStatus.Logger := UTF8Decode(q.Fields[0].AsUTF8String);
-         aStatus.State := UTF8Decode(q.Fields[1].AsUTF8String);
-         aStatus.ErrorCode := UTF8Decode(q.Fields[2].AsUTF8String);
-         aStatus.LastSent := q.Fields[3].AsLargeInt;
+         SetLength(aStatuses, n + 1);
+         aStatuses[n].Logger := UTF8Decode(q.Fields[0].AsUTF8String);
+         aStatuses[n].Account := UTF8Decode(q.Fields[1].AsUTF8String);
+         aStatuses[n].Logbook := UTF8Decode(q.Fields[2].AsUTF8String);
+         aStatuses[n].State := UTF8Decode(q.Fields[3].AsUTF8String);
+         aStatuses[n].ErrorCode := UTF8Decode(q.Fields[4].AsUTF8String);
+         aStatuses[n].LastSent := q.Fields[5].AsLargeInt;
+         Inc(n);
+         q.Next;
          end;
+      Result := n > 0;
    finally
       q.Free;
    end;

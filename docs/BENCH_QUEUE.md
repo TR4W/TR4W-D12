@@ -6903,17 +6903,22 @@ re-uploaded. Needs a HamScore account (or the queue count with posting off).
 
 ## Added 2026-10-31 -- EDIT QSO SHOWS WHERE AN EXTERNAL LOGGER STANDS (WRL)
 
-Edit QSO has a read-only line under "Our station for this QSO" when the QSO
-has an `external_delivery` row, e.g. `External logger WRL: up to date. Last
-sent 2026-10-31 14:05 UTC`. Hidden, and the window no taller, when it has
-none. Needs a log with WRL delivery set up (or rows written by hand).
+REWORKED 2026-11-23: the one-line label is gone (it named the logger by its
+delivery key, which overflowed the window, and showed one logger of several).
+Edit QSO has an "External loggers..." button above Save when the QSO has an
+`external_delivery` row; it opens a read-only window, one row per destination:
+the logger's NAME (as given in Preferences), its status, and when it last
+answered (UTC). Hidden when the QSO has none. Needs a log with external
+delivery set up (or rows written by hand).
 
-- [ ] **Edit QSO delivery line looks right on Windows, Mint (gtk2) and macOS**:
-  one line, left-aligned with the group above it, not clipped at the bottom of
-  the window, and the window has no empty band below the group for a QSO with
-  no delivery row.
+- [ ] **The button and window look right on Windows, Mint (gtk2) and macOS**:
+  the button fits its caption above Save; the window's columns fit their text;
+  Escape and Close both close it; it opens over Edit QSO, not behind it.
+- [ ] **Three loggers, three rows.** A QSO sent to three loggers lists all
+  three, each by its definition's name. A logger removed since shows its
+  provider's name (e.g. `World Radio League`).
 - [ ] **It follows the QSO.** Open a delivered QSO, close, open a QSO with no
-  row: the line is gone. A failed delivery shows its code, e.g.
+  row: the button is gone. A failed delivery shows its code, e.g.
   `failed (BAD_CALL)`; a never-answered one says `Not sent yet`.
 - [ ] **It does not dirty the dialog.** Open and Escape: no save prompt, and
   Save stays disabled.
@@ -7967,3 +7972,15 @@ Built edit-only: the body, the envelope decode and the error words are unit-test
 - [ ] **A row that already has a logbook** asks before replacing it; say whether the wording is right and whether contacts already queued for the old logbook behave as the text says (they are not moved).
 - [ ] **Bad key and no network.** A revoked or wrong key shows the key sentence (no key text anywhere, check `tr4w.log`); unplug the network: the "may have been created, look on the WRL site" sentence, and no second automatic try.
 - [ ] **The suggested name.** For a CW-only, an SSB-only and a mixed contest, say whether CW / SSB / MIXED is right (the modes come from `UsesMode`, and a contest that states nothing reads MIXED); DIGI is the word used for a digital-only contest.
+- [ ] **DXKeeper takes the export-shaped record (2026-11-24).** The `externallog` command now carries the ADIF export's record (`ADIFContactForExternal`), not the old hand-built one. Needs a real DXKeeper: log a QSO in an ALL JA run, a state QSO party and a plain contest, with Edit and Delete. Check (1) the QSO appears with call, band, mode, date and time right (it now also carries TIME_OFF, QTH, PRECEDENCE, STATE, MY_ fields and APP_TR4W_* user-defined tags); (2) DXKeeper does not reject the command (no "command in progress"/parse error in `tr4w.log`, `DeliverCommand] sent` lines show one record with no line break inside); (3) Edit still deletes and re-logs; (4) BAND 70cm/23cm are spelled as the export spells them (it rewrites 432 and 1GH); DXKeeper must accept both.
+
+## Added 2026-11-24 -- Setup Wizard and radio editor fitted to translations (lcl-ui)
+
+Label columns are measured from the widest caption (`uLCLFormHelpers.FitCaptionColumn`), the wrapped notes hang from the row above, and the header is as tall as its description wraps. English should look as before; judge it in German (and one more long language) on gtk2 AND Windows. Not run on screen yet.
+
+- [ ] **Every wizard page, the header.** The description under the title shows whole on every page (no sentence cut at the bottom); the step counter stays right-aligned; the window grows down rather than shrinking the page.
+- [ ] **Station page.** Every caption (Rufzeichen ... Kontinent) whole; the edits line up in one column after the widest; the lookup / country-file notes and the Download button sit right of the edits, wrap inside the window, and the derived-fields note does not run off the bottom.
+- [ ] **Checklist page.** Each item's note wraps under its box and the next item follows it; say whether the last item (WSJT-X) still fits above the buttons in German (the window grows by the measured wrapped height).
+- [ ] **Radio page (and Preferences > Radios > Edit).** Keyer Output Port, CI-V-Adresse (hex), the keyer RTS/DTR lines and the keyer Stoppbits caption whole, the Stoppbits box after its caption; Serial, Network and Advanced tabs: every caption whole, CAT RTS/DTR, the Icom data mode, auto-info and the Advanced check boxes not overlapping; the Network password eye beside its box. The standalone dialog widens with its content (OK/Cancel follow the right edge). Note: the radio Stop bits (Serial tab) and the keyer Stop bits (under the tabs) are two different settings with the same caption -- an i18n/wording question, not a layout one.
+- [ ] **DX Cluster page.** Server box, then Port caption whole ("Hafen", not "Hafer") and its box; the server note wraps under the server box and the Login, Password and After-connecting rows move down below it; "Nach dem Verbinden" whole.
+- [ ] **Rotator and WSJT-X pages.** Captions whole, inputs in one column.

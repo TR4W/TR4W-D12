@@ -676,6 +676,8 @@ uses
   uContestRegistry,
   (* ContestSession -- the zone kind set-up resolved (M10 S9c). *)
   uContestSession,
+  (* AllJAReceivedPowerClass -- the ALL JA's remembered exchange. *)
+  uContestAllJA,
   (* ResetLoggedQSOs -- the final score's view of the log is emptied with
     the totals it is kept beside (M6). *)
   uScoreTotals,
@@ -2352,16 +2354,19 @@ begin
 
      if ContestSession.Exchange = RSTALLJAPrefectureAndPrecedenceExchange then
         begin
-        (* A logged QSO whose precedence was never entered holds #0 here. Joined
-           in, it put a NUL and a space in front of the prefecture of the
-           remembered exchange (issue 210): the QTH alone is the prefill. *)
-        if Precedence = #0 then
+        (* The power class letter, then the prefecture. The letter is the
+           record's Power since 2026-11-24, an older log's Precedence before
+           that -- AllJAReceivedPowerClass answers both. A QSO with neither
+           gives the QTH alone: joining an empty Precedence (#0) in put a NUL
+           and a space in front of the prefecture (issue 210). *)
+        if AllJAReceivedPowerClass(RData) = '' then
            begin
            GetInitialExchangeStringFromContestExchange := QTHString;
            end
         else
            begin
-           GetInitialExchangeStringFromContestExchange := Precedence + ' ' + QTHString;
+           GetInitialExchangeStringFromContestExchange :=
+              ShortString(AllJAReceivedPowerClass(RData) + ' ' + string(QTHString));
            end;
         Exit;
         end;

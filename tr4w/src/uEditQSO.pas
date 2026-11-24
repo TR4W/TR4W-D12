@@ -158,7 +158,7 @@ uses
   uQsoMyFacts,
   (* EditedStationFactRefusal -- the save's check of our station's values. *)
   uStationFactRecord,
-  (* TDeliveryStatus -- the read-only external-logger delivery line. *)
+  (* TDeliveryStatusList -- the read-only external-logger delivery window. *)
   uExternalDelivery,
   (* Which store a log READ comes from -- step B4/B5. *)
   uLogSource,
@@ -272,7 +272,7 @@ var
   IndexInMap: integer;
   lpNumberOfBytesRead: Cardinal;
   qsoWhen: TDateTime;
-  delivery: TDeliveryStatus;
+  deliveries: TDeliveryStatusList;
 begin
    Result := False;
 
@@ -513,11 +513,12 @@ begin
      mistaken year is corrected. *)
    EditQSOShowSentYear(ContestIdentity(EditableQSORXData.ceContest), EditableMyFacts);
 
-   (* WHERE AN EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, and shown
-     only when the QSO has a delivery row. Read on every load and the line
-     hidden when there is none, because the form is reused across QSOs. *)
-   LogStoreReadDeliveryAtIndex(IndexOfItemInLogForEdit, delivery);
-   EditQSOShowDelivery(delivery);
+   (* WHERE EACH EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, every
+     destination, behind a button shown only when the QSO has a delivery row.
+     Read on every load and the button hidden when there is none, because the
+     form is reused across QSOs. *)
+   LogStoreReadDeliveriesAtIndex(IndexOfItemInLogForEdit, deliveries);
+   EditQSOShowDeliveries(deliveries);
 
    Result := True;
 end;

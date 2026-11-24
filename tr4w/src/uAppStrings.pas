@@ -119,11 +119,16 @@ resourcestring
    SLoggerStateFailed     = 'Failed: %s';
    SLoggerStateCounts     = '%s (%d uncertain, %d failed)';
 
-   // EDIT QSO -- the read-only external-logger delivery line under "Our
-   // station for this QSO". Line: logger, state, then the sent clause.
-   // Example: "External logger WRL: up to date. Last sent 2026-10-31 14:05 UTC"
-   SEditQSODeliveryLine      = 'External logger %s: %s. %s';
-   SEditQSODeliveryLastSent  = 'Last sent %s UTC';
+   // EDIT QSO -- where each external logger stands with the QSO: a button
+   // on Edit QSO (shown only when the QSO has a delivery row) opens a
+   // read-only window with one row per destination -- the logger's name, its
+   // state (the words below) and when it last answered, in UTC.
+   SEditQSODeliveriesButton  = 'External loggers...';
+   SDeliveryWindowTitle      = 'External loggers for this QSO';
+   SDeliveryColLogger        = 'Logger';
+   SDeliveryColStatus        = 'Status';
+   SDeliveryColLastSent      = 'Last sent (UTC)';
+   SDeliveryClose            = 'Close';
    SEditQSODeliveryNeverSent = 'Not sent yet';
    SEditQSODeliveryPending   = 'pending';
    SEditQSODeliverySending   = 'sending';
@@ -131,6 +136,11 @@ resourcestring
    SEditQSODeliveryUncertain = 'uncertain';
    SEditQSODeliveryFailed    = 'failed';
    SEditQSODeliveryFailedWithCode = 'failed (%s)';
+   // A destination that gives no reply (DXKeeper, AC Log): the command was
+   // written to it, which is all that is known.
+   SEditQSODeliveryHandedOff = 'handed off (not confirmed)';
+   // A delivery that failed in a way that is tried again.
+   SEditQSODeliveryRetryingWithCode = 'retrying (%s)';
    { ---------------------------------------------- retiring the legacy ini - }
 
    // Shown ONCE, after the settings have been carried into settings\tr4w.json.
@@ -800,6 +810,13 @@ resourcestring
      of 699 and 'HA1 1TA CT' the default report. %s is the word as typed. *)
    SExchangeNotASignalReport = '%s is not a signal report';
 
+   (* THE ALL JA'S TWO REFUSALS (LOGSTUFF.ProcessRSTAllJAPrefectureAndPrecedenceExchange,
+     2026-11-24). NY4I's bench: '101 H' and '02 H' were refused with no
+     message at all. The numbers are uContestAllJA.ALLJA_PREFECTURE_PATTERN's;
+     the letters ALLJA_POWER_CLASS_PATTERN's. *)
+   SExchangeAllJAPrefecture = 'Prefecture must be 02-48 or 101-114';
+   SExchangeAllJAPower = 'Power must be H, M, L or P';
+
    (* THE RSGB RoPoCo's ENTRY WITH NO POSTCODE IN IT -- review M6, 2026-11-16
      (LOGSTUFF.ProcessRSTAndPostalCodeExchange). Every legal entry carries the
      postcode; a report or a number alone ('5', '599') logged a QSO with a
@@ -1383,6 +1400,41 @@ resourcestring
    SPrefsNavBandMapWindow = 'Window and tuning';
    (* A child of DX Cluster. *)
    SPrefsNavClusterSpots = 'Spots and console';
+   (* THE REST OF THE PREFERENCES NAVIGATION TREE (2026-11-24).  These
+     were literals in uPrefsForm.BuildNavTree, so no catalogue held them
+     and the tree was English in every language.  The search box shows a
+     match's section from the node's own text, so it follows.  SCP, WSJT-X,
+     DXLab and MMTTY stay literals: they are names, not words. *)
+   SPrefsNavStation          = 'Station';
+   SPrefsNavHardware         = 'Hardware';
+   SPrefsNavRadios           = 'Radios';
+   SPrefsNavRotators         = 'Rotators';
+   SPrefsNavDXCluster        = 'DX Cluster';
+   SPrefsNavOperating        = 'Operating';
+   SPrefsNavBandMap          = 'Band Map';
+   SPrefsNavBands            = 'Bands';
+   SPrefsNavOnlineScoring    = 'Online Scoring';
+   SPrefsNavTwoRadioMode     = 'Two Radio Mode';
+   SPrefsNavUDPBroadcast     = 'UDP Broadcast';
+   SPrefsNavNetwork          = 'Network';
+   SPrefsNavAppearance       = 'Appearance';
+   SPrefsNavColors           = 'Colors';
+   SPrefsNavLogging          = 'Logging';
+   SPrefsNavBackup           = 'Backup';
+   SPrefsNavContest          = 'Contest';
+   SPrefsNavAudio            = 'Audio';
+   SPrefsNavCWSettings       = 'CW Settings';
+   SPrefsNavPaddleAndPTT     = 'Paddle and PTT';
+   SPrefsNavWebServer        = 'Web Server';
+   SPrefsNavTCIServer        = 'TCI Server';
+   SPrefsNavExternalSoftware = 'External Software';
+   SPrefsNavExternalLogger   = 'External Logger';
+   SPrefsNavAdvanced         = 'Advanced';
+
+   (* The mult strip's one-row label when the QSO strip above is split CW:/SSB:
+     and the multipliers are not (uMainGrids): a mult counts once across
+     both modes.  'CW:' and 'SSB:' are mode tags and stay literals. *)
+   SMultStripBothModes = 'Both:';
    (* ...and the GROUP HEADINGS rows sit under on a page. *)
    SPrefsGroupBandsAndFrequencies = 'Starting band and mode, and frequency memory';
    SPrefsGroupDupeChecking = 'Dupe checking';

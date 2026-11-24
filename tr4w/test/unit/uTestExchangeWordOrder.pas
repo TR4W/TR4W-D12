@@ -1094,7 +1094,7 @@ begin
 end;
 
 (* ISSUE 210 -- ALL JA's remembered exchange for a QSO logged with no
-   precedence began with a NUL (and a space). The text is only the prefill
+   power class began with a NUL (and a space). The text is only the prefill
    a repeat call is offered; it is never written to ADIF or Cabrillo. *)
 procedure TExchangeWordOrderTests.Test_ALLJARememberedExchangeHasNoNul;
 var
@@ -1110,11 +1110,18 @@ begin
 
       rx.Precedence := #0;
       CheckEquals('01', string(GetInitialExchangeStringFromContestExchange(rx)),
-                  'no precedence: the prefecture alone, no NUL and no space');
+                  'no power class: the prefecture alone, no NUL and no space');
 
-      rx.Precedence := 'A';
-      CheckEquals('A 01', string(GetInitialExchangeStringFromContestExchange(rx)),
-                  'a precedence is still put first');
+      (* The power class is the Power field since 2026-11-24 ... *)
+      rx.Power := 'H';
+      CheckEquals('H 01', string(GetInitialExchangeStringFromContestExchange(rx)),
+                  'the power class (Power) is put first');
+
+      (* ... and a log saved before then has it in Precedence. *)
+      rx.Power := '';
+      rx.Precedence := 'M';
+      CheckEquals('M 01', string(GetInitialExchangeStringFromContestExchange(rx)),
+                  'an older log''s class (Precedence) is still put first');
    finally
       ContestSession.WriteExchange(savedKind);
    end;

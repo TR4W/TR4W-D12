@@ -1,7 +1,7 @@
 unit uExternalLoggers;
 {$I tr4w.inc}
 interface
-uses SysUtils, Generics.Collections, VC, uQsoDispatcher, uExternalLoggerService,
+uses SysUtils, Generics.Collections, VC, uQsoDispatcher, uExternalLoggerService, uQsoMyFacts,
    uExternalLoggerConfig, uLogDatabase, uLogRepository, uExternalLoggerActions;
 type
    (* THE SET OF SERVICES IS FIXED once started; THEIR SWITCHES ARE NOT (issue
@@ -41,9 +41,12 @@ type
          aActive: boolean = True; const aStamp: string = '');
       function ApplyConfiguration(const aConfig: TExternalLoggerConfig): integer; override;
       procedure PrepareMessage(const aMessage: TQsoMessage;
-                               const ce: ContestExchange); override;
+                               const ce: ContestExchange;
+                               const aFacts: TQsoMyFacts;
+                               const aRecordedSent: AnsiString); override;
       procedure SubmitMessage(const aMessage: TQsoMessage); override;
       function PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
+         const aFacts: TQsoMyFacts; const aRecordedSent: AnsiString;
          out aCommand1, aCommand2: string): TQsoExternalOp; override;
       procedure SubmitOp(const aOp: TQsoExternalOp;
          const aCommand1, aCommand2, aDescription: string); override;
@@ -295,7 +298,8 @@ begin
    FOrder := newOrder;
 end;
 procedure TExternalLoggers.PrepareMessage(const aMessage: TQsoMessage;
-   const ce: ContestExchange);
+   const ce: ContestExchange; const aFacts: TQsoMyFacts;
+   const aRecordedSent: AnsiString);
 var
    k, i, target: integer;
 begin
@@ -313,9 +317,16 @@ begin
          Continue;
          end;
       aMessage.ExtDeliveries[target].TargetId := FIds[i];
+      (* A delete or a lookup leaves no delivery record: only a QSO that is new
+         or was edited names its row. *)
+      if aMessage.Kind in [qmNew, qmEdited] then
+         begin
+         aMessage.ExtDeliveries[target].SessionId := ce.ceQSOID1;
+         aMessage.ExtDeliveries[target].SessionSeq := ce.ceQSOID2;
+         end;
       try
          aMessage.ExtDeliveries[target].Op := FServices[i].PrepareOp(aMessage.Kind, ce,
-            aMessage.ExtDeliveries[target].Command1, aMessage.ExtDeliveries[target].Command2);
+            aFacts, aRecordedSent, aMessage.ExtDeliveries[target].Command1, aMessage.ExtDeliveries[target].Command2);
       except
          on E: Exception do
             begin
@@ -342,7 +353,9 @@ begin
          if FIds[j] = aMessage.ExtDeliveries[i].TargetId then
             begin
             try
-               FServices[j].SubmitOp(aMessage.ExtDeliveries[i].Op,
+               FServices[j].SubmitOpFor(aMessage.ExtDeliveries[i].TargetId,
+                  aMessage.ExtDeliveries[i].SessionId, aMessage.ExtDeliveries[i].SessionSeq,
+                  aMessage.ExtDeliveries[i].Op,
                   aMessage.ExtDeliveries[i].Command1, aMessage.ExtDeliveries[i].Command2,
                   aMessage.Description);
             except
@@ -358,7 +371,8 @@ begin
       end;
 end;
 function TExternalLoggers.PrepareOp(const aKind: TQsoMessageKind;
-   const ce: ContestExchange; out aCommand1, aCommand2: string): TQsoExternalOp;
+   const ce: ContestExchange; const aFacts: TQsoMyFacts;
+   const aRecordedSent: AnsiString; out aCommand1, aCommand2: string): TQsoExternalOp;
 begin
    aCommand1 := '';
    aCommand2 := '';

@@ -31,6 +31,7 @@ type
       SwitchedOn, SwitchedOff: integer;
       procedure SetActive(aActive: boolean); override;
       function PrepareOp(const aKind: TQsoMessageKind; const ce: ContestExchange;
+         const aFacts: TQsoMyFacts; const aRecordedSent: AnsiString;
          out aCommand1, aCommand2: string): TQsoExternalOp; override;
       procedure SubmitOp(const aOp: TQsoExternalOp;
          const aCommand1, aCommand2, aDescription: string); override;
@@ -112,7 +113,8 @@ begin
    Result.RemoteId := 'fixture-remote';
 end;
 function TRecordingService.PrepareOp(const aKind: TQsoMessageKind;
-   const ce: ContestExchange; out aCommand1, aCommand2: string): TQsoExternalOp;
+   const ce: ContestExchange; const aFacts: TQsoMyFacts; const aRecordedSent: AnsiString;
+   out aCommand1, aCommand2: string): TQsoExternalOp;
 begin
    if PrepareFail then
       begin
@@ -305,7 +307,7 @@ begin
    try
       rec := Default(ContestExchange);
       rec.Callsign := 'W1AW';
-      manager.PrepareMessage(message, rec);
+      manager.PrepareMessage(message, rec, NotCapturedMyFacts, '');
       CheckEquals('first', message.ExtDeliveries[0].TargetId);
       CheckEquals('second', message.ExtDeliveries[1].TargetId);
       manager.SubmitMessage(message);
@@ -316,7 +318,7 @@ begin
       CheckEquals(0, inactive.Calls);
       first.Fail := False;
       first.PrepareFail := True;
-      manager.PrepareMessage(message, rec);
+      manager.PrepareMessage(message, rec, NotCapturedMyFacts, '');
       manager.SubmitMessage(message);
       CheckEquals(1, first.Calls, 'failed preparation is not submitted');
       CheckEquals(2, second.Calls, 'failed preparation does not lose the next destination');
@@ -770,7 +772,7 @@ begin
    try
       rec := Default(ContestExchange);
       rec.Callsign := ShortString(aCall);
-      aManager.PrepareMessage(msg, rec);
+      aManager.PrepareMessage(msg, rec, NotCapturedMyFacts, '');
       aManager.SubmitMessage(msg);
    finally
       msg.Free;
@@ -930,7 +932,7 @@ begin
          rec := Default(ContestExchange);
          rec.Callsign := 'W1';
          msg := TQsoMessage.Create(qmNew, 'W1');
-         manager.PrepareMessage(msg, rec);
+         manager.PrepareMessage(msg, rec, NotCapturedMyFacts, '');
          dispatcher.Post(msg);
          (* The dispatcher thread is now INSIDE a's SubmitOp, held open. *)
          CheckTrue(sa.Entered.WaitFor(3000) = wrSignaled, 'the dispatcher is mid-delivery');
@@ -939,7 +941,7 @@ begin
          CheckEquals(0, manager.ApplyConfiguration(config), 'applied on this thread meanwhile');
          rec.Callsign := 'W2';
          msg := TQsoMessage.Create(qmNew, 'W2');
-         manager.PrepareMessage(msg, rec);
+         manager.PrepareMessage(msg, rec, NotCapturedMyFacts, '');
          dispatcher.Post(msg);
          sa.Gate.SetEvent;
          CheckTrue(dispatcher.WaitIdle(3000), 'both delivered');

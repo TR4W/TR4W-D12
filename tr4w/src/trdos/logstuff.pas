@@ -655,6 +655,13 @@ function ProcessRSTAndLicenceYearExchange(Exchange: ShortString;
   The second reads the words ParseArray2 left in ParserArray. *)
 function ProcessRSTAgeAndPossibleSK(Exchange: ShortString; var RXData:
   ContestExchange): boolean;
+(* THE ALL JA: RS(T), prefecture number and power letter (H, M, L, P). In the
+  interface for uTestPossibleDomesticQTHEntry (2026-11-24): a refused entry
+  names its reason and leaves the QSO as it found it, and the prefecture
+  range agrees with uContestAllJA.ALLJA_PREFECTURE_PATTERN. *)
+function ValidAllJAPrefecture(Prefecture: Str20): boolean;
+function ProcessRSTAllJAPrefectureAndPrecedenceExchange(Exchange: ShortString;
+  var RXData: ContestExchange): boolean;
 function ProcessRSTAndQSONumberOrFrenchDepartmentExchange(Exchange: Str80; var
   RXData: ContestExchange): boolean;
 (* Serial and name (CW Open and others). In the interface for
@@ -3586,17 +3593,22 @@ begin
 
 end;
 
+(* THE ALL JA'S PREFECTURE NUMBERS: 02..48 and Hokkaido's 101..114 -- the
+  list uContestAllJA.ALLJA_PREFECTURE_PATTERN states for OUR prefecture
+  (DXLog's ALLJA.txt, NY4I 2026-11-23), so a number we may not send is not
+  one we may receive. It was 02..50 here (D7), so 49 and 50 were logged; a
+  unit test holds the two lists equal. A one-digit word ('2') is still a
+  prefecture: allja.dom aliases 2 to 02.
+
+  NO 'p' PREFIX any more (2026-11-24). The parser used to write 'p' + the
+  digits and this test stripped it, but allja.dom keys on the bare number,
+  so 'p101' was never found and every one-word entry was refused. *)
 function ValidAllJAPrefecture(Prefecture: Str20): boolean;
 
 var
   PrefectureValue, Result1: integer;
 
 begin
-  if Copy(Prefecture, 1, 1) = 'p' then
-     begin
-     Delete(Prefecture, 1, 1);
-     end;
-
   ValChecked(Prefecture, PrefectureValue, Result1);
 
   if Result1 <> 0 then
@@ -3605,50 +3617,70 @@ begin
      Exit;
      end;
 
-  ValidAllJAPrefecture := ((PrefectureValue > 1) and (PrefectureValue < 51)) or
-    ((PrefectureValue > 100) and (PrefectureValue < 115));
+  ValidAllJAPrefecture := ((PrefectureValue >= 2) and (PrefectureValue <= 48)) or
+    ((PrefectureValue >= 101) and (PrefectureValue <= 114));
 end;
 
 function ProcessRSTAllJAPrefectureAndPrecedenceExchange(Exchange: ShortString
   {Str80}; var RXData: ContestExchange): boolean;
 
-{ Updated for new rules.  Exchange now RS(T) + Prefixture # + Power (A/B/C) }
+(* RS(T) + prefecture number + power letter (H, M, L, P).
+
+  PARSED ON A COPY (2026-11-24): Work is the QSO as it came in, and RXData is
+  written only when the entry is accepted, so a refusal leaves the QSO as it
+  found it. Every refusal names its reason in ExchangeErrorMessage: Enter on
+  '101 H' used to do nothing at all, with no message (the 'p' prefix, see
+  ValidAllJAPrefecture).
+
+  THE POWER LETTER IS REQUIRED, and read from THIS entry (Power), never from
+  the record: the old answer was RXData.Precedence <> '', and Precedence is an
+  AnsiChar, so a #0 compared as a one-character string and the test was
+  always True -- '599 12' logged with no power class. The accepted letter is
+  stored in the record's Power field. *)
 
 var
-  ExchangeString: ShortString; {STR20} {WLI}
-  Entries: array[0..10] of ShortString {Str20}; {WLI}
+  ExchangeString: ShortString;
+  Entries: array[0..10] of ShortString;
   NumberEntries: integer;
+  Work: ContestExchange;
+  Power: AnsiChar;
+  PrefectureNumber, PrefectureCode: integer;
 
 begin
   Exchange := UpperCase(Exchange);
-  //su(Exchange);
+  Work := RXData;
+  Power := #0;
 
-  RXData.RSTReceived := DefaultRST;
+  Work.RSTReceived := DefaultRST;
 
   ProcessRSTAllJAPrefectureAndPrecedenceExchange := False;
 
-  { Get power out of the way }
+  (* Get power out of the way *)
 
   if StringHas(Exchange, 'H') then
      begin
-     RXData.Precedence := 'H';
+     Power := 'H';
      Delete(Exchange, pos('H', Exchange), 1);
      end
   else if StringHas(Exchange, 'M') then
      begin
-     RXData.Precedence := 'M';
+     Power := 'M';
      Delete(Exchange, pos('M', Exchange), 1);
      end
   else if StringHas(Exchange, 'L') then
      begin
-     RXData.Precedence := 'L';
+     Power := 'L';
      Delete(Exchange, pos('L', Exchange), 1);
      end
   else if StringHas(Exchange, 'P') then
      begin
-     RXData.Precedence := 'P';
+     Power := 'P';
      Delete(Exchange, pos('P', Exchange), 1);
      end;
+
+  (* The prefecture is judged from this entry alone: a QTH the record
+    already held must not pass for one typed now. *)
+  Work.QTHString := '';
 
   GetRidOfPostcedingSpaces(Exchange);
 
@@ -3671,52 +3703,50 @@ begin
           2, 3:
             if ValidAllJAPrefecture(Entries[0]) then
                begin
-               RXData.QTHString := 'p' + Entries[0];
+               Work.QTHString := Entries[0];
                end;
 
           4:
-            if Copy(Entries[0], 2, 1) = '1' then { S + 3 dig Pref? }
-              if ValidAllJAPrefecture(Copy(Entries[0], 2, 3)) then
-                 begin
-                 RXData.QTHString := 'p' + Copy(Entries[0], 2, 3);
-                 //              RXData.RSTReceived[2] := Entries[0][1];
-                 end;
+            if Copy(Entries[0], 2, 1) = '1' then (* S + 3 dig Pref? *)
+               begin
+               if ValidAllJAPrefecture(Copy(Entries[0], 2, 3)) then
+                  begin
+                  Work.QTHString := Copy(Entries[0], 2, 3);
+                  end;
+               end;
 
           5:
             if ValidAllJAPrefecture(Copy(Entries[0], 4, 2)) then
                begin
-               RXData.QTHString := 'p' + Copy(Entries[0], 4, 2);
-               //            RXData.RSTReceived := Copy(Entries[0], 1, 3);
+               Work.QTHString := Copy(Entries[0], 4, 2);
                end;
 
           6:
             if ValidAllJAPrefecture(Copy(Entries[0], 4, 3)) then
                begin
-               RXData.QTHString := 'p' + Copy(Entries[0], 4, 3);
-               //            RXData.RSTReceived := Copy(Entries[0], 1, 3);
+               Work.QTHString := Copy(Entries[0], 4, 3);
                end;
 
         end;
         end
      else
-        begin { SSB }
+        begin (* SSB *)
         case length(Entries[0]) of
 
           2:
             if ValidAllJAPrefecture(Entries[0]) then
                begin
-               RXData.QTHString := 'p' + Entries[0];
+               Work.QTHString := Entries[0];
                end;
 
           3:
             if ValidAllJAPrefecture(Entries[0]) then
                begin
-               RXData.QTHString := 'p' + Entries[0]
+               Work.QTHString := Entries[0];
                end
             else if ValidAllJAPrefecture(Copy(Entries[0], 2, 2)) then
                begin
-               RXData.QTHString := Copy(Entries[0], 2, 2);
-               //              RXData.RSTReceived[2] := Entries[0][1];
+               Work.QTHString := Copy(Entries[0], 2, 2);
                end;
 
           4:
@@ -3724,21 +3754,18 @@ begin
                begin
                if ValidAllJAPrefecture(Copy(Entries[0], 2, 3)) then
                   begin
-                  RXData.QTHString := 'p' + Copy(Entries[0], 2, 3);
-                  //              RXData.RSTReceived[2] := Entries[0][1];
+                  Work.QTHString := Copy(Entries[0], 2, 3);
                   end;
                end
             else if ValidAllJAPrefecture(Copy(Entries[0], 3, 2)) then
                begin
-               RXData.QTHString := 'p' + Copy(Entries[0], 3, 2);
-               //              RXData.RSTReceived := Copy(Entries[0], 1, 2);
+               Work.QTHString := Copy(Entries[0], 3, 2);
                end;
 
           5:
             if ValidAllJAPrefecture(Copy(Entries[0], 3, 3)) then
                begin
-               RXData.QTHString := 'p' + Copy(Entries[0], 3, 3);
-               //            RXData.RSTReceived := Copy(Entries[0], 1, 2);
+               Work.QTHString := Copy(Entries[0], 3, 3);
                end;
 
         end;
@@ -3746,77 +3773,56 @@ begin
         end;
      end;
 
-  { Two entries to look at }
+  (* Two entries to look at: the prefecture is the second word, or the only
+    one of the two that is a prefecture. (D7's commented-out RS(T) reads of
+    the other word are gone; see git history.) *)
 
   if NumberEntries = 2 then
      begin
-     if ValidAllJAPrefecture(Entries[0]) then
-       if not ValidAllJAPrefecture(Entries[1]) then
-          begin
-          {
-                RXData.QTHString := Entries[0];
-
-                case length(Entries[1]) of
-                  1: RXData.RSTReceived[2] := Entries[1][1];
-
-                  2:
-                    if ActiveMode = Phone then
-                      RXData.RSTReceived := Entries[1];
-
-                  3:
-                    if ActiveMode = CW then
-                      RXData.RSTReceived := Entries[1];
-                end;
-        }
-          end;
-
      if ValidAllJAPrefecture(Entries[1]) then
-       if not ValidAllJAPrefecture(Entries[0]) then
-          begin
-          RXData.QTHString := Entries[1];
-          {
-                case length(Entries[0]) of
-                  1: RXData.RSTReceived[2] := Entries[0][1];
-
-                  2:
-                    if ActiveMode = Phone then
-                      RXData.RSTReceived := Entries[0];
-
-                  3:
-                    if ActiveMode = CW then
-                      RXData.RSTReceived := Entries[0];
-
-                end;
-              }
-          end;
-
-     if ValidAllJAPrefecture(Entries[0]) then
-       if ValidAllJAPrefecture(Entries[1]) then { Both valid }
-          begin
-          {
-                case length(Entries[0]) of
-                  1: RXData.RSTReceived[2] := Entries[0][1];
-                  2:
-                    if ActiveMode = Phone then RXData.RSTReceived := Entries[0];
-                  3:
-                    if ActiveMode = CW then RXData.RSTReceived := Entries[0];
-                end;
-        }
-          RXData.QTHString := Entries[1];
-          end;
-
+        begin
+        Work.QTHString := Entries[1];
+        end;
      end;
 
-  if not ValidAllJAPrefecture(RXData.QTHString) then
+  if not ValidAllJAPrefecture(Work.QTHString) then
+     begin
+     logger.Info('[ProcessRSTAllJAPrefectureAndPrecedenceExchange] no prefecture in (%s)',
+                 [string(Exchange)]);
+     ExchangeErrorMessage := SExchangeAllJAPrefecture;
+     Exit;
+     end;
+  if not DomesticQTHFoundOrRefused('ProcessRSTAllJAPrefectureAndPrecedenceExchange',
+                                   Work, string(Exchange)) then
      begin
      Exit;
      end;
-  if not FoundDomesticQTH(RXData) then
+  if Power = #0 then
      begin
+     logger.Info('[ProcessRSTAllJAPrefectureAndPrecedenceExchange] no power letter in (%s)',
+                 [string(Exchange)]);
+     ExchangeErrorMessage := SExchangeAllJAPower;
      Exit;
      end;
 
-  ProcessRSTAllJAPrefectureAndPrecedenceExchange := RXData.Precedence <> '';
+  (* THE RECEIVED PREFECTURE IS ITS OWN FIELD as well as the QTH (NY4I,
+     2026-11-24: the Edit QSO form's Prefecture box stayed empty beside a
+     QTH of 12). Its number is the resolved key, 02..48 or 101..114, so it
+     fits the column's byte. *)
+  ValChecked(string(Work.DomesticQTH), PrefectureNumber, PrefectureCode);
+  if (PrefectureCode = 0) and (PrefectureNumber > 0) and (PrefectureNumber < MAXBYTE) then
+     begin
+     Work.Prefecture := PrefectureNumber;
+     end;
+
+  (* THE RECEIVED POWER CLASS IS THE POWER FIELD (rcvd_power), not the
+     Sweepstakes precedence it rode in until 2026-11-24 (NY4I: a contest
+     field gets its own field, never another's). A log saved before that
+     day still holds the letter in Precedence; uContestAllJA.
+     AllJAReceivedPowerClass reads either. *)
+  Work.Power := Power;
+  RXData := Work;
+  ProcessRSTAllJAPrefectureAndPrecedenceExchange := True;
 end;
 
 function ProcessRSTAndAgeExchange(Exchange: Str80; var RXData: ContestExchange):

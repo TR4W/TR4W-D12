@@ -62,6 +62,7 @@ type
       procedure Test_ATenTenContestExportsTheNumberAndNeverAZero;
       procedure Test_AContestWithNoRSTInItsExchangeStillExportsRST;
       procedure Test_TheFOCMarathonNumberGoesToFOCNum;
+      procedure Test_TheALLJAPowerClassGoesToItsOwnTag;
       procedure Test_OurSerialIsNotAReceivedField;
       procedure Test_ARRLDXAsksTheEntrantsList;
       procedure Test_ALoggedQSOIsJudgedByItsOwnContest;
@@ -82,9 +83,11 @@ uses
 
 const
    (* The tags the generic block used to write unconditionally. *)
-   EXCHANGE_TAGS: array[0..11] of string = (
-      'AGE', 'CHECK', 'APP_TR4W_FOC_NUM', 'NAME', 'PRECEDENCE', 'QTH', 'RST_RCVD',
-      'RST_SENT', 'RX_PWR', 'SRX', 'STX', 'TEN_TEN');
+   (* The contests' own power tags are here too, so the walks see them. *)
+   EXCHANGE_TAGS: array[0..12] of string = (
+      'AGE', 'CHECK', 'APP_TR4W_FOC_NUM', 'APP_TR4W_RCVD_POWER_CLASS', 'NAME',
+      'PRECEDENCE', 'QTH', 'RST_RCVD', 'RST_SENT', 'RX_PWR', 'SRX', 'STX',
+      'TEN_TEN');
 
 (* A QSO with EVERY field of the exchange filled, for aContest. *)
 function FullQso(aContest: TContestHandle): ContestExchange;
@@ -381,6 +384,57 @@ begin
    CheckFalse(HasTag(text, 'RX_PWR'), 'FOC Marathon: not RX_PWR: ' + text);
 end;
 
+(* THE ALL JA'S RECEIVED POWER CLASS (H M L P) IS ITS POWER FIELD, written as
+   TR4W's own APP_TR4W_RCVD_POWER_CLASS (2026-11-24). It went out as ADIF's
+   PRECEDENCE, which ADIF defines for Sweepstakes alone, and a letter is not
+   RX_PWR's watts. A QSO logged before then holds the letter in Precedence
+   with an empty Power: it is written under the same tag, still never as
+   PRECEDENCE. And the import reads the tag back into Power. *)
+procedure TADIFReceivedFieldsTests.Test_TheALLJAPowerClassGoesToItsOwnTag;
+var
+   qso: ContestExchange;
+   text: string;
+   fields: TADIFFieldList;
+   back: ContestExchange;
+   temps: TADIFRecordTemps;
+begin
+   BeginTest('Test_TheALLJAPowerClassGoesToItsOwnTag');
+   qso := FullQso(ContestHandleOf(ALLJA));
+   qso.Power := 'H';
+   text := EmitADIFRecord(qso, nil);
+   CheckTrue(Pos('<APP_TR4W_RCVD_POWER_CLASS:1>H ', text) > 0,
+             'ALL JA: APP_TR4W_RCVD_POWER_CLASS: ' + text);
+   CheckFalse(HasTag(text, 'PRECEDENCE'), 'ALL JA: no PRECEDENCE: ' + text);
+   CheckFalse(HasTag(text, 'RX_PWR'), 'ALL JA: no RX_PWR: ' + text);
+
+   (* A log saved before 2026-11-24: the letter in Precedence, Power empty. *)
+   qso.Power := '';
+   qso.Precedence := 'M';
+   text := EmitADIFRecord(qso, nil);
+   CheckTrue(Pos('<APP_TR4W_RCVD_POWER_CLASS:1>M ', text) > 0,
+             'ALL JA, older log: the letter from Precedence: ' + text);
+   (* Each occurrence loses its colon, so the length drop is the count. *)
+   CheckEquals(1, Length(text) -
+                  Length(StringReplace(text, '<APP_TR4W_RCVD_POWER_CLASS:',
+                                       '<APP_TR4W_RCVD_POWER_CLASS', [rfReplaceAll])),
+               'ALL JA, older log: the tag written once: ' + text);
+   CheckFalse(HasTag(text, 'PRECEDENCE'), 'ALL JA, older log: no PRECEDENCE: ' + text);
+
+   (* Neither slot holds a letter: no tag. *)
+   qso.Precedence := #0;
+   CheckFalse(HasTag(EmitADIFRecord(qso, nil), 'APP_TR4W_RCVD_POWER_CLASS'),
+              'ALL JA, no class: no tag');
+
+   (* THE IMPORT: the tag fills Power. *)
+   SetLength(fields, 1);
+   fields[0].Name := 'APP_TR4W_RCVD_POWER_CLASS';
+   fields[0].Value := 'L';
+   back := Default(ContestExchange);
+   ApplyADIFFieldsToExchange(fields, back, temps);
+   CheckEquals('L', string(back.Power), 'import: APP_TR4W_RCVD_POWER_CLASS into Power');
+   CheckTrue(back.Precedence = #0, 'import: nothing in Precedence');
+end;
+
 procedure TADIFReceivedFieldsTests.Test_OurSerialIsNotAReceivedField;
 var
    qso: ContestExchange;
@@ -475,6 +529,7 @@ begin
    Test_ATenTenContestExportsTheNumberAndNeverAZero;
    Test_AContestWithNoRSTInItsExchangeStillExportsRST;
    Test_TheFOCMarathonNumberGoesToFOCNum;
+   Test_TheALLJAPowerClassGoesToItsOwnTag;
    Test_OurSerialIsNotAReceivedField;
    Test_ARRLDXAsksTheEntrantsList;
    Test_ALoggedQSOIsJudgedByItsOwnContest;

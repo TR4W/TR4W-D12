@@ -90,5 +90,5 @@ begin
 end;
 initialization
    RegisterExternalLogger('ACLOG', 'ACLog', CreateACLog, DeclareACLogFields,
-      ACLOG_DEFAULT_PORT);
+      ACLOG_DEFAULT_PORT, True);
 end.

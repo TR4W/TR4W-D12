@@ -356,7 +356,7 @@ uses its own connection. DISTRIBUTION class throughout.
 | `idx_qso_unsent` | `qso(id) WHERE sent_to_server = 0 OR server_dirty = 1` | the multi-op owed rows |
 | `idx_qso_unsent_udp` | `qso(id) WHERE sent_udp = 0 OR udp_dirty = 1` | reserved with its columns |
 | `idx_external_delivery_pending` | `external_delivery(logger, account, next_attempt) WHERE state = 'pending'` | |
-| `idx_external_delivery_contact` | `external_delivery(contact, logger)` | Edit QSO's delivery line |
+| `idx_external_delivery_contact` | `external_delivery(contact, logger)` | Edit QSO's delivery window |
 
 There is NO index on `(session_id, session_seq)`. This was measured and is
 deliberate; see `multi-op-network.md`.

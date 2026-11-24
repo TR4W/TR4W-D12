@@ -96,6 +96,11 @@ type
       TargetId: string;
       Op: TQsoExternalOp;
       Command1, Command2: string;
+      (* The QSO's network key (ceQSOID1, ceQSOID2 = session_id, session_seq),
+         copied by the builder for a new or edited QSO only, so a destination
+         that gives no reply can record its hand-off against the row. (0, 0)
+         = none: a lookup, a delete, or a QSO that never had a key. *)
+      SessionId, SessionSeq: Int64;
    end;
    TQsoExternalDeliveries = array of TQsoExternalDelivery;
 

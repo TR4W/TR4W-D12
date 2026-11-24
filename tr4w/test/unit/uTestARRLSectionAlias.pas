@@ -99,6 +99,7 @@ type
       procedure Test_FieldDayStateKeepsAnUnresolvedRow;
       procedure Test_DXKeeperSendsTheResolvedSection;
       procedure Test_DXKeeperNonSectionContestSendsNoSection;
+      procedure Test_DXKeeperPayloadIsTheExportRecord;
       procedure Test_ARRL160ImportedAliasIsTheCanonicalSection;
       procedure Test_ARRL160RealN1MMAndDXLogRecords;
       procedure Test_QSOPartyImportedAliasIsTheFileQTH;
@@ -928,18 +929,18 @@ begin
       qso.Callsign := 'W1AW';
       qso.QTHString := 'EM';
       qso.DomesticQTH := 'EMA';
-      probe.PrepareOp(qmNew, qso, command1, command2);
+      probe.PrepareOp(qmNew, qso, NotCapturedMyFacts, '', command1, command2);
       CheckTrue(Pos('<ARRL_SECT:3>EMA ', command1) > 0, 'typed EM: the message carries EMA');
       CheckEquals(0, Pos('<ARRL_SECT:2>', command1), 'typed EM: and never EM');
 
       qso.QTHString := 'WF';
       qso.DomesticQTH := 'WcF';
-      probe.PrepareOp(qmNew, qso, command1, command2);
+      probe.PrepareOp(qmNew, qso, NotCapturedMyFacts, '', command1, command2);
       CheckTrue(Pos('<ARRL_SECT:3>WCF ', command1) > 0, 'typed WF: the message carries WCF (it sent none)');
 
       qso.QTHString := 'DX';
       qso.DomesticQTH := '';
-      probe.PrepareOp(qmNew, qso, command1, command2);
+      probe.PrepareOp(qmNew, qso, NotCapturedMyFacts, '', command1, command2);
       CheckEquals(0, Pos('<ARRL_SECT:', command1), 'DX: no ARRL_SECT');
    finally
       probe.Free;
@@ -976,6 +977,100 @@ begin
    qso.QTHString := 'MAR';
    qso.DomesticQTH := 'Mar';
    CheckEquals('', ExternalLoggerARRLSection(qso), 'Wisconsin county MAR: not Maritime');
+end;
+
+(* THE DXKEEPER HAND-OFF CARRIES THE ADIF EXPORT'S RECORD, NOT ITS OWN (NY4I,
+   2026-11-24). Same QSO, same facts: the text inside <ExternalLogADIF:n> is
+   uADIF.EmitADIFContact with the export's tail emitter -- the exact call the
+   export makes -- less the record's closing CR LF, and the framing counts
+   exactly what is sent. Run for a section contest, a plain one (NAQP) and ALL
+   JA, with the session's station and with a captured one. Equality only: which
+   tags a contest writes is the contest's, pinned in its own tests. *)
+procedure TARRLSectionAliasTests.Test_DXKeeperPayloadIsTheExportRecord;
+const
+   PAYLOAD_CONTESTS: array[0 .. 2] of ContestType = (ARRLSSCW, NAQSOCW, ALLJA);
+   COMMAND_HEAD = '<command:11>externallog<parameters:';
+   BODY_HEAD = '<ExternalLogADIF:';
+var
+   probe: TRecordingLogger;
+   qso: ContestExchange;
+   facts: TQsoMyFacts;
+   command1, command2, body, expected, lengthText, what: string;
+   savedContest: TContestHandle;
+   c, k, bodyHeadAt, bodyStart, bodyLength, declared: integer;
+begin
+   BeginTest('Test_DXKeeperPayloadIsTheExportRecord');
+   savedContest := Contest;
+   probe := TRecordingLogger.Create(lt_DxKeeper);
+   try
+      for c := Low(PAYLOAD_CONTESTS) to High(PAYLOAD_CONTESTS) do
+         begin
+         Contest := ContestHandleOf(PAYLOAD_CONTESTS[c]);
+         qso := Default(ContestExchange);
+         qso.ceContest := ContestHandleOf(PAYLOAD_CONTESTS[c]);
+         qso.Callsign := 'JA8GHG';
+         qso.Band := Band20;
+         qso.Mode := CW;
+         qso.Frequency := 14025000;
+         qso.tSysTime.qtYear := 26;
+         qso.tSysTime.qtMonth := 11;
+         qso.tSysTime.qtDay := 24;
+         qso.tSysTime.qtHour := 1;
+         qso.tSysTime.qtMinute := 2;
+         qso.tSysTime.qtSecond := 3;
+         qso.RSTSent := 599;
+         qso.RSTReceived := 599;
+         qso.QTHString := 'EM';
+         qso.DomesticQTH := 'EMA';
+         qso.ExchString := '599 EM';
+         for k := 0 to 1 do
+            begin
+            facts := NotCapturedMyFacts;
+            if k = 1 then
+               begin
+               facts.Source := mfsLogged;
+               facts.Call := 'W2XYZ';
+               facts.Grid := 'FN30';
+               facts.State := 'NY';
+               end;
+            what := string(ContestTypeSA[PAYLOAD_CONTESTS[c]]) + ' facts ' + IntToStr(k);
+
+            command2 := 'untouched';
+            CheckTrue(probe.PrepareOp(qmNew, qso, facts, '', command1, command2) = xoSingle,
+                      what + ': a new QSO is one command');
+            CheckEquals('', command2, what + ': and has no second');
+
+            expected := TrimRight(EmitADIFContact(qso, facts, '',
+                                  @EmitContestSpecificTailForExport, ActiveContest(Contest)));
+
+            (* The envelope: the command, the option flags after the record. *)
+            CheckEquals(1, Pos(COMMAND_HEAD, command1), what + ': the externallog command');
+            bodyHeadAt := Pos(BODY_HEAD, command1);
+            CheckTrue(bodyHeadAt > 0, what + ': the ExternalLogADIF field');
+            lengthText := Copy(command1, Length(COMMAND_HEAD) + 1,
+                               bodyHeadAt - Length(COMMAND_HEAD) - 2);
+            declared := StrToIntDef(lengthText, -1);
+            CheckEquals(Length(command1) - (bodyHeadAt - 1), declared,
+                        what + ': <parameters:n> counts everything after it');
+            lengthText := Copy(command1, bodyHeadAt + Length(BODY_HEAD),
+                               Pos('>', Copy(command1, bodyHeadAt, MaxInt)) - Length(BODY_HEAD) - 1);
+            bodyLength := StrToIntDef(lengthText, -1);
+            bodyStart := bodyHeadAt + Length(BODY_HEAD) + Length(lengthText) + 1;
+            body := Copy(command1, bodyStart, bodyLength);
+            CheckEquals(bodyLength, Length(body), what + ': <ExternalLogADIF:n> is the record''s length');
+
+            CheckEquals(expected, body, what + ': the record IS the export''s record');
+            CheckEquals('<EOR>', Copy(body, Length(body) - 4, 5), what + ': ends at <EOR>');
+            CheckEquals(0, Pos(#13, command1) + Pos(#10, command1),
+                        what + ': no line break anywhere in the command');
+            CheckEquals(bodyStart + bodyLength, Pos('<DeduceMissing:', command1),
+                        what + ': the option flags follow the record');
+            end;
+         end;
+   finally
+      Contest := savedContest;
+      probe.Free;
+   end;
 end;
 
 (* ARRL 160'S IMPORT -- issue 275 item 1. Its own ApplyADIFImport copied the
@@ -1383,6 +1478,7 @@ begin
    Test_FieldDayStateKeepsAnUnresolvedRow;
    Test_DXKeeperSendsTheResolvedSection;
    Test_DXKeeperNonSectionContestSendsNoSection;
+   Test_DXKeeperPayloadIsTheExportRecord;
    Test_ARRL160ImportedAliasIsTheCanonicalSection;
    Test_ARRL160RealN1MMAndDXLogRecords;
    Test_QSOPartyImportedAliasIsTheFileQTH;

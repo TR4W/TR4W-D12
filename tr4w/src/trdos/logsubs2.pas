@@ -3510,7 +3510,7 @@ begin
 
       if aExternal and Assigned(externalLogger) then
          begin
-         externalLogger.PrepareMessage(msg, RXData);
+         externalLogger.PrepareMessage(msg, RXData, aFacts, aRecordedSent);
          end;
 
       if HamScoreUploaderRunning then
@@ -3542,10 +3542,13 @@ var
    facts: TQsoMyFacts;
 begin
    (* BEING LOGGED NOW, so the session IS the record (issue 95). The capture
-     reads the CTY tables, so it is taken only when HamScore will use it. *)
-   if HamScoreUploaderRunning then
+     reads the CTY tables, so it is taken only when HamScore or an external
+     logger will use it -- and it is the capture the store will RECORD
+     (CaptureMyFactsNow, rover's own place included), so a DXKeeper hand-off
+     reads the same station facts the ADIF export will write for this row. *)
+   if HamScoreUploaderRunning or (aExternal and Assigned(externalLogger)) then
       begin
-      facts := LogStoreCurrentMyFacts;
+      facts := CaptureMyFactsNow(RXData);
       end
    else
       begin

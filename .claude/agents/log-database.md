@@ -795,14 +795,23 @@ connection.
 - **Written only by `Complete`, on doConfirmed and doFailed** (the server
   answered), with SQLite's `strftime('%s','now')` -- UTC by construction, so no
   caller passes a time. Inside the guarded UPDATE, so a stale completion
-  cannot move it. `Enqueue` never touches it.
-- **Edit QSO reads it through `LogStoreReadDeliveryAtIndex` ->
-  `ExternalDeliveryStatusOfQso`, on a SHORT-LIVED `OpenReadOnly` connection,
+  cannot move it. `Enqueue` never touches it. **ALSO by `RecordHandOff`
+  (2026-11-24)**: DXKeeper, which has no outbox and no reply, upserts its row
+  from a main-thread relay (`LogStoreRecordExternalHandOff`) as `synced`
+  ("handed off (not confirmed)" in the window, by the provider's `HandOffOnly`
+  registration) or `failed`; NEVER `pending`/`inflight`, which Preferences'
+  counts would show as work waiting for ever. The CHECK on `state` is why no
+  new state word was added (SQLite cannot alter it without a table rebuild).
+- **Edit QSO reads it through `LogStoreReadDeliveriesAtIndex` ->
+  `ExternalDeliveryStatusesOfQso`, on a SHORT-LIVED `OpenReadOnly` connection,
   NOT the store's.** The store's connection can be holding a read transaction
   from an earlier read (sqldb keeps one open until a commit), and that snapshot
   would not show what the worker committed since. Same reason as
-  `ExternalDeliveryCounts`. Several destinations for one contact: the one with
-  the newest `last_sent` is shown.
+  `ExternalDeliveryCounts`. EVERY destination row of the contact comes back
+  (`TDeliveryStatusList`, ordered logger, account, logbook; 2026-11-23 -- the
+  old read was LIMIT 1 and hid all but one logger), and Edit QSO's "External
+  loggers..." window (`uDeliveryStatusForm`) shows one grid row each, the
+  logger named by its definition's Name (`DeliveryLoggerName`).
 - **`DowngradeTestLog` to below 5 drops `external_delivery`** (it did not, so a
   "schema-4" fixture still had the v5 table).
 

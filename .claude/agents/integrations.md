@@ -264,7 +264,9 @@ server (enable "TCP API Enabled", default port 1100). One connection per contact
 bite: **a CR LF anywhere in the line ends the command**, and `EmitADIFContact` ends its
 record with one, so `ACLogAddFrame` drops the trailing pair and turns inner ones into
 spaces; **no reply is documented, so a written command is a HAND-OFF** (`doConfirmed`,
-marker `aclog:added`), never an acknowledgement; connect failure is `doRetry` 60 s not paused
+marker `aclog:added`), never an acknowledgement (Edit QSO's delivery window words it "handed off (not
+confirmed)": `RegisterExternalLogger`'s `aHandOffOnly`, set by ACLog and DXKeeper, read by
+`uDeliveryStatusForm.DeliveryStateText`; a pending row with a code reads "retrying (code)"); connect failure is `doRetry` 60 s not paused
 (AC Log closed), a failure after the connection was up is `doUncertain` paused; edit and
 delete of a delivered contact fail visibly (`ACLOG_EDIT_UNSUPPORTED` /
 `ACLOG_DELETE_UNSUPPORTED`). `ADDADIFRECORD` bypasses scoring and the dupe sheet, so this
@@ -703,6 +705,20 @@ field is an `ILogAppender` (Log4D appenders are ref-counted; a class field plus 
 freed an object the root still held) and the destructor `RemoveAppender`s it. The logger
 itself is hierarchy-owned: never freed here.
 
+## DXKeeper leaves a delivery record too (2026-11-24, NY4I: a TCP destination appears even with no status)
+
+DXKeeper is an in-memory sender with no outbox, yet Edit QSO's "External loggers..." window lists it.
+Shape (no schema change, no DB on the sender thread): `TExternalLoggers.PrepareMessage` copies
+`(ceQSOID1, ceQSOID2)` onto `TQsoExternalDelivery` for a NEW or EDITED QSO only; `SubmitOpFor` (new
+virtual, default = `SubmitOp`) carries the key and the delivery id into the op; the sender thread's
+`TExternalLoggerBase.OpSettled` hook (overridden by `TExternalLogger`) hands a `TExternalHandOff` value to
+the main thread by `Application.QueueAsyncCall`; the relay calls `uLogStore.LogStoreRecordExternalHandOff`,
+which upserts ONE `external_delivery` row (state `synced` = written, or `failed` + `DXKEEPER_*` code) in its
+own short transaction. The key is the session pair, NOT the guid, because the guid does not exist when the
+message is built; `(0, 0)` and a key naming no row write nothing. **Never `pending`/`inflight`** for a
+hand-off (a pending row feeds `ExternalDeliveryCounts` and Preferences would show "Sending" for ever). A
+dropped op (shutdown, logger switched off) writes nothing. Pinned in `uTestWRLDelivery.TestHandOffRecords`.
+
 ## Prefer a reported error over a silent fallback
 
 Several defects on this branch were silent downgrades. A companion program that
@@ -714,4 +730,4 @@ fails to start, or an incomplete logger type selected by an operator, should
 `contest-scoring` (a decode becomes a QSO) · `log-database` (hand-off writes) ·
 `multi-op-network` (the other UDP/TCP consumers) · `lcl-ui` (`uMMTTYForm`).
 
-DXKeeper ARRL_SECT is `uExternalLogger.ExternalLoggerARRLSection` (#266): `ADIFSectionOf` where `ContestQTHIsAnARRLSection`, the legacy `LooksLikeASection(QTHString)` elsewhere. Never `ADIFSectionOf` contest-blind: another contest's domestic key (a Wisconsin county `Mar`) would be sent as a section.
+**THE DXKEEPER `externallog` RECORD IS THE ADIF EXPORT'S (2026-11-24, NY4I: "the contest class hook should be building the adif record ... The same contest class adif generator should be what is used to export the adif").** `TExternalLogger.BuildDXKeeperLogMessage` no longer builds a field: it calls `PostUnit.ADIFContactForExternal(ce, aFacts, aRecordedSent)` (the call Club Log, WRL, Cloudlog, QRZ and ACLog already use), trims the record's closing CR LF, and adds only the envelope (`<command:11>externallog<parameters:n>`, `<ExternalLogADIF:n>`, the option flags). **Do not add a field there**: a missing tag belongs in the contest class's emitter. `PrepareMessage`/`PrepareOp` carry `aFacts` and `aRecordedSent` (from `BuildQsoEvent`; `BuildLoggedQso` passes `uLogStore.CaptureMyFactsNow` when an external logger is wired, `''` for the sent exchange). The deleteqso command and the xoReplace sequence are unchanged. Not bench-checked: DXKeeper accepting the export's record (APP_TR4W_* tags, longer records); see BENCH_QUEUE. `ExternalLoggerARRLSection` (#266: `ADIFSectionOf` where `ContestQTHIsAnARRLSection`) now serves the N1MM UDP `<section>` only; never `ADIFSectionOf` contest-blind (a Wisconsin county `Mar` would be sent as a section).

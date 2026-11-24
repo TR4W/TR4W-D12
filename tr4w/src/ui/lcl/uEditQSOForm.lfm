@@ -1,12 +1,12 @@
 object frmEditQSO: TfrmEditQSO
   Left = 0
-  Height = 603
+  Height = 582
   Top = 0
   Width = 584
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Edit QSO'
-  ClientHeight = 603
+  ClientHeight = 582
   ClientWidth = 584
   Position = poMainFormCenter
   LCLVersion = '4.8.0.0'
@@ -613,6 +613,16 @@ object frmEditQSO: TfrmEditQSO
     TabOrder = 25
     OnChange = FieldChanged
   end
+  object btnDeliveries: TButton
+    Left = 483
+    Height = 23
+    Top = 330
+    Width = 90
+    Caption = '(assigned at run time)'
+    TabOrder = 38
+    Visible = False
+    OnClick = btnDeliveriesClick
+  end
   object btnSave: TButton
     Left = 483
     Height = 23
@@ -621,7 +631,7 @@ object frmEditQSO: TfrmEditQSO
     Caption = '&Save'
     Default = True
     Enabled = False
-    TabOrder = 38
+    TabOrder = 39
     OnClick = btnSaveClick
   end
   object lblOperator: TLabel
@@ -648,7 +658,7 @@ object frmEditQSO: TfrmEditQSO
     Width = 90
     Cancel = True
     Caption = 'Cancel'
-    TabOrder = 39
+    TabOrder = 40
     OnClick = btnCancelClick
   end
   object grpMyStation: TGroupBox
@@ -974,16 +984,5 @@ object frmEditQSO: TfrmEditQSO
       TabOrder = 16
       OnChange = FieldChanged
     end
-  end
-  object lblDelivery: TLabel
-    Left = 8
-    Height = 17
-    Top = 578
-    Width = 568
-    AutoSize = False
-    Caption = 'External logger delivery'
-    Layout = tlCenter
-    ShowAccelChar = False
-    Visible = False
   end
 end

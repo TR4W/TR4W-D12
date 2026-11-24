@@ -60,7 +60,7 @@ uses
      schema 9): LogStoreCurrentMyFacts captures by it, and
      TStationFactCorrections is the station-value correction's argument. *)
    uStationFactRecord,
-   uExternalDelivery, (* TDeliveryStatus -- LogStoreReadDeliveryAtIndex *)
+   uExternalDelivery, (* TDeliveryStatusList -- LogStoreReadDeliveriesAtIndex *)
    uExternalLoggerActions, (* TResendMode, TResendTally -- LogStoreResendToExternalLogger *)
    uLogRestore;      (* TLogRestoreResult -- LogStoreRestoreLog *)
 
@@ -129,6 +129,11 @@ function LogStoreAppendLiveQSOs(const aLegs: array of ContestExchange;
   record that names none (NY4I, 2026-10-18). *)
 function LogStoreCurrentMyFacts: TQsoMyFacts;
 
+(* THE FACTS THE STORE WILL RECORD ON aQso when it is logged now: the session's,
+  plus a rover's own place. The DXKeeper hand-off of a QSO being logged reads
+  them, so its ADIF is the record the export will write later. *)
+function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
+
 (* Rewrites the log's newest row -- the three sites that used to seek back one
   record in the binary log (DeleteLastContact, uNet.UpdateRec,
   uQTCS.SetSendedQSOs).  Writes even when this call migrated the log: the .TRW
@@ -163,14 +168,23 @@ function LogStoreUpdateQSOAtIndex(aRecordIndex: Int64; const aQso: ContestExchan
 function LogStoreReadMyFactsAtIndex(aRecordIndex: Int64;
                                     out aFacts: TQsoMyFacts): boolean;
 
-(* THE EXTERNAL-LOGGER DELIVERY of the QSO at a record position -- the
-  read-only line Edit QSO shows (uExternalDelivery.ExternalDeliveryStatusOfQso,
-  read through its own read-only connection so it sees what the delivery
-  worker has committed). False, with Logger = '', when the QSO has no
-  delivery row, the log is not usable, or the read fails; a failure is
-  logged and the store stays enabled. Never raises. *)
-function LogStoreReadDeliveryAtIndex(aRecordIndex: Int64;
-                                     out aStatus: TDeliveryStatus): boolean;
+(* EVERY EXTERNAL-LOGGER DELIVERY of the QSO at a record position -- what
+  Edit QSO's delivery window lists, one element per destination
+  (uExternalDelivery.ExternalDeliveryStatusesOfQso, read through its own
+  read-only connection so it sees what the delivery workers have committed).
+  False, with an empty list, when the QSO has no delivery row, the log is not
+  usable, or the read fails; a failure is logged and the store stays
+  enabled. Never raises. *)
+function LogStoreReadDeliveriesAtIndex(aRecordIndex: Int64;
+                                       out aStatuses: TDeliveryStatusList): boolean;
+
+(* THE DELIVERY RECORD OF A DESTINATION THAT GIVES NO REPLY (DXKeeper): one
+  external_delivery row, written on the MAIN thread in its own short
+  transaction and committed. False when nothing was written -- the log is not
+  usable or read-only, no QSO carries the key, or the write failed. A failure
+  is logged and rolled back; it never disables the store, because a status row
+  is not the operator's data. Never raises. *)
+function LogStoreRecordExternalHandOff(aHandOff: TExternalHandOff): boolean;
 
 type
    (* Re-exported so a caller can collect rows for LogStoreUpdateQSOsByRowId
@@ -1416,6 +1430,44 @@ begin
          reads began. *)
       RollBackAfterBusy;
       end;
+end;
+
+function LogStoreRecordExternalHandOff(aHandOff: TExternalHandOff): boolean;
+var
+   delivery: TExternalDelivery;
+begin
+   Result := False;
+   if not LogStoreReadyToWrite then
+      begin
+      Exit;
+      end;
+   try
+      delivery := TExternalDelivery.Create(GDatabase);
+      try
+         Result := delivery.RecordHandOff(aHandOff);
+      finally
+         delivery.Free;
+      end;
+      if Result then
+         begin
+         GRepository.Commit;
+         end
+      else
+         begin
+         RollBackAfterBusy;
+         end;
+   except
+      on E: Exception do
+         begin
+         Result := False;
+         RollBackAfterBusy;
+         if logger <> nil then
+            begin
+            logger.Warn('[LogStore] could not record the hand-off to %s: %s -- %s',
+                        [aHandOff.Logger, E.ClassName, E.Message]);
+            end;
+         end;
+   end;
 end;
 
 (* THE LOCKED-LOG QUESTION, natively. The answer is read by MODAL RESULT,
@@ -4087,14 +4139,14 @@ begin
    end;
 end;
 
-function LogStoreReadDeliveryAtIndex(aRecordIndex: Int64;
-                                     out aStatus: TDeliveryStatus): boolean;
+function LogStoreReadDeliveriesAtIndex(aRecordIndex: Int64;
+                                       out aStatuses: TDeliveryStatusList): boolean;
 var
    rowId: Int64;
    rebuilt: boolean;
 begin
    Result := False;
-   aStatus := Default(TDeliveryStatus);
+   aStatuses := nil;
    if GDisabled then
       begin
       Exit;
@@ -4110,12 +4162,12 @@ begin
          begin
          Exit;
          end;
-      Result := ExternalDeliveryStatusOfQso(GDatabase.FileName, rowId, aStatus);
+      Result := ExternalDeliveryStatusesOfQso(GDatabase.FileName, rowId, aStatuses);
    except
       on E: Exception do
          begin
-         (* A READ, so the store stays enabled: the editor hides the line. *)
-         aStatus := Default(TDeliveryStatus);
+         (* A READ, so the store stays enabled: the editor hides its button. *)
+         aStatuses := nil;
          Result := False;
          if logger <> nil then
             begin

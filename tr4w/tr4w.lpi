@@ -42,7 +42,7 @@
         <PackageName Value="LCL"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="415">
+    <Units Count="416">
       <Unit0>
         <Filename Value="tr4w.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -1822,6 +1822,13 @@
         <Filename Value="src/uBandMapOrder.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit414>
+      <Unit415>
+        <Filename Value="src/ui/lcl/uDeliveryStatusForm.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmDeliveryStatus"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit415>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
