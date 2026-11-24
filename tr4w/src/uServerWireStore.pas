@@ -284,6 +284,7 @@ function WireStoreLibraryProblem: string;
 implementation
 
 uses
+   uAppPaths,
    dynlibs,
    db,
    sqldb;
@@ -404,8 +405,10 @@ end;
 
 function WireStoreLibraryProblem: string;
 begin
+   (* The shipped library's folder, by kind: uAppPaths.PrivateLibraryDir is
+     beside the binary on Windows and Linux. *)
    Result := WireStoreLibraryProblemFor(SQLITE_LIBRARY_NAME,
-                                        ExtractFilePath(ParamStr(0)));
+                                        PrivateLibraryDir);
 end;
 
 (* --------------------------------------------------------------------------- *)

@@ -25,6 +25,7 @@ interface
 
 uses
   SysUtils,
+  uFileText,     // RenameFileTo -- the old flat log is set aside through the write owner
   (* WINDOWS AND WINSOCK2 ARE GONE FROM THIS UNIT (2026-09-08).
 
     The note that stood here recorded, on 2026-09-06, that there was not one
@@ -1079,7 +1080,7 @@ begin
                  'and could not be set aside: ' + stamped + ' already exists. It is left as it is.');
      Exit;
      end;
-  if RenameFile(trw, stamped) then
+  if RenameFileTo(trw, stamped) then
      begin
      logger.Warn('[Log] ' + trw + ' (the old flat server log) is not used by this server ' +
                  '(protocol 5 keeps its log in a SQLite database). It was renamed to ' + stamped +

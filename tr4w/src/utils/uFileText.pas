@@ -71,6 +71,11 @@ function FileTextExists(const aFileName: string): Boolean;
 function ReadAllBytesFile(const aFileName: string): TBytes;
 function DeleteFileIfExists(const aFileName: string): Boolean;
 
+(* Rename (set aside) a file; True on success. A rename is a write to the
+  folder, so it lives here with the other writes (Count-LiveWrites). It does not
+  replace an existing target on Windows: the caller checks first. *)
+function RenameFileTo(const aOldName, aNewName: string): Boolean;
+
 // Always ends with a path delimiter, so CombinePath is a plain concatenation.
 function TempDirectory: string;
 function CombinePath(const aDir, aName: string): string;
@@ -254,6 +259,11 @@ begin
       begin
       Result := SysUtils.DeleteFile(aFileName);
       end;
+end;
+
+function RenameFileTo(const aOldName, aNewName: string): Boolean;
+begin
+   Result := SysUtils.RenameFile(aOldName, aNewName);
 end;
 
 function TempDirectory: string;
