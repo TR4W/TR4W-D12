@@ -1196,7 +1196,10 @@ package_tailcat() {
    else
       _name=libtailcat.so
    fi
-   _built="$OUTROOT/tailcat/$ARCH"
+   # TAILCAT_WORK (set by CI to a directory outside the workspace, which
+   # actions/checkout cleans) moves build-tailcat.sh's output; read the same
+   # variable here or this check looks in the wrong place.
+   _built="${TAILCAT_WORK:-$OUTROOT/tailcat}/$ARCH"
    if [ ! -f "$_built/$_name" ] || [ ! -f "$_built/libtailcat-NOTICES.txt" ]; then
       say "  FAILED: build-tailcat exited 0 but $_built lacks $_name or its notices."
       return 1

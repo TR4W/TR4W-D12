@@ -233,6 +233,13 @@ jobs:
           }
           $env:TAILCAT_CC = Join-Path $mingw 'gcc.exe'
           $env:PATH = "$mingw;$env:PATH"
+          # The cache (Go toolchain, upstream checkout, module and build caches,
+          # the built DLL and its stamp) lives OUTSIDE the workspace:
+          # actions/checkout cleans ignored files, so build-out\tailcat was
+          # wiped every run and the DLL rebuilt in 152 s. RUNNER_TOOL_CACHE is
+          # <runner>\_work\_tool, which checkout never touches. The script still
+          # re-copies the cached DLL into tr4w\redist, which checkout does wipe.
+          $env:TAILCAT_WORK = Join-Path $env:RUNNER_TOOL_CACHE 'tr4w-tailcat'
           .\build\Build-Tailcat.ps1
           if ($LASTEXITCODE -ne 0) { throw "Build-Tailcat.ps1 failed with exit code $LASTEXITCODE" }
           $dll = Join-Path $env:GITHUB_WORKSPACE 'tr4w\redist\x86_64-win64\libtailcat.dll'
@@ -415,6 +422,9 @@ jobs:
           # and a stale row read as this run's verdict would make the unit-test
           # gate below worse than no gate.
           rm -f build-out/stage-results.tsv "$RUNNER_TEMP/linux-stage-results.tsv"
+          # libtailcat's cache (Go, checkout, caches, the built library) lives
+          # outside the workspace, which actions/checkout cleans every run.
+          export TAILCAT_WORK="$RUNNER_TOOL_CACHE/tr4w-tailcat"
           sh tr4w/build/build-unix.sh || true
           # KEPT OUT OF build-out: the later `build-unix.sh --symbols` step is
           # its own invocation, and every invocation deletes and rewrites
@@ -756,6 +766,8 @@ jobs:
           # make this gate worse than the grep.
           rm -f "$results"
 
+          # libtailcat's cache lives outside the workspace (see build-linux).
+          export TAILCAT_WORK="$RUNNER_TOOL_CACHE/tr4w-tailcat"
           sh tr4w/build/build-unix.sh 2>&1 | tee "$RUNNER_TEMP/build-unix.log" || true
 
           if [ ! -f "$results" ]; then

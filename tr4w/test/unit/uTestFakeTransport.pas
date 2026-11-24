@@ -120,6 +120,8 @@ end;
 
 procedure TFakeHttpTransport.Execute(aRequest: THttpWireRequest; aSink: TStream;
                                      aResult: THttpWireResult);
+var
+   body: RawByteString;
 begin
    Inc(Calls);
    Urls.Add(aRequest.URL);
@@ -156,26 +158,23 @@ begin
    aResult.ContentType  := ScriptContentType;
    aResult.FinalURL     := ScriptFinalURL;
    aResult.Location     := ScriptLocation;
+   body                 := ScriptBody;
    if HasFollowUp and (Calls >= 2) then
       begin
       aResult.Failure    := FollowUpFailure;
       aResult.StatusCode := FollowUpStatus;
       aResult.Location   := FollowUpLocation;
-      if (FollowUpFailure = hfNone) and (FollowUpBody <> '') then
-         begin
-         aResult.Body := FollowUpBody;
-         end;
-      Exit;
+      body               := FollowUpBody;
       end;
-   if (ScriptFailure = hfNone) and (ScriptBody <> '') then
+   if (aResult.Failure = hfNone) and (body <> '') then
       begin
       if aSink <> nil then
          begin
-         aSink.WriteBuffer(ScriptBody[1], Length(ScriptBody));
+         aSink.WriteBuffer(body[1], Length(body));
          end
       else
          begin
-         aResult.Body := ScriptBody;
+         aResult.Body := body;
          end;
       end;
 end;

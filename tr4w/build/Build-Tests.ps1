@@ -326,6 +326,17 @@ if ($Run)
    $summary = $testOut | Select-String 'PASSED:' | Select-Object -Last 1
    if ($summary) { Write-Host "  $($summary.Line.Trim())" }
 
+   # The runner prints a ranked per-suite timing table (lines starting TIMING,
+   # before the PASSED line). Keep it beside the other build-out logs so the
+   # normal and the checked run can be compared. A report only, never a gate.
+   $timingName = if ($Checked) { 'tests-checked-timing.txt' } else { 'tests-timing.txt' }
+   $timingLines = @($testOut | ForEach-Object { "$_" } | Where-Object { $_ -match '^TIMING' })
+   if ($timingLines.Count -gt 0)
+      {
+      $timingLines | Out-File -FilePath (Join-Path $REPO "build-out\$timingName") -Encoding ascii
+      Write-Host "  suite timing  : build-out\$timingName"
+      }
+
    $failed = $coverageFailed
 
    # 203 IS heaptrc's "the heap had an error" exit, which it sets only when the

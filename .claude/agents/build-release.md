@@ -437,6 +437,25 @@ and every `INCLUDE FILE` line, to the file's EXACT case; 10 class names and 95
 INCLUDE lines are upper case against lower-case files, pinned and ratcheted
 (`$LegacyNames`, `$INCLUDE_CEILING`). Windows cannot see this class of bug.
 
+## libtailcat's cache lives OUTSIDE the workspace (2026-11-24)
+
+`actions/checkout` runs `git clean -ffdx`, which deletes ignored files: every CI run lost
+`build-out\tailcat\` (the downloaded Go, the upstream checkout, the module cache, the built DLL)
+and `tr4w\redist\x86_64-win64\libtailcat.dll`, so the 152 s rebuild and the Go download happened
+every time (run 45183031991). `Build-Tailcat.ps1` and `build-tailcat.sh` take `TAILCAT_WORK`
+(default unchanged, `build-out\tailcat`); `release.yml` sets it to
+`$RUNNER_TOOL_CACHE/tr4w-tailcat` in the Windows, Linux and macOS build steps
+(`build-unix.sh`'s `package_tailcat` reads it too). The Windows up-to-date check no longer
+requires the staged copy: a valid cache (stamp, notices, PE machine, sha256) is RE-COPIED into
+`redist` and re-verified. Not yet seen working: needs one `workflow_dispatch` run, the second
+of which should print "up to date, nothing built".
+
+## Unit-test timing
+
+`tr4w_unit_tests` prints `TIMING ...` lines (slowest 25 suites, share, assertions, total) just
+before the `PASSED:` line; `Build-Tests.ps1 -Run` copies them to `build-out\tests-timing.txt`
+(`tests-checked-timing.txt` for `-Checked`). A report, never a gate.
+
 ## Referenced URLs (issue 248)
 
 `tr4w/build/referenced-urls.txt` lists EVERY URL under `src`, `tools`, `build`, `tr4wserver` and

@@ -265,26 +265,106 @@ begin
    end;
 end;
 
+(* PER-SUITE WALL-CLOCK TIME, printed ranked before the PASSED line. It measures
+   and reports only: nothing here touches a suite's result, and no line of it
+   contains 'PASSED:' or '[FAIL]', the two strings Build-Tests.ps1 and the Unix
+   gate search for. GetTickCount64 is SysUtils' monotonic millisecond clock on
+   Windows, Linux and macOS (granularity 10-16 ms on Windows, so a suite that
+   runs faster than that reads 0.00). *)
+const
+   TIMING_ROWS = 25;
+
+type
+   TSuiteTiming = record
+      Name    : string;
+      Millis  : QWord;
+      Asserts : Integer;
+   end;
+
+procedure PrintTimingTable(var Timings: array of TSuiteTiming);
+var
+   i, j      : Integer;
+   Swap      : TSuiteTiming;
+   TotalMs   : QWord;
+   TotalAsrt : Integer;
+   Shown     : Integer;
+   Share     : Double;
+begin
+   TotalMs   := 0;
+   TotalAsrt := 0;
+   for i := 0 to High(Timings) do
+      begin
+      Inc(TotalMs, Timings[i].Millis);
+      Inc(TotalAsrt, Timings[i].Asserts);
+      end;
+
+   (* Insertion sort, slowest first: a few hundred rows, run once. *)
+   for i := 1 to High(Timings) do
+      begin
+      Swap := Timings[i];
+      j := i - 1;
+      while (j >= 0) and (Timings[j].Millis < Swap.Millis) do
+         begin
+         Timings[j + 1] := Timings[j];
+         Dec(j);
+         end;
+      Timings[j + 1] := Swap;
+      end;
+
+   Shown := Length(Timings);
+   if Shown > TIMING_ROWS then
+      begin
+      Shown := TIMING_ROWS;
+      end;
+
+   WriteLn('TIMING BY SUITE (wall clock, slowest ', Shown, ' of ', Length(Timings), '):');
+   WriteLn('TIMING   seconds   share  assertions  suite');
+   for i := 0 to Shown - 1 do
+      begin
+      if TotalMs > 0 then
+         begin
+         Share := 100.0 * Timings[i].Millis / TotalMs;
+         end
+      else
+         begin
+         Share := 0.0;
+         end;
+      WriteLn(Format('TIMING %8.2f  %5.1f%%  %10d  %s',
+         [Timings[i].Millis / 1000.0, Share, Timings[i].Asserts, Timings[i].Name]));
+      end;
+   WriteLn(Format('TIMING TOTAL %.2f s over %d suites, %d assertions',
+      [TotalMs / 1000.0, Length(Timings), TotalAsrt]));
+end;
+
 function RunAllSuites: Boolean;
 var
    i          : Integer;
    totalPass  : Integer;
    totalFail  : Integer;
    suite      : TTestCase;
+   timings    : array of TSuiteTiming;
+   startMs    : QWord;
 begin
    totalPass := 0;
    totalFail := 0;
+   SetLength(timings, GSuiteCount);
 
    for i := 0 to GSuiteCount - 1 do
       begin
       suite := GSuites[i];
       WriteLn('--- ', suite.Name, ' ---');
+      startMs := GetTickCount64;
       RunSuite(suite);
+      timings[i].Millis  := GetTickCount64 - startMs;
+      timings[i].Name    := suite.Name;
+      timings[i].Asserts := suite.PassCount + suite.FailCount;
       Inc(totalPass, suite.PassCount);
       Inc(totalFail, suite.FailCount);
       suite.Free;
       end;
 
+   WriteLn('');
+   PrintTimingTable(timings);
    WriteLn('');
    { The suite count is REPORTED, so a suite that stops being registered is
      visible in the build log instead of hiding inside a total that only ever

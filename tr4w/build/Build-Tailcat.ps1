@@ -22,7 +22,10 @@
 #           proxy.golang.org (the modules, first run only).
 #
 # WHERE THINGS GO. Everything it makes is under <repo>\build-out\tailcat\, which
-# is gitignored with the rest of build-out:
+# is gitignored with the rest of build-out. The environment variable TAILCAT_WORK
+# names another directory instead. CI sets it to a directory OUTSIDE the
+# workspace, because actions/checkout runs `git clean -ffdx` and so wiped
+# build-out\ (the Go download and a 152 s rebuild) on every run, 2026-11-23:
 #   toolchain\go<version>\      the Go toolchain, when it had to be downloaded
 #   src\                        the upstream checkout
 #   gopath\  gocache\           Go's module and build caches (nothing is written
@@ -47,7 +50,11 @@ $ErrorActionPreference = 'Stop'
 
 $TR4W_DIR  = Split-Path $PSScriptRoot -Parent
 $REPO_ROOT = Split-Path $TR4W_DIR -Parent
-$WORK      = Join-Path $REPO_ROOT 'build-out\tailcat'
+$WORK      = $env:TAILCAT_WORK
+if ([string]::IsNullOrEmpty($WORK))
+   {
+   $WORK = Join-Path $REPO_ROOT 'build-out\tailcat'
+   }
 $TARGET    = 'x86_64-win64'
 $OUT_DIR   = Join-Path $WORK $TARGET
 $DLL       = Join-Path $OUT_DIR 'libtailcat.dll'
@@ -174,12 +181,15 @@ $goVer  = $pin['GO_VERSION']
 
 Write-Host "Build-Tailcat: tailcat $commit, Go $goVer, target $TARGET"
 
+# The CACHED build is up to date: stamp, DLL and notices exist, the stamp names
+# this commit and this Go, and the DLL is byte for byte what the stamp recorded.
+# The staged copy is NOT part of this question (CI wipes it with every checkout
+# while TAILCAT_WORK keeps the cache); Restore-Staged answers for it.
 function Test-UpToDate
    {
    if (-not (Test-Path -LiteralPath $STAMP) -or
        -not (Test-Path -LiteralPath $DLL) -or
-       -not (Test-Path -LiteralPath $NOTICES) -or
-       -not (Test-Path -LiteralPath $STAGED))
+       -not (Test-Path -LiteralPath $NOTICES))
       {
       return $false
       }
@@ -196,12 +206,28 @@ function Test-UpToDate
       {
       return $false
       }
-   $sha = Get-Sha256 -Path $DLL
-   return ($recorded['sha256'] -eq $sha) -and ((Get-Sha256 -Path $STAGED) -eq $sha)
+   if ((Get-PEMachine -Path $DLL) -ne 0x8664)
+      {
+      return $false
+      }
+   return ($recorded['sha256'] -eq (Get-Sha256 -Path $DLL))
    }
 
 if (-not $Force -and (Test-UpToDate))
    {
+   # The cache is good. Put its DLL in the staging directory when that copy is
+   # missing or is not the same bytes, and prove the copy.
+   $cachedSha = Get-Sha256 -Path $DLL
+   if (-not (Test-Path -LiteralPath $STAGED) -or ((Get-Sha256 -Path $STAGED) -ne $cachedSha))
+      {
+      New-Item -ItemType Directory -Force -Path $RedistDir | Out-Null
+      Copy-Item -LiteralPath $DLL -Destination $STAGED -Force
+      if ((Get-Sha256 -Path $STAGED) -ne $cachedSha)
+         {
+         Fail "the copy in $RedistDir does not match the cached DLL"
+         }
+      Write-Host "Build-Tailcat: cached build restaged into $RedistDir."
+      }
    Write-Host 'Build-Tailcat: up to date, nothing built.'
    Show-Result -Path $STAGED
    exit 0
