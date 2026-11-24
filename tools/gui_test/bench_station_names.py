@@ -19,12 +19,13 @@ from preferences_audit import focus_info
 from bench_preferences import search_control
 from bench_uia278 import dlgcode
 
-# The 17 Station captions in their designed Tab order (uPrefsForm.lfm). The
-# left column is the first ten, the right column the last seven.
+# The 19 Station captions in their designed Tab order (uPrefsForm.lfm). The
+# left column is the first ten, the right column the last nine (Prefecture
+# and Power class joined it under License year, #361).
 CAPTIONS = ("Callsign:", "First name:", "Grid square:", "Continent:", "CQ zone:", "ITU zone:",
    "State/Province:", "ARRL section:", "Country:", "Postal code:",
-   "Check:", "Precedence:", "FD class:", "FOC number:", "IOTA:", "Park:", "License year:")
-ENDS = ("Callsign:", "Postal code:", "Check:", "License year:")
+   "Check:", "Precedence:", "FD class:", "FOC number:", "IOTA:", "Park:", "License year:", "Prefecture:", "Power class:")
+ENDS = ("Callsign:", "Postal code:", "Check:", "Power class:")
 
 
 def uia_facts(handle):
@@ -125,10 +126,13 @@ def positive_control(static_style=0x50000000, edit_style=0x50010000):
 
 
 def station_rows(prefs, left_anchor, right_anchor):
-   """The 17 inputs, paired with their captions by designed position.
+   """The 19 inputs, paired with their captions by designed position.
 
    The inputs are the two columns the searched Callsign (left_anchor) and
-   License year (right_anchor) boxes stand in, top to bottom: 10 and 7. The
+   License year (right_anchor) boxes stand in, top to bottom: the top 10 and
+   9. The left column's x is shared by edtMainCallsign (Top 536, below the
+   problem line, issue 278), which is not a station field, so only the top
+   ten count there; too FEW is still an error. The
    caption windows (TStaticText since 68e0a232; TLabel before, so no window)
    are found by their text and must sit on their input's row. Neither step
    reads the UIA Name being measured."""
@@ -136,16 +140,20 @@ def station_rows(prefs, left_anchor, right_anchor):
    inputs = [control for control in controls if control.class_name() in {"Edit", "LCLComboBox"}
       and win32gui.GetClassName(win32gui.GetParent(control.handle)) != "LCLComboBox"]
 
-   def column(anchor, count):
+   def column(anchor, count, top_only=False):
       left = win32gui.GetWindowRect(anchor)[0]
       cells = sorted([control for control in inputs if abs(control.rectangle().left - left) <= 2],
          key=lambda control: control.rectangle().top)
+      if top_only:
+         cells = cells[:count]
       if len(cells) != count:
          raise AssertionError("Expected " + str(count) + " inputs in the column at x=" + str(left)
             + ", found " + str(len(cells)))
       return cells
 
-   fields = column(left_anchor, 10) + column(right_anchor, 7)
+   # Only the left column shares its x with a non-station input (Main
+   # Callsign); the right column's count stays exact.
+   fields = column(left_anchor, 10, top_only=True) + column(right_anchor, 9)
    captions = {}
    for control in controls:
       if control.window_text() in CAPTIONS:

@@ -45,8 +45,9 @@ from input_checks import (STATION_FIELDS, PRELOADED_BAD, NOT_SAVED_WORDS, choose
 from input_ui import client_region, dismiss, ensure_foreground, new_windows, ocr, owned_windows, window_body
 
 # lblStationProblem's designed rectangle in the Station panel's client area
-# (uPrefsForm.lfm: Left 12, Top 332, Width 640, Height 34; 96 DPI, unscaled).
-PROBLEM_LINE = (12, 332, 640, 34)
+# (uPrefsForm.lfm: Left 12, Top 392, Width 640, Height 34; 96 DPI, unscaled).
+# It moved down 60 when MY PREFECTURE and MY POWER CLASS were added (#361).
+PROBLEM_LINE = (12, 392, 640, 34)
 # Red pixels that count as "marked": a field's text, the line's text.
 FIELD_RED_MIN = 5
 LINE_RED_MIN = 20
@@ -295,7 +296,21 @@ def fresh_page(probe, root, run_name):
    refusals = [probe.save_refused("Save and close", park, "typed")]
    if save_enabled:
       refusals.append(probe.save_refused("Save", park, "typed"))
+   probe.journal.perform("capture the whole page with the problem line up",
+      lambda: capture(probe.prefs, probe.output / "station-page-problem.png"))
    probe.probe(index, park, goods["Park"], False)
+   # Each new field ALONE wrong, so the refusal can only be its own.
+   for key, bad_value in (("PowerClass", "X"), ("Prefecture", "H")):
+      field = next(item for item in probe.fields if item["key"] == key)
+      probe.probe(probe.fields.index(field), field, bad_value, True)
+      refusals.append(probe.save_refused("Save and close", field, "alone-" + key))
+      probe.journal.perform("capture the whole page with " + key + " refused",
+         lambda: capture(probe.prefs, probe.output / ("station-page-" + key + "-refused.png")))
+      probe.probe(probe.fields.index(field), field, goods[key], False)
+   prefecture = next(item for item in probe.fields if item["key"] == "Prefecture")
+   observed_49, _ = probe.probe(probe.fields.index(prefecture), prefecture, "49", False)
+   probe.observed_49 = observed_49
+   probe.probe(probe.fields.index(prefecture), prefecture, goods["Prefecture"], False)
    immediate_before = stored_my(probe.settings)
    questions = probe.save_and_close("fresh")
    immediate = stored_my(probe.settings)
@@ -354,7 +369,9 @@ def check(app, main, prefs, root, run_name, output, journal):
    runner's normal close follows, then verify_after_exit reads tr4w.json."""
    prefs.wait("visible enabled", timeout=10)
    probe = StationProbe(app, prefs, output, journal)
+   journal.perform("capture the whole Station page at open", lambda: capture(prefs, probe.output / "station-page-open.png"))
    fresh = fresh_page(probe, root, run_name)
+   fresh["observed_49"] = getattr(probe, "observed_49", None)
    journal.perform("capture main after the fresh save", lambda: capture(main, probe.output / "main-after-fresh.png"))
    close_normally(app, main, journal)
    fresh["stored_after_exit"] = check_stored(probe, fresh["goods"], "fresh, after exit")
@@ -377,6 +394,12 @@ def check(app, main, prefs, root, run_name, output, journal):
    probe = StationProbe(app, prefs, output, journal)
    probe.failures, probe.ocr_checks, probe.windows_seen, probe.foreground_events, probe.sequence = kept
    probe.settings = settings_file(root, run_name)
+   readback = {field["key"]: text_of(field["handle"]) for field in probe.fields if field["key"] in ("Prefecture", "PowerClass")}
+   journal.perform("capture Station page after reopen", lambda: capture(prefs, probe.output / "station-page-reopened.png"))
+   for key, value in readback.items():
+      if value != fresh["goods"][key]:
+         probe.fail("reopen: " + key + " reads " + repr(value) + ", saved " + repr(fresh["goods"][key]))
+   fresh["reopen_readback"] = readback
    preloaded = preloaded_page(probe)
    preloaded["windows_at_startup"] = {str(handle): facts for handle, facts in startup_windows.items()}
 

@@ -18,4 +18,4 @@ def check(app, main, root, run_name, output, journal):
    second = output / "reopened"
    second.mkdir(exist_ok=True)
    program_messages(app, main, second, journal, read_only=True, include_modifiers=True)
-   return {"passed": True, "note": "CQ, exchange, other, Ctrl and Alt messages survived restart; no memory sent"}, app, main
+   return {"passed": True, "note": "CQ, exchange, other, Ctrl and Alt messages, including the picker-inserted rover macro, survived restart; no memory sent"}, app, main

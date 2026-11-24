@@ -10,31 +10,46 @@ def entry_fields(main):
 
 
 def open_contact_editor(app, main, journal):
-   grids = [control for control in main.descendants(class_name="Window") if control.is_visible()
-      and control.rectangle().width() > 600 and 70 < control.rectangle().height() < 250]
+   # The QSO grid is the wide drawn window directly ABOVE the entry panel (the
+   # one wide window holding the call and exchange Edits); the totals area
+   # above the grid is wide and edit-free too. A height cap (once < 250)
+   # broke when the grid grew to 258 at 1280x800.
+   wide = [control for control in main.descendants(class_name="Window") if control.is_visible()
+      and control.rectangle().width() > 600 and control.rectangle().height() > 70]
+   panels = [control for control in wide if control.descendants(class_name="Edit")]
+   if len(panels) != 1:
+      raise RuntimeError("Entry panel is not unique: " + repr([str(control.rectangle()) for control in panels]))
+   grids = [control for control in wide if not control.descendants(class_name="Edit")
+      and abs(control.rectangle().bottom - panels[0].rectangle().top) <= 2]
    if len(grids) != 1:
-      raise RuntimeError("Visible QSO grid is not unique")
+      raise RuntimeError("Visible QSO grid is not unique: " + repr([str(control.rectangle()) for control in wide]))
    journal.perform("double-click the sole test contact", lambda: grids[0].double_click_input(coords=(300, 30)))
    editor = app.window(title="Edit QSO")
    editor.wait("visible enabled", timeout=10)
    return editor
 
 
+# uEditQSOForm's grpMyStation rows, as TfrmEditQSO's layout places them
+# (mine.AddRow): schema 3's two rows, schema 9's two, schema 14's power class
+# alone on a fifth. Every box is always shown; a contest that does not use a
+# fact gets it disabled (ShowStationBox), so the shape does not vary.
 MY_STATION_ROWS = (("call", "grid", "state", "county"), ("section", "park", "cq_zone", "itu_zone"),
-   ("year_sent",))
+   ("year_sent", "check", "prec", "fd_class"), ("name", "postal_code", "foc_number", "prefecture"),
+   ("power_class",))
 
 
 def my_station_fields(editor):
    """Edit QSO's "Our station for this QSO" inputs by their designed rows
-   (uEditQSOForm.lfm grpMyStation): the one container whose direct Edit
-   children form rows of 4, 4 and 1. Rows and columns are observed geometry;
+   (uEditQSOForm grpMyStation): the one container whose direct Edit children
+   form rows of 4, 4, 4, 4 and 1. Rows and columns are observed geometry;
    a different shape fails rather than guessing which box is which."""
    matches = []
+   expected = sum(len(names) for names in MY_STATION_ROWS)
    for container in editor.descendants():
       if container.class_name() == "Edit" or not container.is_visible():
          continue
       edits = [child for child in container.children() if child.class_name() == "Edit"]
-      if len(edits) != 9:
+      if len(edits) != expected:
          continue
       rows = {}
       for edit in edits:

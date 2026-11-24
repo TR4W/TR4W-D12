@@ -26,12 +26,20 @@ CASES = {
    "locked": "bench-locked-regression",
    "import": "bench-import-regression",
    "messages": "bench-messages-regression",
+   "release-ui": "bench-release-ui",
    # A taskbar button while New Contest is up, and only the main window's once
    # it shows (bench_taskbar.py; NY4I 2026-11-16).
    "taskbar": "bench-taskbar",
    # Preferences > Station checks each field inline: red mark, the line under
    # the fields, focus held, no window, refused and good saves (be4dc5a6).
    "station-check": "bench-prefs-station-check",
+   # Issue 361: New Contest for ALL JA asks MY PREFECTURE and MY POWER CLASS
+   # and refuses what its patterns refuse; Edit QSO shows both; the Cabrillo
+   # sent columns (bench_allja.py). Starts with no contest log.
+   "allja": "bench-allja",
+   # Edit QSO's our-station group observed by geometry on the seed's CW Open
+   # log (qso_entry.my_station_fields; Year sent empty and disabled there).
+   "edit-qso": "bench-yearsent-check-cwopen",
    # The invalid-input sweep of the other Preferences pages, by tag range: a
    # REPORT (sweep_report.py makes the table), passing unless it crashes.
    "sweep-a": "bench-prefs-invalid-sweep-a",
@@ -45,7 +53,7 @@ CASES = {
    "wizard-done-serial": "bench-wizard-done-serial",
    "wizard-done-network": "bench-wizard-done-network",
    # Issue 334: the external logger (hosted editor), rotator and WSJT-X pages,
-   # each page captured for the guide. NOT RUN YET (BENCH_QUEUE).
+   # each page captured for the guide.
    "wizard-extras": "bench-wizard-extras",
    # Issue 334: a QRZ key typed into the hosted logger editor reaches the OS
    # credential store, never tr4w.json. WRITES A CREDENTIAL on the guest;
@@ -78,10 +86,10 @@ FRESH_INSTALL_CASES = {"wizard-no", "wizard-station", "wizard-empty", "wizard-ha
 # ...and of those, the ones whose working folder holds no data files at all.
 EMPTY_FOLDER_CASES = {"wizard-empty", "wizard-download"}
 # Ordinary (settings-template) cases that get the full installed data set too.
-INSTALL_DATA_CASES = {"wizard-switch", "wizard-preserve", "wizard-partial", "install-dom"}
+INSTALL_DATA_CASES = {"wizard-switch", "wizard-preserve", "wizard-partial", "install-dom", "release-ui"}
 # Cases with no contest log: a contest on the command line skips the startup
 # offer and install check, so these start with no argument.
-NO_DATABASE_CASES = {"wizard-switch", "wizard-preserve", "wizard-partial"}
+NO_DATABASE_CASES = {"wizard-switch", "wizard-preserve", "wizard-partial", "release-ui", "allja"}
 # Installed parts deliberately left out, so the startup install check
 # (uProgramMain.WarnIfInstallIncomplete) meets each branch of its rule: a lone
 # missing CTY.DAT and a lone missing TRMASTER.DTA must NOT warn, dom alone must.

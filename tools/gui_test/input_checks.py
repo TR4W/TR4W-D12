@@ -45,6 +45,13 @@ STATION_FIELDS = (
       "words": ("park", "us1234")},
    {"caption": "License year:", "command": "MY LICENSE YEAR", "key": "LicenseYear", "bad": "alph",
       "goods": ("1985", "1986"), "words": ("licenseyear", "1985")},
+   {"caption": "Prefecture:", "command": "MY PREFECTURE", "key": "Prefecture", "bad": "H",
+      "goods": ("10", "11"), "words": ("prefecture", "jarlnumber")},
+   {"caption": "Power class:", "command": "MY POWER CLASS", "key": "PowerClass", "bad": "X",
+      "goods": ("M", "L"), "words": ("powerclass", "powerclassisoneletter")},
+      # NOT "hmlorp": Windows OCR reads the commas of "H, M, L or P." as "t",
+      # so the letters never squeeze together. The sentence before the colon
+      # has no punctuation in it.
 )
 
 # Bad values written into tr4w.json before a launch, for the "loaded, never

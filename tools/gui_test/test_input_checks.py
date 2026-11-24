@@ -15,7 +15,7 @@ class StationFieldTable(unittest.TestCase):
       self.assertEqual(len(commands), len(set(commands)))
       self.assertEqual(set(commands), {"MY GRID", "MY ZONE", "MY ITU ZONE", "MY STATE", "MY SECTION",
          "MY COUNTRY", "MY CHECK", "MY PREC", "MY FD CLASS", "MY FOC NUMBER", "MY IOTA", "MY PARK",
-         "MY LICENSE YEAR"})
+         "MY LICENSE YEAR", "MY PREFECTURE", "MY POWER CLASS"})
 
    def test_nyai_values(self):
       by_command = {field["command"]: field for field in STATION_FIELDS}

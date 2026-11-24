@@ -61,6 +61,10 @@ This inventories the current local MkDocs source and writes docs/GUI_SCREENSHOT_
 
 ## Bench queue scenarios
 
+The `release-ui` suite case checks upcoming contest order and selection retention, drags the main window wider and taller, and checks the sent exchange above the call field. It opens Rover from the Tools menu and the call field, then verifies two saved county rows from one practice contact. The `messages` case inserts `{ROVERQTH}` through **List of commands** and verifies the saved text after reopening the log.
+
+To refresh the 5.1.0 guide captures, extract the Windows x64 release installer into a staging directory and copy its `tr4w.exe` to `tr4w_fpc.exe` in that directory, the name the runner launches. Pass that copy as `--exe` and the extracted directory as `--data-root` to `run_suite.py`. Select `--case release-ui --case wizard-station --case wizard-extras --case messages`. The suite checks the matching debug file and archives the exact build alongside the captures.
+
 `bench_preferences.py` drives visible searches, three-page Cancel/Save/restart and cleanup phases, and per-button overview navigation. Station and contest storage are checked after normal application exit. Failed navigation is retained per action rather than masked by later successes. `bench_log_names.py` tests startup collisions and physical title-bar cancellation; `bench_entry_errors.py` checks refused and corrected CW Open exchanges with Ctrl+Enter to avoid CW. `contest_forms.py` and `qso_entry.py` hold shared form/entry operations.
 
 Use `prepare_fixture.py` for a new isolated run; SQLite backup makes a consistent clone and `--database-name` allows the guest's current local date for collision tests. `session.py` records each owned PID in owned-process.json, including relaunches, so failure collection targets the correct process. `vm_run.py` uses one interactive GUI task and sequential SSH, collects logs and artifacts, and captures fatal dumps before stopping owned workers. Use the pinned main executable and matching symbols, not a worktree build.

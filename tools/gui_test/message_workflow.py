@@ -2,7 +2,24 @@
 
 import json
 
+from pywinauto.controls.win32_controls import ListBoxWrapper
+
 from session import capture
+
+
+def insert_rover_macro(app, editor, field, journal):
+   journal.perform("prepare the rover exchange", lambda: field.set_edit_text("5NN "))
+   journal.perform("put the caret after the signal report", lambda: field.type_keys("{END}"))
+   journal.perform("open List of commands", editor.child_window(title="List of commands").click_input)
+   picker = app.window(title="List of commands")
+   picker.wait("visible enabled", timeout=10)
+   commands = ListBoxWrapper(picker.child_window(class_name="LCLListBox").handle)
+   index, = [index for index, text in enumerate(commands.item_texts()) if text.lstrip().startswith("{ROVERQTH} =")]
+   journal.perform("select the rover exchange command", lambda: commands.select(index))
+   journal.perform("insert the selected command", picker.child_window(title="OK").click_input)
+   picker.wait_not("visible", timeout=5)
+   if field.window_text() != "5NN {ROVERQTH}":
+      raise AssertionError("The command picker did not insert the braced rover macro at the caret")
 
 
 def program_messages(app, main, output, journal, event="CWO", exchange="# TOM", read_only=False, include_modifiers=False, bank="Standard"):
@@ -55,6 +72,9 @@ def program_messages(app, main, output, journal, event="CWO", exchange="# TOM", 
          if bank.upper() not in command.upper() and not (bank == "Control" and "CTRL" in command.upper()):
             raise AssertionError("Selected bank does not match message command: " + command)
          replacements = {command: "GUI " + bank.upper() + " " + key.upper() + " TEST"}
+      macro_memory = "CQ CW MEMORY F10" if include_modifiers and key == "c" else None
+      if macro_memory:
+         replacements[macro_memory] = "5NN {ROVERQTH}"
       for command, value in replacements.items():
          if names.count(command) != 1:
             raise RuntimeError("Message command is not unique: " + command + " in " + repr(names))
@@ -66,7 +86,7 @@ def program_messages(app, main, output, journal, event="CWO", exchange="# TOM", 
             if include_modifiers and command == "CQ CW MEMORY F3" and listing.get_item(index, 2).text() != "GUI & CAPTION":
                raise AssertionError("Custom message caption did not survive restart")
             expected[command] = actual
-            if command != "CQ CW MEMORY F1":
+            if command not in {"CQ CW MEMORY F1", macro_memory}:
                continue
          journal.perform("select " + command, lambda: listing.select(index))
          journal.perform("focus selected memory", listing.set_focus)
@@ -77,7 +97,10 @@ def program_messages(app, main, output, journal, event="CWO", exchange="# TOM", 
          if len(fields) != 2:
             raise RuntimeError("Expected Message and Caption fields")
          if not read_only:
-            journal.perform("set " + command, lambda: fields[0].set_edit_text(value))
+            if command == macro_memory:
+               insert_rover_macro(app, editor, fields[0], journal)
+            else:
+               journal.perform("set " + command, lambda: fields[0].set_edit_text(value))
          if not read_only and fields[1].is_enabled():
             caption = "GUI & CAPTION" if include_modifiers and command == "CQ CW MEMORY F3" else ""
             journal.perform("set custom caption for " + command, lambda: fields[1].set_edit_text(caption))
@@ -85,6 +108,8 @@ def program_messages(app, main, output, journal, event="CWO", exchange="# TOM", 
             raise AssertionError("Other-message Caption field should be disabled")
          if command == "CQ CW MEMORY F1":
             journal.perform("capture configured F1", lambda: capture(editor, output / "message-editor.png"))
+         if command == macro_memory:
+            journal.perform("capture rover exchange macro", lambda: capture(editor, output / "rover-macro.png"))
          button = "Cancel" if read_only else "OK"
          journal.perform("close editor for " + command, lambda: editor.child_window(title=button).click_input())
          journal.perform("wait for editor close", lambda: editor.wait_not("visible", timeout=5))

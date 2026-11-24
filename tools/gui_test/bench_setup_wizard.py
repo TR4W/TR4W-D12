@@ -881,7 +881,13 @@ def restart_without_offer(root, run_name, output, journal, facts, failures, owne
    startup = wait_new_contest(app, journal)
    time.sleep(1.5)
    facts["restart_visible_windows"] = visible_titles(app)
-   facts["restart_asked_again"] = app.window(title="TR4W", visible_only=True).exists(timeout=0)
+   message = app.window(title="TR4W", class_name="#32770", visible_only=True)
+   facts["restart_asked_again"] = False
+   if message.exists(timeout=0):
+      _, question = dialog_facts(app, "TR4W", timeout=5, class_name="#32770")
+      facts["restart_question"] = question
+      facts["restart_asked_again"] = OFFER_TEXT in " ".join(question["uia_texts"]
+         + [item["text"] for item in question["win32_texts"]])
    facts["restart_new_contest_callsign"] = new_contest_callsign(startup).window_text()
    journal.perform("capture New Contest on restart", lambda: capture(startup, output / "restart-new-contest.png"))
    if facts["restart_asked_again"]:

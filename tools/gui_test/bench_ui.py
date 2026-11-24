@@ -85,6 +85,9 @@ def run(root, run_name, phase):
          return dict(result, pid=app.process)
       startup = app.window(title_re=r".*Open configuration file or start a new contest")
       journal.perform("wait for New Contest", lambda: startup.wait("visible", timeout=30))
+      if phase == "bench-release-ui":
+         from bench_release_ui import check
+         return check(app, startup, root, run_name, output, journal)
       if phase == "bench-taskbar":
          from bench_taskbar import check as check_taskbar
          return check_taskbar(app, startup, root, run_name, output, journal)
@@ -94,6 +97,9 @@ def run(root, run_name, phase):
       if phase in {"bench-county-check", "bench-county-texas"}:
          from bench_county import check
          return check(app, startup, root, run_name, output, journal, phase)
+      if phase == "bench-allja":
+         from bench_allja import check as check_allja
+         return check_allja(app, startup, root, run_name, output, journal)
       if phase.startswith("bench-yearsent-create-"):
          from bench_year_sent import create
          return create(app, startup, root, run_name, output, journal, phase.rsplit("-", 1)[1])
