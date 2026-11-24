@@ -3782,6 +3782,16 @@ begin
      if ValidAllJAPrefecture(Entries[1]) then
         begin
         Work.QTHString := Entries[1];
+        end
+     else if ValidAllJAPrefecture(Entries[0]) and
+             (not StringHasNumber(Entries[1])) then
+        begin
+        (* '48 A': a prefecture followed by a stray word that is no number
+           (a letter that is not a power class). The prefecture is the
+           first word and the refusal that follows is about the POWER class;
+           reading only the second word blamed a good prefecture (NY4I,
+           2026-11-24). *)
+        Work.QTHString := Entries[0];
         end;
      end;
 

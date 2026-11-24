@@ -621,6 +621,10 @@ begin
          AllJARefused('12', SExchangeAllJAPower);
          AllJARefused('599 12', SExchangeAllJAPower);
          AllJARefused('101', SExchangeAllJAPower);
+         (* A good prefecture with a letter that is no power class: the message
+            is about the POWER, not the prefecture (NY4I, 2026-11-24). *)
+         AllJARefused('48 A', SExchangeAllJAPower);
+         AllJARefused('101 X', SExchangeAllJAPower);
          AllJARefused('49 H', SExchangeAllJAPrefecture);
          AllJARefused('50 H', SExchangeAllJAPrefecture);
          (* In CW '115' is no prefecture. In phone and digital a three-digit
