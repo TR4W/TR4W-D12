@@ -57,6 +57,14 @@ type
    end;
 (* base + '/api/qso', with trailing slashes on the base dropped. *)
 function CloudlogQsoUrl(const aBaseUrl: string): string;
+(* WHICH 401 IT WAS. The servers answer 401 for several problems and say which
+   in the JSON body's "reason" (read from Api.php, 2026-11-24):
+      'station id does not belong to the API key owner.'  CLOUDLOG_STATION_NOT_OWNED
+      'station callsign does not match ... profile.'      CLOUDLOG_CALLSIGN_MISMATCH
+      'missing api key' / 'missing or wrong api key'      CLOUDLOG_KEY_REJECTED
+   anything else, an unreadable body or no reason        CLOUDLOG_UNAUTHORIZED
+   The station-id text also contains "api key", so it is tested first. Pure. *)
+function CloudlogUnauthorizedCode(const aBody: string): string;
 implementation
 uses SysUtils, fpjson, uJSON;
 
@@ -70,6 +78,45 @@ begin
       Delete(base, Length(base), 1);
       end;
    Result := base + '/api/qso';
+end;
+
+function CloudlogUnauthorizedCode(const aBody: string): string;
+var
+   root: TJSONData;
+   reason: string;
+begin
+   Result := 'CLOUDLOG_UNAUTHORIZED';
+   if aBody = '' then
+      begin
+      Exit;
+      end;
+   root := nil;
+   try
+      try
+         root := GetJSON(UTF8Encode(aBody));
+         if root.JSONType <> jtObject then
+            begin
+            Exit;
+            end;
+         reason := LowerCase(JSONGetStr(TJSONObject(root), 'reason', ''));
+      except
+         Exit;
+      end;
+      if Pos('does not belong', reason) > 0 then
+         begin
+         Result := 'CLOUDLOG_STATION_NOT_OWNED';
+         end
+      else if Pos('callsign', reason) > 0 then
+         begin
+         Result := 'CLOUDLOG_CALLSIGN_MISMATCH';
+         end
+      else if Pos('api key', reason) > 0 then
+         begin
+         Result := 'CLOUDLOG_KEY_REJECTED';
+         end;
+   finally
+      root.Free;
+   end;
 end;
 
 constructor TCloudlogClient.Create(const aBaseUrl, aProfileId, aApiKey: string);
@@ -153,7 +200,7 @@ begin
          (* The key, the station profile, or (Cloudlog) the STATION_CALLSIGN. The
             worker stops on 401 and keeps the work. *)
          Result.Outcome := doFailed;
-         Result.ErrorCode := 'CLOUDLOG_UNAUTHORIZED';
+         Result.ErrorCode := CloudlogUnauthorizedCode(request.Response);
          Exit;
          end;
       if Result.Status = 403 then

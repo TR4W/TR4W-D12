@@ -91,9 +91,17 @@ function NotDeliverableReasonText(const aCode: string): string;
 
 (* THE OPERATOR'S WORDS FOR ANY DELIVERY CODE THAT HAS SOME: a QSO the logger
    cannot be given (NotDeliverableReasonText) or a plain-http address that was
-   refused (any *_INSECURE_URL_REFUSED, whichever provider's prefix). '' for any
-   other code, so a caller falls back to showing the code. *)
+   refused (any *_INSECURE_URL_REFUSED, whichever provider's prefix), or one of
+   Cloudlog / Wavelog's own codes (CLOUDLOG_HTTP_404 and the rest: the
+   sentence says what to change). '' for any other code, so a caller falls
+   back to showing the code. *)
 function DeliveryFailureReasonText(const aCode: string): string;
+
+(* Cloudlog's station profile is normally the NUMBER of a station location. True
+   when a non-empty value has a character that is not a digit (a name such as
+   'Home-EL88'). ADVICE only: the repo holds no evidence that Wavelog refuses a
+   name, so the editor shows a note and never refuses the value. *)
+function CloudlogProfileLooksWrong(const aValue: string): boolean;
 
 (* THE NOTICE THROTTLE: one line per logger per window. Ten QSOs held back in a
    row must not scroll ten lines. aLastTick is the tick of the last line shown
@@ -282,11 +290,127 @@ begin
       end;
 end;
 
+function CloudlogProfileLooksWrong(const aValue: string): boolean;
+var
+   i: integer;
+   text: string;
+begin
+   text := Trim(aValue);
+   Result := False;
+   for i := 1 to Length(text) do
+      begin
+      if not (text[i] in ['0'..'9']) then
+         begin
+         Result := True;
+         Exit;
+         end;
+      end;
+end;
+
+(* The words for one of uCloudlogClient's codes (prefix CLOUDLOG_), '' for
+   any other. HTTP_<n> carries the status in the code. *)
+function CloudlogReasonText(const aCode: string): string;
+const
+   PREFIX = 'CLOUDLOG_';
+   HTTP_PREFIX = 'CLOUDLOG_HTTP_';
+var
+   status: integer;
+begin
+   Result := '';
+   if Copy(aCode, 1, Length(PREFIX)) <> PREFIX then
+      begin
+      Exit;
+      end;
+   if Copy(aCode, 1, Length(HTTP_PREFIX)) = HTTP_PREFIX then
+      begin
+      status := StrToIntDef(UTF8Encode(Copy(aCode, Length(HTTP_PREFIX) + 1, 10)), 0);
+      if status = 404 then
+         begin
+         Result := SLoggerWhyCloudlog404;
+         end
+      else if status = 401 then
+         begin
+         Result := SLoggerWhyCloudlog401;
+         end
+      else if status = 403 then
+         begin
+         Result := UnicodeFormat(SLoggerWhyCloudlogKey, [status]);
+         end
+      else if status = 405 then
+         begin
+         Result := SLoggerWhyCloudlog405;
+         end
+      else if (status >= 400) and (status < 500) then
+         begin
+         Result := UnicodeFormat(SLoggerWhyCloudlog4xx, [status]);
+         end
+      else if status >= 500 then
+         begin
+         Result := UnicodeFormat(SLoggerWhyCloudlog5xx, [status]);
+         end;
+      Exit;
+      end;
+   if aCode = 'CLOUDLOG_UNAUTHORIZED' then
+      begin
+      Result := SLoggerWhyCloudlog401;
+      end
+   else if aCode = 'CLOUDLOG_KEY_REJECTED' then
+      begin
+      Result := SLoggerWhyCloudlogKeyRejected;
+      end
+   else if aCode = 'CLOUDLOG_STATION_NOT_OWNED' then
+      begin
+      Result := SLoggerWhyCloudlogStationNotOwned;
+      end
+   else if aCode = 'CLOUDLOG_CALLSIGN_MISMATCH' then
+      begin
+      Result := SLoggerWhyCloudlogCallMismatch;
+      end
+   else if aCode = 'CLOUDLOG_READ_ONLY_KEY' then
+      begin
+      Result := SLoggerWhyCloudlogReadOnly;
+      end
+   else if aCode = 'CLOUDLOG_IMPORT_REJECTED' then
+      begin
+      Result := SLoggerWhyCloudlogRejected;
+      end
+   else if aCode = 'CLOUDLOG_URL_REFUSED' then
+      begin
+      Result := SLoggerWhyCloudlogUrl;
+      end
+   else if aCode = 'CLOUDLOG_REDIRECT' then
+      begin
+      Result := SLoggerWhyCloudlogRedirect;
+      end
+   else if aCode = 'CLOUDLOG_SETUP_REQUIRED' then
+      begin
+      Result := SLoggerWhyCloudlogSetup;
+      end
+   else if aCode = 'CLOUDLOG_REQUEST_REFUSED' then
+      begin
+      Result := SLoggerWhyCloudlogBadRequest;
+      end
+   else if (aCode = 'CLOUDLOG_INVALID_RESPONSE') or
+           (aCode = 'CLOUDLOG_RESPONSE_REQUIRES_REVIEW') then
+      begin
+      Result := SLoggerWhyCloudlogUnreadable;
+      end
+   else if (aCode = 'CLOUDLOG_EDIT_UNSUPPORTED') or
+           (aCode = 'CLOUDLOG_DELETE_UNSUPPORTED') then
+      begin
+      Result := SLoggerWhyCloudlogNoChange;
+      end;
+end;
+
 function DeliveryFailureReasonText(const aCode: string): string;
 const
    INSECURE_SUFFIX = 'INSECURE_URL_REFUSED';
 begin
    Result := NotDeliverableReasonText(aCode);
+   if Result = '' then
+      begin
+      Result := CloudlogReasonText(aCode);
+      end;
    if (Result = '') and (Length(aCode) >= Length(INSECURE_SUFFIX)) and
       (Copy(aCode, Length(aCode) - Length(INSECURE_SUFFIX) + 1, Length(INSECURE_SUFFIX)) =
        INSECURE_SUFFIX) then

@@ -52,7 +52,7 @@ uses
       DateUtils: DateTimeToUnix. uLogSchema: the v5 index DDL.
       uDeliveryStatusForm: DeliveryRowCells, the Edit QSO delivery window.
       uExternalLoggerConfig: the definitions that name a delivery. *)
-   Classes, DateUtils, uLogSchema, uDeliveryStatusForm, uExternalLoggerConfig,
+   Classes, DateUtils, uLogSchema, uDeliveryStatusForm, uExternalLoggerConfig, uAppStrings,
    fpjson, uJSON, uWRLContact, uWRLExternalLogger, uLogRepository,
    uSettingsModel, VC, LogDupe, SyncObjs, uWRLWorker, uQsoMyFacts,
    uContestRegistry, Tree, uExternalLoggerRegistry, uExternalLoggerActions,
@@ -1550,6 +1550,9 @@ begin
    CheckEquals('failed: no frequency', DeliveryStateText(status));
    status.ErrorCode := 'WRL_REJECTED';
    CheckEquals('failed (WRL_REJECTED)', DeliveryStateText(status), 'other codes read as before');
+   status.ErrorCode := 'CLOUDLOG_HTTP_404';
+   CheckEquals('failed: ' + SLoggerWhyCloudlog404, DeliveryStateText(status),
+      'Edit QSO names the Cloudlog 404 cure');
 
    snapshot := Default(TExternalLoggerSnapshot);
    CheckEquals('off', UnsentReasonToken(False, False, snapshot));

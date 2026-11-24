@@ -123,6 +123,11 @@ begin
    snap.Code := 'MISSING_FREQUENCY';
    CheckEquals(UnicodeFormat(SLoggerStateFailed, [SLoggerWhyNoFrequency]),
       ExternalLoggerStateText(elsFailed, snap, counts));
+   snap.Code := 'CLOUDLOG_HTTP_404';
+   CheckEquals(UnicodeFormat(SLoggerStatePaused, [SLoggerWhyCloudlog404]),
+      ExternalLoggerStateText(elsPaused, snap, counts), 'a Cloudlog 404 names the index.php cure');
+   CheckTrue(Pos('CLOUDLOG_HTTP_404', ExternalLoggerStateText(elsPaused, snap, counts)) = 0,
+      'the raw code is not shown');
 end;
 
 procedure TExternalLoggerStatusModelTests.Test_StateTextAppendsOldCounts;

@@ -169,11 +169,29 @@ type
 *)
 function ServerPasswordOnWire(const aPassword: AnsiString): TIdBytes;
 
+(* IS THIS EXCEPTION THE OTHER END, OR THE NETWORK, ENDING THE LINK -- AN
+  ORDINARY EVENT AND NOT A FAULT IN TR4W? The server closing the connection,
+  a reset, a timeout. NY4I, 2026-11-24: "if ANYONE sees CRASH in a log, they
+  think bad things happened". The reader thread used to hand every one of these
+  to LogCaughtException, so a server that closes an idle connection every five
+  minutes put a [CRASH] record with a backtrace in tr4w.log each time, and the
+  backtrace's symbol lookup held the reconnect back by seconds. These are one
+  plain line now; a fault inside TR4W keeps the [CRASH] record. *)
+function IsOrdinaryLinkClose(aException: Exception): boolean;
+
 implementation
 
 uses
    MainUnit,    // logger
    uCrashLog;   // LogCaughtException -- a fault here names itself
+
+function IsOrdinaryLinkClose(aException: Exception): boolean;
+begin
+   Result := (aException is EIdConnClosedGracefully) or
+             (aException is EIdSocketError) or
+             (aException is EIdReadTimeout) or
+             (aException is EIdClosedSocket);
+end;
 
 function ServerPasswordOnWire(const aPassword: AnsiString): TIdBytes;
 begin
@@ -289,7 +307,18 @@ begin
                     backtrace, so a fault on this thread identifies itself the
                     first time it happens. It is the RTL-only half of the
                     crash reporter and links without a widget set. *)
-                  LogCaughtException('TNetReader.Execute', E);
+                  if IsOrdinaryLinkClose(E) then
+                     begin
+                     (* The other end or the network ended the link: say so
+                       once, plainly. The owner's handler reports the loss and
+                       reconnects; no backtrace, no [CRASH]. *)
+                     logger.Info('[NetClient] the link to TR4WServer was closed (%s)',
+                                 [closeText]);
+                     end
+                  else
+                     begin
+                     LogCaughtException('TNetReader.Execute', E);
+                     end;
                   end;
                Break;
                end;

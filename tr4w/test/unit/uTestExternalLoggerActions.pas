@@ -426,13 +426,53 @@ begin
    CheckTrue(Pos('https', DeliveryFailureReasonText('CLOUDLOG_INSECURE_URL_REFUSED')) > 0,
       'and https');
    BeginTest('Reason text: a scheme-less address and other codes have no words (the code is shown)');
-   CheckEquals('', DeliveryFailureReasonText('CLOUDLOG_URL_REFUSED'), 'URL_REFUSED is not the insecure code');
+   CheckEquals(SLoggerWhyCloudlogUrl, DeliveryFailureReasonText('CLOUDLOG_URL_REFUSED'), 'URL_REFUSED is not the insecure code');
    CheckEquals('', DeliveryFailureReasonText('WRL_RATE_LIMITED'));
+   CheckEquals('', DeliveryFailureReasonText('CLOUDLOG_RATE_LIMITED'), 'a retry code keeps showing the code');
+   CheckEquals('', DeliveryFailureReasonText('CLOUDLOG_HTTP_'), 'no status, no words');
+   CheckEquals('', DeliveryFailureReasonText('CLOUDLOG_HTTP_200'), 'a status that is no refusal has none');
+   CheckEquals('', DeliveryFailureReasonText('WRL_HTTP_404'), 'only Cloudlog has this mapper');
    CheckEquals('', DeliveryFailureReasonText(''));
    CheckEquals('', DeliveryFailureReasonText('URL_REFUSED'));
    BeginTest('Reason text: a QSO the logger cannot be given keeps its words');
    CheckEquals(NotDeliverableReasonText('MISSING_FREQUENCY'), DeliveryFailureReasonText('MISSING_FREQUENCY'));
    CheckEquals(SLoggerWhyNoFrequency, DeliveryFailureReasonText('MISSING_FREQUENCY'));
+   BeginTest('Reason text: Cloudlog / Wavelog codes read in words, each naming what to change');
+   CheckEquals(SLoggerWhyCloudlog404, DeliveryFailureReasonText('CLOUDLOG_HTTP_404'));
+   CheckTrue(Pos('/index.php', DeliveryFailureReasonText('CLOUDLOG_HTTP_404')) > 0,
+      '404 names the index.php cure');
+   CheckEquals(SLoggerWhyCloudlog401, DeliveryFailureReasonText('CLOUDLOG_HTTP_401'));
+   CheckEquals(UnicodeFormat(SLoggerWhyCloudlogKey, [403]), DeliveryFailureReasonText('CLOUDLOG_HTTP_403'));
+   CheckEquals(SLoggerWhyCloudlog401, DeliveryFailureReasonText('CLOUDLOG_UNAUTHORIZED'));
+   CheckTrue(Pos('401', DeliveryFailureReasonText('CLOUDLOG_UNAUTHORIZED')) > 0, 'the status is in the words');
+   CheckTrue(Pos('API key', SLoggerWhyCloudlog401) > 0, '401 names the key');
+   CheckTrue(Pos('NUMBER', SLoggerWhyCloudlog401) > 0, 'and the station profile number');
+   CheckTrue(Pos('call sign', SLoggerWhyCloudlog401) > 0, 'and the call sign');
+   BeginTest('Cloudlog station profile: a name earns the advice, a number or nothing does not');
+   CheckTrue(CloudlogProfileLooksWrong('Home-EL88'));
+   CheckTrue(CloudlogProfileLooksWrong('12a'));
+   CheckFalse(CloudlogProfileLooksWrong('12'));
+   CheckFalse(CloudlogProfileLooksWrong(' 7 '), 'surrounding blanks are trimmed');
+   CheckFalse(CloudlogProfileLooksWrong(''), 'empty is the setup check, not this note');
+   CheckEquals(SLoggerWhyCloudlogReadOnly, DeliveryFailureReasonText('CLOUDLOG_READ_ONLY_KEY'));
+   CheckEquals(SLoggerWhyCloudlogKeyRejected, DeliveryFailureReasonText('CLOUDLOG_KEY_REJECTED'));
+   CheckEquals(SLoggerWhyCloudlogStationNotOwned, DeliveryFailureReasonText('CLOUDLOG_STATION_NOT_OWNED'));
+   CheckTrue(Pos('NUMBER', SLoggerWhyCloudlogStationNotOwned) > 0, 'it says the number, not the name');
+   CheckEquals(SLoggerWhyCloudlogCallMismatch, DeliveryFailureReasonText('CLOUDLOG_CALLSIGN_MISMATCH'));
+   CheckEquals(SLoggerWhyCloudlog405, DeliveryFailureReasonText('CLOUDLOG_HTTP_405'));
+   CheckEquals(UnicodeFormat(SLoggerWhyCloudlog4xx, [413]), DeliveryFailureReasonText('CLOUDLOG_HTTP_413'));
+   CheckEquals(UnicodeFormat(SLoggerWhyCloudlog4xx, [400]), DeliveryFailureReasonText('CLOUDLOG_HTTP_400'));
+   CheckEquals(UnicodeFormat(SLoggerWhyCloudlog5xx, [502]), DeliveryFailureReasonText('CLOUDLOG_HTTP_502'));
+   CheckEquals(SLoggerWhyCloudlogRejected, DeliveryFailureReasonText('CLOUDLOG_IMPORT_REJECTED'));
+   CheckEquals(SLoggerWhyCloudlogRedirect, DeliveryFailureReasonText('CLOUDLOG_REDIRECT'));
+   CheckEquals(SLoggerWhyCloudlogSetup, DeliveryFailureReasonText('CLOUDLOG_SETUP_REQUIRED'));
+   CheckEquals(SLoggerWhyCloudlogBadRequest, DeliveryFailureReasonText('CLOUDLOG_REQUEST_REFUSED'));
+   CheckEquals(SLoggerWhyCloudlogUnreadable, DeliveryFailureReasonText('CLOUDLOG_INVALID_RESPONSE'));
+   CheckEquals(SLoggerWhyCloudlogUnreadable, DeliveryFailureReasonText('CLOUDLOG_RESPONSE_REQUIRES_REVIEW'));
+   CheckEquals(SLoggerWhyCloudlogNoChange, DeliveryFailureReasonText('CLOUDLOG_EDIT_UNSUPPORTED'));
+   CheckEquals(SLoggerWhyCloudlogNoChange, DeliveryFailureReasonText('CLOUDLOG_DELETE_UNSUPPORTED'));
+   CheckEquals(SLoggerWhyInsecure, DeliveryFailureReasonText('CLOUDLOG_INSECURE_URL_REFUSED'),
+      'the insecure code still wins over URL_REFUSED');
 end;
 
 end.

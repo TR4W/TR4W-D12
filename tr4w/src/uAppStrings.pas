@@ -1939,6 +1939,28 @@ resourcestring
    SAllowInsecureCaption     = 'Allow insecure (plain http)';
    SLoggerPlainHttpNotice    = 'This address is plain http. Everything sent, including your API key, travels unencrypted. Use https if the server offers it. If you must use http, tick Allow insecure.';
    SLoggerWhyInsecure        = 'plain http not allowed (tick Allow insecure or use https)';
+   (* CLOUDLOG / WAVELOG FAILURES IN WORDS (NY4I, 2026-11-24: a Cloudlog served
+      through index.php answered 404 and the operator saw only the code
+      CLOUDLOG_HTTP_404). DeliveryFailureReasonText maps each code to one of
+      these, for the Connection column, Edit QSO's window and the log. *)
+   SLoggerWhyCloudlog404     = 'The server answered 404 for the API address. If your Cloudlog runs through index.php, end the address with /index.php.';
+   SLoggerWhyCloudlogKey     = 'The server refused the API key, or the key has no write permission (HTTP %d). Check the key, the station profile id and the station call sign.';
+   SLoggerWhyCloudlog401     = 'The server answered 401. One of three things is wrong: the API key (wrong, or read-only); the station profile id (it is the NUMBER of the station location, not its name); or the call sign does not match the one set on that station profile.';
+   SLoggerWhyCloudlogKeyRejected = 'The server rejected the API key (missing or wrong). Check the key.';
+   SLoggerWhyCloudlogStationNotOwned = 'The station profile id does not belong to the owner of the API key. Use the station location''s NUMBER from Cloudlog''s Station Locations list, not its name.';
+   SLoggerWhyCloudlogCallMismatch = 'The call sign does not match the call sign set on that station profile in Cloudlog.';
+   SLoggerCloudlogProfileNote ='The station profile is normally a number: the station location''s number in Cloudlog''s Station Locations list, not its name.';
+   SLoggerWhyCloudlogReadOnly ='The API key is read-only. Use a key with write permission.';
+   SLoggerWhyCloudlog405     = 'The server does not accept this request at that address (HTTP 405). Check the address; an instance served through index.php needs it to end with /index.php.';
+   SLoggerWhyCloudlog4xx     = 'The server refused the request (HTTP %d). Check the address and the station profile id.';
+   SLoggerWhyCloudlog5xx     = 'The server reported an error (HTTP %d). Check that contact in Cloudlog before sending it again.';
+   SLoggerWhyCloudlogRejected = 'The server did not take this contact (for example, it already has it).';
+   SLoggerWhyCloudlogUrl     = 'The address must start with https:// (or http://).';
+   SLoggerWhyCloudlogRedirect = 'The address redirects somewhere the program will not follow. Check the address (try https://, and /index.php at the end).';
+   SLoggerWhyCloudlogSetup   = 'The address, station profile id or API key is empty.';
+   SLoggerWhyCloudlogBadRequest = 'The server said the request was malformed.';
+   SLoggerWhyCloudlogUnreadable = 'The server''s answer was not understood. Check that contact in Cloudlog before sending it again.';
+   SLoggerWhyCloudlogNoChange = 'Cloudlog and Wavelog cannot change or delete a contact that was already sent.';
    (* THE STANDALONE "EXTERNAL LOGGERS" WINDOW (NY4I, 2026-11-24: the status of
       every logger, Resync, and a way to the settings page, without going
       into Preferences each time). SLoggersWindowTitle is also the Windows

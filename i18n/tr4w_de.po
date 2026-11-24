@@ -13313,3 +13313,93 @@ msgstr ""
 #, fuzzy
 msgid "plain http not allowed (tick Allow insecure or use https)"
 msgstr ""
+
+#: uappstrings.sloggerwhycloudlog404
+#, fuzzy
+msgid "The server answered 404 for the API address. If your Cloudlog runs through index.php, end the address with /index.php."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogkey
+#, fuzzy
+msgid "The server refused the API key, or the key has no write permission (HTTP %d). Check the key, the station profile id and the station call sign."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogreadonly
+#, fuzzy
+msgid "The API key is read-only. Use a key with write permission."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlog405
+#, fuzzy
+msgid "The server does not accept this request at that address (HTTP 405). Check the address; an instance served through index.php needs it to end with /index.php."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlog4xx
+#, fuzzy
+msgid "The server refused the request (HTTP %d). Check the address and the station profile id."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlog5xx
+#, fuzzy
+msgid "The server reported an error (HTTP %d). Check that contact in Cloudlog before sending it again."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogrejected
+#, fuzzy
+msgid "The server did not take this contact (for example, it already has it)."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogurl
+#, fuzzy
+msgid "The address must start with https:// (or http://)."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogredirect
+#, fuzzy
+msgid "The address redirects somewhere the program will not follow. Check the address (try https://, and /index.php at the end)."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogsetup
+#, fuzzy
+msgid "The address, station profile id or API key is empty."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogbadrequest
+#, fuzzy
+msgid "The server said the request was malformed."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogunreadable
+#, fuzzy
+msgid "The server's answer was not understood. Check that contact in Cloudlog before sending it again."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlognochange
+#, fuzzy
+msgid "Cloudlog and Wavelog cannot change or delete a contact that was already sent."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlog401
+#, fuzzy
+msgid "The server answered 401. One of three things is wrong: the API key (wrong, or read-only); the station profile id (it is the NUMBER of the station location, not its name); or the call sign does not match the one set on that station profile."
+msgstr ""
+
+#: uappstrings.sloggercloudlogprofilenote
+#, fuzzy
+msgid "The station profile is normally a number: the station location's number in Cloudlog's Station Locations list, not its name."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogkeyrejected
+#, fuzzy
+msgid "The server rejected the API key (missing or wrong). Check the key."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogstationnotowned
+#, fuzzy
+msgid "The station profile id does not belong to the owner of the API key. Use the station location's NUMBER from Cloudlog's Station Locations list, not its name."
+msgstr ""
+
+#: uappstrings.sloggerwhycloudlogcallmismatch
+#, fuzzy
+msgid "The call sign does not match the call sign set on that station profile in Cloudlog."
+msgstr ""

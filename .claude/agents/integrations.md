@@ -636,6 +636,8 @@ Facts that bite:
 
 ## Cloudlog / Wavelog provider (issue 204, 2026-11-07)
 
+**Its failures are said in words (2026-11-24).** A Cloudlog served through index.php answered 404 and the operator saw only `CLOUDLOG_HTTP_404`. `uExternalLoggerActions.DeliveryFailureReasonText` (the ONE code-to-words mapper: Connection column, Edit QSO's "failed: ...", `uExternalDeliveryWorker`'s pause log line) now maps every `CLOUDLOG_*` code (resourcestrings `SLoggerWhyCloudlog*`; 404 says "end the address with /index.php"). The worker's pause line used to blame credentials for every pause; it now reads `Delivery paused (CODE): words`. A 401 is split by the body's JSON `reason` (`CloudlogUnauthorizedCode`): `CLOUDLOG_STATION_NOT_OWNED` / `CALLSIGN_MISMATCH` / `KEY_REJECTED`, else `CLOUDLOG_UNAUTHORIZED`. The Station profile is normally a station location's NUMBER; the editor shows an advice note (never a refusal) for a non-numeric value (`CloudlogProfileLooksWrong`). NOT built: a Test button listing `GET <base>/api/station_info/<key>` (key in the URL path: check the HTTP layer masks path keys first; Cloudlog's profile field is text and a choice row needs an Account).
+
 `uCloudlogClient` + `uCloudlogExternalLogger` (provider id `CLOUDLOG`, linked from
 `uExternalLoggerFactory`'s uses clause like Club Log, not from a `.lpr`). Fields: address
 (`LF_URL`), API key (secret), station profile id (`LF_LOGBOOK`); address and profile are in the

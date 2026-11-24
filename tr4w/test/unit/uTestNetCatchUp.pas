@@ -96,6 +96,7 @@ type
       procedure Test_TheDownloadIsExactlyWhatTheServerSent;
       procedure Test_AOneMegabyteStreamSplitIntoOddChunksArrivesWhole;
       procedure Test_TheDownloadSendsTenPasswordBytes;
+      procedure Test_AClosedLinkIsOrdinaryAndAFaultIsNot;
       procedure Test_AServerThatStopsShortIsReported;
       procedure Test_AnImpossibleFrameOrCountIsRefused;
       procedure Test_ARowWithABadChecksumEndsTheDownload;
@@ -121,7 +122,7 @@ type
 implementation
 
 uses
-   StrUtils, TF, uNet, uNetClient, uNetFraming, uComputerID, uContestRegistry, PostUnit,
+   StrUtils, IdException, IdExceptionCore, IdStack, TF, uNet, uNetClient, uNetFraming, uComputerID, uContestRegistry, PostUnit,
    uLogStore, uGuidSet, uGetServerLog, uQsoColumns, uLogRepository, uSettingsModel;
 
 const
@@ -538,6 +539,34 @@ end;
 
 (* THE PASSWORD IS TEN BYTES, NUL PADDED -- what D7's client wrote with
   send(buf, 10). The in-tree server's sync port once waited for fifty. *)
+(* THE SERVER CLOSING THE LINK IS NOT A CRASH (NY4I, 2026-11-24): the reader
+   thread logs a closed or reset link as one plain line, and only a fault in
+   TR4W keeps the [CRASH] record. *)
+procedure TNetCatchUpTests.Test_AClosedLinkIsOrdinaryAndAFaultIsNot;
+var
+   closed: Exception;
+   reset: Exception;
+   timeout: Exception;
+   fault: Exception;
+begin
+   BeginTest('a link closed by the other end is ordinary; a fault is not');
+   closed := EIdConnClosedGracefully.Create('Connection Closed Gracefully.');
+   reset := EIdSocketError.Create('Connection reset by peer');
+   timeout := EIdReadTimeout.Create('Read timed out');
+   fault := Exception.Create('Access violation');
+   try
+      CheckTrue(IsOrdinaryLinkClose(closed), 'the server closing the connection');
+      CheckTrue(IsOrdinaryLinkClose(reset), 'a reset');
+      CheckTrue(IsOrdinaryLinkClose(timeout), 'a read timeout');
+      CheckFalse(IsOrdinaryLinkClose(fault), 'a fault in TR4W keeps its [CRASH] record');
+   finally
+      closed.Free;
+      reset.Free;
+      timeout.Free;
+      fault.Free;
+   end;
+end;
+
 procedure TNetCatchUpTests.Test_TheDownloadSendsTenPasswordBytes;
 var
    image: TServerLogImage;
@@ -1340,6 +1369,7 @@ begin
    Test_TheDownloadIsExactlyWhatTheServerSent;
    Test_AOneMegabyteStreamSplitIntoOddChunksArrivesWhole;
    Test_TheDownloadSendsTenPasswordBytes;
+   Test_AClosedLinkIsOrdinaryAndAFaultIsNot;
    Test_AServerThatStopsShortIsReported;
    Test_AnImpossibleFrameOrCountIsRefused;
    Test_ARowWithABadChecksumEndsTheDownload;

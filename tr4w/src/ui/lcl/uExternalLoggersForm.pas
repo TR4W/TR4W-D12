@@ -188,7 +188,7 @@ function ExternalLoggerConfigAcceptable(const aConfig: TExternalLoggerConfig): b
 
 implementation
 uses Graphics, Math, uLCLFormHelpers, uLCLTranslate, uPasswordReveal, uAppStrings,
-   uExternalDelivery, uLogStore, uHTTPDownload,
+   uExternalDelivery, uLogStore, uHTTPDownload, uExternalLoggerActions,
    uAppPaths,             (* HelpDir -- where the help catalogues are *)
    uEmbeddedTranslations, (* ActiveUILanguage -- which help catalogue to load *)
    uCommandHelp,          (* TCommandHelp -- the fixed fields' tooltips *)
@@ -922,6 +922,20 @@ begin
             end;
          end;
       end;
+   (* A Cloudlog station profile that is not a number (a typed name gave a 401,
+      2026-11-24). Advice, one line, never refused; the plain-http / certificate
+      note above takes precedence while one is shown. *)
+   if (warning = '') and (FDefinition <> nil) and (FDefinition.ProviderId = 'CLOUDLOG') then
+      begin
+      for row in FRows do
+         begin
+         if (row.Descriptor.Key = LF_LOGBOOK) and (row.Edit <> nil) and
+            CloudlogProfileLooksWrong(UTF8Decode(row.Edit.Text)) then
+            begin
+            warning := SLoggerCloudlogProfileNote;
+            end;
+         end;
+      end;
    lblVerifyNote.Caption := UTF8Encode(warning);
    lblVerifyNote.Visible := warning <> '';
 end;
@@ -941,7 +955,8 @@ begin
       begin
       Exit;
       end;
-   if (row.Descriptor.Kind = lfkCheck) or (row.Descriptor.Key = LF_URL) then
+   if (row.Descriptor.Kind = lfkCheck) or (row.Descriptor.Key = LF_URL) or
+      ((row.Descriptor.Key = LF_LOGBOOK) and (row.Descriptor.Kind = lfkText)) then
       begin
       (* The certificate warning follows the box and the address. Only when it
          appears or goes does the dialog need laying out again. *)

@@ -101,7 +101,7 @@ type
 implementation
 
 uses
-   DateUtils, sqldb, Log4D;
+   DateUtils, sqldb, Log4D, uExternalLoggerActions;
 
 function TExternalDeliveryWorker.GetVerifyServer: boolean;
 begin
@@ -507,7 +507,25 @@ begin
                end;
             if answer.Pause or (answer.Status = 401) or (answer.Status = 403) then
                begin
-               log.Error('[ExternalDelivery] Delivery paused: credentials or account access require attention');
+               (* SAY WHAT PAUSED IT (NY4I, 2026-11-24): the old line blamed
+                  credentials for every pause, including a 404 from a wrong
+                  address. The code, and its words where it has some. A pause
+                  with no code is the authentication one. *)
+               if answer.ErrorCode = '' then
+                  begin
+                  log.Error('[ExternalDelivery] Delivery paused: the server refused the credentials or account access (HTTP %d)',
+                     [answer.Status]);
+                  end
+               else if DeliveryFailureReasonText(answer.ErrorCode) <> '' then
+                  begin
+                  log.Error('[ExternalDelivery] Delivery paused (%s): %s',
+                     [answer.ErrorCode, DeliveryFailureReasonText(answer.ErrorCode)]);
+                  end
+               else
+                  begin
+                  log.Error('[ExternalDelivery] Delivery paused (%s), HTTP %d',
+                     [answer.ErrorCode, answer.Status]);
+                  end;
                if answer.ErrorCode <> '' then
                   begin
                   MarkHalted(answer.ErrorCode);
