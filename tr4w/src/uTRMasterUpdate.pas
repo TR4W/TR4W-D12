@@ -15,15 +15,15 @@ unit uTRMasterUpdate;
 interface
 
 uses
-   Version;   // TR4W_WEBSITE -- a leaf; this unit stays clear of VC and MainUnit
+   Version;
 
 const
 
-   (* NY4I's own copy, 2026-08-16.  ~3.5 MB.  Built from Version.TR4W_WEBSITE,
-     the one spelling of the site: https://tr4w.net/TRMASTER.DTA -- written
-     out for build\referenced-urls.txt (issue 248), whose endpoint row probes
-     it. Pinned by uTestTR4WWebsite. *)
-   TRMASTER_DOWNLOAD_URL = TR4W_WEBSITE + '/TRMASTER.DTA';
+   (* Stable data address, independent of the installed application version.
+     The endpoint inventory probes https://tr4w.github.io/TRMASTER.DTA and
+     the legacy mirror https://tr4w.net/TRMASTER.DTA. *)
+   TRMASTER_DOWNLOAD_URL = TR4W_DATA_SITE + '/TRMASTER.DTA';
+   TRMASTER_FALLBACK_URL = TR4W_WEBSITE + '/TRMASTER.DTA';
 
 type
    (* Raised ON THE MAIN THREAD when the download finishes. *)
@@ -48,6 +48,8 @@ uses
    Classes,
    SysUtils,
    Log4D,
+   LogSCP,
+   uCallHistoryDownload,
    uHTTPDownload;
 
 var
@@ -118,15 +120,72 @@ begin
    Thread.Resume;
 end;
 
-function DownloadTRMasterFile(const ATargetFile: string): boolean;
+function FetchTRMaster(const aURL, aStagedFile: string): boolean;
+var
+   snapshot: TTRMasterSnapshot;
+   why: string;
 begin
-   // The URL stays inside this unit: callers name the FILE they want, never the
-   // site it comes from.  uHTTPDownload has already logged any failure reason.
-   Result := DownloadFileToPath(TRMASTER_DOWNLOAD_URL, ATargetFile);
-   if Result then
+   Result := False;
+   if not DownloadFileToPath(aURL, aStagedFile) then
       begin
-      logger.Info('[TRMaster] saved %s', [ATargetFile]);
+      Exit;
       end;
+   snapshot := LoadTRMasterSnapshot(aStagedFile, why);
+   if snapshot = nil then
+      begin
+      logger.Warn('[TRMaster] %s returned unusable data: %s', [aURL, why]);
+      Exit;
+      end;
+   snapshot.Free;
+   Result := True;
+end;
+
+function DownloadTRMasterFile(const ATargetFile: string): boolean;
+var
+   stageId: TGUID;
+   stagedFile: string;
+begin
+   Result := False;
+   stagedFile := '';
+   try
+      try
+         if CreateGUID(stageId) <> 0 then
+            begin
+            logger.Error('[TRMaster] could not stage data beside %s', [ATargetFile]);
+            Exit;
+            end;
+         stagedFile := ATargetFile + '.' + GUIDToString(stageId) + '.download';
+         if not FetchTRMaster(TRMASTER_DOWNLOAD_URL, stagedFile) then
+            begin
+            logger.Warn('[TRMaster] trying fallback %s', [TRMASTER_FALLBACK_URL]);
+            if not FetchTRMaster(TRMASTER_FALLBACK_URL, stagedFile) then
+               begin
+               Exit;
+               end;
+            end;
+         Result := ReplaceFileAtomic(stagedFile, ATargetFile);
+         if Result then
+            begin
+            logger.Info('[TRMaster] saved %s', [ATargetFile]);
+            end
+         else
+            begin
+            logger.Error('[TRMaster] could not replace %s: %s',
+                         [ATargetFile, SysErrorMessage(GetLastOSError)]);
+            end;
+      except
+         on E: Exception do
+            begin
+            logger.Error('[TRMaster] download to %s failed: %s', [ATargetFile, E.Message]);
+            end;
+      end;
+   finally
+      if stagedFile <> '' then
+         begin
+         SysUtils.DeleteFile(stagedFile);
+         SysUtils.DeleteFile(stagedFile + '.tmp');
+         end;
+   end;
 end;
 
 initialization

@@ -38,6 +38,10 @@ changes).
 - **`check_dta_names.py`** — read-only scan of a `.dta` for names that fail the name
   rule below. `python check_dta_names.py ../../target/TRMASTER.DTA` prints the
   offenders and a count; exit 1 if any. Tests: `python -I test_name_validator.py`.
+- **`check_name_count.py`** — step 5 of `build_trmaster.cmd` (issue 309): fails the
+  build when the named-call count of the new `.dta` is more than 10% below the file
+  deployed in `target\`. `python check_name_count.py NEW.DTA PREVIOUS.DTA --max-drop 0.10`.
+  Tests: `python -I test_name_count.py`.
 - **`lookup_build.py`** -- the *daily* build of `fcc_lookup.sqlite.gz`, the downloadable
   call -> name/ZIP/county/ARRL-or-RAC-section database for the TR4W website (all active
   US licences from FCC ULS plus every Canadian licence from ISED). Unrelated to the

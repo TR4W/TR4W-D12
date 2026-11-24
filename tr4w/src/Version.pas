@@ -30,8 +30,8 @@ const
   (* THE PROJECT'S WEBSITE -- the ONE spelling of it (2026-11-20). Every
     address on the site is built from it: the About box's link, Help > Home
     Page, the download page (VC.TR4W_DOWNLOAD_LINK), the version check
-    (uCheckLatestVersion.VERSION_URL), the TRMASTER.DTA download
-    (uTRMasterUpdate.TRMASTER_DOWNLOAD_URL) and the credit line the 3830 and
+    (uCheckLatestVersion.VERSION_URL), the TRMASTER.DTA fallback
+    (uTRMasterUpdate.TRMASTER_FALLBACK_URL) and the credit line the 3830 and
     summary-sheet reports print (PostUnit.SoftwareCredit). It lives here, with
     the version, because it is the product's identity and this unit is a
     leaf every one of those already uses or can use without pulling in VC.
@@ -39,9 +39,9 @@ const
   TR4W_WEBSITE                          = 'https://tr4w.net';
 
   (* THE PROJECT'S DATA HOST on GitHub Pages (NY4I, 2026-11-20): the big files
-    the program downloads when the operator asks. Today that is the callsign
-    lookup database (FCC and ISED licensees), which tools\trmaster\lookup_build.py
-    publishes as fcc_lookup.sqlite.gz (gzip of one SQLite file; the download
+    the program downloads when the operator asks. The TRMASTER updater uses
+    it first. tools\trmaster\lookup_build.py publishes the FCC/ISED callsign
+    database as fcc_lookup.sqlite.gz (gzip of one SQLite file; the download
     gunzips it) beside a ~600 byte manifest.json to fetch first
     (tools\trmaster\LOOKUP_DB.md has the client flow). The URLs are built here,
     from the host and the file NAMES, so changing either is one line. The

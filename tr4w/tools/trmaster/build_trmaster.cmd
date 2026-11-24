@@ -74,6 +74,13 @@ echo [4/4] build pass 2 (with QRZ names) ...
     --prune-qrz-unverified "%SCPDB%" --names-csv "%NAMES%" ^
     --geo-csv "%GEO%" || goto :error
 
+REM --- 5. guard: the name count must not have fallen sharply (issue 309) ------
+REM     Compares with the file deployed in target\ (skipped if there is none).
+REM     A QRZ failure once built a DTA with 26,647 names instead of ~64,255 and
+REM     the build still exited 0.  Exit 1 here when the count drops over 10%%.
+echo [5/5] checking the name count against the deployed file ...
+"%PYTHON%" check_name_count.py "%OUT%" "%~dp0..\..\target\TRMASTER.DTA" --max-drop 0.10 || goto :error
+
 echo.
 echo Done.  Built:  %~dp0%OUT%
 echo Deploy step (yours):  copy "%~dp0%OUT%"  to  tr4w\target\TRMASTER.DTA

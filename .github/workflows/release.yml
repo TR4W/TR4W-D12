@@ -1240,6 +1240,12 @@ jobs:
           name: tr4w-macos-pkg-${{ needs.build.outputs.version }}
           path: release-files
 
+      - name: Stage TRMASTER.DTA from the release tag
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Copy-Item -LiteralPath 'tr4w/target/TRMASTER.DTA' -Destination 'release-files/TRMASTER.DTA'
+
       - name: List release files
         shell: powershell
         run: Get-ChildItem -LiteralPath release-files | Format-Table Name, Length, LastWriteTime
@@ -1265,7 +1271,7 @@ jobs:
       #
       # REQUIRED vs OPTIONAL, AND THE LINE IS WHICH JOB PRODUCED IT.
       #
-      # The three artifacts off win-ci are Required. Their jobs are named in
+      # The three artifacts from earlier win-ci jobs are required. Their jobs are named in
       # this job's `if:` as having to have succeeded, so an absent one is not a
       # platform that was allowed to fail -- it is this workflow losing a file
       # it was handed, which is exactly the class of failure that made v5.0.14
@@ -1276,13 +1282,15 @@ jobs:
       # is that a Linux or macOS failure must never withhold the Windows
       # installer (2026-09-17). What they get is the annotation naming them and
       # their producing job's result.
-      - name: Report which platform artifacts are present
+      # TRMASTER.DTA is required too. It comes straight from the release tag.
+      - name: Report which release files are present
         shell: powershell
         run: |
           $expected = @(
             @{ Label = 'Windows installer'; Filter = 'tr4w_setup_*.exe';             Job = 'build';           Required = $true;  Result = '${{ needs.build.result }}' },
             @{ Label = 'Debug symbols';     Filter = 'tr4w-*.dbg';                   Job = 'build';           Required = $true;  Result = '${{ needs.build.result }}' },
             @{ Label = 'VirusTotal report'; Filter = 'virustotal-report.md';         Job = 'virustotal-scan'; Required = $true;  Result = '${{ needs['virustotal-scan'].result }}' },
+            @{ Label = 'TRMASTER data';     Filter = 'TRMASTER.DTA';                Job = 'release';         Required = $true;  Result = 'staged from tag' },
             @{ Label = 'Linux tarball';     Filter = 'tr4w-*-x86_64-linux.tar.gz';   Job = 'build-linux';     Required = $false; Result = '${{ needs['build-linux'].result }}' },
             @{ Label = 'Linux AppImage';    Filter = 'TR4W-*-x86_64.AppImage';       Job = 'build-linux';     Required = $false; Result = '${{ needs['build-linux'].result }}' },
             @{ Label = 'macOS disk image';  Filter = 'tr4w-*-aarch64-darwin.dmg';    Job = 'build-macos';     Required = $false; Result = '${{ needs['build-macos'].result }}' },
@@ -1327,7 +1335,7 @@ jobs:
           }
           Write-Host ("{0} of {1} expected artifacts are present." -f ($expected.Count - $missing), $expected.Count)
           if ($missingRequired.Count -gt 0) {
-            throw ("Required release asset(s) absent: {0}. Nothing is published from a run that cannot account for the Windows artifacts." -f ($missingRequired -join ', '))
+            throw ("Required release asset(s) absent: {0}." -f ($missingRequired -join ', '))
           }
 
       # Generate the changelog body against the REAL previous tag. GitHub's
@@ -1527,6 +1535,7 @@ jobs:
             release-files/tr4w_setup_*.exe
             release-files/tr4w-*.dbg
             release-files/virustotal-report.md
+            release-files/TRMASTER.DTA
             release-files/tr4w-*-x86_64-linux.tar.gz
             release-files/TR4W-*-x86_64.AppImage
             release-files/tr4w-*-aarch64-darwin.dmg

@@ -246,7 +246,7 @@ python lookup_build.py --output-dir D:\site\downloads\fcc --workdir D:\work\fcc
 | `--zip-file PATH` | Use an already-downloaded `l_amat.zip` (implies `--force`). |
 | `--ised-zip PATH` | Use an already-downloaded ISED `amateur_delim.zip`. |
 | `--keep-work` | Keep the scratch DB and zip for inspection. |
-| `--deploy` | After a good build, or when nothing changed, upload the `.gz` and `manifest.json` to the website's git repository (`https://github.com/TR4W/TR4W.github.io.git`, which GitHub Pages serves as `https://tr4w.github.io/`). It shallow-clones the repo into `<workdir>/deploy`, copies the two files, commits and pushes; nothing is committed when the site already holds identical files. Needs git and push access to the repo. |
+| `--deploy` | After a good build, or when nothing changed, upload the `.gz` and `manifest.json` to the website's git repository (`https://github.com/TR4W/TR4W.github.io.git`, which GitHub Pages serves as `https://tr4w.github.io/`). It shallow-clones the repo into a temporary directory under `<workdir>`, copies the two files, commits and pushes. Identical files are skipped. Needs Git and push access to the repo. |
 | `--deployURL URL` | Deploy to this git URL instead (any URL git accepts, such as a local bare repo for a trial run). Implies `--deploy`. |
 
 Exit code is 0 when the build succeeded or nothing needed doing, 1 on error.

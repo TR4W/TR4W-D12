@@ -394,8 +394,9 @@ about to tag. If not, do [section 5](#5-when-to-update-versionpas) first.
    - **release** (`win-ci`): runs only when `github.event_name == 'push'` (a tag),
      and only if build and virustotal-scan succeeded. It downloads the
      artifacts, generates notes scoped to the previous tag, and creates a
-     **draft** GitHub Release with the installer, the `.dbg`, the VT report and
-     whichever Linux/macOS artifacts exist. A missing optional artifact is
+     **draft** GitHub Release with the installer, the `.dbg`, the VT report,
+     the tag's `tr4w/target/TRMASTER.DTA`, and whichever Linux/macOS artifacts
+     exist. A missing optional artifact is
      reported by name, not fatal (`fail_on_unmatched_files: false`).
 
    **A `workflow_dispatch` run builds all three platforms and creates NO release**
@@ -418,10 +419,41 @@ about to tag. If not, do [section 5](#5-when-to-update-versionpas) first.
    - Open the draft on GitHub.
    - Edit the auto-generated notes -- highlight headline changes, call out radio
      additions, breaking changes, contest additions.
-   - Verify the installer is attached (and note which optional Linux/macOS
+   - Verify the installer and standalone `TRMASTER.DTA` are attached (and note which optional Linux/macOS
      artifacts the release job reported absent, if any).
    - **Publish.** This emails watchers and makes the release public. A green
      pipeline is a build-and-publish result; tr4w.net still serves 4.x.
+
+### Publish the current TRMASTER.DTA
+
+Operators can update Super Check Partial with **Help → Download TRMASTER.DTA**
+while keeping their installed TR4W version. The GitHub release carries the
+dataset shipped with that tag. The stable Pages download carries the dataset
+you choose to publish.
+
+Build and review new data with `tr4w/tools/trmaster/build_trmaster.cmd`, then
+put the result in `tr4w/target/TRMASTER.DTA` and commit it before tagging.
+After the release is public, run the publisher from the repository root with
+its exact tag. It uses your authenticated GitHub CLI and your Git write access
+to the TR4W organization Pages repository.
+
+```powershell
+py -3.12 tr4w/tools/trmaster/publish_trmaster.py vX.Y.Z
+py -3.12 tr4w/tools/trmaster/publish_trmaster.py vX.Y.Z --publish
+```
+
+The first command downloads and checks the release asset. The second validates
+the asset, commits it to the root Pages repository, and waits for the public
+URL to serve matching bytes. A rerun skips the push when the Pages source
+already contains those bytes. If verification times out after a push, check the
+Pages deployment and rerun it. The first publish creates the Pages URL, so the
+network URL check will report 404 there until that deployment completes.
+
+Keep `https://tr4w.net/TRMASTER.DTA` current for releases already in use.
+Continue copying the same file there with the existing website process, or
+configure that endpoint to redirect to Pages after the public file is verified.
+Older versions use the legacy URL directly. Builds with the Pages downloader
+try it as a fallback. [Pages download](https://tr4w.github.io/TRMASTER.DTA)
 
 ### Fixing a mis-tag
 

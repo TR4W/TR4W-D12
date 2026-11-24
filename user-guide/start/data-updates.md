@@ -13,7 +13,7 @@ Update reference data before an event, then verify the affected lookup in a prac
 ## Download and check
 
 1. Finish any active operating task and retain a backup of the contest before changing data used for scoring.
-2. Select the appropriate download action and wait for its completion or error report.
+2. Select the appropriate download action and wait for its completion or error report. **Help → Download TRMASTER.DTA** updates callsign data without installing a new TR4W version.
 3. Check the destination if diagnosing a failure. Downloads use the [settings directory](files.md), or the directory of the explicit `--settings` file, rather than the application bundle.
 4. In 5.1.0 a successful TRMASTER or call-history load takes effect in the running application. If the new file fails validation or loading, TR4W continues using the previous data. Follow the program's message for other data files.
 5. Check a known call/prefix or park reference. For POTA, confirm that the expected park name appears.
@@ -26,4 +26,4 @@ Read the diagnostic message for network, TLS, or destination-write errors. Confi
 
 ## Sources
 
-Current actions and destinations: `MainUnit.pas`, `uMenu.pas`, `uAppPaths.pas`. Downloaders: `uCTYUpdate.pas`, `uTRMasterUpdate.pas`, and `uPOTAParks.pas`. The TRMASTER downloader names `https://tr4w.net/TRMASTER.DTA`; the POTA module names `https://pota.app/all_parks_ext.csv`. Endpoint availability was not tested for this documentation update.
+Current actions and destinations are in `MainUnit.pas`, `uMenu.pas`, and `uAppPaths.pas`. The TRMASTER downloader in `uTRMasterUpdate.pas` uses the stable Pages address with a `tr4w.net` fallback in builds that support Pages. Earlier builds fetch from `tr4w.net`. You can also download the standalone file shipped with a version from its GitHub release assets, once available. [TR4W releases](https://github.com/TR4W/TR4W-D12/releases)

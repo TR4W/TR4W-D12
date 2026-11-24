@@ -19,7 +19,8 @@
 https://www.country-files.com/cty/cty.dat | endpoint | head | uCTYUpdate
 https://www.country-files.com/feed/ | endpoint | get | uCTYUpdate
 https://api.hamdb.org/v1/ | endpoint | root | uCallbookHamDB
-https://tr4w.net/TRMASTER.DTA | endpoint | head | uTRMasterUpdate
+https://tr4w.github.io/TRMASTER.DTA | endpoint | head | uTRMasterUpdate | current data
+https://tr4w.net/TRMASTER.DTA | endpoint | head | uTRMasterUpdate | legacy mirror and fallback
 https://tr4w.net/version.json | endpoint | get | uCheckLatestVersion
 https://tr4w.github.io | endpoint | skip | Version | data host for the FCC/VE license database (Version.FCC_LICENSE_DOWNLOAD_URL); file not published yet, so no probe
 https://pota.app/all_parks_ext.csv | endpoint | head | uPOTAParks
