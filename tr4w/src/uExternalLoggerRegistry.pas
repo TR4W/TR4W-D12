@@ -52,6 +52,12 @@ type
       Kind: TLoggerFieldKind;
       Required: boolean;
       Loader: TLoggerChoiceLoader;
+      (* A TEXT field only: a "Find..." button beside the box. It runs this off
+         the main thread on the editor's unsaved values (the same task as a
+         choice's Loader); on success the editor offers aChoices as a pick list
+         (Value goes into the box), and a non-empty result is a SENTENCE the
+         editor shows as it is -- not a code. The row stays a plain text row. *)
+      Finder: TLoggerChoiceLoader;
       (* A check box only: the sentence the editor shows while the box is
          CLEARED. '' = none. *)
       OffWarning: string;

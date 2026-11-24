@@ -38,7 +38,8 @@ unit uCloudlogClient;
    success). A contact never delivered is simply sent (edit) or cancelled
    locally (delete). *)
 interface
-uses uExternalDeliveryClient, uExternalDelivery, uHTTPDownload;
+uses uExternalDeliveryClient, uExternalDelivery, uHTTPDownload, uHttpTransport,
+   uExternalLoggerRegistry;
 const
    (* Local delivery marker, never sent anywhere. The outbox needs a nonempty
       remote identity on a confirmed creation and these servers return none; the
@@ -54,9 +55,34 @@ type
    public
       constructor Create(const aBaseUrl, aProfileId, aApiKey: string);
       function Deliver(const aJob: TDeliveryJob): TExternalDeliveryResult; override;
+      (* THE EDITOR'S "FIND..." (NY4I, 2026-11-24): ONE read-only GET of
+         <base>/api/station_info/<key>, which lists the station locations the
+         key's owner has. aChoices gets one row per station (Value = the
+         station_id, the number the Station profile wants). Returns '' when at
+         least one was found, else the sentence to show the operator. Worker-
+         thread safe; sends no contact. The key is in the URL PATH, so it is
+         also the request's Password (no Username): the shared layer scrubs it
+         out of every line it writes, URL included. The base is the editor's
+         unsaved text; AllowInsecure and VerifyServer are the client's own. *)
+      function ReadStations(const aChoices: TLoggerChoices): string;
    end;
 (* base + '/api/qso', with trailing slashes on the base dropped. *)
 function CloudlogQsoUrl(const aBaseUrl: string): string;
+(* base + '/api/station_info/' + the key encoded as ONE path segment
+   (uHTTPDownload.EncodeUrlSegment, the form ScrubSecret masks). *)
+function CloudlogStationInfoUrl(const aBaseUrl, aKey: string): string;
+(* The station_info answer as a pick list: False when aBody is not a JSON array
+   (an HTML page, an error object); True for an array, which may be empty.
+   One row per element that has a station_id made of digits, as a number or a
+   string. Display = 'id - name (call)', with ' [inactive]' (the word is
+   SLoggerFindInactive) when station_active is 0, false or "0". Other fields
+   (Wavelog sends many) are ignored; a missing name or call is just left out. *)
+function CloudlogParseStations(const aBody: string; const aChoices: TLoggerChoices): boolean;
+(* THE WHOLE OUTCOME AS WORDS, pure: what the request ended as (aFailure,
+   aStatus, aBody) to the sentence the operator reads, '' when the list was
+   filled. 401 and 404 and the not-sent kinds each have their own sentence. *)
+function CloudlogFindOutcomeText(aFailure: THttpFailure; aStatus: integer;
+   const aBody: string; const aChoices: TLoggerChoices): string;
 (* WHICH 401 IT WAS. The servers answer 401 for several problems and say which
    in the JSON body's "reason" (read from Api.php, 2026-11-24):
       'station id does not belong to the API key owner.'  CLOUDLOG_STATION_NOT_OWNED
@@ -66,18 +92,172 @@ function CloudlogQsoUrl(const aBaseUrl: string): string;
    The station-id text also contains "api key", so it is tested first. Pure. *)
 function CloudlogUnauthorizedCode(const aBody: string): string;
 implementation
-uses SysUtils, fpjson, uJSON;
+uses SysUtils, fpjson, uJSON, uAppStrings;
+
+(* The address as typed, without surrounding blanks or trailing slashes: the one
+   tidy-up both URLs below share. *)
+function TidyBase(const aBaseUrl: string): string;
+begin
+   Result := Trim(aBaseUrl);
+   while (Result <> '') and (Result[Length(Result)] = '/') do
+      begin
+      Delete(Result, Length(Result), 1);
+      end;
+end;
 
 function CloudlogQsoUrl(const aBaseUrl: string): string;
-var
-   base: string;
 begin
-   base := Trim(aBaseUrl);
-   while (base <> '') and (base[Length(base)] = '/') do
+   Result := TidyBase(aBaseUrl) + '/api/qso';
+end;
+
+function CloudlogStationInfoUrl(const aBaseUrl, aKey: string): string;
+begin
+   Result := TidyBase(aBaseUrl) + '/api/station_info/' + EncodeUrlSegment(aKey);
+end;
+
+(* A station_id is the NUMBER the Station profile wants: digits only. *)
+function AllDigits(const aText: string): boolean;
+var
+   i: integer;
+begin
+   Result := aText <> '';
+   for i := 1 to Length(aText) do
       begin
-      Delete(base, Length(base), 1);
+      if not (aText[i] in ['0'..'9']) then
+         begin
+         Result := False;
+         Exit;
+         end;
       end;
-   Result := base + '/api/qso';
+end;
+
+(* One member as text: '' when it is absent, null, an object or an array (AsString
+   of a null RAISES, and a station with a null name must not end the list). *)
+function MemberText(aObject: TJSONObject; const aName: string): string;
+var
+   item: TJSONData;
+begin
+   Result := '';
+   item := aObject.Find(AnsiString(aName));
+   if (item <> nil) and (item.JSONType in [jtString, jtNumber, jtBoolean]) then
+      begin
+      Result := item.AsString;
+      end;
+end;
+
+function CloudlogParseStations(const aBody: string; const aChoices: TLoggerChoices): boolean;
+var
+   root: TJSONData;
+   item: TJSONObject;
+   i: integer;
+   id, name, call, flag, text: string;
+begin
+   Result := False;
+   root := nil;
+   try
+      try
+         root := GetJSON(UTF8Encode(aBody));
+      except
+         Exit;
+      end;
+      if (root = nil) or (root.JSONType <> jtArray) then
+         begin
+         Exit;
+         end;
+      Result := True;
+      for i := 0 to root.Count - 1 do
+         begin
+         if root.Items[i].JSONType <> jtObject then
+            begin
+            Continue;
+            end;
+         item := TJSONObject(root.Items[i]);
+         id := Trim(MemberText(item, 'station_id'));
+         if not AllDigits(id) then
+            begin
+            Continue;
+            end;
+         name := Trim(MemberText(item, 'station_profile_name'));
+         call := Trim(MemberText(item, 'station_callsign'));
+         flag := LowerCase(Trim(MemberText(item, 'station_active')));
+         text := id;
+         if name <> '' then
+            begin
+            text := text + ' - ' + name;
+            end;
+         if call <> '' then
+            begin
+            text := text + ' (' + call + ')';
+            end;
+         if (flag = '0') or (flag = 'false') or (flag = 'n') or (flag = 'no') then
+            begin
+            text := text + ' [' + SLoggerFindInactive + ']';
+            end;
+         aChoices.Add(id, text);
+         end;
+   finally
+      root.Free;
+   end;
+end;
+
+function CloudlogFindOutcomeText(aFailure: THttpFailure; aStatus: integer;
+   const aBody: string; const aChoices: TLoggerChoices): string;
+begin
+   Result := '';
+   case aFailure of
+      hfNone:
+         begin
+         end;
+      hfPlaintextNotAllowed:
+         begin
+         Result := SLoggerFindPlainHttp;
+         Exit;
+         end;
+      hfBadScheme:
+         begin
+         Result := SLoggerFindBadAddress;
+         Exit;
+         end;
+      hfTlsUnavailable, hfTlsLibraryFault, hfTrustUnavailable,
+      hfVerificationUnavailable, hfVerificationFailed:
+         begin
+         Result := SLoggerFindSecure;
+         Exit;
+         end;
+   else
+      begin
+      Result := SLoggerFindNoAnswer;
+      Exit;
+      end;
+   end;
+   if aStatus = 200 then
+      begin
+      if not CloudlogParseStations(aBody, aChoices) then
+         begin
+         Result := SLoggerFindNotList;
+         end
+      else if aChoices.Count = 0 then
+         begin
+         Result := SLoggerFindEmpty;
+         end;
+      Exit;
+      end;
+   if aStatus = 401 then
+      begin
+      Result := SLoggerFind401;
+      end
+   else if aStatus = 404 then
+      begin
+      Result := SLoggerFind404;
+      end
+   else if (aStatus >= 300) and (aStatus < 400) then
+      begin
+      Result := SLoggerWhyCloudlogRedirect;
+      end
+   else
+      begin
+      Result := UnicodeFormat(SLoggerFindHttp, [aStatus]);
+      end;
 end;
 
 function CloudlogUnauthorizedCode(const aBody: string): string;
@@ -339,6 +519,48 @@ begin
    finally
       request.Free;
       body.Free;
+   end;
+end;
+
+function TCloudlogClient.ReadStations(const aChoices: TLoggerChoices): string;
+var
+   request: THttpRequest;
+begin
+   (* An empty key is refused BEFORE a request: ScrubSecret leaves text alone
+      for an empty secret, and a locked vault leaves the box empty. *)
+   if Trim(FBaseUrl) = '' then
+      begin
+      Result := SLoggerFindNoAddress;
+      Exit;
+      end;
+   if FKey = '' then
+      begin
+      Result := SLoggerFindNoKey;
+      Exit;
+      end;
+   request := NewRequest(CloudlogStationInfoUrl(FBaseUrl, FKey));
+   try
+      StampRequest(request);
+      request.Method := 'GET';
+      request.UserAgent := 'TR4W';
+      (* THE KEY IS IN THE URL PATH: named as the Password, with no Username,
+         so no Authorization header is made but the shared layer masks it (and
+         its encoded form) in every line it writes -- the request, the failure,
+         the refusal and the redirect lines. *)
+      request.Password := FKey;
+      request.Sensitive := True;
+      (* Not followed: a followed redirect hands the caller a FinalURL, and a
+         redirect on a read means the address is wrong (the sentence says so). *)
+      request.FollowRedirects := False;
+      request.ConnectMs := 5000;
+      request.IOMs := 10000;
+      (* Wavelog adds many fields to every station. *)
+      request.MaxResponseBytes := 262144;
+      request.Send;
+      Result := CloudlogFindOutcomeText(request.Failure, request.StatusCode,
+         request.Response, aChoices);
+   finally
+      request.Free;
    end;
 end;
 

@@ -739,6 +739,14 @@ URL's box has its own red warning line at the bottom (`lblScoreVerifyNote`). The
 handlers (`chkHamScoreVerifyChange`, `chkScoreVerifyChange`, `edtScorePostURLChange`) call `MarkDirty`
 themselves. The external logger editor gained a check row (`lfkCheck`, `row.Check`, `FieldCheck`) and
 `lblVerifyNote`, laid out by `FitLayout` only while shown. Captions are resourcestrings set in code.
+**A TEXT row can carry a "Find..." button (2026-11-24, Cloudlog's Station profile):** the descriptor's
+`Finder` (a `TLoggerChoiceLoader`) makes `BuildRow` give the text row a `RefreshButton`, so `RowOf`,
+`SetBusy` and the shared `TChoiceTask` / `tmrLoad` / `PollLoad` run it unchanged; `FitLayout` places
+the button at the row's right edge, narrows the box, widens the dialog by the gap plus the button, and
+counts its height in the row. `ApplyLoad` sends a text row to `ApplyFind`: a failure sentence goes to
+`lblFieldStatus` as it is, success opens the LCL's own `InputCombo` and the pick is assigned to
+`row.Edit.Text` -- which now reaches `RowChanged` for the `LF_LOGBOOK` text row (the handler was
+written for it but never attached), so the profile advice note follows the box.
 
 ## The exchange field's single space is a keying state; Win32 UIA ignores AccessibleName (issues 296, 278, 2026-11-13)
 

@@ -1972,6 +1972,26 @@ resourcestring
    SLoggersWindowOn          = 'On';
    SLoggersWindowOff         = 'Off';
    SLoggerPlainHttpRefusedNotice ='nothing was sent: the address is plain http. Use https, or tick Allow insecure in this logger''s settings, save, and restart TR4W.';
+   (* THE CLOUDLOG / WAVELOG "FIND..." BUTTON beside the Station profile
+      (NY4I, 2026-11-24): one read-only GET of the station locations the key's
+      owner has, to pick the NUMBER from. Nothing is sent that is not a read;
+      no contact is posted. Every sentence below is shown in the editor. *)
+   SLoggerFindCaption        = 'Find...';
+   SLoggerFindLoading        = 'Looking up the station locations...';
+   SLoggerFindPickCaption    = 'Station location';
+   SLoggerFindPickPrompt     = 'Pick the station location this logger sends to:';
+   SLoggerFindInactive       = 'inactive';
+   SLoggerFindNoAddress      = 'Enter the Cloudlog / Wavelog address first.';
+   SLoggerFindNoKey          = 'Enter the API key first.';
+   SLoggerFindPlainHttp      = 'Nothing was sent: the address is plain http. Use https, or tick Allow insecure (plain http) and try again.';
+   SLoggerFindBadAddress     = 'Nothing was sent: the address must start with https:// (or http:// with Allow insecure ticked).';
+   SLoggerFindSecure         = 'A secure (https) connection could not be set up, so nothing was sent. The certificate was refused, or the TLS library or the certificate file is missing. The log has the detail.';
+   SLoggerFindNoAnswer       = 'There was no answer from the server. Check the address and that the server is reachable.';
+   SLoggerFind401            = 'The server refused the key (HTTP 401): it is wrong, or it is not allowed to read station locations.';
+   SLoggerFind404            = 'The server answered 404: the address is probably wrong. If the site has no URL rewriting, end the address with /index.php.';
+   SLoggerFindHttp           = 'The server answered HTTP %d, not a list of station locations. Check the address.';
+   SLoggerFindNotList        = 'The server''s answer was not a list of station locations. Check the address.';
+   SLoggerFindEmpty          = 'No station locations were found for this key.';
 
    (* THE TAILCAT ADDRESS ROW on Preferences > Network (issue 293): the
       string a server operator gives a remote position to reach the multi-op

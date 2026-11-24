@@ -117,6 +117,7 @@ type
       procedure ReadRows(const aTarget: TExternalLoggerDefinition; aFinal: boolean);
       procedure StartLoad(const aRow: TFieldRow);
       procedure ApplyLoad(const aTask: TChoiceTask);
+      procedure ApplyFind(const aRow: TFieldRow; const aTask: TChoiceTask);
       procedure StartAutoLoad;
       procedure SetBusy;
       procedure ShowDefinition;
@@ -541,6 +542,23 @@ begin
             is disabled while it stands (UpdateVerifyNote). *)
          Result.Edit.OnChange := RowChanged;
          end;
+      if (aDescriptor.Key = LF_LOGBOOK) and (aDescriptor.Kind = lfkText) then
+         begin
+         (* The station-profile advice follows the box, and a value the Find
+            list puts there reaches RowChanged the same way. *)
+         Result.Edit.OnChange := RowChanged;
+         end;
+      if Assigned(aDescriptor.Finder) then
+         begin
+         (* A plain text row with a Find... button (TLoggerFieldDescriptor.Finder).
+            The button is the row's RefreshButton, so FitLayout, SetBusy and
+            RowOf treat it as they treat a choice's Refresh. *)
+         Result.RefreshButton := TButton.Create(Result.Panel);
+         Result.RefreshButton.Parent := Result.Panel;
+         Result.RefreshButton.Anchors := [akTop, akLeft];
+         Result.RefreshButton.Caption := UTF8Encode(SLoggerFindCaption);
+         Result.RefreshButton.OnClick := RefreshClick;
+         end;
       if aDescriptor.Kind = lfkSecret then
          begin
          Result.Edit.PasswordChar := '*';
@@ -717,6 +735,11 @@ begin
          begin
          fieldW := Max(fieldW, WidestText(row.Combo.Font, row.Combo.Items) +
             Px(DROPDOWN_CHROME_96) + Px(COLUMN_GAP_96) + refreshW);
+         end
+      else if (row.Edit <> nil) and (row.RefreshButton <> nil) then
+         begin
+         (* A text box with a Find... button keeps its own width. *)
+         fieldW := Max(fieldW, Px(FIELD_WIDTH_96) + Px(COLUMN_GAP_96) + refreshW);
          end;
       end;
    rowW := editLeft + fieldW;
@@ -753,6 +776,10 @@ begin
       else
          begin
          rowH := Max(rowH, HeightOf(row.Edit));
+         if row.RefreshButton <> nil then
+            begin
+            rowH := Max(rowH, HeightOf(row.RefreshButton));
+            end;
          end;
       end;
    rowH := Max(Px(ROW_PITCH_96), rowH + Px(ROW_SPACE_96));
@@ -801,7 +828,19 @@ begin
             eyeW := h;
             eye.Width := eyeW;
             end;
-         row.Edit.SetBounds(editLeft, (rowH - h) div 2, fieldW - eyeW, h);
+         if row.RefreshButton <> nil then
+            begin
+            (* Find... at the row's right edge, the box narrowed to make room. *)
+            row.RefreshButton.SetBounds(rowW - refreshW,
+               (rowH - HeightOf(row.RefreshButton)) div 2, refreshW,
+               HeightOf(row.RefreshButton));
+            row.Edit.SetBounds(editLeft, (rowH - h) div 2,
+               fieldW - eyeW - Px(COLUMN_GAP_96) - refreshW, h);
+            end
+         else
+            begin
+            row.Edit.SetBounds(editLeft, (rowH - h) div 2, fieldW - eyeW, h);
+            end;
          end;
       end;
    y := pnlFields.Top + pnlFields.Height + Px(SECTION_GAP_96);
@@ -1091,9 +1130,19 @@ end;
 procedure TExternalLoggersForm.StartLoad(const aRow: TFieldRow);
 var
    work: TExternalLoggerDefinition;
+   loader: TLoggerChoiceLoader;
 begin
-   if (aRow = nil) or (FTask <> nil) or
-      not Assigned(aRow.Descriptor.Loader) then
+   if aRow = nil then
+      begin
+      Exit;
+      end;
+   (* A choice's Loader, or a text row's Finder: the same off-thread task. *)
+   loader := aRow.Descriptor.Loader;
+   if not Assigned(loader) then
+      begin
+      loader := aRow.Descriptor.Finder;
+      end;
+   if (FTask <> nil) or not Assigned(loader) then
       begin
       Exit;
       end;
@@ -1103,13 +1152,54 @@ begin
    try
       work.Assign(FDefinition);
       ReadRows(work, False);
-      FTask := TChoiceTask.Create(aRow.Descriptor.Key, aRow.Descriptor.Loader, work);
+      FTask := TChoiceTask.Create(aRow.Descriptor.Key, loader, work);
    finally
       work.Free;
    end;
-   lblFieldStatus.Caption := UTF8Encode(SLoggerChoiceLoading);
+   if aRow.Combo = nil then
+      begin
+      lblFieldStatus.Caption := UTF8Encode(SLoggerFindLoading);
+      end
+   else
+      begin
+      lblFieldStatus.Caption := UTF8Encode(SLoggerChoiceLoading);
+      end;
    FTask.Start;
    SetBusy;
+end;
+
+(* A FINDER'S ANSWER (a text row's Find... button). A failure is a sentence, shown
+   as it is; success is a modal pick list (the LCL's own InputCombo: an attended
+   setup dialog, never a contest-time path) and the pick's value goes into the
+   box, which the box's own change handler then reacts to. Cancel changes
+   nothing. *)
+procedure TExternalLoggersForm.ApplyFind(const aRow: TFieldRow;
+   const aTask: TChoiceTask);
+var
+   items: TStringList;
+   i, index: integer;
+begin
+   if aTask.ErrorCode <> '' then
+      begin
+      lblFieldStatus.Caption := UTF8Encode(aTask.ErrorCode);
+      Exit;
+      end;
+   lblFieldStatus.Caption := '';
+   items := TStringList.Create;
+   try
+      for i := 0 to aTask.Choices.Count - 1 do
+         begin
+         items.Add(UTF8Encode(aTask.Choices.Display[i]));
+         end;
+      index := InputCombo(UTF8Encode(SLoggerFindPickCaption),
+         UTF8Encode(SLoggerFindPickPrompt), items);
+      if (index >= 0) and (index < aTask.Choices.Count) then
+         begin
+         aRow.Edit.Text := UTF8Encode(aTask.Choices.Value[index]);
+         end;
+   finally
+      items.Free;
+   end;
 end;
 
 (* The saved entry stays selectable, whatever the answer was: without a
@@ -1124,6 +1214,11 @@ begin
    row := RowByKey(aTask.Key);
    if row = nil then
       begin
+      Exit;
+      end;
+   if row.Combo = nil then
+      begin
+      ApplyFind(row, aTask);
       Exit;
       end;
    if aTask.ErrorCode <> '' then

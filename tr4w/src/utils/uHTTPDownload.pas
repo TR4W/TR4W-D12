@@ -60,6 +60,14 @@ function MaskSecret(const aSecret: string): string;
   reason shown to the operator. An empty secret leaves the text alone. *)
 function ScrubSecret(const aText, aSecret: string): string;
 
+(* A VALUE AS ONE URL PATH SEGMENT OR QUERY VALUE, in exactly the encoding
+  ScrubSecret looks for. A key that travels in a PATH (Cloudlog's
+  /api/station_info/<key>) must be built with this, never another encoder, or a
+  form ScrubSecret does not search for would reach a log unmasked. The request
+  then names the key as its Password (with no Username) and every line the
+  shared layer writes shows ******** in its place. *)
+function EncodeUrlSegment(const aText: string): string;
+
 (* THE ONE LOG LINE FOR A TRANSPORT FAILURE: method, URL, exception class and
   message, with both secrets scrubbed out of ALL of it. A URL can carry a key in
   a query string and a server's error text can echo one back, so neither is
@@ -325,6 +333,11 @@ begin
       end;
 end;
 
+function EncodeUrlSegment(const aText: string): string;
+begin
+   Result := UTF8Decode(EncodeURLElement(UTF8Encode(aText)));
+end;
+
 function ScrubSecret(const aText, aSecret: string): string;
 var
    encoded: string;
@@ -334,7 +347,7 @@ begin
       begin
       Exit;
       end;
-   encoded := UTF8Decode(EncodeURLElement(UTF8Encode(aSecret)));
+   encoded := EncodeUrlSegment(aSecret);
    if encoded <> aSecret then
       begin
       (* UnicodeStringReplace: FPC 3.2.2's SysUtils.StringReplace takes
@@ -1262,6 +1275,8 @@ begin
          begin
          FinalURL := wire.URL;   (* the address that answered the repeat *)
          end;
+      (* A caller may show or log this, and a key in a path would be in it. *)
+      FinalURL := ScrubBoth(FinalURL, BearerToken, Password);
       ErrorDetail := ScrubBoth(res.Detail, BearerToken, Password);
    finally
       res.Free;

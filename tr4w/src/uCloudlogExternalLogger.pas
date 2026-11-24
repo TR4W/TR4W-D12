@@ -11,7 +11,7 @@ unit uCloudlogExternalLogger;
    See uCloudlogClient and docs/EXTERNAL_LOGGERS_DESIGN.md. *)
 interface
 uses VC, uQsoMyFacts, uDurableExternalLogger, uExternalDeliveryWorker,
-   uExternalDeliveryClient, uExternalLoggerConfig;
+   uExternalDeliveryClient, uExternalLoggerConfig, uExternalLoggerRegistry;
 type
    TCloudlogWorker = class(TExternalDeliveryWorker)
    private
@@ -39,8 +39,13 @@ type
    public
       constructor Create(const aDefinition: TExternalLoggerDefinition; aComputerId: AnsiChar);
    end;
+(* The Station profile's "Find..." (TLoggerFieldDescriptor.Finder). Worker-thread
+   safe; a public name so a test can run it against a fake transport. '' = the
+   list is filled, else the sentence to show. *)
+function LoadCloudlogStations(const aWork: TExternalLoggerDefinition;
+   const aChoices: TLoggerChoices): string;
 implementation
-uses PostUnit, uCloudlogClient, uExternalLoggerRegistry, uExternalLoggerService,
+uses PostUnit, uCloudlogClient, uExternalLoggerService,
    uAppStrings;
 const
    (* The durable account label; the destination is told apart by the logger id
@@ -87,12 +92,34 @@ function CreateCloudlog(const aDefinition: TExternalLoggerDefinition;
 begin
    Result := TCloudlogExternalLogger.Create(aDefinition, aComputerId);
 end;
+function LoadCloudlogStations(const aWork: TExternalLoggerDefinition;
+   const aChoices: TLoggerChoices): string;
+var
+   client: TCloudlogClient;
+begin
+   (* The editor's unsaved address, key and Allow insecure / certificate
+      choices, exactly what a delivery would use. One read; nothing is sent
+      that is not a read. *)
+   client := TCloudlogClient.Create(aWork.URL, '', aWork.ApiKey);
+   try
+      client.VerifyServer := aWork.VerifyServer;
+      client.Destination := aWork.Name;
+      client.AllowInsecure := aWork.AllowInsecure;
+      Result := client.ReadStations(aChoices);
+   finally
+      client.Free;
+   end;
+end;
+
 (* The station profile id is stored in the definition's Logbook. *)
 procedure DeclareCloudlogFields(const aFields: TLoggerFieldList);
 begin
    aFields.AddText(LF_URL, SLoggerFieldCloudlogUrl, True);
    aFields.AddSecret(LF_API_KEY, SLoggerFieldCloudlogKey, False);
-   aFields.AddText(LF_LOGBOOK, SLoggerFieldCloudlogProfile, True);
+   (* A plain text row with a Find... button: the id is the station location's
+      NUMBER and the editor can list them (issue: NY4I 2026-11-24). *)
+   aFields.AddText(LF_LOGBOOK, SLoggerFieldCloudlogProfile, True).Finder :=
+      LoadCloudlogStations;
    aFields.AddVerifyServer;
    (* NY4I, 2026-11-24: a Cloudlog / Wavelog on a home network is often plain
       http. Refused unless this box is ticked; the editor says why. *)

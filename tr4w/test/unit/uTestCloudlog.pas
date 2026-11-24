@@ -43,6 +43,12 @@ type
       procedure Test_EditAndDelete_Policy;
       procedure Test_Descriptors_AndDefinitionError;
       procedure Test_DestinationIdentity;
+      procedure Test_StationInfoUrl;
+      procedure Test_ParseStations;
+      procedure Test_FindOutcomeText;
+      procedure Test_FindRequestShape_AndRefusals;
+      procedure Test_FindKeyInThePathIsNeverLogged;
+      procedure Test_FindIsADeclaredFinderOnTheProfileRow;
    public
       procedure RunAllTests; override;
    end;
@@ -554,6 +560,292 @@ begin
    end;
 end;
 
+(* ---- The editor's Find... (station_info), 2026-11-24 ---- *)
+
+(* One Find through LoadCloudlogStations, the loader the editor runs, with the
+   editor's unsaved values in a work copy. *)
+function FindStations(aFake: TFakeHttpTransport; const aBase, aKey: string;
+                      aAllowInsecure: boolean;
+                      const aChoices: TLoggerChoices): string;
+var
+   d: TExternalLoggerDefinition;
+begin
+   SetHttpTransportForTest(aFake);
+   d := TExternalLoggerDefinition.Create;
+   try
+      d.ProviderId := 'CLOUDLOG';
+      d.Name := 'Shack';
+      d.URL := aBase;
+      d.ApiKey := aKey;
+      d.AllowInsecure := aAllowInsecure;
+      d.VerifyServer := True;
+      Result := LoadCloudlogStations(d, aChoices);
+   finally
+      d.Free;
+      SetHttpTransportForTest(nil);
+   end;
+end;
+
+const
+   STATIONS_BODY =
+      '[{"station_id":"2","station_profile_name":"Home-EL88","station_callsign":"NY4I","station_gridsquare":"EL88","station_active":"1"},' +
+      '{"station_id":3,"station_profile_name":"Old QTH","station_callsign":"NY4I","station_active":"0"}]';
+
+procedure TCloudlogTests.Test_StationInfoUrl;
+begin
+   BeginTest('Find: the address is the base plus /api/station_info/ plus the key as one path segment');
+   CheckEquals('https://h.test/api/station_info/abc123', CloudlogStationInfoUrl('https://h.test', 'abc123'));
+   CheckEquals('https://h.test/api/station_info/abc123', CloudlogStationInfoUrl(' https://h.test/// ', 'abc123'),
+               'trailing slashes and blanks tidied');
+   CheckEquals('https://h.test/index.php/api/station_info/abc123',
+               CloudlogStationInfoUrl('https://h.test/index.php/', 'abc123'), 'an index.php instance');
+   CheckEquals('https://h.test/api/station_info/' + EncodeUrlSegment('a/b c'),
+               CloudlogStationInfoUrl('https://h.test', 'a/b c'), 'a key with / or a blank cannot add path segments');
+   CheckTrue(Pos('a/b', CloudlogStationInfoUrl('https://h.test', 'a/b c')) = 0, 'the slash is encoded');
+end;
+
+procedure TCloudlogTests.Test_ParseStations;
+var
+   c: TLoggerChoices;
+begin
+   BeginTest('Find: the station list parses numeric and string ids, inactive flags, and tolerates the rest');
+   c := TLoggerChoices.Create;
+   try
+      CheckTrue(CloudlogParseStations(STATIONS_BODY, c), 'a list');
+      CheckEquals(2, c.Count);
+      CheckEquals('2', c.Value[0], 'string id');
+      CheckEquals('2 - Home-EL88 (NY4I)', c.Display[0]);
+      CheckEquals('3', c.Value[1], 'numeric id');
+      CheckEquals('3 - Old QTH (NY4I) [' + SLoggerFindInactive + ']', c.Display[1], 'inactive is marked');
+   finally
+      c.Free;
+   end;
+   c := TLoggerChoices.Create;
+   try
+      CheckTrue(CloudlogParseStations(
+         '[{"station_id":"5"},{"station_id":6,"station_active":0,"station_profile_name":"P"},' +
+         '{"station_id":7,"station_active":false},{"station_id":8,"station_active":true,"x":{"y":1},"station_country":"USA"},' +
+         '{"station_id":9,"station_active":null,"station_profile_name":null,"station_callsign":null},{"station_id":"","station_profile_name":"no id"},' +
+         '{"station_profile_name":"missing id"},{"station_id":"abc"},"junk",42,{"station_id":10,"station_callsign":"W1AW"}]', c),
+         'tolerant');
+      CheckEquals(6, c.Count, 'ids 5..10: a missing, empty or non-numeric id and non-objects are skipped');
+      CheckEquals('5', c.Display[0], 'only an id');
+      CheckEquals('6 - P [' + SLoggerFindInactive + ']', c.Display[1], 'numeric 0');
+      CheckEquals('7 [' + SLoggerFindInactive + ']', c.Display[2], 'boolean false');
+      CheckEquals('8', c.Display[3], 'true and extra Wavelog fields');
+      CheckEquals('9', c.Display[4], 'null is not marked');
+      CheckEquals('10 (W1AW)', c.Display[5], 'no name');
+   finally
+      c.Free;
+   end;
+   c := TLoggerChoices.Create;
+   try
+      CheckTrue(CloudlogParseStations('[]', c), 'an empty list is a list');
+      CheckEquals(0, c.Count);
+      CheckFalse(CloudlogParseStations('{"status":"failed","reason":"missing or invalid api key"}', c), 'an object');
+      CheckFalse(CloudlogParseStations('<html>nope</html>', c), 'html');
+      CheckFalse(CloudlogParseStations('', c), 'nothing');
+   finally
+      c.Free;
+   end;
+end;
+
+procedure TCloudlogTests.Test_FindOutcomeText;
+var
+   c: TLoggerChoices;
+   f: THttpFailure;
+
+   function Say(aFailure: THttpFailure; aStatus: integer; const aBody: string): string;
+   begin
+      c.Clear;
+      Result := CloudlogFindOutcomeText(aFailure, aStatus, aBody, c);
+   end;
+begin
+   BeginTest('Find: every outcome reads as one sentence, success as none');
+   c := TLoggerChoices.Create;
+   try
+      CheckEquals('', Say(hfNone, 200, STATIONS_BODY), 'success');
+      CheckEquals(SLoggerFindEmpty, Say(hfNone, 200, '[]'), 'empty list');
+      CheckEquals(SLoggerFindNotList, Say(hfNone, 200, '<html>login</html>'), 'not JSON');
+      CheckEquals(SLoggerFindNotList, Say(hfNone, 200, '{"a":1}'), 'not a list');
+      CheckEquals(SLoggerFind401, Say(hfNone, 401, '{"status":"failed","reason":"missing or invalid api key"}'), '401');
+      CheckEquals(SLoggerFind404, Say(hfNone, 404, ''), '404 mentions index.php');
+      CheckTrue(Pos('/index.php', SLoggerFind404) > 0, 'the 404 sentence names /index.php');
+      CheckEquals(SLoggerWhyCloudlogRedirect, Say(hfNone, 302, ''), 'a redirect');
+      CheckEquals(UnicodeFormat(SLoggerFindHttp, [500]), Say(hfNone, 500, ''), 'other status');
+      CheckEquals(SLoggerFindPlainHttp, Say(hfPlaintextNotAllowed, 0, ''), 'plain http is said');
+      CheckEquals(SLoggerFindBadAddress, Say(hfBadScheme, 0, ''), 'bad scheme');
+      CheckEquals(SLoggerFindSecure, Say(hfTrustUnavailable, 0, ''), 'no CA bundle');
+      CheckEquals(SLoggerFindSecure, Say(hfVerificationFailed, 0, ''), 'certificate refused');
+      CheckEquals(SLoggerFindNoAnswer, Say(hfCannotConnect, 0, ''), 'cannot connect');
+      for f := Low(THttpFailure) to High(THttpFailure) do
+         begin
+         if f <> hfNone then
+            begin
+            CheckTrue(Say(f, 0, '') <> '', 'a failure kind always has a sentence');
+            end;
+         end;
+   finally
+      c.Free;
+   end;
+end;
+
+procedure TCloudlogTests.Test_FindRequestShape_AndRefusals;
+var
+   fake: TFakeHttpTransport;
+   c: TLoggerChoices;
+   text: string;
+begin
+   BeginTest('Find: ONE read-only GET of station_info with the editor''s values; refusals send nothing');
+   DeclareVerifyOn;
+   c := TLoggerChoices.Create;
+   fake := Scripted(200, STATIONS_BODY);
+   try
+      text := FindStations(fake, BASE + '/index.php/', KEY, False, c);
+      CheckEquals('', text, 'found');
+      CheckEquals(2, c.Count);
+      CheckEquals(1, fake.Calls, 'one request');
+      CheckEquals('GET', fake.Last.Method);
+      CheckEquals(BASE + '/index.php/api/station_info/' + EncodeUrlSegment(KEY), fake.Last.URL);
+      CheckEquals(KEY, fake.Last.Password, 'the key is named so it is scrubbed');
+      CheckEquals('', fake.Last.Username, 'no basic-auth header');
+      CheckEquals('', fake.Last.BearerToken, 'no bearer header');
+      CheckFalse(fake.Last.FollowRedirects, 'a redirect is reported, not followed');
+      CheckTrue(fake.Last.ConnectMs > 0, 'a connect timeout is set');
+      CheckTrue(fake.Last.IOMs > 0, 'a read timeout is set');
+      CheckTrue(fake.Last.VerifyServer, 'the editor''s certificate choice');
+      (* Plain http: refused in words unless the editor's box is ticked. *)
+      c.Clear;
+      CheckEquals(SLoggerFindPlainHttp, FindStations(fake, 'http://192.168.1.5', KEY, False, c),
+                  'plain http without Allow insecure');
+      CheckEquals(1, fake.Calls, 'nothing was sent');
+      c.Clear;
+      CheckEquals('', FindStations(fake, 'http://192.168.1.5', KEY, True, c), 'plain http with it');
+      CheckEquals(2, fake.Calls, 'now it was sent');
+      CheckEquals(2, c.Count);
+      (* Empty address or key: nothing sent. *)
+      CheckEquals(SLoggerFindNoKey, FindStations(fake, BASE, '', False, c), 'no key');
+      CheckEquals(SLoggerFindNoAddress, FindStations(fake, '  ', KEY, False, c), 'no address');
+      CheckEquals(2, fake.Calls, 'no request for either');
+      (* 401 and 404 through the real Send. *)
+      fake.ScriptStatus := 401;
+      fake.ScriptBody := '{"status":"failed","reason":"missing or invalid api key"}';
+      c.Clear;
+      CheckEquals(SLoggerFind401, FindStations(fake, BASE, KEY, False, c), '401');
+      fake.ScriptStatus := 404;
+      CheckEquals(SLoggerFind404, FindStations(fake, BASE, KEY, False, c), '404');
+      fake.ScriptStatus := 0;
+      fake.ScriptFailure := hfCannotConnect;
+      CheckEquals(SLoggerFindNoAnswer, FindStations(fake, BASE, KEY, False, c), 'cannot connect');
+      (* A failed 401 body is the one the delivery classifier maps to KEY_REJECTED. *)
+      CheckEquals('CLOUDLOG_KEY_REJECTED',
+                  CloudlogUnauthorizedCode('{"status":"failed","reason":"missing or invalid api key"}'));
+   finally
+      fake.Free;
+      c.Free;
+   end;
+end;
+
+procedure TCloudlogTests.Test_FindKeyInThePathIsNeverLogged;
+const
+   PATHKEY = 'wl/PATH+KEY 0123';
+var
+   lg: TLogLogger;
+   keep: ILogAppender;
+   oldLevel: TLogLevel;
+   fake: TFakeHttpTransport;
+   c: TLoggerChoices;
+   request: THttpRequest;
+   joined, enc, shown: string;
+begin
+   BeginTest('Find: the key in the URL PATH is in no log line (success, 401, error text, refusal, redirect), raw or encoded');
+   DeclareVerifyOn;
+   enc := EncodeUrlSegment(PATHKEY);
+   CheckTrue(enc <> PATHKEY, 'the test key needs encoding, so both forms are exercised');
+   GCaptured := TStringList.Create;
+   lg := TLogLogger.GetLogger('TR4WDebugLog.HTTP');
+   oldLevel := lg.Level;
+   lg.Level := All;
+   keep := TCaptureAppender.Create('unit-test cloudlog find capture');
+   lg.AddAppender(keep);
+   c := TLoggerChoices.Create;
+   fake := Scripted(200, STATIONS_BODY);
+   try
+      CheckEquals('', FindStations(fake, BASE, PATHKEY, False, c), 'a 200');
+      fake.ScriptStatus := 401;
+      fake.ScriptBody := '{"status":"failed"}';
+      FindStations(fake, BASE, PATHKEY, False, c);
+      (* A transport failure whose text echoes the whole URL, key and all. *)
+      fake.ScriptStatus := 0;
+      fake.ScriptFailure := hfOther;
+      fake.ScriptErrorClass := 'Exception';
+      fake.ScriptErrorMessage := 'GET ' + BASE + '/api/station_info/' + enc + ' failed; key ' + PATHKEY;
+      FindStations(fake, BASE, PATHKEY, False, c);
+      (* The shared layer's own refusal line for plain http. *)
+      fake.ScriptFailure := hfNone;
+      fake.ScriptStatus := 200;
+      FindStations(fake, 'http://192.168.1.5', PATHKEY, False, c);
+      (* A redirect whose Location and final address carry the key. *)
+      fake.ScriptStatus := 302;
+      fake.ScriptLocation := BASE + '/other/station_info/' + enc;
+      fake.ScriptFinalURL := BASE + '/other/station_info/' + enc;
+      FindStations(fake, BASE, PATHKEY, False, c);
+      (* FinalURL, which a caller may show, is scrubbed too. *)
+      SetHttpTransportForTest(fake);
+      request := THttpRequest.Create(CloudlogStationInfoUrl(BASE, PATHKEY));
+      try
+         request.Method := 'GET';
+         request.Password := PATHKEY;
+         request.Sensitive := True;
+         request.FollowRedirects := True;
+         request.Send;
+         shown := request.FinalURL + ' ' + request.ErrorDetail + ' ' + request.FailReason;
+      finally
+         request.Free;
+         SetHttpTransportForTest(nil);
+      end;
+   finally
+      lg.RemoveAppender(keep);
+      lg.Level := oldLevel;
+      fake.Free;
+      c.Free;
+      joined := GCaptured.Text;
+      FreeAndNil(GCaptured);
+   end;
+   CheckTrue(Pos('station_info/', joined) > 0, 'the requests were logged: ' + joined);
+   CheckEquals(0, Pos(PATHKEY, joined), 'the raw key is in no line: ' + joined);
+   CheckEquals(0, Pos(enc, joined), 'the encoded key is in no line: ' + joined);
+   CheckTrue(Pos('/api/station_info/********', joined) > 0, 'the path shows the mask: ' + joined);
+   CheckEquals(0, Pos(PATHKEY, shown), 'FinalURL and the error text hold no raw key: ' + shown);
+   CheckEquals(0, Pos(enc, shown), 'nor the encoded key: ' + shown);
+end;
+
+procedure TCloudlogTests.Test_FindIsADeclaredFinderOnTheProfileRow;
+var
+   registration: TExternalLoggerRegistration;
+   fields: TLoggerFieldList;
+begin
+   BeginTest('Find: the profile row stays a plain text row and DECLARES the finder; the editor names no provider');
+   CheckTrue(FindExternalLoggerRegistration('CLOUDLOG', registration), 'registered');
+   fields := registration.CreateFields;
+   try
+      CheckTrue(fields[2].Kind = lfkText, 'still text, not a choice');
+      CheckFalse(Assigned(fields[2].Loader), 'it has no choice loader');
+      CheckTrue(Assigned(fields[2].Finder), 'it has the finder');
+      CheckFalse(Assigned(fields[0].Finder), 'no other row has one');
+   finally
+      fields.Free;
+   end;
+   CheckTrue(FindExternalLoggerRegistration('WRL', registration), 'WRL registered');
+   fields := registration.CreateFields;
+   try
+      CheckTrue(fields.Find(LF_LOGBOOK).Kind = lfkChoice, 'WRL''s logbook is still a choice');
+      CheckFalse(Assigned(fields.Find(LF_LOGBOOK).Finder), 'with no finder');
+   finally
+      fields.Free;
+   end;
+end;
+
 procedure TCloudlogTests.RunAllTests;
 begin
    Test_UrlIsBasePlusApiQso;
@@ -571,6 +863,12 @@ begin
    Test_EditAndDelete_Policy;
    Test_Descriptors_AndDefinitionError;
    Test_DestinationIdentity;
+   Test_StationInfoUrl;
+   Test_ParseStations;
+   Test_FindOutcomeText;
+   Test_FindRequestShape_AndRefusals;
+   Test_FindKeyInThePathIsNeverLogged;
+   Test_FindIsADeclaredFinderOnTheProfileRow;
 end;
 
 end.

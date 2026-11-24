@@ -12915,3 +12915,83 @@ msgstr ""
 #, fuzzy
 msgid "The call sign does not match the call sign set on that station profile in Cloudlog."
 msgstr ""
+
+#: uappstrings.sloggerfind401
+#, fuzzy
+msgid "The server refused the key (HTTP 401): it is wrong, or it is not allowed to read station locations."
+msgstr ""
+
+#: uappstrings.sloggerfind404
+#, fuzzy
+msgid "The server answered 404: the address is probably wrong. If the site has no URL rewriting, end the address with /index.php."
+msgstr ""
+
+#: uappstrings.sloggerfindbadaddress
+#, fuzzy
+msgid "Nothing was sent: the address must start with https:// (or http:// with Allow insecure ticked)."
+msgstr ""
+
+#: uappstrings.sloggerfindcaption
+#, fuzzy
+msgid "Find..."
+msgstr ""
+
+#: uappstrings.sloggerfindempty
+#, fuzzy
+msgid "No station locations were found for this key."
+msgstr ""
+
+#: uappstrings.sloggerfindhttp
+#, fuzzy
+msgid "The server answered HTTP %d, not a list of station locations. Check the address."
+msgstr ""
+
+#: uappstrings.sloggerfindinactive
+#, fuzzy
+msgid "inactive"
+msgstr ""
+
+#: uappstrings.sloggerfindloading
+#, fuzzy
+msgid "Looking up the station locations..."
+msgstr ""
+
+#: uappstrings.sloggerfindnoaddress
+#, fuzzy
+msgid "Enter the Cloudlog / Wavelog address first."
+msgstr ""
+
+#: uappstrings.sloggerfindnoanswer
+#, fuzzy
+msgid "There was no answer from the server. Check the address and that the server is reachable."
+msgstr ""
+
+#: uappstrings.sloggerfindnokey
+#, fuzzy
+msgid "Enter the API key first."
+msgstr ""
+
+#: uappstrings.sloggerfindnotlist
+#, fuzzy
+msgid "The server's answer was not a list of station locations. Check the address."
+msgstr ""
+
+#: uappstrings.sloggerfindpickcaption
+#, fuzzy
+msgid "Station location"
+msgstr ""
+
+#: uappstrings.sloggerfindpickprompt
+#, fuzzy
+msgid "Pick the station location this logger sends to:"
+msgstr ""
+
+#: uappstrings.sloggerfindplainhttp
+#, fuzzy
+msgid "Nothing was sent: the address is plain http. Use https, or tick Allow insecure (plain http) and try again."
+msgstr ""
+
+#: uappstrings.sloggerfindsecure
+#, fuzzy
+msgid "A secure (https) connection could not be set up, so nothing was sent. The certificate was refused, or the TLS library or the certificate file is missing. The log has the detail."
+msgstr ""
