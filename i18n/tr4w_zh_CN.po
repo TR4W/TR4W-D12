@@ -3828,6 +3828,7 @@ msgstr "同步"
 #. Section: UEDITMESSAGE
 #: tr4w/src/lang/tr4w_consts_eng.pas:794
 #: utr4wstrings.rc_colors
+#: uappstrings.sprefsnavcolors
 #, fuzzy
 msgid "Colors"
 msgstr "颜色"
@@ -5752,6 +5753,7 @@ msgstr "字体适用于主竞赛窗口. 两者在TR4W下次开机时都生效."
 #~ msgstr "这些原先位于设置菜单的外观项中。一旦 ROW COUNT 和 WINDOW SIZE 也移到这里，那个窗口就会取消。"
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "音频"
@@ -5994,7 +5996,7 @@ msgstr "DXLab 日历"
 #: tprefsform.lbldxlabinfo2.caption
 #, fuzzy
 msgid "The port is not configurable today.  If you want it to be, say so and it becomes a setting here."
-msgstr "港口今天无法配置. 如果你想要的话,就这么说吧,它就变成了一个环境."
+msgstr "端口今天无法配置. 如果你想要的话,就这么说吧,它就变成了一个环境."
 
 #: tprefsform.lblfarnsworthspeed.caption
 #, fuzzy
@@ -6267,6 +6269,7 @@ msgid "CW while operating"
 msgstr "操作时的 CW"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "运行"
@@ -6293,6 +6296,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "平行端口 划桨或脚开关有线,不在这里。 TR4W是否一直支持LPT是一个未决问题,因此PADDLE PORT在Ctrl-J命令列表中一直保留到解决,而不是被给予它可能保存不起来的家."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "划桨和 PTT"
@@ -6792,7 +6796,7 @@ msgstr "高级"
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr "序列"
+msgstr "串口"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -6898,7 +6902,7 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
-"港口冲突 :\n"
+"端口冲突 :\n"
 "\n"
 "%s应用呢?"
 
@@ -7094,7 +7098,7 @@ msgstr ""
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr "港号必须是1至65535之间的号码."
+msgstr "端口号必须是1至65535之间的号码."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
@@ -9626,6 +9630,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "右键单击日志编辑器, 更改新的 QSO, 移动或删除它; 拖动命令单元格重新排序 。 主动伐木者发出命令。 将首选项保存为当前应用 Electiond and Order; 重新启动后将应用新的日志或更改的连接设置 。"
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "锁定器"
@@ -10107,6 +10112,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "试试你有什么 任何闲置的都可以在后期的\"优惠\"中设置."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -10191,7 +10197,7 @@ msgstr "温克耶"
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr "选择您的 Winkeyer 打开的端口 。 一个Winkeyer需要自己的港口 而不是无线电"
+msgstr "选择您的 Winkeyer 打开的端口 。 一个Winkeyer需要自己的端口 而不是无线电"
 
 #: uappstrings.swizmenu
 #, fuzzy
@@ -10361,7 +10367,7 @@ msgstr "保持无线电的CW速度与TR4W同步"
 #: uappstrings.swizclusterserverhint
 #, fuzzy
 msgid "A host name or an IP address, for example dxc.nc7j.com or 192.168.1.5. Leave the port blank for the standard port, 23."
-msgstr "主机名或IP地址,例如dxc.nc7j.com或192.168.1.5. 离开港口空白 标准港口,23。"
+msgstr "主机名或IP地址,例如dxc.nc7j.com或192.168.1.5. 离开端口空白 标准端口,23。"
 
 #: uappstrings.swizclusterport
 #, fuzzy
@@ -11119,7 +11125,7 @@ msgstr "UDP 端口 :"
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr "港口的编号必须是从1到65535."
+msgstr "端口的编号必须是从1到65535."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
@@ -12230,34 +12236,185 @@ msgstr "发送到服务器 : %d QSO(s) - %d 断开时登录, %d 它没有。"
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "动力类 :"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "县:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "动力类"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "输入您的动力等级( H, M, L 或 P) :"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "价值 %s 这场比赛不会接受的"
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "功率等级为一字母:H,M,L或P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "一个县是JARL的编号,最多可有3个数字,或2个字母代码."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "外部日志..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "此 QSO 的外部日志"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "状态"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "上次发送( UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "(未确认)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "重试( R)%s(中文(简体) )."
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "权力必须是H、M、L或P"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "县必须02-48或101-114"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "两者:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "高级"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "外观"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "备份"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "带状图"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "带"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "比赛"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "CW 设置"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX 分组"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "外部锁定器"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "外部软件"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "硬件"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "日志"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "网络"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "在线分数"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "无线电"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "旋转器"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "车站"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "TCI 服务器"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "两个无线电模式"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "UDP 广播"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Web 服务器"

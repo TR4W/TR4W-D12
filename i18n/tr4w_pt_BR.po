@@ -1911,7 +1911,7 @@ msgstr "Quer mesmo sair do programa?"
 #: utr4wstrings.tc_youarenowtalkingtoyourpacketport
 #, fuzzy
 msgid "You are now talking to your packet port.  Use Control-B to exit."
-msgstr "Agora você está falando com seu porto de pacotes. Use o controle B para sair."
+msgstr "Agora você está falando com sua porta de pacotes. Use Control-B para sair."
 
 #. Section: LOGSUBS2
 #: tr4w/src/lang/tr4w_consts_eng.pas:366
@@ -2002,7 +2002,7 @@ msgstr "Reme e apenas sidetone"
 #: utr4wstrings.tc_winkeyerport
 #, fuzzy
 msgid "Winkeyer port"
-msgstr "Porto Winkeyer"
+msgstr "Porta do Winkeyer"
 
 #. Section: UWINKEY
 #: tr4w/src/lang/tr4w_consts_eng.pas:388
@@ -3244,7 +3244,7 @@ msgstr "Tipo chaveiro"
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr "Porto"
+msgstr "Porta"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
@@ -4299,6 +4299,7 @@ msgstr "A fonte se aplica à janela principal do concurso. Ambos fazem efeito qu
 #~ msgstr "Estes estavam no item Aparência do menu Configurações. Essa janela deixará de existir quando ROW COUNT e WINDOW SIZE também vierem para cá."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Áudio"
@@ -4379,12 +4380,12 @@ msgstr "Um mapa de banda não precisa de um cluster DX, ele também tem pontos q
 #: tprefsform.lblbandoutput1.caption
 #, fuzzy
 msgid "Radio 1 band output port"
-msgstr "Porto de saída da banda rádio 1"
+msgstr "Porta de saída de banda do rádio 1"
 
 #: tprefsform.lblbandoutput2.caption
 #, fuzzy
 msgid "Radio 2 band output port"
-msgstr "Porto de saída da banda rádio 2"
+msgstr "Porta de saída de banda do rádio 2"
 
 #: tprefsform.lblbandsheading.caption
 #, fuzzy
@@ -4546,7 +4547,7 @@ msgstr "DXLab"
 #: tprefsform.lbldxlabinfo2.caption
 #, fuzzy
 msgid "The port is not configurable today.  If you want it to be, say so and it becomes a setting here."
-msgstr "O porto não está configurável hoje. Se você quer que seja, diga e se torna um cenário aqui."
+msgstr "A porta não é configurável hoje. Se você quiser que seja, diga e ela se torna uma configuração aqui."
 
 #: tprefsform.lblfarnsworthspeed.caption
 #, fuzzy
@@ -4591,7 +4592,7 @@ msgstr "Hardware"
 #: tprefsform.lblkeyerhint.caption
 #, fuzzy
 msgid "Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio's own port, or by CAT, is part of that radio's setup; a station profile then chooses which method each slot uses."
-msgstr "Apenas dispositivos com suas próprias configurações vivem aqui - um WinKeyer ou uma caixa de SO2R+ YCCC. Chavear o próprio porto de um rádio, ou por CAT, faz parte da configuração do rádio; um perfil da estação então escolhe qual método cada slot usa."
+msgstr "Apenas dispositivos com suas próprias configurações ficam aqui - um WinKeyer ou uma caixa YCCC SO2R+. Chavear pela própria porta de um rádio, ou por CAT, faz parte da configuração do rádio; um perfil da estação então escolhe qual método cada slot usa."
 
 #: tprefsform.lblleadingzerochar.caption
 #, fuzzy
@@ -4632,7 +4633,7 @@ msgstr "Registrador externo"
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
-msgstr "Porto:"
+msgstr "Porta:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
@@ -4822,6 +4823,7 @@ msgid "CW while operating"
 msgstr "CW enquanto opera"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Operando"
@@ -4849,6 +4851,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "A porta paralela para onde uma pá ou interruptor de pé está ligada não está aqui. Se TR4W continua apoiando LPT em tudo é uma pergunta aberta, então PADDLE PORT permanece na lista de comandos Ctrl-J até que seja resolvido em vez de receber uma casa que não possa manter."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Reme e PTT"
@@ -5069,12 +5072,12 @@ msgstr "Informação da estação"
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
 msgid "Off by default, and worth leaving off.  This is an unauthenticated radio-control socket: anything that can reach the port can move your VFO and key your transmitter."
-msgstr "Off por padrão, e vale a pena sair. Este é um soquete de controle de rádio não autenticado: qualquer coisa que possa chegar ao porto pode mover seu VFO e chave seu transmissor."
+msgstr "Desligado por padrão, e vale a pena deixar assim. Este é um soquete de controle de rádio não autenticado: qualquer coisa que alcance a porta pode mover seu VFO e chavear seu transmissor."
 
 #: tprefsform.lbltciintro.caption
 #, fuzzy
 msgid "Lets other programs - WSJT-X, JTDX, a skimmer - control whichever radio TR4W has the port open on, even a radio with no TCI of its own.  Radio 1 is trx 0 and radio 2 is trx 1."
-msgstr "Permite que outros programas - WSJT-X, JTDX, um escumador - controlem qualquer rádio que TR4W tenha o porto aberto, mesmo um rádio sem TCI próprio. Rádio 1 é trx 0 e rádio 2 é trx 1."
+msgstr "Permite que outros programas - WSJT-X, JTDX, um skimmer - controlem o rádio cuja porta o TR4W tem aberta, mesmo um rádio sem TCI próprio. Rádio 1 é trx 0 e rádio 2 é trx 1."
 
 #: tprefsform.lbltciloghint.caption
 #, fuzzy
@@ -5601,7 +5604,7 @@ msgstr "Escolha um tipo de rádio."
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr "O porto deve ser um número entre 1 e 65535."
+msgstr "A porta deve ser um número entre 1 e 65535."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
@@ -8152,7 +8155,7 @@ msgstr "Velocidade do Código"
 #: usettingscaptions.rs_cw_ctrlj_paddleport
 #, fuzzy
 msgid "Paddle Port"
-msgstr "Remem o porto."
+msgstr "Porta do paddle"
 
 #: usettingscaptions.rs_cw_ctrlj_questionmarkchar
 #, fuzzy
@@ -9218,7 +9221,7 @@ msgstr "Host / endereço IP"
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr "Porto"
+msgstr "Porta"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
@@ -10131,6 +10134,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Clique com o botão direito de um registrador para editá-lo, alterar Enviar novos QSOs, mover ou remover; arraste a célula Ordem para reordenar. Registradores ativos enviam ordem. Salvar Preferências para aplicar Activado e Ordem agora; um registrador novo, ou configurações de conexão alteradas, aplica-se após um reinício."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Logger."
@@ -10369,7 +10373,7 @@ msgstr "QSO número 0 não é válido neste concurso."
 #: utr4wstrings.tc_tciserverportusedbytciradio
 #, fuzzy
 msgid "The TCI server cannot use port %d: your TCI radio '%s' connects to the SDR on that port on this PC. Choose a different port for the TCI server (default %d) or turn the TCI server off."
-msgstr "O servidor TCI não pode usar o porto %dSeu rádio TCI.%sLiga-se ao SDR naquela porta neste PC. Escolha uma porta diferente para o servidor TCI (padrão %d) ou desligar o servidor TCI."
+msgstr "O servidor TCI não pode usar a porta %d: seu rádio TCI '%s' se conecta ao SDR nessa porta neste PC. Escolha uma porta diferente para o servidor TCI (padrão %d) ou desligue o servidor TCI."
 
 #: utr4wstrings.tc_toomanycounties
 #, fuzzy
@@ -10612,6 +10616,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "Tique o que você tem. Qualquer coisa desmarcada pode ser criada mais tarde em Preferências."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -10675,7 +10680,7 @@ msgstr "Um WinKeyer"
 #: uappstrings.swizitemkeyerhint
 #, fuzzy
 msgid "A WinKeyer CW keyer on its own port."
-msgstr "Um chaveiro WinKeyer CW em seu próprio porto."
+msgstr "Um keyer CW WinKeyer em sua própria porta."
 
 #: uappstrings.swizitemradio
 #, fuzzy
@@ -10696,7 +10701,7 @@ msgstr "WinKeyer"
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr "Escolha a porta onde seu WinKeyer está. Um WinKeyer precisa de seu próprio porto, não do rádio."
+msgstr "Escolha a porta onde seu WinKeyer está. Um WinKeyer precisa de sua própria porta, não a do rádio."
 
 #: uappstrings.swizmenu
 #, fuzzy
@@ -10866,17 +10871,17 @@ msgstr "Mantenha a velocidade CW do rádio no passo com TR4W"
 #: uappstrings.swizclusterserverhint
 #, fuzzy
 msgid "A host name or an IP address, for example dxc.nc7j.com or 192.168.1.5. Leave the port blank for the standard port, 23."
-msgstr "Um nome de host ou um endereço IP, por exemplo dxc.nc7j.com ou 192.168.1.5. Deixe o porto em branco para o porto padrão, 23."
+msgstr "Um nome de host ou um endereço IP, por exemplo dxc.nc7j.com ou 192.168.1.5. Deixe a porta em branco para a porta padrão, 23."
 
 #: uappstrings.swizclusterport
 #, fuzzy
 msgid "Port:"
-msgstr "Porto:"
+msgstr "Porta:"
 
 #: uappstrings.swizclusterportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535, or blank."
-msgstr "O porto deve ser um número de 1 a 65535, ou em branco."
+msgstr "A porta deve ser um número de 1 a 65535, ou em branco."
 
 #: uappstrings.swizresonport
 #, fuzzy
@@ -10891,7 +10896,7 @@ msgstr "em %s"
 #: uappstrings.swizresnoport
 #, fuzzy
 msgid "with no port chosen yet"
-msgstr "sem nenhum porto escolhido ainda."
+msgstr "sem nenhuma porta escolhida ainda"
 
 #: uappstrings.swizrescwbycat
 #, fuzzy
@@ -11559,7 +11564,7 @@ msgstr "WSJT-X: a integração está desligada."
 #: uappstrings.swizreswsjtxon
 #, fuzzy
 msgid "WSJT-X: TR4W listens on UDP port %s."
-msgstr "TR4W escuta no porto UDP %s."
+msgstr "WSJT-X: TR4W escuta na porta UDP %s."
 
 #: uappstrings.swizreswsjtxrestart
 #, fuzzy
@@ -11590,7 +11595,7 @@ msgstr "Escolha o tipo rotador, ou volte e desmarque."
 #: uappstrings.swizrotatorport
 #, fuzzy
 msgid "Serial port:"
-msgstr "Porta em série:"
+msgstr "Porta serial:"
 
 #: uappstrings.swizrotatorudpport
 #, fuzzy
@@ -11628,7 +11633,7 @@ msgstr "Porta UDP:"
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr "O porto deve ser um número de 1 a 65535."
+msgstr "A porta deve ser um número de 1 a 65535."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
@@ -12739,34 +12744,190 @@ msgstr "Enviado para o servidor: %d QSO(s) -- %d registrado enquanto desconectad
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Classe de energia:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Prefeitura:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Classe de energia."
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Digite sua classe de poder (H, M, L ou P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "O valor de %s Não é um dos que este concurso aceita."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "A classe de poder é uma letra: H, M, L ou P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Uma prefeitura é um número JARL de até três dígitos, ou um código de duas letras."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Registradores externos..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Registradores externos para este QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Situação"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Último envio (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "Entregue (não confirmado)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "Tentando novamente.%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "O poder deve ser H, M, L ou P."
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "Prefeitura deve ser 02-48 ou 101-114"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Os dois:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Avançado"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Aparência"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Reforço"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Mapa da Banda"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Bandas"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Cores"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Concurso"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "Configurações CW"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX Cluster"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Registrador Externo"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Software Externo"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Hardware."
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Registro"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Rede"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Pontuação Online"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Rádios"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "Rotadores"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Estação."
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "Servidor TCI"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Dois Modo de Rádio"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "Transmissão UDP"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Servidor Web"

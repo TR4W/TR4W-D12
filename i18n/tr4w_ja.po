@@ -3921,7 +3921,7 @@ msgstr "キーラータイプ"
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr "ポートレート"
+msgstr "ポート"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
@@ -4977,6 +4977,7 @@ msgstr "フォントはメインコンテストウィンドウに適用されま
 #~ msgstr "これらは、設定メニューの外観項目にありました。 このウィンドウは ROW COUNT と WINDOW SIZE がここに参加すると消えます."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "オーディオ"
@@ -5309,7 +5310,7 @@ msgstr "外部ロガー"
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
-msgstr "港:"
+msgstr "ポート:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
@@ -5502,6 +5503,7 @@ msgid "CW while operating"
 msgstr "稼働中のCW"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "運営会社"
@@ -5528,6 +5530,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "パドルまたはフットスイッチの並列ポートは、ここにはありません。 TR4W が LPT をサポートしているかどうかは、オープンな質問です。そのため、PADDLE PORT は Ctrl-J コマンドリストにとどまり、家を出さずに解決します."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "パドルとPTT"
@@ -5642,7 +5645,7 @@ msgstr "タイプ:"
 #: tprefsform.lblrotatorudp.caption
 #, fuzzy
 msgid "UDP port:"
-msgstr "UDPの港:"
+msgstr "UDPのポート:"
 
 #: tprefsform.lblsayhicutoff.caption
 #, fuzzy
@@ -5826,7 +5829,7 @@ msgstr "マルチキャストグループ:"
 #: tprefsform.lblwsjtxport.caption
 #, fuzzy
 msgid "Broadcast port:"
-msgstr "放送港:"
+msgstr "放送ポート:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
@@ -9909,7 +9912,7 @@ msgstr "ホスト/IPアドレス"
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr "ポートレート"
+msgstr "ポート"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
@@ -9949,7 +9952,7 @@ msgstr "API キーを入力し、選択する前にリストをロードしま�
 #: uappstrings.sloggerportrange
 #, fuzzy
 msgid "External logger port must be between 1 and 65535"
-msgstr "外的なロガーの港は1つから65535の間になければなりません"
+msgstr "外的なロガーのポートは1つから65535の間になければなりません"
 
 #: uappstrings.sloggerchoicerefresh
 #, fuzzy
@@ -10822,6 +10825,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "それを編集するためにロガーを右クリックし、新しいQSOを送信し、それを移動または削除します。 注文セルをドラッグして注文します。 活動的なロガーは順序で送ります。 Preferences を保存して、有効化と 今すぐ注文します。新しいロガー、または接続設定を変更して、再起動後に適用します。"
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "ログイン"
@@ -11303,6 +11307,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "あなたが持っているものを入れます。 左のuntickedはPreferencesで後で設定できます。"
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -11557,12 +11562,12 @@ msgstr "ラジオのCW速度をTR4Wで保つ"
 #: uappstrings.swizclusterserverhint
 #, fuzzy
 msgid "A host name or an IP address, for example dxc.nc7j.com or 192.168.1.5. Leave the port blank for the standard port, 23."
-msgstr "ホスト名または IP アドレス、例えば dxc.nc7j.com または 192.168.1.5 標準的な港、23のための港のブランクを残して下さい。"
+msgstr "ホスト名または IP アドレス、例えば dxc.nc7j.com または 192.168.1.5 標準的なポート、23のためのポートのブランクを残して下さい。"
 
 #: uappstrings.swizclusterport
 #, fuzzy
 msgid "Port:"
-msgstr "港:"
+msgstr "ポート:"
 
 #: uappstrings.swizclusterportbad
 #, fuzzy
@@ -12295,7 +12300,7 @@ msgstr "シリアルポート:"
 #, fuzzy
 msgctxt "uappstrings.swizrotatorudpport"
 msgid "UDP port:"
-msgstr "UDPの港:"
+msgstr "UDPのポート:"
 
 #: uappstrings.swizrotatorudpportbad
 #, fuzzy
@@ -12322,7 +12327,7 @@ msgstr "TR4W は WSJT-X から QSO をデコードして記録し、必要な呼
 #, fuzzy
 msgctxt "uappstrings.swizwsjtxport"
 msgid "UDP port:"
-msgstr "UDPの港:"
+msgstr "UDPのポート:"
 
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
@@ -13438,34 +13443,190 @@ msgstr "サーバへ送信: %d お問い合わせ %d 接続が解除されると
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "パワークラス:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "都道府県:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "パワークラス"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "パワークラス(H、M、L、P)を入力してください。"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "値の %s このコンテストは、このコンテストが承諾するものではありません。"
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "パワークラスは、H、M、L、Pの1文字です。"
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "都道府県は最大3桁のJARL数、または2文字のコードです。"
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "外部ロガー..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "このQSOの外部ロガー"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "ステータス"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "最終送信(UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "ハンドオフ(未確認)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "再試行()%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "力はH、M、LまたはPでなければなりません"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "都道府県は02-48か101-114である必要があります"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "両方:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "アドバンスト"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "インフォメーション"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "バックアップ"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "バンドマップ"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "バンド"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "カラー"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "コンテスト"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "CW設定"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DXクラスタ"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "外部ロガー"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "外部ソフトウェア"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "ハードウェア"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "ログイン"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "ネットワーク"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "オンラインスキャリング"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "ラジオ"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "ローテーター"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "ステーション"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "TCI サーバー"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "2つの無線モード"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "UDP放送"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "ウェブサーバー"

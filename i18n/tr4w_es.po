@@ -146,12 +146,13 @@ msgctxt "TC_HAMLIB_ID_LABEL"
 msgid "HAMLIB ID"
 msgstr "HAMLIB ID"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: RADIO ONE y RADIO TWO están configuradas para usar %s. RADIO ONE mantiene el puerto; El control RADIO DOS CAT está desactivado hasta que se cambie el PUERTO DE CONTROL de una radio.
 #. Section: General
 #: utr4wstrings:tc_port_conflict_startup tr4w/src/lang/tr4w_consts_eng.pas:32
 #: utr4wstrings.tc_port_conflict_startup
 msgctxt "TC_PORT_CONFLICT_STARTUP"
 msgid "RADIO ONE and RADIO TWO are both configured to use %s. RADIO ONE keeps the port; RADIO TWO CAT control is disabled until one radio's CONTROL PORT is changed."
-msgstr "RADIO ONE y RADIO TWO están configuradas para usar %s. RADIO ONE mantiene el puerto; El control RADIO DOS CAT está desactivado hasta que se cambie el PUERTO DE CONTROL de una radio."
+msgstr "RADIO ONE y RADIO TWO están configuradas para usar %s. RADIO ONE mantiene el puerto; el control CAT de RADIO TWO está desactivado hasta que se cambie el CONTROL PORT de una radio."
 
 #. Section: General
 #: utr4wstrings:tc_port_conflict_dialog tr4w/src/lang/tr4w_consts_eng.pas:33
@@ -333,12 +334,13 @@ msgctxt "TC_MESSAGETOSENDVIANETWORK"
 msgid "message to send via network"
 msgstr "mensaje a enviar via red"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Reglas for %s concurso en WA7BNM calendario del consurso
 #. Section: MAIN
 #: utr4wstrings:tc_rulesonsm3cer tr4w/src/lang/tr4w_consts_eng.pas:64
 #: utr4wstrings.tc_rulesonsm3cer
 msgctxt "TC_RULESONSM3CER"
 msgid "Rules for %s contest at WA7BNM Contest Calendar"
-msgstr "Reglas for %s concurso en WA7BNM calendario del consurso"
+msgstr "Reglas del concurso %s en el calendario de concursos de WA7BNM"
 
 #. Section: MAIN
 #: utr4wstrings:tc_rulesonqrzru tr4w/src/lang/tr4w_consts_eng.pas:65
@@ -406,12 +408,13 @@ msgctxt "TC_PADDLE"
 msgid "Paddle"
 msgstr "Llave"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Pedal para el control del PTT
 #. Section: MAIN
 #: utr4wstrings:tc_footsw tr4w/src/lang/tr4w_consts_eng.pas:75
 #: utr4wstrings.tc_footsw
 msgctxt "TC_FOOTSW"
 msgid "Footsw."
-msgstr "Pedal para el control del PTT"
+msgstr "Pedal"
 
 #. Section: MAIN
 #: utr4wstrings:tc_sun tr4w/src/lang/tr4w_consts_eng.pas:79
@@ -545,35 +548,39 @@ msgctxt "TC_CROAT"
 msgid "I am in Croatia"
 msgstr "Estoy en Croacia"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Entre su estado de New England abreviacion\r(ME, NH, VT, MA, CT, RI):
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_newenglandstateabreviation
 #: tr4w/src/lang/tr4w_consts_eng.pas:106
 msgctxt "TC_NEWENGLANDSTATEABREVIATION"
 msgid "Enter your New England state abbreviation\r(ME, NH, VT, MA, CT, RI):"
-msgstr "Entre su estado de New England abreviacion\r(ME, NH, VT, MA, CT, RI):"
+msgstr "Introduzca la abreviatura de su estado de Nueva Inglaterra\r(ME, NH, VT, MA, CT, RI):"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Enter su QTH a enviar:
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_entertheqththatyouwanttosend
 #: tr4w/src/lang/tr4w_consts_eng.pas:107
 #: utr4wstrings.tc_entertheqththatyouwanttosend
 msgctxt "TC_ENTERTHEQTHTHATYOUWANTTOSEND"
 msgid "Enter the QTH that you want to send:"
-msgstr "Enter su QTH a enviar:"
+msgstr "Introduzca el QTH que desea enviar:"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Enter estado de U.S., provincia para Canada:
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enterstateforusprovinceforcanada
 #: tr4w/src/lang/tr4w_consts_eng.pas:108
 #: utr4wstrings.tc_enterstateforusprovinceforcanada
 msgctxt "TC_ENTERSTATEFORUSPROVINCEFORCANADA"
 msgid "Enter state for U.S., province for Canada:"
-msgstr "Enter estado de U.S., provincia para Canada:"
+msgstr "Introduzca el estado para EE. UU. o la provincia para Canadá:"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Entre su oblast ID:
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryouroblastid tr4w/src/lang/tr4w_consts_eng.pas:109
 #: utr4wstrings.tc_enteryouroblastid
 msgctxt "TC_ENTERYOUROBLASTID"
 msgid "Enter your oblast ID:"
-msgstr "Entre su oblast ID:"
+msgstr "Introduzca su ID de óblast:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourprovinceid tr4w/src/lang/tr4w_consts_eng.pas:110
@@ -673,20 +680,22 @@ msgstr ""
 "Entre sus coodenadas geograficas\n"
 "(e.j. 55N37O para Moscu):"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Enter suma de su edad y los años trancurridos desde su primer QSO (e.j. 28+14=42):
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_entersumofyourageandamount
 #: tr4w/src/lang/tr4w_consts_eng.pas:123
 #: utr4wstrings.tc_entersumofyourageandamount
 msgctxt "TC_ENTERSUMOFYOURAGEANDAMOUNT"
 msgid "Enter sum of your age and amount of years elapsed since your first QSO (e.g. 28+14=42):"
-msgstr "Enter suma de su edad y los años trancurridos desde su primer QSO (e.j. 28+14=42):"
+msgstr "Introduzca la suma de su edad y los años transcurridos desde su primer QSO (p. ej. 28+14=42):"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Enter tres letras:
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_ozcr tr4w/src/lang/tr4w_consts_eng.pas:124
 #: utr4wstrings.tc_ozcr
 msgctxt "TC_OZCR"
 msgid "Enter three-letters number:"
-msgstr "Enter tres letras:"
+msgstr "Introduzca el número de tres letras:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourstatecode tr4w/src/lang/tr4w_consts_eng.pas:125
@@ -718,12 +727,13 @@ msgctxt "TC_ENTERYOURSIXDIGITGRIDSQUARE"
 msgid "Enter your six digit grid square:"
 msgstr "Entre sus seis digitos del locator:"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Entre su name (y estado US si esta en norteamerica):
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryournameandstate tr4w/src/lang/tr4w_consts_eng.pas:129
 #: utr4wstrings.tc_enteryournameandstate
 msgctxt "TC_ENTERYOURNAMEANDSTATE"
 msgid "Enter your name (and state if you are in North America):"
-msgstr "Entre su name (y estado US si esta en norteamerica):"
+msgstr "Introduzca su nombre (y su estado si está en Norteamérica):"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryournameandqth tr4w/src/lang/tr4w_consts_eng.pas:130
@@ -781,12 +791,13 @@ msgctxt "TC_ENTERFIRSTTWOLETTERSOFYOURGRID"
 msgid "Enter first two letters of your grid square:"
 msgstr "Entre las dos primeras letras de su locator:"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Entre su square ID:
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryoursquareid tr4w/src/lang/tr4w_consts_eng.pas:137
 #: utr4wstrings.tc_enteryoursquareid
 msgctxt "TC_ENTERYOURSQUAREID"
 msgid "Enter your square ID:"
-msgstr "Entre su square ID:"
+msgstr "Introduzca su ID de cuadrícula:"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourmembershipnumber
@@ -796,12 +807,13 @@ msgctxt "TC_ENTERYOURMEMBERSHIPNUMBER"
 msgid "Enter your membership number:"
 msgstr "Entre tu número de membresía:"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Entre su continent (and possible additional ID, i.e. SAYL or NAQRP)
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourcontinent tr4w/src/lang/tr4w_consts_eng.pas:139
 #: utr4wstrings.tc_enteryourcontinent
 msgctxt "TC_ENTERYOURCONTINENT"
 msgid "Enter your continent (and possible additional ID, i.e. SA or NAQ)"
-msgstr "Entre su continent (and possible additional ID, i.e. SAYL or NAQRP)"
+msgstr "Introduzca su continente (y un posible ID adicional, p. ej. SA o NAQ)"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_enteryourcountyorstateporovincedx
@@ -820,12 +832,13 @@ msgctxt "TC_ENTERYOURISTRICTIFINVE7"
 msgid "Enter your federal district if in British Columbia, or your State/Province"
 msgstr "Introduzca su distrito federal si está en Columbia Británica, o su Estado/Provincia"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Entre su prefecture:
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_prefecture tr4w/src/lang/tr4w_consts_eng.pas:142
 #: utr4wstrings.tc_prefecture
 msgctxt "TC_PREFECTURE"
 msgid "Enter your prefecture:"
-msgstr "Entre su prefecture:"
+msgstr "Introduzca su prefectura:"
 
 # 2026-10-19 NY4I approved; was: "Entre su station class:"; evidence CQWS bulletin
 #. Section: NEW CONTEST
@@ -973,13 +986,14 @@ msgctxt "TC_UKRAINE"
 msgid "Ukraine"
 msgstr "Ucrania"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Czech Republic o en Slovakia
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_czechrepublicorinslovakia
 #: tr4w/src/lang/tr4w_consts_eng.pas:163
 #: utr4wstrings.tc_czechrepublicorinslovakia
 msgctxt "TC_CZECHREPUBLICORINSLOVAKIA"
 msgid "Czech Republic or in Slovakia"
-msgstr "Czech Republic o en Slovakia"
+msgstr "República Checa o Eslovaquia"
 
 #. Section: NEW CONTEST
 #: utr4wstrings:tc_bulgaria tr4w/src/lang/tr4w_consts_eng.pas:164
@@ -1251,27 +1265,30 @@ msgctxt "TC_FAILEDTOCONNECTTO"
 msgid "Failed to connect to "
 msgstr "Fallo al conectar a "
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: SERVER y LOCAL logs son identicos.
 #. Section: UNET
 #: utr4wstrings:tc_serverandlocallogsareidentical
 #: tr4w/src/lang/tr4w_consts_eng.pas:214
 #: utr4wstrings.tc_serverandlocallogsareidentical
 msgctxt "TC_SERVERANDLOCALLOGSAREIDENTICAL"
 msgid "Server and local logs are identical."
-msgstr "SERVER y LOCAL logs son identicos."
+msgstr "Los logs del servidor y local son idénticos."
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Redes de contact : %s %s:%d
 #. Section: UNET
 #: utr4wstrings:tc_network tr4w/src/lang/tr4w_consts_eng.pas:215
 #: utr4wstrings.tc_network
 msgctxt "TC_NETWORK"
 msgid "Network : %s %s:%d"
-msgstr "Redes de contact : %s %s:%d"
+msgstr "Red : %s %s:%d"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Server El registro del servidor cambió. %u QSO(s) actualizado. Haz la sincronización de logs (Ctrl+Alt+S).
 #. Section: UNET
 #: utr4wstrings:tc_server_log_changed tr4w/src/lang/tr4w_consts_eng.pas:216
 #: utr4wstrings.tc_server_log_changed
 msgctxt "TC_SERVER_LOG_CHANGED"
 msgid "Server log changed. %u QSO(s) updated. Do logs synchronizing (Ctrl+Alt+S)."
-msgstr "Server El registro del servidor cambió. %u QSO(s) actualizado. Haz la sincronización de logs (Ctrl+Alt+S)."
+msgstr "El registro del servidor cambió. %u QSO(s) actualizado(s). Sincronice los logs (Ctrl+Alt+S)."
 
 #. Section: UNET
 #: utr4wstrings:tc_all_logs_network_cleared
@@ -1477,13 +1494,14 @@ msgctxt "TC_IMPROPERDOMESITCQTH"
 msgid "Improper domestic QTH!!"
 msgstr "Impropio QTH doméstico!!"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Improper domesitc QTH or missing name!!
 #. Section: LOGSTUFF
 #: utr4wstrings:tc_improperdomesitcqthormissingname
 #: tr4w/src/lang/tr4w_consts_eng.pas:267
 #: utr4wstrings.tc_improperdomesitcqthormissingname
 msgctxt "TC_IMPROPERDOMESITCQTHORMISSINGNAME"
 msgid "Improper domestic QTH or missing name!!"
-msgstr "Improper domesitc QTH or missing name!!"
+msgstr "¡¡QTH doméstico incorrecto o falta el nombre!!"
 
 #. Section: LOGSTUFF
 #: utr4wstrings:tc_missingqthandorname tr4w/src/lang/tr4w_consts_eng.pas:268
@@ -1607,7 +1625,7 @@ msgstr "Estaciones en %s modo"
 #, fuzzy
 msgctxt "TC_SPOTS"
 msgid "%d spots"
-msgstr "%d spots"
+msgstr "%d anuncios"
 
 #. Section: uSendKeyboard
 #: utr4wstrings:tc_sendingssbwavfilename tr4w/src/lang/tr4w_consts_eng.pas:302
@@ -1854,7 +1872,7 @@ msgstr "Icapaz de encontrar %s."
 #, fuzzy
 msgctxt "TC_INVALIDSTATEMENTIN"
 msgid "Invalid statement in %s !!\r\rLine %u\r%s"
-msgstr "INVALID STATEMENT IN %s !!\r\rLine %u\r%s"
+msgstr "Instrucción no válida en %s !!\r\rLínea %u\r%s"
 
 #. Section: LOGCFG
 #: utr4wstrings:tc_unabletofindctydat tr4w/src/lang/tr4w_consts_eng.pas:350
@@ -1991,7 +2009,7 @@ msgstr "%s ya existe.\r\rLo borro?"
 #, fuzzy
 msgctxt "TC_WINKEYERENABLE"
 msgid "&Winkeyer enable"
-msgstr "&Winkeyer enable"
+msgstr "&Activar Winkeyer"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_autospace tr4w/src/lang/tr4w_consts_eng.pas:383
@@ -1999,7 +2017,7 @@ msgstr "&Winkeyer enable"
 #, fuzzy
 msgctxt "TC_AUTOSPACE"
 msgid "&Autospace"
-msgstr "&Autospace"
+msgstr "&Autoespaciado"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_ctspacing tr4w/src/lang/tr4w_consts_eng.pas:384
@@ -2007,7 +2025,7 @@ msgstr "&Autospace"
 #, fuzzy
 msgctxt "TC_CTSPACING"
 msgid "C&T spacing"
-msgstr "C&T spacing"
+msgstr "Espaciado C&T"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_sidetone tr4w/src/lang/tr4w_consts_eng.pas:385
@@ -2015,7 +2033,7 @@ msgstr "C&T spacing"
 #, fuzzy
 msgctxt "TC_SIDETONE"
 msgid "&Sidetone"
-msgstr "&Sidetone"
+msgstr "&Tono lateral"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_paddleswap tr4w/src/lang/tr4w_consts_eng.pas:386
@@ -2030,7 +2048,7 @@ msgstr "Palanca swa&p"
 #, fuzzy
 msgctxt "TC_IGNORESPEEDPOT"
 msgid "&Ignore speed pot"
-msgstr "&Ignore speed pot"
+msgstr "&Ignorar el potenciómetro de velocidad"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_paddleonlysidetone tr4w/src/lang/tr4w_consts_eng.pas:388
@@ -2038,7 +2056,7 @@ msgstr "&Ignore speed pot"
 #, fuzzy
 msgctxt "TC_PADDLEONLYSIDETONE"
 msgid "Paddle &only sidetone"
-msgstr "Paddle &only sidetone"
+msgstr "Tono lateral s&olo con la paleta"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_winkeyerport tr4w/src/lang/tr4w_consts_eng.pas:390
@@ -2046,7 +2064,7 @@ msgstr "Paddle &only sidetone"
 #, fuzzy
 msgctxt "TC_WINKEYERPORT"
 msgid "Winkeyer port"
-msgstr "Winkeyer port"
+msgstr "Puerto del Winkeyer"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_keyermode tr4w/src/lang/tr4w_consts_eng.pas:391
@@ -2055,7 +2073,7 @@ msgstr "Winkeyer port"
 #, fuzzy
 msgctxt "TC_KEYERMODE"
 msgid "Keyer mode"
-msgstr "Keyer mode"
+msgstr "Modo del keyer"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_sidetonefreq tr4w/src/lang/tr4w_consts_eng.pas:392
@@ -2063,7 +2081,7 @@ msgstr "Keyer mode"
 #, fuzzy
 msgctxt "TC_SIDETONEFREQ"
 msgid "Sidetone freq."
-msgstr "Sidetone freq."
+msgstr "Frec. tono lateral"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_hangtime tr4w/src/lang/tr4w_consts_eng.pas:393
@@ -2071,7 +2089,7 @@ msgstr "Sidetone freq."
 #, fuzzy
 msgctxt "TC_HANGTIME"
 msgid "Hang time"
-msgstr "Hang time"
+msgstr "Tiempo de retención"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_iambicb tr4w/src/lang/tr4w_consts_eng.pas:395
@@ -2103,7 +2121,7 @@ msgstr "Ultimatic"
 #, fuzzy
 msgctxt "TC_BUGMODE"
 msgid "Bug mode"
-msgstr "Bug mode"
+msgstr "Modo bug"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_weighting tr4w/src/lang/tr4w_consts_eng.pas:400
@@ -2118,7 +2136,7 @@ msgstr "Ponderación"
 #, fuzzy
 msgctxt "TC_DITDAHRATIO"
 msgid "Dit/Dah ratio"
-msgstr "Dit/Dah ratio"
+msgstr "Relación punto/raya"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_leadin tr4w/src/lang/tr4w_consts_eng.pas:402
@@ -2183,7 +2201,7 @@ msgstr "Prefijo"
 #, fuzzy
 msgctxt "TC_DXMULTS"
 msgid "DX Mults"
-msgstr "DX Mults"
+msgstr "Mult. DX"
 
 #. Section: UTOTAL
 #: utr4wstrings:tc_oblasts tr4w/src/lang/tr4w_consts_eng.pas:414
@@ -2191,7 +2209,7 @@ msgstr "DX Mults"
 #, fuzzy
 msgctxt "TC_OBLASTS"
 msgid "Oblasts"
-msgstr "Oblasts"
+msgstr "Óblasts"
 
 #. Section: UTOTAL
 #: utr4wstrings:tc_hqmults tr4w/src/lang/tr4w_consts_eng.pas:415
@@ -2199,7 +2217,7 @@ msgstr "Oblasts"
 #, fuzzy
 msgctxt "TC_HQMULTS"
 msgid "HQ Mults"
-msgstr "HQ Mults"
+msgstr "Mult. HQ"
 
 #. Section: UTOTAL
 #: utr4wstrings:tc_dommults tr4w/src/lang/tr4w_consts_eng.pas:416
@@ -2207,7 +2225,7 @@ msgstr "HQ Mults"
 #, fuzzy
 msgctxt "TC_DOMMULTS"
 msgid "Dom Mults"
-msgstr "Dom Mults"
+msgstr "Mult. nac."
 
 #. Section: UTOTAL
 #: utr4wstrings:tc_qsos tr4w/src/lang/tr4w_consts_eng.pas:417
@@ -2223,7 +2241,7 @@ msgstr "QSOs"
 #, fuzzy
 msgctxt "TC_CWQSOS"
 msgid "CW QSOs"
-msgstr "CW QSOs"
+msgstr "QSOs CW"
 
 #. Section: UTOTAL
 #: utr4wstrings:tc_ssbqsos tr4w/src/lang/tr4w_consts_eng.pas:419
@@ -2231,7 +2249,7 @@ msgstr "CW QSOs"
 #, fuzzy
 msgctxt "TC_SSBQSOS"
 msgid "SSB QSOs"
-msgstr "SSB QSOs"
+msgstr "QSOs SSB"
 
 #. Section: UTOTAL
 #: utr4wstrings:tc_digqsos tr4w/src/lang/tr4w_consts_eng.pas:420
@@ -2239,7 +2257,7 @@ msgstr "SSB QSOs"
 #, fuzzy
 msgctxt "TC_DIGQSOS"
 msgid "DIG QSOs"
-msgstr "DIG QSOs"
+msgstr "QSOs DIG"
 
 #. Section: UALTD
 #: utr4wstrings:tc_entercalltobecheckedon tr4w/src/lang/tr4w_consts_eng.pas:424
@@ -2360,7 +2378,7 @@ msgstr "¡Demasiados TOTAL SCORE MESSAGE!"
 #, fuzzy
 msgctxt "TC_THEFIRSTCOMMANDINCONFIGFILEMUSTBE"
 msgid "The first command in config file must be the MY CALL statement!!"
-msgstr "The first command in config file must be the MY CALL statement!!"
+msgstr "¡¡El primer comando del archivo de configuración debe ser la instrucción MY CALL!!"
 
 #. Section: ULOGSEARCH
 #: utr4wstrings:tc_entriesperms tr4w/src/lang/tr4w_consts_eng.pas:460
@@ -2614,12 +2632,13 @@ msgctxt "TC_REPEATRSTSENT"
 msgid "Repeat RST sent"
 msgstr "Repetir RST enviado"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Version on server
 #. Section: UCHECKLATESTVERSION
 #: utr4wstrings:tc_versiononserver tr4w/src/lang/tr4w_consts_eng.pas:546
 #: utr4wstrings.tc_versiononserver
 msgctxt "TC_VERSIONONSERVER"
 msgid "The last version on server"
-msgstr "Version on server"
+msgstr "La última versión en el servidor"
 
 #. Section: UCHECKLATESTVERSION
 #: utr4wstrings:tc_thisversion2 tr4w/src/lang/tr4w_consts_eng.pas:547
@@ -2645,7 +2664,7 @@ msgstr "¿Desea descargar la última versión?"
 #, fuzzy
 msgctxt "TC_LIST_OF_COMMAND"
 msgid "List of commands"
-msgstr "&List of commands"
+msgstr "Lista de comandos"
 
 #. Section: UCHECKLATESTVERSION
 #: utr4wstrings:tc_editfunctionkey tr4w/src/lang/tr4w_consts_eng.pas:736
@@ -2734,7 +2753,7 @@ msgstr "No se encuentran porcentajes de radio %s en la red"
 #, fuzzy
 msgctxt "TC_DISCOVER_MULTI_FOUND"
 msgid "More than one %s found; filled in the first.  All found:"
-msgstr "More than one %s found; filled in the first.  All found:"
+msgstr "Se encontró más de un %s; se rellenó el primero.  Todos los encontrados:"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_port_not_connected tr4w/src/lang/tr4w_consts_eng.pas:853
@@ -2868,7 +2887,7 @@ msgstr "Plan de bandas"
 #: tfrmbeacons.caption
 #, fuzzy
 msgid "Beacons Monitor"
-msgstr "Beacons Monitor"
+msgstr "Monitor de balizas"
 
 #: tfrmct1boh.caption
 msgid "CT1BOH information"
@@ -2891,7 +2910,7 @@ msgstr "Hoja de duplicados"
 #, fuzzy
 msgctxt "RC_EDIT_WORD"
 msgid "&Edit"
-msgstr "Edit"
+msgstr "&Editar"
 
 #. Section: UEDITMESSAGE
 #: tfrmeditmessage.caption utr4wstrings:rc_progrmess
@@ -2923,7 +2942,7 @@ msgstr "Mensaje"
 #: tfrmeditqso.btnplay.caption
 #, fuzzy
 msgid "&Play"
-msgstr "&Play"
+msgstr "&Reproducir"
 
 #: tfrmeditqso.btnsave.caption
 msgid "&Save"
@@ -2947,12 +2966,12 @@ msgstr "Mult"
 #: tfrmeditqso.chkdupe.caption
 #, fuzzy
 msgid "Dupe"
-msgstr "Dupe"
+msgstr "Duplicado"
 
 #: tfrmeditqso.chkdxmult.caption
 #, fuzzy
 msgid "DX Mult"
-msgstr "DX Mult"
+msgstr "Mult. DX"
 
 #: tfrmeditqso.chkinhibitmults.caption
 #, fuzzy
@@ -3070,7 +3089,7 @@ msgstr "Nombre"
 #: tfrmeditqso.lblnumberrcvd.caption
 #, fuzzy
 msgid "Number Rcvd"
-msgstr "Número Rcvd"
+msgstr "Número recibido"
 
 #: tfrmeditqso.lblnumbersent.caption
 #, fuzzy
@@ -3128,12 +3147,12 @@ msgstr "RADIO ONE"
 #: tfrmeditqso.lblrstreceived.caption
 #, fuzzy
 msgid "RST received"
-msgstr "RST received"
+msgstr "RST recibido"
 
 #: tfrmeditqso.lblrstsent.caption
 #, fuzzy
 msgid "RST sent"
-msgstr "RST sent"
+msgstr "RST enviado"
 
 #: tfrmeditqso.lbltenten.caption
 #, fuzzy
@@ -3220,7 +3239,7 @@ msgstr "Valor de entrada:"
 #, fuzzy
 msgctxt "RC_INTERCOM"
 msgid "Intercom"
-msgstr "Intercom"
+msgstr "Intercomunicador"
 
 #: tfrmkeyeredit.btnok.caption tprefsform.btnok.caption
 #: tradioeditform.btnok.caption
@@ -3244,7 +3263,7 @@ msgstr "Espacio automático"
 #: tfrmkeyeredit.chkwkctspacing.caption
 #, fuzzy
 msgid "CT spacing"
-msgstr "Espaciamiento de la TC"
+msgstr "Espaciado CT"
 
 #: tfrmkeyeredit.chkwkignorespeedpot.caption
 #, fuzzy
@@ -3264,7 +3283,7 @@ msgstr "Paletas de cremallera"
 #: tfrmkeyeredit.chkwksidetoneenable.caption
 #, fuzzy
 msgid "Sidetone on"
-msgstr "Sidetone on"
+msgstr "Tono lateral activado"
 
 #: tfrmkeyeredit.grpwinkeyer.caption
 #, fuzzy
@@ -3299,13 +3318,13 @@ msgstr "Lead-in"
 #: usettingscaptions.rs_operating_cw_serial_ditdahratio
 #, fuzzy
 msgid "Dit/dah ratio"
-msgstr "Relación entre el punto y el punto de contacto"
+msgstr "Relación punto/raya"
 
 #: tfrmkeyeredit.lblwksidetone.caption
 #: usettingscaptions.rs_cw_tone
 #, fuzzy
 msgid "Sidetone"
-msgstr "Sidetone"
+msgstr "Tono lateral"
 
 #: tfrmkeyeredit.lblwkswitchpoint.caption
 #, fuzzy
@@ -3332,7 +3351,7 @@ msgstr "Limpiar todos los registros"
 #: tfrmfileview.mnuexit.caption
 #, fuzzy
 msgid "Exit"
-msgstr "Exit"
+msgstr "Salir"
 
 #. Section: UEDITMESSAGE
 #: tfrmlogcompare.btnsynchronize.caption utr4wstrings:rc_synchronize
@@ -3361,12 +3380,12 @@ msgstr "Super cheque parcial"
 #, fuzzy
 msgctxt "RC_MP3REC"
 msgid "MP3 Recorder"
-msgstr "MP3 Recorder"
+msgstr "Grabador MP3"
 
 #: tfrmmp3recorder.chkrecord.caption
 #, fuzzy
 msgid "Record"
-msgstr "Record"
+msgstr "Grabar"
 
 #. Section: UEDITMESSAGE
 #: tfrmnetwork.caption tradioeditform.tabnetwork.caption
@@ -3387,12 +3406,12 @@ msgstr "Pausa"
 #: tfrmpanadapter.btnspannarrow.hint
 #, fuzzy
 msgid "Narrower span (zoom in)"
-msgstr "Lazo más estrecho (zoom in)"
+msgstr "Intervalo más estrecho (acercar)"
 
 #: tfrmpanadapter.btnspanwide.hint
 #, fuzzy
 msgid "Wider span (zoom out)"
-msgstr "Lazo más ancho (zoom out)"
+msgstr "Intervalo más ancho (alejar)"
 
 #: tfrmpanadapter.caption
 #, fuzzy
@@ -3616,14 +3635,14 @@ msgstr "Prueba"
 #: tfrmudpdestinationedit.caption
 #, fuzzy
 msgid "UDP Destination"
-msgstr "UDP Destination"
+msgstr "Destino UDP"
 
 #: tfrmudpdestinationedit.chkstreamappinfo.caption
 #: ulclformhelpers.tc_prefs_udpstream_appinfo
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamappinfo.caption"
 msgid "App info"
-msgstr "App info"
+msgstr "Info de la aplicación"
 
 #: tfrmudpdestinationedit.chkstreamcontact.caption
 #: ulclformhelpers.tc_prefs_udpstream_contact
@@ -3645,7 +3664,7 @@ msgstr "Consulta de indicativos"
 #, fuzzy
 msgctxt "tfrmudpdestinationedit.chkstreamradio.caption"
 msgid "Radio info"
-msgstr "Radio info"
+msgstr "Info de la radio"
 
 #: tfrmudpdestinationedit.chkstreamrotor.caption
 #: ulclformhelpers.tc_prefs_udpstream_rotor
@@ -3719,7 +3738,7 @@ msgstr "Examine..."
 #, fuzzy
 msgctxt "tprefsform.btndeleteprofile.caption"
 msgid "Delete"
-msgstr "Suprimir"
+msgstr "Eliminar"
 
 #: tprefsform.btnduplicate.caption tprefsform.btnduplicatekeyer.caption
 #: tprefsform.btnduplicatekeyer.caption
@@ -3748,7 +3767,7 @@ msgstr "Nuevo..."
 #: tprefsform.btnopenlogfile.caption
 #, fuzzy
 msgid "Open log file"
-msgstr "Archivo de registro abierto"
+msgstr "Abrir archivo de registro"
 
 #: tprefsform.btnremove.caption tprefsform.btnremovecluster.caption
 #: tprefsform.btnremovekeyer.caption tprefsform.btnremoverotator.caption
@@ -3767,7 +3786,7 @@ msgstr "Retirar"
 #, fuzzy
 msgctxt "tprefsform.btnrenameprofile.caption"
 msgid "Rename..."
-msgstr "Renombre..."
+msgstr "Renombrar..."
 
 #: tprefsform.btnusecluster.caption tprefsform.btnuserotator.caption
 #: tprefsform.btnuserotator.caption
@@ -3870,7 +3889,7 @@ msgstr "Pantalla SO2R"
 #: uappstrings.sprefsfontbold
 #, fuzzy
 msgid "Bold"
-msgstr "Bold"
+msgstr "Negrita"
 
 # 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'cada lugar' -> 'cada anuncio', s.2.d 'auto anuncio'; the reviewed 'anuncios' (lugar = place). Previous text: "Mostrar cada lugar en la ventana de llamada"
 #: tprefsform.chkcallwindowshowallspots.caption
@@ -3935,7 +3954,7 @@ msgstr "Utilice archivos de mensajes DVK localizados"
 #: usettingscaptions.rs_operating_escapeexitssap
 #, fuzzy
 msgid "Escape leaves search and pounce"
-msgstr "Escapar hojas búsqueda y pounce"
+msgstr "Escape sale de búsqueda y captura"
 
 #: tprefsform.chkfarnsworth.caption
 #: usettingscaptions.rs_operating_cw_serial_farnsworth
@@ -3946,7 +3965,7 @@ msgstr "Farnsworth espaciamiento"
 #: tprefsform.chkhamlibasynconly.caption
 #, fuzzy
 msgid "HamLib - async callbacks only, no heartbeat (testing)"
-msgstr "HamLib - callbacks asinc solamente, sin latido del corazón (testing)"
+msgstr "HamLib - solo callbacks asíncronos, sin heartbeat (pruebas)"
 
 #: tprefsform.chkhamlibdebug.caption
 #, fuzzy
@@ -3956,7 +3975,7 @@ msgstr "HamLib - registro de depuración"
 #: tprefsform.chkhamlibtrace.caption
 #, fuzzy
 msgid "HamLib - internal trace to hamlib_trace.log"
-msgstr "HamLib - traza interna a hamlib trace.log"
+msgstr "HamLib - traza interna en hamlib_trace.log"
 
 #: tprefsform.chkhamscorecontact.caption
 #: usettingscaptions.rs_scoring_hamscore_contactinfo
@@ -3980,7 +3999,7 @@ msgstr "HF (160 - 10 m)"
 #: usettingscaptions.rs_operating_tworadio_inbandlockout
 #, fuzzy
 msgid "Stop both radios landing on one band"
-msgstr "Detenga ambas radios aterrizando en una banda"
+msgstr "Impedir que las dos radios estén en la misma banda"
 
 #: tprefsform.chkincludefkeynumber.caption
 #: usettingscaptions.rs_cw_includefkeynumber
@@ -4044,7 +4063,7 @@ msgstr "Sincronizar el registro al conectarse"
 #: usettingscaptions.rs_appearance_noborder
 #, fuzzy
 msgid "Main window has no border"
-msgstr "La ventana principal no tiene frontera"
+msgstr "La ventana principal no tiene borde"
 
 #: tprefsform.chknocaption.caption
 #: usettingscaptions.rs_appearance_nocaption
@@ -4082,7 +4101,7 @@ msgstr "Ofrecer llamadas posibles"
 #: usettingscaptions.rs_ptt_enable
 #, fuzzy
 msgid "Assert PTT when transmitting"
-msgstr "Assert PTT cuando se transmite"
+msgstr "Activar PTT al transmitir"
 
 #: tprefsform.chkpttlockout.caption
 #: usettingscaptions.rs_ptt_lockout
@@ -4093,7 +4112,7 @@ msgstr "Cierra el PTT"
 #: tprefsform.chkpttviacommands.caption
 #, fuzzy
 msgid "Key the transmitter with a CAT command instead of a hardware line"
-msgstr "Clave el transmisor con un comando CAT en lugar de una línea de hardware"
+msgstr "Manipular el transmisor con un comando CAT en lugar de una línea de hardware"
 
 #: tprefsform.chkqsyinactive.caption
 #, fuzzy
@@ -4122,7 +4141,7 @@ msgstr "Dibujar líneas de red en el registro"
 #: usettingscaptions.rs_operating_tworadio_skipactiveband
 #, fuzzy
 msgid "Skip the band the other radio is on"
-msgstr "Skip the band the other radio is on"
+msgstr "Omitir la banda en la que está la otra radio"
 
 #: tprefsform.chkso2r.caption
 #: ulclformhelpers.tc_prefs_so2r
@@ -4163,7 +4182,7 @@ msgstr "Enviar anuncios a la otra radio"
 #: usettingscaptions.rs_cw_paddle_swap
 #, fuzzy
 msgid "Swap dit and dah"
-msgstr "Cierra el trasero y dah"
+msgstr "Intercambiar punto y raya"
 
 #: tprefsform.chkswaprelaysense.caption
 #: usettingscaptions.rs_operating_tworadio_swaprelaysense
@@ -4190,13 +4209,13 @@ msgstr "Activar el servidor TCI"
 #: tprefsform.chktelnetdebug.caption
 #, fuzzy
 msgid "DX cluster - log all telnet traffic"
-msgstr "DX cluster - log all telnet traffic"
+msgstr "DX cluster - registrar todo el tráfico telnet"
 
 #: tprefsform.chktunewithdits.caption
 #: usettingscaptions.rs_cw_tunewithdits
 #, fuzzy
 msgid "Tune with dits rather than a solid carrier"
-msgstr "Tune con puntos en lugar de un portador sólido"
+msgstr "Sintonizar con puntos en lugar de una portadora continua"
 
 #: tprefsform.chktworadiomode.caption
 #: usettingscaptions.rs_operating_tworadio_enable
@@ -4213,7 +4232,7 @@ msgstr "También emitieron QSOs editados y previamente registrados"
 #: tprefsform.chkudpenabled.caption
 #, fuzzy
 msgid "Broadcast UDP data"
-msgstr "Broadcast UDP data"
+msgstr "Difundir datos UDP"
 
 # 2026-10-19: term from the EU DX Contest rules, Spanish edition (EUDXCC, https://www.eudx-contest.com/reglas/): 'Llamadas de grabación sin partido de país' -> 'Registrar indicativos sin país coincidente', s.10 'su indicativo de Europa', s.11 'registro' (llamadas de grabacion = recording calls; partido = match game). Previous text: "Llamadas de grabación sin partido de país"
 #: tprefsform.chkunknowncountryfile.caption
@@ -4336,6 +4355,7 @@ msgstr "La fuente se aplica a la ventana principal del concurso. Ambos toman efe
 #~ msgstr "Estos estaban en el elemento de Apariencia del menú Ajustes. Esa ventana desaparece una vez que ROW COUNT y WINDOW SIZE se unen a ellos aquí."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Audio"
@@ -4478,7 +4498,7 @@ msgstr "Nombre:"
 #: tprefsform.lblclusternote.caption
 #, fuzzy
 msgid "The cluster reconnects on its own after a drop.  Telnet logging is on the Logging page; spot display and ageing are on Band Map."
-msgstr "El clúster se conecta por sí solo después de una gota. El registro de Telnet está en la página Logging; la visualización de anuncios y el envejecimiento están en Band Map."
+msgstr "El clúster se reconecta solo después de una caída.  El registro de Telnet está en la página Registro; la visualización de anuncios y su envejecimiento están en Mapa de banda."
 
 #: tprefsform.lblclusterpassword.caption tprefsform.lblhamscorepass.caption
 #: tprefsform.lblnetpassword.caption
@@ -4511,14 +4531,14 @@ msgstr "Intercambio de concursos"
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput1.caption"
 msgid "CW output 1"
-msgstr "Producción de CW 1"
+msgstr "Salida de CW 1"
 
 #: tprefsform.lblcwoutput2.caption
 #: ulclformhelpers.tc_prefs_cwoutput2
 #, fuzzy
 msgctxt "tprefsform.lblcwoutput2.caption"
 msgid "CW output 2"
-msgstr "Producción 2"
+msgstr "Salida de CW 2"
 
 #: tprefsform.lblcwsendheading.caption
 #, fuzzy
@@ -4538,12 +4558,12 @@ msgstr "WPM por PageUp / PageDown"
 #: tprefsform.lblcwtone.caption
 #, fuzzy
 msgid "Sidetone:"
-msgstr "Sidetone:"
+msgstr "Tono lateral:"
 
 #: tprefsform.lblcwtoneunits.caption
 #, fuzzy
 msgid "Hz  (0 = the radios own sidetone)"
-msgstr "Hz (0 = las radios propia sidetone)"
+msgstr "Hz  (0 = el tono lateral propio de la radio)"
 
 #: tprefsform.lbldetaillogs.caption
 #, fuzzy
@@ -4558,7 +4578,7 @@ msgstr "Ratio Dit/dah:"
 #: tprefsform.lbldvkheading.caption
 #, fuzzy
 msgid "Digital voice keyer"
-msgstr "Llavero de voz digital"
+msgstr "Keyer de voz digital"
 
 #: tprefsform.lbldvkpath.caption
 #, fuzzy
@@ -4650,7 +4670,7 @@ msgstr "Principales ceros:"
 #: tprefsform.lbllogfilesheading.caption
 #, fuzzy
 msgid "Log files"
-msgstr "Archivo de registros"
+msgstr "Archivos de registro"
 
 #: tprefsform.lblloggeraddress.caption
 #, fuzzy
@@ -4679,7 +4699,7 @@ msgstr "Puerto:"
 #, fuzzy
 msgctxt "tprefsform.lblloggerrestart.caption"
 msgid "The logger type, address and port take effect when TR4W next starts."
-msgstr "El tipo de logger, dirección y puerto tienen efecto cuando el TR4W siguiente comienza."
+msgstr "El tipo de logger, la dirección y el puerto tienen efecto la próxima vez que se inicie TR4W."
 
 #: tprefsform.lblloggerstatus.caption
 #, fuzzy
@@ -4719,7 +4739,7 @@ msgstr "El camino completo a MMTTY.EXE. TR4W lo inicia para RTTY y lo habla dire
 #: tprefsform.lblmp3heading.caption
 #, fuzzy
 msgid "QSO recording"
-msgstr "QSO recording"
+msgstr "Grabación de QSO"
 
 #: tprefsform.lblmp3path.caption
 #, fuzzy
@@ -4827,7 +4847,7 @@ msgstr "Sección ARRL:"
 #: uappstrings.swizstate
 #, fuzzy
 msgid "State/Province:"
-msgstr "State/Province:"
+msgstr "Estado/Provincia:"
 
 #: tprefsform.lblmyzone.caption
 #: uappstrings.swizcqzone
@@ -4861,9 +4881,10 @@ msgid "CW while operating"
 msgstr "CW mientras opera"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
-msgstr "Funcionamiento"
+msgstr "Operación"
 
 # 2026-11-21: obsolete -- the .lfm caption was reworded to 'How the log behaves while you are running the contest. Band map, bands, messages, scoring and two-radio settings are on the pages below; CW is under CW Settings.'; the identifier moved to a new entry.
 #: tprefsform.lbloperatinginfo.caption
@@ -4887,9 +4908,10 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "El puerto paralelo un interruptor de pádel o de pie está cableado a no está aquí. Si TR4W sigue apoyando a LPT en absoluto es una pregunta abierta, por lo que PADDLE PORT se mantiene en la lista de comandos Ctrl-J hasta que se resuelve en lugar de recibir un hogar que no puede guardar."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
-msgstr "Paddle y PTT"
+msgstr "Paleta y PTT"
 
 #: tprefsform.lblpaddlepttinfo.caption
 #, fuzzy
@@ -4911,7 +4933,7 @@ msgstr "WPM (0 sigue la velocidad del teclado)"
 #: usettingscaptions.rs_cw_paddle_monitortone
 #, fuzzy
 msgid "Paddle sidetone"
-msgstr "Paddle sidetone"
+msgstr "Tono lateral de la paleta"
 
 #: tprefsform.lblplaceholder.caption
 #: ulclformhelpers.tc_prefs_notmigrated
@@ -4973,7 +4995,7 @@ msgstr "Deja en blanco y este rotador gira por cada banda, que es lo que una est
 #: tprefsform.lblrotatorbaud.caption
 #, fuzzy
 msgid "Baud rate:"
-msgstr "Tasa de Baud:"
+msgstr "Velocidad en baudios:"
 
 #: tprefsform.lblrotatorbaudhint.caption
 #, fuzzy
@@ -5030,7 +5052,7 @@ msgstr "Decoración en línea"
 #: tprefsform.lblscoreposturl.caption
 #, fuzzy
 msgid "Posting URL:"
-msgstr "Posting URL:"
+msgstr "URL de envío:"
 
 #: tprefsform.lblscorereadurl.caption
 #, fuzzy
@@ -5040,7 +5062,7 @@ msgstr "URL de lectura:"
 #: tprefsform.lblscpcountry.caption
 #, fuzzy
 msgid "Restrict to countries:"
-msgstr "Restrict to countries:"
+msgstr "Restringir a países:"
 
 #: tprefsform.lblscpfilehint.caption
 #, fuzzy
@@ -5055,7 +5077,7 @@ msgstr "Super Check Partial"
 #: tprefsform.lblscphint.caption
 #, fuzzy
 msgid "Blank shows matches from everywhere.  A list of country prefixes narrows it, which is useful in a domestic contest where the whole world is not workable."
-msgstr "Blank muestra partidos de todas partes. Una lista de prefijos del país la estrecha, que es útil en un concurso nacional donde el mundo entero no es viable."
+msgstr "En blanco muestra coincidencias de todas partes.  Una lista de prefijos de país la restringe, lo que es útil en un concurso nacional en el que no se puede trabajar con todo el mundo."
 
 #: tprefsform.lblscpmatchheading.caption
 #, fuzzy
@@ -5080,7 +5102,7 @@ msgstr "Teclado en serie de radio (sólo llave DTR/RTS)"
 #: tprefsform.lblserialkeyintro.caption
 #, fuzzy
 msgid "These shape the CW that TR4W generates itself by toggling a serial line.  They do nothing for a WinKeyer, a YCCC box, or CW sent by CAT - those devices keep their own timing."
-msgstr "Esta forma el CW que TR4W genera a sí mismo toggling una línea de serie. No hacen nada por un WinKeyer, una caja YCCC, o CW enviado por CAT - esos dispositivos mantienen su propio tiempo."
+msgstr "Estos ajustes dan forma al CW que TR4W genera por sí mismo conmutando una línea serie.  No afectan a un WinKeyer, a una caja YCCC ni al CW enviado por CAT: esos dispositivos mantienen su propia temporización."
 
 #. Section: UEDITMESSAGE
 #: tprefsform.lblstationheading.caption utr4wstrings:rc_stationinfo
@@ -5197,7 +5219,7 @@ msgstr "Para permitir que WSJT-X conduzca la radio sobre TCI en su lugar, vea la
 #: tprefsform.lblycccinfo.caption
 #, fuzzy
 msgid "Station controllers will get a factory of their own, as radios and keyers did. This checkbox is the interim home for the setting."
-msgstr "Los controladores de estación obtendrán una fábrica propia, como lo hicieron las radios y los llaveros. Esta casilla es la casa provisional para el ajuste."
+msgstr "Los controladores de estación tendrán una fábrica propia, como la tuvieron las radios y los keyers. Esta casilla es el lugar provisional del ajuste."
 
 #: tradioeditform.btndiscover.caption ulclformhelpers.tc_radioedit_discover
 #: ulclformhelpers.tc_radioedit_discover
@@ -5249,7 +5271,7 @@ msgstr "Nivel Auto-info"
 #, fuzzy
 msgctxt "tradioeditform.lblbaud.caption"
 msgid "Baud rate"
-msgstr "Tasa de Baud"
+msgstr "Velocidad en baudios"
 
 #: tradioeditform.lblcatdtr.caption
 #: ulclformhelpers.tc_radioedit_catdtr
@@ -5284,26 +5306,26 @@ msgstr "Bits de datos"
 #, fuzzy
 msgctxt "tradioeditform.lbldatamode.caption"
 msgid "Icom data mode ID"
-msgstr "Icom data mode ID"
+msgstr "ID de modo de datos Icom"
 
 #: tradioeditform.lblfilterbyte.caption
 #: ulclformhelpers.tc_radioedit_filterbyte
 #, fuzzy
 msgctxt "tradioeditform.lblfilterbyte.caption"
 msgid "Icom filter byte"
-msgstr "Icom filter byte"
+msgstr "Byte de filtro Icom"
 
 #: tradioeditform.lblfound.caption
 #: ulclformhelpers.tc_radioedit_found
 #, fuzzy
 msgctxt "tradioeditform.lblfound.caption"
 msgid "Found"
-msgstr "Found"
+msgstr "Encontrado"
 
 #: tradioeditform.lblfreqoffset.caption
 #, fuzzy
 msgid "Frequency offset (transverter), Hz"
-msgstr "Frequency offset (transverter), Hz"
+msgstr "Desplazamiento de frecuencia (transversor), Hz"
 
 #: tradioeditform.lblhamlibid.caption
 #: ulclformhelpers.tc_radioedit_hamlibid
@@ -5412,7 +5434,7 @@ msgstr "Ninguno"
 #, fuzzy
 msgctxt "tradioeditform.optparityodd.caption"
 msgid "Odd"
-msgstr "Odd"
+msgstr "Impar"
 
 #: tradioeditform.tabadvanced.caption
 #: ulclformhelpers.tc_radioedit_advanced
@@ -5450,7 +5472,7 @@ msgstr ""
 #: uappstrings.sdownloadcouldnotstart
 #, fuzzy
 msgid "the download was refused before it began (bad URL)."
-msgstr "la descarga fue rechazada antes de comenzar (bad URL)."
+msgstr "la descarga fue rechazada antes de comenzar (URL incorrecta)."
 
 #: uappstrings.sdownloadnossllibrary
 #, fuzzy
@@ -5688,7 +5710,7 @@ msgstr "Conectar\000Desconectar\000Comandos\000Congelar\000Limpiar\000100\000\00
 #, fuzzy
 msgctxt "TC_BANDCHANGEDISABLED"
 msgid "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
-msgstr "Band change requires MULTIPLE BANDS = TRUE once the log has QSOs"
+msgstr "El cambio de banda requiere MULTIPLE BANDS = TRUE cuando el log ya tiene QSOs"
 
 #. Section: UEDITMESSAGE
 #. 4.51.8
@@ -5755,6 +5777,7 @@ msgctxt "RC_SENDINGCW"
 msgid "Sending CW from the keyboard. Use ENTER/Escape/F10 to exit."
 msgstr "Enviar CW desde el teclado. Use ENTER/Escape/F10 para salir."
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Ventana de control
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_wincontrol2 tr4w/src/lang/tr4w_consts_eng.pas:547
 #: utr4wstrings:rc_wincontrol tr4w/src/lang/tr4w_consts_eng.pas:552
@@ -5762,7 +5785,7 @@ msgstr "Enviar CW desde el teclado. Use ENTER/Escape/F10 para salir."
 #: utr4wstrings.rc_wincontrol2
 msgctxt "RC_WINCONTROL2"
 msgid "Windows control"
-msgstr "Ventana de control"
+msgstr "Control de ventanas"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_tools tr4w/src/lang/tr4w_consts_eng.pas:549
@@ -5897,12 +5920,13 @@ msgctxt "RC_TRLOGFORM"
 msgid "TR Log format"
 msgstr "Formato TR Log"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: I
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_reports tr4w/src/lang/tr4w_consts_eng.pas:603
 #: utr4wstrings.rc_reports
 msgctxt "RC_REPORTS"
 msgid "Reports"
-msgstr "I"
+msgstr "Informes"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_allcalls tr4w/src/lang/tr4w_consts_eng.pas:604
@@ -6412,7 +6436,7 @@ msgstr "Acerca de"
 #, fuzzy
 msgctxt "RC_DELETED"
 msgid "Deleted"
-msgstr "&Borrados"
+msgstr "Borrados"
 
 #. ACCELERATOR: the English has a keyboard shortcut here (the letter after &) and this translation has none. Put & before the letter that should be the shortcut in your language, then clear "Needs work".
 #. Section: UEDITMESSAGE
@@ -6478,7 +6502,7 @@ msgstr "Número de QSO"
 #, fuzzy
 msgctxt "RC_AI_CWSPEED"
 msgid "CW Speed"
-msgstr "CW Speed"
+msgstr "Velocidad CW"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_clearmsheet tr4w/src/lang/tr4w_consts_eng.pas:780
@@ -6544,7 +6568,7 @@ msgstr "SH/DX [indicativo]"
 #, fuzzy
 msgctxt "RC_LOGIN"
 msgid "Log in"
-msgstr "Log in"
+msgstr "Iniciar sesión"
 
 #. Section: UEDITMESSAGE
 #: utr4wstrings:rc_colors tr4w/src/lang/tr4w_consts_eng.pas:796
@@ -6603,13 +6627,14 @@ msgctxt "TC_DOWNLOADINGPOTAPARKS"
 msgid "Downloading POTA parks..."
 msgstr "Descargar parques POTA..."
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: HamScore: colar el resync del registro completo...
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_hamscorequeueingfulllogresync
 #: tr4w/src/lang/tr4w_consts_eng.pas:830
 #: utr4wstrings.tc_hamscorequeueingfulllogresync
 msgctxt "TC_HAMSCOREQUEUEINGFULLLOGRESYNC"
 msgid "HamScore: queueing full log resync..."
-msgstr "HamScore: colar el resync del registro completo..."
+msgstr "HamScore: poniendo en cola la resincronización completa del log..."
 
 # 2026-10-19 NY4I approved; was: "La llamada de inicio no parece una llamada"; evidence CQWS bulletin
 #. Section: FD Additions NY4I
@@ -6627,7 +6652,7 @@ msgstr "El indicativo de inicio de sesión no parece un indicativo"
 #, fuzzy
 msgctxt "TC_NOPOTAPARKSLOGGEDYETSESSION"
 msgid "No POTA parks logged yet this session"
-msgstr "No POTA parks logged yet this session"
+msgstr "Aún no hay parques POTA registrados en esta sesión"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cwoff tr4w/src/lang/tr4w_consts_eng.pas:833
@@ -6635,7 +6660,7 @@ msgstr "No POTA parks logged yet this session"
 #, fuzzy
 msgctxt "TC_CWOFF"
 msgid "CW Off"
-msgstr "CW Off"
+msgstr "CW desactivado"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_cannotopenlogfile tr4w/src/lang/tr4w_consts_eng.pas:834
@@ -6673,15 +6698,16 @@ msgstr "Parques POTA cargados"
 #, fuzzy
 msgctxt "TC_POTAPARKSFILECOULDLOADED"
 msgid "POTA parks file could not be loaded"
-msgstr "POTA parks file could not be loaded"
+msgstr "No se pudo cargar el archivo de parques POTA"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: POTA parks descarga falló
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_potaparksdownloadfailed
 #: tr4w/src/lang/tr4w_consts_eng.pas:839
 #: utr4wstrings.tc_potaparksdownloadfailed
 msgctxt "TC_POTAPARKSDOWNLOADFAILED"
 msgid "POTA parks download failed"
-msgstr "POTA parks descarga falló"
+msgstr "Falló la descarga de los parques POTA"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_trmasterdtadownloadedrestarttr4wus
@@ -6769,13 +6795,14 @@ msgctxt "TC_TR4WTIMEWARNING"
 msgid "TR4W Time Warning"
 msgstr "TR4W Tiempo de advertencia"
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: Oferta de error Commander proxy TCP Port
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_errorofferingcommanderproxytcpport
 #: tr4w/src/lang/tr4w_consts_eng.pas:851
 #: utr4wstrings.tc_errorofferingcommanderproxytcpport
 msgctxt "TC_ERROROFFERINGCOMMANDERPROXYTCPPORT"
 msgid "Error offering Commander proxy TCP Port"
-msgstr "Oferta de error Commander proxy TCP Port"
+msgstr "Error al ofrecer el puerto TCP del proxy Commander"
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_pttviacommandsctrljoptionmusttruew
@@ -6831,13 +6858,14 @@ msgctxt "TC_QTCPROCESSTERMINATED"
 msgid "QTC process terminated."
 msgstr "El proceso QTC terminó."
 
+# 2026-11-24 i18n review (NY4I Linux bench): corrected; was: QTC Number tiene caracteres ilegales.
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_qtcnumberillegalcharacters
 #: tr4w/src/lang/tr4w_consts_eng.pas:859
 #: utr4wstrings.tc_qtcnumberillegalcharacters
 msgctxt "TC_QTCNUMBERILLEGALCHARACTERS"
 msgid "QTC Number has illegal characters."
-msgstr "QTC Number tiene caracteres ilegales."
+msgstr "El número de QTC tiene caracteres no válidos."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_numbermessagesillegalcharacters
@@ -7259,7 +7287,7 @@ msgid ""
 "Line %u\n"
 "%s"
 msgstr ""
-"¡Invalid statement in %s!\n"
+"¡Instrucción no válida en %s!\n"
 "\n"
 "Línea %u\n"
 "%s"
@@ -7320,7 +7348,7 @@ msgstr ""
 #, fuzzy
 msgctxt "utr4wstrings.rc_synlog2"
 msgid "Synchronize log"
-msgstr "Synchronize log"
+msgstr "Sincronizar log"
 
 #: utr4wstrings.rc_getservlog
 #, fuzzy
@@ -7347,7 +7375,7 @@ msgstr "Registros enviados:"
 #, fuzzy
 msgctxt "utr4wstrings.rc_recvbytes"
 msgid "Received bytes:"
-msgstr "Los bytes recibidos:"
+msgstr "Bytes recibidos:"
 
 #: utr4wstrings.rc_recvqsos
 #: tfrmserverlog.lblqsoscaption.caption
@@ -7384,7 +7412,7 @@ msgstr "Obtener registro de servidor"
 #, fuzzy
 msgctxt "tfrmtelnet.btnconfigure.caption"
 msgid "Configure..."
-msgstr "Configure..."
+msgstr "Configurar..."
 
 #: tfrmtelnet.lblnoclusters.caption
 #, fuzzy
@@ -7462,7 +7490,7 @@ msgstr "Show Typed Callsign"
 #: usettingscaptions.rs_appearance_ctrlj_userinfoshown
 #, fuzzy
 msgid "User Info Shown"
-msgstr "Información del usuario Shown"
+msgstr "Información de usuario mostrada"
 
 #: usettingscaptions.rs_appearance_layout_rowcount
 #, fuzzy
@@ -7630,7 +7658,7 @@ msgstr "Intercambio inicial"
 #: usettingscaptions.rs_contest_literaldomesticqth
 #, fuzzy
 msgid "Literal Domestic Qth"
-msgstr "Literal IP"
+msgstr "QTH doméstico literal"
 
 #: usettingscaptions.rs_contest_logrssent
 #, fuzzy
@@ -7858,7 +7886,7 @@ msgstr "Paddle Port"
 #: usettingscaptions.rs_cw_ctrlj_questionmarkchar
 #, fuzzy
 msgid "Question Mark Char"
-msgstr "Pregunta Mark Char"
+msgstr "Carácter del signo de interrogación"
 
 #: usettingscaptions.rs_cw_ctrlj_short0
 #, fuzzy
@@ -7974,7 +8002,7 @@ msgstr "Nombre del archivo del país desconocido"
 #: usettingscaptions.rs_hardware_ctrlj_stereocontrolpin
 #, fuzzy
 msgid "Stereo Control Pin"
-msgstr "Pintor de control de estereo"
+msgstr "Pin de control estéreo"
 
 #: usettingscaptions.rs_hardware_ctrlj_stereopinhigh
 #, fuzzy
@@ -8054,7 +8082,7 @@ msgstr "De Enable"
 #: usettingscaptions.rs_operating_ctrlj_digitalmodeenable
 #, fuzzy
 msgid "Digital Mode Enable"
-msgstr "Modo digital"
+msgstr "Activar modo digital"
 
 #: usettingscaptions.rs_operating_ctrlj_distancemode
 #, fuzzy
@@ -8142,12 +8170,12 @@ msgstr "Qsx Enable"
 #: usettingscaptions.rs_operating_ctrlj_qzbrandomoffsetenable
 #, fuzzy
 msgid "Qzb Random Offset Enable"
-msgstr "Qzb desactivación aleatoria"
+msgstr "Activar desplazamiento aleatorio Qzb"
 
 #: usettingscaptions.rs_operating_ctrlj_radiusofearth
 #, fuzzy
 msgid "Radius Of Earth"
-msgstr "Radius of Earth"
+msgstr "Radio de la Tierra"
 
 #: usettingscaptions.rs_operating_ctrlj_shiftkeyenable
 #, fuzzy
@@ -8296,7 +8324,9 @@ msgid ""
 msgstr ""
 "TR4W no pudo abrir esta ubicación en su gestor de archivos:\n"
 "\n"
-"%sComprueba que aún existe. tr4w.log registra lo que fue probado."
+"%s\n"
+"\n"
+"Comprueba que aún existe. tr4w.log registra lo que fue probado."
 
 #: uappstrings.sdownloadcannotverify
 #, fuzzy
@@ -8350,7 +8380,9 @@ msgid ""
 "It is installed beside TR4W itself. TR4W will start with its defaults, and your old settings file is left untouched."
 msgstr ""
 "TR4W no pudo encontrar el programa de conversión:\n"
-" %sEstá instalado junto al propio TR4W. TR4W comenzará con sus defectos, y su antiguo archivo de configuración se deja intacto."
+"    %s\n"
+"\n"
+"Está instalado junto al propio TR4W. TR4W comenzará con sus valores predeterminados, y su antiguo archivo de configuración se deja intacto."
 
 #: uappstrings.sfirstrunconvertnothingdone
 #, fuzzy
@@ -8364,8 +8396,10 @@ msgid ""
 msgstr ""
 "Nada fue convertido.\n"
 "\n"
-"TR4W comenzará con sus defectos y su antiguo archivo de configuración es intacto. Usted puede convertir en cualquier momento corriendo\n"
-" %sdesde un mensaje de comando en esa carpeta. Convertir entonces reemplaza lo que hayas configurado mientras tanto con los viejos valores."
+"TR4W comenzará con sus valores predeterminados y su antiguo archivo de configuración es intacto. Usted puede convertir en cualquier momento ejecutando\n"
+"    %s\n"
+"\n"
+"desde un símbolo del sistema en esa carpeta. Convertir entonces reemplaza lo que hayas configurado mientras tanto con los viejos valores."
 
 #: uappstrings.sfirstrunconvertnow
 #, fuzzy
@@ -8388,12 +8422,16 @@ msgid ""
 "What is worth knowing is the ORDER. If you continue now and then set TR4W up by hand, converting afterwards overwrites that work with the values from the old file. Converting first avoids the question."
 msgstr ""
 "TR4W ha encontrado la configuración de una versión anterior:\n"
-" %sy no ha escrito su propio archivo de configuración todavía:\n"
-" %sTR4W puede llevar esa antigua configuración a través de ahora. La conversión enumera lo que cambiaría y pregunta antes de escribir algo, para que puedas mirar primero y aún decir que no.\n"
+"    %s\n"
 "\n"
-"No tienes que hacerlo ahora. Nada se pierde por continuar: TR4W comienza con sus defectos, su antiguo archivo se deja sin tocar, y convertir más adelante simplemente reemplaza esos defectos con sus valores antiguos.\n"
+"y no ha escrito su propio archivo de configuración todavía:\n"
+"    %s\n"
 "\n"
-"Lo que vale la pena saber es el ORDER. Si continúas ahora y luego estableces TR4W a mano, convirtiendo después sobreescrituras que trabajan con los valores del archivo antiguo. Convertir primero evita la pregunta."
+"TR4W puede llevar esa antigua configuración ahora. La conversión enumera lo que cambiaría y pregunta antes de escribir algo, para que puedas mirar primero y aún decir que no.\n"
+"\n"
+"No tienes que hacerlo ahora. Nada se pierde por continuar: TR4W comienza con sus valores predeterminados, su antiguo archivo se deja sin tocar, y convertir más adelante simplemente reemplaza esos valores predeterminados con sus valores antiguos.\n"
+"\n"
+"Lo que vale la pena saber es el ORDEN. Si continúas ahora y luego estableces TR4W a mano, convertir después sobrescribe ese trabajo con los valores del archivo antiguo. Convertir primero evita la pregunta."
 
 #: uappstrings.sfirstrunconvertskip
 #, fuzzy
@@ -8416,7 +8454,9 @@ msgid ""
 msgstr ""
 "TR4W no podía abrir su archivo de registro.\n"
 "\n"
-"%sTR4W seguirá corriendo y seguirá tratando de abrirlo. Hasta que pueda, nada de esta sesión está escrito al registro."
+"%s\n"
+"\n"
+"TR4W seguirá corriendo y seguirá tratando de abrirlo. Hasta que pueda, nada de esta sesión está escrito al registro."
 
 # 2026-10-19: config command names restored to their exact English spelling -- an operator types them in a .cfg or looks them up by name; only the sentence around them is translated. Still fuzzy. Previous text: "ID de computadora %s ya está en uso por otra estación en esta red.\n\nCambio ID a una carta que ninguna otra estación está usando, luego reconecte."
 #: uappstrings.snetcomputeridinuse
@@ -8448,7 +8488,7 @@ msgstr "Este concurso marca multiplicadores domésticos de un archivo .DOM y nin
 #: uappstrings.sreadinessfooter
 #, fuzzy
 msgid "Set these in Preferences > Station, then restart TR4W: they are read once when the contest is set up, so changing them now will not change this contest."
-msgstr "Establezca estos en Preferencias > Station, luego reiniciar TR4W: son leídos una vez cuando se establece el concurso, por lo que cambiarlos ahora no cambiará este concurso."
+msgstr "Establezca estos en Preferencias > Estación, luego reiniciar TR4W: son leídos una vez cuando se establece el concurso, por lo que cambiarlos ahora no cambiará este concurso."
 
 #: uappstrings.sreadinessheading
 #, fuzzy
@@ -8503,7 +8543,7 @@ msgstr "Resultado"
 #: uappstrings.sverifyfailed
 #, fuzzy
 msgid "FAILED"
-msgstr "FAILED"
+msgstr "FALLÓ"
 
 #: uappstrings.sverifypassed
 #, fuzzy
@@ -8541,7 +8581,9 @@ msgid ""
 msgstr ""
 "Este archivo es una base de datos, pero no fue creado por TR4W:\n"
 "\n"
-"%sTR4W no puede abrir el registro de otro programa. Elija un registro TR4W (.db) o un archivo de configuración del concurso (.cfg)."
+"%s\n"
+"\n"
+"TR4W no puede abrir el registro de otro programa. Elija un registro TR4W (.db) o un archivo de configuración del concurso (.cfg)."
 
 #: uprogrammain.scontestfilenotrecognised
 #, fuzzy
@@ -8554,7 +8596,9 @@ msgid ""
 msgstr ""
 "Este archivo no es un registro TR4W y no es un archivo de configuración del concurso:\n"
 "\n"
-"%sElija un registro TR4W (.db) o un archivo de configuración del concurso (.cfg)."
+"%s\n"
+"\n"
+"Elija un registro TR4W (.db) o un archivo de configuración del concurso (.cfg)."
 
 #: utr4wstrings.tc_bankalt
 #, fuzzy
@@ -8724,7 +8768,7 @@ msgstr "TX inHIBITED: %s"
 #: uappstrings.snetnohelloanswer
 #, fuzzy
 msgid "The multi-op server closed the connection without answering. It is probably older than this TR4W (which speaks network protocol %d). Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr "El servidor multiop cerró la conexión sin responder. Es probablemente más viejo que este TR4W (que habla protocolo de red %d). Actualización TR4 WServer en el ordenador del servidor, luego elige Conectarse en el menú Net."
+msgstr "El servidor multiop cerró la conexión sin responder. Es probablemente más viejo que este TR4W (que habla protocolo de red %d). Actualice TR4WServer en el ordenador del servidor, luego elige Conectarse en el menú Net."
 
 #: uappstrings.snetserverprotocolnewer
 #, fuzzy
@@ -8734,12 +8778,12 @@ msgstr "El servidor multiop habla protocolo de red %d, que es más nuevo que el 
 #: uappstrings.snetserverprotocololder
 #, fuzzy
 msgid "The multi-op server speaks network protocol %d, but this TR4W needs protocol %d. Update TR4WServer on the server computer, then choose Connect on the Net menu."
-msgstr "El servidor multiop habla protocolo de red %d, pero este TR4W necesita protocolo %d. Actualización TR4 WServer en el ordenador del servidor, luego elige Conectarse en el menú Net."
+msgstr "El servidor multiop habla protocolo de red %d, pero este TR4W necesita protocolo %d. Actualice TR4WServer en el ordenador del servidor, luego elige Conectarse en el menú Net."
 
 #: uappstrings.snetmenureconnect
 #, fuzzy
 msgid "Reconnect"
-msgstr "Reconnect"
+msgstr "Reconectar"
 
 #: uappstrings.snetmenushowwindow
 #, fuzzy
@@ -8810,13 +8854,13 @@ msgstr "Atrapado desde el servidor: %d QSO(s) agregó."
 #: uappstrings.snetresent
 #, fuzzy
 msgid "Resent to the server what was logged while disconnected: %d QSO(s), %d edit(s)."
-msgstr "Resentimiento al servidor lo que se ha registrado durante la desconexión: %d QSO(s), %d edit(s)."
+msgstr "Reenviado al servidor lo registrado durante la desconexión: %d QSO(s), %d edición(es)."
 
 #: uappstrings.sserverlogadd
 #: tfrmserverlog.btnaddmissing.caption
 #, fuzzy
 msgid "Add missing QSOs"
-msgstr "Add missing QSOs"
+msgstr "Añadir los QSO que faltan"
 
 #: uappstrings.sserverlogaddmissing
 #, fuzzy
@@ -8876,7 +8920,7 @@ msgstr "Plain http: su contraseña de HamScore se envía sin cifrar. Utilice htt
 #: tfrmhamscore.btnresync.caption
 #, fuzzy
 msgid "Re-send Log to HamScore..."
-msgstr "Reenviar Iniciar sesión en HamScore..."
+msgstr "Reenviar el log a HamScore..."
 
 #: uappstrings.shamscoreresyncbody
 #, fuzzy
@@ -8897,7 +8941,7 @@ msgstr "Reenviar sólo"
 #: uappstrings.shamscoreresyncdeletefirst
 #, fuzzy
 msgid "Delete and re-send"
-msgstr "Suprimir y reenviar"
+msgstr "Eliminar y reenviar"
 
 #: tprefsform.lblscorerestart.caption
 #, fuzzy
@@ -8988,7 +9032,7 @@ msgstr "Elección guardada (refresco para ver su nombre)"
 #: uappstrings.sloggergridenabled
 #, fuzzy
 msgid "Enabled"
-msgstr "Enabled"
+msgstr "Activado"
 
 #: uappstrings.sloggerstatedisabled
 #, fuzzy
@@ -9003,7 +9047,7 @@ msgstr "Reinicie TR4W para aplicar"
 #: uappstrings.sloggerstateidle
 #, fuzzy
 msgid "Idle"
-msgstr "Idle"
+msgstr "Inactivo"
 
 #: uappstrings.sloggerstatesending
 #, fuzzy
@@ -9013,7 +9057,7 @@ msgstr "Enviar (%d pendientes)"
 #: uappstrings.sloggerstateretrying
 #, fuzzy
 msgid "Retrying: %s"
-msgstr "Retrying: %s"
+msgstr "Reintentando: %s"
 
 #: uappstrings.sloggerstatepaused
 #, fuzzy
@@ -9048,7 +9092,7 @@ msgstr "Open Log no se hizo: el nuevo concurso no pudo ser guardado para el rein
 #: uappstrings.sopenlogrefusedkeyed
 #, fuzzy
 msgid "Open Log was not done: a radio is transmitting. Unkey it, then choose File > Open Log again."
-msgstr "Open Log no se hizo: una radio está transmitiendo. Unkey it, luego elige Archivo > Open Log de nuevo."
+msgstr "Open Log no se hizo: una radio está transmitiendo. Deje de transmitir y luego elige Archivo > Open Log de nuevo."
 
 #: uappstrings.sopenlogrefusedsendingcw
 #, fuzzy
@@ -9073,7 +9117,7 @@ msgstr "Mensajes"
 #: uappstrings.sprefsnavcwwhileoperating
 #, fuzzy
 msgid "While operating"
-msgstr "Mientras operaba"
+msgstr "Durante la operación"
 
 #: uappstrings.sprefsnavcwspeedandcharacters
 #, fuzzy
@@ -9144,7 +9188,7 @@ msgstr "Comprobación de tuberías"
 #: uappstrings.sprefsgroupsearchandpounce
 #, fuzzy
 msgid "Search and pounce"
-msgstr "Search and pounce"
+msgstr "Búsqueda y captura"
 
 #: uappstrings.sprefsgrouptyping
 #, fuzzy
@@ -9164,7 +9208,7 @@ msgstr "Entrar un registro a mano"
 #: uappstrings.sprefsgrouptuningotherradio
 #, fuzzy
 msgid "Tuning the other radio"
-msgstr "Tuning the other radio"
+msgstr "Sintonizar la otra radio"
 
 #: uappstrings.sprefsgroupbandmapwindow
 #, fuzzy
@@ -9174,7 +9218,7 @@ msgstr "Ventana de mapa de banda"
 #: uappstrings.sprefsgroupspottuning
 #, fuzzy
 msgid "Tuning to a spot"
-msgstr "Tuning a un lugar"
+msgstr "Sintonizar un anuncio"
 
 #: uappstrings.sprefsgroupradiopolling
 #, fuzzy
@@ -9239,7 +9283,7 @@ msgstr "Datos multiplicadores"
 #: uappstrings.sprefsbandplanrow
 #, fuzzy
 msgid "Band plan (cutoff frequencies and memories)"
-msgstr "Plan de banda (frecuencias cortadas y recuerdos)"
+msgstr "Plan de bandas (frecuencias de corte y memorias)"
 
 #: uappstrings.sprefsbandplanedit
 #, fuzzy
@@ -9398,7 +9442,7 @@ msgstr "Sin respuesta: la dirección no comienza con http:// o https://"
 #: uappstrings.surltestnoanswerplain
 #, fuzzy
 msgid "No answer: a plain http:// address was not sent"
-msgstr "No response: a plain http:// address was not sent"
+msgstr "Sin respuesta: no se envió una dirección http:// sin cifrar"
 
 #: uappstrings.surltestnoanswertls
 #, fuzzy
@@ -9413,7 +9457,7 @@ msgstr "Sin respuesta: la biblioteca TLS se detuvo mientras se conecta"
 #: uappstrings.surltestnoanswertrust
 #, fuzzy
 msgid "No answer: the certificate file cacert.pem could not be used"
-msgstr "Sin respuesta: el certificado de cacert. pem no se puede utilizar"
+msgstr "Sin respuesta: no se pudo usar el archivo de certificados cacert.pem"
 
 #: uappstrings.surltestnoanswerverify
 #, fuzzy
@@ -9478,25 +9522,25 @@ msgstr "La identidad del servidor no se revisa; cualquiera entre usted y puede l
 #: uappstrings.sprefsnavcwkeyers
 #, fuzzy
 msgid "CW keyers"
-msgstr "Llaveros CW"
+msgstr "Keyers CW"
 
 #: uappstrings.sprefshardwareinfo
 #: tprefsform.lblhardwareinfo.caption
 #, fuzzy
 msgid "Station-wide hardware. Settings that belong to one radio are under Radios; rotators are under Rotators; WinKeyer and YCCC SO2R+ keyers are under CW keyers."
-msgstr "Herraje para toda la estación. Los ajustes que pertenecen a una radio están bajo radios; los rotadores están bajo rotores; WinKeyer y YCCC SO2R+ Los llaveros están bajo llaveros CW."
+msgstr "Hardware de toda la estación. Los ajustes que pertenecen a una radio están en Radios; los rotores, en Rotores; los keyers WinKeyer y YCCC SO2R+, en Keyers CW."
 
 #: uappstrings.sprefscwkeyerspointer
 #: tprefsform.lblcwkeyerspointer.caption
 #, fuzzy
 msgid "WinKeyer and YCCC SO2R+ keyers, and their settings, are under Hardware > CW keyers."
-msgstr "Los llaveros WinKeyer y YCCC SO2R+, y sus ajustes, están bajo llaveros Hardware CW."
+msgstr "Los keyers WinKeyer y YCCC SO2R+, y sus ajustes, están en Hardware > Keyers CW."
 
 #: uappstrings.sprefskeyerscwpointer
 #: tprefsform.lblkeyerscwpointer.caption
 #, fuzzy
 msgid "The CW TR4W sends, and the paddle and serial-line keying it does itself, are under CW Settings."
-msgstr "El CW TR4W envía, y el teclado de línea de paddle y serie que hace, están bajo Configuración CW."
+msgstr "El CW que envía TR4W, y la manipulación por paleta y línea serie que hace por sí mismo, están en Ajustes de CW."
 
 #: uappstrings.sprefssearchcwkeyers
 #, fuzzy
@@ -9566,7 +9610,7 @@ msgstr "Estás dentro. %s: Elija su condado de la lista."
 #: uappstrings.snewcontesthostareaoutsidenotice
 #, fuzzy
 msgid "You are outside %0:s: enter your US state or Canadian province (two letters, e.g. GA or ON), or DX. Tick the box if you are in %0:s."
-msgstr "Estás afuera. %0:s: ingrese su estado estadounidense o provincia canadiense (dos cartas, por ejemplo GA o ON), o DX. Tick the box if you are in %0:s."
+msgstr "Está fuera de %0:s: introduzca su estado de EE. UU. o su provincia canadiense (dos letras, p. ej. GA u ON), o DX. Marque la casilla si está en %0:s."
 
 #: uappstrings.snewcontesthostareaentryisinside
 #, fuzzy
@@ -9677,7 +9721,7 @@ msgstr "incierto"
 #, fuzzy
 msgctxt "uappstrings.seditqsomycall"
 msgid "Call"
-msgstr "Call"
+msgstr "Indicativo"
 
 #: uappstrings.seditqsomycounty
 #: tfrmeditqso.lblmycounty.caption
@@ -9695,7 +9739,7 @@ msgstr "Zona CQ"
 #: tfrmeditqso.lblmygrid.caption
 #, fuzzy
 msgid "Grid"
-msgstr "Grid"
+msgstr "Cuadrícula"
 
 #: uappstrings.seditqsomyituzone
 #: tfrmeditqso.lblmyituzone.caption
@@ -9707,7 +9751,7 @@ msgstr "Zona de la UIT"
 #: tfrmeditqso.lblmypark.caption
 #, fuzzy
 msgid "Park"
-msgstr "Park"
+msgstr "Parque"
 
 #: uappstrings.seditqsomysection
 #: tfrmeditqso.lblmysection.caption
@@ -9765,7 +9809,7 @@ msgstr "Sección desaparecida"
 #: uappstrings.shamscorenobundlestatus
 #, fuzzy
 msgid "Not sent: cacert.pem not found (looked in: %0:s) -- %1:d QSO(s) retained"
-msgstr "No enviado: cacert.pem no encontrado (mirado en: %0:s) %1:d QSO(s) kept"
+msgstr "No enviado: no se encontró cacert.pem (buscado en: %0:s) -- %1:d QSO(s) conservados"
 
 #: uappstrings.slogbusynotsaved
 #, fuzzy
@@ -9811,7 +9855,7 @@ msgstr "ID de perfil de estación"
 #: uappstrings.sloggerfieldcloudlogurl
 #, fuzzy
 msgid "Cloudlog / Wavelog address (https://...)"
-msgstr "Cloudlog / Wavelog address (https://...)"
+msgstr "Dirección de Cloudlog / Wavelog (https://...)"
 
 #: uappstrings.sloggergridadd
 #: tprefsform.btnaddexternallogger.caption
@@ -9836,6 +9880,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Haga clic derecho en un logger para editarlo, cambiar Enviar nuevos QSOs, mover o eliminarlo; arrastre la celda del pedido para reordenar. Los loggers activos envían orden. Guardar preferencias para aplicar Activado y Orden ahora; un nuevo logger, o ajustes de conexión cambiados, se aplica después de un reinicio."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Logger"
@@ -9879,12 +9924,12 @@ msgstr "Quita..."
 #: uappstrings.sloggergridremoveask
 #, fuzzy
 msgid "Remove logger definition? Pending deliveries stay in the contest log and will not be redirected to another definition."
-msgstr "Quitar la definición de logger? Hasta que las entregas permanezcan en el registro del concurso y no serán redirigidos a otra definición."
+msgstr "¿Quitar la definición del logger? Las entregas pendientes permanecen en el registro del concurso y no se redirigirán a otra definición."
 
 #: uappstrings.sloggergridsavedrestart
 #, fuzzy
 msgid "Saved. Enabled and Order are in effect. %d logger(s) with new or changed connection settings apply after you restart TR4W."
-msgstr "Salvado. Enabled and Order are in effect. %d logger(s) con ajustes de conexión nuevos o cambiados se aplican después de reiniciar TR4W."
+msgstr "Guardado. Activado y Orden están en vigor. %d logger(s) con ajustes de conexión nuevos o cambiados se aplican después de reiniciar TR4W."
 
 #: uappstrings.sloggergridsend
 #, fuzzy
@@ -9927,7 +9972,7 @@ msgstr "Esta conexión de fondo de TR4W lo mantiene: %s."
 #: uappstrings.sloglockedquit
 #, fuzzy
 msgid "Quit TR4W"
-msgstr "Quit TR4W"
+msgstr "Salir de TR4W"
 
 #: uappstrings.sloglockedreadonly
 #, fuzzy
@@ -9956,7 +10001,7 @@ msgstr ""
 #: uappstrings.snettailcatfailed
 #, fuzzy
 msgid "The link to the multi-op server through Tailcat could not be opened: %s. TR4W keeps trying."
-msgstr "El enlace al servidor multiop a través de Tailcat no se puede abrir: %sTR4W sigue intentando."
+msgstr "El enlace al servidor multiop a través de Tailcat no se puede abrir: %s. TR4W sigue intentando."
 
 #: uappstrings.sprefsgroupinternet
 #, fuzzy
@@ -9979,12 +10024,12 @@ msgstr "Para llegar a un servidor en otra red, pega la dirección que su operado
 #: tprefsform.chknetusetailcat.caption
 #, fuzzy
 msgid "Use Tailcat"
-msgstr "Use Tailcat"
+msgstr "Usar Tailcat"
 
 #: uappstrings.swrldeliveryissue
 #, fuzzy
 msgid "World Radio League delivery needs attention. %s. Local logging continues; check the TR4W log and WRL delivery records."
-msgstr "La World Radio League necesita atención. %s. La tala local continúa; compruebe el registro TR4W y los registros de entrega WRL."
+msgstr "La entrega a World Radio League necesita atención. %s. El registro local continúa; compruebe el log de TR4W y los registros de entrega de WRL."
 
 #: uappstrings.swrlstatusunavailable
 #, fuzzy
@@ -9994,7 +10039,7 @@ msgstr "El estado de entrega WRL no está disponible para el registro actual."
 #: uappstrings.swrlsummary
 #, fuzzy
 msgid "WRL delivery: pending %d; sending %d; up to date %d; uncertain %d; failed %d. Reopen Preferences to refresh."
-msgstr "WRL delivery: pending %d; envío %d; hasta la fecha %d; incierto %d; falló %d. Actualizar Preferencias para refrescarse."
+msgstr "Entrega a WRL: pendientes %d; enviando %d; al día %d; inciertos %d; fallidos %d. Vuelva a abrir Preferencias para actualizar."
 
 #: ulclformhelpers.tc_prefs_ports_unavailable
 #, fuzzy
@@ -10128,12 +10173,12 @@ msgstr "Año de licencia"
 #: uappstrings.smessageeditcaptiontoolong
 #, fuzzy
 msgid "The caption is %0:d bytes long and a caption holds %1:d. Shorten it and press OK again."
-msgstr "La leyenda es %0:d bytes long and a caption hold %1:dAcortarlo y presionarlo de nuevo."
+msgstr "La leyenda tiene %0:d bytes y una leyenda admite %1:d. Acórtela y pulse OK de nuevo."
 
 #: uappstrings.smessageedittexttoolong
 #, fuzzy
 msgid "The message is %0:d bytes long and a message holds %1:d. Shorten it and press OK again."
-msgstr "El mensaje es %0:d bytes long and a message hold %1:dAcortarlo y presionarlo de nuevo."
+msgstr "El mensaje tiene %0:d bytes y un mensaje admite %1:d. Acórtelo y pulse OK de nuevo."
 
 #: uappstrings.snetparametertoolong
 #, fuzzy
@@ -10288,9 +10333,9 @@ msgid ""
 "\n"
 "Use it anyway?"
 msgstr ""
-"\"%s\"no parece una señal regular.\n"
+"\"%s\" no parece un indicativo normal.\n"
 "\n"
-"¿Lo usas de todos modos?"
+"¿Usarlo de todos modos?"
 
 #: uappstrings.swizcallrequired
 #, fuzzy
@@ -10317,6 +10362,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "Ata lo que tienes. Cualquier cosa que quede desatado se puede configurar más tarde en Preferencias."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -10335,7 +10381,7 @@ msgstr "Escoja un clúster de la lista, o escriba su nombre de host o dirección
 #: uappstrings.swizclusterlogin
 #, fuzzy
 msgid "Login callsign:"
-msgstr "Inicie sesión callsign:"
+msgstr "Indicativo de inicio de sesión:"
 
 #: uappstrings.swizclusterneeded
 #, fuzzy
@@ -10385,7 +10431,7 @@ msgstr "Un llavero WinKeyer CW en su propio puerto."
 #: uappstrings.swizitemradio
 #, fuzzy
 msgid "A radio (rig control)"
-msgstr "Una radio (control de carga)"
+msgstr "Una radio (control del equipo)"
 
 #: uappstrings.swizitemradiohint
 #, fuzzy
@@ -10442,7 +10488,7 @@ msgstr "Salvado, pero no puesto en uso: %s. reiniciar TR4W o utilizar Activar en
 #: uappstrings.swizrescluster
 #, fuzzy
 msgid "DX cluster \"%0:s\": %1:s, logging in as %2:s."
-msgstr "DX cluster \"%0:s\": %1:s, logging in as %2:s."
+msgstr "DX cluster \"%0:s\": %1:s, conectándose como %2:s."
 
 #: uappstrings.swizresclusterfailed
 #, fuzzy
@@ -10586,7 +10632,7 @@ msgstr "El puerto debe ser un número de 1 a 65535, o en blanco."
 #: uappstrings.swizresonport
 #, fuzzy
 msgid "on %s"
-msgstr "on %s"
+msgstr "en %s"
 
 #: uappstrings.swizresataddress
 #, fuzzy
@@ -10651,7 +10697,7 @@ msgstr "   Comando de inicio: %s"
 #: uappstrings.swizdetkeyermode
 #, fuzzy
 msgid "   Mode %0:s, sidetone %1:s"
-msgstr "   Mode %0:s, sidetone %1:s"
+msgstr "   Modo %0:s, tono lateral %1:s"
 
 #: uappstrings.swizdetclustercommand
 #, fuzzy
@@ -10831,7 +10877,7 @@ msgstr "Búsqueda de datos"
 #: tfrmqtcreceive.lblcallsign.caption
 #, fuzzy
 msgid "Callsign"
-msgstr "Callsign"
+msgstr "Indicativo"
 
 #: tfrmlogsearch.lblmode.caption
 #, fuzzy
@@ -10913,7 +10959,7 @@ msgstr ""
 #: uappstrings.sloggerfieldqrzcall
 #, fuzzy
 msgid "QRZ logbook callsign"
-msgstr "QRZ logbook callsign"
+msgstr "Indicativo del logbook de QRZ"
 
 #: uappstrings.sloggerfieldqrzkey
 #, fuzzy
@@ -10924,7 +10970,7 @@ msgstr "QRZ logbook API clave"
 #: tfrmbandmap.micenteronradio.caption
 #, fuzzy
 msgid "Center on radio frequency"
-msgstr "Center on radio frequency"
+msgstr "Centrar en la frecuencia de la radio"
 
 #: uappstrings.sbandmapsortbybeam
 #: tfrmbandmap.misortbybeam.caption
@@ -11165,7 +11211,7 @@ msgstr "Estás dentro. %s: Elija su distrito de la lista."
 #: uappstrings.stotalsgridmults
 #, fuzzy
 msgid "Grids"
-msgstr "Grids"
+msgstr "Cuadrículas"
 
 #: uappstrings.snewcontestcpqpdistrictorlocation
 #, fuzzy
@@ -11186,7 +11232,7 @@ msgstr "Introduzca su código de cinco letras o división (por ejemplo, NSHRM) s
 #, fuzzy
 msgctxt "uappstrings.sdefaultrotatorname"
 msgid "Rotator"
-msgstr "Rotator"
+msgstr "Rotor"
 
 #: uappstrings.swizitemlogger
 #, fuzzy
@@ -11217,7 +11263,7 @@ msgstr "WSJT-X"
 #: uappstrings.swizitemwsjtxhint
 #, fuzzy
 msgid "Decodes and logged QSOs come in from WSJT-X over UDP."
-msgstr "Decodes and logged QSOs come in from WSJT-X over UDP."
+msgstr "Las decodificaciones y los QSO registrados llegan desde WSJT-X por UDP."
 
 #: uappstrings.swizloggerintro
 #, fuzzy
@@ -11283,7 +11329,7 @@ msgstr "El cambio WSJT-X tiene efecto la próxima vez que comience TR4W."
 #, fuzzy
 msgctxt "uappstrings.swizrotatorheading"
 msgid "Rotator"
-msgstr "Rotator"
+msgstr "Rotor"
 
 #: uappstrings.swizrotatorintro
 #, fuzzy
@@ -11541,7 +11587,7 @@ msgstr "SUM - hoja resumida"
 #: uappstrings.scmdmenuudp
 #, fuzzy
 msgid "UDP - send the whole log by UDP"
-msgstr "UDP - send the whole log by UDP"
+msgstr "UDP - enviar todo el log por UDP"
 
 #: uappstrings.scmdmenuwcy
 #, fuzzy
@@ -11615,7 +11661,7 @@ msgstr "Cancelar"
 #, fuzzy
 msgctxt "uappstrings.sroverdialogoff"
 msgid "Rover off"
-msgstr "Rover off"
+msgstr "Rover desactivado"
 
 #: uappstrings.sroverdialogprompt
 #, fuzzy
@@ -11652,7 +11698,7 @@ msgstr "Este concurso permite al máximo %0:d lugares a la vez"
 #, fuzzy
 msgctxt "uappstrings.sroverturnedoff"
 msgid "Rover off"
-msgstr "Rover off"
+msgstr "Rover desactivado"
 
 #: uappstrings.sroverunknownunit
 #, fuzzy
@@ -11697,7 +11743,7 @@ msgstr ""
 #: uappstrings.sselfspotsent
 #, fuzzy
 msgid "Self-spot sent: %0:s on %1:s."
-msgstr "Self-spot sent: %0:s on %1:s."
+msgstr "Autoanuncio enviado: %0:s en %1:s."
 
 #: uappstrings.sselfspottoosoon
 #, fuzzy
@@ -11777,7 +11823,7 @@ msgstr "Donde opera esta estación ahora"
 #: tfrmrover.btnoff.caption
 #, fuzzy
 msgid "Rover off"
-msgstr "Rover off"
+msgstr "Rover desactivado"
 
 #: uappstrings.spostrepostrefused
 #, fuzzy
@@ -11939,7 +11985,7 @@ msgstr "Elige..."
 #: tprefsform.lblmainwindowheading.caption
 #, fuzzy
 msgid "Windows and log"
-msgstr "Windows y log"
+msgstr "Ventanas y registro"
 
 #: tfrmpanadapter.lblscale.caption
 #, fuzzy
@@ -11990,7 +12036,7 @@ msgstr "Más pequeña"
 #: tfrmbandmap.mitextreset.caption
 #, fuzzy
 msgid "Reset"
-msgstr "Reset"
+msgstr "Restablecer"
 
 #: uappstrings.sloggergridopensite
 #, fuzzy
@@ -12110,7 +12156,7 @@ msgstr "QSO no se salvó"
 #: uappstrings.sentrystatuslogreadonly
 #, fuzzy
 msgid "Log read-only"
-msgstr "Log read-only"
+msgstr "Log de solo lectura"
 
 #: uappstrings.sentryfieldexchangename
 #, fuzzy
@@ -12145,12 +12191,12 @@ msgstr "%s no se ha registrado: su llamada base no está en el archivo del país
 #: uappstrings.scallwindowcwon
 #, fuzzy
 msgid "CW On"
-msgstr "CW On"
+msgstr "CW activado"
 
 #: uappstrings.smenutogglevoicekeyer
 #, fuzzy
 msgid "Toggle Voice Keyer"
-msgstr "Toggle Voice Keyer"
+msgstr "Activar/desactivar el keyer de voz"
 
 #: uappstrings.sexchangecountylineoneparty
 #, fuzzy
@@ -12170,12 +12216,12 @@ msgstr "Aceptar QSOs de JTDX y JTAlert (N1MM log listener)"
 #: usettingscaptions.rs_wsjtx_n1mmlistenaddress
 #, fuzzy
 msgid "Address the N1MM log listener binds to"
-msgstr "Address the N1MM log listener binds to"
+msgstr "Dirección en la que escucha el receptor de log N1MM"
 
 #: uappstrings.sprefsgroupn1mmlistener
 #, fuzzy
 msgid "N1MM log listener (JTDX, JTAlert)"
-msgstr "N1MM log listener (JTDX, JTAlert)"
+msgstr "Receptor de log N1MM (JTDX, JTAlert)"
 
 #: uappstrings.snetstationmissing
 #, fuzzy
@@ -12452,34 +12498,190 @@ msgstr "Enviado al servidor: %d QSO(s) -- %d conectado mientras que desconectado
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Clase de poder:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Prefectura:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Clase de poder"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Introduzca su clase de potencia (H, M, L o P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "El valor de %s no es uno que este concurso acepta."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "La clase de poder es una carta: H, M, L o P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Una prefectura es un número JARL de hasta tres dígitos, o un código de dos letras."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Loggers externos..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Loggers externos para este QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Situación"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Último enviado (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "entregado (no confirmado)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "retrying (retrying)%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "El poder debe ser H, M, L o P"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "La Prefectura debe ser de 02-48 o 101-114"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Ambos:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Avanzado"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Apariencia"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Copia de seguridad"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Mapa de banda"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Bandas"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Colores"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Concurso"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "Ajustes de CW"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "Clúster DX"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Logger externo"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Software externo"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Hardware"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Registro"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Red"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Puntuación en línea"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Radios"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "Rotores"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Estación"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "Servidor TCI"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Modo de dos radios"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "Difusión UDP"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Servidor web"

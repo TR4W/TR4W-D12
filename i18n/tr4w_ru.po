@@ -4636,6 +4636,7 @@ msgstr "Шрифт распространяется на главное окно
 #~ msgstr "Они были в разделе Внешний вид меню Настройки. Это окно исчезает, как только к ним присоединяются ROW COUNT и WINDOW SIZE."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Аудио"
@@ -5165,6 +5166,7 @@ msgid "CW while operating"
 msgstr "CW во время работы"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Оперировать"
@@ -5192,6 +5194,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "Параллельного порта, к которому подключен гребной или ножной переключатель, здесь нет. Вопрос о том, поддерживает ли TR4W LPT, остается открытым, поэтому PADDLE PORT остается в списке команд Ctrl-J до тех пор, пока это не будет решено, а не будет предоставлен дом, который он может не сохранить."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Paddle и PTT"
@@ -5736,7 +5739,7 @@ msgstr "Продвинутый"
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr "Серийный"
+msgstr "Последовательный"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -10404,6 +10407,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Нажмите правой кнопкой мыши регистратор, чтобы отредактировать его, изменить отправку новых QSO, переместить или удалить его; перетащите ячейку Заказа для повторного заказа. Активные регистраторы отправляют заказ. Сохраните предпочтения для применения Enabled и Order сейчас; новый регистратор или измененные настройки подключения применяются после перезагрузки."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Логгер"
@@ -10885,6 +10889,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "Отметьте, что у вас есть. Все, что осталось незамеченным, может быть установлено позже в Предпочтениях."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -11863,7 +11868,7 @@ msgstr "Выберите тип ротора или вернитесь и отц
 #: uappstrings.swizrotatorport
 #, fuzzy
 msgid "Serial port:"
-msgstr "Серийный порт:"
+msgstr "Последовательный порт:"
 
 #: uappstrings.swizrotatorudpport
 #, fuzzy
@@ -13012,34 +13017,190 @@ msgstr "Отправлено на сервер: %d QSO(s) - %d отсоедин�
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Класс мощности:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Префектура:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Силовой класс"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Введите класс мощности (H, M, L или P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "ценность %s Этот конкурс не принимает."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "Класс мощности — это одна буква: H, M, L или P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Префектура представляет собой число JARL до трех цифр или двухбуквенный код."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Внешние лесозаготовители..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Внешние регистраторы для этого QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "статус"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Последнее сообщение (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "Снято (не подтверждено)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "повторять%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "Мощность должна быть H, M, L или P"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "Префектура должна быть 02-48 или 101-114"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Оба:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "продвинутый"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "внешний вид"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Резервное копирование"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Карта группы"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Банда"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Цвета"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Конкурс"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "Настройки CW"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "Кластер DX"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Внешний логгер"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "внешнее программное обеспечение"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Аппаратное оборудование"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "лесозаготовка"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Сеть"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Онлайн-счет"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Радио"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "ротаторы"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Станция"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "Сервер TCI"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Два радиорежима"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "Трансляция UDP"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Веб-сервер"

@@ -4270,6 +4270,7 @@ msgstr "Η γραμματοσειρά εφαρμόζεται στο κύριο �
 #~ msgstr "Αυτά βρίσκονταν στο στοιχείο Εμφάνιση του μενού Ρυθμίσεις. Εκείνο το παράθυρο θα καταργηθεί μόλις έρθουν εδώ και τα ROW COUNT και WINDOW SIZE."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Ήχος"
@@ -4514,7 +4515,7 @@ msgstr "DXLab"
 #: tprefsform.lbldxlabinfo2.caption
 #, fuzzy
 msgid "The port is not configurable today.  If you want it to be, say so and it becomes a setting here."
-msgstr "Το λιμάνι δεν είναι διαμορφωμένο σήμερα. Αν θέλεις να γίνει, πες το και θα γίνει σκηνικό εδώ."
+msgstr "Η θύρα δεν είναι ρυθμιζόμενη σήμερα. Αν θέλεις να γίνει, πες το και θα γίνει ρύθμιση εδώ."
 
 #: tprefsform.lblfarnsworthspeed.caption
 #, fuzzy
@@ -4788,6 +4789,7 @@ msgid "CW while operating"
 msgstr "CW κατά τη λειτουργία"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Λειτουργία"
@@ -4814,6 +4816,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "Η παράλληλη θύρα ένας διακόπτης κουπί ή ποδιού δεν είναι εδώ. Αν το TR4W συνεχίζει να υποστηρίζει LPT σε όλα είναι μια ανοιχτή ερώτηση, έτσι PADDLE PORT παραμένει στη λίστα εντολών Ctrl-J μέχρι να τακτοποιηθεί αυτό αντί να δοθεί ένα σπίτι που δεν μπορεί να κρατήσει."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Κουπί και PTT"
@@ -5038,7 +5041,7 @@ msgstr "Εκ προεπιλογής, και αξίζει να φύγεις. Αυ
 #: tprefsform.lbltciintro.caption
 #, fuzzy
 msgid "Lets other programs - WSJT-X, JTDX, a skimmer - control whichever radio TR4W has the port open on, even a radio with no TCI of its own.  Radio 1 is trx 0 and radio 2 is trx 1."
-msgstr "Αφήνει άλλα προγράμματα - WSJT-X, JTDX, ένα skimmer - έλεγχο όποιο radio TR4W έχει το λιμάνι ανοιχτό, ακόμη και ένα radio χωρίς TCI δικό του. Το Radio 1 είναι trx 0 και το radio 2 είναι trx 1."
+msgstr "Αφήνει άλλα προγράμματα - WSJT-X, JTDX, ένα skimmer - να ελέγχουν όποιο radio έχει ανοιχτή θύρα στο TR4W, ακόμη και ένα radio χωρίς δικό του TCI. Το Radio 1 είναι trx 0 και το radio 2 είναι trx 1."
 
 #: tprefsform.lbltciloghint.caption
 #, fuzzy
@@ -5569,7 +5572,7 @@ msgstr "Επιλέξτε έναν τύπο ραδιοφώνου."
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr "Το λιμάνι πρέπει να είναι αριθμός μεταξύ 1 και 65535."
+msgstr "Η θύρα πρέπει να είναι αριθμός μεταξύ 1 και 65535."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
@@ -10077,6 +10080,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Κάντε δεξί κλικ σε έναν καταγραφέα για να το επεξεργαστείτε, αλλάξτε Αποστολή νέων QSO, μετακινήστε ή αφαιρέστε το; σύρετε το κελί Παραγγελίας για να επαναπαραγγείλετε. Ενεργοί καταγραφείς στέλνουν την Τάξη. Αποθήκευση Προτιμήσεων για εφαρμογή Ενεργοποίησης και Παραγγελίας τώρα: ένας νέος καταγραφέας, ή τροποποιημένες ρυθμίσεις σύνδεσης, ισχύει μετά από επανεκκίνηση."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Καταγραφή"
@@ -10558,6 +10562,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "Τικ τι έχεις; Ό,τι μείνει ξεβιδωμένο μπορεί να στηθεί αργότερα στις Προτιμήσεις."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -10642,7 +10647,7 @@ msgstr "WinKeyer"
 #: uappstrings.swizkeyerintro
 #, fuzzy
 msgid "Choose the port your WinKeyer is on. A WinKeyer needs its own port, not the radio's."
-msgstr "Επιλέξτε το λιμάνι WinKeyer σας είναι on. Ένα WinKeyer χρειάζεται το δικό του λιμάνι, όχι το radio."
+msgstr "Επιλέξτε τη θύρα στην οποία είναι ο WinKeyer σας. Ένας WinKeyer χρειάζεται δική του θύρα, όχι αυτή του radio."
 
 #: uappstrings.swizmenu
 #, fuzzy
@@ -11574,7 +11579,7 @@ msgstr "Θύρα UDP:"
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr "Το λιμάνι πρέπει να είναι από το 1 έως το 65535."
+msgstr "Η θύρα πρέπει να είναι αριθμός από το 1 έως το 65535."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
@@ -12685,34 +12690,190 @@ msgstr "Αποστολή στον εξυπηρετητή: %d QSO(ες) -- %d σ�
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Τάξη ισχύος:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Νομός:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Τάξη ισχύος"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Εισάγετε την κατηγορία ισχύος σας (H, M, L ή P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "Η αξία του %s Αυτός ο διαγωνισμός δεν είναι αποδεκτός."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "Η τάξη ισχύος είναι ένα γράμμα: H, M, L ή P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Ένας νομός είναι ένας αριθμός JARL μέχρι τρία ψηφία, ή ένας κωδικός δύο γραμμάτων."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Εξωτερικοί καταγραφείς..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Εξωτερικοί καταγραφείς για αυτό το QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Κατάσταση"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Τελευταία αποστολή (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "παραδίδεται (δεν έχει επιβεβαιωθεί)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "επανέναρξη (%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "Η ισχύς πρέπει να είναι H, M, L ή P"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "Ο νομός πρέπει να είναι 02-48 ή 101-114."
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Και τα δύο:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Προχωρημένα"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Εμφάνιση"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Δημιουργία αντιγράφων ασφαλείας"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Χάρτης ζώνης"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Ζώνες"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Χρώματα"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Διαγωνισμός"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "Settings CW"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "Σμήνος DX"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Εξωτερικός καταγραφέας"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Εξωτερικό Λογισμικό"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Υλικό"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Καταγραφή"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Δίκτυο"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Online βαθμολόγηση"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Ράδιο"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "Περιστροφείς"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Σταθμός"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "Εξυπηρετητής TCI"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Δύο λειτουργία Radio"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "Εκπομπή UDP"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Εξυπηρετητής ιστού"

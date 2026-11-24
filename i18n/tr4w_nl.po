@@ -3906,7 +3906,7 @@ msgstr "Sleuteltype"
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr "Haven"
+msgstr "Poort"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
@@ -4956,6 +4956,7 @@ msgstr "Het lettertype is van toepassing op het hoofdvenster. Beide worden van k
 #~ msgstr "Deze stonden onder het onderdeel Weergave van het menu Instellingen. Dat venster verdwijnt zodra ROW COUNT en WINDOW SIZE ook hierheen zijn verplaatst."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Audio"
@@ -5474,6 +5475,7 @@ msgid "CW while operating"
 msgstr "CW tijdens gebruik"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Werking"
@@ -5500,6 +5502,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "De parallelle poort een paddle of voetschakelaar is bedraad naar is niet hier. Of TR4W LPT blijft ondersteunen is een open vraag, dus PADDLE PORT blijft op de commandolijst van Ctrl-J totdat dat is geregeld in plaats van een huis te krijgen dat het misschien niet houdt."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Peddel en PTT"
@@ -6154,7 +6157,7 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
-"Havenconflicten:\n"
+"Poortconflicten:\n"
 "\n"
 "%s\n"
 "\n"
@@ -6255,7 +6258,7 @@ msgstr "Kies een radiotype."
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr "De haven moet een nummer zijn tussen 1 en 65535."
+msgstr "De poort moet een nummer zijn tussen 1 en 65535."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
@@ -9872,7 +9875,7 @@ msgstr "Host / IP-adres"
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr "Haven"
+msgstr "Poort"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
@@ -10785,6 +10788,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Klik met de rechtermuisknop op een logger om het te bewerken, wijzigen Stuur nieuwe QSO's, verplaatsen of verwijderen; sleep de Bestelcel om te herschikken. Actieve loggers sturen in orde. Voorkeuren opslaan om Ingeschakeld en Bestellen nu toe te passen; een nieuwe logger, of gewijzigde verbindingsinstellingen, is van toepassing na een herstart."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Logger"
@@ -10948,7 +10952,7 @@ msgstr "WRL-levering: in behandeling %d; verzenden %d; bijgewerkt %d; onzeker %d
 #: ulclformhelpers.tc_prefs_ports_unavailable
 #, fuzzy
 msgid "(port list not available on this platform)"
-msgstr "(havenlijst niet beschikbaar op dit platform)"
+msgstr "(poortlijst niet beschikbaar op dit platform)"
 
 #: ulclformhelpers.tc_prefs_port_not_present
 #, fuzzy
@@ -11266,6 +11270,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "Tik wat je hebt. Alles wat niet aangeraakt is kan later ingesteld worden in Voorkeuren."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -11530,7 +11535,7 @@ msgstr "Poort:"
 #: uappstrings.swizclusterportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535, or blank."
-msgstr "De haven moet een nummer zijn van 1 tot 65535, of leeg."
+msgstr "De poort moet een nummer zijn van 1 tot 65535, of leeg."
 
 #: uappstrings.swizresonport
 #, fuzzy
@@ -12252,7 +12257,7 @@ msgstr "Kies het rotatortype, of ga terug en verwijder het."
 #: uappstrings.swizrotatorport
 #, fuzzy
 msgid "Serial port:"
-msgstr "Seriepoort:"
+msgstr "Seriële poort:"
 
 #: uappstrings.swizrotatorudpport
 #, fuzzy
@@ -12290,7 +12295,7 @@ msgstr "UDP-poort:"
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr "De haven moet een nummer zijn van 1 tot 65535."
+msgstr "De poort moet een nummer zijn van 1 tot 65535."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
@@ -13401,34 +13406,190 @@ msgstr "Naar de server gestuurd: %d QSO(s) -- %d ingelogd terwijl de verbinding 
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Vermogensklasse:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Prefectuur:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Vermogensklasse"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Vul uw stroomklasse in (H, M, L of P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "De waarde van %s is niet een die deze wedstrijd accepteert."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "De krachtklasse is één letter: H, M, L of P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Een prefectuur is een JARL-nummer van maximaal drie cijfers, of een tweelettercode."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Externe loggers..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Externe loggers voor deze QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Status"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Laatst verzonden (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "overhandigd (niet bevestigd)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "opnieuw proberen (%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "Vermogen moet H, M, L of P zijn"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "De prefectuur moet 02-48 of 101-114 zijn"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Beide:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Geavanceerd"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Uiterlijk"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Reservekopie"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Bandkaart"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Banden"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Kleuren"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Wedstrijd"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "CW instellingen"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX-cluster"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Externe logger"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Externe software"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Hardheid"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Loggen"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Netwerk"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Online score"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Radio's"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "draaibanken"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Post"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "TCI-server"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Twee radiomodus"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "UDP-uitzending"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Webserver"

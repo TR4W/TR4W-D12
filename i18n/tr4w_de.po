@@ -3585,7 +3585,7 @@ msgstr "WinKeyer Einstellungen"
 #: tfrmkeyeredit.lblkind.caption
 #, fuzzy
 msgid "Keyer type"
-msgstr "Schlüsselart"
+msgstr "Keyer-Typ"
 
 #: tfrmkeyeredit.lblport.caption
 #: tfrmudpdestinationedit.lblport.caption
@@ -3594,7 +3594,7 @@ msgstr "Schlüsselart"
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr "Hafen"
+msgstr "Port"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
@@ -3895,7 +3895,7 @@ msgstr "Kommandos"
 #: uappstrings.snetmenuconnect
 #, fuzzy
 msgid "Connect"
-msgstr "Anschluss"
+msgstr "Verbinden"
 
 #: tfrmtelnet.btndisconnect.caption
 #: uappstrings.snetmenudisconnect
@@ -4089,7 +4089,7 @@ msgstr "Verwenden Sie diese"
 #, fuzzy
 msgctxt "tprefsform.caption"
 msgid "TR4W Preferences"
-msgstr "TR4W Präferenzen"
+msgstr "TR4W Einstellungen"
 
 #: tprefsform.chkaltdbuffer.caption
 #: usettingscaptions.rs_operating_tworadio_altdbuffer
@@ -4293,7 +4293,7 @@ msgstr "Stoppen Sie beide Radios Landung auf einem Band"
 #: usettingscaptions.rs_cw_includefkeynumber
 #, fuzzy
 msgid "Show the key number on the function-key buttons"
-msgstr "Zeigen Sie die Schlüsselnummer auf den Funktionstasten an"
+msgstr "Tastennummer auf den Funktionstasten anzeigen"
 
 #: tprefsform.chkintercomfile.caption
 #: usettingscaptions.rs_network_intercomfile
@@ -4398,7 +4398,7 @@ msgstr "Sperrung von PTT"
 #: tprefsform.chkpttviacommands.caption
 #, fuzzy
 msgid "Key the transmitter with a CAT command instead of a hardware line"
-msgstr "Schlüsseln Sie den Sender mit einem CAT-Befehl anstelle einer Hardwareleitung"
+msgstr "Den Sender mit einem CAT-Befehl statt über eine Hardwareleitung tasten"
 
 #: tprefsform.chkqsyinactive.caption
 #, fuzzy
@@ -4635,6 +4635,7 @@ msgstr "Die Schriftart gilt für das Hauptwettbewerbsfenster. Beide treten in Kr
 #~ msgstr "Diese standen auf dem Element Aussehen des Einstellungsmenüs. Das Fenster geht weg, sobald ROW COUNT und WINDOW SIZE sich ihnen hier anschließen."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Audio"
@@ -4967,7 +4968,7 @@ msgstr "Externer Logger"
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
-msgstr "Hafen:"
+msgstr "Port:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
@@ -5144,7 +5145,7 @@ msgstr "ein einzelner buchstabe, einzigartig im netzwerk"
 #: tprefsform.lblnetheading.caption
 #, fuzzy
 msgid "Multi-operator network"
-msgstr "Netz mit mehreren Operatoren"
+msgstr "Netzwerk mit mehreren Operatoren"
 
 #: tprefsform.lblnethint.caption
 #, fuzzy
@@ -5157,6 +5158,7 @@ msgid "CW while operating"
 msgstr "CW während des Betriebs"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Betrieb"
@@ -5183,6 +5185,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "Der parallele Port, an den ein Paddel- oder Fußschalter angeschlossen ist, ist nicht hier. Ob TR4W LPT überhaupt unterstützt, ist eine offene Frage, also bleibt PADDLE PORT auf der Ctrl-J-Befehlsliste, bis dies erledigt ist, anstatt ein Zuhause zu erhalten, das es möglicherweise nicht behält."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Paddle und PTT"
@@ -5477,7 +5480,7 @@ msgstr "Multicast Gruppe:"
 #: tprefsform.lblwsjtxport.caption
 #, fuzzy
 msgid "Broadcast port:"
-msgstr "Rundfunkport:"
+msgstr "Broadcast-Port:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
@@ -5620,21 +5623,21 @@ msgstr "IP-Adresse"
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerdtr.caption"
 msgid "Keyer DTR line"
-msgstr "Schlüssel-DTR-Leitung"
+msgstr "Keyer-DTR-Leitung"
 
 #: tradioeditform.lblkeyerport.caption
 #: ulclformhelpers.tc_radioedit_keyerport
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerport.caption"
 msgid "Keyer output port"
-msgstr "Keyer Output Port"
+msgstr "Keyer-Ausgangsport"
 
 #: tradioeditform.lblkeyerrts.caption
 #: ulclformhelpers.tc_radioedit_keyerrts
 #, fuzzy
 msgctxt "tradioeditform.lblkeyerrts.caption"
 msgid "Keyer RTS line"
-msgstr "Schlüssel-TS-Strecke"
+msgstr "Keyer-RTS-Leitung"
 
 #: tradioeditform.lblkeyerstopbits.caption
 #: tradioeditform.lblstopbits.caption
@@ -5715,14 +5718,14 @@ msgstr "Odd"
 #, fuzzy
 msgctxt "tradioeditform.tabadvanced.caption"
 msgid "Advanced"
-msgstr "Fortgeschritten"
+msgstr "Erweitert"
 
 #: tradioeditform.tabserial.caption
 #: ulclformhelpers.tc_radioedit_serial
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr "Seriennummer"
+msgstr "Seriell"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -5836,7 +5839,7 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
-"Hafenkonflikte:\n"
+"Portkonflikte:\n"
 "\n"
 "%s\n"
 "\n"
@@ -7536,7 +7539,7 @@ msgstr "PTT LOCKOUT=TRUE"
 #, fuzzy
 msgctxt "TC_PREFERENCESCOULDOPENEDS"
 msgid "Preferences could not be opened (%s)."
-msgstr "Präferenzen konnten nicht geöffnet werden (%s)."
+msgstr "Einstellungen konnten nicht geöffnet werden (%s)."
 
 #. Section: FD Additions NY4I
 #: utr4wstrings:tc_theseentrieswereacceptedbeensaved
@@ -7706,7 +7709,7 @@ msgstr "Wettbewerb"
 #: uappstrings.sloggergridstate
 #, fuzzy
 msgid "Connection"
-msgstr "Anschluss"
+msgstr "Verbindung"
 
 #: ulclformhelpers.tc_radioedit_unsaved
 #, fuzzy
@@ -8734,7 +8737,7 @@ msgstr "Warten Sie auf eine Signalstärkemessung"
 #: usettingscaptions.rs_ptt_viacommands
 #, fuzzy
 msgid "Key the transmitter with a CAT command"
-msgstr "Schlüsseln Sie den Sender mit einem CAT-Befehl"
+msgstr "Den Sender mit einem CAT-Befehl tasten"
 
 #: usettingscaptions.rs_scoring_board_postingurl
 #, fuzzy
@@ -9460,7 +9463,7 @@ msgstr "Host/IP-Adresse"
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr "Hafen"
+msgstr "Port"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
@@ -10015,7 +10018,7 @@ msgstr "Die identität des servers wird nicht überprüft; jeder zwischen ihnen 
 #: uappstrings.sprefsnavcwkeyers
 #, fuzzy
 msgid "CW keyers"
-msgstr "CW-Schlüssel"
+msgstr "CW-Keyer"
 
 #: uappstrings.sprefshardwareinfo
 #: tprefsform.lblhardwareinfo.caption
@@ -10373,6 +10376,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Klicken Sie mit der rechten Maustaste auf einen Logger, um ihn zu bearbeiten, senden Sie neue QSOs, verschieben oder entfernen Sie ihn; ziehen Sie die Order-Zelle zur Neubestellung. Aktive Logger senden Ordnung. Einstellungen speichern, um Enabled and Order jetzt anzuwenden; ein neuer Logger oder geänderte Verbindungseinstellungen gelten nach einem Neustart."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Logger"
@@ -10851,9 +10855,10 @@ msgstr "Was möchten Sie jetzt noch einrichten?"
 #: uappstrings.swizchecklistintro
 #, fuzzy
 msgid "Tick what you have. Anything left unticked can be set up later in Preferences."
-msgstr "Zeichne, was du hast. Alles, was nicht getickt wurde, kann später in Preferences eingerichtet werden."
+msgstr "Kreuzen Sie an, was Sie haben. Alles, was nicht angekreuzt ist, kann später in den Einstellungen eingerichtet werden."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -10969,7 +10974,7 @@ msgstr "Radio"
 #: uappstrings.swizradiointro
 #, fuzzy
 msgid "Choose your radio and how it is connected. These are the same settings Preferences uses. TR4W connects to it when you create the configuration."
-msgstr "Wählen Sie Ihr Radio und wie es verbunden ist. Dies sind die gleichen Einstellungen, die Preferences verwendet. TR4W verbindet sich mit ihm, wenn Sie die Konfiguration erstellen."
+msgstr "Wählen Sie Ihr Radio und wie es angeschlossen ist. Es sind dieselben Einstellungen wie im Fenster Einstellungen. TR4W verbindet sich damit, wenn Sie die Konfiguration erstellen."
 
 #: uappstrings.swizresapplyfailed
 #, fuzzy
@@ -10984,7 +10989,7 @@ msgstr "DX-Cluster \"%0:s\": %1:s, Anmeldung als %2:s."
 #: uappstrings.swizresclusterfailed
 #, fuzzy
 msgid "The DX cluster was not saved. Set it up in Preferences > DX Cluster."
-msgstr "Der DX-Cluster wurde nicht gespeichert. Richten Sie es in Präferenzen > DX Cluster ein."
+msgstr "Der DX-Cluster wurde nicht gespeichert. Richten Sie es in Einstellungen > DX Cluster ein."
 
 #: uappstrings.swizreskeyer
 #, fuzzy
@@ -10994,7 +10999,7 @@ msgstr "WinKeyer \"%0:s\" auf %1:s, verwendet für CW auf Radio 1."
 #: uappstrings.swizreskeyerfailed
 #, fuzzy
 msgid "The WinKeyer was not saved: %s. Set it up in Preferences."
-msgstr "Der WinKeyer wurde nicht gerettet: %sSetzen Sie es in Präferenzen ein."
+msgstr "Der WinKeyer wurde nicht gespeichert: %s. Richten Sie ihn in den Einstellungen ein."
 
 #: uappstrings.swizresnotsaved
 #, fuzzy
@@ -11018,7 +11023,7 @@ msgstr "Radio 1: %0:s %1:s. Name: \"%2:s\"."
 #: uappstrings.swizresradiofailed
 #, fuzzy
 msgid "The radio was not saved: %s. Set it up in Preferences > Radios."
-msgstr "Das Radio wurde nicht gerettet: %sSetzen Sie es in Einstellungen > Radios."
+msgstr "Das Radio wurde nicht gespeichert: %s. Richten Sie es unter Einstellungen > Radios ein."
 
 #: uappstrings.swizresrefused
 #, fuzzy
@@ -11028,7 +11033,7 @@ msgstr "%0:s „%1:s\" wurde nicht akzeptiert.\" Setzen Sie es in Einstellungen 
 #: uappstrings.swizresstation
 #, fuzzy
 msgid "Station %s saved."
-msgstr "Bahnhof %s gerettet."
+msgstr "Station %s gespeichert."
 
 #: uappstrings.swizresultheading
 #, fuzzy
@@ -11038,7 +11043,7 @@ msgstr "Geschehen"
 #: uappstrings.swizresultintro
 #, fuzzy
 msgid "This is what was saved. All of it can be changed later in Preferences."
-msgstr "Das ist es, was gerettet wurde. Alles kann später in Preferences geändert werden."
+msgstr "Das wurde gespeichert. Alles kann später in den Einstellungen geändert werden."
 
 #: uappstrings.swizstationheading
 #, fuzzy
@@ -11063,7 +11068,7 @@ msgstr "TR4W-Einrichtung"
 #: uappstrings.swizresprofile
 #, fuzzy
 msgid "The station profile \"%s\" now holds the hardware you set up. You can refine it in Preferences > Hardware."
-msgstr "Das Stationsprofil%s\" hält jetzt die Hardware, die Sie eingerichtet haben. \" Sie können es in Präferenzen verfeinern > Hardware."
+msgstr "Das Stationsprofil%s\" hält jetzt die Hardware, die Sie eingerichtet haben. \" Sie können es in Einstellungen verfeinern > Hardware."
 
 #: uappstrings.swizstartupprompt
 #, fuzzy
@@ -11113,7 +11118,7 @@ msgstr "Ein Hostname oder eine IP-Adresse, beispielsweise dxc.nc7j.com oder 192.
 #: uappstrings.swizclusterport
 #, fuzzy
 msgid "Port:"
-msgstr "Hafen:"
+msgstr "Port:"
 
 #: uappstrings.swizclusterportbad
 #, fuzzy
@@ -11178,7 +11183,7 @@ msgstr "   Frequenzabfrage: %0:s, alle %1:s ms"
 #: uappstrings.swizdetkeyerport
 #, fuzzy
 msgid "   The radio's keyer output port: %s"
-msgstr "   Der Keyer Output Port des Radios: %s"
+msgstr "   Keyer-Ausgangsport des Radios: %s"
 
 #: uappstrings.swizdetstartup
 #, fuzzy
@@ -11751,7 +11756,7 @@ msgstr "Dekodierungen und protokollierte QSOs kommen von WSJT-X über UDP."
 #: uappstrings.swizloggerintro
 #, fuzzy
 msgid "Choose the program or service that should receive your QSOs, and how to reach it. These are the same settings Preferences uses. Keys and passwords are kept in the system's credential store."
-msgstr "Wählen Sie das Programm oder den Dienst aus, das Ihre QSOs erhalten soll, und wie Sie es erreichen können. Dies sind die gleichen Einstellungen, die Preferences verwendet. Schlüssel und Passwörter werden im Credential Store des Systems aufbewahrt."
+msgstr "Wählen Sie das Programm oder den Dienst aus, das Ihre QSOs erhalten soll, und wie es erreicht wird. Es sind dieselben Einstellungen wie im Fenster Einstellungen. Schlüssel und Passwörter werden im Anmeldespeicher des Systems aufbewahrt."
 
 #: uappstrings.swizloggerloading
 #, fuzzy
@@ -11776,7 +11781,7 @@ msgstr "Der externe Logger wurde nicht gespeichert: %s"
 #: uappstrings.swizresloggerinactive
 #, fuzzy
 msgid "External logger \"%0:s\" (%1:s) is saved but not switched on. Switch it on in Preferences."
-msgstr "Externer Logger%0:s„ ()%1:sEs wird gespeichert, aber nicht eingeschaltet. Schalten Sie es in Preferences ein."
+msgstr "Externer Logger „%0:s“ (%1:s) ist gespeichert, aber nicht eingeschaltet. Schalten Sie ihn in den Einstellungen ein."
 
 #: uappstrings.swizresloggerrestart
 #, fuzzy
@@ -11791,7 +11796,7 @@ msgstr "Rotator%0:s„: %1:s %2:sFür jede Band."
 #: uappstrings.swizresrotatorfailed
 #, fuzzy
 msgid "The rotator was not saved. Set it up in Preferences > Rotators."
-msgstr "Der Rotator wurde nicht gerettet. Richten Sie es in Einstellungen > Rotatoren ein."
+msgstr "Der Rotator wurde nicht gespeichert. Richten Sie ihn unter Einstellungen > Rotatoren ein."
 
 #: uappstrings.swizreswsjtxoff
 #, fuzzy
@@ -11817,7 +11822,7 @@ msgstr "Rotator"
 #: uappstrings.swizrotatorintro
 #, fuzzy
 msgid "Choose your rotator and how it is connected. It turns for every band; Preferences > Rotators can limit it to some."
-msgstr "Wählen Sie Ihren Rotator und wie er verbunden ist. Es dreht sich für jede Band; Präferenzen > Rotatoren können es auf einige beschränken."
+msgstr "Wählen Sie Ihren Rotator und wie er verbunden ist. Es dreht sich für jede Band; Einstellungen > Rotatoren können es auf einige beschränken."
 
 #: uappstrings.swizrotatorneedsport
 #, fuzzy
@@ -11832,7 +11837,7 @@ msgstr "Wählen Sie den Rotatortyp oder gehen Sie zurück und kreuzen Sie ihn au
 #: uappstrings.swizrotatorport
 #, fuzzy
 msgid "Serial port:"
-msgstr "Serienhafen:"
+msgstr "Serieller Port:"
 
 #: uappstrings.swizrotatorudpport
 #, fuzzy
@@ -11930,7 +11935,7 @@ msgstr "verriegelt"
 #: uappstrings.slogreadonlynotsaved
 #, fuzzy
 msgid "Log is read-only (%s): not saved."
-msgstr "Log ist read-only (nur)%s: nicht gerettet."
+msgstr "Log ist schreibgeschützt (%s): nicht gespeichert."
 
 #: uappstrings.seditqsonoqsoselected
 #, fuzzy
@@ -11980,7 +11985,7 @@ msgstr "TR4W bietet dann eine DX Commander kompatible Schnittstelle am TCP-Port 
 #: uappstrings.swizwsjtxmulticasthint
 #, fuzzy
 msgid "Advanced. Leave it blank unless WSJT-X is configured to use a multicast group."
-msgstr "Fortgeschrittene. Lassen Sie es leer, es sei denn, WSJT-X ist für die Verwendung einer Multicast-Gruppe konfiguriert."
+msgstr "Erweitert. Lassen Sie es leer, es sei denn, WSJT-X ist für die Verwendung einer Multicast-Gruppe konfiguriert."
 
 #: uappstrings.swizreswsjtxradiocontrol
 #, fuzzy
@@ -12050,7 +12055,7 @@ msgstr "OPON - Operator Login"
 #: uappstrings.scmdmenupref
 #, fuzzy
 msgid "PREF - Preferences"
-msgstr "PREF - Präferenzen"
+msgstr "PREF - Einstellungen"
 
 #: uappstrings.scmdmenurover
 #, fuzzy
@@ -12122,7 +12127,7 @@ msgstr ""
 #: uappstrings.speeronanotherversion
 #, fuzzy
 msgid "Station %s runs TR4W %s, this station runs %s. All stations should run the same version."
-msgstr "Bahnhof %s läuft TR4W %sDiese Station läuft %sAlle Stationen sollten die gleiche Version haben."
+msgstr "Station %s verwendet TR4W %s, diese Station verwendet %s. Alle Stationen sollten dieselbe Version verwenden."
 
 #: uappstrings.spostredirected
 #, fuzzy
@@ -12589,7 +12594,7 @@ msgstr "Sie läuft nicht. Speichern Sie Einstellungen und starten Sie TR4W neu, 
 #: uappstrings.sloggerresendwhynotactive
 #, fuzzy
 msgid "Send new QSOs is off for it. Switch it on and save Preferences first."
-msgstr "Senden Sie neue QSOs ist dafür ausgeschaltet. Schalten Sie es ein und speichern Sie Präferenzen zuerst."
+msgstr "Senden Sie neue QSOs ist dafür ausgeschaltet. Schalten Sie es ein und speichern Sie Einstellungen zuerst."
 
 #: uappstrings.sloggerresendwhypaused
 #, fuzzy
@@ -12729,7 +12734,7 @@ msgstr "Keine andere Station ist auf der %0:s kHz-Band, so {PASS] %0:s} kann nic
 #: uappstrings.spassstationabsent
 #, fuzzy
 msgid "Station %0:s is not on the network, so {PASS %0:s} cannot be filled in. The message was not sent."
-msgstr "Bahnhof %0:s ist nicht im Netzwerk, also {PASS] %0:s} kann nicht ausgefüllt werden. Die Nachricht wurde nicht gesendet."
+msgstr "Station %0:s ist nicht im Netzwerk, daher kann {PASS %0:s} nicht ausgefüllt werden. Die Nachricht wurde nicht gesendet."
 
 #: uappstrings.spassstationisus
 #, fuzzy
@@ -12739,7 +12744,7 @@ msgstr "{PASS] %0:s} nennt diesen Computer. Nennen Sie eine andere Position. Die
 #: uappstrings.spassnofrequency
 #, fuzzy
 msgid "Station %0:s is on the network but has not reported a frequency yet. The message was not sent."
-msgstr "Bahnhof %0:s ist im Netzwerk, hat aber noch keine Frequenz gemeldet. Die Nachricht wurde nicht gesendet."
+msgstr "Station %0:s ist im Netzwerk, hat aber noch keine Frequenz gemeldet. Die Nachricht wurde nicht gesendet."
 
 #: uappstrings.spassnothingpassed
 #, fuzzy
@@ -12797,7 +12802,7 @@ msgstr ""
 "\n"
 "Das Protokoll ist zuerst zurückgelegt. Jedes geänderte QSO wird dann als Bearbeitung erneut gesendet - an Club Log, WRL und jeden anderen externen Logger, an den Multi-Op-Server und als UDP-Ersatz - und das Protokoll wird neu bewertet. %8:d von ihnen sind Multi-Op-Peers: hier korrigiert, von dieser Station gesendet.\n"
 "\n"
-"Nicht geändert: %5:d eingeführt, %6:d nie aufgezeichnet (sie folgen Ihrer Einstellung: korrigieren Sie es auch in Präferenzen), %7:d pro Ort (ein Rover oder eine in-staatliche Partei)."
+"Nicht geändert: %5:d eingeführt, %6:d nie aufgezeichnet (sie folgen Ihrer Einstellung: korrigieren Sie es auch in Einstellungen), %7:d pro Ort (ein Rover oder eine in-staatliche Partei)."
 
 #: uappstrings.sstationcorrectiondone
 #, fuzzy
@@ -12881,7 +12886,7 @@ msgstr "Erstellen von World Radio League Logbuch"
 #: uappstrings.swrlcreatedone
 #, fuzzy
 msgid "Created logbook \"%s\" (id %s) at World Radio League and chose it for %s. Save Preferences to keep it. The new logbook is used after you restart TR4W: a running logger keeps the settings it started with."
-msgstr "Logbuch erstellt%s„ (id) %sbei der World Radio League und wählte es für %sSpeichern Sie Präferenzen, um es zu behalten. Das neue Logbuch wird nach dem Neustart von TR4W verwendet: Ein laufender Logger behält die Einstellungen, mit denen er begonnen hat."
+msgstr "Logbuch erstellt%s„ (id) %sbei der World Radio League und wählte es für %sSpeichern Sie Einstellungen, um es zu behalten. Das neue Logbuch wird nach dem Neustart von TR4W verwendet: Ein laufender Logger behält die Einstellungen, mit denen er begonnen hat."
 
 #: uappstrings.swrlcreatefailed
 #, fuzzy
@@ -12981,34 +12986,190 @@ msgstr "An den Server gesendet: %d QSO(s) - %d protokolliert während getrennt, 
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Leistungsklasse:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Präfektur:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Leistungsklasse"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Geben Sie Ihre Leistungsklasse (H, M, L oder P) ein:"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "Der Wert von %s ist nicht einer, den dieser Wettbewerb akzeptiert."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "Die Leistungsklasse ist ein Buchstabe: H, M, L oder P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Eine Präfektur ist eine JARL-Nummer von bis zu drei Ziffern oder ein zweistelliger Code."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Externe Logger..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Externe Logger für dieses QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Status"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Zuletzt gesendet (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "ausgehändigt (nicht bestätigt)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "Wiederholen ()%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "Leistung muss H, M, L oder P sein"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "Präfektur muss 02-48 oder 101-114 sein"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Beide:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Erweitert"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Aussehen"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Backup"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Band Map"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Bänder"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Farben"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Wettbewerb"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "CW Einstellungen"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX Cluster"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Externer Logger"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Externe Software"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Hardware"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Protokollierung"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Netz"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Online Scoring"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Funkgeräte"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "Rotatoren"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Station"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "TCI-Server"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Zwei-Funkmodus"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "UDP Broadcast"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Webserver"

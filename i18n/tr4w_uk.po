@@ -3280,7 +3280,7 @@ msgstr "Тип ключа"
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr "Портфоліо"
+msgstr "Порт"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
@@ -4322,6 +4322,7 @@ msgstr "Шрифт відноситься до основного вікна к�
 #~ msgstr "Це були на пункті призначення меню налаштувань. Цей вікно відправляється один раз на ROW COUNT і WINDOW SIZE приєднатися до них тут."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Аудіо"
@@ -4841,6 +4842,7 @@ msgid "CW while operating"
 msgstr "CW при експлуатації"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Проксимус"
@@ -4867,6 +4869,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "Паралельний порт веслування або вимикач стопи продається не тут. Якщо TR4W зберігає підтримку LPT у всьому є відкритим питанням, тому PADDLE PORT залишається на списку команд Ctrl-J до тих пір, поки це не буде заблоковано, а не дано додому, він не може зберігатися."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Свічка і PTT"
@@ -5406,7 +5409,7 @@ msgstr "Головна"
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr "Сфера"
+msgstr "Послідовний"
 
 #: uappstrings.sctydownloadfailed
 msgid ""
@@ -8936,7 +8939,7 @@ msgstr "Хост / IP адреса"
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr "Портфоліо"
+msgstr "Порт"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
@@ -9849,6 +9852,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Клацніть правою кнопкою миші logger, щоб змінити його, змінити Відправити нові QSO, перемістити або видалити його; перетягніть клітинку замовлення для повторення. Активні блогери відправляються в Замовлення. Заощаджуйте переваги, щоб застосувати Увімкнено і Замовити зараз; новий logger або змінені налаштування з'єднання, застосовується після перезавантаження."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Увійти"
@@ -10330,6 +10334,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "Який у вас є. Будь-який лівий невидимий можна налаштувати пізніше в розділі Налаштування."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -11308,7 +11313,7 @@ msgstr "Виберіть тип ротора або поверніть наза�
 #: uappstrings.swizrotatorport
 #, fuzzy
 msgid "Serial port:"
-msgstr "Серійний порт:"
+msgstr "Послідовний порт:"
 
 #: uappstrings.swizrotatorudpport
 #, fuzzy
@@ -12457,34 +12462,190 @@ msgstr "Перейти до сервера: %d QSO(s) -- %d з'єднатися 
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Клас потужності:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Виявлення:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Клас потужності"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Введіть свій клас живлення (H, M, L або P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "Значення значення %s не один цей конкурс приймає."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "Клас потужності - один лист: H, M, L або P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Передефектур - це число JARL до трьох цифр, або дворазовий код."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Зовнішні блогери ..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Зовнішні logger для цього QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Статус на сервери"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Останній відправлений (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "не підтверджено"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "птиця%sй"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "Потужність повинна бути H, M, L або P"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "Потрібні бути 02-48 або 101-114"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "І:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Головна"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Закупівля"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Зареєструватися"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Карта сайту"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Гурти"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Колір"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Конкурси"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "Налаштування CW"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX кластер"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Зовнішній логгер"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Програмне забезпечення"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Обладнання"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Пробити"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Мережа"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Онлайн замовлення"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Радіо"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "Ротори"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Станція"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "Статус на сервери"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Два радіорежим"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "UDP Трансляція"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Веб-сервер"

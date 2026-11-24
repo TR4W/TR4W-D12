@@ -2491,7 +2491,7 @@ msgstr "패들 &유일한 측돌"
 #, fuzzy
 msgctxt "TC_WINKEYERPORT"
 msgid "Winkeyer port"
-msgstr "Winkeyer 항구"
+msgstr "Winkeyer 포트"
 
 #. Section: UWINKEY
 #: utr4wstrings:tc_keyermode
@@ -3902,7 +3902,7 @@ msgstr "Keyer 유형"
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr "항구"
+msgstr "포트"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
@@ -4952,6 +4952,7 @@ msgstr "글꼴은 메인 대회 창에 적용됩니다. 둘 다 TR4W 다음 시�
 #~ msgstr "이 항목들은 설정 메뉴의 모양 항목에 있었습니다. ROW COUNT와 WINDOW SIZE도 이곳으로 옮겨지면 그 창은 없어집니다."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "언어: 영어"
@@ -5241,7 +5242,7 @@ msgstr "제품정보"
 #: tprefsform.lblkeyerhint.caption
 #, fuzzy
 msgid "Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio's own port, or by CAT, is part of that radio's setup; a station profile then chooses which method each slot uses."
-msgstr "자신의 설정이있는 장치 만 여기에 라이브 - WinKeyer 또는 YCCC SO2R + 상자. 라디오의 자신의 항구에 열쇠를 달기, 또는 CAT에 의하여, 그 라디오의 체제의 부분입니다; 역 단면도는 그 후에 방법 각 구멍 용도를 선택합니다."
+msgstr "자신의 설정이있는 장치 만 여기에 라이브 - WinKeyer 또는 YCCC SO2R + 상자. 라디오의 자신의 포트에 열쇠를 달기, 또는 CAT에 의하여, 그 라디오의 체제의 부분입니다; 역 단면도는 그 후에 방법 각 구멍 용도를 선택합니다."
 
 #: tprefsform.lblleadingzerochar.caption
 #, fuzzy
@@ -5282,7 +5283,7 @@ msgstr "외부 로거"
 #, fuzzy
 msgctxt "tprefsform.lblloggerport.caption"
 msgid "Port:"
-msgstr "항구:"
+msgstr "포트:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblloggerrestart.caption
@@ -5470,6 +5471,7 @@ msgid "CW while operating"
 msgstr "CW 운영"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "- 연혁"
@@ -5493,9 +5495,10 @@ msgstr "dit 조사"
 #: tprefsform.lblpaddleportnote.caption
 #, fuzzy
 msgid "The parallel port a paddle or foot switch is wired to is not here. Whether TR4W keeps supporting LPT at all is an open question, so PADDLE PORT stays on the Ctrl-J command list until that is settled rather than being given a home it may not keep."
-msgstr "평행한 항구 paddle 또는 발 스위치는 여기에서 아닙니다. TR4W가 LPT를 모두 지원하지 않는 것은 개방적인 질문입니다. PADDLE PORT는 Ctrl-J 명령 목록에 머물지 않고 집을 놓을 수 없습니다."
+msgstr "평행한 포트 paddle 또는 발 스위치는 여기에서 아닙니다. TR4W가 LPT를 모두 지원하지 않는 것은 개방적인 질문입니다. PADDLE PORT는 Ctrl-J 명령 목록에 머물지 않고 집을 놓을 수 없습니다."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "패들 및 PTT"
@@ -5609,7 +5612,7 @@ msgstr "유형:"
 #: tprefsform.lblrotatorudp.caption
 #, fuzzy
 msgid "UDP port:"
-msgstr "UDP 항구:"
+msgstr "UDP 포트:"
 
 #: tprefsform.lblsayhicutoff.caption
 #, fuzzy
@@ -5715,7 +5718,7 @@ msgstr "역 정보"
 #: tprefsform.lbltcibindallwarning.caption
 #, fuzzy
 msgid "Off by default, and worth leaving off.  This is an unauthenticated radio-control socket: anything that can reach the port can move your VFO and key your transmitter."
-msgstr "기본적으로, 그리고 떠나는 가치. 이것은 무해한 라디오 통제 소켓입니다: 항구가 당신의 VFO를 이동하고 당신의 전송기를 열쇠 할 수 있는 무엇이든."
+msgstr "기본적으로, 그리고 떠나는 가치. 이것은 무해한 라디오 통제 소켓입니다: 포트가 당신의 VFO를 이동하고 당신의 전송기를 열쇠 할 수 있는 무엇이든."
 
 #: tprefsform.lbltciintro.caption
 #, fuzzy
@@ -5791,7 +5794,7 @@ msgstr "Multicast 그룹:"
 #: tprefsform.lblwsjtxport.caption
 #, fuzzy
 msgid "Broadcast port:"
-msgstr "방송 항구:"
+msgstr "방송 포트:"
 
 # 2026-11-01: English reworded by the Preferences restart audit; the machine draft of the old wording was cleared.
 #: tprefsform.lblwsjtxrestart.caption
@@ -6036,7 +6039,7 @@ msgstr "지원하다"
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr "(주)"
+msgstr "직렬"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -6142,7 +6145,7 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
-"항구 충돌:\n"
+"포트 충돌:\n"
 "\n"
 "%s자주 묻는 질문"
 
@@ -6241,7 +6244,7 @@ msgstr "라디오 유형을 선택하십시오."
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr "항구는 1과 65535 사이 수 있어야 합니다."
+msgstr "포트는 1과 65535 사이 수 있어야 합니다."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
@@ -8790,7 +8793,7 @@ msgstr "코드 속도"
 #: usettingscaptions.rs_cw_ctrlj_paddleport
 #, fuzzy
 msgid "Paddle Port"
-msgstr "Paddle 항구"
+msgstr "Paddle 포트"
 
 #: usettingscaptions.rs_cw_ctrlj_questionmarkchar
 #, fuzzy
@@ -9855,7 +9858,7 @@ msgstr "호스트 / IP 주소"
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr "항구 항구"
+msgstr "포트"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
@@ -9895,7 +9898,7 @@ msgstr "API 키를 입력하고 선택하기 전에 목록을로드하십시오.
 #: uappstrings.sloggerportrange
 #, fuzzy
 msgid "External logger port must be between 1 and 65535"
-msgstr "외부 로거 항구는 1과 65535 사이에서 있어야 합니다"
+msgstr "외부 로거 포트는 1과 65535 사이에서 있어야 합니다"
 
 #: uappstrings.sloggerchoicerefresh
 #, fuzzy
@@ -10768,6 +10771,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "편집하려면 logger를 마우스 오른쪽 버튼으로 클릭하고 새 QSO를 변경하거나 이동하거나 제거하십시오. 주문 셀을 드래그하십시오. Active loggers는 순서에서 보냅니다. 지금 Enabled 및 Order를 적용하려면 Preferences를 저장하십시오. 새로운 logger 또는 변경된 연결 설정은 재시작 후 적용됩니다."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "로그인"
@@ -11249,6 +11253,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "당신이 무엇을 가지고. 아무것도 왼쪽 unticked 나중에 설정할 수 있습니다."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -11402,7 +11407,7 @@ msgid ""
 "Check these ports:\n"
 "%s"
 msgstr ""
-"이 항구를 검사하십시오:\n"
+"이 포트를 검사하십시오:\n"
 "%s"
 
 #: uappstrings.swizresradio
@@ -11508,12 +11513,12 @@ msgstr "호스트 이름 또는 IP 주소, 예를 들어 dxc.nc7j.com 또는 192
 #: uappstrings.swizclusterport
 #, fuzzy
 msgid "Port:"
-msgstr "항구:"
+msgstr "포트:"
 
 #: uappstrings.swizclusterportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535, or blank."
-msgstr "항구는 1에서 65535까지 수, 또는 공백이어야 합니다."
+msgstr "포트는 1에서 65535까지 수, 또는 공백이어야 합니다."
 
 #: uappstrings.swizresonport
 #, fuzzy
@@ -11528,7 +11533,7 @@ msgstr "으로 %s"
 #: uappstrings.swizresnoport
 #, fuzzy
 msgid "with no port chosen yet"
-msgstr "아직 항구 없음"
+msgstr "아직 포트 없음"
 
 #: uappstrings.swizrescwbycat
 #, fuzzy
@@ -11573,7 +11578,7 @@ msgstr "   빈도 polling: %0:s, 매 %1:s ms"
 #: uappstrings.swizdetkeyerport
 #, fuzzy
 msgid "   The radio's keyer output port: %s"
-msgstr "   라디오의 keyer 산출 항구: %s"
+msgstr "   라디오의 keyer 산출 포트: %s"
 
 #: uappstrings.swizdetstartup
 #, fuzzy
@@ -12197,7 +12202,7 @@ msgstr "WSJT-X: 통합은 떨어져 있습니다."
 #: uappstrings.swizreswsjtxon
 #, fuzzy
 msgid "WSJT-X: TR4W listens on UDP port %s."
-msgstr "WSJT-X: TR4W는 UDP 항구에 듣습니다 %s·"
+msgstr "WSJT-X: TR4W는 UDP 포트에 듣습니다 %s·"
 
 #: uappstrings.swizreswsjtxrestart
 #, fuzzy
@@ -12234,7 +12239,7 @@ msgstr "직렬 포트:"
 #, fuzzy
 msgctxt "uappstrings.swizrotatorudpport"
 msgid "UDP port:"
-msgstr "UDP 항구:"
+msgstr "UDP 포트:"
 
 #: uappstrings.swizrotatorudpportbad
 #, fuzzy
@@ -12261,12 +12266,12 @@ msgstr "TR4W는 데코드를 취할 수 있으며 WSJT-X에서 QSOs를 기록하
 #, fuzzy
 msgctxt "uappstrings.swizwsjtxport"
 msgid "UDP port:"
-msgstr "UDP 항구:"
+msgstr "UDP 포트:"
 
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr "항구는 1에서 65535까지 수 있어야 합니다."
+msgstr "포트는 1에서 65535까지 수 있어야 합니다."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
@@ -13377,34 +13382,190 @@ msgstr "서버로 전송: %d 사이트맵 %d 연결되는 동안, %d 그것은 �
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "힘 종류:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "국가:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "힘 종류"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "힘 종류 (H, M, L 또는 P)를 입력하십시오:"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "가치의 %s 이 대회는 허용되지 않습니다."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "힘 종류는 1개의 편지입니다: H, M, L 또는 P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "현은 세 자리까지 JARL 번호, 또는 두 자리 코드입니다."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "외부 로거 ..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "이 QSO를 위한 외부 로거"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "주요연혁"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "최근 전송 (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "(확인되지 않음)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "재교육 (%s·"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "힘은 H, M, L 또는 P이어야 합니다"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "현은 02-48 또는 101-114이어야 합니다."
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "둘 다:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "지원하다"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "* 이름"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "지원하다"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Band 지도"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "언어: 한국어"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "색상 :"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "회사연혁"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "CW 설정"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX 클러스터"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "외부 Logger"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "외부 소프트웨어"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "제품정보"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "로그아웃"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "회사연혁"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "온라인 득점"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "라디오"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "회전 장치"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "역대역"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "TCI 서버"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "2개의 라디오 형태"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "UDP 방송"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "웹 서버"

@@ -3593,6 +3593,7 @@ msgstr "Czcionka ma zastosowanie do głównego okna konkursu. Oba stają się sk
 #~ msgstr "Były w pozycji Wygląd menu Ustawienia. To okno zniknie, gdy tylko ROW COUNT i WINDOW SIZE również trafią tutaj."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Audio"
@@ -4106,6 +4107,7 @@ msgid "CW while operating"
 msgstr "CW podczas pracy"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Działanie"
@@ -4133,6 +4135,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "Nie ma tu równoległego portu, do którego jest podłączona wiosła lub wyłącznik stopy. Czy TR4W utrzymuje wsparcie LPT w ogóle jest otwarte pytanie, więc PADDLE PORT pozostaje na liście poleceń Ctrl- J, aż to jest rozliczane, a nie daje domu, że nie może utrzymać."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Wiosło i PTT"
@@ -4635,7 +4638,7 @@ msgstr "Zaawansowane"
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr "Seria"
+msgstr "Szeregowy"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -6521,6 +6524,7 @@ msgstr "Makra"
 
 #: tfrmsendkeyboard.btnclose.caption
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -6887,6 +6891,7 @@ msgid "Cancel"
 msgstr "Anuluj"
 
 #: ulclformhelpers.tc_prefs_cluster
+#: uappstrings.sprefsnavdxcluster
 #, fuzzy
 msgid "DX Cluster"
 msgstr "Klaster DX"
@@ -7216,7 +7221,7 @@ msgstr "Port"
 #, fuzzy
 msgctxt "ulclformhelpers.tc_radioedit_serial"
 msgid "Serial"
-msgstr "Seria"
+msgstr "Szeregowy"
 
 #: ulclformhelpers.tc_radioedit_startup
 #, fuzzy
@@ -7734,6 +7739,7 @@ msgid "Clear multsheet"
 msgstr "Wyczyść zestawienie mnożników"
 
 #: utr4wstrings.rc_colors
+#: uappstrings.sprefsnavcolors
 #, fuzzy
 msgid "Colors"
 msgstr "Kolory"
@@ -13752,6 +13758,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Right- click logger, aby go edytować, zmienić Wyślij nowe QSOs, przenieść lub usunąć go; przeciągnij komórkę Order, aby ponownie zamówić. Aktywni loggerzy wysyłają porządek. Zapisz Preferencje do zastosowania Włącz i Zamów teraz; nowy logger lub zmienione ustawienia połączenia, ma zastosowanie po ponownym uruchomieniu."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Logger"
@@ -16297,34 +16304,180 @@ msgstr "Wysłany na serwer: %d QSO %d zalogowany podczas odłączenia, %d Nie."
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Klasa mocy:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Prefektura:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Klasa mocy"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Wprowadź swoją klasę mocy (H, M, L lub P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "Wartość %s nie jest tym, który ten konkurs akceptuje."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "Klasa mocy to jedna litera: H, M, L lub P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Prefektura to numer JARL do trzech cyfr lub kod dwuliterowy."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Zewnętrzne loggery..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Zewnętrzne loggery dla tego QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Stan"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Ostatnio wysłane (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "przekazane (niepotwierdzone)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "ponowna próba (%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "Moc musi być H, M, L lub P"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "Prefektura musi być 02- 48 lub 101- 114"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Oba:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Zaawansowane"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Wygląd"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Kopia zapasowa"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Mapa zespołu"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Zespoły"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Konkurs"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "Ustawienia CW"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Logger zewnętrzny"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Zewnętrzne oprogramowanie"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Sprzęt"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Logowanie"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Sieć"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Punktacja online"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Radiotelefony"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "Obrotnice"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Stacja"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "Serwer TCI"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Dwa tryby radiowe"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "Transmisja UDP"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Web Server"

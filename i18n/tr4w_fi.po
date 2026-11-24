@@ -3220,7 +3220,7 @@ msgstr "Avaimen tyyppi"
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr "Satama"
+msgstr "Portti"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
@@ -4270,6 +4270,7 @@ msgstr "Kirjasin koskee pääkilpailun ikkunaa. Molemmat tulevat voimaan, kun TR
 #~ msgstr "Nämä olivat Asetukset-valikon Ulkoasu-kohdassa. Se ikkuna poistuu, kun myös ROW COUNT ja WINDOW SIZE siirtyvät tänne."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Ääni"
@@ -4559,7 +4560,7 @@ msgstr "Laitteisto"
 #: tprefsform.lblkeyerhint.caption
 #, fuzzy
 msgid "Only devices with their own settings live here - a WinKeyer or a YCCC SO2R+ box.  Keying on a radio's own port, or by CAT, is part of that radio's setup; a station profile then chooses which method each slot uses."
-msgstr "Täällä asuvat vain omat laitteet - WinKeyer tai YCCC SO2R+ -laatikko. Radion omassa satamassa tai CAT:n välityksellä tapahtuva keying on osa kyseisen radion kokoonpanoa; asemaprofiili valitsee sitten, mitä menetelmää kukin paikka käyttää."
+msgstr "Täällä asuvat vain omat laitteet - WinKeyer tai YCCC SO2R+ -laatikko. Radion omassa portissa tai CAT:n välityksellä tapahtuva keying on osa kyseisen radion kokoonpanoa; asemaprofiili valitsee sitten, mitä menetelmää kukin paikka käyttää."
 
 #: tprefsform.lblleadingzerochar.caption
 #, fuzzy
@@ -4788,6 +4789,7 @@ msgid "CW while operating"
 msgstr "CW käytön aikana"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Käyttö"
@@ -4814,6 +4816,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "Rinnakkainen portti mela tai jalkakytkin on kytketty ei ole täällä. Onko TR4W pitää tukea LPT ollenkaan on avoin kysymys, joten PADDLE PORT pysyy Ctrl-J komentoluettelossa kunnes se on ratkaistu sen sijaan, että annetaan kotiin se voi pitää."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Melo ja PTT"
@@ -5354,7 +5357,7 @@ msgstr "Lisäasetukset"
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr "Sarja"
+msgstr "Sarjaportti"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -5468,7 +5471,7 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
-"Satamakiistat:\n"
+"Porttiristiriidat:\n"
 "\n"
 "%s\n"
 "\n"
@@ -5569,7 +5572,7 @@ msgstr "Valitse radiotyyppi."
 #: uudpdestinationeditform.tc_udpedit_badport
 #, fuzzy
 msgid "The port must be a number between 1 and 65535."
-msgstr "Sataman numeron on oltava 1-65535."
+msgstr "Portin numeron on oltava 1-65535."
 
 #: uudpdestinationeditform.tc_udpedit_noaddress
 #, fuzzy
@@ -9163,7 +9166,7 @@ msgstr "Host / IP- osoite"
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr "Satama"
+msgstr "Portti"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
@@ -10076,6 +10079,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Napsauta hiiren oikealla napsautuksella lokikonetta muokataksesi sitä, muuttaaksesi Lähetä uudet QSO:t, siirrä tai poista se; vedä Järjestys- solua tilataksesi uudelleen. Aktiiviset kirjautujat lähettävät Järjestyksen. Tallenna asetukset käyttöön Ota käyttöön ja Tilaa nyt; uusi kirjautuja, tai muuttuneet yhteysasetukset, sovelletaan käynnistämisen jälkeen."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Logger"
@@ -10239,7 +10243,7 @@ msgstr "WRL-jakelu: vireillä %d; lähettää %d; ajan tasalla %d; epävarma %d;
 #: ulclformhelpers.tc_prefs_ports_unavailable
 #, fuzzy
 msgid "(port list not available on this platform)"
-msgstr "(satamaluetteloa ei ole saatavilla tällä alustalla)"
+msgstr "(porttiluetteloa ei ole saatavilla tällä alustalla)"
 
 #: ulclformhelpers.tc_prefs_port_not_present
 #, fuzzy
@@ -10557,6 +10561,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "Tick mitä sinulla on. Kaikki jäljellä oleva voidaan asettaa myöhemmin Asetuksissa."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -10620,7 +10625,7 @@ msgstr "WinKeyer"
 #: uappstrings.swizitemkeyerhint
 #, fuzzy
 msgid "A WinKeyer CW keyer on its own port."
-msgstr "WinKeyer CW keyer omalla satamalla."
+msgstr "WinKeyer CW keyer omassa portissaan."
 
 #: uappstrings.swizitemradio
 #, fuzzy
@@ -10710,7 +10715,7 @@ msgid ""
 "Check these ports:\n"
 "%s"
 msgstr ""
-"Tarkista nämä satamat:\n"
+"Tarkista nämä portit:\n"
 "%s"
 
 #: uappstrings.swizresradio
@@ -11573,7 +11578,7 @@ msgstr "UDP-portti:"
 #: uappstrings.swizwsjtxportbad
 #, fuzzy
 msgid "The port must be a number from 1 to 65535."
-msgstr "Sataman numeron on oltava 1-65535."
+msgstr "Portin numeron on oltava 1-65535."
 
 #: uappstrings.sbackupcopyfaileddiskfull
 #, fuzzy
@@ -12684,34 +12689,190 @@ msgstr "Lähetetty palvelimelle: %d QSO(s) -- %d kirjautuneena irrotettuna, %d E
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Teholuokka:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "prefektuuri:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Teholuokka"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Syötä teholuokka (H, M, L tai P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "Arvo %s Tämä kilpailu ei hyväksy sitä."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "Teholuokka on yksi kirjain: H, M, L tai P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "prefektuuri on JARL-numero, joka on enintään kolme numeroa, tai kaksikirjaiminen koodi."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Ulkoiset tukkijat..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "QSO:n ulkoiset kirjautujat"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Tila"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Viimeksi lähetetty (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "Luovutettu (ei vahvistettu)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "uudelleenyrittäminen (%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "Virran on oltava H, M, L tai P"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "prefektuurin on oltava 02-48 tai 101-114"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Molemmat:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Lisäasetukset"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Ulkoasu"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Apu"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Bändikartta"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Bändit"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Värit"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Kilpailu"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "CW- asetukset"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX Cluster"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Ulkoinen lokikirja"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Ulkoiset ohjelmistot"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Laitteisto"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Kirjaaminen"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Verkko"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Online pisteytys"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Radiot"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "Roottorit"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Asema"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "TCI- palvelin"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Kaksi radiotilaa"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "UDP-lähetys"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Web- palvelin"

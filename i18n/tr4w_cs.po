@@ -3551,7 +3551,7 @@ msgstr "Typ keyeru"
 #, fuzzy
 msgctxt "tfrmkeyeredit.lblport.caption"
 msgid "Port"
-msgstr "Přístav"
+msgstr "Port"
 
 #: tfrmkeyeredit.lblwkcomp.caption
 #, fuzzy
@@ -4587,6 +4587,7 @@ msgstr "Písmo platí pro hlavní okno soutěže. Obojí nabude účinku, až p�
 #~ msgstr "Tyto byly v položce Vzhled v nabídce Nastavení. To okno zmizí, jakmile se k nim připojí ROW COUNT a WINDOW SIZE."
 
 #: tprefsform.lblaudioheading.caption
+#: uappstrings.sprefsnavaudio
 #, fuzzy
 msgid "Audio"
 msgstr "Audio"
@@ -5105,6 +5106,7 @@ msgid "CW while operating"
 msgstr "CW při provozu"
 
 #: tprefsform.lbloperatingheading.caption
+#: uappstrings.sprefsnavoperating
 #, fuzzy
 msgid "Operating"
 msgstr "Provozní"
@@ -5131,6 +5133,7 @@ msgid "The parallel port a paddle or foot switch is wired to is not here. Whethe
 msgstr "Paralelní port, ke kterému je připojen pádlo nebo pádlo. Zda TR4W udržuje podporu LPT vůbec, je otevřená otázka, takže PADDLE PORT zůstane na příkazovém seznamu Ctrl-J, dokud je usazen, spíše než být uveden domov nemusí držet."
 
 #: tprefsform.lblpaddlepttheading.caption
+#: uappstrings.sprefsnavpaddleandptt
 #, fuzzy
 msgid "Paddle and PTT"
 msgstr "Pádlo a PTT"
@@ -5670,7 +5673,7 @@ msgstr "Pokročilé"
 #, fuzzy
 msgctxt "tradioeditform.tabserial.caption"
 msgid "Serial"
-msgstr "Pořadové"
+msgstr "Sériový"
 
 #: uappstrings.sctydownloadfailed
 #, fuzzy
@@ -5784,7 +5787,7 @@ msgid ""
 "\n"
 "Apply anyway?"
 msgstr ""
-"Konflikty v přístavu:\n"
+"Konflikty portů:\n"
 "\n"
 "%s\n"
 "\n"
@@ -9382,7 +9385,7 @@ msgstr "Adresa hostitele / IP"
 #: uappstrings.sloggerfieldport
 #, fuzzy
 msgid "Port"
-msgstr "Přístav"
+msgstr "Port"
 
 #: uappstrings.sloggerfieldclublogcall
 #, fuzzy
@@ -10295,6 +10298,7 @@ msgid "Right-click a logger to edit it, change Send new QSOs, move or remove it;
 msgstr "Pravým tlačítkem myši na logger ji editovat, změnit Odeslat nové QSO, přesunout nebo odstranit; přetáhněte Objednat buňku přeobjednat. Aktivní dřevorubci posílají rozkaz. Uložit Preference pro aplikaci Povolené a Objednat nyní; po restartu se použije nový logger, nebo změněná nastavení připojení."
 
 #: uappstrings.sloggergridlogger
+#: uappstrings.sdeliverycollogger
 #, fuzzy
 msgid "Logger"
 msgstr "Logger"
@@ -10458,7 +10462,7 @@ msgstr "Doručování WRL: probíhá %d; odesílání %d; aktuální %d; nejist�
 #: ulclformhelpers.tc_prefs_ports_unavailable
 #, fuzzy
 msgid "(port list not available on this platform)"
-msgstr "(seznam přístavů není na této platformě k dispozici)"
+msgstr "(seznam portů není na této platformě k dispozici)"
 
 #: ulclformhelpers.tc_prefs_port_not_present
 #, fuzzy
@@ -10776,6 +10780,7 @@ msgid "Tick what you have. Anything left unticked can be set up later in Prefere
 msgstr "Zaškrtněte, co máte. Vše, co zůstane netknuté, lze nastavit později v Preferences."
 
 #: uappstrings.swizclose
+#: uappstrings.sdeliveryclose
 #: tfrmaltp.btnclose.caption
 #, fuzzy
 msgid "Close"
@@ -10839,7 +10844,7 @@ msgstr "WinKeyer"
 #: uappstrings.swizitemkeyerhint
 #, fuzzy
 msgid "A WinKeyer CW keyer on its own port."
-msgstr "WinKeyer CW keyer na vlastním přístavu."
+msgstr "WinKeyer CW keyer na vlastním portu."
 
 #: uappstrings.swizitemradio
 #, fuzzy
@@ -12903,34 +12908,190 @@ msgstr "Odesláno na server: %d QSO (s) -- %d zaznamenán při odpojení, %d To 
 #: tprefsform.lblmypowerclass.caption
 #, fuzzy
 msgid "Power class:"
-msgstr ""
+msgstr "Třída výkonu:"
 
 #: tprefsform.lblmyprefecture.caption
 #, fuzzy
 msgid "Prefecture:"
-msgstr ""
+msgstr "Prefektura:"
 
 #: uappstrings.seditqsomypowerclass
 #, fuzzy
 msgid "Power class"
-msgstr ""
+msgstr "Třída výkonu"
 
 #: uappstrings.snewcontestenterpowerclass
 #, fuzzy
 msgid "Enter your power class (H, M, L or P):"
-msgstr ""
+msgstr "Zadejte třídu výkonu (H, M, L nebo P):"
 
 #: uappstrings.snewcontestfieldvaluerefused
 #, fuzzy
 msgid "The value of %s is not one this contest accepts."
-msgstr ""
+msgstr "Hodnota %s tahle soutěž nepřijímá."
 
 #: uappstrings.sstationfieldpowerclass
 #, fuzzy
 msgid "The power class is one letter: H, M, L or P."
-msgstr ""
+msgstr "Třída výkonu je jedno písmeno: H, M, L nebo P."
 
 #: uappstrings.sstationfieldprefecture
 #, fuzzy
 msgid "A prefecture is a JARL number of up to three digits, or a two-letter code."
-msgstr ""
+msgstr "Prefektura je JARL číslo až tří číslic, nebo dvoupísmenný kód."
+
+#: uappstrings.seditqsodeliveriesbutton
+#, fuzzy
+msgid "External loggers..."
+msgstr "Externí záznamníci..."
+
+#: uappstrings.sdeliverywindowtitle
+#, fuzzy
+msgid "External loggers for this QSO"
+msgstr "Externí záznamníky pro tento QSO"
+
+#: uappstrings.sdeliverycolstatus
+#, fuzzy
+msgid "Status"
+msgstr "Stav"
+
+#: uappstrings.sdeliverycollastsent
+#, fuzzy
+msgid "Last sent (UTC)"
+msgstr "Poslední odeslání (UTC)"
+
+#: uappstrings.seditqsodeliveryhandedoff
+#, fuzzy
+msgid "handed off (not confirmed)"
+msgstr "vydaná (nepotvrzená)"
+
+#: uappstrings.seditqsodeliveryretryingwithcode
+#, fuzzy
+msgid "retrying (%s)"
+msgstr "(%s)"
+
+#: uappstrings.sexchangealljapower
+#, fuzzy
+msgid "Power must be H, M, L or P"
+msgstr "Výkon musí být H, M, L nebo P"
+
+#: uappstrings.sexchangealljaprefecture
+#, fuzzy
+msgid "Prefecture must be 02-48 or 101-114"
+msgstr "Prefektura musí být 02- 48 nebo 101- 114"
+
+#: uappstrings.smultstripbothmodes
+#, fuzzy
+msgid "Both:"
+msgstr "Oba:"
+
+#: uappstrings.sprefsnavadvanced
+#, fuzzy
+msgid "Advanced"
+msgstr "Pokročilé"
+
+#: uappstrings.sprefsnavappearance
+#, fuzzy
+msgid "Appearance"
+msgstr "Vzhled"
+
+#: uappstrings.sprefsnavbackup
+#, fuzzy
+msgid "Backup"
+msgstr "Záloha"
+
+#: uappstrings.sprefsnavbandmap
+#, fuzzy
+msgid "Band Map"
+msgstr "Mapa kapely"
+
+#: uappstrings.sprefsnavbands
+#, fuzzy
+msgid "Bands"
+msgstr "Kapela"
+
+#: uappstrings.sprefsnavcolors
+#, fuzzy
+msgid "Colors"
+msgstr "Barvy"
+
+#: uappstrings.sprefsnavcontest
+#, fuzzy
+msgctxt "uappstrings.sprefsnavcontest"
+msgid "Contest"
+msgstr "Soutěž"
+
+#: uappstrings.sprefsnavcwsettings
+#, fuzzy
+msgid "CW Settings"
+msgstr "Nastavení CW"
+
+#: uappstrings.sprefsnavdxcluster
+#, fuzzy
+msgid "DX Cluster"
+msgstr "DX Cluster"
+
+#: uappstrings.sprefsnavexternallogger
+#, fuzzy
+msgid "External Logger"
+msgstr "Externí záznamník"
+
+#: uappstrings.sprefsnavexternalsoftware
+#, fuzzy
+msgid "External Software"
+msgstr "Externí software"
+
+#: uappstrings.sprefsnavhardware
+#, fuzzy
+msgid "Hardware"
+msgstr "Hardware"
+
+#: uappstrings.sprefsnavlogging
+#, fuzzy
+msgid "Logging"
+msgstr "Zaznamenávání"
+
+#: uappstrings.sprefsnavnetwork
+#, fuzzy
+msgid "Network"
+msgstr "Síť"
+
+#: uappstrings.sprefsnavonlinescoring
+#, fuzzy
+msgid "Online Scoring"
+msgstr "Online scoring"
+
+#: uappstrings.sprefsnavradios
+#, fuzzy
+msgid "Radios"
+msgstr "Rádia"
+
+#: uappstrings.sprefsnavrotators
+#, fuzzy
+msgid "Rotators"
+msgstr "Rotátory"
+
+#: uappstrings.sprefsnavstation
+#, fuzzy
+msgid "Station"
+msgstr "Stanice"
+
+#: uappstrings.sprefsnavtciserver
+#, fuzzy
+msgid "TCI Server"
+msgstr "TCI server"
+
+#: uappstrings.sprefsnavtworadiomode
+#, fuzzy
+msgid "Two Radio Mode"
+msgstr "Dvourádiový režim"
+
+#: uappstrings.sprefsnavudpbroadcast
+#, fuzzy
+msgid "UDP Broadcast"
+msgstr "UDP vysílání"
+
+#: uappstrings.sprefsnavwebserver
+#, fuzzy
+msgid "Web Server"
+msgstr "Web Server"
