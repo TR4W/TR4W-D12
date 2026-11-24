@@ -444,7 +444,7 @@ procedure InitializeStrings;
   indexed it -- checked before deleting: zero references in the tree. *)
 
 implementation
-uses MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
+uses uBandFrequency, MainUnit, SysUtils,   // Issue #997 -- SysUtils for Format/StrPCopy (asm-to-Pascal conversion)
      Classes,              // TStringList -- the noted Preferences edits (issue 315)
      uSettingsModel,      // Settings -- the commands that have left this array
      uContestNames,        // CurrentContestSpelling -- CONTEST's legacy names

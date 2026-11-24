@@ -330,6 +330,7 @@ AddChoice`, and since issue 256 `AddCheck` / `AddVerifyServer` for a yes/no box)
 reads the same list: required text, port range, and a choice needs its value AND
 `Account`; a secret is never required (a locked vault leaves it empty and the logger
 must still start), and neither is a check box (either answer is valid). A registration is a class owned by the registry. Facts that bite:
+**A QSO LOGGED WITH NO RADIO FREQUENCY NO LONGER FAILS WRL'S REQUIRED `FREQ`** (2026-11-24): `uADIF.EmitADIFRecord` writes the band's default for the mode (`uBandFrequency`) with `APP_TR4W_FREQ_ASSUMED=Y`, and every ADIF-built payload (WRL, Club Log, QRZ, Cloudlog, DXKeeper, ACLog) carries it. A band with no default still takes the existing "no frequency" path. The UDP `BuildUDPContact` has its own band default and is separate.
 **WRL's account id and logbook id are never fields.** The logbook is a CHOICE
 (`LF_LOGBOOK` with `LF_LOGBOOK_NAME` beside it); the loader (`LoadWRLLogbookChoices`,
 over `uWRLClient.WRLReadAccountId/WRLReadLogbooks`) runs

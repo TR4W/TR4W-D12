@@ -9,5 +9,12 @@
 #
 # Read by run-golden-diff.sh: the lines below the comments are EXACTLY the changed lines golden_diff.py
 # must report for ref.adi vs cand.adi -- any other difference in this artifact is a FAIL.
+#
+# NY4I, 2026-11-24 (option A): a QSO that has a band but no frequency now writes the
+# band's default FREQ (the Band Plan table, by band and mode) and
+# <APP_TR4W_FREQ_ASSUMED:1>Y, so the record is deliverable to WRL and other
+# loggers; the stored QSO keeps frequency 0 and TR4W's own import restores it.
+# The D7 reference lacks FREQ on those QSOs and is never regenerated, so the
+# changed records are pinned here as the exact expected difference.
 -<CALL:5>N0TST <BAND:4>160m <QSO_DATE:8>20250111 <TIME_ON:6>201454 <TIME_OFF:6>201454 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:11>ARRL-SS-SSB <MODE:2>CW <QTH:2>OK <PRECEDENCE:1>M <CHECK:2>23 <SRX:5>00093 <STX:5>00206 <OPERATOR:4>W4TA <STX_STRING:12>206 M 13 WCF <SRX_STRING:9>93M OK 23 <ARRL_SECT:2>OK <EOR>
-+<CALL:5>N0TST <BAND:4>160m <QSO_DATE:8>20250111 <TIME_ON:6>201454 <TIME_OFF:6>201454 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:11>ARRL-SS-SSB <MODE:2>CW <QTH:2>OK <PRECEDENCE:1>M <CHECK:2>23 <SRX:5>00093 <STX:5>00206 <OPERATOR:4>W4TA <APP_TR4W_CLAIMEDQSO:1>0 <STX_STRING:12>206 M 13 WCF <SRX_STRING:9>93M OK 23 <ARRL_SECT:2>OK <EOR>
++<CALL:5>N0TST <BAND:4>160m <QSO_DATE:8>20250111 <TIME_ON:6>201454 <TIME_OFF:6>201454 <RST_SENT:3>599 <RST_RCVD:3>599 <CONTEST_ID:11>ARRL-SS-SSB <MODE:2>CW <FREQ:4>1.82 <QTH:2>OK <PRECEDENCE:1>M <CHECK:2>23 <SRX:5>00093 <STX:5>00206 <OPERATOR:4>W4TA <APP_TR4W_CLAIMEDQSO:1>0 <APP_TR4W_FREQ_ASSUMED:1>Y <STX_STRING:12>206 M 13 WCF <SRX_STRING:9>93M OK 23 <ARRL_SECT:2>OK <EOR>

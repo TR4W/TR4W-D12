@@ -84,6 +84,7 @@ type
       procedure Test_InvalidValuesAreNotWritten;
       procedure Test_OldDOKAndFOCNamesStillImport;
       procedure Test_GenericDataMode_SaysSoInTheFile;
+      procedure Test_NoFrequency_WritesTheBandDefault;
       procedure Test_JTTY_WritesAValidModeAndRoundTrips;
       procedure Test_FT2_WritesAValidModeAndRoundTrips;
       procedure Test_OldTR4WSpellingsStillImport;
@@ -114,8 +115,10 @@ uses
    VC,
    uADIF,
    uARRLSections,
+   uBandFrequency,
    uContestRegistry,
-   uQsoMyFacts;
+   uQsoMyFacts,
+   uWRLContact;
 
 // ---------------------------------------------------------------------------
 // Basic shapes
@@ -1301,6 +1304,86 @@ begin
    CheckEquals('1234', temps.FOC_Num, 'the old FOC_NUM');
 end;
 
+(* A QSO WITH A BAND AND NO FREQUENCY WRITES THE BAND'S DEFAULT, MARKED
+  (NY4I, 2026-11-24). WRL refuses a contact with no FREQ; the log keeps the
+  truth (Frequency stays 0), so the record says the number is a guess and the
+  import takes it back. *)
+function FreqLessQso(aBand: BandType; aMode: ModeType): ContestExchange;
+begin
+   Result := Default(ContestExchange);
+   Result.Callsign := 'KG1S';
+   Result.Band     := aBand;
+   Result.Mode     := aMode;
+   Result.tSysTime.qtYear   := 26;
+   Result.tSysTime.qtMonth  := 11;
+   Result.tSysTime.qtDay    := 24;
+   Result.tSysTime.qtHour   := 12;
+   Result.tSysTime.qtMinute := 30;
+end;
+
+procedure TADIFHelperTests.Test_NoFrequency_WritesTheBandDefault;
+var
+   rec      : ContestExchange;
+   s        : string;
+   records  : TContestExchangeArray;
+   saved    : TFreqMemoryType;
+   wrl      : string;
+begin
+   BeginTest('Test_NoFrequency_WritesTheBandDefault');
+   saved := DefaultFreqMemory;
+   try
+      // CW takes the CW column, phone the phone column, digital its own.
+      s := EmitADIFRecord(FreqLessQso(Band20, CW));
+      CheckTrue(Pos('<FREQ:6>14.025', s) > 0, '20 m CW FREQ: ' + s);
+      CheckTrue(Pos('<APP_TR4W_FREQ_ASSUMED:1>Y', s) > 0, '20 m CW marker');
+      s := EmitADIFRecord(FreqLessQso(Band20, Phone));
+      CheckTrue(Pos('<FREQ:6>14.225', s) > 0, '20 m phone FREQ: ' + s);
+      CheckTrue(Pos('<APP_TR4W_FREQ_ASSUMED:1>Y', s) > 0, '20 m phone marker');
+      s := EmitADIFRecord(FreqLessQso(Band20, Digital));
+      CheckTrue(Pos('<FREQ:5>14.08', s) > 0, '20 m digital FREQ: ' + s);
+      s := EmitADIFRecord(FreqLessQso(Band20, FM));
+      CheckTrue(Pos('<FREQ:6>14.225', s) > 0, 'FM takes the phone column');
+
+      // A band with no default writes neither.
+      s := EmitADIFRecord(FreqLessQso(Band5760, CW));
+      CheckEquals(0, Pos('<FREQ:', s), 'no default: no FREQ');
+      CheckEquals(0, Pos('FREQ_ASSUMED', s), 'no default: no marker');
+
+      // A real frequency is untouched and carries no marker.
+      rec := FreqLessQso(Band20, CW);
+      rec.Frequency := 14030000;
+      s := EmitADIFRecord(rec);
+      CheckTrue(Pos('<FREQ:5>14.03', s) > 0, 'real frequency written: ' + s);
+      CheckEquals(0, Pos('FREQ_ASSUMED', s), 'real frequency: no marker');
+
+      // The operator's own edit of the table is what is written.
+      DefaultFreqMemory[Band20, CW] := 14033000;
+      s := EmitADIFRecord(FreqLessQso(Band20, CW));
+      CheckTrue(Pos('<FREQ:6>14.033', s) > 0, 'edited default: ' + s);
+
+      // Import: the marker gives the truth back, whichever side of FREQ it is.
+      DefaultFreqMemory := saved;
+      s := EmitADIFRecord(FreqLessQso(Band20, CW)) + '<EOR>';
+      CheckEquals(1, ImportADIFFromString(s, records), 'one record');
+      CheckEquals(0, records[0].Frequency, 'the guess is not data');
+      CheckEquals(1, ImportADIFFromString(
+         '<CALL:4>KG1S <APP_TR4W_FREQ_ASSUMED:1>Y <BAND:3>20m <FREQ:6>14.025 ' +
+         '<MODE:2>CW <EOR>', records), 'marker before FREQ');
+      CheckEquals(0, records[0].Frequency, 'order-independent');
+      CheckEquals(1, ImportADIFFromString(
+         '<CALL:4>KG1S <BAND:3>20m <FREQ:6>14.025 <MODE:2>CW <EOR>', records),
+         'no marker');
+      CheckEquals(14025000, records[0].Frequency, 'a real FREQ is kept');
+
+      // WRL refused a contact with no FREQ; it takes this one.
+      wrl := WRLContactFromADIF(
+         EmitADIFRecord(FreqLessQso(Band20, CW)) + '<EOR>', 'N1MM');
+      CheckTrue(Pos('1.4025', wrl) > 0, 'WRL payload carries the default: ' + wrl);
+   finally
+      DefaultFreqMemory := saved;
+   end;
+end;
+
 procedure TADIFHelperTests.Test_GenericDataMode_SaysSoInTheFile;
 var
    rec     : ContestExchange;
@@ -1721,6 +1804,7 @@ begin
    Test_InvalidValuesAreNotWritten;
    Test_OldDOKAndFOCNamesStillImport;
    Test_GenericDataMode_SaysSoInTheFile;
+   Test_NoFrequency_WritesTheBandDefault;
    Test_JTTY_WritesAValidModeAndRoundTrips;
    Test_FT2_WritesAValidModeAndRoundTrips;
    Test_OldTR4WSpellingsStillImport;

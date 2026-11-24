@@ -107,6 +107,7 @@ var
 implementation
 
 uses
+   uBandFrequency, // DefaultFreqMemory, TFreqMemoryType
    SyncObjs,       // TCriticalSection -- the udp client's lock
    uPortAddress,   // TPortKind -- see the radio port kind accessors
    uSettingsModel, // Settings.My -- the station's own facts

@@ -1384,7 +1384,9 @@ begin
       rec.ceComputerID := 'A';
       rec.ceRecordKind := rkQSO;
       rec.ceContest := ContestHandleOf(GENERALQSO);
-      rec.Band := Band20;
+      (* A BAND WITH NO DEFAULT FREQUENCY: the export writes a band's default
+         for a QSO with none (2026-11-24), so 20 m would no longer be refused. *)
+      rec.Band := Band5760;
       rec.Mode := CW;
       rec.ExtMode := eCW;
       rec.Frequency := 0;

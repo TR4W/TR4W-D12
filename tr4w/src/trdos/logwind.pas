@@ -24,6 +24,7 @@ unit LogWind;
 interface
 uses
   uConfigValues,   // Config -- migrated settings
+  uBandFrequency,  // TFreqMemoryType, DefaultFreqMemory
   SysUtils,
 utils_text,
   uWinKey,
@@ -140,7 +141,7 @@ var
 
 type
 
-  TFreqMemoryType = array[BandType, CW..Phone] of LONGINT;
+  (* TFreqMemoryType moved to uBandFrequency with DefaultFreqMemory. *)
 
   K5KAStateType = (KAIdle, KAMessageStarted, KASendingMessage);
   K5KAObject = record // Used for fancy stuff with AltD while sending
@@ -534,33 +535,8 @@ var
 
   FreqMemory                            : TFreqMemoryType;
 
-  DefaultFreqMemory                     : TFreqMemoryType =
-    (
-    (0001820000, 1840000, 0001840000),
-    (0003525000, 3580000, 0003850000),
-    (0007025000, 7040000, 0007070000),
-    (0014025000, 14080000, 0014225000),
-    (0021025000, 21080000, 0021300000),
-    (0028050000, 28080000, 0028400000),
-
-    (0010105000, 10125000, 0010105000),
-    (0018068000, 18110000, 0018110000),
-    (0024890000, 24920000, 0024930000),
-    (0050125000, 50125000, 0050125000),
-    (0144100000, 144200000, 0144200000),
-    (0222100000, 0, 0222100000),
-    (0433100000, 0, 0433200000),
-    (0902000000, 0, 0902000000),
-    (1296200000, 0, 1296200000),
-    (0000000000, 0, 0000000000),
-    (0000000000, 0, 0000000000),
-    (0000000000, 0, 0000000000),
-    (0000000000, 0, 0000000000),
-    (0000000000, 0, 0000000000),
-    (0000000000, 0, 0000000000),
-    (0000000000, 0, 0000000000),
-    (0000000000, 0, 0000000000)
-    );
+  (* DefaultFreqMemory MOVED to uBandFrequency (2026-11-24): the ADIF
+    writer reads the same table. *)
 
   (* FrequencyMemoryEnable is gone (2026-09-12) --
     Settings.Operating.FrequencyMemoryEnable. *)

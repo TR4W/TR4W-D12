@@ -128,7 +128,10 @@ type
       (* THE OTHER STATION'S POWER CLASS LETTER -- the ALL JA's ADIFPowerTag
         since 2026-11-24 (it was written as PRECEDENCE). Read into Power, as
         RX_PWR is. *)
-      tAdifAPP_TR4W_RCVD_POWER_CLASS);
+      tAdifAPP_TR4W_RCVD_POWER_CLASS,
+      (* A FREQUENCY THE EXPORT SUPPLIED from the band's default because the
+        QSO had none (NY4I, 2026-11-24); the import undoes it. *)
+      tAdifAPP_TR4W_FREQ_ASSUMED);
 
 // =========================================================================
 // Lexer
@@ -708,6 +711,9 @@ implementation
   its own bounds instead of StrPLCopy plus a hand-passed High(). *)
 uses
    TF,
+   (* DefaultBandFrequency -- the band's default frequency for a QSO that
+      has none. A leaf, so uADIF still names no TRDOS unit. *)
+   uBandFrequency,
    (* FindContestByADIFContestId -- which contest answers to a CONTEST_ID,
       including the ids it was exported under before a rename -- and
       ContestIdentity, the contest's own id for export. The contest owns both
@@ -1572,7 +1578,7 @@ end;
 const
    // Order MUST match the TADIF_Fields enum declaration.  Adding a field
    // requires updating BOTH this array AND the enum.
-   ADIF_FIELD_NAMES : array[0..67] of string = (
+   ADIF_FIELD_NAMES : array[0..68] of string = (
       // ADIF spec field name is `CQZ` (no underscore).  The original
       // import lookup had `CQ_Z` which never matched real-world ADIF
       // exports -- the tAdifCQ_Z handler was effectively dead until
@@ -1605,7 +1611,9 @@ const
       // Our power class (schema 14) -- order must match the enum
       'APP_TR4W_POWER_CLASS',
       // The other station's power class (the ALL JA) -- order must match
-      'APP_TR4W_RCVD_POWER_CLASS');
+      'APP_TR4W_RCVD_POWER_CLASS',
+      // A frequency the export took from the band's default -- order must match
+      'APP_TR4W_FREQ_ASSUMED');
 
 // Index of aName in ADIF_FIELD_NAMES, or -1.  Case-insensitive, ASCII-only.
 //
@@ -1681,12 +1689,14 @@ var
    haveRoverCall        : Boolean;
    contestFromId        : Boolean;
    modeAssumed          : Boolean;
+   freqAssumed          : Boolean;
    appSubMode           : string;
 begin
    Result := True;
    InitADIFRecordTemps(temps);
    haveRoverCall := False;
    modeAssumed := False;
+   freqAssumed := False;
    appSubMode := '';
    contestFromId := False;
 
@@ -1956,6 +1966,10 @@ begin
             tAdifAPP_TR4W_MODE_ASSUMED:
                modeAssumed := UpperCase(Trim(fieldValue)) = 'Y';
 
+            (* Applied after the loop: the FREQ may follow it. *)
+            tAdifAPP_TR4W_FREQ_ASSUMED:
+               freqAssumed := UpperCase(Trim(fieldValue)) = 'Y';
+
             (* Applied after the loop, for the same reason. *)
             tAdifAPP_TR4W_SUBMODE:
                appSubMode := Trim(fieldValue);
@@ -1987,6 +2001,14 @@ begin
    if modeAssumed and (exch.ExtMode = eRTTY) then
       begin
       exch.ExtMode := eData;
+      end;
+
+   (* THE EXPORT'S DEFAULTED FREQUENCY, UNDONE.  The QSO had no frequency and
+     the export wrote its band's default beside APP_TR4W_FREQ_ASSUMED=Y; the
+     log keeps the truth, so a round trip never turns a guess into data. *)
+   if freqAssumed then
+      begin
+      exch.Frequency := 0;
       end;
 
    (* THE SUBMODE ADIF CANNOT NAME, RESTORED (issue 120). TR4W wrote MODE
@@ -2530,6 +2552,7 @@ var
    freqStr        : string;
    stateForQP     : string;
    rules          : TContestBase;
+   freqAssumed    : Boolean;
 begin
    rules := ContestForRecord(rec, aContest);
    ResolveRoverCall(rec, bareCall, roverFullCall);
@@ -2547,6 +2570,17 @@ begin
 
    ResolveADIFModeSubmode(rec, modeStr, subModeStr);
    freqStr := FormatADIFFreq(rec.Frequency);
+   (* NO FREQUENCY BUT A BAND: the band's default for the mode, marked (NY4I,
+     2026-11-24). A logger that wants a FREQ (WRL) otherwise refuses the QSO.
+     The stored QSO stays at 0; only this record carries the guess, and
+     APP_TR4W_FREQ_ASSUMED says so, so the import restores 0. A band with no
+     default writes nothing, as before. *)
+   freqAssumed := False;
+   if freqStr = '' then
+      begin
+      freqStr := FormatADIFFreq(DefaultBandFrequency(rec.Band, rec.Mode));
+      freqAssumed := freqStr <> '';
+      end;
 
    Result := '';
 
@@ -2685,6 +2719,13 @@ begin
    if IsGenericDataMode(rec.ExtMode) then
       begin
       Result := Result + EmitADIFField('APP_TR4W_MODE_ASSUMED', 'Y');
+      end;
+
+   (* THE TRUTH ABOUT A DEFAULTED FREQUENCY: FREQ is the band's default, not
+     what the radio said. *)
+   if freqAssumed then
+      begin
+      Result := Result + EmitADIFField('APP_TR4W_FREQ_ASSUMED', 'Y');
       end;
 end;
 

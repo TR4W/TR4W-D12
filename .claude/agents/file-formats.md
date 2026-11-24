@@ -133,6 +133,7 @@ untouched. The validator gate's `known-findings-<source>.txt` pins excuse only s
 input, and a pin that matches nothing fails. The generic DATA modes export as
 `MODE RTTY` (NY4I, 2026-10-23) with `APP_TR4W_MODE_ASSUMED=Y` per record and a header line with the
 count; import restores `eData` from the flag.
+**A QSO WITH A BAND AND NO FREQUENCY WRITES THE BAND'S DEFAULT (NY4I, 2026-11-24)**: `uADIF.EmitADIFRecord` writes `FREQ` from `uBandFrequency.DefaultBandFrequency(Band, Mode)` (CW and Digital their own columns, every other mode the Phone column) plus `APP_TR4W_FREQ_ASSUMED=Y`, the same shape as `APP_TR4W_MODE_ASSUMED`; the import (`ApplyADIFFieldsToExchange`, after the loop, so tag order does not matter) sets `Frequency` back to 0, so a round trip never turns a guess into data. The stored QSO keeps 0. A band with no default (microwave rows) writes neither tag. `uBandFrequency` (src/domain, a leaf) owns `DefaultFreqMemory` now -- LogWind, the Band Plan window, the radio profile and `uCFG` use it; Cabrillo's `tCabrilloFreqString` is a separate table, untouched. Every payload built from `EmitADIFRecord` (export, WRL, Club Log, QRZ, Cloudlog, DXKeeper, ACLog) therefore carries it. The five corpus sets whose D7 ADIF reference has QSOs without FREQ (arrl_digi, arrl_fd, arrl_ss_ssb, iaru_hf, winter_fd; 22 records) gain it: NY4I decides how they are pinned.
 
 `tr4w/test/logdump/` dumps binary `.dat` logs to JSONL through the canonical
 `ContestExchange`; `tr4w/test/python/verify_adif_export.py` cross-checks ADIF

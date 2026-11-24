@@ -120,6 +120,7 @@ implementation
 {$R *.lfm}
 
 uses
+   uBandFrequency,   // DefaultFreqMemory
    utils_text,
   LCLIntf,   (* GetSystemMetrics -- see the width floor *)
   Types,               // TRect / IntersectRect

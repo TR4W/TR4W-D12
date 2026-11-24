@@ -331,6 +331,7 @@ function DescribePortConflicts(const aStore: TRadioConfigStore;
 implementation
 
 uses
+   uBandFrequency, // DefaultFreqMemory -- the band plan's defaults
    uPortAddress,   // SerialTokenFor / SerialDeviceName -- the port-naming rules
    // Windows, not Winapi.Windows: the rest of the tree spells it the short way
    // and qualifies calls as Windows.<fn>, which only resolves if the unit is
