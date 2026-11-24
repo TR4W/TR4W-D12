@@ -50,13 +50,20 @@ type
       rvQueued,        (* pending or inflight: already on its way *)
       rvUncertain,     (* may be at the destination: never replayed *)
       rvDelivered,     (* delivered, and this mode / provider does not resend it *)
-      rvNotOurs);      (* logged by another station: that station uploads it *)
+      rvNotOurs,       (* logged by another station: that station uploads it *)
+      rvNotDeliverable); (* the QSO cannot become this logger's contact as it stands *)
 
    (* What a resend did, for the summary the operator reads. A class, not a
       record (the project prefers it); nothing here is shared with a thread. *)
    TResendTally = class
    public
       Created, Requeued, AlreadyQueued, Uncertain, Delivered, NotOurs: integer;
+      (* QSOs the payload builder refused (a required field missing). Not in
+         Total's other columns' meaning of "left alone": they are marked failed. *)
+      NotDeliverable: integer;
+      (* The logger had stopped capturing after a storage failure and this
+         resend resumed it. *)
+      Resumed: boolean;
       procedure Add(aVerdict: TResendVerdict);
       function Total: integer;
       (* What was put on the queue. *)
@@ -70,6 +77,25 @@ type
    replace a delivered contact. *)
 function ResendVerdict(aMode: TResendMode; aHasRow: boolean; const aState: string;
    aHasRemoteId, aCanUpdate: boolean): TResendVerdict;
+
+(* A QSO THAT CANNOT BECOME THIS LOGGER'S CONTACT (issue: a QSO logged with no
+   frequency stopped WRL for the whole log). The payload builder raises with a
+   message naming the missing field; this maps it to a STABLE code that a
+   delivery row can hold, so the Edit QSO window can say why. The message
+   itself goes to the log; nothing here reads a secret. *)
+function NotDeliverableCode(const aMessage: string): string;
+
+(* The operator's words for one of those codes ('no frequency'); '' for any
+   other code, so a caller can tell a not-deliverable row from a refusal. *)
+function NotDeliverableReasonText(const aCode: string): string;
+
+(* THE NOTICE THROTTLE: one line per logger per window. Ten QSOs held back in a
+   row must not scroll ten lines. aLastTick is the tick of the last line shown
+   (0 = none yet), aNowTick the current one; both milliseconds. *)
+const
+   NOT_DELIVERABLE_NOTICE_WINDOW_MS = 60000;
+
+function NotDeliverableNoticeDue(aNowTick, aLastTick: QWord): boolean;
 
 type
    TSiteUrlProblem = (supNone, supEmpty, supScheme, supHost, supCharacters);
@@ -102,7 +128,7 @@ function WRLDefaultLogbookName(aYear: integer; const aADIFContestId: string;
 implementation
 
 uses
-   uriparser;
+   uriparser, uAppStrings;
 
 procedure TResendTally.Add(aVerdict: TResendVerdict);
 begin
@@ -131,12 +157,17 @@ begin
          begin
          Inc(NotOurs);
          end;
+      rvNotDeliverable:
+         begin
+         Inc(NotDeliverable);
+         end;
    end;
 end;
 
 function TResendTally.Total: integer;
 begin
-   Result := Created + Requeued + AlreadyQueued + Uncertain + Delivered + NotOurs;
+   Result := Created + Requeued + AlreadyQueued + Uncertain + Delivered + NotOurs +
+      NotDeliverable;
 end;
 
 function TResendTally.Queued: integer;
@@ -188,6 +219,67 @@ begin
       (* 'uncertain', and anything this code does not know. *)
       Result := rvUncertain;
       end;
+end;
+
+function NotDeliverableCode(const aMessage: string): string;
+var
+   text: string;
+begin
+   text := UpperCase(aMessage);
+   if Pos('FREQ', text) > 0 then
+      begin
+      Result := 'MISSING_FREQUENCY';
+      end
+   else if Pos('ITS MODE', text) > 0 then
+      begin
+      Result := 'MISSING_MODE';
+      end
+   else if Pos('DATE/TIME', text) > 0 then
+      begin
+      Result := 'MISSING_TIME';
+      end
+   else if Pos('STATION CALLSIGN', text) > 0 then
+      begin
+      Result := 'MISSING_STATION_CALL';
+      end
+   else
+      begin
+      Result := 'QSO_NOT_DELIVERABLE';
+      end;
+end;
+
+function NotDeliverableReasonText(const aCode: string): string;
+begin
+   if aCode = 'MISSING_FREQUENCY' then
+      begin
+      Result := SLoggerWhyNoFrequency;
+      end
+   else if aCode = 'MISSING_MODE' then
+      begin
+      Result := SLoggerWhyNoMode;
+      end
+   else if aCode = 'MISSING_TIME' then
+      begin
+      Result := SLoggerWhyNoTime;
+      end
+   else if aCode = 'MISSING_STATION_CALL' then
+      begin
+      Result := SLoggerWhyNoStationCall;
+      end
+   else if aCode = 'QSO_NOT_DELIVERABLE' then
+      begin
+      Result := SLoggerWhyNotDeliverable;
+      end
+   else
+      begin
+      Result := '';
+      end;
+end;
+
+function NotDeliverableNoticeDue(aNowTick, aLastTick: QWord): boolean;
+begin
+   Result := (aLastTick = 0) or (aNowTick < aLastTick) or
+      (aNowTick - aLastTick >= NOT_DELIVERABLE_NOTICE_WINDOW_MS);
 end;
 
 function CheckSiteUrl(const aUrl: string): TSiteUrlProblem;

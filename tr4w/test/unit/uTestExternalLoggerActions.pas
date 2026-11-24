@@ -119,8 +119,9 @@ begin
       CheckEquals(1, tally.Uncertain);
       CheckEquals(1, tally.Delivered);
       CheckEquals(1, tally.NotOurs);
+      CheckEquals(1, tally.NotDeliverable);
       CheckEquals(3, tally.Queued, 'queued = created + requeued');
-      CheckEquals(7, tally.Total);
+      CheckEquals(8, tally.Total);
    finally
       tally.Free;
    end;

@@ -707,8 +707,12 @@ begin
       FillConfig(config);
       view.Bind(config);
       view.Refresh;
-      CheckEquals(7, grid.ColCount, 'Order, Logger, Provider, Enabled, State, Id, state ordinal');
-      CheckEquals(6, grid.Columns.Count, 'every column but the fixed Order column');
+      CheckEquals(8, grid.ColCount, 'Order, Logger, Provider, Enabled, Resync, State, Id, state ordinal');
+      CheckEquals(7, grid.Columns.Count, 'every column but the fixed Order column');
+      CheckTrue(grid.Columns[LOGGER_COL_RESYNC - 1].ButtonStyle = cbsButtonColumn,
+         'the Resync button is the LCL''s own button column');
+      CheckEquals('Resync', string(grid.Columns[LOGGER_COL_RESYNC - 1].Title.Caption));
+      CheckEquals('Resync', string(grid.Cells[LOGGER_COL_RESYNC, 1]), 'every row carries the button');
       CheckTrue(grid.Columns[LOGGER_COL_ENABLED - 1].ButtonStyle = cbsCheckboxColumn,
          'the LCL draws a real checkbox');
       CheckTrue(grid.Columns[LOGGER_COL_ENABLED - 1].ValueChecked = '1');
@@ -927,8 +931,8 @@ begin
    CheckEquals(aGrid.ClientWidth, SumOfColumnWidths(aGrid),
       'the columns fill the client width' + where);
    CheckEquals(60, aGrid.ColWidths[LOGGER_COL_ORDER], 'Order keeps its width' + where);
-   CheckEquals(190, aGrid.ColWidths[LOGGER_COL_NAME], 'Logger keeps its width' + where);
-   CheckEquals(110, aGrid.ColWidths[LOGGER_COL_PROVIDER], 'Provider keeps its width' + where);
+   CheckEquals(170, aGrid.ColWidths[LOGGER_COL_NAME], 'Logger keeps its width' + where);
+   CheckEquals(90, aGrid.ColWidths[LOGGER_COL_PROVIDER], 'Provider keeps its width' + where);
    CheckEquals(70, aGrid.ColWidths[LOGGER_COL_ENABLED], 'Enabled keeps its width' + where);
    CheckEquals(0, aGrid.ColWidths[LOGGER_COL_ID], 'the id stays hidden' + where);
    CheckEquals(0, aGrid.ColWidths[LOGGER_COL_STATEKIND], 'the state ordinal stays hidden' + where);
@@ -1100,9 +1104,9 @@ begin
       CheckEquals(1, grid.SizedCount, 'the LCL ran a column resize' + where);
       CheckEquals(LOGGER_COL_NAME, grid.SizedIndex, 'it sized Logger' + where);
       (* The LCL sizes to the pointer: the new right edge is where it let go. *)
-      grown := (x + 40) - grid.ColWidths[LOGGER_COL_ORDER] - 190;
+      grown := (x + 40) - grid.ColWidths[LOGGER_COL_ORDER] - 170;
       CheckTrue(grown > 30, 'Logger grew by about the drag' + where);
-      CheckEquals(190 + grown, grid.ColWidths[LOGGER_COL_NAME], 'Logger ends at the pointer' + where);
+      CheckEquals(170 + grown, grid.ColWidths[LOGGER_COL_NAME], 'Logger ends at the pointer' + where);
       CheckEquals(stateBefore - grown, grid.ColWidths[LOGGER_COL_STATE],
          'Connection gave up exactly what Logger took' + where);
       CheckEquals(grid.ClientWidth, SumOfColumnWidths(grid), 'still no gap' + where);
@@ -1182,7 +1186,7 @@ begin
       grid.Drag(x, x + 40, headerY);
       Application.ProcessMessages;
       dragged := grid.ColWidths[LOGGER_COL_NAME];
-      CheckTrue(dragged > 220, 'Logger was dragged wider (' + IntToStr(dragged) + ')');
+      CheckTrue(dragged > 190, 'Logger was dragged wider (' + IntToStr(dragged) + ')');
 
       w := 0;
       CheckTrue(PendingColumnWidths.TryGetWidth(LOGGER_GRID_COLUMNS_NAME, 'Logger', w),
@@ -1202,12 +1206,12 @@ begin
       view2 := TExternalLoggerGrid.Create(form2, grid2);
       view2.Bind(config);
       view2.Refresh;
-      CheckEquals(190, grid2.ColWidths[LOGGER_COL_NAME], 'a new grid starts at the designed width');
+      CheckEquals(170, grid2.ColWidths[LOGGER_COL_NAME], 'a new grid starts at the designed width');
       view2.RestoreColumnWidths;
       ShowOffScreen(form2);
       CheckEquals(grid2.Scale96ToForm(grid.ScaleFormTo96(dragged)), grid2.ColWidths[LOGGER_COL_NAME],
          'and comes back at the dragged one');
-      CheckEquals(110, grid2.ColWidths[LOGGER_COL_PROVIDER], 'Provider was not dragged, so is designed');
+      CheckEquals(90, grid2.ColWidths[LOGGER_COL_PROVIDER], 'Provider was not dragged, so is designed');
       CheckEquals(0, grid2.ColWidths[LOGGER_COL_ID], 'the id stays hidden');
       CheckEquals(0, grid2.ColWidths[LOGGER_COL_STATEKIND], 'the ordinal stays hidden');
       CheckEquals(grid2.ClientWidth, SumOfColumnWidths(grid2), 'the fill still closes the row' +

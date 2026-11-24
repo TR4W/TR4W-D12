@@ -56,6 +56,7 @@ type
          and so does this. *)
       function StateSnapshot(const aDeliveryId: string;
          out aSnapshot: TExternalLoggerSnapshot): boolean; override;
+      function ConfiguredCount: integer; override;
       procedure CaptureSavedQso(aDatabase: TLogDatabase; aRepository: TLogRepository;
          aRowId: Int64; aNew: boolean); override;
       procedure AfterLogCommit(aDatabase: TLogDatabase); override;
@@ -405,6 +406,11 @@ begin
          Exit;
          end;
       end;
+end;
+
+function TExternalLoggers.ConfiguredCount: integer;
+begin
+   Result := FServices.Count;
 end;
 
 procedure TExternalLoggers.CaptureSavedQso(aDatabase: TLogDatabase;

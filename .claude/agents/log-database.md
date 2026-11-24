@@ -780,6 +780,14 @@ log lacks (design, contest rule and threading: the `multi-op-network` agent and
 
 ## SCHEMA 5: `external_delivery`, AND ITS `last_sent` (WRL, 2026-10-31)
 
+- **A `failed` row with an EMPTY payload is a QSO the payload builder refused** (2026-11-24;
+  `TExternalDelivery.RecordNotDeliverable`; `error_code` is `MISSING_FREQUENCY`, `MISSING_MODE`,
+  `MISSING_TIME`, `MISSING_STATION_CALL` or `QSO_NOT_DELIVERABLE`). No schema change. Nothing claims
+  it (`Claim` takes `pending` only); `Enqueue` of the corrected QSO differs from `''` and returns it to
+  `pending`. A resend rebuilds the payload from the current QSO. The gap marker
+  (`session_state` key from `ExternalDeliveryGapKey`) is for STORAGE failures only and is deleted by
+  the resync that resumes the logger, inside its savepoint.
+
 Durable external-logger delivery, one row per (logger, account, logbook,
 contact); `contact` is the QSO's `guid`. Repo access is
 `src/domain/uExternalDelivery.pas`; the worker (`uWRLWorker`) owns its OWN

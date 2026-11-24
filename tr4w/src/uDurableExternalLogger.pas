@@ -17,6 +17,10 @@ type
       FWorker: TExternalDeliveryWorker;
       FReported: boolean;
       FLocalNotice: string;
+      (* The tick of the last 'QSO not sent' line, and how many QSOs were held
+         back since it (the throttle: one line per minute, with a count). *)
+      FNoticeTick: QWord;
+      FNoticeHeld: integer;
       (* THE WATCHDOG (uLogConnectionWatch) -- a main-thread LCL timer, 1 s,
         alive while a worker is. It lives HERE because this is the only owner
         of a secondary connection, and its last resort (stop the worker,
@@ -32,9 +36,17 @@ type
       procedure WatchdogTick(Sender: TObject);
       procedure WorkerStalled(aWatch: TLogConnectionWatch);
       (* The payload a delivery of this QSO carries: '{}' for a deleted one.
-         The one place a capture and a resend build it. *)
+         The one place a capture and a resend build it.
+
+         TWO KINDS OF FAILURE, kept apart. The builder refusing THIS QSO (a
+         required field missing: EConvertError and the like) returns False with
+         aCode naming the reason; the QSO cannot become this logger's contact,
+         which is no reason to stop the logger. A failure to READ the QSO's
+         station facts is storage, and propagates. *)
       function PayloadFor(aRepository: TLogRepository; aRowId: Int64;
-         const aRec: ContestExchange): string;
+         const aRec: ContestExchange; out aPayload, aCode: string): boolean;
+      (* One non-modal line on the quick-command panel, at most once a minute. *)
+      procedure AnnounceNotDeliverable(const aCall, aCode: string);
    public
       function BuildPayload(const aRecord: ContestExchange; const aFacts: TQsoMyFacts;
                             const aSent: AnsiString): string; virtual; abstract;
@@ -118,17 +130,57 @@ begin
 end;
 
 function TDurableExternalLogger.PayloadFor(aRepository: TLogRepository; aRowId: Int64;
-   const aRec: ContestExchange): string;
+   const aRec: ContestExchange; out aPayload, aCode: string): boolean;
 var
    facts: TQsoMyFacts;
    sent: AnsiString;
 begin
-   Result := '{}';
+   aPayload := '{}';
+   aCode := '';
+   Result := True;
    if not aRec.ceQSO_Deleted then
       begin
       aRepository.LoadQSOMyFacts(aRowId, facts, sent);
-      Result := BuildPayload(aRec, facts, sent);
+      try
+         aPayload := BuildPayload(aRec, facts, sent);
+      except
+         on E: Exception do
+            begin
+            Result := False;
+            aPayload := '';
+            aCode := NotDeliverableCode(E.Message);
+            (* The message names a missing field, never a secret or a path. *)
+            TLogLogger.GetLogger(FLoggerId).Warn(
+               '[ExternalDelivery] QSO %s cannot be sent to this logger (%s: %s); ' +
+               'delivery continues for the other QSOs.',
+               [string(aRec.Callsign), aCode, E.Message]);
+            end;
       end;
+      end;
+end;
+
+procedure TDurableExternalLogger.AnnounceNotDeliverable(const aCall, aCode: string);
+var
+   now: QWord;
+begin
+   Inc(FNoticeHeld);
+   now := GetTickCount64;
+   if (not NotDeliverableNoticeDue(now, FNoticeTick)) or tSilentExport then
+      begin
+      Exit;
+      end;
+   if FNoticeHeld = 1 then
+      begin
+      QuickDisplay(UnicodeFormat(SLoggerQsoNotSent,
+         [DisplayName, aCall, NotDeliverableReasonText(aCode)]));
+      end
+   else
+      begin
+      QuickDisplay(UnicodeFormat(SLoggerQsosNotSent,
+         [DisplayName, FNoticeHeld, aCall, NotDeliverableReasonText(aCode)]));
+      end;
+   FNoticeTick := now;
+   FNoticeHeld := 0;
 end;
 
 type
@@ -158,6 +210,7 @@ var
    verdict: TResendVerdict;
    lastId: Int64;
    canUpdate, savepointOpen: boolean;
+   payload, code: string;
 begin
    Result := False;
    aRefusal := '';
@@ -169,11 +222,6 @@ begin
    if not FEnabled then
       begin
       aRefusal := 'RESEND_NOT_ACTIVE';
-      Exit;
-      end;
-   if FPaused then
-      begin
-      aRefusal := 'SYNCHRONIZATION_GAP';
       Exit;
       end;
    if (FAccount = '') or (FLogbook = '') then
@@ -251,7 +299,17 @@ begin
                      key.Account := FAccount;
                      key.Logbook := FLogbook;
                      key.Contact := row.Guid;
-                     delivery.Enqueue(key, PayloadFor(aRepository, row.RowId, rec), False);
+                     if PayloadFor(aRepository, row.RowId, rec, payload, code) then
+                        begin
+                        delivery.Enqueue(key, payload, False);
+                        end
+                     else
+                        begin
+                        (* One QSO the builder refuses does not stop the
+                           resend: it is marked failed with its reason. *)
+                        delivery.RecordNotDeliverable(key, code);
+                        verdict := rvNotDeliverable;
+                        end;
                      end;
                   rvRequeue:
                      begin
@@ -264,8 +322,16 @@ begin
                      key.Account := row.Account;
                      key.Logbook := row.Logbook;
                      key.Contact := row.Guid;
-                     delivery.Enqueue(key, PayloadFor(aRepository, row.RowId, rec), False);
-                     delivery.Requeue(key);
+                     if PayloadFor(aRepository, row.RowId, rec, payload, code) then
+                        begin
+                        delivery.Enqueue(key, payload, False);
+                        delivery.Requeue(key);
+                        end
+                     else
+                        begin
+                        delivery.RecordNotDeliverable(key, code);
+                        verdict := rvNotDeliverable;
+                        end;
                      end;
                end;
                aTally.Add(verdict);
@@ -273,9 +339,44 @@ begin
          finally
             delivery.Free;
          end;
+         if FPaused then
+            begin
+            (* THE OPERATOR'S EXPLICIT ACTION is what resumes a logger paused
+               after a storage failure: this resend has just looked at every QSO
+               of the log (the ones the gap missed have no row, so they were
+               created above), so the gap is closed. The marker goes inside the
+               savepoint, so it is cleared only if the resend is kept. *)
+            q := TSQLQuery.Create(nil);
+            try
+               q.Database := aDatabase.Connection;
+               q.Transaction := aDatabase.Transaction;
+               q.SQL.Text := 'DELETE FROM session_state WHERE key = :key';
+               q.ParamByName('key').AsUTF8String := UTF8Encode(ExternalDeliveryGapKey(FLoggerId));
+               q.ExecSQL;
+            finally
+               q.Free;
+            end;
+            end;
          aDatabase.Connection.ExecuteDirect('RELEASE SAVEPOINT external_resend');
          savepointOpen := False;
          Result := True;
+         if FPaused then
+            begin
+            FPaused := False;
+            FReported := False;
+            aTally.Resumed := True;
+            (* AfterLogCommit stopped the worker when the pause began and left
+               it in place; retire it as SetActive does, so the watchdog
+               starts a fresh one (never joined on the main thread). *)
+            if (FWorker <> nil) and (FStalled = nil) then
+               begin
+               FWorker.RequestStop;
+               FStalled := FWorker;
+               FWorker := nil;
+               end;
+            TLogLogger.GetLogger(FLoggerId).Warn('[ExternalDelivery] Delivery resumed by the ' +
+               'operator''s resync.');
+            end;
       except
          on E: Exception do
             begin
@@ -311,11 +412,13 @@ var
    key: TDeliveryKey;
    destinations: array of TDeliveryKey;
    i: integer;
-   payload: string;
+   payload, code: string;
    q: TSQLQuery;
    delivery: TExternalDelivery;
-   savepointOpen: boolean;
+   savepointOpen, deliverable, announce: boolean;
 begin
+   announce := False;
+   code := '';
    if (not FEnabled and aNew) or FPaused or (FAccount = '') or (FLogbook = '') then
       begin
       Exit;
@@ -373,17 +476,29 @@ begin
       finally
          q.Free;
       end;
-      payload := PayloadFor(aRepository, aRowId, rec);
+      (* A QSO the builder refuses (no frequency, say) is THIS QSO's problem:
+         its row is recorded as failed with the reason, the logger stays on and
+         the next QSO is captured as usual. Only a storage failure, the except
+         arm below, pauses the logger. *)
+      deliverable := PayloadFor(aRepository, aRowId, rec, payload, code);
       delivery := TExternalDelivery.Create(aDatabase);
       try
          for i := 0 to High(destinations) do
             begin
-            delivery.Enqueue(destinations[i], payload, rec.ceQSO_Deleted);
+            if deliverable then
+               begin
+               delivery.Enqueue(destinations[i], payload, rec.ceQSO_Deleted);
+               end
+            else
+               begin
+               delivery.RecordNotDeliverable(destinations[i], code);
+               end;
             end;
       finally
          delivery.Free;
       end;
       aDatabase.Connection.ExecuteDirect('RELEASE SAVEPOINT external_capture');
+      announce := not deliverable;
    except
       on E: Exception do
          begin
@@ -420,6 +535,12 @@ begin
             'Review delivery before resuming synchronization.', [E.ClassName]);
          end;
    end;
+   (* Outside the try: a failing notice must never be read as a storage
+      failure (the arm above pauses the logger and rolls a savepoint back). *)
+   if announce then
+      begin
+      AnnounceNotDeliverable(string(rec.Callsign), code);
+      end;
 end;
 
 procedure TDurableExternalLogger.AfterLogCommit(aDatabase: TLogDatabase);

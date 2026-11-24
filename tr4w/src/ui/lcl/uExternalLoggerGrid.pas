@@ -1,8 +1,9 @@
 unit uExternalLoggerGrid;
 (* THE PREFERENCES > EXTERNAL LOGGER GRID IS THE EDITOR (issue 220).
 
-   One row per definition: Order, Logger, Provider, Enabled (a checkbox), the
-   connection State, and two hidden columns, Id and the state's ordinal. They
+   One row per definition: Order, Logger, Provider, Enabled (a checkbox), Resync
+   (a button: the Resend dialog), the connection State, and two hidden columns,
+   Id and the state's ordinal. They
    live in the grid because a dragged row carries its cells with it, so the
    row always knows which definition it is and which colour it paints; there is
    no parallel list to fall out of step.
@@ -45,9 +46,13 @@ const
    LOGGER_COL_NAME      = 1;
    LOGGER_COL_PROVIDER  = 2;
    LOGGER_COL_ENABLED   = 3;
-   LOGGER_COL_STATE     = 4;
-   LOGGER_COL_ID        = 5;
-   LOGGER_COL_STATEKIND = 6;
+   (* THE RESYNC BUTTON: one per row, a real LCL button column. The click is
+      ours (mouse release on the cell it was pressed on, like Enabled) and
+      runs the Resend dialog -- one implementation. *)
+   LOGGER_COL_RESYNC    = 4;
+   LOGGER_COL_STATE     = 5;
+   LOGGER_COL_ID        = 6;
+   LOGGER_COL_STATEKIND = 7;
    (* How often the State column is re-read. A few seconds: each read opens
       one read-only connection per row. *)
    LOGGER_STATE_REFRESH_MS = 5000;
@@ -110,6 +115,7 @@ type
       procedure RemoveClick(aSender: TObject);
       procedure OpenSiteClick(aSender: TObject);
       procedure ResendClick(aSender: TObject);
+      procedure ResyncSelected;
       procedure CreateLogbookClick(aSender: TObject);
       procedure CreateLogbookPoll(aSender: TObject);
       procedure CreateLogbookFinished(const aAnswer: TWRLCreateLogbookResult);
@@ -153,7 +159,9 @@ const
       AutoFillColumns owns its width, so a saved one would fight the fill --
       and Id and the state ordinal are hidden at width 0. *)
    LOGGER_COLUMN_TOKENS: array[LOGGER_COL_ORDER .. LOGGER_COL_STATEKIND] of string =
-      ('', 'Logger', 'Provider', 'Enabled', '', '', '');
+      ('', 'Logger', 'Provider', 'Enabled', '', '', '', '');
+
+function ResendRefusalText(const aCode: string): string; forward;
 
 function ExternalLoggerStateColour(aState: TExternalLoggerState): TColor;
 begin
@@ -287,9 +295,12 @@ begin
    FGrid.Columns[LOGGER_COL_ENABLED - 1].ValueUnchecked := '0';
    FGrid.Columns[LOGGER_COL_ENABLED - 1].Alignment := taCenter;
    FGrid.ColWidths[LOGGER_COL_ORDER] := 60;
-   FGrid.ColWidths[LOGGER_COL_NAME] := 190;
-   FGrid.ColWidths[LOGGER_COL_PROVIDER] := 110;
+   FGrid.Columns[LOGGER_COL_RESYNC - 1].ButtonStyle := cbsButtonColumn;
+   FGrid.Columns[LOGGER_COL_RESYNC - 1].Alignment := taCenter;
+   FGrid.ColWidths[LOGGER_COL_NAME] := 170;
+   FGrid.ColWidths[LOGGER_COL_PROVIDER] := 90;
    FGrid.ColWidths[LOGGER_COL_ENABLED] := 70;
+   FGrid.ColWidths[LOGGER_COL_RESYNC] := 70;
    FGrid.ColWidths[LOGGER_COL_ID] := 0;
    FGrid.ColWidths[LOGGER_COL_STATEKIND] := 0;
    (* THE COLUMNS FILL THE GRID (issue 226 follow-up): Connection takes the
@@ -450,6 +461,7 @@ begin
    FGrid.Columns[LOGGER_COL_NAME - 1].Title.Caption := UTF8Encode(SLoggerGridLogger);
    FGrid.Columns[LOGGER_COL_PROVIDER - 1].Title.Caption := UTF8Encode(SLoggerGridProvider);
    FGrid.Columns[LOGGER_COL_ENABLED - 1].Title.Caption := UTF8Encode(SLoggerGridEnabled);
+   FGrid.Columns[LOGGER_COL_RESYNC - 1].Title.Caption := UTF8Encode(SLoggerResyncColumn);
    FGrid.Columns[LOGGER_COL_STATE - 1].Title.Caption := UTF8Encode(SLoggerGridState);
 end;
 
@@ -497,6 +509,7 @@ begin
             FGrid.Cells[LOGGER_COL_ORDER, i + 1] := '-';
             FGrid.Cells[LOGGER_COL_ENABLED, i + 1] := '0';
             end;
+         FGrid.Cells[LOGGER_COL_RESYNC, i + 1] := UTF8Encode(SLoggerResyncColumn);
          FGrid.Cells[LOGGER_COL_NAME, i + 1] := UTF8Encode(definition.Name);
          FGrid.Cells[LOGGER_COL_PROVIDER, i + 1] := UTF8Encode(definition.ProviderId);
          FGrid.Cells[LOGGER_COL_ID, i + 1] := AnsiString(definition.Id);
@@ -726,9 +739,47 @@ begin
       begin
       FGrid.Row := row;
       ToggleSendSelected;
+      end
+   else if (col = LOGGER_COL_RESYNC) and (row >= FGrid.FixedRows) and
+      (col = FDownCol) and (row = FDownRow) and (IdAt(row) <> '') then
+      begin
+      FGrid.Row := row;
+      FDownCol := -1;
+      FDownRow := -1;
+      ResyncSelected;
+      Exit;
       end;
    FDownCol := -1;
    FDownRow := -1;
+end;
+
+(* THE RESYNC BUTTON. It is the Resend dialog (one implementation: the same
+   confirmation, the same duplicate-safe rules); a logger that is switched off
+   is refused first with the reason, since the dialog would only say the same
+   thing after asking a question. *)
+procedure TExternalLoggerGrid.ResyncSelected;
+var
+   kind: integer;
+begin
+   kind := StrToIntDef(AnsiString(FGrid.Cells[LOGGER_COL_STATEKIND, FGrid.Row]), -1);
+   if kind = Ord(elsDisabled) then
+      begin
+      MessageDlg(UTF8Encode(SLoggerResyncWhySwitchedOff), mtInformation, [mbOK], 0);
+      Exit;
+      end;
+   (* Not running (added or changed since start) or not yet applied: the same
+      reasons the service would give, said before the question is asked. *)
+   if kind = Ord(elsRestartNeeded) then
+      begin
+      MessageDlg(UTF8Encode(ResendRefusalText('RESEND_NOT_RUNNING')), mtInformation, [mbOK], 0);
+      Exit;
+      end;
+   if kind = Ord(elsApplyOnSave) then
+      begin
+      MessageDlg(UTF8Encode(ResendRefusalText('RESEND_NOT_ACTIVE')), mtInformation, [mbOK], 0);
+      Exit;
+      end;
+   ResendClick(nil);
 end;
 
 procedure TExternalLoggerGrid.GridKeyDown(aSender: TObject; var aKey: word;
@@ -750,6 +801,11 @@ begin
    FGrid.MouseToCell(p.X, p.Y, col, row);
    if row < FGrid.FixedRows then
       begin
+      Exit;
+      end;
+   if col = LOGGER_COL_RESYNC then
+      begin
+      (* A double click on the button is two clicks of a button, not an edit. *)
       Exit;
       end;
    if col = LOGGER_COL_ENABLED then
@@ -862,7 +918,7 @@ var
    answer: TModalResult;
    mode: TResendMode;
    tally: TResendTally;
-   refusal: string;
+   refusal, summary: string;
 begin
    definition := FConfig.Find(SelectedId);
    if definition = nil then
@@ -870,7 +926,8 @@ begin
       Exit;
       end;
    answer := QuestionDlg('TR4W',
-                         LclText(UnicodeFormat(SLoggerResendBody, [definition.Name])),
+                         LclText(UnicodeFormat(SLoggerResendBody, [definition.Name]) +
+                            #10#10 + SLoggerResendDuplicateNote),
                          mtConfirmation,
                          [mrOk,     LclText(SLoggerResendUndelivered),
                           mrYes,    LclText(SLoggerResendAll),
@@ -896,10 +953,19 @@ begin
    try
       if LogStoreResendToExternalLogger(definition.DeliveryId, mode, tally, refusal) then
          begin
-         MessageDlg(UTF8Encode(UnicodeFormat(SLoggerResendDone,
+         summary := UnicodeFormat(SLoggerResendDone,
             [definition.Name, tally.Queued, tally.Created, tally.Requeued,
-             tally.Delivered, tally.AlreadyQueued, tally.Uncertain, tally.NotOurs])),
-            mtInformation, [mbOK], 0);
+             tally.Delivered, tally.AlreadyQueued, tally.Uncertain, tally.NotOurs]);
+         if tally.NotDeliverable > 0 then
+            begin
+            summary := summary + #10#10 +
+               UnicodeFormat(SLoggerResendNotDeliverable, [tally.NotDeliverable]);
+            end;
+         if tally.Resumed then
+            begin
+            summary := summary + #10#10 + SLoggerResendResumed;
+            end;
+         MessageDlg(UTF8Encode(summary), mtInformation, [mbOK], 0);
          end
       else
          begin

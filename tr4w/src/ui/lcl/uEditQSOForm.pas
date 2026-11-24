@@ -325,7 +325,8 @@ procedure EditQSOShowZoneBox(aContest: TContestBase);
 // loggers..." button, which is shown only when there is at least one and
 // hidden otherwise. The row texts are uDeliveryStatusForm.DeliveryRowCells.
 // A no-op when the form is not up.
-procedure EditQSOShowDeliveries(const aStatuses: TDeliveryStatusList);
+procedure EditQSOShowDeliveries(const aStatuses: TDeliveryStatusList;
+                                aAnyLoggerConfigured: boolean);
 // The window a message box should be parented on. 0 when the form is not up,
 // which is what MessageBox wants for "no owner" anyway.
 
@@ -860,7 +861,8 @@ begin
 end;
 
 // --------------------------------------------- the external-logger delivery
-procedure EditQSOShowDeliveries(const aStatuses: TDeliveryStatusList);
+procedure EditQSOShowDeliveries(const aStatuses: TDeliveryStatusList;
+                                aAnyLoggerConfigured: boolean);
 begin
    if frmEditQSO = nil then
       begin
@@ -870,7 +872,7 @@ begin
    // SET EVERY TIME, shown or hidden: the form is hidden on close and reused,
    // so a button left from the previous QSO would otherwise open its rows.
    frmEditQSO.FDeliveries := Copy(aStatuses);
-   frmEditQSO.btnDeliveries.Visible := Length(aStatuses) > 0;
+   frmEditQSO.btnDeliveries.Visible := (Length(aStatuses) > 0) or aAnyLoggerConfigured;
 end;
 
 procedure TfrmEditQSO.btnDeliveriesClick(Sender: TObject);

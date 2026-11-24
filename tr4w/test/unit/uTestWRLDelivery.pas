@@ -38,6 +38,8 @@ type
       procedure TestDeliveryRowsNameTheirLoggers;
       procedure TestHandOffRecords;
       procedure TestLastSentMigration;
+      procedure TestNotDeliverableQso;
+      procedure TestUnlistedLoggersAreListed;
    public
       procedure RunAllTests; override;
    end;
@@ -52,7 +54,8 @@ uses
    Classes, DateUtils, uLogSchema, uDeliveryStatusForm, uExternalLoggerConfig,
    fpjson, uJSON, uWRLContact, uWRLExternalLogger, uLogRepository,
    uSettingsModel, VC, LogDupe, SyncObjs, uWRLWorker, uQsoMyFacts,
-   uContestRegistry, Tree, uExternalLoggerRegistry;
+   uContestRegistry, Tree, uExternalLoggerRegistry, uExternalLoggerActions,
+   uExternalLoggerService;
 
 type
    TStubRequest = class(THttpRequest)
@@ -1252,6 +1255,305 @@ begin
    end;
 end;
 
+var
+   StandingKnown: boolean;
+   StandingSnapshot: TExternalLoggerSnapshot;
+
+(* The test's stand-in for the program's running composite. *)
+function TestStanding(const aDeliveryId: string;
+                      out aSnapshot: TExternalLoggerSnapshot): boolean;
+begin
+   aSnapshot := StandingSnapshot;
+   Result := StandingKnown;
+end;
+
+(* A QSO WITH NO FREQUENCY MUST NOT STOP THE LOGGER (2026-11-24: one QSO logged
+   with frequency 0 raised EConvertError in the WRL payload builder, and the
+   capture treated it as a storage failure -- it paused WRL, wrote a gap marker
+   and left no row for Edit QSO to list). Three things are pinned: the refused
+   QSO leaves a FAILED row that names the reason and the logger keeps capturing;
+   a REAL storage failure still pauses; and a resync resumes the paused logger,
+   creates what the gap missed, marks again what is still refused, queues the
+   QSO the operator has since corrected, and never makes a second row. *)
+procedure TWRLDeliveryTests.TestNotDeliverableQso;
+var
+   repository: TLogRepository;
+   service: TWRLExternalLogger;
+   rec, good: ContestExchange;
+   noFreq, fine, gapped: Int64;
+   facts: TQsoMyFacts;
+   snapshot: TExternalLoggerSnapshot;
+   tally: TResendTally;
+   refusal: string;
+   q: TSQLQuery;
+   savedSilent: boolean;
+   function RowOf(aRowId: Int64; const aColumn: AnsiString): string;
+   begin
+      q.Close;
+      q.SQL.Text := 'SELECT d.' + aColumn + ' FROM external_delivery d JOIN qso ON ' +
+         'qso.guid = d.contact WHERE qso.id = :id';
+      q.ParamByName('id').AsLargeInt := aRowId;
+      q.Open;
+      if q.EOF then
+         begin
+         Result := '<none>';
+         end
+      else
+         begin
+         Result := UTF8Decode(q.Fields[0].AsUTF8String);
+         end;
+      q.Close;
+   end;
+   function RowCount: integer;
+   begin
+      q.Close;
+      q.SQL.Text := 'SELECT COUNT(*) FROM external_delivery';
+      q.Open;
+      Result := q.Fields[0].AsInteger;
+      q.Close;
+   end;
+begin
+   BeginTest('a QSO with no frequency is failed with its reason and the logger keeps going; storage failure pauses; resync resumes');
+   savedSilent := tSilentExport;
+   tSilentExport := True;  (* the notice goes through QuickDisplay: no panel here *)
+   OpenFixture;
+   repository := TLogRepository.Create(FDatabase);
+   service := TWRLExternalLogger.Create('account', 'book', 'test-secret', 'A', True);
+   q := TSQLQuery.Create(nil);
+   tally := TResendTally.Create;
+   try
+      q.Database := FDatabase.Connection;
+      q.Transaction := FDatabase.Transaction;
+      rec := Default(ContestExchange);
+      rec.Callsign := 'J8HGH';
+      rec.ceComputerID := 'A';
+      rec.ceRecordKind := rkQSO;
+      rec.ceContest := ContestHandleOf(GENERALQSO);
+      rec.Band := Band20;
+      rec.Mode := CW;
+      rec.ExtMode := eCW;
+      rec.Frequency := 0;
+      rec.RSTSent := 599;
+      rec.RSTReceived := 599;
+      rec.tSysTime.qtYear := 26;
+      rec.tSysTime.qtMonth := 11;
+      rec.tSysTime.qtDay := 24;
+      rec.tSysTime.qtHour := 8;
+      facts := NotCapturedMyFacts;
+      facts.Source := mfsLogged;
+      facts.Call := 'NY4I';
+      repository.SetNextMyFacts(facts);
+      noFreq := repository.SaveQSO(rec);
+      service.CaptureSavedQso(FDatabase, repository, noFreq, True);
+      FDatabase.Transaction.Commit;
+      CheckEquals('failed', RowOf(noFreq, 'state'), 'the refused QSO leaves a row, so the window lists the logger');
+      CheckEquals('MISSING_FREQUENCY', RowOf(noFreq, 'error_code'), 'and the reason');
+      snapshot := Default(TExternalLoggerSnapshot);
+      service.FillSnapshot(snapshot);
+      CheckFalse(snapshot.Halted, 'one bad QSO does not pause the logger');
+
+      good := rec;
+      good.Frequency := 14031000;
+      good.Callsign := 'W1AW';
+      repository.SetNextMyFacts(facts);
+      fine := repository.SaveQSO(good);
+      service.CaptureSavedQso(FDatabase, repository, fine, True);
+      FDatabase.Transaction.Commit;
+      CheckEquals('pending', RowOf(fine, 'state'), 'the next QSO is captured as usual');
+
+      (* EDIT QSO'S SAVE re-captures an edit (aNew False) through the row's own
+         destination: the operator adds the frequency, the failed row returns to
+         pending with its reason cleared, and a second save makes no second row. *)
+      CheckTrue(repository.LoadQSO(noFreq, rec));
+      rec.Frequency := 14031000;
+      CheckTrue(repository.UpdateQSO(noFreq, rec));
+      FDatabase.Transaction.Commit;
+      service.CaptureSavedQso(FDatabase, repository, noFreq, False);
+      FDatabase.Transaction.Commit;
+      CheckEquals('pending', RowOf(noFreq, 'state'), 'the corrected QSO is queued by the edit save');
+      CheckEquals('', RowOf(noFreq, 'error_code'), 'with the reason cleared');
+      CheckEquals(2, RowCount, 'on its own row');
+      service.CaptureSavedQso(FDatabase, repository, noFreq, False);
+      FDatabase.Transaction.Commit;
+      CheckEquals(2, RowCount, 'a second save changes nothing');
+      (* ... and an edit that REMOVES the frequency fails the row again. *)
+      rec.Frequency := 0;
+      CheckTrue(repository.UpdateQSO(noFreq, rec));
+      FDatabase.Transaction.Commit;
+      service.CaptureSavedQso(FDatabase, repository, noFreq, False);
+      FDatabase.Transaction.Commit;
+      CheckEquals('failed', RowOf(noFreq, 'state'));
+      CheckEquals('MISSING_FREQUENCY', RowOf(noFreq, 'error_code'));
+      snapshot := Default(TExternalLoggerSnapshot);
+      service.FillSnapshot(snapshot);
+      CheckFalse(snapshot.Halted, 'an edit does not pause the logger either');
+
+      (* A REAL storage failure keeps the old behaviour: pause, gap marker. *)
+      FDatabase.Connection.ExecuteDirect('CREATE TRIGGER fail_delivery ' +
+         'BEFORE INSERT ON external_delivery BEGIN ' +
+         'SELECT RAISE(ABORT, ''injected delivery failure''); END');
+      (* A schema change invalidates the repository's prepared statements. *)
+      repository.Free;
+      repository := TLogRepository.Create(FDatabase);
+      good.Callsign := 'K1ABC';
+      repository.SetNextMyFacts(facts);
+      gapped := repository.SaveQSO(good);
+      service.CaptureSavedQso(FDatabase, repository, gapped, True);
+      FDatabase.Transaction.Commit;
+      FDatabase.Connection.ExecuteDirect('DROP TRIGGER fail_delivery');
+      FDatabase.Transaction.Commit;
+      repository.Free;
+      repository := TLogRepository.Create(FDatabase);
+      service.FillSnapshot(snapshot);
+      CheckTrue(snapshot.Halted, 'a storage failure pauses');
+      CheckEquals('SYNCHRONIZATION_GAP', snapshot.Code);
+      CheckEquals('<none>', RowOf(gapped, 'state'), 'the QSO the gap missed has no row');
+      q.SQL.Text := 'SELECT value FROM session_state WHERE key = ''external_delivery_gap''';
+      q.Open;
+      CheckFalse(q.EOF, 'the gap marker is written');
+      q.Close;
+
+      (* THE OPERATOR CORRECTS THE FREQUENCY of the first QSO, then resyncs. *)
+      CheckTrue(repository.LoadQSO(noFreq, rec));
+      rec.Frequency := 14031000;
+      CheckTrue(repository.UpdateQSO(noFreq, rec));
+      FDatabase.Transaction.Commit;
+      (* A QSO still refused, to see the resend carry on past it. *)
+      good.Callsign := 'N2NOF';
+      good.Frequency := 0;
+      repository.SetNextMyFacts(facts);
+      gapped := repository.SaveQSO(good);
+      FDatabase.Transaction.Commit;
+
+      CheckTrue(service.ResendQsos(FDatabase, repository, 'WRL', rmAll, tally, refusal),
+         'a paused logger takes the operator''s resync, ' + refusal);
+      FDatabase.Transaction.Commit;
+      CheckTrue(tally.Resumed, 'and is resumed by it');
+      snapshot := Default(TExternalLoggerSnapshot);
+      service.FillSnapshot(snapshot);
+      CheckFalse(snapshot.Halted, 'no longer paused');
+      q.SQL.Text := 'SELECT value FROM session_state WHERE key = ''external_delivery_gap''';
+      q.Open;
+      CheckTrue(q.EOF, 'the gap marker is cleared');
+      q.Close;
+      CheckEquals('pending', RowOf(noFreq, 'state'), 'the corrected QSO goes out from its CURRENT data');
+      CheckEquals('', RowOf(noFreq, 'error_code'));
+      CheckEquals(1, tally.NotDeliverable, 'the QSO still without a frequency is failed again, not fatal');
+      CheckEquals('failed', RowOf(gapped, 'state'));
+      CheckEquals('MISSING_FREQUENCY', RowOf(gapped, 'error_code'));
+      CheckEquals(1, tally.AlreadyQueued, 'the pending one is left alone');
+      CheckEquals(4, RowCount, 'one row per QSO: the gap-missed one was created, none twice');
+
+      (* DUPLICATE SAFETY: a QSO the logger already holds is never created again. *)
+      FDatabase.Connection.ExecuteDirect('UPDATE external_delivery SET state = ''synced'', ' +
+         'remote_id = ''remote-1'', confirmed_payload = payload WHERE state = ''pending''');
+      FDatabase.Transaction.Commit;
+      tally.Free;
+      tally := TResendTally.Create;
+      CheckTrue(service.ResendQsos(FDatabase, repository, 'WRL', rmUndelivered, tally, refusal));
+      FDatabase.Transaction.Commit;
+      CheckEquals(0, tally.Created, 'nothing new to create');
+      CheckEquals(4, RowCount, 'still one row per QSO');
+      CheckEquals('synced', RowOf(noFreq, 'state'), 'a delivered QSO is left alone');
+      CheckEquals('remote-1', RowOf(noFreq, 'remote_id'));
+   finally
+      tally.Free;
+      q.Free;
+      service.Free;
+      repository.Free;
+      CloseFixture;
+      tSilentExport := savedSilent;
+   end;
+end;
+
+(* EVERY CONFIGURED LOGGER IS LISTED FOR EVERY QSO, and the words and codes. *)
+procedure TWRLDeliveryTests.TestUnlistedLoggersAreListed;
+var
+   config: TExternalLoggerConfig;
+   wrl, clublog, qrz: TExternalLoggerDefinition;
+   rows, listed: TDeliveryStatusList;
+   snapshot: TExternalLoggerSnapshot;
+   status: TDeliveryStatus;
+begin
+   BeginTest('the delivery window lists a configured logger with no row, and says why');
+   CheckEquals('MISSING_FREQUENCY', NotDeliverableCode('Contact is missing a numeric FREQ'));
+   CheckEquals('MISSING_MODE', NotDeliverableCode('Contact is missing its mode'));
+   CheckEquals('MISSING_TIME', NotDeliverableCode('Contact is missing its UTC date/time'));
+   CheckEquals('MISSING_STATION_CALL', NotDeliverableCode('Contact is missing its station callsign'));
+   CheckEquals('QSO_NOT_DELIVERABLE', NotDeliverableCode('Contact is missing CALL'));
+   CheckEquals('no frequency', NotDeliverableReasonText('MISSING_FREQUENCY'));
+   CheckEquals('', NotDeliverableReasonText('WRL_RATE_LIMITED'), 'a refusal is not a not-deliverable reason');
+   CheckTrue(NotDeliverableNoticeDue(1000, 0), 'the first line is shown');
+   CheckFalse(NotDeliverableNoticeDue(1000 + 59000, 1000), 'not twice in a minute');
+   CheckTrue(NotDeliverableNoticeDue(1000 + 60000, 1000), 'once the minute is up');
+
+   status := Default(TDeliveryStatus);
+   status.State := 'failed';
+   status.ErrorCode := 'MISSING_FREQUENCY';
+   CheckEquals('failed: no frequency', DeliveryStateText(status));
+   status.ErrorCode := 'WRL_REJECTED';
+   CheckEquals('failed (WRL_REJECTED)', DeliveryStateText(status), 'other codes read as before');
+
+   snapshot := Default(TExternalLoggerSnapshot);
+   CheckEquals('off', UnsentReasonToken(False, False, snapshot));
+   CheckEquals('restart', UnsentReasonToken(True, False, snapshot));
+   snapshot.Active := True;
+   CheckEquals('notqueued', UnsentReasonToken(True, True, snapshot));
+   snapshot.Halted := True;
+   snapshot.Code := 'SYNCHRONIZATION_GAP';
+   CheckEquals('paused', UnsentReasonToken(True, True, snapshot));
+   snapshot.Code := 'LOGGER_SETUP_REQUIRED';
+   CheckEquals('setup', UnsentReasonToken(True, True, snapshot));
+   snapshot.Halted := False;
+   CheckEquals('off', UnsentReasonToken(False, True, snapshot), 'switched off in the dialog');
+
+   config := TExternalLoggerConfig.Create;
+   try
+      wrl := TExternalLoggerDefinition.Create;
+      wrl.Name := 'WRL contest log';
+      wrl.ProviderId := 'WRL';
+      config.Definitions.Add(wrl);
+      clublog := TExternalLoggerDefinition.Create;
+      clublog.Name := 'Club Log main';
+      clublog.ProviderId := 'CLUBLOG';
+      config.Definitions.Add(clublog);
+      qrz := TExternalLoggerDefinition.Create;
+      qrz.Name := 'QRZ';
+      qrz.ProviderId := 'QRZ';
+      config.Definitions.Add(qrz);
+      config.SetActive(wrl.Id, True);
+      config.SetActive(clublog.Id, True);
+
+      rows := nil;
+      SetLength(rows, 1);
+      rows[0].Logger := wrl.DeliveryId;
+      rows[0].State := 'synced';
+      StandingKnown := True;
+      StandingSnapshot := Default(TExternalLoggerSnapshot);
+      StandingSnapshot.Active := True;
+      StandingSnapshot.Halted := True;
+      StandingSnapshot.Code := 'SYNCHRONIZATION_GAP';
+      listed := WithUnlistedLoggers(rows, config, TestStanding);
+      CheckEquals(3, Length(listed), 'the row, and one line each for the two loggers without one');
+      CheckEquals(wrl.DeliveryId, listed[0].Logger);
+      CheckEquals(clublog.DeliveryId, listed[1].Logger);
+      CheckEquals('not sent: paused (review needed)', DeliveryStateText(listed[1]));
+      CheckEquals(qrz.DeliveryId, listed[2].Logger);
+      CheckEquals('not sent: switched off', DeliveryStateText(listed[2]), 'QRZ was never switched on');
+      StandingKnown := False;
+      listed := WithUnlistedLoggers(rows, config, TestStanding);
+      CheckEquals('not sent: not running (restart TR4W)', DeliveryStateText(listed[1]));
+      CheckEquals(1, Length(WithUnlistedLoggers(rows, nil, TestStanding)), 'no configuration, no extra rows');
+      (* A row whose key carries the definition's id belongs to it even after the
+         destination was edited (a new delivery id). *)
+      rows[0].Logger := 'WRL/' + wrl.Id + '/old-fingerprint';
+      listed := WithUnlistedLoggers(rows, config, TestStanding);
+      CheckEquals(3, Length(listed), 'the edited definition is not listed twice');
+   finally
+      config.Free;
+   end;
+end;
+
 procedure TWRLDeliveryTests.RunAllTests;
 begin
    TestRevisions;
@@ -1275,6 +1577,8 @@ begin
    TestDeliveryRowsNameTheirLoggers;
    TestHandOffRecords;
    TestLastSentMigration;
+   TestNotDeliverableQso;
+   TestUnlistedLoggersAreListed;
 end;
 
 end.

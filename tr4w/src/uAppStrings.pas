@@ -71,6 +71,16 @@ resourcestring
    SLoggerResendWhyUnsupported = 'it has no delivery queue to resend into.';
    SLoggerResendWhyNoLog  = 'no writable contest log is open.';
    SLoggerResendWhyFailed = 'the log could not be updated (see tr4w.log). Nothing was changed.';
+   // RESYNC (the Resync button on the logger's row). %s is the logger's name.
+   // Resync is the Resend dialog (one implementation); the column heading and the
+   // sentences appended to its summary are new.
+   SLoggerResyncColumn    = 'Resync';
+   // %d: how many QSOs could not be made into this logger's contact.
+   SLoggerResendNotDeliverable = '%d QSOs cannot be sent in their present form (see Edit QSO > External loggers for each reason); correct them and resync again.';
+   SLoggerResendResumed   = 'Delivery, which was paused after a failure, is resumed.';
+   // Appended to the Resend dialog's question, so the operator knows before answering.
+   SLoggerResendDuplicateNote = 'A QSO that already has a delivery row at this logger is never created a second time. If this logger''s delivery was paused after a failure, answering Not yet delivered or Resend all also resumes it.';
+   SLoggerResyncWhySwitchedOff = 'Resync is not available: this logger is switched off. Switch it on and save Preferences first.';
    (* CREATE LOGBOOK (issue 358): the WRL logger row's popup item and its dialogs.
       %s is the logger's name, the logbook's name, or the logbook's id as marked. *)
    SLoggerGridCreateLogbook = 'Create logbook...';
@@ -141,6 +151,26 @@ resourcestring
    SEditQSODeliveryHandedOff = 'handed off (not confirmed)';
    // A delivery that failed in a way that is tried again.
    SEditQSODeliveryRetryingWithCode = 'retrying (%s)';
+   // A QSO that could not be made into this logger's contact (a required field
+   // is missing): the row is failed, and the reason follows the colon.
+   SEditQSODeliveryFailedBecause = 'failed: %s';
+   SLoggerWhyNoFrequency = 'no frequency';
+   SLoggerWhyNoMode = 'no mode';
+   SLoggerWhyNoTime = 'no date or time';
+   SLoggerWhyNoStationCall = 'no station call sign';
+   SLoggerWhyNotDeliverable = 'a required field is missing';
+   // One line on the quick-command panel, never a dialog. %s: logger name, call sign, reason.
+   SLoggerQsoNotSent = '%s: QSO %s not sent (%s). See Edit QSO > External loggers.';
+   // The same, once more than one QSO was held back within the minute.
+   // %s: logger name; %d: how many; %s: the latest call sign; %s: the reason.
+   SLoggerQsosNotSent = '%s: %d QSOs not sent, the latest %s (%s). See Edit QSO > External loggers.';
+   // A configured logger with no delivery row for this QSO (the Edit QSO window
+   // lists every configured logger, so an empty list never reads as "never tried").
+   SDeliveryNotSentPaused = 'not sent: paused (review needed)';
+   SDeliveryNotSentOff = 'not sent: switched off';
+   SDeliveryNotSentRestart = 'not sent: not running (restart TR4W)';
+   SDeliveryNotSentSetup = 'not sent: setup incomplete';
+   SDeliveryNotSentNotQueued = 'not sent: not queued for this QSO';
    { ---------------------------------------------- retiring the legacy ini - }
 
    // Shown ONCE, after the settings have been carried into settings\tr4w.json.

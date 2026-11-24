@@ -91,6 +91,15 @@ type
          an uncertain contact is never replayed blindly. Like Enqueue, belongs
          in the caller's transaction. *)
       procedure Requeue(const aKey: TDeliveryKey);
+      (* A QSO THAT CANNOT BECOME THIS DESTINATION'S CONTACT (the payload builder
+         refused it, for instance for want of a frequency): leave a 'failed' row
+         that names the reason in aErrorCode, so the delivery window lists the
+         destination instead of saying nothing. Nothing is sent. The payload is
+         emptied, so the next Enqueue of the corrected QSO always differs and
+         puts the row back to pending; a remote id and the confirmed payload of
+         an earlier delivery are kept. A row in flight or of unknown outcome is
+         left alone. Like Enqueue, belongs in the caller's transaction. *)
+      procedure RecordNotDeliverable(const aKey: TDeliveryKey; const aErrorCode: string);
       function Claim(const aLogger, aAccount: string; aNow: Int64;
                      out aJob: TDeliveryJob): boolean;
       procedure Complete(const aJob: TDeliveryJob; aOutcome: TDeliveryOutcome;
@@ -275,6 +284,31 @@ begin
    try
       q.ParamByName('payload').AsUTF8String := UTF8Encode(aPayload);
       q.ParamByName('deleted').AsInteger := Ord(aDeleted);
+      q.ExecSQL;
+   finally
+      q.Free;
+   end;
+end;
+
+procedure TExternalDelivery.RecordNotDeliverable(const aKey: TDeliveryKey;
+                                                 const aErrorCode: string);
+var
+   q: TSQLQuery;
+begin
+   if (aKey.Logger = '') or (aKey.Account = '') or
+      (aKey.Logbook = '') or (aKey.Contact = '') then
+      begin
+      raise EArgumentException.Create('A delivery requires a complete destination and contact identity');
+      end;
+   q := KeyedQuery('INSERT INTO external_delivery ' +
+      '(logger, account, logbook, contact, revision, payload, state, error_code) ' +
+      'VALUES (:logger, :account, :logbook, :contact, 1, '''', ''failed'', :error) ' +
+      'ON CONFLICT(logger, account, logbook, contact) DO UPDATE SET ' +
+      'revision = revision + 1, payload = '''', state = ''failed'', ' +
+      'error_code = excluded.error_code ' +
+      'WHERE state NOT IN (''inflight'', ''uncertain'')', aKey);
+   try
+      q.ParamByName('error').AsUTF8String := UTF8Encode(aErrorCode);
       q.ExecSQL;
    finally
       q.Free;

@@ -12423,3 +12423,93 @@ msgstr "Web 服务器"
 #, fuzzy
 msgid "Language file %s overrides the built-in translations (dated %s)"
 msgstr ""
+
+#: uappstrings.sdeliverynotsentnotqueued
+#, fuzzy
+msgid "not sent: not queued for this QSO"
+msgstr ""
+
+#: uappstrings.sdeliverynotsentoff
+#, fuzzy
+msgid "not sent: switched off"
+msgstr ""
+
+#: uappstrings.sdeliverynotsentpaused
+#, fuzzy
+msgid "not sent: paused (review needed)"
+msgstr ""
+
+#: uappstrings.sdeliverynotsentrestart
+#, fuzzy
+msgid "not sent: not running (restart TR4W)"
+msgstr ""
+
+#: uappstrings.sdeliverynotsentsetup
+#, fuzzy
+msgid "not sent: setup incomplete"
+msgstr ""
+
+#: uappstrings.seditqsodeliveryfailedbecause
+#, fuzzy
+msgid "failed: %s"
+msgstr ""
+
+#: uappstrings.sloggerqsonotsent
+#, fuzzy
+msgid "%s: QSO %s not sent (%s). See Edit QSO > External loggers."
+msgstr ""
+
+#: uappstrings.sloggerqsosnotsent
+#, fuzzy
+msgid "%s: %d QSOs not sent, the latest %s (%s). See Edit QSO > External loggers."
+msgstr ""
+
+#: uappstrings.sloggerresendduplicatenote
+#, fuzzy
+msgid "A QSO that already has a delivery row at this logger is never created a second time. If this logger's delivery was paused after a failure, answering Not yet delivered or Resend all also resumes it."
+msgstr ""
+
+#: uappstrings.sloggerresendnotdeliverable
+#, fuzzy
+msgid "%d QSOs cannot be sent in their present form (see Edit QSO > External loggers for each reason); correct them and resync again."
+msgstr ""
+
+#: uappstrings.sloggerresendresumed
+#, fuzzy
+msgid "Delivery, which was paused after a failure, is resumed."
+msgstr ""
+
+#: uappstrings.sloggerresynccolumn
+#, fuzzy
+msgid "Resync"
+msgstr ""
+
+#: uappstrings.sloggerresyncwhyswitchedoff
+#, fuzzy
+msgid "Resync is not available: this logger is switched off. Switch it on and save Preferences first."
+msgstr ""
+
+#: uappstrings.sloggerwhynofrequency
+#, fuzzy
+msgid "no frequency"
+msgstr ""
+
+#: uappstrings.sloggerwhynomode
+#, fuzzy
+msgid "no mode"
+msgstr ""
+
+#: uappstrings.sloggerwhynostationcall
+#, fuzzy
+msgid "no station call sign"
+msgstr ""
+
+#: uappstrings.sloggerwhynotdeliverable
+#, fuzzy
+msgid "a required field is missing"
+msgstr ""
+
+#: uappstrings.sloggerwhynotime
+#, fuzzy
+msgid "no date or time"
+msgstr ""

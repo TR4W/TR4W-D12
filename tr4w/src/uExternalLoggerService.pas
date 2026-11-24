@@ -70,6 +70,11 @@ type
          service does not run it. Only the composite answers. Main thread. *)
       function StateSnapshot(const aDeliveryId: string;
          out aSnapshot: TExternalLoggerSnapshot): boolean; virtual;
+      (* How many destinations this service runs (the composite: one per saved
+         definition at start). Edit QSO shows its External loggers button when
+         there is at least one, so an empty list never reads as "never tried".
+         Main thread. *)
+      function ConfiguredCount: integer; virtual;
       (* Issue 233. Applies a SAVED configuration to the running service, on
          the main thread: the Enabled flag and the delivery order only. Returns
          the number of definitions that still need a restart (new, or with
@@ -236,6 +241,11 @@ end;
 function TExternalLoggerService.QueuesCommands: boolean;
 begin
    Result := True;
+end;
+
+function TExternalLoggerService.ConfiguredCount: integer;
+begin
+   Result := 0;
 end;
 
 procedure TExternalLoggerService.SetActive(aActive: boolean);

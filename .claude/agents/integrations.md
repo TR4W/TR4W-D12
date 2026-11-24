@@ -719,6 +719,28 @@ message is built; `(0, 0)` and a key naming no row write nothing. **Never `pendi
 hand-off (a pending row feeds `ExternalDeliveryCounts` and Preferences would show "Sending" for ever). A
 dropped op (shutdown, logger switched off) writes nothing. Pinned in `uTestWRLDelivery.TestHandOffRecords`.
 
+## One bad QSO never pauses a durable logger; Resync resumes one that paused (2026-11-24, NY4I)
+
+A QSO logged with frequency 0 (no `FREQ` in its ADIF) made `uWRLContact` raise `EConvertError`
+inside `TDurableExternalLogger.CaptureSavedQso`, which treated it as a STORAGE failure and paused
+WRL for the session. Now `PayloadFor(..., out aPayload, out aCode)` separates the two: the builder
+refusing the QSO records a `failed` delivery row (`TExternalDelivery.RecordNotDeliverable`; code from
+the pure `NotDeliverableCode`, `MISSING_FREQUENCY` and friends; payload emptied so the corrected QSO's
+`Enqueue` always requeues it), logs the MESSAGE at Warn, shows one throttled non-modal `QuickDisplay`
+line (once a minute, with a count) and carries on; only an exception from the savepoint / `Enqueue` SQL
+or the facts read still pauses (ClassName-only log, gap marker). **Do not catch broadly around the
+`Enqueue`/`RecordNotDeliverable` writes**: a failure there is storage. **Edit QSO's External loggers
+window lists every configured logger** (`WithUnlistedLoggers` + `UnsentReasonToken`: `not sent: paused
+(review needed)`, `switched off`, `not running`, `setup incomplete`, `not queued for this QSO`), so a
+logger with no row never reads as "never tried". **Resync = the Resend dialog, as a `Resync` button
+column on each Preferences row** (one implementation, `ResendQsos`); it creates rowless QSOs, requeues
+failed ones from the CURRENT QSO data, never creates a contact that has a row, and RESUMES a paused
+logger (deletes the gap marker in its savepoint, clears the pause, retires the stopped worker so the
+watchdog starts a new one). The grid's columns are now Order, Logger, Provider, Enabled, Resync,
+State, Id, StateKind (`LOGGER_COL_*`); the hidden-column rules index from `LOGGER_COL_ID`. Pinned in
+`uTestWRLDelivery.TestNotDeliverableQso` / `TestUnlistedLoggersAreListed`. UNBENCHED: the button
+column's real click and look (LCL), and WRL's reply to a corrected, re-sent QSO.
+
 ## Prefer a reported error over a silent fallback
 
 Several defects on this branch were silent downgrades. A companion program that

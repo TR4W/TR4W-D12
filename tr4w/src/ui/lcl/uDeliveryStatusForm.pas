@@ -38,6 +38,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Grids,
   uExternalDelivery,       // TDeliveryStatus, TDeliveryStatusList
+  uExternalLoggerService,  // TExternalLoggerSnapshot -- a logger's standing now
   uExternalLoggerConfig;   // TExternalLoggerConfig -- the definitions' names
 
 type
@@ -85,6 +86,35 @@ function DeliveryLoggerName(const aLoggerKey: string;
 procedure DeliveryRowCells(const aStatus: TDeliveryStatus;
                            aConfig: TExternalLoggerConfig; aCells: TStrings);
 
+type
+  (* A running logger's standing, asked by delivery id: the snapshot of the
+     service that runs it, False when none does. A plain function so a test
+     can stand in for the program's composite. *)
+  TLoggerStanding = function(const aDeliveryId: string;
+                             out aSnapshot: TExternalLoggerSnapshot): boolean;
+
+(* WHY A CONFIGURED LOGGER HAS NOTHING FOR THIS QSO, as a fixed token:
+     'off'       switched off (or its running copy is);
+     'restart'   switched on but no running service has it yet;
+     'paused'    stopped after a capture failure (review needed);
+     'setup'     account or logbook not set up;
+     'notqueued' running, and this QSO was never queued for it (logged while
+                 it was off, or by another station).
+  Pure, so a test pins every branch. *)
+function UnsentReasonToken(aConfigEnabled, aKnown: boolean;
+                           const aSnapshot: TExternalLoggerSnapshot): string;
+
+(* EVERY CONFIGURED LOGGER IS LISTED FOR EVERY QSO. A logger with no delivery
+  row is absent from aStatuses; a window that shows only rows reads as if TR4W
+  never tried. Returns aStatuses followed by one row per configured logger that
+  has none: State 'notsent' and ErrorCode the token above. A row belongs to a
+  definition by its delivery id or by the definition's own id inside the key
+  (a destination edited since has a new delivery id). aConfig nil returns
+  aStatuses unchanged. *)
+function WithUnlistedLoggers(const aStatuses: TDeliveryStatusList;
+                             aConfig: TExternalLoggerConfig;
+                             aStanding: TLoggerStanding): TDeliveryStatusList;
+
 (* The window, modal over aOver (Edit QSO). The definitions are read from the
   settings file at the click, so a logger renamed since startup shows its
   new name; if the file will not load, the provider names are shown. *)
@@ -98,6 +128,7 @@ implementation
 uses
   // FIRST, so every unit below still wins any name it shares.
   uAppStrings,              // SDelivery*, SEditQSODelivery*
+  uExternalLoggerActions,   // NotDeliverableReasonText
   DateUtils,                // UnixToDateTime
   uExternalLoggerRegistry,  // FindExternalLoggerRegistration
   uRadioConfigStore,        // TRadioConfigStore -- holds the definitions
@@ -126,8 +157,45 @@ end;
 function DeliveryStateText(const aStatus: TDeliveryStatus): string;
 var
    registration: TExternalLoggerRegistration;
+   reason: string;
 begin
-   if (aStatus.State = 'pending') and (aStatus.ErrorCode <> '') then
+   if aStatus.State = 'notsent' then
+      begin
+      (* A configured logger with no row for this QSO (WithUnlistedLoggers);
+         ErrorCode is the token UnsentReasonToken chose. *)
+      if aStatus.ErrorCode = 'paused' then
+         begin
+         Result := SDeliveryNotSentPaused;
+         end
+      else if aStatus.ErrorCode = 'off' then
+         begin
+         Result := SDeliveryNotSentOff;
+         end
+      else if aStatus.ErrorCode = 'restart' then
+         begin
+         Result := SDeliveryNotSentRestart;
+         end
+      else if aStatus.ErrorCode = 'setup' then
+         begin
+         Result := SDeliveryNotSentSetup;
+         end
+      else
+         begin
+         Result := SDeliveryNotSentNotQueued;
+         end;
+      Exit;
+      end;
+   reason := '';
+   if aStatus.State = 'failed' then
+      begin
+      (* A QSO the logger could not be given (no frequency, say) names why. *)
+      reason := NotDeliverableReasonText(aStatus.ErrorCode);
+      end;
+   if reason <> '' then
+      begin
+      Result := UnicodeFormat(SEditQSODeliveryFailedBecause, [reason]);
+      end
+   else if (aStatus.State = 'pending') and (aStatus.ErrorCode <> '') then
       begin
       (* Complete(doRetry) leaves the code of the attempt that failed. *)
       Result := UnicodeFormat(SEditQSODeliveryRetryingWithCode, [aStatus.ErrorCode]);
@@ -251,6 +319,89 @@ begin
       end;
 end;
 
+function UnsentReasonToken(aConfigEnabled, aKnown: boolean;
+                           const aSnapshot: TExternalLoggerSnapshot): string;
+begin
+   if not aKnown then
+      begin
+      if aConfigEnabled then
+         begin
+         Result := 'restart';
+         end
+      else
+         begin
+         Result := 'off';
+         end;
+      end
+   else if not (aConfigEnabled and aSnapshot.Active) then
+      begin
+      Result := 'off';
+      end
+   else if aSnapshot.Halted and (aSnapshot.Code = 'LOGGER_SETUP_REQUIRED') then
+      begin
+      Result := 'setup';
+      end
+   else if aSnapshot.Halted then
+      begin
+      Result := 'paused';
+      end
+   else
+      begin
+      Result := 'notqueued';
+      end;
+end;
+
+function WithUnlistedLoggers(const aStatuses: TDeliveryStatusList;
+                             aConfig: TExternalLoggerConfig;
+                             aStanding: TLoggerStanding): TDeliveryStatusList;
+var
+   k, i, n: integer;
+   definition: TExternalLoggerDefinition;
+   listed, known: boolean;
+   snapshot: TExternalLoggerSnapshot;
+begin
+   Result := Copy(aStatuses);
+   if aConfig = nil then
+      begin
+      Exit;
+      end;
+   for k := 0 to aConfig.Definitions.Count - 1 do
+      begin
+      definition := aConfig.Definitions[k];
+      listed := False;
+      for i := 0 to High(aStatuses) do
+         begin
+         if (aStatuses[i].Logger = definition.DeliveryId) or
+            (Pos('/' + definition.Id + '/', aStatuses[i].Logger) > 0) then
+            begin
+            listed := True;
+            Break;
+            end;
+         end;
+      if listed then
+         begin
+         Continue;
+         end;
+      snapshot := Default(TExternalLoggerSnapshot);
+      known := Assigned(aStanding) and aStanding(definition.DeliveryId, snapshot);
+      n := Length(Result);
+      SetLength(Result, n + 1);
+      Result[n] := Default(TDeliveryStatus);
+      Result[n].Logger := definition.DeliveryId;
+      Result[n].State := 'notsent';
+      Result[n].ErrorCode := UnsentReasonToken(aConfig.ActivePosition(definition.Id) > 0,
+         known, snapshot);
+      end;
+end;
+
+(* The program's composite, as a TLoggerStanding. *)
+function ProgramLoggerStanding(const aDeliveryId: string;
+                               out aSnapshot: TExternalLoggerSnapshot): boolean;
+begin
+   aSnapshot := Default(TExternalLoggerSnapshot);
+   Result := (externalLogger <> nil) and externalLogger.StateSnapshot(aDeliveryId, aSnapshot);
+end;
+
 procedure DeliveryRowCells(const aStatus: TDeliveryStatus;
                            aConfig: TExternalLoggerConfig; aCells: TStrings);
 begin
@@ -348,7 +499,8 @@ begin
          end;
 
       form := TfrmDeliveryStatus.Create(aOver);
-      form.ShowStatuses(aStatuses, config);
+      (* Every configured logger is listed, with a row or without. *)
+      form.ShowStatuses(WithUnlistedLoggers(aStatuses, config, ProgramLoggerStanding), config);
       if aOver <> nil then
          begin
          (* Above Edit QSO, which is itself modal: the LCL's own owner rule,

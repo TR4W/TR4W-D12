@@ -514,11 +514,13 @@ begin
    EditQSOShowSentYear(ContestIdentity(EditableQSORXData.ceContest), EditableMyFacts);
 
    (* WHERE EACH EXTERNAL LOGGER STANDS WITH THIS QSO -- read-only, every
-     destination, behind a button shown only when the QSO has a delivery row.
-     Read on every load and the button hidden when there is none, because the
-     form is reused across QSOs. *)
+     configured destination, behind a button shown when the QSO has a delivery
+     row OR any logger is configured (a logger with no row is listed too, with
+     why: nothing listed would read as "never tried"). Read on every load,
+     because the form is reused across QSOs. *)
    LogStoreReadDeliveriesAtIndex(IndexOfItemInLogForEdit, deliveries);
-   EditQSOShowDeliveries(deliveries);
+   EditQSOShowDeliveries(deliveries,
+      (externalLogger <> nil) and (externalLogger.ConfiguredCount > 0));
 
    Result := True;
 end;
