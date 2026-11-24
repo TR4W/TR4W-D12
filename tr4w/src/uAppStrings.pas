@@ -1928,6 +1928,29 @@ resourcestring
    SVerifyServerCaption      = 'Verify the server''s certificate';
    SVerifyServerOffWarning   = 'The server''s identity is not checked; anyone between you and it can read what you send.';
 
+   (* PLAIN http:// FOR AN EXTERNAL LOGGER (NY4I, 2026-11-24). A logger's address
+      that starts with http:// is refused unless the operator ticks Allow
+      insecure: the key and the contacts then travel unencrypted. The editor
+      says so ONCE, when the address is left or saved; a delivery that is
+      refused says so in words (SLoggerWhyInsecure, in the Connection column and
+      Edit QSO's External loggers window) and once on the quick-command panel
+      (SLoggerPlainHttpRefusedNotice; the logger's name is put in front by the
+      owner). *)
+   SAllowInsecureCaption     = 'Allow insecure (plain http)';
+   SLoggerPlainHttpNotice    = 'This address is plain http. Everything sent, including your API key, travels unencrypted. Use https if the server offers it. If you must use http, tick Allow insecure.';
+   SLoggerWhyInsecure        = 'plain http not allowed (tick Allow insecure or use https)';
+   (* THE STANDALONE "EXTERNAL LOGGERS" WINDOW (NY4I, 2026-11-24: the status of
+      every logger, Resync, and a way to the settings page, without going
+      into Preferences each time). SLoggersWindowTitle is also the Windows
+      menu row's text and so the window's title. Its columns reuse the
+      Preferences grid's captions (the SLoggerGrid strings). *)
+   SLoggersWindowTitle       = 'External loggers';
+   SLoggersWindowResync      = 'Resync...';
+   SLoggersWindowEdit        = 'Edit / add...';
+   SLoggersWindowOn          = 'On';
+   SLoggersWindowOff         = 'Off';
+   SLoggerPlainHttpRefusedNotice ='nothing was sent: the address is plain http. Use https, or tick Allow insecure in this logger''s settings, save, and restart TR4W.';
+
    (* THE TAILCAT ADDRESS ROW on Preferences > Network (issue 293): the
       string a server operator gives a remote position to reach the multi-op
       server through a Tailcat tunnel. *)

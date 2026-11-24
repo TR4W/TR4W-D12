@@ -1005,6 +1005,22 @@ Refused while the log is read-only. The rules, the write and the announce are
 not here (log-database). Not run on screen yet (BENCH_QUEUE); `InputCombo` was
 checked in the local `C:\Lazarus` only.
 
+## The External loggers window (2026-11-24)
+
+`tw_EXTLOGGERSWINDOW_INDEX` (slot 21, before `tw_Dummy11`) is the newest tool window, a copy of
+HamScore's shape (`bsSizeToolWin`, `LeaveFormUnowned`, Escape closes, `caHide` + `CloseTR4WWindow`,
+`FrmSetFocus` after a button). **Adding a window touches more than the form, and the compiler
+sees none of the loops:** `VC` (enum, `WindowNames`, `menu_windows_*` = 10199 + ordinal), every
+`to tw_..._INDEX` loop in `MainUnit` (eight of them, all re-pointed to the new LAST real window,
+two had un-braced bodies the pascal hook flagged), `OpenTR4WWindow`'s `wi` table and arm, `ProcessMenu`'s
+range guard, the default-size block beside HamScore's, `uMenu` (the row, its caption in the same
+position, and `T_MENU_ARRAY_SIZE` +1), `tr4w.lpr` and `uProgramMain`'s uses. `Lint-MenuDispatch`
+counts rows against captions. **The window's title is its menu row's text**, so the caption is a
+resourcestring in `uMenu`. The form's captions are assigned at run time (`(assigned at run time)`
+placeholders in the `.lfm`). The grid keeps its data in cells (two hidden columns: the logger's id
+and the state's ordinal) with the state colour from `OnPrepareCanvas`, as the Preferences grid does.
+Bench: how it looks, refreshes and resyncs on a real run (BENCH_QUEUE).
+
 ## Coordinate with
 
 Every other agent — each owns a window. `i18n` on any caption.

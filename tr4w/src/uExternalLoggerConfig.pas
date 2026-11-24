@@ -18,6 +18,10 @@ const
    (* The destination's own "verify the server's certificate" choice (issue
       256). A boolean field: FieldText reads '1' or '0'. *)
    LF_VERIFY_SERVER = 'verifyServer';
+   (* "ALLOW INSECURE (PLAIN HTTP)" for this destination. A boolean field:
+      FieldText reads '1' or '0'. Off by default; see
+      TExternalLoggerDefinition.AllowInsecure. *)
+   LF_ALLOW_INSECURE = 'allowInsecure';
    (* DXKeeper's port: what the legacy single-logger setting defaulted to and
       what a new definition starts with. *)
    DXKEEPER_DEFAULT_PORT = 52001;
@@ -49,6 +53,15 @@ type
          connection-setting change, issue 233) and NOT in DestinationFingerprint
          (the queue must not park when the operator ticks a box). *)
       VerifyServer: boolean;
+      (* THE OPERATOR ACCEPTS A PLAIN http:// ADDRESS for this destination, with
+         the key and the contacts travelling unencrypted. FALSE by default and
+         for a definition saved before the field existed: the shared HTTP layer
+         refuses http:// unless the caller says so (THttpRequest.AllowInsecure),
+         and only a provider that declares the box (Cloudlog / Wavelog) can
+         say so. Like VerifyServer it is in SettingsStamp (a connection setting:
+         a running service keeps what it started with until a restart) and NOT
+         in DestinationFingerprint (ticking a box must not park the queue). *)
+      AllowInsecure: boolean;
       constructor Create;
       procedure Assign(const aOther: TExternalLoggerDefinition);
       function DeliveryId: string;
@@ -143,11 +156,20 @@ begin
 end;
 
 function TExternalLoggerDefinition.SettingsStamp: string;
+var
+   text: string;
 begin
-   Result := string(SHA256OfBytes(UTF8Encode(ProviderId + #0 + URL + #0 +
+   text := ProviderId + #0 + URL + #0 +
       LowerCase(Trim(Address)) + #0 + string(IntToStr(Port)) + #0 + Account + #0 +
       Logbook + #0 + ApiKey + #0 + Password + #0 +
-      string(IntToStr(Ord(VerifyServer))))));
+      string(IntToStr(Ord(VerifyServer)));
+   if AllowInsecure then
+      begin
+      (* APPENDED ONLY WHEN TICKED, so the stamp of every definition that never
+         had the box is byte-identical to what it was. *)
+      text := text + #0 + 'allowInsecure';
+      end;
+   Result := string(SHA256OfBytes(UTF8Encode(text)));
 end;
 
 function TExternalLoggerDefinition.FieldText(const aKey: string): string;
@@ -188,6 +210,17 @@ begin
    else if aKey = LF_VERIFY_SERVER then
       begin
       if VerifyServer then
+         begin
+         Result := '1';
+         end
+      else
+         begin
+         Result := '0';
+         end;
+      end
+   else if aKey = LF_ALLOW_INSECURE then
+      begin
+      if AllowInsecure then
          begin
          Result := '1';
          end
@@ -236,6 +269,11 @@ begin
       begin
       (* Anything but an explicit '0' is True: the safe reading. *)
       VerifyServer := aValue <> '0';
+      end
+   else if aKey = LF_ALLOW_INSECURE then
+      begin
+      (* The opposite reading: only an explicit '1' allows plain http. *)
+      AllowInsecure := aValue = '1';
       end;
 end;
 
@@ -258,6 +296,7 @@ begin
    ApiKeyProtected := aOther.ApiKeyProtected;
    PasswordProtected := aOther.PasswordProtected;
    VerifyServer := aOther.VerifyServer;
+   AllowInsecure := aOther.AllowInsecure;
 end;
 
 function TExternalLoggerDefinition.ToJSON: TJSONObject;
@@ -290,6 +329,11 @@ begin
          did round-trips to the JSON it was loaded from; a missing value is
          True. *)
       Result.AddPair('verifyServer', TJSONBool.Create(False));
+      end;
+   if AllowInsecure then
+      begin
+      (* Written only when ticked; a missing value is False. *)
+      Result.AddPair('allowInsecure', TJSONBool.Create(True));
       end;
    if (ApiKey <> '') or ApiKeyProtected then
       begin
@@ -331,6 +375,9 @@ begin
       legacyWRL above, whose absence is False. *)
    VerifyServer := (aObject.GetValue('verifyServer') = nil) or
       aObject.GetValue('verifyServer').AsBoolean;
+   (* A MISSING VALUE IS FALSE: plain http stays refused unless asked for. *)
+   AllowInsecure := (aObject.GetValue('allowInsecure') <> nil) and
+      aObject.GetValue('allowInsecure').AsBoolean;
    ApiKey := ReadProtectedPassword(aObject, 'apiKey', SecretName(Id, 'ApiKey'));
    Password := ReadProtectedPassword(aObject, 'password', SecretName(Id, 'Password'));
    ApiKeyProtected := aObject.GetValue('apiKey' + KEYCHAIN_REF_SUFFIX) <> nil;

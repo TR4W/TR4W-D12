@@ -22,6 +22,9 @@ type
       (* Inverted: a client nobody configured verifies (fields start at zero). *)
       FUnverified: boolean;
       FDestination: string;
+      (* The definition's "Allow insecure (plain http)" choice. Zero (False) for
+         a client nobody configured: plain http stays refused. *)
+      FAllowInsecure: boolean;
       function GetVerifyServer: boolean;
       procedure SetVerifyServer(aValue: boolean);
    protected
@@ -36,6 +39,9 @@ type
          display name, set by the worker that built the client. *)
       property VerifyServer: boolean read GetVerifyServer write SetVerifyServer;
       property Destination: string read FDestination write FDestination;
+      (* Accept an http:// address for this destination (THttpRequest.AllowInsecure),
+         set only by a provider that declares the box; StampRequest applies it. *)
+      property AllowInsecure: boolean read FAllowInsecure write FAllowInsecure;
       function RecoverUpdatesAsUncertain: boolean; virtual;
       function Deliver(const aJob: TDeliveryJob): TExternalDeliveryResult; virtual; abstract;
    end;
@@ -57,10 +63,18 @@ type
      set up (bundle fine)                      operator's own setting, cures it
      bearer gate             doRetry, PAUSED   the credential class: the worker
                                                treats a 401 the same way
-     plaintext / no scheme   doFailed, PAUSED  a malformed request, a defect
+     plaintext (http://)     doFailed, PAUSED  *_INSECURE_URL_REFUSED + the
+                                               notice (Allow insecure, or https)
+     no scheme               doFailed, PAUSED  *_URL_REFUSED: a malformed request
      any other proved kind   doRetry, 300 s *)
 function ApplyNothingSent(aRequest: THttpRequest; const aCodePrefix, aService: string;
                           var aResult: TExternalDeliveryResult): boolean;
+(* WHAT THE OWNER IS TOLD about an answer (TExternalDeliveryWorker.Notice keeps
+  only the LAST text it is given): the client's own sentence when it gave one
+  (the CA bundle, plain http refused), else the bare error code. The worker
+  calls it at each place it raises a notice, so a later call cannot replace a
+  sentence with a code. *)
+function DeliveryNoticeText(const aResult: TExternalDeliveryResult): string;
 (* HTTP 429, CLASSIFIED ONCE for the services that read Retry-After (Club Log,
   Cloudlog/Wavelog). Returns True, with aResult filled, when the status is 429:
   a retry, not paused, after the server's Retry-After seconds (60 when absent
@@ -73,7 +87,19 @@ function ApplyRateLimited(aRequest: THttpRequest; const aCodePrefix: string;
   path or body, so anything else is refused rather than sent. *)
 function IsPositiveNumericId(const aValue: string): boolean;
 implementation
-uses SysUtils, uHttpTransport, uTLSTrust;
+uses SysUtils, uHttpTransport, uTLSTrust, uAppStrings;
+
+function DeliveryNoticeText(const aResult: TExternalDeliveryResult): string;
+begin
+   if aResult.OperatorNotice <> '' then
+      begin
+      Result := aResult.OperatorNotice;
+      end
+   else
+      begin
+      Result := aResult.ErrorCode;
+      end;
+end;
 
 function IsPositiveNumericId(const aValue: string): boolean;
 var
@@ -147,7 +173,18 @@ begin
          aResult.Pause     := True;
          aResult.ErrorCode := aCodePrefix + 'AUTH_POLICY';
          end;
-      hfPlaintextNotAllowed, hfBadScheme:
+      hfPlaintextNotAllowed:
+         begin
+         (* NY4I, 2026-11-24: plain http must be SAID, not only logged. Its own
+            code (DeliveryFailureReasonText turns it into words) and the once-
+            per-owner notice on the quick-command panel. The way out is the
+            definition's Allow insecure box, or https. *)
+         aResult.Outcome   := doFailed;
+         aResult.Pause     := True;
+         aResult.ErrorCode := aCodePrefix + 'INSECURE_URL_REFUSED';
+         aResult.OperatorNotice := SLoggerPlainHttpRefusedNotice;
+         end;
+      hfBadScheme:
          begin
          aResult.Outcome   := doFailed;
          aResult.Pause     := True;
@@ -174,6 +211,7 @@ procedure TExternalDeliveryClient.StampRequest(aRequest: THttpRequest);
 begin
    aRequest.VerifyServer := VerifyServer;
    aRequest.Destination := FDestination;
+   aRequest.AllowInsecure := FAllowInsecure;
 end;
 
 function TExternalDeliveryClient.RecoverUpdatesAsUncertain: boolean;

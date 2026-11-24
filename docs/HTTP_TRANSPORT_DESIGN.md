@@ -844,7 +844,7 @@ his answers stand as he left them.
 | 9. Main-thread callers (version check, startup CTY) | a separate issue (filed) | NY4I accepted the recommendation |
 | 10, 15. Proxy | the platform transports follow the operating system's proxy configuration; no TR4W proxy field | NY4I accepted the recommendation |
 | 11. Linux | stays on OpenSSL with system CA tiers (no libcurl) | NY4I accepted the recommendation |
-| 12. Credential over plain http | only as an explicit per-definition choice with a visible warning; never a bearer token; never by default | NY4I accepted the recommendation |
+| 12. Credential over plain http | only as an explicit per-definition choice with a visible warning; never a bearer token; never by default | NY4I accepted the recommendation. **Built for Cloudlog / Wavelog on 2026-11-24:** the definition's "Allow insecure (plain http)" box (`allowInsecure`, off by default), an inline editor note while the address is http, and a refusal said in words (`*_INSECURE_URL_REFUSED`). Other providers have no box. |
 | 13. Verify certificates | per definition on the HTTP providers, default on; the global setting stays the master switch | NY4I accepted the recommendation; **BUILT 2026-11-09 (issue 256), see section 13** |
 | 14. Dropping `libeay32.dll` / `ssleay32.dll` | only after a release has run on `auto` | NY4I accepted the recommendation |
 

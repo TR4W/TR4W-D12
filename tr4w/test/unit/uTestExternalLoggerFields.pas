@@ -51,6 +51,10 @@ type
       procedure Test_Definition_VerifyServerIsAConnectionSettingNotADestination;
       procedure Test_Editor_TheCertificateBoxAndItsWarning;
       procedure Test_WRL_LoaderUsesTheRowsCertificateChoice;
+      procedure Test_AllowInsecure_DefinitionAndJson;
+      procedure Test_AllowInsecure_IsAConnectionSettingNotADestination;
+      procedure Test_AllowInsecure_OnlyCloudlogDeclaresIt;
+      procedure Test_AllowInsecure_EditorHintFollowsTheAddressAndTheBox;
    public
       procedure RunAllTests; override;
    end;
@@ -781,6 +785,177 @@ begin
    end;
 end;
 
+(* ALLOW INSECURE (NY4I, 2026-11-24): OFF by default, written only when ticked,
+   a missing value reads OFF, and only an explicit '1' turns it on. *)
+procedure TExternalLoggerFieldsTests.Test_AllowInsecure_DefinitionAndJson;
+var
+   source, loaded, assigned: TExternalLoggerDefinition;
+   json: TJSONObject;
+begin
+   InstallTestKeychain;
+   source := TExternalLoggerDefinition.Create;
+   loaded := TExternalLoggerDefinition.Create;
+   assigned := TExternalLoggerDefinition.Create;
+   try
+      source.Id := 'def-ai';
+      source.ProviderId := 'CLOUDLOG';
+      source.URL := 'http://shack.lan';
+      BeginTest('Allow insecure: off by default, nothing written while off');
+      CheckFalse(source.AllowInsecure, 'the default is OFF');
+      CheckEquals('0', source.FieldText(LF_ALLOW_INSECURE), 'the field reads 0');
+      json := source.ToJSON;
+      try
+         CheckTrue(json.GetValue('allowInsecure') = nil, 'nothing written while OFF');
+      finally
+         json.Free;
+      end;
+
+      BeginTest('Allow insecure: ticked is written, read back and copied by Assign');
+      source.SetFieldText(LF_ALLOW_INSECURE, '1');
+      CheckTrue(source.AllowInsecure, 'field text 1 ticks it');
+      json := source.ToJSON;
+      try
+         CheckTrue(json.GetValue('allowInsecure') <> nil, 'written when ON');
+         loaded.LoadJSON(json);
+      finally
+         json.Free;
+      end;
+      CheckTrue(loaded.AllowInsecure, 'read back ON');
+      assigned.Assign(loaded);
+      CheckTrue(assigned.AllowInsecure, 'Assign copies it');
+
+      BeginTest('Allow insecure: a missing value reads OFF, and anything but 1 is OFF');
+      source.AllowInsecure := False;
+      json := source.ToJSON;
+      try
+         loaded.AllowInsecure := True;
+         loaded.LoadJSON(json);
+      finally
+         json.Free;
+      end;
+      CheckFalse(loaded.AllowInsecure, 'missing is OFF');
+      source.SetFieldText(LF_ALLOW_INSECURE, '1');
+      source.SetFieldText(LF_ALLOW_INSECURE, 'yes');
+      CheckFalse(source.AllowInsecure, 'only an explicit 1 allows plain http');
+   finally
+      assigned.Free;
+      loaded.Free;
+      source.Free;
+   end;
+end;
+
+procedure TExternalLoggerFieldsTests.Test_AllowInsecure_IsAConnectionSettingNotADestination;
+var
+   d: TExternalLoggerDefinition;
+   stamp, delivery, fingerprint: string;
+begin
+   BeginTest('Allow insecure: in the settings stamp (restart to apply), NOT in the destination (the queue does not park)');
+   d := TExternalLoggerDefinition.Create;
+   try
+      d.Id := 'fixed';
+      d.ProviderId := 'CLOUDLOG';
+      d.URL := 'http://shack.lan';
+      d.Logbook := '3';
+      d.ApiKey := 'k';
+      stamp := d.SettingsStamp;
+      delivery := d.DeliveryId;
+      fingerprint := d.DestinationFingerprint;
+      d.AllowInsecure := True;
+      CheckTrue(stamp <> d.SettingsStamp, 'the stamp moves: a running service holds the old choice until a restart');
+      CheckEquals(delivery, d.DeliveryId, 'the queue does not move');
+      CheckEquals(fingerprint, d.DestinationFingerprint, 'the destination fingerprint is unchanged');
+      d.AllowInsecure := False;
+      CheckEquals(stamp, d.SettingsStamp, 'unticked: byte-identical to the stamp a definition without the box had');
+   finally
+      d.Free;
+   end;
+end;
+
+procedure TExternalLoggerFieldsTests.Test_AllowInsecure_OnlyCloudlogDeclaresIt;
+var
+   registration: TExternalLoggerRegistration;
+   fields: TLoggerFieldList;
+   i: integer;
+   id: string;
+   declared: boolean;
+begin
+   BeginTest('Allow insecure: declared by Cloudlog (a check, never required), by no other provider');
+   for i := 0 to ExternalLoggerProviderCount - 1 do
+      begin
+      registration := ExternalLoggerRegistration(i);
+      id := registration.Id;
+      fields := registration.CreateFields;
+      try
+         declared := fields.Find(LF_ALLOW_INSECURE) <> nil;
+         if id = 'CLOUDLOG' then
+            begin
+            CheckTrue(declared, 'Cloudlog declares the box');
+            CheckTrue(fields.Find(LF_ALLOW_INSECURE).Kind = lfkCheck, 'a check box');
+            CheckFalse(fields.Find(LF_ALLOW_INSECURE).Required, 'never required');
+            CheckEquals(SAllowInsecureCaption, fields.Find(LF_ALLOW_INSECURE).Caption, 'its own caption');
+            end
+         else
+            begin
+            CheckFalse(declared, id + ' declares no Allow insecure box');
+            end;
+      finally
+         fields.Free;
+      end;
+      end;
+end;
+
+procedure TExternalLoggerFieldsTests.Test_AllowInsecure_EditorHintFollowsTheAddressAndTheBox;
+var
+   form: TExternalLoggersForm;
+   d: TExternalLoggerDefinition;
+   box, verify: TCheckBox;
+begin
+   InitWidgetSet;
+   BeginTest('Editor: a plain http:// address shows the plain-http hint until Allow insecure is ticked; Save is never blocked');
+   form := TExternalLoggersForm.Create(nil);
+   try
+      form.AutoLoadChoices := False;
+      d := TExternalLoggerDefinition.Create;
+      d.ProviderId := 'CLOUDLOG';
+      d.Name := 'Shack';
+      d.URL := 'https://shack.lan';
+      d.Logbook := '3';
+      form.Config.Definitions.Add(d);
+      form.BeginEdit(d);
+      box := form.FieldCheck(LF_ALLOW_INSECURE);
+      verify := form.FieldCheck(LF_VERIFY_SERVER);
+      CheckTrue(box <> nil, 'Cloudlog shows the box');
+      CheckFalse(box.Checked, 'OFF by default');
+      CheckFalse(form.lblVerifyNote.Visible, 'https: no hint');
+
+      form.FieldEdit(LF_URL).Text := 'http://shack.lan';
+      CheckTrue(form.lblVerifyNote.Visible, 'plain http: the hint appears');
+      CheckEquals(SLoggerPlainHttpNotice, UTF8Decode(form.lblVerifyNote.Caption), 'and says what plain http costs');
+      CheckTrue(box.Enabled, 'the box stays enabled: it is the way out');
+      CheckFalse(verify.Enabled, 'the certificate box is moot over plain http (as before)');
+
+      form.FieldEdit(LF_URL).Text := 'HTTP://shack.lan';
+      CheckTrue(form.lblVerifyNote.Visible, 'upper case counts');
+
+      box.Checked := True;
+      CheckFalse(form.lblVerifyNote.Visible, 'ticking Allow insecure clears the hint');
+      form.Capture;
+      CheckTrue(d.AllowInsecure, 'captured ON');
+      CheckTrue(ExternalLoggerDefinitionError(d) = '', 'plain http with the box is a valid definition');
+
+      box.Checked := False;
+      CheckTrue(form.lblVerifyNote.Visible, 'unticked again: the hint is back');
+      form.Capture;
+      CheckFalse(d.AllowInsecure, 'captured OFF');
+      CheckTrue(ExternalLoggerDefinitionError(d) = '', 'the hint is not a refusal: Save is never blocked');
+
+      form.FieldEdit(LF_URL).Text := 'https://shack.lan';
+      CheckFalse(form.lblVerifyNote.Visible, 'back to https: no hint');
+   finally
+      form.Free;
+   end;
+end;
+
 procedure TExternalLoggerFieldsTests.Test_Editor_TheCertificateBoxAndItsWarning;
 var
    form: TExternalLoggersForm;
@@ -815,11 +990,12 @@ begin
       form.Capture;
       CheckFalse(d.VerifyServer, 'captured OFF');
 
-      BeginTest('Editor: over a plain http:// address the box is disabled, keeps its value and shows no warning');
+      BeginTest('Editor: over a plain http:// address the box is disabled, keeps its value and shows no CERTIFICATE warning (the plain-http note replaces it)');
       form.FieldEdit(LF_URL).Text := 'http://shack.lan';
       CheckFalse(box.Enabled, 'disabled: a plain connection has no certificate');
       CheckFalse(box.Checked, 'its saved value is untouched');
-      CheckFalse(form.lblVerifyNote.Visible, 'no warning while the choice is moot');
+      CheckTrue(UTF8Decode(form.lblVerifyNote.Caption) <> SVerifyServerOffWarning,
+         'no certificate warning while the choice is moot (Cloudlog shows the plain-http note instead)');
       form.FieldEdit(LF_URL).Text := 'https://shack.lan';
       CheckTrue(box.Enabled, 'enabled again over https');
       CheckTrue(form.lblVerifyNote.Visible, 'and the warning is back');
@@ -875,6 +1051,10 @@ begin
    Test_Definition_VerifyServerIsAConnectionSettingNotADestination;
    Test_Editor_TheCertificateBoxAndItsWarning;
    Test_WRL_LoaderUsesTheRowsCertificateChoice;
+   Test_AllowInsecure_DefinitionAndJson;
+   Test_AllowInsecure_IsAConnectionSettingNotADestination;
+   Test_AllowInsecure_OnlyCloudlogDeclaresIt;
+   Test_AllowInsecure_EditorHintFollowsTheAddressAndTheBox;
    Test_Descriptors_PerProvider;
    Test_Descriptors_WRLHasNoAccountOrLogbookIdText;
    Test_Descriptors_AtMostTheProviderFieldLimit;

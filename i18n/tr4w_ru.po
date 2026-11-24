@@ -13299,3 +13299,48 @@ msgstr ""
 #, fuzzy
 msgid "no date or time"
 msgstr ""
+
+#: uappstrings.sallowinsecurecaption
+#, fuzzy
+msgid "Allow insecure (plain http)"
+msgstr ""
+
+#: uappstrings.sloggerplainhttpnotice
+#, fuzzy
+msgid "This address is plain http. Everything sent, including your API key, travels unencrypted. Use https if the server offers it. If you must use http, tick Allow insecure."
+msgstr ""
+
+#: uappstrings.sloggerplainhttprefusednotice
+#, fuzzy
+msgid "nothing was sent: the address is plain http. Use https, or tick Allow insecure in this logger's settings, save, and restart TR4W."
+msgstr ""
+
+#: uappstrings.sloggerswindowedit
+#, fuzzy
+msgid "Edit / add..."
+msgstr ""
+
+#: uappstrings.sloggerswindowoff
+#, fuzzy
+msgid "Off"
+msgstr ""
+
+#: uappstrings.sloggerswindowon
+#, fuzzy
+msgid "On"
+msgstr ""
+
+#: uappstrings.sloggerswindowresync
+#, fuzzy
+msgid "Resync..."
+msgstr ""
+
+#: uappstrings.sloggerswindowtitle
+#, fuzzy
+msgid "External loggers"
+msgstr ""
+
+#: uappstrings.sloggerwhyinsecure
+#, fuzzy
+msgid "plain http not allowed (tick Allow insecure or use https)"
+msgstr ""

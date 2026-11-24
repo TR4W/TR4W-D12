@@ -173,6 +173,7 @@ uses
   uMasterForm,
   uPostScoresForm,
   uHamScoreForm,
+  uExternalLoggersStatusForm,
   uIntercomForm,
   uRadioPanelForm,
   uPanadapterRestore,

@@ -2721,7 +2721,12 @@ type
    {18}tw_STATIONS_RM_PREFIX,
    {19}tw_DUPESHEETWINDOW2_INDEX,
    {20}tw_HAMSCOREWINDOW_INDEX,
-   {21}tw_Dummy11
+   (* {21} The External loggers window (NY4I, 2026-11-24): status of every
+     external logger, Resync, and a way to its Preferences page. Menu id
+     10199 + 21 = 10220 (menu_windows_externalloggers). It is the LAST real
+     window: every "to tw_..._INDEX" loop over the windows ends here. *)
+   {21}tw_EXTLOGGERSWINDOW_INDEX,
+   {22}tw_Dummy11
     );
 
 const
@@ -2748,7 +2753,7 @@ const
     'RemMults', 'Radio1', 'Radio2', 'Telnet', 'Network',
     'MMTTY', 'Intercom', 'PostScores', 'Stations', 'StationsRMDX',
     'StationsRMDOM', 'StationsRMZone', 'Unused17', 'StationsRMPrefix',
-    'DupeSheet2', 'HamScore', 'Dummy11');
+    'DupeSheet2', 'HamScore', 'ExternalLoggers', 'Dummy11');
 
 type
   LogColumnsType =
@@ -3148,6 +3153,9 @@ const
   // existing CheckMenuItem in OpenTR4WWindow auto-toggle the menu checkmark and
   // lets the windows-menu dispatch in MainUnit auto-route open/close.
   menu_windows_hamscore                = 10219;  // Issue #783 Phase 4 -- HamScore status window toggle
+  // The External loggers window: 10199 + Ord(tw_EXTLOGGERSWINDOW_INDEX) = 10199 + 21,
+  // the same derivation, so the menu check mark and the open/close routing follow.
+  menu_windows_externalloggers         = 10220;  // 2026-11-24 -- External loggers window toggle
   menu_check_latest_version             = 10611;  // 2026-08-22 -- Help menu
   menu_home_page                        = 10606;
 //  menu_send_bug                         = 10605;

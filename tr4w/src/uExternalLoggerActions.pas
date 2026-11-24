@@ -89,6 +89,12 @@ function NotDeliverableCode(const aMessage: string): string;
    other code, so a caller can tell a not-deliverable row from a refusal. *)
 function NotDeliverableReasonText(const aCode: string): string;
 
+(* THE OPERATOR'S WORDS FOR ANY DELIVERY CODE THAT HAS SOME: a QSO the logger
+   cannot be given (NotDeliverableReasonText) or a plain-http address that was
+   refused (any *_INSECURE_URL_REFUSED, whichever provider's prefix). '' for any
+   other code, so a caller falls back to showing the code. *)
+function DeliveryFailureReasonText(const aCode: string): string;
+
 (* THE NOTICE THROTTLE: one line per logger per window. Ten QSOs held back in a
    row must not scroll ten lines. aLastTick is the tick of the last line shown
    (0 = none yet), aNowTick the current one; both milliseconds. *)
@@ -273,6 +279,19 @@ begin
    else
       begin
       Result := '';
+      end;
+end;
+
+function DeliveryFailureReasonText(const aCode: string): string;
+const
+   INSECURE_SUFFIX = 'INSECURE_URL_REFUSED';
+begin
+   Result := NotDeliverableReasonText(aCode);
+   if (Result = '') and (Length(aCode) >= Length(INSECURE_SUFFIX)) and
+      (Copy(aCode, Length(aCode) - Length(INSECURE_SUFFIX) + 1, Length(INSECURE_SUFFIX)) =
+       INSECURE_SUFFIX) then
+      begin
+      Result := SLoggerWhyInsecure;
       end;
 end;
 

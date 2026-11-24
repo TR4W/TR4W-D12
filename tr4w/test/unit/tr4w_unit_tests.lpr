@@ -691,6 +691,7 @@ uses
    uTestShowOffScreen in 'uTestShowOffScreen.pas',
    uTestExternalLoggerGrid in 'uTestExternalLoggerGrid.pas',
    uTestExternalLoggerActions in 'uTestExternalLoggerActions.pas',
+   uTestExternalLoggerStatusModel in 'uTestExternalLoggerStatusModel.pas',
    uTestColumnWidthStore in 'uTestColumnWidthStore.pas',
    uTestColumnHeaders in 'uTestColumnHeaders.pas',
    uTestAltDragMove in 'uTestAltDragMove.pas',
@@ -1467,6 +1468,7 @@ begin
    RegisterSuite(TACLogTests.Create('ACLog'));
    RegisterSuite(TPlainHttpUrlTests.Create('PlainHttpUrl'));
    RegisterSuite(TExternalLoggerActionsTests.Create('ExternalLoggerActions'));
+   RegisterSuite(TExternalLoggerStatusModelTests.Create('ExternalLoggerStatusModel'));
    RegisterSuite(TUrlTestTests.Create('UrlTest'));
    RegisterSuite(TVerifyServerTests.Create('VerifyServer'));
    RegisterSuite(TExternalLoggersTests.Create('ExternalLoggers'));

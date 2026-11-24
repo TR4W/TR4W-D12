@@ -169,7 +169,7 @@ const
       defect found the first time its editor opens. The dialog grows to fit
       the rows it has (FitLayout), so this is a statement about providers,
       not about room. *)
-   EXTERNAL_LOGGER_MAX_FIELDS = 4;
+   EXTERNAL_LOGGER_MAX_FIELDS = 5;   (* 4 until Cloudlog's Allow insecure box, 2026-11-24 *)
 
 (* Add (aId = '') or edit one definition of aConfig. True when the operator
    accepted; aConfig then holds the change. *)
@@ -899,7 +899,21 @@ begin
    warning := '';
    for row in FRows do
       begin
-      if row.Check <> nil then
+      if (row.Check <> nil) and (row.Descriptor.Key = LF_ALLOW_INSECURE) then
+         begin
+         (* THE PLAIN-HTTP NOTICE (NY4I, 2026-11-24). An inline hint, in the
+            note's own label, shown as long as the address is plain http and
+            Allow insecure is not ticked: a state, not a pop-up, so it neither
+            repeats per keystroke nor blocks Save (the refusal at delivery time
+            says the same in words). This box stays enabled for a plain
+            address: it is the way out. *)
+         row.Check.Enabled := True;
+         if plain and (not row.Check.Checked) then
+            begin
+            warning := SLoggerPlainHttpNotice;
+            end;
+         end
+      else if row.Check <> nil then
          begin
          row.Check.Enabled := not plain;
          if (not plain) and (not row.Check.Checked) and (warning = '') then
@@ -916,6 +930,7 @@ procedure TExternalLoggersForm.RowChanged(Sender: TObject);
 var
    row, other: TFieldRow;
    noteWasShown: boolean;
+   oldNote: string;
 begin
    if FBuilding > 0 then
       begin
@@ -931,8 +946,12 @@ begin
       (* The certificate warning follows the box and the address. Only when it
          appears or goes does the dialog need laying out again. *)
       noteWasShown := lblVerifyNote.Visible;
+      oldNote := lblVerifyNote.Caption;
       UpdateVerifyNote;
-      if (noteWasShown <> lblVerifyNote.Visible) and (Visible or FHosted) then
+      (* Also when the TEXT changed while it stayed shown: the certificate
+         warning and the (longer) plain-http note take different heights. *)
+      if ((noteWasShown <> lblVerifyNote.Visible) or
+          (oldNote <> lblVerifyNote.Caption)) and (Visible or FHosted) then
          begin
          FitLayout;
          LayoutChanged;

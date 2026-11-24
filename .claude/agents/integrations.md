@@ -630,7 +630,7 @@ Facts that bite:
   click; a toggle blanks the stale result.
 * **A for-in over an untyped literal array of strings truncates to the first element's width**
   (`['CLUBLOG', 'CLOUDLOG']` gave `CLOUDLO`). Use a typed `array of string` constant. A test found it.
-* NOT built and for NY4I: Q12's plain-http credential choice; help text for the two settings (now written in
+* NOT built and for NY4I: ~~Q12's plain-http credential choice~~ (built for Cloudlog / Wavelog only, 2026-11-24, see "Plain http is said, not logged"); help text for the two settings (now written in
   `help_en.po`, AGENT WRITTEN until reviewed); an OS trust-store option; a per-destination choice for the download verbs (CTY, TRMASTER,
   POTA, call history, SCP, version check obey the master alone).
 
@@ -660,10 +660,61 @@ run against a live server:
   implemented provider"; it is NY4I's decision, not an agent's.** A confirmed create has no remote
   id, so the local marker `cloudlog:created` stands in (the outbox refuses a confirmed create with
   an empty one).
-* **https only, and the certificate choice is the definition's own box** under the global master (issue
-  256, the section above). There is still no plain-http Cloudlog: HTTP_TRANSPORT_DESIGN question 12 is
-  NY4I's, so do not invent it here.
+* **https by default; plain http only by the definition's own "Allow insecure (plain http)" box (NY4I,
+  2026-11-24; HTTP_TRANSPORT_DESIGN question 12's "explicit per-definition choice with a visible
+  warning").** The certificate choice is the other box, under the global master (issue 256).
+  See the plain-http section below.
 * Response cap is 256 KB: the 201 echoes the whole ADIF back.
+
+## Plain http is said, not logged (NY4I, 2026-11-24; Cloudlog / Wavelog)
+
+tr4w.log said `[HTTP] refusing plaintext http://... the caller must pass AAllowInsecure` and nothing
+else reached the operator. **There was no external-logger "allow insecure" setting at all**:
+`THttpRequest.AllowInsecure` was set only by the score post, HamScore and the URL test. Now:
+
+* **`TExternalLoggerDefinition.AllowInsecure`** (JSON `allowInsecure`, written only when ticked, a
+  missing value is False; field key `LF_ALLOW_INSECURE`, only an explicit `'1'` is True). Declared by
+  Cloudlog only (`TLoggerFieldList.AddAllowInsecure`, caption `SAllowInsecureCaption`), so `EXTERNAL_LOGGER_MAX_FIELDS`
+  is 5. **In `SettingsStamp` (appended only when ticked, so every other stamp is byte-identical) and
+  NOT in `DestinationFingerprint`/`DeliveryId`** (ticking a box must not park the queue; pinned).
+  **Consequence to tell the operator: it is a connection setting, so a running logger keeps its old
+  choice until a restart. The fix sequence is tick, Save, RESTART, Resync.**
+* Plumbed worker -> client: `TCloudlogExternalLogger` -> `TCloudlogWorker.AllowInsecure` ->
+  `TExternalDeliveryClient.AllowInsecure` (zero = False) -> `StampRequest` sets
+  `THttpRequest.AllowInsecure`. Not a service property (only Cloudlog declares it).
+* **The editor says it once, inline:** while the address is plain http (`uHTTPDownload.IsPlainHttpUrl`,
+  the one test) and the box is clear, `lblVerifyNote` shows `SLoggerPlainHttpNotice` (unencrypted,
+  use https, or tick Allow insecure). It is a state, not a pop-up, never blocks Save and is not an
+  `ExternalLoggerDefinitionError`. The Allow insecure box stays enabled over http (the certificate box
+  is disabled there, as before).
+* **The refusal is said at delivery time.** `ApplyNothingSent` splits `hfPlaintextNotAllowed` from
+  `hfBadScheme`: `<PREFIX>_INSECURE_URL_REFUSED` (doFailed, PAUSED, as `URL_REFUSED` was) plus
+  `OperatorNotice := SLoggerPlainHttpRefusedNotice`, which rides the existing worker -> `QueueDeliveryNotice`
+  -> `ShowDeliveryNotice` path (once per owner per session, non-modal `QuickDisplay`). **Do not call
+  `QuickDisplay` from the worker; the not-deliverable throttle is main-thread, capture-time only.**
+  `uExternalLoggerActions.DeliveryFailureReasonText` (pure) turns any `*INSECURE_URL_REFUSED` into
+  `SLoggerWhyInsecure` ("plain http not allowed (tick Allow insecure or use https)"), tried after
+  `NotDeliverableReasonText` (which keeps its "'' for a refusal" contract); the Connection column
+  (`ExternalLoggerStateText`) and Edit QSO's window (`DeliveryStateText`, "failed: ...") both use it.
+  Club Log, WRL and QRZ get the new code and notice too (their URLs are https in practice; they have
+  no box). A bare `URL_REFUSED` (no scheme) stays as it was. Pinned in `uTestNothingSent`,
+  `uTestCloudlog`, `uTestExternalLoggerActions`, `uTestExternalLoggerFields`. Unbenched: a real
+  http Cloudlog / Wavelog (BENCH_QUEUE).
+
+## The External loggers window (NY4I, 2026-11-24)
+
+A standalone non-modal tool window (Windows menu, `menu_windows_externalloggers` = 10220 = 10199 +
+`tw_EXTLOGGERSWINDOW_INDEX`; position kept as `ExternalLoggers` in the layout store). Rows, state
+and buttons are pure (`uExternalLoggerStatusModel`: `BuildLoggerStatusRows`, `ExternalLoggerStateText`
+-- LIFTED out of the Preferences grid so both windows word a state once --, `ResyncPreflight`,
+`LoggerStatusCanResync`); the form is `ui/lcl/uExternalLoggersStatusForm`. It reads the SAVED
+configuration (the settings file, re-read when its time changes: the Preferences working copy's
+unsaved edits carry other delivery ids) and the running program through
+`uExternalLoggerGrid.QueryExternalLoggerState` (the Preferences page delegates to the same
+function). Resync is `uExternalLoggerResendUI.ResyncLogger` / `ResendQsosDialog`, lifted from the
+grid unchanged (one implementation); Edit / add opens Preferences on the External Logger page with
+the selected row selected (`ShowPreferencesAtExternalLogger`), the page's grid being the editor.
+Refreshes every 5 s while showing. No keyboard accelerator (HamScore has none either).
 
 ## Call history download -- supercheckhistory.com (2026-11-08)
 

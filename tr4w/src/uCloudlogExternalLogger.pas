@@ -16,15 +16,20 @@ type
    TCloudlogWorker = class(TExternalDeliveryWorker)
    private
       FBaseUrl, FProfileId, FApiKey: string;
+      FAllowInsecure: boolean;
    protected
       function NewClient: TExternalDeliveryClient; override;
    public
       constructor Create(const aFileName, aLoggerId, aBaseUrl, aProfileId,
          aApiKey: string);
+      (* The definition's "Allow insecure (plain http)" box, handed to every
+         client this worker makes. *)
+      property AllowInsecure: boolean read FAllowInsecure write FAllowInsecure;
    end;
    TCloudlogExternalLogger = class(TDurableExternalLogger)
    private
       FBaseUrl: string;
+      FAllowInsecure: boolean;
    protected
       function BuildPayload(const aRecord: ContestExchange; const aFacts: TQsoMyFacts;
          const aSent: AnsiString): string; override;
@@ -52,6 +57,7 @@ end;
 function TCloudlogWorker.NewClient: TExternalDeliveryClient;
 begin
    Result := TCloudlogClient.Create(FBaseUrl, FProfileId, FApiKey);
+   Result.AllowInsecure := FAllowInsecure;
 end;
 function TCloudlogExternalLogger.CanUpdateDelivered: boolean;
 begin
@@ -63,6 +69,7 @@ begin
    inherited Create(aDefinition.DeliveryId, CLOUDLOG_ACCOUNT, aDefinition.Logbook,
       aDefinition.ApiKey, aComputerId, True);
    FBaseUrl := aDefinition.URL;
+   FAllowInsecure := aDefinition.AllowInsecure;
 end;
 function TCloudlogExternalLogger.BuildPayload(const aRecord: ContestExchange;
    const aFacts: TQsoMyFacts; const aSent: AnsiString): string;
@@ -73,6 +80,7 @@ function TCloudlogExternalLogger.CreateWorker: TExternalDeliveryWorker;
 begin
    Result := TCloudlogWorker.Create(FFileName, FLoggerId, FBaseUrl, FLogbook,
       FApiKey);
+   TCloudlogWorker(Result).AllowInsecure := FAllowInsecure;
 end;
 function CreateCloudlog(const aDefinition: TExternalLoggerDefinition;
    aComputerId: AnsiChar): TExternalLoggerService;
@@ -86,6 +94,9 @@ begin
    aFields.AddSecret(LF_API_KEY, SLoggerFieldCloudlogKey, False);
    aFields.AddText(LF_LOGBOOK, SLoggerFieldCloudlogProfile, True);
    aFields.AddVerifyServer;
+   (* NY4I, 2026-11-24: a Cloudlog / Wavelog on a home network is often plain
+      http. Refused unless this box is ticked; the editor says why. *)
+   aFields.AddAllowInsecure;
 end;
 initialization
    RegisterExternalLogger('CLOUDLOG', 'Cloudlog / Wavelog', CreateCloudlog,

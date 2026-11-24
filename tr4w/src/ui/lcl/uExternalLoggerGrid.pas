@@ -40,7 +40,8 @@ unit uExternalLoggerGrid;
 {$I ..\..\tr4w.inc}
 interface
 uses Classes, SysUtils, Controls, Forms, Grids, Menus, ExtCtrls, Graphics,
-   uExternalLoggerConfig, uExternalLoggerService, uExternalDelivery, uWRLClient;
+   uExternalLoggerConfig, uExternalLoggerService, uExternalDelivery, uWRLClient,
+   uExternalLoggerStatusModel;
 const
    LOGGER_COL_ORDER     = 0;
    LOGGER_COL_NAME      = 1;
@@ -60,13 +61,9 @@ const
       section of settings\tr4w.json (issue 234). On disk, so never renamed. *)
    LOGGER_GRID_COLUMNS_NAME = 'ExternalLoggers';
 type
-   (* The owner's window onto the running program: the snapshot of the service
-      running aDeliveryId (False when there is none) and that destination's
-      durable queue counts (zero when no log is open). Main thread. *)
-   TLoggerStateQuery = function(const aDeliveryId: string;
-      out aSnapshot: TExternalLoggerSnapshot;
-      out aCounts: TDeliveryCounts): boolean of object;
-
+   (* TLoggerStateQuery, the owner's window onto the running program, lives in
+      uExternalLoggerStatusModel with the state text: the standalone External
+      loggers window asks the same question (NY4I, 2026-11-24). *)
    TExternalLoggerGrid = class(TComponent)
    private
       FGrid: TStringGrid;
@@ -146,9 +143,20 @@ type
 (* The colour a state paints in. Text carries the meaning; this repeats it. *)
 function ExternalLoggerStateColour(aState: TExternalLoggerState): TColor;
 
+(* THE RUNNING PROGRAM'S ANSWER for one destination (issue 226), the one
+   implementation behind the Preferences grid and the standalone External
+   loggers window. The service is the composite started at launch, so it knows
+   nothing of an unsaved edit: a destination it does not run is reported as
+   unknown, which reads "restart to apply". The counts are a status read, never
+   a reason to fail: with no log open, or on any error, they are zero. Main
+   thread. *)
+function QueryExternalLoggerState(const aDeliveryId: string;
+   out aSnapshot: TExternalLoggerSnapshot; out aCounts: TDeliveryCounts): boolean;
+
 implementation
-uses Dialogs, LCLType, LCLIntf, uAppStrings, uExternalLoggersForm,
-   uExternalLoggerActions, uLogStore, utils_text,  (* issue 356: resend, open site *)
+uses MainUnit,   (* externalLogger -- FIRST, so every unit below wins any name it shares *)
+   Dialogs, LCLType, LCLIntf, uAppStrings, uExternalLoggersForm,
+   uExternalLoggerActions, uExternalLoggerResendUI, uLogStore, utils_text,  (* issue 356: resend, open site *)
    uWRLLogbookSuggest,   (* issue 358: the new logbook's default name and call *)
    uLCLFormHelpers;   (* Restore/SaveGridColumnWidth(s) -- issue 234; FillGridFromColumn *)
 
@@ -160,8 +168,6 @@ const
       and Id and the state ordinal are hidden at width 0. *)
    LOGGER_COLUMN_TOKENS: array[LOGGER_COL_ORDER .. LOGGER_COL_STATEKIND] of string =
       ('', 'Logger', 'Provider', 'Enabled', '', '', '', '');
-
-function ResendRefusalText(const aCode: string): string; forward;
 
 function ExternalLoggerStateColour(aState: TExternalLoggerState): TColor;
 begin
@@ -205,62 +211,23 @@ begin
    end;
 end;
 
-(* The text for a state. The reason is a fixed delivery code, never server
-   text. Old uncertain or failed rows ride along as counts. *)
-function StateText(aState: TExternalLoggerState;
-   const aSnapshot: TExternalLoggerSnapshot; const aCounts: TDeliveryCounts): string;
-var
-   code: string;
+function QueryExternalLoggerState(const aDeliveryId: string;
+   out aSnapshot: TExternalLoggerSnapshot; out aCounts: TDeliveryCounts): boolean;
 begin
-   code := aSnapshot.Code;
-   if code = '' then
+   aSnapshot := Default(TExternalLoggerSnapshot);
+   aCounts := Default(TDeliveryCounts);
+   Result := (externalLogger <> nil) and
+      externalLogger.StateSnapshot(aDeliveryId, aSnapshot);
+   if Result and (LogStoreRepository <> nil) then
       begin
-      code := 'UNSPECIFIED';
+      try
+         aCounts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, aDeliveryId);
+      except
+         on E: Exception do
+            begin
+            aCounts := Default(TDeliveryCounts);
+            end;
       end;
-   case aState of
-      elsDisabled:
-         begin
-         Result := SLoggerStateDisabled;
-         end;
-      elsRestartNeeded:
-         begin
-         Result := SLoggerStateRestart;
-         end;
-      elsApplyOnSave:
-         begin
-         Result := SLoggerStateApplyOnSave;
-         end;
-      elsIdle:
-         begin
-         Result := SLoggerStateIdle;
-         end;
-      elsSending:
-         begin
-         Result := UnicodeFormat(SLoggerStateSending,
-            [aCounts.Pending + aCounts.InFlight + aSnapshot.QueueDepth]);
-         end;
-      elsRetrying:
-         begin
-         Result := UnicodeFormat(SLoggerStateRetrying, [code]);
-         end;
-      elsPaused:
-         begin
-         Result := UnicodeFormat(SLoggerStatePaused, [code]);
-         end;
-      elsFailed:
-         begin
-         Result := UnicodeFormat(SLoggerStateFailed, [code]);
-         end;
-   else
-      begin
-      Result := '';
-      end;
-   end;
-   if (aState in [elsIdle, elsSending, elsRetrying, elsPaused, elsFailed]) and
-      ((aCounts.Uncertain > 0) or (aCounts.Failed > 0)) then
-      begin
-      Result := UnicodeFormat(SLoggerStateCounts,
-         [Result, aCounts.Uncertain, aCounts.Failed]);
       end;
 end;
 
@@ -415,7 +382,7 @@ begin
          FOnQueryState(definition.DeliveryId, snapshot, counts);
       state := DeriveExternalLoggerState(FConfig.ActivePosition(definition.Id) > 0,
          known, snapshot, counts);
-      FGrid.Cells[LOGGER_COL_STATE, row] := UTF8Encode(StateText(state, snapshot, counts));
+      FGrid.Cells[LOGGER_COL_STATE, row] := UTF8Encode(ExternalLoggerStateText(state, snapshot, counts));
       FGrid.Cells[LOGGER_COL_STATEKIND, row] := AnsiString(IntToStr(Ord(state)));
       end;
 end;
@@ -760,26 +727,21 @@ end;
 procedure TExternalLoggerGrid.ResyncSelected;
 var
    kind: integer;
+   state: TExternalLoggerState;
 begin
+   (* THE DIALOGS ARE uExternalLoggerResendUI's, shared with the standalone
+      External loggers window. A state this row does not hold yet (-1) is
+      treated as idle: the dialog itself then answers. *)
    kind := StrToIntDef(AnsiString(FGrid.Cells[LOGGER_COL_STATEKIND, FGrid.Row]), -1);
-   if kind = Ord(elsDisabled) then
+   if (kind >= Ord(Low(TExternalLoggerState))) and (kind <= Ord(High(TExternalLoggerState))) then
       begin
-      MessageDlg(UTF8Encode(SLoggerResyncWhySwitchedOff), mtInformation, [mbOK], 0);
-      Exit;
-      end;
-   (* Not running (added or changed since start) or not yet applied: the same
-      reasons the service would give, said before the question is asked. *)
-   if kind = Ord(elsRestartNeeded) then
+      state := TExternalLoggerState(kind);
+      end
+   else
       begin
-      MessageDlg(UTF8Encode(ResendRefusalText('RESEND_NOT_RUNNING')), mtInformation, [mbOK], 0);
-      Exit;
+      state := elsIdle;
       end;
-   if kind = Ord(elsApplyOnSave) then
-      begin
-      MessageDlg(UTF8Encode(ResendRefusalText('RESEND_NOT_ACTIVE')), mtInformation, [mbOK], 0);
-      Exit;
-      end;
-   ResendClick(nil);
+   ResyncLogger(FConfig.Find(SelectedId), state);
 end;
 
 procedure TExternalLoggerGrid.GridKeyDown(aSender: TObject; var aKey: word;
@@ -874,107 +836,12 @@ begin
       end;
 end;
 
-function ResendRefusalText(const aCode: string): string;
-begin
-   if aCode = 'RESEND_NOT_RUNNING' then
-      begin
-      Result := SLoggerResendWhyNotRunning;
-      end
-   else if aCode = 'RESEND_NOT_ACTIVE' then
-      begin
-      Result := SLoggerResendWhyNotActive;
-      end
-   else if aCode = 'SYNCHRONIZATION_GAP' then
-      begin
-      Result := SLoggerResendWhyPaused;
-      end
-   else if aCode = 'LOGGER_SETUP_REQUIRED' then
-      begin
-      Result := SLoggerResendWhySetup;
-      end
-   else if aCode = 'RESEND_NOT_SUPPORTED' then
-      begin
-      Result := SLoggerResendWhyUnsupported;
-      end
-   else if aCode = 'RESEND_NO_LOG' then
-      begin
-      Result := SLoggerResendWhyNoLog;
-      end
-   else
-      begin
-      Result := SLoggerResendWhyFailed;
-      end;
-end;
-
-(* RESEND QSOs (issue 356). Two choices and a confirmation: 'Resend all' asks
-   again, because it can put a contact at the destination twice. Cancel is
-   both the default and Escape. The decisions are uExternalLoggerActions's;
-   the queueing is LogStoreResendToExternalLogger's, in one transaction. The
-   QuestionDlg captions are LclText (ansi) and the answer is read by RESULT,
-   never by button position (GTK draws them the other way round). *)
+(* RESEND QSOs (issue 356), from the popup menu: the dialogs are
+   uExternalLoggerResendUI's, shared with the Resync button and with the
+   standalone External loggers window. *)
 procedure TExternalLoggerGrid.ResendClick(aSender: TObject);
-var
-   definition: TExternalLoggerDefinition;
-   answer: TModalResult;
-   mode: TResendMode;
-   tally: TResendTally;
-   refusal, summary: string;
 begin
-   definition := FConfig.Find(SelectedId);
-   if definition = nil then
-      begin
-      Exit;
-      end;
-   answer := QuestionDlg('TR4W',
-                         LclText(UnicodeFormat(SLoggerResendBody, [definition.Name]) +
-                            #10#10 + SLoggerResendDuplicateNote),
-                         mtConfirmation,
-                         [mrOk,     LclText(SLoggerResendUndelivered),
-                          mrYes,    LclText(SLoggerResendAll),
-                          mrCancel, 'IsDefault', 'IsCancel'], 0);
-   if answer = mrOk then
-      begin
-      mode := rmUndelivered;
-      end
-   else if answer = mrYes then
-      begin
-      mode := rmAll;
-      if MessageDlg(UTF8Encode(UnicodeFormat(SLoggerResendAllAsk, [definition.Name])),
-         mtWarning, [mbYes, mbNo], 0) <> mrYes then
-         begin
-         Exit;
-         end;
-      end
-   else
-      begin
-      Exit;
-      end;
-   tally := TResendTally.Create;
-   try
-      if LogStoreResendToExternalLogger(definition.DeliveryId, mode, tally, refusal) then
-         begin
-         summary := UnicodeFormat(SLoggerResendDone,
-            [definition.Name, tally.Queued, tally.Created, tally.Requeued,
-             tally.Delivered, tally.AlreadyQueued, tally.Uncertain, tally.NotOurs]);
-         if tally.NotDeliverable > 0 then
-            begin
-            summary := summary + #10#10 +
-               UnicodeFormat(SLoggerResendNotDeliverable, [tally.NotDeliverable]);
-            end;
-         if tally.Resumed then
-            begin
-            summary := summary + #10#10 + SLoggerResendResumed;
-            end;
-         MessageDlg(UTF8Encode(summary), mtInformation, [mbOK], 0);
-         end
-      else
-         begin
-         MessageDlg(UTF8Encode(UnicodeFormat(SLoggerResendRefused,
-            [definition.Name, ResendRefusalText(refusal)])), mtWarning, [mbOK], 0);
-         end;
-   finally
-      tally.Free;
-   end;
+   ResendQsosDialog(FConfig.Find(SelectedId));
 end;
 
 (* CREATE LOGBOOK (issue 358). Name first (InputQuery, defaulted from the open

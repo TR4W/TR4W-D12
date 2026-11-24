@@ -13,7 +13,7 @@ interface
 
 uses
    SysUtils, fpjson, uTR4WTestFramework, uExternalLoggerActions, uExternalLoggerConfig,
-   uJSON, uKeychain, uWRLClient;
+   uJSON, uKeychain, uWRLClient, uAppStrings;
 
 type
    TExternalLoggerActionsTests = class(TTestCase)
@@ -34,6 +34,7 @@ type
       procedure Test_WRLCreateLogbookBody;
       procedure Test_WRLDecodeCreateLogbook;
       procedure Test_WRLCreateLogbookText;
+      procedure Test_DeliveryFailureReasonText;
    public
       procedure RunAllTests; override;
    end;
@@ -408,6 +409,30 @@ begin
    Test_WRLCreateLogbookBody;
    Test_WRLDecodeCreateLogbook;
    Test_WRLCreateLogbookText;
+   Test_DeliveryFailureReasonText;
+end;
+
+(* THE OPERATOR'S WORDS FOR A DELIVERY CODE (NY4I, 2026-11-24): a plain-http
+   refusal reads in words for every provider prefix, a not-deliverable QSO keeps
+   its words, and any other code has none (the caller shows the code). *)
+procedure TExternalLoggerActionsTests.Test_DeliveryFailureReasonText;
+begin
+   BeginTest('Reason text: plain http refused reads in words for every provider prefix');
+   CheckEquals(SLoggerWhyInsecure, DeliveryFailureReasonText('CLOUDLOG_INSECURE_URL_REFUSED'));
+   CheckEquals(SLoggerWhyInsecure, DeliveryFailureReasonText('CLUBLOG_INSECURE_URL_REFUSED'));
+   CheckEquals(SLoggerWhyInsecure, DeliveryFailureReasonText('WRL_INSECURE_URL_REFUSED'));
+   CheckTrue(Pos('Allow insecure', DeliveryFailureReasonText('CLOUDLOG_INSECURE_URL_REFUSED')) > 0,
+      'it names the way out');
+   CheckTrue(Pos('https', DeliveryFailureReasonText('CLOUDLOG_INSECURE_URL_REFUSED')) > 0,
+      'and https');
+   BeginTest('Reason text: a scheme-less address and other codes have no words (the code is shown)');
+   CheckEquals('', DeliveryFailureReasonText('CLOUDLOG_URL_REFUSED'), 'URL_REFUSED is not the insecure code');
+   CheckEquals('', DeliveryFailureReasonText('WRL_RATE_LIMITED'));
+   CheckEquals('', DeliveryFailureReasonText(''));
+   CheckEquals('', DeliveryFailureReasonText('URL_REFUSED'));
+   BeginTest('Reason text: a QSO the logger cannot be given keeps its words');
+   CheckEquals(NotDeliverableReasonText('MISSING_FREQUENCY'), DeliveryFailureReasonText('MISSING_FREQUENCY'));
+   CheckEquals(SLoggerWhyNoFrequency, DeliveryFailureReasonText('MISSING_FREQUENCY'));
 end;
 
 end.

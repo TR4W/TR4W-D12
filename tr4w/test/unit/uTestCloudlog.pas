@@ -96,12 +96,14 @@ end;
 (* One delivery of one new contact through the real Send. aFake is scripted by
   the caller first; aBase lets a test use an http:// address. *)
 function Deliver(aFake: TFakeHttpTransport; const aJob: TDeliveryJob;
-                 const aBase: string = BASE): TExternalDeliveryResult;
+                 const aBase: string = BASE;
+                 aAllowInsecure: boolean = False): TExternalDeliveryResult;
 var
    client: TCloudlogClient;
 begin
    SetHttpTransportForTest(aFake);
    client := TCloudlogClient.Create(aBase, PROFILE, KEY);
+   client.AllowInsecure := aAllowInsecure;
    try
       Result := client.Deliver(aJob);
    finally
@@ -339,9 +341,20 @@ begin
       CheckEquals(0, fake.Calls, 'plain http never reaches the transport (the key is in the body)');
       CheckTrue(r.Outcome = doFailed, 'refused');
       CheckTrue(r.Pause);
-      CheckEquals('CLOUDLOG_URL_REFUSED', r.ErrorCode);
+      CheckEquals('CLOUDLOG_INSECURE_URL_REFUSED', r.ErrorCode, 'plain http has its own code (2026-11-24)');
+      CheckEquals(SLoggerPlainHttpRefusedNotice, r.OperatorNotice, 'and is SAID, once, through the owner');
       r := Deliver(fake, NewJob, 'log.example.test');
       CheckEquals('CLOUDLOG_URL_REFUSED', r.ErrorCode, 'no scheme');
+      CheckEquals('', r.OperatorNotice, 'no notice for a scheme-less address');
+   finally
+      fake.Free;
+   end;
+   (* THE OPERATOR TICKED "Allow insecure": the same address now reaches the wire. *)
+   fake := Scripted(201, '{"status":"created","imported_count":1}');
+   try
+      r := Deliver(fake, NewJob, 'http://192.168.1.5', True);
+      CheckEquals(1, fake.Calls, 'Allow insecure: plain http is sent');
+      CheckTrue(r.Outcome = doConfirmed, 'and the contact is delivered');
    finally
       fake.Free;
    end;
@@ -467,7 +480,7 @@ begin
    CheckEquals('Cloudlog / Wavelog', registration.DisplayName);
    fields := registration.CreateFields;
    try
-      CheckEquals(4, fields.Count, 'address, key, profile, certificate choice (issue 256)');
+      CheckEquals(5, fields.Count, 'address, key, profile, certificate choice (issue 256), allow insecure (2026-11-24)');
       CheckEquals(LF_URL, fields[0].Key);
       CheckTrue(fields[0].Kind = lfkText, 'address is text');
       CheckTrue(fields[0].Required, 'address is required');
@@ -480,6 +493,8 @@ begin
       CheckEquals(SLoggerFieldCloudlogProfile, fields[2].Caption);
       CheckEquals(LF_VERIFY_SERVER, fields[3].Key);
       CheckTrue(fields[3].Kind = lfkCheck, 'the certificate choice is a check box');
+      CheckEquals(LF_ALLOW_INSECURE, fields[4].Key, 'allow insecure follows it');
+      CheckTrue(fields[4].Kind = lfkCheck, 'a check box, off by default');
    finally
       fields.Free;
    end;

@@ -70,6 +70,11 @@ type
          and warning, so every HTTP provider declares it the same way in one
          line. Declared by Club Log, WRL and Cloudlog; never by a TCP provider. *)
       function AddVerifyServer: TLoggerFieldDescriptor;
+      (* THE "ALLOW INSECURE (PLAIN HTTP)" BOX, off by default. Declared only by
+         a provider whose address the operator types and which may be a server
+         without TLS (Cloudlog / Wavelog); the box is what lets the shared HTTP
+         layer accept an http:// address for this destination. *)
+      function AddAllowInsecure: TLoggerFieldDescriptor;
       function Find(const aKey: string): TLoggerFieldDescriptor;
    end;
 
@@ -189,6 +194,10 @@ end;
 function TLoggerFieldList.AddVerifyServer: TLoggerFieldDescriptor;
 begin
    Result := AddCheck(LF_VERIFY_SERVER, SVerifyServerCaption, SVerifyServerOffWarning);
+end;
+function TLoggerFieldList.AddAllowInsecure: TLoggerFieldDescriptor;
+begin
+   Result := AddCheck(LF_ALLOW_INSECURE, SAllowInsecureCaption, '');
 end;
 function TLoggerFieldList.Find(const aKey: string): TLoggerFieldDescriptor;
 var

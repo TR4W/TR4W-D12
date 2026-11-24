@@ -50,6 +50,7 @@ type
       procedure Test_OtherProvedKindsAreARetry;
       procedure Test_AFailureThatMayHaveBeenSentStaysConservative;
       procedure Test_ExistingCodesAreUnchanged;
+      procedure Test_TheOwnerIsToldTheSentenceNotTheCode;
    public
       procedure RunAllTests; override;
    end;
@@ -59,7 +60,7 @@ implementation
 uses
    uHttpTransport, uHTTPDownload, uExternalDelivery, uExternalDeliveryClient,
    uClubLogClient, uWRLClient, uTLSTrust, uSettingsRegistry, uSettingsDeclarations,
-   uTestFakeTransport;
+   uTestFakeTransport, uAppStrings;
 
 const
    TOKEN = 'zq-FAKE-TOKEN-0123456789abcdef';
@@ -177,12 +178,23 @@ begin
       DeliverBoth(kind, club, wrl);
       CheckTrue(club.Outcome = doFailed, 'Club Log ' + HttpFailureName(kind) + ': failed');
       CheckTrue(club.Pause, 'Club Log: paused');
-      CheckEquals('CLUBLOG_URL_REFUSED', club.ErrorCode, 'Club Log: its own code');
-      CheckEquals('', club.OperatorNotice, 'Club Log: no notice');
       CheckTrue(wrl.Outcome = doFailed, 'WRL ' + HttpFailureName(kind) + ': a POST is failed, not uncertain');
       CheckTrue(wrl.Pause, 'WRL: paused');
-      CheckEquals('WRL_URL_REFUSED', wrl.ErrorCode, 'WRL: its own code');
-      CheckEquals('', wrl.OperatorNotice, 'WRL: no notice');
+      if kind = hfPlaintextNotAllowed then
+         begin
+         (* Its own code and a notice since 2026-11-24 (plain http is said). *)
+         CheckEquals('CLUBLOG_INSECURE_URL_REFUSED', club.ErrorCode, 'Club Log: its own code');
+         CheckEquals('WRL_INSECURE_URL_REFUSED', wrl.ErrorCode, 'WRL: its own code');
+         CheckTrue(club.OperatorNotice <> '', 'Club Log: the plain-http notice');
+         CheckTrue(wrl.OperatorNotice <> '', 'WRL: the plain-http notice');
+         end
+      else
+         begin
+         CheckEquals('CLUBLOG_URL_REFUSED', club.ErrorCode, 'Club Log: its own code');
+         CheckEquals('', club.OperatorNotice, 'Club Log: no notice');
+         CheckEquals('WRL_URL_REFUSED', wrl.ErrorCode, 'WRL: its own code');
+         CheckEquals('', wrl.OperatorNotice, 'WRL: no notice');
+         end;
       end;
 end;
 
@@ -249,6 +261,14 @@ begin
          begin
          CheckTrue(Pos('Club Log', club.OperatorNotice) > 0, 'Club Log is told, naming itself');
          CheckTrue(Pos('World Radio League', wrl.OperatorNotice) > 0, 'WRL is told, naming itself');
+         end
+      else if kind = hfPlaintextNotAllowed then
+         begin
+         (* NY4I, 2026-11-24: plain http is SAID. Its own notice, not the
+            CA-bundle one: it names no bundle and points at Allow insecure. *)
+         CheckEquals(SLoggerPlainHttpRefusedNotice, club.OperatorNotice, 'Club Log: the plain-http notice');
+         CheckEquals(SLoggerPlainHttpRefusedNotice, wrl.OperatorNotice, 'WRL: the plain-http notice');
+         CheckTrue(Pos('bundle', club.OperatorNotice) = 0, 'and it is not the bundle text');
          end
       else
          begin
@@ -326,6 +346,27 @@ begin
    Test_OtherProvedKindsAreARetry;
    Test_AFailureThatMayHaveBeenSentStaysConservative;
    Test_ExistingCodesAreUnchanged;
+   Test_TheOwnerIsToldTheSentenceNotTheCode;
+end;
+
+(* THE WORKER KEEPS ONLY THE LAST NOTICE TEXT it is given, and it raised the
+   bare error code AFTER the client's sentence, so a plain-http refusal would
+   have reached the quick-command panel as CLOUDLOG_INSECURE_URL_REFUSED
+   (found in review, 2026-11-24). DeliveryNoticeText is what it now raises at
+   every site. *)
+procedure TNothingSentTests.Test_TheOwnerIsToldTheSentenceNotTheCode;
+var
+   r: TExternalDeliveryResult;
+begin
+   BeginTest('Notice text: the client''s sentence wins over the bare code; with none, the code');
+   r := Default(TExternalDeliveryResult);
+   r.ErrorCode := 'CLOUDLOG_INSECURE_URL_REFUSED';
+   r.OperatorNotice := SLoggerPlainHttpRefusedNotice;
+   CheckEquals(SLoggerPlainHttpRefusedNotice, DeliveryNoticeText(r));
+   r.OperatorNotice := '';
+   CheckEquals('CLOUDLOG_INSECURE_URL_REFUSED', DeliveryNoticeText(r));
+   r.ErrorCode := '';
+   CheckEquals('', DeliveryNoticeText(r), 'nothing to say stays empty');
 end;
 
 end.

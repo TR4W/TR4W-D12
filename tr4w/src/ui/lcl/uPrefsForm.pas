@@ -1217,6 +1217,10 @@ type
         -- Settings > Colors should land on Colors, not on wherever Preferences
         was last left (NY4I, 2026-08-21). }
       function  SelectPage(const aTag: NativeInt): boolean;
+      (* Selects one logger's row in the External Logger page's grid (the
+         standalone External loggers window opens Preferences here). A row this
+         copy does not hold is ignored: the page just shows its list. *)
+      procedure SelectExternalLogger(const aId: string);
 
       function  ControlForCommand(const aCommand: string): TWinControl;
       procedure FocusControlOnItsSection(const aControl: TWinControl);
@@ -1623,6 +1627,11 @@ function ShowPreferencesForCommand(const aCommand: string): boolean;
 
 // Open Preferences AT a section, by its nav tag (the NAV_* constants).
 function ShowPreferencesAtPage(const aTag: NativeInt): boolean;
+
+// Open Preferences AT the External Logger page with logger aLoggerId selected
+// ('' selects nothing): the standalone External loggers window's Edit / add
+// button. The editor itself is the grid's -- double-click the row, or Add.
+function ShowPreferencesAtExternalLogger(const aLoggerId: string): boolean;
 
 (* THE ONE PLACEMENT TABLE (see TPrefsPlacements).  Built on first use and
   freed at finalization; Preferences and the tests read it on the main thread
@@ -2223,6 +2232,15 @@ begin
       Exit;
       end;
    Result := gPrefsForm.SelectPage(aTag);
+end;
+
+function ShowPreferencesAtExternalLogger(const aLoggerId: string): boolean;
+begin
+   Result := ShowPreferencesAtPage(NAV_EXTERNALLOGGER);
+   if Result and (aLoggerId <> '') then
+      begin
+      gPrefsForm.SelectExternalLogger(aLoggerId);
+      end;
 end;
 
 function ShowPreferencesForCommand(const aCommand: string): boolean;
@@ -3803,6 +3821,15 @@ begin
 
    navItem.Selected := True;
    Result := True;
+end;
+
+procedure TPrefsForm.SelectExternalLogger(const aId: string);
+begin
+   EnsureLoggerGrid;
+   if FStore.ExternalLoggers.Find(aId) <> nil then
+      begin
+      FLoggerGrid.Refresh(aId);
+      end;
 end;
 
 function TPrefsForm.NavItemForTag(const aTag: NativeInt): TTreeNode;
@@ -9075,21 +9102,8 @@ end;
 function TPrefsForm.QueryLoggerState(const aDeliveryId: string;
    out aSnapshot: TExternalLoggerSnapshot; out aCounts: TDeliveryCounts): boolean;
 begin
-   aSnapshot := Default(TExternalLoggerSnapshot);
-   aCounts := Default(TDeliveryCounts);
-   Result := (externalLogger <> nil) and
-      externalLogger.StateSnapshot(aDeliveryId, aSnapshot);
-   if Result and (LogStoreRepository <> nil) then
-      begin
-      try
-         aCounts := ExternalDeliveryCounts(LogStoreRepository.Database.FileName, aDeliveryId);
-      except
-         on E: Exception do
-            begin
-            aCounts := Default(TDeliveryCounts);
-            end;
-      end;
-      end;
+   (* ONE IMPLEMENTATION, shared with the standalone External loggers window. *)
+   Result := QueryExternalLoggerState(aDeliveryId, aSnapshot, aCounts);
 end;
 
 procedure TPrefsForm.LoadExternalSoftwarePanels;

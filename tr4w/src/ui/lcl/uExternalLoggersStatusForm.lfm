@@ -1,0 +1,78 @@
+object frmExternalLoggersStatus: TfrmExternalLoggersStatus
+  Left = 0
+  Height = 240
+  Top = 0
+  Width = 560
+  BorderStyle = bsSizeToolWin
+  Caption = '(assigned at run time)'
+  ClientHeight = 240
+  ClientWidth = 560
+  KeyPreview = True
+  LCLVersion = '4.8.0.0'
+  OnClose = HandleClose
+  OnCreate = HandleCreate
+  OnKeyDown = HandleKeyDown
+  OnResize = HandleResize
+  OnShow = HandleShow
+  object grdLoggers: TStringGrid
+    Left = 8
+    Height = 184
+    Top = 8
+    Width = 544
+    Align = alClient
+    BorderSpacing.Around = 8
+    ColCount = 7
+    FixedCols = 0
+    Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRowSelect, goSmoothScroll, goThumbTracking]
+    RowCount = 2
+    ScrollBars = ssAutoVertical
+    TabOrder = 0
+    OnDblClick = GridDblClick
+    OnPrepareCanvas = GridPrepareCanvas
+    OnSelection = GridSelection
+  end
+  object pnlButtons: TPanel
+    Left = 0
+    Height = 40
+    Top = 200
+    Width = 560
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 40
+    ClientWidth = 560
+    TabOrder = 1
+    object btnResync: TButton
+      Left = 8
+      Height = 25
+      Top = 6
+      Width = 120
+      Caption = '(assigned at run time)'
+      Enabled = False
+      TabOrder = 0
+      OnClick = ResyncClick
+    end
+    object btnEdit: TButton
+      Left = 136
+      Height = 25
+      Top = 6
+      Width = 140
+      Caption = '(assigned at run time)'
+      TabOrder = 1
+      OnClick = EditClick
+    end
+    object btnClose: TButton
+      Left = 442
+      Height = 25
+      Top = 6
+      Width = 110
+      Anchors = [akTop, akRight]
+      Caption = '(assigned at run time)'
+      TabOrder = 2
+      OnClick = CloseClick
+    end
+  end
+  object tmrRefresh: TTimer
+    Enabled = False
+    OnTimer = RefreshTick
+  end
+end

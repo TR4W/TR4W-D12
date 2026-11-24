@@ -885,6 +885,7 @@ uses
   uMasterForm,             // CreateTR4WMasterWindow -- the SCP window
   uPostScoresForm,         // CreateTR4WPostScoresWindow
   uHamScoreForm,           // CreateTR4WHamScoreWindow
+  uExternalLoggersStatusForm, // CreateTR4WExternalLoggersWindow
   uVerificationForm,       // ShowVerificationChecks -- Tools menu
   uSetupWizardForm,        // ShowSetupWizard -- Tools menu
   uCorrectStationFactsDialog, // ShowCorrectStationFacts -- Tools menu, issue 223
@@ -2727,7 +2728,7 @@ begin
      // whose rect is therefore whatever the array was initialised with --
      // writing it would put a permanent entry for a non-existent window in the
      // operator's settings file.
-     for i := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
+     for i := tw_MAINWINDOW_INDEX to tw_EXTLOGGERSWINDOW_INDEX do
         begin
         store.SetLayout(WindowNames[i],
                         tr4w_WindowsArray[i].WndRect,
@@ -3264,7 +3265,7 @@ var
    live: TRect;
 begin
    CascadeIndex := 0;
-   for i := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
+   for i := tw_MAINWINDOW_INDEX to tw_EXTLOGGERSWINDOW_INDEX do
       begin
       (* WAS h = 0 / IsWindow(h) / IsIconic(h) -- three Win32 questions about
         an object we hold. A nil entry is a closed window (IsWindow's job, and
@@ -3343,7 +3344,7 @@ begin
          Exit;
          end;
 
-      for i := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
+      for i := tw_MAINWINDOW_INDEX to tw_EXTLOGGERSWINDOW_INDEX do
          begin
          r       := tr4w_WindowsArray[i].WndRect;
          visible := tr4w_WindowsArray[i].WndVisible;
@@ -3462,14 +3463,16 @@ begin
      begin
      SeedLayoutFromLegacyPOSFile;
      end;
-  for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
-    if tr4w_WindowsArray[i].WndRect.Right = 0 then
-       begin
-       tr4w_WindowsArray[i].WndRect.Top := 400;
-       tr4w_WindowsArray[i].WndRect.Left := Ord(i) * 30;
-       tr4w_WindowsArray[i].WndRect.Right := Ord(i) * 30 + 220;
-       tr4w_WindowsArray[i].WndRect.Bottom := 600;
-       end;
+  for i := tw_BANDMAPWINDOW_INDEX to tw_EXTLOGGERSWINDOW_INDEX do
+     begin
+     if tr4w_WindowsArray[i].WndRect.Right = 0 then
+        begin
+        tr4w_WindowsArray[i].WndRect.Top := 400;
+        tr4w_WindowsArray[i].WndRect.Left := Ord(i) * 30;
+        tr4w_WindowsArray[i].WndRect.Right := Ord(i) * 30 + 220;
+        tr4w_WindowsArray[i].WndRect.Bottom := 600;
+        end;
+     end;
   // Issue #783 Phase 4: give the HamScore status window enough room for
   // the URL line and the multi-line status edit.  Default 220 x N is too
   // narrow / short.  Min: 410 wide x 270 tall.
@@ -3484,6 +3487,21 @@ begin
      begin
      tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Bottom :=
        tr4w_WindowsArray[tw_HAMSCOREWINDOW_INDEX].WndRect.Top + 270;
+     end;
+  // 2026-11-24: the External loggers window lists a name, provider, state and a
+  // Resync and an Edit button, so the 220 x 200 default is too small. Min: 560
+  // wide x 240 tall (a window the operator sized larger keeps its size).
+  if tr4w_WindowsArray[tw_EXTLOGGERSWINDOW_INDEX].WndRect.Right -
+     tr4w_WindowsArray[tw_EXTLOGGERSWINDOW_INDEX].WndRect.Left < 560 then
+     begin
+     tr4w_WindowsArray[tw_EXTLOGGERSWINDOW_INDEX].WndRect.Right :=
+       tr4w_WindowsArray[tw_EXTLOGGERSWINDOW_INDEX].WndRect.Left + 560;
+     end;
+  if tr4w_WindowsArray[tw_EXTLOGGERSWINDOW_INDEX].WndRect.Bottom -
+     tr4w_WindowsArray[tw_EXTLOGGERSWINDOW_INDEX].WndRect.Top < 240 then
+     begin
+     tr4w_WindowsArray[tw_EXTLOGGERSWINDOW_INDEX].WndRect.Bottom :=
+       tr4w_WindowsArray[tw_EXTLOGGERSWINDOW_INDEX].WndRect.Top + 240;
      end;
 
   if tr4w_WindowsArray[tw_MAINWINDOW_INDEX].WndRect.Right = 0 then
@@ -3506,11 +3524,11 @@ begin
   // Issue #739: validate every restored rect against the current monitor layout
   // so a window saved on a now-absent monitor is pulled back on-screen (cascaded).
   CascadeIndex := 0;
-  for i := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
+  for i := tw_MAINWINDOW_INDEX to tw_EXTLOGGERSWINDOW_INDEX do
      begin
      EnsureRectOnScreen(i, CascadeIndex);
      end;
-  for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
+  for i := tw_BANDMAPWINDOW_INDEX to tw_EXTLOGGERSWINDOW_INDEX do
      begin
      tr4w_WindowsArray[i].WndForm := nil;
      end;
@@ -3893,7 +3911,7 @@ begin
   closedCount    := 0;
   changedCount   := 0;
   preservedCount := 0;
-  for tipos := tw_MAINWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do
+  for tipos := tw_MAINWINDOW_INDEX to tw_EXTLOGGERSWINDOW_INDEX do
      begin
      { SAVE WHAT THE RESTORE WILL READ -- see LclFormFor.  Windows only for a
        window that is still a Win32 dialog. }
@@ -5440,7 +5458,8 @@ begin
         tr4w_WindowsArray[chosen].WndVisible := True;
         end;
 
-     for i := tw_BANDMAPWINDOW_INDEX to tw_HAMSCOREWINDOW_INDEX do  // Issue #783 -- include HamScore in restore
+     for i := tw_BANDMAPWINDOW_INDEX to tw_EXTLOGGERSWINDOW_INDEX do  // Issue #783 -- include HamScore in restore
+       begin
        if tr4w_WindowsArray[i].WndVisible then
           begin
           // TIME EACH ONE.  This whole loop logs nothing of its own, so a slow
@@ -5464,6 +5483,7 @@ begin
              logger.Trace('[Startup] restored %s in %d ms', [WindowNames[i], tookMs]);
              end;
           end;
+       end;
 
      // THE OPERATOR TYPES IN THE CALL WINDOW, not in whatever opened last.  A
      // restored tool window is Shown, and showing a window can take the focus --
@@ -5930,7 +5950,7 @@ begin
   LowordWparam := LoWord(menuID);
 
   if LowordWparam >= menu_windows_bandmap then
-    if LowordWparam <= menu_windows_hamscore then  // Issue #783 -- extended past dupesheet2
+    if LowordWparam <= menu_windows_externalloggers then  // Issue #783 -- extended past dupesheet2; and past HamScore for External loggers
        begin
        ID := WindowsType(LowordWparam - menu_windows_bandmap + 1);
 
@@ -7616,6 +7636,7 @@ const
     tw_REMMULTSWINDOW_INDEX,
     tw_MASTERWINDOW_INDEX,
     tw_HAMSCOREWINDOW_INDEX,   // Issue #783 Phase 4 -- HamScore status window
+    tw_EXTLOGGERSWINDOW_INDEX, // 2026-11-24 -- External loggers window
     tw_Dummy11
     );
 var
@@ -7750,6 +7771,11 @@ begin
      begin
      CreateTR4WHamScoreWindow;
      lclForm := TR4WHamScoreForm;
+     end
+  else if ID = tw_EXTLOGGERSWINDOW_INDEX then
+     begin
+     CreateTR4WExternalLoggersWindow;
+     lclForm := TR4WExternalLoggersForm;
      end
   else if ID = tw_POSTSCORESWINDOW_INDEX then
      begin

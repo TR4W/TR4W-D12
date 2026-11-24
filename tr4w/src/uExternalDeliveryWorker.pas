@@ -500,7 +500,10 @@ begin
                begin
                log.Warn('[ExternalDelivery] Contact %s: %s (HTTP %d)',
                   [job.Key.Contact, answer.ErrorCode, answer.Status]);
-               Notice(answer.ErrorCode);
+               (* THE CLIENT'S OWN SENTENCE, when it gave one (plain http refused,
+                  2026-11-24), is what the operator is told: Notice keeps only the
+                  LAST text, so the bare code here would have replaced it. *)
+               Notice(DeliveryNoticeText(answer));
                end;
             if answer.Pause or (answer.Status = 401) or (answer.Status = 403) then
                begin
@@ -508,7 +511,7 @@ begin
                if answer.ErrorCode <> '' then
                   begin
                   MarkHalted(answer.ErrorCode);
-                  Notice(answer.ErrorCode);
+                  Notice(DeliveryNoticeText(answer));
                   end
                else
                   begin

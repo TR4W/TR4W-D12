@@ -128,7 +128,7 @@ implementation
 uses
   // FIRST, so every unit below still wins any name it shares.
   uAppStrings,              // SDelivery*, SEditQSODelivery*
-  uExternalLoggerActions,   // NotDeliverableReasonText
+  uExternalLoggerActions,   // DeliveryFailureReasonText
   DateUtils,                // UnixToDateTime
   uExternalLoggerRegistry,  // FindExternalLoggerRegistration
   uRadioConfigStore,        // TRadioConfigStore -- holds the definitions
@@ -189,7 +189,7 @@ begin
    if aStatus.State = 'failed' then
       begin
       (* A QSO the logger could not be given (no frequency, say) names why. *)
-      reason := NotDeliverableReasonText(aStatus.ErrorCode);
+      reason := DeliveryFailureReasonText(aStatus.ErrorCode);
       end;
    if reason <> '' then
       begin
