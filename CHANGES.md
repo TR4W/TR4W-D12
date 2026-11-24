@@ -41,6 +41,38 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### 5.1.1 (2026-11-24) - NY4I
+
+#### ALL JA (`contestFactory/uContestAllJA`, `trdos/logstuff`, `trdos/logdupe`, `uADIF`, `target/dom/allja.dom`) - issue #361
+
+- **Received power class in `Power`** (`rcvd_power`), exported as `APP_TR4W_RCVD_POWER_CLASS`; it rode in the `Precedence` slot and ADIF `PRECEDENCE` before. `AllJAReceivedPowerClass` is the one reader (Cabrillo, ADIF, remembered exchange) with `Precedence` as the fallback for older logs.
+- **Parser on a copy**: `ProcessRSTAllJAPrefectureAndPrecedenceExchange` writes the QSO only on acceptance, refuses with `ExchangeErrorMessage` (prefecture or power), stores the received `Prefecture`; the always-true `Precedence <> ''` test is gone. `48 A` (good prefecture, bad letter) names the power.
+- **`allja.dom`** lists exactly 02..48 and 101..114 (49, 50, 115..118 were D7 leftovers counted as multipliers).
+- **ADIF STATE**: `ADIFPrefectureCode` (01..47, regions 101..114 -> 01, 48 -> `O`, else omitted) for `STATE` (`ADIFWorkedStationState`) and `MY_STATE`.
+- Matrix: ALL_JA re-frozen (received power tag and column).
+
+#### External delivery (`uDurableExternalLogger`, `uExternalDelivery`, `uExternalLoggerActions`, `uWRLClient`, `uLogStore`, `ui/lcl/uDeliveryStatusForm`, `ui/lcl/uExternalLoggerGrid`)
+
+- **Not-deliverable QSO**: any exception from the payload builder records a `failed` row with a reason code (`NotDeliverableCode`: `MISSING_FREQUENCY`, `MISSING_MODE`, `MISSING_TIME`, `MISSING_STATION_CALL`, else `QSO_NOT_DELIVERABLE`); no pause, no gap marker; throttled non-modal `QuickDisplay`. Storage failures still pause.
+- **Delivery status window** lists every configured logger (`WithUnlistedLoggers`, `UnsentReasonToken`); DXKeeper and ACLog rows read "handed off (not confirmed)" (`HandOffOnly`, `LogStoreRecordExternalHandOff`).
+- **Resync** column in the grid; `ResendQsos` creates rowless QSOs, requeues failed rows from current data, never creates a QSO with a row, and clears the gap marker.
+- **WRL `DUPLICATE_CONTACT`** = `doConfirmed` with the remote id marker `wrl:duplicate`; edits and deletes of a marker contact are confirmed no-ops.
+- **DXKeeper** `externallog` payload is `PostUnit.ADIFContactForExternal` (the export's record); the hand-built builder is gone; facts are captured whenever an external logger is wired (`logsubs2`, `uLogStore.CaptureMyFactsNow`).
+- **Band-default `FREQ`** in `EmitADIFRecord` with `APP_TR4W_FREQ_ASSUMED`; `TFreqMemoryType`/`DefaultFreqMemory` moved to `domain/uBandFrequency`. Five corpus ADIF sets re-pinned (`known.adi.diff`; winter_fd's round-trip pin).
+
+#### Layout and i18n (`ui/lcl/uLCLFormHelpers`, `uPrefsForm`, `uSetupWizardForm`, `uRadioEditForm`, `uEmbeddedTranslations`, `i18n/*.po`)
+
+- `FitCaptionColumn`/`ChildrenRightEdge`; `GrowWithinRoom` moved from `uNewContestForm`; `FitNavWidth`; Preferences tree captions are `SPrefsNav*` resourcestrings.
+- A loose `languages\<code>\tr4w.po` logs a WARN with its date and shows one startup notice (`SLanguageFileOverrides`); `Sweep-TextFit.ps1` removes what it installs.
+- Catalogues: 224 Spanish and 46 German entries corrected, 140 wrong-sense Port/Serial entries in 16 other languages, all new msgids seeded.
+
+#### Build, gates and tooling
+
+- The unit-test runner prints per-suite timing; `libtailcat` cache moved outside the workspace (`TAILCAT_WORK`).
+- The command hook asks only before the contest matrix; tests, lints, corpus and the ADIF checks are free (CLAUDE.md).
+- `TRMASTER.DTA` downloads from `TR4W_DATA_SITE` first, `tr4w.net` as the fallback.
+- gui_test: the ALL JA case and the 17-box station-field reader.
+
 ### 5.1.0 (2026-11-22) - NY4I
 
 #### Read this before upgrading: multi-op protocol 5 (issues #300, #341)

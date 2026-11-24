@@ -44,16 +44,70 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+---
+
+## 5.1.x — November 2026
+
+### 5.1.1 (2026-11-24) - NY4I
+
+#### ALL JA
+
+- **Prefecture and power class are their own fields.** The New Contest dialog asks for your prefecture and
+  power class, and Edit QSO shows the other station's prefecture and power class in their own boxes. The
+  Cabrillo and ADIF output carry them in the columns and tags the sponsor's tools expect.
+- **Every refusal says why.** Typing `101 H` and pressing Enter used to do nothing and say nothing. A
+  prefecture that is wrong, a missing power letter, or a letter that is not H, M, L or P now each get a
+  message that names the problem, and nothing is logged.
+- **The multiplier list is exactly the sponsor's:** prefectures 02-47, Ogasawara (48) and Hokkaido's regions
+  101-114. Entries that were never part of the contest no longer count toward the possible multipliers.
+- **ADIF states.** The other station's prefecture is written as the ADIF `STATE`, and yours as `MY_STATE`:
+  Hokkaido's regions all become `01`, Ogasawara is `O`, and nothing is written when no state can be
+  determined.
+
+#### External loggers
+
+- **See what happened to each QSO.** Edit QSO has an **External loggers...** button. It lists every
+  configured logger for that QSO: delivered, handed off, failed with the reason, or not sent with the reason
+  (paused, switched off, not running).
+- **One QSO that cannot be sent no longer stops the rest.** A QSO the logger cannot use, for example one with
+  no frequency, is marked failed for that logger with the reason. Logging and the other QSOs carry on, and
+  you get one short, non-modal line instead of a paused logger.
+- **Resync button.** Each logger in Preferences > External logger has a **Resync** button. It sends the QSOs
+  the logger does not have yet, and re-sends ones you have fixed since, without creating duplicates.
+- **A duplicate at WRL is not a failure.** WRL answering that it already has a contact is now treated as
+  delivered.
+- **DXKeeper gets the same record the ADIF export writes**, including the contest's own fields, instead of a
+  shorter hand-built one.
+- **QSOs with no frequency.** When a QSO has a band but no frequency, the ADIF export and the loggers receive
+  the band's default frequency (from the Band Plan), marked `APP_TR4W_FREQ_ASSUMED`. Your log still shows no
+  frequency, and TR4W's own import restores that.
+
+#### Languages and layout
+
+- **Long translations fit.** Preferences, the Setup Wizard and the radio editor size their labels to the
+  language in use instead of cutting text off, and the Preferences tree widens to its longest caption.
+- **The Preferences tree captions are translatable** and were English in every language before.
+- **Corrections:** about 270 Spanish entries (Reports was a single letter, CW "output" was "production"),
+  German port and keyer wording, and "port" read as a harbour and "serial" as a serial number in 17 other
+  languages. These are still machine-assisted translations that reviewers can correct online.
+- **A language file placed beside the program overrides the built-in translations**, which is how three
+  months of fixes went unseen on one machine. TR4W now says so in the log and on screen when that happens.
+- The **Open log file** button on the Logging page fits its caption in every language.
+
+#### Data and multi-op
+
+- **TRMASTER.DTA** is downloaded from TR4W's data site first, with the web site as the fallback, so a network
+  that blocks one still gets the file.
+- **TR4WServer's log** is checked for integrity before anything is written, and a verified backup is made
+  before Clear all.
+- **Jock White Field Day and ALL JA Cabrillo columns** end with the separating space the sponsors' tools need.
+
 #### Diagnostics
 
 - **Log times are UTC.** Every line in `tr4w.log` (and the start-up trace, crash reports and the Telnet
   trace) now carries a UTC time in 24-hour form with a trailing Z, for example `2026-11-23 02:58:27.466Z`,
   so a log sent from anywhere in the world reads the same. Lines written by earlier versions have no Z
   and were in local time. `hamlib_trace.log` is HamLib's own and keeps its own time.
-
----
-
-## 5.1.x — November 2026
 
 ### 5.1.0 (2026-11-22) - NY4I
 
