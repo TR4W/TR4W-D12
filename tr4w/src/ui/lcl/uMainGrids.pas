@@ -132,7 +132,8 @@ procedure SetMultNeedBands(const aMode: ModeType; const aBandMask: Cardinal);
 implementation
 
 uses
-   SysUtils, Graphics, Log4D, utils_text, uElementPanel, uMainForm, MainUnit;
+   SysUtils, Graphics, Log4D, utils_text, uElementPanel, uMainForm, MainUnit,
+   uAppStrings;   (* SMultStripBothModes *)
 
 type
    (* Row one is CW when the contest counts by mode and Both when it does not;
@@ -640,7 +641,7 @@ begin
      so the base's "every mode" answer would call it a mixed contest. *)
    if aQSOByMode then
       begin
-      LabelRows([GMultNeedLabel[1], GMultNeedLabel[2]], aMultByMode, mweNewMultStatus, 'Both:');
+      LabelRows([GMultNeedLabel[1], GMultNeedLabel[2]], aMultByMode, mweNewMultStatus, SMultStripBothModes);
       end
    else
       begin

@@ -269,6 +269,10 @@ type
         others return to these. *)
       FBaseClientHeight: integer;
       FBaseClientWidth: integer;
+      (* The header's designed height: the description under the title may
+        wrap to more lines than it was designed for, and the window grows by
+        the difference (FitWindowTo). *)
+      FBaseHeaderHeight: integer;
       (* RUN FROM STARTUP, BEFORE THE NEW CONTEST WINDOW (ShowSetupWizardAtStartup).
         Nothing exists yet to put a radio or a cluster into use on, and startup
         applies the saved active profile and cluster itself a little later --
@@ -288,6 +292,8 @@ type
       procedure ShowCountryFileState;
       procedure ShowEditorPage(const aPage: TSetupPage);
       procedure FitWindowTo(const aHosted: integer; const aHostedWidth: integer = 0);
+      function FitPageColumns: integer;
+      function ChecklistHeight: integer;
       procedure LoggerLayoutChanged(Sender: TObject);
       procedure DropLoggerEditor;
       procedure LoadRotatorLists;
@@ -378,7 +384,7 @@ uses
    uDXLabCommanderProtocol,   // COMMANDER_DEFAULT_PORT -- the port WSJT-X's radio control connects to
    uRadioConfigApply,   // ApplyAndStoreCommand, StationCommandValue, ApplyProfile ...
    uPrefsForm,          // PreferencesIsShowing, LoadClusterDirectory ...
-   uLCLFormHelpers,     // OwnFormByMainWindow
+   uLCLFormHelpers,     // OwnFormByMainWindow, FitCaptionColumn, WrappedTextHeight
    uAppStrings,
    uAppPaths,           // DownloadedDataFilePath, HelpDir
    uEmbeddedTranslations, // ActiveUILanguage -- which help catalogue to load
@@ -502,7 +508,12 @@ begin
 
    FBaseClientHeight := ClientHeight;
    FBaseClientWidth := ClientWidth;
+   FBaseHeaderHeight := pnlHeader.Height;
    AssignCaptions;
+   (* The captions are final now: every page's label column is fitted to its
+     language once, and the window is as wide as the widest page needs. *)
+   FBaseClientWidth := FBaseClientWidth
+                       + GrowWithinRoom(FitPageColumns, Screen.WorkAreaWidth - Width);
    ApplyFieldHelp;
    LoadStation;
    LoadWSJTX;
@@ -1219,6 +1230,10 @@ begin
    hosted := 0;
    hostedWidth := 0;
    case aPage of
+      spChecklist:
+         begin
+         hosted := ChecklistHeight;
+         end;
       spRadio:
          begin
          if FRadioEditor = nil then
@@ -1231,6 +1246,8 @@ begin
             end;
          UpdateCWChoices;
          hosted := FRadioEditor.pnlContent.Height;
+         (* As wide as its captions made it (TRadioEditForm.FitLayout). *)
+         hostedWidth := FRadioEditor.pnlContent.Width;
          if chkCWByCAT.Visible or chkSpeedSync.Visible then
             begin
             hosted := hosted + CW_ROW_HEIGHT;
@@ -1246,6 +1263,7 @@ begin
             FKeyerEditor.EditKeyerIn(FKeyerEditing, tsKeyer);
             end;
          hosted := FKeyerEditor.pnlContent.Height;
+         hostedWidth := FKeyerEditor.pnlContent.Width;
          end;
       spLogger:
          begin
@@ -1350,31 +1368,158 @@ begin
       end;
 end;
 
+(* EVERY PAGE'S LABEL COLUMN AS WIDE AS ITS WIDEST CAPTION, and how much
+  wider than designed the window must be for the widest page.
+
+  The columns were typed for English (120-140 px) and a translation was cut
+  off -- German on gtk2 showed "Hafer" for the cluster's Port and "Nach dem
+  Verbind..." for After connecting. uLCLFormHelpers.FitCaptionColumn widens a
+  column to its widest caption and moves the inputs (and the Station page's
+  right-hand notes) by the same amount; the cluster's Port caption is a
+  column of its own, after the server box. The notes that wrap are anchored
+  in the .lfm (left and right, rows hanging from the one above), so they
+  follow without code.
+
+  The answer is what the widest page's right edge, plus the designed 16 px
+  margin, needs beyond the page as designed -- 0 in English, so the window
+  keeps its designed width there. The caller caps it at the work area. Once,
+  from the constructor: the language does not change while the wizard lives. *)
+function TfrmSetupWizard.FitPageColumns: integer;
+const
+   PAGE_MARGIN = 16;
+   PAGE_FRAME  = 8;
+var
+   sheets: array[0..4] of TTabSheet;
+   i:      integer;
+   want:   integer;
+begin
+   FitCaptionColumn([lblCall, lblName, lblGrid, lblState, lblSection, lblPostal,
+                     lblZone, lblITUZone, lblCountry, lblContinent],
+                    [edtCall, edtName, edtGrid, edtState, edtSection, edtPostal,
+                     edtZone, edtITUZone, edtCountry, cbxContinent,
+                     lblLookup, lblCtyStatus, btnCtyDownload, lblDerived]);
+
+   FitCaptionColumn([lblServer, lblLogin, lblPassword, lblCommand],
+                    [cbxServer, lblPort, edtPort, edtLogin, edtPassword, edtCommand]);
+   FitCaptionColumn([lblPort], [edtPort]);
+
+   FitCaptionColumn([lblRotatorType, lblRotatorPort, lblRotatorIP, lblRotatorUDP],
+                    [cbxRotatorType, cbxRotatorPort, edtRotatorIP, edtRotatorUDP]);
+
+   FitCaptionColumn([lblWSJTXPort, lblWSJTXMulticast],
+                    [edtWSJTXPort, edtWSJTXMulticast]);
+
+   sheets[0] := tsStation;
+   sheets[1] := tsChecklist;
+   sheets[2] := tsCluster;
+   sheets[3] := tsRotator;
+   sheets[4] := tsWSJTX;
+
+   Result := 0;
+   for i := Low(sheets) to High(sheets) do
+      begin
+      want := ChildrenRightEdge(sheets[i]) + Scale96ToForm(PAGE_MARGIN)
+              - (ClientWidth - Scale96ToForm(PAGE_FRAME));
+      if want > Result then
+         begin
+         Result := want;
+         end;
+      end;
+end;
+
+(* HOW TALL THE CHECKLIST PAGE'S CONTENT IS, its notes wrapped. Each note
+  hangs under its box and the next box under the note (the .lfm), so a note
+  that wraps to more lines pushes the rest down -- past the designed page in a
+  long language. Measured (WrappedTextHeight) at the width the notes get: the
+  page less their 40 px indent and 16 px right margin. English is 287 px plus
+  the page's own frame, inside the designed window, so nothing changes there. *)
+function TfrmSetupWizard.ChecklistHeight: integer;
+const
+   FIRST_TOP   = 8;    (* the first box's top *)
+   NOTE_GAP    = 1;    (* box to its note *)
+   ITEM_GAP    = 9;    (* note to the next box *)
+   NOTE_INDENT = 40;
+   NOTE_RIGHT  = 16;
+   PAGE_FRAME  = 8;
+   PAGE_AIR    = 20;   (* the page control's frame and the air under the last note *)
+var
+   boxes: array[0..5] of TCheckBox;
+   notes: array[0..5] of TLabel;
+   i, noteWidth: integer;
+begin
+   boxes[0] := chkRadio;
+   boxes[1] := chkKeyer;
+   boxes[2] := chkCluster;
+   boxes[3] := chkLogger;
+   boxes[4] := chkRotator;
+   boxes[5] := chkWSJTX;
+   notes[0] := lblRadioHint;
+   notes[1] := lblKeyerHint;
+   notes[2] := lblClusterHint;
+   notes[3] := lblLoggerHint;
+   notes[4] := lblRotatorHint;
+   notes[5] := lblWSJTXHint;
+
+   noteWidth := FBaseClientWidth
+                - Scale96ToForm(PAGE_FRAME + NOTE_INDENT + NOTE_RIGHT);
+   Result := Scale96ToForm(FIRST_TOP + PAGE_AIR);
+   for i := Low(boxes) to High(boxes) do
+      begin
+      if i > Low(boxes) then
+         begin
+         Result := Result + Scale96ToForm(ITEM_GAP);
+         end;
+      Result := Result + boxes[i].Height + Scale96ToForm(NOTE_GAP)
+                + WrappedTextHeight(notes[i].Font, notes[i].Caption, noteWidth);
+      end;
+end;
+
 (* Size the window to the header, the hosted editor (and anything under it),
   the buttons and a little air. *)
 procedure TfrmSetupWizard.FitWindowTo(const aHosted: integer; const aHostedWidth: integer);
 const
    SLACK = 8;
+   INTRO_RIGHT  = 16;   (* the designed margin right of the description *)
+   INTRO_BOTTOM = 4;    (* and under it *)
 var
-   needed, neededWidth: integer;
+   needed, neededWidth, header: integer;
    work, outer: TRect;
 begin
-   needed := pnlHeader.Height + aHosted + pnlButtons.Height + SLACK;
-   if needed < FBaseClientHeight then
-      begin
-      needed := FBaseClientHeight;
-      end;
-   ClientHeight := needed;
-
-   (* WIDER ONLY FOR AN EDITOR THAT IS: the external logger editor lays out
-     from measurement and can be wider than the designed window.  The page
-     control's frame is SLACK. *)
+   (* WIDER ONLY FOR AN EDITOR THAT IS: the external logger and radio editors
+     lay out from measurement and can be wider than the designed window.  The
+     page control's frame is SLACK.  FBaseClientWidth already holds what the
+     widest fitted page needs (FitPageColumns). *)
    neededWidth := aHostedWidth + SLACK;
    if neededWidth < FBaseClientWidth then
       begin
       neededWidth := FBaseClientWidth;
       end;
    ClientWidth := neededWidth;
+
+   (* THE DESCRIPTION UNDER THE TITLE IS AS TALL AS IT WRAPS, at the width it
+     will have (it is anchored left and right, so the width just set).  It was
+     a fixed two lines, and a translation was cut off mid-sentence on every
+     page.  Measured, not asked of the label: before the window is shown a
+     word-wrapped label reports no wrapped height.  Never below the designed
+     header, so English is unchanged. *)
+   header := lblIntro.Top
+             + WrappedTextHeight(lblIntro.Font, lblIntro.Caption,
+                                 ClientWidth - lblIntro.Left - Scale96ToForm(INTRO_RIGHT))
+             + Scale96ToForm(INTRO_BOTTOM);
+   if header < FBaseHeaderHeight then
+      begin
+      header := FBaseHeaderHeight;
+      end;
+   pnlHeader.Height := header;
+
+   (* The designed page area under a taller header: the window grows by what
+     the header grew, so no page loses its bottom rows. *)
+   needed := pnlHeader.Height + aHosted + pnlButtons.Height + SLACK;
+   if needed < FBaseClientHeight + (pnlHeader.Height - FBaseHeaderHeight) then
+      begin
+      needed := FBaseClientHeight + (pnlHeader.Height - FBaseHeaderHeight);
+      end;
+   ClientHeight := needed;
 
    (* GROWN DOWNWARDS, so a window placed for its normal height ends with its
      Back and Next under the taskbar (seen at 1280x800, 2026-11-14).  Pull it

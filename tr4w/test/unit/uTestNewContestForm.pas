@@ -36,6 +36,7 @@ uses
    uLatestContest,    (* TLatestContest -- what each grid row must say *)
    uTestLatestContest, (* MakeTestContestLog, WriteDamagedTestLog, ScrubTestLog *)
    uTestShowOffScreen, (* ShowOffScreen -- the layout test measures a shown form *)
+   uLCLFormHelpers,   (* GrowWithinRoom -- the cap the dialog's columns grow under *)
    uNewContestForm;
 
 type

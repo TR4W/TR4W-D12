@@ -670,6 +670,49 @@ const
 
 function TextWidthInFont(const aFont: TFont; const aText: TCaption): integer;
 function WidestText(const aFont: TFont; const aTexts: TStrings): integer;
+(* HOW MUCH A DIALOG MAY GROW to fit what it measured: what it wants, but never
+  past the room the screen's work area leaves, and never negative -- a dialog
+  fitted this way only grows. With no room at all (a desktop no wider than the
+  form, which is what a CI runner's service session gives) the answer is 0 and
+  the control keeps its designed size. Pure, so the cap is testable on any
+  screen. LIFTED FROM uNewContestForm when Preferences' navigation tree became
+  its second caller. *)
+function GrowWithinRoom(aWanted, aRoom: integer): integer;
+
+(* THE ROOM A CHECK BOX'S OWN GLYPH TAKES BESIDE ITS CAPTION, at 96 dpi: the
+  box and the gap to the text. A STATED ALLOWANCE, like DROPDOWN_CHROME_96:
+  the box is 13 px on Windows and up to 18 on gtk2 themes, plus its gap. *)
+const
+   CHECKBOX_CHROME_96 = 24;
+   (* What a caption needs beyond its text, so the last glyph is not shaved. *)
+   CAPTION_CHROME_96  = 4;
+
+(* A COLUMN OF CAPTIONS AS WIDE AS ITS WIDEST TEXT -- the label column of a
+  designed form whose widths were typed for English, so a longer translation
+  was cut off ("Kever Output Por" for Keyer Output Port, gtk2 German).
+
+  Every caption is measured in its own font (TextWidthInFont, so it answers
+  before the form has a window) plus aChrome96 scaled to the form. When the
+  widest needs more than the column's designed width (the widest Width among
+  aCaptions), every caption is widened to it and every control in aFollowers
+  -- the inputs beside the column and anything to their right -- moves right
+  by the same amount. Returns that amount, 0 when the text already fits, so
+  English keeps its designed layout. IDEMPOTENT: a second call finds the
+  column already wide enough and moves nothing.
+
+  The CALLER grows the parent by what this returns (GrowWithinRoom); this
+  routine only places. A follower anchored to another control's side follows
+  that control and must not be listed. *)
+function FitCaptionColumn(const aCaptions: array of TControl;
+                          const aFollowers: array of TControl;
+                          const aChrome96: integer = CAPTION_CHROME_96): integer;
+
+(* THE RIGHT EDGE OF aParent's PLACED CHILDREN: the largest Left + Width
+  among controls that are not aligned (an aligned child is as wide as its
+  parent by definition, and would answer the parent's width). What a fitted
+  page needs, before any layout has run. *)
+function ChildrenRightEdge(const aParent: TWinControl): integer;
+
 (* The height of one line of aText in aFont, by the same bitmap canvas. *)
 function TextHeightInFont(const aFont: TFont; const aText: TCaption): integer;
 (* THE HEIGHT OF aText WRAPPED AT WORD BREAKS TO aWidth, in aFont: whole lines
@@ -1429,6 +1472,82 @@ begin
    finally
       probe.Free;
    end;
+end;
+
+function GrowWithinRoom(aWanted, aRoom: integer): integer;
+begin
+   Result := aWanted;
+   if Result > aRoom then
+      begin
+      Result := aRoom;
+      end;
+   if Result < 0 then
+      begin
+      Result := 0;
+      end;
+end;
+
+function FitCaptionColumn(const aCaptions: array of TControl;
+                          const aFollowers: array of TControl;
+                          const aChrome96: integer): integer;
+var
+   i:        integer;
+   designed: integer;
+   widest:   integer;
+   w:        integer;
+begin
+   Result := 0;
+   if Length(aCaptions) = 0 then
+      begin
+      Exit;
+      end;
+
+   designed := 0;
+   widest   := 0;
+   for i := 0 to High(aCaptions) do
+      begin
+      if aCaptions[i].Width > designed then
+         begin
+         designed := aCaptions[i].Width;
+         end;
+      w := TextWidthInFont(aCaptions[i].Font, aCaptions[i].Caption)
+           + aCaptions[i].Scale96ToForm(aChrome96);
+      if w > widest then
+         begin
+         widest := w;
+         end;
+      end;
+
+   if widest <= designed then
+      begin
+      Exit;
+      end;
+
+   Result := widest - designed;
+   for i := 0 to High(aCaptions) do
+      begin
+      aCaptions[i].Width := widest;
+      end;
+   for i := 0 to High(aFollowers) do
+      begin
+      aFollowers[i].Left := aFollowers[i].Left + Result;
+      end;
+end;
+
+function ChildrenRightEdge(const aParent: TWinControl): integer;
+var
+   i: integer;
+   c: TControl;
+begin
+   Result := 0;
+   for i := 0 to aParent.ControlCount - 1 do
+      begin
+      c := aParent.Controls[i];
+      if (c.Align = alNone) and (c.Left + c.Width > Result) then
+         begin
+         Result := c.Left + c.Width;
+         end;
+      end;
 end;
 
 function TextHeightInFont(const aFont: TFont; const aText: TCaption): integer;

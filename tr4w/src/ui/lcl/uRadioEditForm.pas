@@ -270,6 +270,9 @@ type
         beginning "RADIO EDITOR " (help key TC_HELP_RADIO_EDITOR_...).
         Lint-ControlHints holds this form at no unhinted control. *)
       procedure ApplyFieldHelp;
+      (* EVERY CAPTION COLUMN AS WIDE AS ITS TEXT, in the UI language -- see the
+        routine. Once, from the constructor, after the captions are final. *)
+      procedure FitLayout;
       (* The "Drive through HamLib" box's tooltip, written as the LCL is
         about to show it (TControl.OnShowHint, public, not published for a
         TCheckBox -- so assigned in the constructor, not in the .lfm). It is
@@ -634,6 +637,95 @@ begin
 
    PopulateTypeCombo;
    PopulatePortCombos;
+
+   (* Last: every caption is final here (TranslateForm, the poll rate). *)
+   FitLayout;
+end;
+
+(* THE LABEL COLUMNS WERE TYPED FOR ENGLISH (120-130 px) and a translation
+  was cut off -- German on gtk2 showed "Kever Output Por" and "CI-V-Adresse
+  (hex". Each column is now as wide as its widest caption
+  (uLCLFormHelpers.FitCaptionColumn) and everything to its right moves with
+  it; a second column (CAT RTS/DTR, the Icom data mode, keyer stop bits) is
+  fitted after the first, so it moves twice when both grow. The check boxes on
+  Advanced are fitted to their captions too, each pushing what sits to its
+  right on the same row.
+
+  Then the CONTAINERS: the transport tabs grow to their widest page, the
+  content panel to its widest child, and the window to the panel, never past
+  the screen's work area (GrowWithinRoom). The wizard hosts pnlContent and
+  sizes itself from pnlContent.Width, so both hosts see the same answer.
+
+  English fits every designed width, so nothing moves in English. Measured,
+  not laid out: the form has no window yet, so no label can report its size.
+  Once, from the constructor -- the captions do not change while it lives. *)
+procedure TRadioEditForm.FitLayout;
+const
+   TAB_MARGIN   = 10;   (* designed: Advanced's widest row ends 10 px inside the tabs *)
+   PANEL_MARGIN = 12;   (* designed: keyer stop bits end 15 px inside the panel *)
+var
+   need: integer;
+   grow: integer;
+begin
+   (* Name and type. *)
+   FitCaptionColumn([lblName, lblType], [edtName, cbxType]);
+
+   (* Serial: the left column, then CAT RTS/DTR. *)
+   FitCaptionColumn([lblPort, lblBaud, lblDataBits, lblParity, lblStopBits],
+                    [cbxPort, edtBaud, pnlDataBits, pnlParity, pnlStopBits,
+                     lblCatRTS, cbxCatRTS, lblCatDTR, cbxCatDTR]);
+   FitCaptionColumn([lblCatRTS, lblCatDTR], [cbxCatRTS, cbxCatDTR]);
+
+   (* Network. The password's eye is anchored to its edit and follows it. *)
+   FitCaptionColumn([lblIP, lblTCPPort, lblUser, lblPassword, lblFound],
+                    [edtIP, btnDiscover, edtTCPPort, edtUser, edtPassword, cbxFound]);
+
+   (* Advanced: the left column, then each row's right-hand part. *)
+   FitCaptionColumn([lblStartup, lblFilterByte, lblHamLibID],
+                    [edtStartup, edtFilterByte, lblDataMode, edtDataMode,
+                     edtHamLibID, chkUseHamLib]);
+   FitCaptionColumn([lblDataMode], [edtDataMode]);
+   FitCaptionColumn([chkUseHamLib], [], CHECKBOX_CHROME_96);
+   FitCaptionColumn([chkWideCW], [chkFT1000MPReverse], CHECKBOX_CHROME_96);
+   FitCaptionColumn([chkFT1000MPReverse], [], CHECKBOX_CHROME_96);
+   FitCaptionColumn([chkPolling], [lblAutoInfo, edtAutoInfo], CHECKBOX_CHROME_96);
+   FitCaptionColumn([lblAutoInfo], [edtAutoInfo]);
+   FitCaptionColumn([lblFreqOffset, lblPollRate], [edtFreqOffset, edtPollRate]);
+
+   (* The keyer block under the tabs. *)
+   FitCaptionColumn([lblKeyerPort, lblCIV, lblKeyerRTS, lblKeyerDTR],
+                    [cbxKeyerPort, edtCIV, cbxKeyerRTS, lblKeyerStopBits,
+                     cbxKeyerStopBits, cbxKeyerDTR]);
+   FitCaptionColumn([lblKeyerStopBits], [cbxKeyerStopBits]);
+
+   (* The tabs, as wide as their widest page. *)
+   need := ChildrenRightEdge(tabSerial);
+   if ChildrenRightEdge(tabNetwork) > need then
+      begin
+      need := ChildrenRightEdge(tabNetwork);
+      end;
+   if ChildrenRightEdge(tabAdvanced) > need then
+      begin
+      need := ChildrenRightEdge(tabAdvanced);
+      end;
+   grow := need + Scale96ToForm(TAB_MARGIN) - tbcTransport.Width;
+   if grow > 0 then
+      begin
+      tbcTransport.Width := tbcTransport.Width + grow;
+      end;
+
+   (* The panel, as wide as its widest child; the window, as wide as the
+     panel while it is still this form's (the wizard takes it later). *)
+   grow := ChildrenRightEdge(pnlContent) + Scale96ToForm(PANEL_MARGIN) - pnlContent.Width;
+   if grow > 0 then
+      begin
+      pnlContent.Width := pnlContent.Width + grow;
+      end;
+   grow := GrowWithinRoom(pnlContent.Width - ClientWidth, Screen.WorkAreaWidth - Width);
+   if grow > 0 then
+      begin
+      ClientWidth := ClientWidth + grow;
+      end;
 end;
 
 procedure TRadioEditForm.PopulateTypeCombo;

@@ -1333,6 +1333,7 @@ type
         command they carry, and four copies of the detection-and-collapse rules
         would drift the first time one of them was corrected. }
       procedure BuildNavTree;
+      procedure FitNavWidth;
       procedure NoteRadiosNavItem(item: TTreeNode);
       procedure ApplyChevrons;
 
@@ -2378,6 +2379,7 @@ begin
    // uncalled -- which opened Preferences with an empty navigation strip and no
    // error anywhere, because an empty tree is not a failure to any layer here.
    BuildNavTree;
+   FitNavWidth;
    LogPhase(FTiming, 'BuildNavTree');
 
    // THE SEARCH RESULTS OVERLAY, created here rather than streamed.
@@ -6761,57 +6763,57 @@ begin
    try
       tvNav.Items.Clear;
 
-      navStation := tvNav.Items.Add(nil, 'Station');
+      navStation := tvNav.Items.Add(nil, SPrefsNavStation);
       TNavNode(navStation).Tag := 1;
-      navHardware := tvNav.Items.Add(nil, 'Hardware');
+      navHardware := tvNav.Items.Add(nil, SPrefsNavHardware);
       TNavNode(navHardware).Tag := 2;
-      navRadios := tvNav.Items.AddChild(navHardware, 'Radios');
+      navRadios := tvNav.Items.AddChild(navHardware, SPrefsNavRadios);
       TNavNode(navRadios).Tag := 26;
-      navRotators := tvNav.Items.AddChild(navHardware, 'Rotators');
+      navRotators := tvNav.Items.AddChild(navHardware, SPrefsNavRotators);
       TNavNode(navRotators).Tag := 27;
       navKeyers := tvNav.Items.AddChild(navHardware, SPrefsNavCWKeyers);
       TNavNode(navKeyers).Tag := NAV_KEYERS;
-      navCluster := tvNav.Items.Add(nil, 'DX Cluster');
+      navCluster := tvNav.Items.Add(nil, SPrefsNavDXCluster);
       TNavNode(navCluster).Tag := 3;
       navClusterSpots := tvNav.Items.AddChild(navCluster, SPrefsNavClusterSpots);
       TNavNode(navClusterSpots).Tag := NAV_CLUSTERSPOTS;
-      navOperating := tvNav.Items.Add(nil, 'Operating');
+      navOperating := tvNav.Items.Add(nil, SPrefsNavOperating);
       TNavNode(navOperating).Tag := 21;
-      navBandMap := tvNav.Items.AddChild(navOperating, 'Band Map');
+      navBandMap := tvNav.Items.AddChild(navOperating, SPrefsNavBandMap);
       TNavNode(navBandMap).Tag := 20;
       navBandMapWindow := tvNav.Items.AddChild(navBandMap, SPrefsNavBandMapWindow);
       TNavNode(navBandMapWindow).Tag := NAV_BANDMAPWINDOW;
-      navBands := tvNav.Items.AddChild(navOperating, 'Bands');
+      navBands := tvNav.Items.AddChild(navOperating, SPrefsNavBands);
       TNavNode(navBands).Tag := 24;
       // Issue 235: what is sent around your own call (DE ENABLE).
       navEntry := tvNav.Items.AddChild(navOperating, SPrefsNavEntryAndDupeChecking);
       TNavNode(navEntry).Tag := NAV_ENTRY;
       navMessages := tvNav.Items.AddChild(navOperating, SPrefsNavMessages);
       TNavNode(navMessages).Tag := NAV_MESSAGES;
-      navOnlineScoring := tvNav.Items.AddChild(navOperating, 'Online Scoring');
+      navOnlineScoring := tvNav.Items.AddChild(navOperating, SPrefsNavOnlineScoring);
       TNavNode(navOnlineScoring).Tag := 22;
-      navTwoRadio := tvNav.Items.AddChild(navOperating, 'Two Radio Mode');
+      navTwoRadio := tvNav.Items.AddChild(navOperating, SPrefsNavTwoRadioMode);
       TNavNode(navTwoRadio).Tag := 25;
       navSCP := tvNav.Items.Add(nil, 'SCP');
       TNavNode(navSCP).Tag := 4;
-      navUDPBroadcast := tvNav.Items.Add(nil, 'UDP Broadcast');
+      navUDPBroadcast := tvNav.Items.Add(nil, SPrefsNavUDPBroadcast);
       TNavNode(navUDPBroadcast).Tag := 5;
-      navNetwork := tvNav.Items.Add(nil, 'Network');
+      navNetwork := tvNav.Items.Add(nil, SPrefsNavNetwork);
       TNavNode(navNetwork).Tag := 6;
-      navAppearance := tvNav.Items.Add(nil, 'Appearance');
+      navAppearance := tvNav.Items.Add(nil, SPrefsNavAppearance);
       TNavNode(navAppearance).Tag := 7;
       // Under Appearance, because that is where an operator looks for it, and
       // as its own page because fifty elements x two drop-downs will not fit
       // on the designed panel.
-      navColors := tvNav.Items.AddChild(navAppearance, 'Colors');
+      navColors := tvNav.Items.AddChild(navAppearance, SPrefsNavColors);
       TNavNode(navColors).Tag := NAV_COLORS;
       navLogDisplay := tvNav.Items.AddChild(navAppearance, SPrefsNavLogDisplay);
       TNavNode(navLogDisplay).Tag := NAV_LOGDISPLAY;
-      navLogging := tvNav.Items.Add(nil, 'Logging');
+      navLogging := tvNav.Items.Add(nil, SPrefsNavLogging);
       TNavNode(navLogging).Tag := 8;
-      navBackup := tvNav.Items.Add(nil, 'Backup');
+      navBackup := tvNav.Items.Add(nil, SPrefsNavBackup);
       TNavNode(navBackup).Tag := 9;
-      navContest := tvNav.Items.Add(nil, 'Contest');
+      navContest := tvNav.Items.Add(nil, SPrefsNavContest);
       TNavNode(navContest).Tag := 10;
       (* THE CONTEST LEAVES, split off the Contest page by topic (NY4I).
         Their placements are in DeclarePrefsPlacements. *)
@@ -6838,11 +6840,11 @@ begin
         place.  Where "More settings" was, which emptied and went. *)
       navFiles := tvNav.Items.Add(nil, SPrefsNavFilesAndUpdates);
       TNavNode(navFiles).Tag := NAV_FILES;
-      navAudio := tvNav.Items.Add(nil, 'Audio');
+      navAudio := tvNav.Items.Add(nil, SPrefsNavAudio);
       TNavNode(navAudio).Tag := 29;
-      navCW := tvNav.Items.Add(nil, 'CW Settings');
+      navCW := tvNav.Items.Add(nil, SPrefsNavCWSettings);
       TNavNode(navCW).Tag := 11;
-      navPaddlePTT := tvNav.Items.AddChild(navCW, 'Paddle and PTT');
+      navPaddlePTT := tvNav.Items.AddChild(navCW, SPrefsNavPaddleAndPTT);
       TNavNode(navPaddlePTT).Tag := 28;
       (* ONE HOME FOR CW (issue 235, NY4I: "I don't see a reason to have CW in
         multiple places").  The page that was Operating > CW, moved here by its
@@ -6851,21 +6853,21 @@ begin
       TNavNode(navOperatingCW).Tag := NAV_OPERATINGCW;
       navCWCharacters := tvNav.Items.AddChild(navCW, SPrefsNavCWSpeedAndCharacters);
       TNavNode(navCWCharacters).Tag := NAV_CWCHARACTERS;
-      navWebServer := tvNav.Items.Add(nil, 'Web Server');
+      navWebServer := tvNav.Items.Add(nil, SPrefsNavWebServer);
       TNavNode(navWebServer).Tag := 12;
-      navTCIServer := tvNav.Items.Add(nil, 'TCI Server');
+      navTCIServer := tvNav.Items.Add(nil, SPrefsNavTCIServer);
       TNavNode(navTCIServer).Tag := 15;
-      navExternalSoftware := tvNav.Items.Add(nil, 'External Software');
+      navExternalSoftware := tvNav.Items.Add(nil, SPrefsNavExternalSoftware);
       TNavNode(navExternalSoftware).Tag := 13;
       navWSJTX := tvNav.Items.AddChild(navExternalSoftware, 'WSJT-X');
       TNavNode(navWSJTX).Tag := 16;
-      navExternalLogger := tvNav.Items.AddChild(navExternalSoftware, 'External Logger');
+      navExternalLogger := tvNav.Items.AddChild(navExternalSoftware, SPrefsNavExternalLogger);
       TNavNode(navExternalLogger).Tag := 17;
       navDXLab := tvNav.Items.AddChild(navExternalSoftware, 'DXLab');
       TNavNode(navDXLab).Tag := 18;
       navMMTTY := tvNav.Items.AddChild(navExternalSoftware, 'MMTTY');
       TNavNode(navMMTTY).Tag := 19;
-      navAdvanced := tvNav.Items.Add(nil, 'Advanced');
+      navAdvanced := tvNav.Items.Add(nil, SPrefsNavAdvanced);
       TNavNode(navAdvanced).Tag := 14;
 
       // Collapsed at open, as the designed form was: an operator looking for
@@ -6874,6 +6876,63 @@ begin
    finally
       tvNav.Items.EndUpdate;
    end;
+end;
+
+(* THE NAVIGATION STRIP IS AS WIDE AS ITS WIDEST CAPTION. Its 170 px was sized
+  for the English captions, so a longer translation was clipped ("Archivos y
+  actualizacion..." for Files and updates, on gtk2). Every node is measured,
+  children included -- the tree opens collapsed but they expand -- each at its
+  own depth: one Indent per level plus the root's button column (ShowRoot).
+  The vertical bar is counted because expanding a branch brings it up.
+
+  THE FORM GROWS, THE PAGES DO NOT. The form is fixed-size and every page is a
+  designed 675 px child of layContent (BuildPlacedBlock reads its page's
+  ClientWidth), so
+  a splitter could only squeeze the page; instead the strip, the search box
+  and the form widen by the same amount and the content panel moves right.
+  The footer buttons are anchored right and follow. Never past the screen's
+  work area (GrowWithinRoom); never narrower than designed.
+
+  Once, after BuildNavTree: a language takes effect at the next start, so the
+  captions do not change while this form lives. *)
+procedure TPrefsForm.FitNavWidth;
+const
+   NAV_TEXT_PAD = 4;   (* before the text and after it *)
+var
+   i:      integer;
+   node:   TTreeNode;
+   w:      integer;
+   widest: integer;
+   need:   integer;
+   grow:   integer;
+begin
+   widest := 0;
+   for i := 0 to tvNav.Items.Count - 1 do
+      begin
+      node := tvNav.Items[i];
+      w := (node.Level + 1) * tvNav.Indent + TextWidthInFont(tvNav.Font, node.Text);
+      if w > widest then
+         begin
+         widest := w;
+         end;
+      end;
+
+   need := widest + 2 * NAV_TEXT_PAD + GetSystemMetrics(SM_CXVSCROLL);
+   grow := GrowWithinRoom(need - tvNav.Width, Screen.WorkAreaWidth - Width);
+
+   if grow > 0 then
+      begin
+      tvNav.Width     := tvNav.Width + grow;
+      edtSearch.Width := edtSearch.Width + grow;
+      layContent.Left := layContent.Left + grow;
+      ClientWidth     := ClientWidth + grow;
+      end;
+
+   if logger.IsDebugEnabled then
+      begin
+      logger.Debug('[Prefs] navigation: widest caption needs %d px, grew %d -> strip %d, form %d',
+                   [need, grow, tvNav.Width, Width]);
+      end;
 end;
 
 procedure TPrefsForm.ForEachNavItem(const aVisit: TNavItemVisit);

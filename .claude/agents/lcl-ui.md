@@ -792,6 +792,21 @@ through `Format`, not `LclText`/`UnicodeFormat` (that is two needless
 conversions). The page control hides its tabs; the page ORDER lives in
 `uSetupWizard.SetupPagePlan`, never in tab indexes.
 
+**Its label columns, and the radio editor's, are fitted to the language**
+(2026-11-24, German on gtk2 cut "Keyer Output Port" to "Kever Output Por").
+`uLCLFormHelpers.FitCaptionColumn(captions, followers, chrome)` widens a
+column to its widest caption (measured, so it works before a window exists)
+and moves the followers by the same amount; 0 in English. The wizard runs it
+once after `AssignCaptions` (`FitPageColumns`, which also widens
+`FBaseClientWidth` by what the widest page needs, `ChildrenRightEdge`), the
+radio editor once at the end of its constructor (`FitLayout`, which also grows
+the tabs, `pnlContent` and its own window); the wizard sizes itself from the
+hosted `pnlContent.Width`. Wrapped notes are anchored left and right and the
+rows under them hang from them in the `.lfm`. The header is as tall as
+`lblIntro` wraps (`FitWindowTo`, measured with `WrappedTextHeight`), and the
+window grows by the header's growth. A new caption on these forms belongs in
+a column passed to one of those calls.
+
 ## A key held anywhere: the LCL has a key-DOWN hook and no key-UP one (issue #3, 2026-11-15)
 
 `Application.AddOnKeyDownBeforeHandler` reaches every `TWinControl` (it runs in

@@ -27,6 +27,7 @@ object frmSetupWizard: TfrmSetupWizard
       Height = 20
       Top = 12
       Width = 440
+      Anchors = [akTop, akLeft, akRight]
       AutoSize = False
       Caption = 'lblHeading'
       Font.Style = [fsBold]
@@ -38,6 +39,7 @@ object frmSetupWizard: TfrmSetupWizard
       Top = 12
       Width = 140
       Alignment = taRightJustify
+      Anchors = [akTop, akRight]
       AutoSize = False
       Caption = 'lblStep'
     end
@@ -46,6 +48,7 @@ object frmSetupWizard: TfrmSetupWizard
       Height = 46
       Top = 38
       Width = 588
+      Anchors = [akTop, akLeft, akRight, akBottom]
       AutoSize = False
       Caption = 'lblIntro'
       WordWrap = True
@@ -249,41 +252,74 @@ object frmSetupWizard: TfrmSetupWizard
         TabOrder = 19
       end
       object lblLookup: TLabel
+        AnchorSideLeft.Control = edtCall
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideRight.Control = tsStation
+        AnchorSideRight.Side = asrBottom
         Left = 300
         Height = 46
         Top = 11
         Width = 296
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 20
+        BorderSpacing.Right = 16
         Caption = 'lblLookup'
+        Constraints.MinHeight = 46
         WordWrap = True
       end
       object lblCtyStatus: TLabel
+        AnchorSideLeft.Control = edtCall
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = lblLookup
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsStation
+        AnchorSideRight.Side = asrBottom
         Left = 300
         Height = 46
         Top = 62
         Width = 296
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 20
+        BorderSpacing.Top = 5
+        BorderSpacing.Right = 16
         Caption = 'lblCtyStatus'
+        Constraints.MinHeight = 46
         WordWrap = True
       end
       object btnCtyDownload: TButton
+        AnchorSideLeft.Control = edtCall
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = lblCtyStatus
+        AnchorSideTop.Side = asrBottom
         Left = 300
         Height = 25
         Top = 112
         Width = 200
         AutoSize = True
+        BorderSpacing.Left = 20
+        BorderSpacing.Top = 4
         Constraints.MinWidth = 200
         Caption = 'btnCtyDownload'
         TabOrder = 10
         OnClick = btnCtyDownloadClick
       end
       object lblDerived: TLabel
+        AnchorSideLeft.Control = edtCall
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = btnCtyDownload
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsStation
+        AnchorSideRight.Side = asrBottom
         Left = 300
         Height = 76
         Top = 167
         Width = 296
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 20
+        BorderSpacing.Top = 30
+        BorderSpacing.Right = 16
         Caption = 'lblDerived'
+        Constraints.MinHeight = 76
         WordWrap = True
       end
     end
@@ -301,97 +337,154 @@ object frmSetupWizard: TfrmSetupWizard
         OnChange = ChecklistChange
       end
       object lblRadioHint: TLabel
+        AnchorSideTop.Control = chkRadio
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChecklist
+        AnchorSideRight.Side = asrBottom
         Left = 40
         Height = 17
         Top = 30
         Width = 556
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 1
+        BorderSpacing.Right = 16
         Caption = 'lblRadioHint'
+        WordWrap = True
       end
       object chkKeyer: TCheckBox
+        AnchorSideTop.Control = lblRadioHint
+        AnchorSideTop.Side = asrBottom
         Left = 16
         Height = 21
         Top = 56
         Width = 560
+        BorderSpacing.Top = 9
         Caption = 'chkKeyer'
         TabOrder = 1
         OnChange = ChecklistChange
       end
       object lblKeyerHint: TLabel
+        AnchorSideTop.Control = chkKeyer
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChecklist
+        AnchorSideRight.Side = asrBottom
         Left = 40
         Height = 17
         Top = 78
         Width = 556
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 1
+        BorderSpacing.Right = 16
         Caption = 'lblKeyerHint'
+        WordWrap = True
       end
       object chkCluster: TCheckBox
+        AnchorSideTop.Control = lblKeyerHint
+        AnchorSideTop.Side = asrBottom
         Left = 16
         Height = 21
         Top = 104
         Width = 560
+        BorderSpacing.Top = 9
         Caption = 'chkCluster'
         TabOrder = 2
         OnChange = ChecklistChange
       end
       object lblClusterHint: TLabel
+        AnchorSideTop.Control = chkCluster
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChecklist
+        AnchorSideRight.Side = asrBottom
         Left = 40
         Height = 17
         Top = 126
         Width = 556
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 1
+        BorderSpacing.Right = 16
         Caption = 'lblClusterHint'
+        WordWrap = True
       end
       object chkLogger: TCheckBox
+        AnchorSideTop.Control = lblClusterHint
+        AnchorSideTop.Side = asrBottom
         Left = 16
         Height = 21
         Top = 152
         Width = 560
+        BorderSpacing.Top = 9
         Caption = 'chkLogger'
         TabOrder = 3
         OnChange = ChecklistChange
       end
       object lblLoggerHint: TLabel
+        AnchorSideTop.Control = chkLogger
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChecklist
+        AnchorSideRight.Side = asrBottom
         Left = 40
         Height = 17
         Top = 174
         Width = 556
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 1
+        BorderSpacing.Right = 16
         Caption = 'lblLoggerHint'
+        WordWrap = True
       end
       object chkRotator: TCheckBox
+        AnchorSideTop.Control = lblLoggerHint
+        AnchorSideTop.Side = asrBottom
         Left = 16
         Height = 21
         Top = 200
         Width = 560
+        BorderSpacing.Top = 9
         Caption = 'chkRotator'
         TabOrder = 4
         OnChange = ChecklistChange
       end
       object lblRotatorHint: TLabel
+        AnchorSideTop.Control = chkRotator
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChecklist
+        AnchorSideRight.Side = asrBottom
         Left = 40
         Height = 17
         Top = 222
         Width = 556
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 1
+        BorderSpacing.Right = 16
         Caption = 'lblRotatorHint'
+        WordWrap = True
       end
       object chkWSJTX: TCheckBox
+        AnchorSideTop.Control = lblRotatorHint
+        AnchorSideTop.Side = asrBottom
         Left = 16
         Height = 21
         Top = 248
         Width = 560
+        BorderSpacing.Top = 9
         Caption = 'chkWSJTX'
         TabOrder = 5
         OnChange = ChecklistChange
       end
       object lblWSJTXHint: TLabel
+        AnchorSideTop.Control = chkWSJTX
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsChecklist
+        AnchorSideRight.Side = asrBottom
         Left = 40
         Height = 17
         Top = 270
         Width = 556
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 1
+        BorderSpacing.Right = 16
         Caption = 'lblWSJTXHint'
+        WordWrap = True
       end
     end
     object tsRadio: TTabSheet
@@ -473,15 +566,26 @@ object frmSetupWizard: TfrmSetupWizard
         TabOrder = 2
       end
       object lblServerHint: TLabel
+        AnchorSideLeft.Control = cbxServer
+        AnchorSideTop.Control = cbxServer
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = tsCluster
+        AnchorSideRight.Side = asrBottom
         Left = 160
         Height = 34
         Top = 34
         Width = 436
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 3
+        BorderSpacing.Right = 16
         Caption = 'lblServerHint'
+        Constraints.MinHeight = 34
         WordWrap = True
       end
       object edtLogin: TEdit
+        AnchorSideTop.Control = lblServerHint
+        AnchorSideTop.Side = asrBottom
+        BorderSpacing.Top = 8
         Left = 160
         Height = 23
         Top = 76
@@ -490,6 +594,8 @@ object frmSetupWizard: TfrmSetupWizard
         TabOrder = 5
       end
       object lblLogin: TInputCaption
+        AnchorSideTop.Control = edtLogin
+        AnchorSideTop.Side = asrCenter
         Left = 16
         Height = 17
         Top = 79
@@ -500,6 +606,9 @@ object frmSetupWizard: TfrmSetupWizard
         TabOrder = 4
       end
       object edtPassword: TEdit
+        AnchorSideTop.Control = edtLogin
+        AnchorSideTop.Side = asrBottom
+        BorderSpacing.Top = 3
         Left = 160
         Height = 23
         Top = 102
@@ -509,6 +618,8 @@ object frmSetupWizard: TfrmSetupWizard
         TabOrder = 7
       end
       object lblPassword: TInputCaption
+        AnchorSideTop.Control = edtPassword
+        AnchorSideTop.Side = asrCenter
         Left = 16
         Height = 17
         Top = 105
@@ -519,6 +630,9 @@ object frmSetupWizard: TfrmSetupWizard
         TabOrder = 6
       end
       object edtCommand: TEdit
+        AnchorSideTop.Control = edtPassword
+        AnchorSideTop.Side = asrBottom
+        BorderSpacing.Top = 3
         Left = 160
         Height = 23
         Top = 128
@@ -526,6 +640,8 @@ object frmSetupWizard: TfrmSetupWizard
         TabOrder = 9
       end
       object lblCommand: TInputCaption
+        AnchorSideTop.Control = edtCommand
+        AnchorSideTop.Side = asrCenter
         Left = 16
         Height = 17
         Top = 131

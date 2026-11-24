@@ -288,13 +288,9 @@ var
    TR4W restarts to do it (issue 228), after the same version prefix. *)
 function NewContestFormCaption(aMode: TNewContestDialogMode = ncmStartup): string;
 
-(* HOW MUCH A COLUMN OF THIS DIALOG MAY GROW: what it wants, but never past
-   the room the screen's work area leaves, and never negative -- the dialog
-   only grows. Both SizeContestList and SizeFileGrid ask it, so the cap is
-   one rule. With no room at all (a desktop no wider than the form, which is
-   what a CI runner's service session gives) the answer is 0 and the control
-   scrolls sideways instead. Interfaced so the cap is testable on any screen. *)
-function GrowWithinRoom(aWanted, aRoom: integer): integer;
+(* HOW MUCH A COLUMN OF THIS DIALOG MAY GROW is uLCLFormHelpers.GrowWithinRoom:
+   SizeContestList and SizeFileGrid both ask it, so the cap is one rule, and
+   with no room the control scrolls sideways instead. *)
 
 implementation
 
@@ -326,19 +322,6 @@ var
     write-before-the-load path. Within a run it carries from the start-up
     dialog to File > Open Log; a restart starts unticked. *)
   GSoonestFirst: boolean = False;
-
-function GrowWithinRoom(aWanted, aRoom: integer): integer;
-begin
-   Result := aWanted;
-   if Result > aRoom then
-      begin
-      Result := aRoom;
-      end;
-   if Result < 0 then
-      begin
-      Result := 0;
-      end;
-end;
 
 function NewContestFormCaption(aMode: TNewContestDialogMode = ncmStartup): string;
 begin

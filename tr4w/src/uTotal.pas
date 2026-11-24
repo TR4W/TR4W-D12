@@ -479,7 +479,7 @@ begin
      begin
      if (ActiveMode = CW) or ((QTotals[AllBands, CW] > 0) and (NumberDifferentMults < 3)) then
         begin
-        WriteLeftColumnText('CW - ');
+        WriteLeftColumnText(TC_CWQSOS);
         end;
      if (ActiveMode = Phone) or ((QTotals[AllBands, Phone] > 0) and (NumberDifferentMults < 3)) then
         begin

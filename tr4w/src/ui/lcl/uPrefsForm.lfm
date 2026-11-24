@@ -365,12 +365,12 @@ object PrefsForm: TPrefsForm
       end
       object grpProfile: TGroupBox
         Left = 12
-        Height = 260
+        Height = 300
         Top = 195
-        Width = 540
+        Width = 651
         Caption = 'Station profile'
-        ClientHeight = 260
-        ClientWidth = 540
+        ClientHeight = 300
+        ClientWidth = 651
         ParentBackground = False
         TabOrder = 5
         object cbxProfile: TComboBox
@@ -415,43 +415,52 @@ object PrefsForm: TPrefsForm
           Height = 17
           Top = 66
           Width = 70
-          AutoSize = False
           Caption = 'Radio 1'
+          Constraints.MinWidth = 70
         end
         object cbxRadio1: TComboBox
+          AnchorSideLeft.Control = lblRadio1
+          AnchorSideLeft.Side = asrBottom
           Left = 90
           Height = 22
           Top = 62
           Width = 190
           AutoSize = False
+          BorderSpacing.Left = 8
           ItemHeight = 0
           TabOrder = 4
           OnChange = cbxRadio1Change
         end
         object lblCWOutput1: TLabel
+          AnchorSideLeft.Control = cbxRadio1
+          AnchorSideLeft.Side = asrBottom
           Left = 290
           Height = 17
           Top = 66
           Width = 90
-          AutoSize = False
+          BorderSpacing.Left = 10
           Caption = 'CW output 1'
+          Constraints.MinWidth = 90
         end
         object cbxCW1: TComboBox
+          AnchorSideLeft.Control = lblCWOutput1
+          AnchorSideLeft.Side = asrBottom
           Left = 385
           Height = 22
           Top = 62
           Width = 140
           AutoSize = False
+          BorderSpacing.Left = 5
           ItemHeight = 0
           TabOrder = 5
           OnChange = cbxCW1Change
         end
         object chkSpeedSync1: TCheckBox
-          Left = 385
+          AnchorSideLeft.Control = lblCWOutput1
+          Left = 290
           Height = 19
           Top = 92
           Width = 140
-          AutoSize = False
           Caption = 'Speed sync'
           TabOrder = 6
           OnChange = chkSpeedSync1Change
@@ -461,43 +470,52 @@ object PrefsForm: TPrefsForm
           Height = 17
           Top = 126
           Width = 70
-          AutoSize = False
           Caption = 'Radio 2'
+          Constraints.MinWidth = 70
         end
         object cbxRadio2: TComboBox
+          AnchorSideLeft.Control = lblRadio2
+          AnchorSideLeft.Side = asrBottom
           Left = 90
           Height = 22
           Top = 122
           Width = 190
           AutoSize = False
+          BorderSpacing.Left = 8
           ItemHeight = 0
           TabOrder = 7
           OnChange = cbxRadio2Change
         end
         object lblCWOutput2: TLabel
+          AnchorSideLeft.Control = cbxRadio2
+          AnchorSideLeft.Side = asrBottom
           Left = 290
           Height = 17
           Top = 126
           Width = 90
-          AutoSize = False
+          BorderSpacing.Left = 10
           Caption = 'CW output 2'
+          Constraints.MinWidth = 90
         end
         object cbxCW2: TComboBox
+          AnchorSideLeft.Control = lblCWOutput2
+          AnchorSideLeft.Side = asrBottom
           Left = 385
           Height = 22
           Top = 122
           Width = 140
           AutoSize = False
+          BorderSpacing.Left = 5
           ItemHeight = 0
           TabOrder = 8
           OnChange = cbxCW2Change
         end
         object chkSpeedSync2: TCheckBox
-          Left = 385
+          AnchorSideLeft.Control = lblCWOutput2
+          Left = 290
           Height = 19
           Top = 152
           Width = 140
-          AutoSize = False
           Caption = 'Speed sync'
           TabOrder = 9
           OnChange = chkSpeedSync2Change
@@ -507,8 +525,8 @@ object PrefsForm: TPrefsForm
           Height = 19
           Top = 182
           Width = 200
-          AutoSize = False
           Caption = 'SO2R enabled'
+          Constraints.MinWidth = 200
           TabOrder = 10
           OnChange = chkSO2RChange
         end
@@ -533,19 +551,21 @@ object PrefsForm: TPrefsForm
           Left = 300
           Height = 32
           Top = 240
-          Width = 300
-          AutoSize = False
+          Width = 339
+          Anchors = [akTop, akLeft, akRight]
           Caption = 'Saving stores your changes. It does not switch the radios over - use this button for that.'
           Font.Color = clGrayText
           ParentFont = False
           WordWrap = True
         end
         object chkAutoConnect: TCheckBox
+          AnchorSideLeft.Control = chkSO2R
+          AnchorSideLeft.Side = asrBottom
           Left = 220
           Height = 19
           Top = 182
           Width = 300
-          AutoSize = False
+          BorderSpacing.Left = 8
           Caption = 'Connect radios at startup'
           TabOrder = 11
           OnChange = chkAutoConnectChange
@@ -3303,81 +3323,104 @@ object PrefsForm: TPrefsForm
         Height = 34
         Top = 102
         Width = 620
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
         Caption = 'The font applies to the main contest window.  Both take effect when TR4W next starts.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
       end
       object lblLanguage: TLabel
+        AnchorSideTop.Control = cbxLanguage
+        AnchorSideTop.Side = asrCenter
         Left = 12
         Height = 17
-        Top = 184
+        Top = 154
         Width = 160
         AutoSize = False
         Caption = 'Language:'
         FocusControl = cbxLanguage
       end
       object cbxLanguage: TComboBox
+        AnchorSideTop.Control = lblAppearHint
+        AnchorSideTop.Side = asrBottom
         Left = 180
         Height = 22
-        Top = 180
+        Top = 152
         Width = 240
         AutoSize = False
+        BorderSpacing.Top = 16
         ItemHeight = 0
         Style = csDropDownList
         TabOrder = 4
       end
       object lblLanguageHint: TLabel
-        Left = 432
-        Height = 30
+        AnchorSideLeft.Control = cbxLanguage
+        AnchorSideTop.Control = cbxLanguage
+        AnchorSideTop.Side = asrBottom
+        Left = 180
+        Height = 17
         Top = 178
-        Width = 200
-        AutoSize = False
+        Width = 452
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 4
         Caption = 'Takes effect when TR4W next starts.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
       end
       object lblMainWindowHeading: TLabel
+        AnchorSideTop.Control = lblLanguageHint
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 17
-        Top = 216
+        Top = 209
         Width = 400
-        AutoSize = False
+        BorderSpacing.Top = 14
         Caption = 'Windows and log'
         Font.Style = [fsBold]
         ParentFont = False
       end
       object chkNoBorder: TCheckBox
+        AnchorSideTop.Control = lblMainWindowHeading
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
-        Top = 242
+        Top = 234
         Width = 540
+        BorderSpacing.Top = 8
         Caption = 'Main window has no border'
         TabOrder = 5
       end
       object chkNoCaption: TCheckBox
+        AnchorSideTop.Control = chkNoBorder
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
-        Top = 268
+        Top = 260
         Width = 540
+        BorderSpacing.Top = 4
         Caption = 'Tool windows have no title bar'
         TabOrder = 6
       end
       object chkNoColumnHeader: TCheckBox
+        AnchorSideTop.Control = chkNoCaption
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
-        Top = 294
+        Top = 286
         Width = 540
+        BorderSpacing.Top = 4
         Caption = 'Hide the log column headings'
         TabOrder = 7
       end
       object chkShowGridlines: TCheckBox
+        AnchorSideTop.Control = chkNoColumnHeader
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
-        Top = 320
+        Top = 312
         Width = 540
+        BorderSpacing.Top = 4
         Caption = 'Draw gridlines in the log'
         TabOrder = 8
       end
