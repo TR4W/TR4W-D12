@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "tag": "v5.1.0",
-  "version": "5.1.0",
-  "published": "2026-11-23T07:50:11Z",
-  "release_url": "https://github.com/TR4W/TR4W-D12/releases/tag/v5.1.0",
+  "tag": "v5.1.1",
+  "version": "5.1.1",
+  "published": "2026-11-24T23:10:45Z",
+  "release_url": "https://github.com/TR4W/TR4W-D12/releases/tag/v5.1.1",
   "platforms": {
     "windows-x64": {
       "label": "Windows",
@@ -12,10 +12,10 @@
       "files": [
         {
           "role": "installer",
-          "name": "tr4w_setup_5.1.0-x64.exe",
-          "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.0/tr4w_setup_5.1.0-x64.exe",
-          "size": 60040699,
-          "sha256": "f6ee4f616788d8ee97c8b788a0e4a983b085c80233fbcd54658eea59ff525767",
+          "name": "tr4w_setup_5.1.1-x64.exe",
+          "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.1/tr4w_setup_5.1.1-x64.exe",
+          "size": 60660320,
+          "sha256": "84d052c31d615c785f1ed1686d6ff230615073156c53da563e4a9c274dabcb00",
           "description": "Windows installer for 64-bit Windows. Run it to install or upgrade TR4W."
         }
       ],
@@ -28,18 +28,18 @@
       "files": [
         {
           "role": "pkg",
-          "name": "tr4w-5.1.0-aarch64-darwin.pkg",
-          "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.0/tr4w-5.1.0-aarch64-darwin.pkg",
-          "size": 26498512,
-          "sha256": "9dac15dd9d76d88d00f65f66656d3765bb0e52e039c2ff1b31b5eb341ba00b76",
+          "name": "tr4w-5.1.1-aarch64-darwin.pkg",
+          "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.1/tr4w-5.1.1-aarch64-darwin.pkg",
+          "size": 26930813,
+          "sha256": "7acb909ee46afcab1c9e76267a766de47ead22865dd5da750bd4eea5bc95ba5d",
           "description": "Installer package for Apple Silicon Macs. Double-click it to place TR4W.app in Applications."
         },
         {
           "role": "dmg",
-          "name": "tr4w-5.1.0-aarch64-darwin.dmg",
-          "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.0/tr4w-5.1.0-aarch64-darwin.dmg",
-          "size": 36961147,
-          "sha256": "05d9592e49613be0921e232e25a4adb447523a340ff26f3059fba1e11fc879c3",
+          "name": "tr4w-5.1.1-aarch64-darwin.dmg",
+          "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.1/tr4w-5.1.1-aarch64-darwin.dmg",
+          "size": 37509231,
+          "sha256": "4690e53e82f28dcee4049fa33445d2ae7e6b1642cedf53dc9042ad560e5dcdbc",
           "description": "Disk image for Apple Silicon Macs. Open it and drag TR4W.app to Applications; includes the multi-op server."
         }
       ],
@@ -52,10 +52,10 @@
       "files": [
         {
           "role": "appimage",
-          "name": "TR4W-5.1.0-x86_64.AppImage",
-          "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.0/TR4W-5.1.0-x86_64.AppImage",
-          "size": 43768312,
-          "sha256": "a3e78bc5bc4185b6bc291f4bf24819666cdacd089c5a122583e1cd3d4fee2b79",
+          "name": "TR4W-5.1.1-x86_64.AppImage",
+          "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.1/TR4W-5.1.1-x86_64.AppImage",
+          "size": 44182008,
+          "sha256": "5ef76af745a0916efec75533cf3fb660521bf0bd4d385075adb7e9433893eb79",
           "description": "Single-file application for 64-bit Linux. Make it executable and run it; see the release notes for the distributions it supports."
         }
       ],
@@ -65,9 +65,9 @@
   "virustotal": {
     "role": "virustotal",
     "name": "virustotal-report.md",
-    "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.0/virustotal-report.md",
+    "url": "https://github.com/TR4W/TR4W-D12/releases/download/v5.1.1/virustotal-report.md",
     "size": 896,
-    "sha256": "9f3262c273cbaaf2d91a0c17de24e73528c2a2f9daed5fe9ec99d415e1206cac",
+    "sha256": "89da7bfb796ef9f75639fea6897b5f23468ad59fb9271c29eb72744ce5c3b8e4",
     "description": "VirusTotal scan report for this release's files."
   }
 }
