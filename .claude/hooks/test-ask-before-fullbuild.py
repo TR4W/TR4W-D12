@@ -53,9 +53,16 @@ PASSES = [
    r"ls tr4w",
 ]
 
-# The second group (2026-11-22): tests, lints, corpus. Compiling the product is
-# free (see PASSES); each of these asks.
+# The second gate (2026-11-24): the contest matrix only, about 17 minutes.
 ASKS += [
+   r"bash tr4w/test/contest-matrix/run-contest-matrix.sh",
+   r"cd /c/tr4w-d12 && bash tr4w/test/contest-matrix/run-contest-matrix.sh 2>&1 | tail -40",
+   r"bash tr4w/test/contest-matrix/freeze-contest-matrix.sh --reason x ALL_JA",
+]
+
+# Tests, lints, the corpus and the ADIF checks are cheap (about 4 min, 2 min,
+# under 1 min) and no longer ask; they were the 2026-11-22 group.
+PASSES += [
    r".\tr4w\build\Build-Tests.ps1",
    r".\tr4w\build\Build-Tests.ps1 -Run",
    r".\tr4w\build\Build-Tests.ps1 -Checked -Run",
@@ -66,14 +73,13 @@ ASKS += [
    r"tr4w\test\unit\tr4w_unit_tests_fpc.exe",
    r".\tr4w_unit_tests_fpc.exe | Select-String FAIL",
    r"bash tr4w/test/corpus/export-d12-corpus.sh",
-   r"bash tr4w/test/contest-matrix/run-contest-matrix.sh",
    r"sh tr4w/test/corpus/test-adif-roundtrip.sh",
    r"bash tr4w/test/adif-validate/validate-adif-outputs.sh",
    r"bash tr4w/test/corpus/freeze-rescore-baseline.sh",
 ]
 
-ASK_FLOOR = 20
-PASS_FLOOR = 18
+ASK_FLOOR = 12
+PASS_FLOOR = 30
 
 
 EMPTY_MARKER_DIR = tempfile.mkdtemp(prefix='gate-markers-')

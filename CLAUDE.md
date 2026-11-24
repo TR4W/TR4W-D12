@@ -175,17 +175,19 @@ change. The tag-time CI run (`release.yml`) is unaffected.
 harness ASK before any command that runs `FullBuild.ps1` or its `.cmd` twin. Reads of the file
 (`rg`, `git add`, `cat`) do not prompt. Approve the prompt only when NY4I asked for the run.
 
-**THE SAME HOOK NOW GATES TESTS, LINTS AND THE CORPUS (NY4I, 2026-11-22: *"We have wasted days with
-needless builds"*).** One session ran about 35 full app builds and about 60 unit-suite builds
-(`Build-Tests.ps1` clears and rebuilds the whole suite on every call), because briefs listed the gates
-as each agent's own work and the coordinator then repeated them. A memory note against it was broken
-twice, so it is a lock. **COMPILING THE PRODUCT IS FREE:** `Build-App.ps1` (any form) and
-`Build-Server.ps1` never prompt, so an agent can always find its own compile error. **THESE ASK:**
-`Build-Tests.ps1` (any form), the unit-test exe, `Build-Bench.ps1`, `Run-Lints.ps1` (a single
-`Lint-*.ps1` is free), the corpus, the contest matrix, the ADIF round trip and the ADIF validator.
-Approve only when NY4I asked, and run each ONCE per batch. An agent that is refused reports "not run";
-the coordinator asks once. `.claude/gates-preapproved` (untracked) pre-approves the group for an
-unattended run, as `fullbuild-preapproved` does for FullBuild; delete it afterwards.
+**THE SAME HOOK ASKS BEFORE THE CONTEST MATRIX, AND ONLY THAT (NY4I, 2026-11-24: *"let's keep this
+simple now ... put the command hook on only running the 17 minute test ... I would be fine letting the
+ci-runner do it"*).** Measured that day: the unit suite is about 4 minutes, the lints 2, the corpus
+under 1, the matrix about 17 (213 contests). It began on 2026-11-22 as a lock on the whole group of
+checks (*"We have wasted days with needless builds"*: about 35 full app builds and 60 unit-suite builds
+in one session), and the cheap ones are free again. **FREE, never prompting:** `Build-App.ps1`,
+`Build-Server.ps1`, `Build-Tests.ps1` (any form), the unit-test exe, `Build-Bench.ps1`,
+`Run-Lints.ps1`, the corpus, the ADIF round trip and the ADIF validator. They are cheap, not
+free of cost: run each ONCE per batch. **ASKS:** `run-contest-matrix.sh` and `freeze-contest-matrix.sh`.
+The matrix is not run here for now; **NOTHING ELSE RUNS IT TODAY** (neither `release.yml` nor
+`FullBuild.ps1` calls it), so a change that can move a contest's setup, scoring or export is
+unchecked until it does. Run it for a named contest when a change reaches one, or ask NY4I.
+`.claude/gates-preapproved` (untracked) pre-approves the matrix for an unattended run.
 
 ### Iterating
 

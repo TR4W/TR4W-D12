@@ -23,21 +23,21 @@ broken one must not wedge every shell command).
 
 Not covered, on purpose: a script that itself calls FullBuild. Nothing here does.
 
-THE SECOND GATE GROUP -- TESTS, LINTS, CORPUS (NY4I, 2026-11-22). "We have wasted
-days with needless builds": one session ran about 35 full app builds and about 60
-unit-suite builds, because the agent briefs listed the gates as each agent's own
-work and the coordinator then re-ran them. A rule in memory was broken twice, so
-it is a hook now. COMPILING THE PRODUCT IS FREE (Build-App, Build-App
--Incremental, Build-Server): an agent must be able to find its own compile
-error. EVERYTHING THAT RUNS OR REBUILDS A CHECK ASKS:
-
-   Build-Tests (any form: it clears and rebuilds the whole suite every time),
-   the unit-test exe itself, Build-Bench, Run-Lints (the whole set; a single
-   Lint-*.ps1 stays free), the corpus, the contest matrix, the ADIF round
-   trip and the ADIF validator.
+THE SECOND GATE -- THE CONTEST MATRIX ONLY (NY4I, 2026-11-24). It began on
+2026-11-22 as a whole group -- tests, lints, corpus, matrix, ADIF checks -- after
+"we have wasted days with needless builds" (one session ran about 35 full app
+builds and 60 unit-suite builds). Measured on 2026-11-24, the unit suite is
+about 4 minutes, the lints 2, the corpus under 1, and the contest matrix about
+17: only the matrix is long enough to be worth a prompt. NY4I: "let's keep this
+simple now ... put the command hook on only running the 17 minute test ... I
+would be fine letting the ci-runner do it." So run-contest-matrix.sh and
+freeze-contest-matrix.sh ask; Build-Tests, the unit-test exe, Build-Bench,
+Run-Lints, the corpus, the ADIF round trip and the ADIF validator are FREE, as
+Build-App and Build-Server always were. (Run them once per batch all the same:
+they are cheap, not free of cost.)
 
 The marker `.claude/gates-preapproved` (untracked, local to a clone) pre-approves
-this group for an unattended run, as `fullbuild-preapproved` does for FullBuild.
+the matrix for an unattended run, as `fullbuild-preapproved` does for FullBuild.
 """
 import json
 import os
@@ -46,17 +46,14 @@ import sys
 
 FULLBUILD_REASON = ('FullBuild.ps1 takes about 13 minutes and runs only when NY4I asks '
                     '(pre-release / pre-push). Approve only if he asked for it.')
-GATES_REASON = ('A TEST, LINT OR CORPUS RUN: each rebuilds or runs a whole check and the '
-                'suite alone is a full rebuild every time. NY4I, 2026-11-22: run these '
-                'once per batch, only when asked. Compiling the product (Build-App, '
-                'Build-Server) does not need approval. Approve only if he asked for this run.')
+GATES_REASON = ('THE CONTEST MATRIX takes about 17 minutes (213 contests, one process each). '
+                'NY4I, 2026-11-24: it is not run here for now; the CI runner is the place '
+                'for it. Approve only if he asked for this run.')
 
 # (pattern, reason, marker file) -- the first gate whose pattern a run segment names.
 GATES = [
    (re.compile(r'fullbuild', re.IGNORECASE), FULLBUILD_REASON, 'fullbuild-preapproved'),
-   (re.compile(r'build-tests|tr4w_unit_tests|build-bench|run-lints|export-d12-corpus|'
-               r'run-contest-matrix|freeze-contest-matrix|freeze-rescore-baseline|'
-               r'test-adif-roundtrip|validate-adif-outputs', re.IGNORECASE),
+   (re.compile(r'run-contest-matrix|freeze-contest-matrix', re.IGNORECASE),
     GATES_REASON, 'gates-preapproved'),
 ]
 
