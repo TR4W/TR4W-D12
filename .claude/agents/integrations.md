@@ -719,6 +719,10 @@ message is built; `(0, 0)` and a key naming no row write nothing. **Never `pendi
 hand-off (a pending row feeds `ExternalDeliveryCounts` and Preferences would show "Sending" for ever). A
 dropped op (shutdown, logger switched off) writes nothing. Pinned in `uTestWRLDelivery.TestHandOffRecords`.
 
+## A duplicate at the destination is a delivery, not a failure (2026-11-24, NY4I: "no harm to a duplicate")
+
+WRL answering a POST with `DUPLICATE_CONTACT` is `doConfirmed` with RemoteId `wrl:duplicate` (`WRL_DUPLICATE_MARKER`; WRL's error body names no contact id, none is guessed), the QRZ precedent. `TWRLClient.Deliver` settles an edit or delete of a marker contact as a confirmed no-op, nothing sent. Old `failed` / `DUPLICATE_CONTACT` rows have no remote id, so a Resync requeues them and they settle. Club Log `duplicate` was already success; Cloudlog cannot tell a duplicate from other refusals (stays `CLOUDLOG_IMPORT_REJECTED`). No QuickDisplay for a duplicate. Pinned in `uTestWRLDelivery.TestDuplicateContact`.
+
 ## One bad QSO never pauses a durable logger; Resync resumes one that paused (2026-11-24, NY4I)
 
 A QSO logged with frequency 0 (no `FREQ` in its ADIF) made `uWRLContact` raise `EConvertError`

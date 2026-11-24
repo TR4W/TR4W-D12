@@ -23,6 +23,7 @@ type
       procedure TestDestinationsAndRetry;
       procedure TestMigration;
       procedure TestClient;
+      procedure TestDuplicateContact;
       procedure TestAuthenticationGuards;
       procedure TestADIFMapping;
       procedure TestNotesCarryTheExchange;
@@ -440,6 +441,60 @@ begin
    finally
       client.Free;
    end;
+end;
+
+procedure TWRLDeliveryTests.TestDuplicateContact;
+var
+   client: TWRLClient;
+   job: TDeliveryJob;
+   answer: TWRLResult;
+begin
+   BeginTest('a DUPLICATE_CONTACT answer is a delivery; an edit or delete of it is a no-op');
+   client := TStubWRLClient.Create('test-secret');
+   try
+      job := Default(TDeliveryJob);
+      job.Key := Key;
+      job.Payload := '{"call":"W1AW","freq":14.031}';
+      StubSent := True;
+      StubRetry := '';
+      (* With and without an id in the error body: the same answer, since no
+         id field is known; the marker stands in either way. *)
+      StubStatus := 409;
+      StubResponse := '{"data":null,"error":{"code":"DUPLICATE_CONTACT","message":"exists"}}';
+      answer := client.Deliver(job);
+      CheckTrue(answer.Outcome = doConfirmed, 'already at WRL is delivered');
+      CheckEquals('', answer.ErrorCode, 'no failure code');
+      CheckEquals(WRL_DUPLICATE_MARKER, answer.RemoteId);
+      CheckEquals('POST', LastMethod);
+      StubResponse := '{"data":null,"error":{"code":"DUPLICATE_CONTACT","id":"abcd-1234"}}';
+      answer := client.Deliver(job);
+      CheckTrue(answer.Outcome = doConfirmed);
+      CheckEquals(WRL_DUPLICATE_MARKER, answer.RemoteId);
+      (* Another refusal is still a failure. *)
+      StubStatus := 400;
+      StubResponse := '{"data":null,"error":{"code":"VALIDATION_ERROR"}}';
+      answer := client.Deliver(job);
+      CheckTrue(answer.Outcome = doFailed);
+      (* An edit of the marker contact sends nothing and does not fail. *)
+      LastMethod := '';
+      job.RemoteId := WRL_DUPLICATE_MARKER;
+      answer := client.Deliver(job);
+      CheckTrue(answer.Outcome = doConfirmed, 'edit settles');
+      CheckEquals('', answer.ErrorCode);
+      CheckEquals(WRL_DUPLICATE_MARKER, answer.RemoteId);
+      CheckEquals('', LastMethod, 'nothing was sent');
+      job.Deleted := True;
+      answer := client.Deliver(job);
+      CheckTrue(answer.Outcome = doConfirmed, 'delete settles');
+      CheckTrue(answer.Deleted);
+      CheckEquals('', LastMethod, 'nothing was sent');
+   finally
+      client.Free;
+   end;
+   (* The seven old failed rows: failed, no remote id, so a resync queues them
+      again (the POST then answers DUPLICATE_CONTACT and settles). *)
+   CheckTrue(ResendVerdict(rmUndelivered, True, 'failed', False, True) = rvRequeue);
+   CheckTrue(ResendVerdict(rmAll, True, 'failed', False, True) = rvRequeue);
 end;
 
 procedure TWRLDeliveryTests.TestAuthenticationGuards;
@@ -1562,6 +1617,7 @@ begin
    TestDestinationsAndRetry;
    TestMigration;
    TestClient;
+   TestDuplicateContact;
    TestAuthenticationGuards;
    TestADIFMapping;
    TestNotesCarryTheExchange;

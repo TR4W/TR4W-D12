@@ -13,6 +13,16 @@ const
    WRL_LOGBOOK_NAME_MAX = 100;
    WRL_CALLSIGN_MAX = 20;
 
+   (* THE REMOTE ID OF A CONTACT WRL SAID IT ALREADY HAS. A POST answered with
+      WRL's own code DUPLICATE_CONTACT means the contact is at WRL, which is a
+      delivery. The error body names no id of the existing contact (what is
+      known of it: code, message, field, hint, requestId), so this marker
+      stands in, as QRZ's does; the outbox refuses a confirmed create with an
+      empty id. Deliver treats a later edit or delete of a marker contact as
+      a confirmed no-op: there is no id to patch or delete. *)
+   WRL_DUPLICATE_MARKER = 'wrl:duplicate';
+   WRL_DUPLICATE_CODE = 'DUPLICATE_CONTACT';
+
 type
    TWRLResult = TExternalDeliveryResult;
 
@@ -383,6 +393,16 @@ begin
       Exit;
       end;
    path := '/contacts';
+   if aJob.RemoteId = WRL_DUPLICATE_MARKER then
+      begin
+      (* The contact is at WRL (it answered DUPLICATE_CONTACT to the create) but
+         we never learned its id, so there is nothing to patch or delete. Settled
+         as delivered, nothing sent; never a failure, never a loop. *)
+      Result.Outcome := doConfirmed;
+      Result.RemoteId := aJob.RemoteId;
+      Result.Deleted := aJob.Deleted;
+      Exit;
+      end;
    if aJob.RemoteId <> '' then
       begin
       (* The API uses UUIDs. Reject path/query delimiters rather than letting
@@ -467,6 +487,16 @@ begin
             end;
          attempted := True;
          Result := Request(method, path, UTF8Decode(body.AsJSON));
+         if (method = 'POST') and (Result.Outcome = doFailed) and
+            (Result.ErrorCode = WRL_DUPLICATE_CODE) then
+            begin
+            (* WRL already holds this contact (a resync re-sent it): delivered,
+               and no harm done (NY4I). Its id is not in the answer. *)
+            Result.Outcome := doConfirmed;
+            Result.ErrorCode := '';
+            Result.RemoteId := WRL_DUPLICATE_MARKER;
+            Result.RetrySeconds := 0;
+            end;
          if (Result.Outcome = doConfirmed) and (method = 'POST') and
             (Result.RemoteId = '') then
             begin
