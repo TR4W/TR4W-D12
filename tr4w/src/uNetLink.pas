@@ -97,6 +97,33 @@ function ShouldConnectAtStartup(const aAutoConnect: boolean;
   failure goes to the log, never to the screen. *)
 function TakeUnavailableNotice(var aShown: boolean): boolean;
 
+const
+   (* A SERVER THAT STILL HOLDS THIS STATION'S COMPUTER ID FROM ITS LAST SESSION
+     (it has not yet noticed the old connection is dead, and a server older than
+     the takeover rule never will) refuses the restarted station. The refusal is
+     retried quietly for this long, then reported with the modal box. *)
+   ID_RETRY_WINDOW_MS = 60000;
+   (* Refusals further apart than this are not one episode: the earlier retries
+     ended (the id was accepted, or the link was left) and this is a new
+     problem. Three retry intervals at the default 5 s, with room for a slow
+     connect. *)
+   ID_RETRY_EPISODE_GAP_MS = 20000;
+
+type
+   TIdRetryVerdict =
+      (
+      irvRetryFirst,   // the first refusal of an episode: retry, and say so once
+      irvRetry,        // inside the window: retry, say nothing
+      irvGiveUp        // the refusal persisted: report it as a refusal
+      );
+
+(* WHAT TO DO ABOUT A COMPUTER-ID REFUSAL. aFirstTick / aLastTick are the
+  caller's episode (0 = no episode); the function starts, extends or ends it.
+  aNowTick is GetTickCount64. On irvGiveUp the episode is cleared, so the next
+  refusal starts a new one. The retry itself is the link's existing timer. *)
+function JudgeIdRefusal(var aFirstTick, aLastTick: QWord;
+                        const aNowTick: QWord): TIdRetryVerdict;
+
 (* The state in words for the log. Not for the operator: it is not translated. *)
 function LinkStateName(const aState: TNetLinkState): string;
 
@@ -179,6 +206,30 @@ function ShouldConnectAtStartup(const aAutoConnect: boolean;
                                 const aComputerId: AnsiChar): boolean;
 begin
    Result := aAutoConnect and (aComputerId >= 'A') and (aComputerId <= 'Z');
+end;
+
+function JudgeIdRefusal(var aFirstTick, aLastTick: QWord;
+                        const aNowTick: QWord): TIdRetryVerdict;
+begin
+   if (aFirstTick = 0) or (aNowTick - aLastTick > ID_RETRY_EPISODE_GAP_MS) then
+      begin
+      aFirstTick := aNowTick;
+      aLastTick := aNowTick;
+      Result := irvRetryFirst;
+      Exit;
+      end;
+
+   aLastTick := aNowTick;
+   if aNowTick - aFirstTick < ID_RETRY_WINDOW_MS then
+      begin
+      Result := irvRetry;
+      end
+   else
+      begin
+      aFirstTick := 0;
+      aLastTick := 0;
+      Result := irvGiveUp;
+      end;
 end;
 
 function TakeUnavailableNotice(var aShown: boolean): boolean;

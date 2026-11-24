@@ -373,6 +373,12 @@ var
   ResendNoticeSink: TPeerNoticeProc = nil;
   (* The same for the refused-peer-QSO notice (PeerQsosRefusedOnThisLink). *)
   PeerQsoRefusedNoticeSink: TPeerNoticeProc = nil;
+  (* The same for the "server still holds your computer ID, retrying" line. *)
+  IdRetryNoticeSink: TPeerNoticeProc = nil;
+
+(* TEST HOOK: make the computer-id refusal episode aMs milliseconds older, so a
+  test can reach the end of the quiet-retry window without waiting for it. *)
+procedure NetAgeIdRefusalEpisode(const aMs: QWord);
 
 (* The walk over NetBuffer, one arm per message id. In the interface so the
   unit tests can put a packet in NetBuffer and hand it to the real arms. *)
@@ -663,6 +669,11 @@ var
   it compiled at the write and vanished at the read. }
 var
   FRefusedComputerID : AnsiChar = #0;
+  (* THE QUIET-RETRY EPISODE for a refused computer id (uNetLink.JudgeIdRefusal):
+    when the first and the latest refusal came (GetTickCount64, 0 = none).
+    Main thread; cleared by ForgetServerRefusal. *)
+  FIdRefusalFirstTick: QWord = 0;
+  FIdRefusalLastTick : QWord = 0;
 
 (* NETWORK PROTOCOL 2 -- WHAT THIS STATION KNOWS ABOUT THE OTHER ENDS.
 
@@ -773,6 +784,74 @@ begin
       RefuseServer(SysUtils.Format(SNetServerProtocolOlder,
                                    [aServerProtocol, NET_PROTOCOL_VERSION]));
       end;
+end;
+
+procedure NetAgeIdRefusalEpisode(const aMs: QWord);
+begin
+   if FIdRefusalFirstTick > aMs then
+      begin
+      FIdRefusalFirstTick := FIdRefusalFirstTick - aMs;
+      end;
+end;
+
+(* THE SERVER WILL NOT HAVE THIS STATION'S COMPUTER ID (SM_COMPUTERID_IN_USE).
+
+  A station restarted within minutes of its last run usually meets ITS OWN old
+  session: the server learns a connection is dead only when it reads or writes
+  on it, and a server older than the takeover rule never lets the id go.
+  So the first minute of refusals is retried QUIETLY (NY4I 2026-11-24): the link
+  is closed, NOT latched, and the link's own retry timer (NetLinkTick, the
+  Network.StatusUpdateInterval, 5 s by default) reconnects and announces again;
+  the operator gets one line on the main window and no modal box. That timer
+  runs only while a link is wanted, so Disconnect and exit stop the retries with
+  no state here. Only a refusal that persists for ID_RETRY_WINDOW_MS is shown
+  and latched as it always was (a genuine second station using the letter).
+  Main thread (the message arm). *)
+procedure HandleComputerIdRefused(const aRefusedId: AnsiChar);
+var
+   verdict: TIdRetryVerdict;
+   notice: string;
+begin
+   verdict := JudgeIdRefusal(FIdRefusalFirstTick, FIdRefusalLastTick, GetTickCount64);
+
+   case verdict of
+      irvRetryFirst, irvRetry:
+         begin
+         if verdict = irvRetryFirst then
+            begin
+            logger.Warn('[Net] server refused computer ID %s -- it may still hold ' +
+                        'the last session of this station; retrying for %d s',
+                        [string(Settings.Computer.Id), ID_RETRY_WINDOW_MS div 1000]);
+            notice := SysUtils.Format(SNetComputerIDHeldByOldSession,
+                                      [string(Settings.Computer.Id)]);
+            if Assigned(IdRetryNoticeSink) then
+               begin
+               IdRetryNoticeSink(notice);
+               end
+            else
+               begin
+               QuickDisplay(notice);
+               end;
+            end
+         else
+            begin
+            logger.Debug('[Net] server still refuses computer ID %s; retrying',
+                         [string(Settings.Computer.Id)]);
+            end;
+         NetLinkWentDown;
+         end;
+
+      irvGiveUp:
+         begin
+         FRefusedComputerID := aRefusedId;
+         logger.Warn('[Net] server refused computer ID %s -- ' +
+                     'another station is already using it',
+                     [string(Settings.Computer.Id)]);
+         NetLinkWentDown;
+         showwarning(SysUtils.Format(SNetComputerIDInUse,
+                                     [string(Settings.Computer.Id)]));
+         end;
+   end;
 end;
 
 function PeerQsosRefusedOnThisLink: integer;
@@ -1432,13 +1511,7 @@ var
                   and how it starts again. }
                 SM_COMPUTERID_IN_USE_MESSAGE:
                   begin
-                    FRefusedComputerID := AnsiChar(ServerMessagePtr^.smParam);
-                    logger.Warn('[Net] server refused computer ID %s -- ' +
-                                'another station is already using it',
-                                [string(Settings.Computer.Id)]);
-                    NetLinkWentDown;
-                    showwarning(SysUtils.Format(SNetComputerIDInUse,
-                                                [string(Settings.Computer.Id)]));
+                    HandleComputerIdRefused(AnsiChar(ServerMessagePtr^.smParam));
                   end;
 
                 SM_GETSTATUS_MESSAGE: SendFullStationStatus;
@@ -3305,6 +3378,8 @@ begin
    end;
    FServerRefusedFor := '';
    FRefusedComputerID := #0;
+   FIdRefusalFirstTick := 0;
+   FIdRefusalLastTick := 0;
    GNetLock.Acquire;
    try
       FResolveFailedFor := '';   (* the operator asked again: name it again *)

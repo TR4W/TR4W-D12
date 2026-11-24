@@ -12728,3 +12728,8 @@ msgstr ""
 #, fuzzy
 msgid "A secure (https) connection could not be set up, so nothing was sent. The certificate was refused, or the TLS library or the certificate file is missing. The log has the detail."
 msgstr ""
+
+#: uappstrings.snetcomputeridheldbyoldsession
+#, fuzzy
+msgid "The server still holds computer ID %s from your last session, retrying..."
+msgstr ""

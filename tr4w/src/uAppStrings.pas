@@ -561,6 +561,11 @@ resourcestring
       'Change COMPUTER ID to a letter no other station is using, then ' +
       'reconnect.';
 
+   // The server has not yet let go of this station's previous session; the
+   // link is retrying quietly (uNet.HandleComputerIdRefused). One line, no box.
+   SNetComputerIDHeldByOldSession =
+      'The server still holds computer ID %s from your last session, retrying...';
+
    (* SContestNotOnMultiOp WAS HERE and is gone (2026-10-27): network protocol
      2 carries every contest, so no door refuses one any more. *)
 

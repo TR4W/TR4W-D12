@@ -81,6 +81,44 @@ type
 function JudgeComputerID(const aID: AnsiChar;
                          const aTaken: TComputerIDSet): TComputerIDVerdict;
 
+const
+   (* A letter held by a stale session of the SAME station is taken over by the
+     new connection. If the same letter is taken over AGAIN inside this many
+     milliseconds, the two "same" stations are really two live ones sharing an
+     address (NAT, a gateway): the later claim is refused as it always was, so
+     they cannot evict each other for ever. The Python server's
+     ID_TAKEOVER_FLAP_WINDOW is 30 seconds; the two must stay equal. *)
+   ID_TAKEOVER_FLAP_WINDOW_MS = 30000;
+
+type
+   TTakeoverVerdict =
+      (
+      tvNotSameStation,   // refuse, as always
+      tvTakeOver,         // the holder is a stale session of this station
+      tvFlap              // same station, but a takeover of this letter was just done
+      );
+
+(* IS THE CLAIMANT, AS FAR AS THE SERVER CAN TELL, THE SAME MACHINE AS THE
+  HOLDER of the letter (a session the server may not yet know is dead)?
+
+  The peer address is the necessary condition: empty or different is no. The
+  host name, the program version and the contest must then not DISAGREE; a
+  value either side does not have (the legacy COMPUTERID path carries no
+  version or contest) does not count against it. It is not a proof: the HELLO
+  has no install id, so two stations behind one address that announce the same
+  version and contest are indistinguishable, and the flap window is what stops
+  that becoming a fight. The same rule as the Python server's _same_station. *)
+function IsSameStation(const aClaimAddress, aHolderAddress,
+                       aClaimHostName, aHolderHostName,
+                       aClaimVersion, aHolderVersion,
+                       aClaimContest, aHolderContest: string): boolean;
+
+(* WHAT TO DO ABOUT A HOLDER. aLastTakeoverTick is the tick (GetTickCount64) at
+  which this letter was last taken over, 0 for never (a tick of 0 is the first
+  millisecond after boot). *)
+function JudgeTakeover(const aSameStation: boolean;
+                       const aLastTakeoverTick, aNowTick: QWord): TTakeoverVerdict;
+
 { The ordinal as the operator's letter, or '?' when it is not a legal id.
 
   '?' rather than an exception or a blank: this is only ever used to build a
@@ -112,6 +150,56 @@ begin
    else
       begin
       Result := cidAccept;
+      end;
+end;
+
+function IsSameStation(const aClaimAddress, aHolderAddress,
+                       aClaimHostName, aHolderHostName,
+                       aClaimVersion, aHolderVersion,
+                       aClaimContest, aHolderContest: string): boolean;
+begin
+   Result := False;
+   if (aClaimAddress = '') or (aClaimAddress <> aHolderAddress) then
+      begin
+      Exit;
+      end;
+
+   if (aClaimHostName <> '') and (aHolderHostName <> '') and
+      (aClaimHostName <> aHolderHostName) then
+      begin
+      Exit;
+      end;
+
+   if (aClaimVersion <> '') and (aHolderVersion <> '') and
+      (aClaimVersion <> aHolderVersion) then
+      begin
+      Exit;
+      end;
+
+   if (aClaimContest <> '') and (aHolderContest <> '') and
+      (aClaimContest <> aHolderContest) then
+      begin
+      Exit;
+      end;
+
+   Result := True;
+end;
+
+function JudgeTakeover(const aSameStation: boolean;
+                       const aLastTakeoverTick, aNowTick: QWord): TTakeoverVerdict;
+begin
+   if not aSameStation then
+      begin
+      Result := tvNotSameStation;
+      end
+   else if (aLastTakeoverTick <> 0) and
+           (aNowTick - aLastTakeoverTick < ID_TAKEOVER_FLAP_WINDOW_MS) then
+      begin
+      Result := tvFlap;
+      end
+   else
+      begin
+      Result := tvTakeOver;
       end;
 end;
 

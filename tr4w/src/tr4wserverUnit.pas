@@ -392,7 +392,8 @@ function ClearServerLog: boolean;
 procedure SendDisconnectMessage(Client: AnsiChar);
 (* True when the id was accepted; False when it was refused (the station has been
   told). *)
-function SetComputerID(ID: AnsiChar; s: TClientHandle): boolean;
+function SetComputerID(ID: AnsiChar; s: TClientHandle;
+                       const aVersion, aContest: string): boolean;
 (* NETWORK PROTOCOL 2 -- see uNetHello. MessageAllowedNow: may this connection
   send a message with this id yet (only HELLO until it has sent one)?
   AcceptHello: judge a HELLO, answer it, record it and tell the others. *)
@@ -738,7 +739,8 @@ begin
 
           NET_COMPUTERID_ID:
             begin
-              SetComputerID(TComputerNetIDPtr(@ServerBuffer[Bufindex])^.ciComputerID, aSocket);
+              SetComputerID(TComputerNetIDPtr(@ServerBuffer[Bufindex])^.ciComputerID, aSocket,
+                             '', '');
               Bufindex := Bufindex + SizeOf(TComputerNetID);
             end;
 {
@@ -1267,6 +1269,11 @@ begin
        end;
 end;
 
+var
+  (* WHEN EACH LETTER WAS LAST TAKEN OVER from a stale session (GetTickCount64;
+    0 = never), for the flap window. Main thread only, like the client array. *)
+  IdTakeoverTick                        : array[FIRST_COMPUTER_ID..LAST_COMPUTER_ID] of QWord;
+
 { Tell one station its id is not available and leave it unidentified.
 
   IT IS NOT DISCONNECTED HERE.  The socket is the server's only handle on a
@@ -1299,10 +1306,15 @@ end;
   FIRST COME, FIRST SERVED.  The station already holding the id is operating;
   the one that just arrived is not.  Disturbing the wrong one of those in the
   middle of a contest would be worse than the collision. }
-function SetComputerID(ID: AnsiChar; s: TClientHandle): boolean;
+function SetComputerID(ID: AnsiChar; s: TClientHandle;
+                       const aVersion, aContest: string): boolean;
 var
   i                                     : integer;
   mine                                  : integer;
+  h                                     : integer;
+  now                                   : QWord;
+  holderAddress                         : string;
+  verdict                               : TTakeoverVerdict;
   taken                                 : TComputerIDSet;
   { Which slot holds each id, so the refusal can name the station that has it.
     An address is worth more to the operator than "some other station". }
@@ -1345,9 +1357,49 @@ begin
 
      cidInUse:
         begin
-        RefuseComputerID(s, ID, 'already held by ' +
-           CharBufferText(ClientsSoocketsArray[holder[Ord(ID)]].clIPAdr));
-        Exit;
+        h := holder[Ord(ID)];
+        holderAddress := CharBufferText(ClientsSoocketsArray[h].clIPAdr);
+        now := GetTickCount64;
+        (* THE ONE EXCEPTION TO FIRST COME, FIRST SERVED (NY4I 2026-11-24): the
+          server learns a connection is dead only when it reads or writes on it,
+          so a station restarted within minutes finds its OWN previous session
+          holding its letter. The same peer address (host name, version and
+          contest not disagreeing) is the same station: the old session is
+          closed as a disconnect and the new claim stands. The same letter taken
+          over again inside the flap window is two live stations sharing an
+          address, and is refused as before. Parity with TR4WServerPy's
+          _claim_computer_id (uComputerID holds the rule and its tests). *)
+        verdict := JudgeTakeover(
+           IsSameStation(CharBufferText(ClientsSoocketsArray[mine].clIPAdr),
+                         holderAddress,
+                         CharBufferText(ClientsSoocketsArray[mine].clName),
+                         CharBufferText(ClientsSoocketsArray[h].clName),
+                         aVersion,
+                         HelloAppVersion(ClientsSoocketsArray[h].clHello),
+                         aContest,
+                         HelloContestId(ClientsSoocketsArray[h].clHello)),
+           IdTakeoverTick[Ord(ID)], now);
+        case verdict of
+           tvNotSameStation:
+              begin
+              RefuseComputerID(s, ID, 'already held by ' + holderAddress);
+              Exit;
+              end;
+
+           tvFlap:
+              begin
+              RefuseComputerID(s, ID, Format(
+                 'two stations on %s are using the same ID; it was already ' +
+                 'taken over within %d s',
+                 [holderAddress, ID_TAKEOVER_FLAP_WINDOW_MS div 1000]));
+              Exit;
+              end;
+        end;
+
+        IdTakeoverTick[Ord(ID)] := now;
+        logger.Info('Computer ID %s taken over from the stale session of %s',
+                    [ComputerIDLetter(ID), holderAddress]);
+        DropStaleClient(ClientsSoocketsArray[h].clSocket);
         end;
   end;
 
@@ -1435,7 +1487,8 @@ begin
      sSend(s, reply, SizeOf(reply), dmHello);
      end;
 
-  if not SetComputerID(AnsiChar(aHello.hmComputerID), s) then
+  if not SetComputerID(AnsiChar(aHello.hmComputerID), s,
+                       HelloAppVersion(aHello), HelloContestId(aHello)) then
      begin
      Exit;
      end;

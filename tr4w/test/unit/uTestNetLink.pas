@@ -42,6 +42,7 @@ type
       procedure Test_ObserversAreCalledOnceAndMayRemoveThemselves;
       procedure Test_TheNetMenuFollowsEveryState;
       procedure Test_AStationWithNoLinkAndNoWishIsOff;
+      procedure Test_TheQuietRetryOfARefusedIdIsDecidedByTheClock;
       procedure Test_ARefusedServerIsLatchedAndConnectReArmsIt;
       procedure Test_ARefusedComputerIdIsLatchedAndConnectReArmsIt;
       procedure Test_AStatusLineTellsTheObservers;
@@ -84,6 +85,15 @@ end;
 
 var
    GTestMenuOwner: TComponent = nil;
+   (* What the quiet-retry notice said, and how often (IdRetryNoticeSink). *)
+   GIdRetryNotices: integer = 0;
+   GIdRetryText: string = '';
+
+procedure RecordIdRetryNotice(const aText: string);
+begin
+   Inc(GIdRetryNotices);
+   GIdRetryText := aText;
+end;
 
 (* THE REAL MENU, built once per process and never freed - the same reason
   uTestMenuShortcuts gives: uMenu publishes it and cannot unpublish it. A menu
@@ -470,10 +480,23 @@ begin
 
    saved := Settings.Computer.Id;
    Settings.Computer.Id := 'B';
+   IdRetryNoticeSink := RecordIdRetryNotice;
+   GIdRetryNotices := 0;
    try
       ForgetServerRefusal;
       (* 8320, naming the id the server would not have: the wire form is the
-        ordinal *)
+        ordinal. THE FIRST MINUTE IS RETRIED QUIETLY (the server may still hold
+        this station's own last session): one notice, no latch, no modal. *)
+      FeedServerMessage(SM_COMPUTERID_IN_USE_MESSAGE, Ord(ComputerIDOrdinal('B')));
+      CheckFalse(NetLinkRefused, 'the first refusal is retried, not latched');
+      CheckEquals(1, GIdRetryNotices, 'one quiet notice');
+      CheckTrue(Pos('B', GIdRetryText) > 0, 'it names the id: ' + GIdRetryText);
+      FeedServerMessage(SM_COMPUTERID_IN_USE_MESSAGE, Ord(ComputerIDOrdinal('B')));
+      CheckFalse(NetLinkRefused, 'a second refusal inside the window is still retried');
+      CheckEquals(1, GIdRetryNotices, 'and says nothing more');
+
+      (* PERSISTING PAST THE WINDOW is a real second station: latched as before. *)
+      NetAgeIdRefusalEpisode(ID_RETRY_WINDOW_MS + 1000);
       FeedServerMessage(SM_COMPUTERID_IN_USE_MESSAGE, Ord(ComputerIDOrdinal('B')));
       CheckTrue(NetLinkRefused, 'the id refusal stands while the id is unchanged');
 
@@ -485,9 +508,49 @@ begin
       ForgetServerRefusal;
       CheckFalse(NetLinkRefused, 'Connect (ForgetServerRefusal) asks the server again');
    finally
+      IdRetryNoticeSink := nil;
       Settings.Computer.Id := saved;
       ForgetServerRefusal;
    end;
+end;
+
+procedure TTestNetLink.Test_TheQuietRetryOfARefusedIdIsDecidedByTheClock;
+var
+   first, last: QWord;
+   now: QWord;
+begin
+   BeginTest('uNetLink: a refused computer id is retried for 60 s, then given up');
+
+   first := 0;
+   last := 0;
+   CheckEquals(Ord(irvRetryFirst), Ord(JudgeIdRefusal(first, last, 100000)),
+               'the first refusal starts an episode');
+   CheckEquals(Ord(irvRetry), Ord(JudgeIdRefusal(first, last, 105000)),
+               'a retry 5 s later');
+   for now := 110000 to 150000 do
+      begin
+      if (now mod 5000) = 0 then
+         begin
+         CheckEquals(Ord(irvRetry), Ord(JudgeIdRefusal(first, last, now)),
+                     'a retry every 5 s, still inside the 60 s');
+         end;
+      end;
+   CheckEquals(Ord(irvRetry), Ord(JudgeIdRefusal(first, last, 159999)),
+               'just inside the 60 s');
+   CheckEquals(Ord(irvGiveUp), Ord(JudgeIdRefusal(first, last, 160000)),
+               'at 60 s the refusal is reported');
+   CheckEquals(0, Integer(first), 'giving up clears the episode');
+   CheckEquals(Ord(irvRetryFirst), Ord(JudgeIdRefusal(first, last, 161000)),
+               'and the next refusal starts a new one');
+
+   (* A refusal long after the last one is a new problem, not the old episode
+     (a later restart, hours on), whatever the first tick was. *)
+   first := 100000;
+   last := 150000;
+   CheckEquals(Ord(irvRetryFirst),
+               Ord(JudgeIdRefusal(first, last, 150000 + ID_RETRY_EPISODE_GAP_MS + 1)),
+               'a gap longer than the episode gap restarts it');
+   CheckEquals(150000 + ID_RETRY_EPISODE_GAP_MS + 1, Integer(first), 'at the new time');
 end;
 
 procedure TTestNetLink.Test_AStatusLineTellsTheObservers;
@@ -674,6 +737,7 @@ begin
    Test_AStationWithNoLinkAndNoWishIsOff;
    Test_ARefusedServerIsLatchedAndConnectReArmsIt;
    Test_ARefusedComputerIdIsLatchedAndConnectReArmsIt;
+   Test_TheQuietRetryOfARefusedIdIsDecidedByTheClock;
    Test_AStatusLineTellsTheObservers;
    Test_AWindowOpenedMidSessionShowsEveryStation;
    Test_ADestroyedWindowIsNoLongerTold;

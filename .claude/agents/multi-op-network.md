@@ -176,6 +176,46 @@ with `SM_COMPUTERID_IN_USE`; its computer id is no longer taken from
 
 The server's own log holds each sender's `ceContest` byte as it came (a by-id handle means nothing outside the program that wrote it), and the log-compare packet reads the first record's. Neither is judged by the server. The late catch-up (below) reads that log and restamps, as the receive arms do, and judges each record's contest itself.
 
+## A restarted station takes its computer id back from its own dead session (2026-11-24)
+
+The server learns a connection is dead only when it reads or writes on it, so a
+station restarted within minutes was refused its own id (NY4I: a modal "already in
+use"). Two halves, the first at parity with TR4WServerPy's `_claim_computer_id`
+(commit 3dc41ef, branch computer-id-takeover; keep the constants equal):
+
+- **The servers.** `uComputerID.IsSameStation` (leaf, tested): peer address
+  equal and non-empty, and host name, `hmAppVersion` and `hmContestId` not both
+  non-empty and different (the claimant's version/contest come from the HELLO
+  being judged, the holder's from its `clHello`; the legacy COMPUTERID path
+  passes ''). `JudgeTakeover` + `ID_TAKEOVER_FLAP_WINDOW_MS` = 30000: a second
+  takeover of the same letter inside the window is refused (`tvFlap`, Warn
+  `two stations on <ip> are using the same ID`). `tr4wserverUnit.SetComputerID`
+  (now takes version and contest) records `IdTakeoverTick[1..26]`, logs Info
+  `Computer ID X taken over from the stale session of <ip>` and calls
+  `uServerNet.DropStaleClient`, which frees the slot and broadcasts the
+  disconnect EXACTLY as `SyncDrop` does, clears `FAdmitted` so the old
+  connection's own later `SyncDrop` does nothing (it would otherwise free,
+  and announce, a slot a REUSED socket handle now stands for), and closes the
+  socket. The in-tree server records `Binding.PeerIP` (the real TCP peer) and a
+  host name of '?' (never resolved), so the host-name test is vacuous here and
+  the address plus version/contest decide; it does not serve Tailcat yet
+  (Python labels a tunnel peer `tc:<last two groups>`, host `tailcat`). Behind a
+  NAT or gateway showing one address for several stations only the flap guard
+  protects. Not proof: the HELLO has no install id.
+- **The client, for a server without the rule.** `SM_COMPUTERID_IN_USE` goes to
+  `uNet.HandleComputerIdRefused`: `uNetLink.JudgeIdRefusal` starts an episode
+  (first refusal: ONE `QuickDisplay` line `SNetComputerIDHeldByOldSession`, no
+  modal), retries for `ID_RETRY_WINDOW_MS` = 60 s and then does what it always
+  did (latch `FRefusedComputerID`, modal `SNetComputerIDInUse`). A retry is
+  NOT latched: the link is closed (`NetLinkWentDown`) and the EXISTING
+  `atNetReconnect` timer (`NetLinkTick`, `Network.StatusUpdateInterval`, 5 s by
+  default; the operator's setting governs) reconnects, so there is no second
+  loop, and Disconnect / exit stop it with no state of their own (the timer runs
+  only while `GLinkWanted`). Refusals more than `ID_RETRY_EPISODE_GAP_MS` apart
+  are separate episodes (a restart hours later is a new problem);
+  `ForgetServerRefusal` clears the episode. Tests: `uTestComputerID`,
+  `uTestNetLink` (`NetAgeIdRefusalEpisode` is the clock hook).
+
 ## Network protocol 3: the QSO record carries a received year (issue 298, 2026-11-12)
 
 `NET_PROTOCOL_VERSION` = **3**. `ContestExchange` gained `RcvdYear` (Word, offset

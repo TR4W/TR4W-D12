@@ -176,6 +176,13 @@ function SendToClient(const aHandle: Cardinal; const aBuf;
 { What closesocket(client) became. }
 procedure DropClient(const aHandle: Cardinal);
 
+(* A STALE SESSION OF A STATION THAT HAS COME BACK (computer id takeover): leave
+  it exactly as a disconnect does -- its slot is freed and the other stations
+  are told -- BEFORE the new claim is recorded, then close its socket. The
+  connection's own later SyncDrop finds it no longer admitted and does nothing,
+  so it cannot free (or announce) the slot a reused handle now stands for. *)
+procedure DropStaleClient(const aHandle: Cardinal);
+
 { True while the listeners are up. }
 function ServerNetActive: boolean;
 
@@ -916,6 +923,29 @@ begin
       begin
       c.CloseConnection;
       end;
+end;
+
+procedure DropStaleClient(const aHandle: Cardinal);
+var
+   c: TServerConn;
+begin
+   c := ContextOf(aHandle);
+   if c = nil then
+      begin
+      (* No live context answers to it: only the slot is left to free. *)
+      DeleteSocketFromArray(aHandle);
+      DisplayClients;
+      Exit;
+      end;
+
+   if c.FAdmitted then
+      begin
+      c.FAdmitted := False;
+      logger.Info('[Net] client %s (%d) disconnected (stale session)', [c.FPeerIP, c.FHandle]);
+      DeleteSocketFromArray(c.FHandle);
+      DisplayClients;
+      end;
+   c.CloseConnection;
 end;
 
 end.

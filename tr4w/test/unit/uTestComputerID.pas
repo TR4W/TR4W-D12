@@ -54,6 +54,11 @@ type
       procedure TestLetterRoundTrip;
       procedure TestLetterOfAnIllegalIDIsAQuestionMark;
       procedure TestOrdinalOfANonLetterIsZero;
+      procedure TestTheSameAddressIsTheSameStation;
+      procedure TestADifferentOrEmptyAddressIsAnotherStation;
+      procedure TestASecondTakeoverInsideTheWindowIsAFlap;
+      procedure TestADifferentVersionHostOrContestIsAnotherStation;
+      procedure TestAnOwnLetterOrOutOfRangeNeverReachesTheTakeover;
    public
       procedure RunAllTests; override;
    end;
@@ -169,8 +174,73 @@ begin
    CheckEquals('?', string(ComputerIDLetter(AnsiChar(27))), 'ordinal 27 has no letter');
 end;
 
+(* THE TAKEOVER RULE, mirroring TestComputerIdTakeover in TR4WServerPy's
+  tests/test_server.py. The server unit itself cannot be linked into this
+  exe, so the decision (the two functions it calls) is what is pinned here. *)
+
+procedure TComputerIDTests.TestTheSameAddressIsTheSameStation;
+begin
+   CheckTrue(IsSameStation('10.0.0.5', '10.0.0.5', 'x', 'x', '5.0.99', '5.0.99',
+                           'ARRL-FD', 'ARRL-FD'),
+             'everything equal');
+   CheckTrue(IsSameStation('10.0.0.5', '10.0.0.5', '?', '?', '5.0.99', '5.0.99', '', ''),
+             'a holder with no contest yet does not count against it');
+   CheckTrue(IsSameStation('10.0.0.5', '10.0.0.5', 'x', 'x', '', '', '', ''),
+             'the legacy COMPUTERID path carries no version or contest');
+   CheckEquals(Ord(tvTakeOver), Ord(JudgeTakeover(True, 0, 1000)),
+               'the first takeover of a letter goes ahead');
+end;
+
+procedure TComputerIDTests.TestADifferentOrEmptyAddressIsAnotherStation;
+begin
+   CheckFalse(IsSameStation('10.0.0.6', '10.0.0.5', 'x', 'x', '5.0.99', '5.0.99', '', ''),
+              'a different address');
+   CheckFalse(IsSameStation('', '', 'x', 'x', '5.0.99', '5.0.99', '', ''),
+              'an empty address is never the same');
+   CheckEquals(Ord(tvNotSameStation), Ord(JudgeTakeover(False, 0, 1000)),
+               'refused as before');
+end;
+
+procedure TComputerIDTests.TestASecondTakeoverInsideTheWindowIsAFlap;
+begin
+   CheckEquals(30000, ID_TAKEOVER_FLAP_WINDOW_MS, 'the same 30 seconds as the Python server');
+   CheckEquals(Ord(tvFlap), Ord(JudgeTakeover(True, 100000, 100000 + 29999)),
+               'just inside the window');
+   CheckEquals(Ord(tvTakeOver), Ord(JudgeTakeover(True, 100000, 100000 + 30000)),
+               'at the window it is accepted again');
+   CheckEquals(Ord(tvTakeOver), Ord(JudgeTakeover(True, 100000, 100000 + 31000)),
+               'after the window it is accepted');
+   CheckEquals(Ord(tvNotSameStation), Ord(JudgeTakeover(False, 100000, 100001)),
+               'another station is refused whatever the clock says');
+end;
+
+procedure TComputerIDTests.TestADifferentVersionHostOrContestIsAnotherStation;
+begin
+   CheckFalse(IsSameStation('10.0.0.5', '10.0.0.5', 'x', 'x', '5.0.98', '5.0.99',
+                            'ARRL-FD', 'ARRL-FD'), 'another version');
+   CheckFalse(IsSameStation('10.0.0.5', '10.0.0.5', 'other', 'x', '5.0.99', '5.0.99',
+                            'ARRL-FD', 'ARRL-FD'), 'another host name');
+   CheckFalse(IsSameStation('10.0.0.5', '10.0.0.5', 'x', 'x', '5.0.99', '5.0.99',
+                            'CQ-WW-CW', 'ARRL-FD'), 'another contest');
+end;
+
+procedure TComputerIDTests.TestAnOwnLetterOrOutOfRangeNeverReachesTheTakeover;
+begin
+   (* The takeover is asked only for cidInUse, and the verdict excludes the
+     asking station's own letter and checks the range first. *)
+   CheckEquals(Ord(cidAccept), Ord(JudgeComputerID(Ord1('A'), [])),
+               'a station re-announcing its own letter: nothing else holds it');
+   CheckEquals(Ord(cidOutOfRange), Ord(JudgeComputerID(AnsiChar(27), [1])),
+               'an id out of range is refused before anything else');
+end;
+
 procedure TComputerIDTests.RunAllTests;
 begin
+   TestTheSameAddressIsTheSameStation;
+   TestADifferentOrEmptyAddressIsAnotherStation;
+   TestASecondTakeoverInsideTheWindowIsAFlap;
+   TestADifferentVersionHostOrContestIsAnotherStation;
+   TestAnOwnLetterOrOutOfRangeNeverReachesTheTakeover;
    TestFreeIDIsAccepted;
    TestTakenIDIsRefused;
    TestReannouncingOwnIDIsAccepted;
