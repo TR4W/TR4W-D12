@@ -71,11 +71,11 @@ const
 
 (* THE ADIF PRIMARY ADMINISTRATIVE SUBDIVISION for an ALL JA prefecture number
    (NY4I, 2026-11-24): the ALL JA's Hokkaido regions 101..114 all fall under
-   ADIF's single Hokkaido, '01'; every other number is its own code. WHERE NO
-   CODE CAN BE DETERMINED -- a number ADIF's list does not have (48, which
-   allja.dom and the entry check still accept), text, nothing -- THE ANSWER IS
-   '' AND THE STATE IS OMITTED, for MY_STATE and STATE alike. Public so a test
-   can pin it. *)
+   ADIF's single Hokkaido, '01'; 48, Ogasawara, is its own DXCC entity and
+   ADIF's 'O'; every other number 02..47 is its own code. WHERE NO CODE CAN BE
+   DETERMINED -- text, nothing, a number the contest does not have -- THE
+   ANSWER IS '' AND THE STATE IS OMITTED, for MY_STATE and STATE alike. Public
+   so a test can pin it. *)
 function ADIFPrefectureCode(const aPrefecture: string): string;
 
 (* THE RECEIVED POWER CLASS LETTER (H M L P) of a logged ALL JA QSO -- the
@@ -160,6 +160,12 @@ begin
    ValChecked(Trim(aPrefecture), number, code);
    if code <> 0 then
       begin
+      Exit;
+      end;
+   if number = 48 then
+      begin
+      (* Ogasawara: its own DXCC entity, whose ADIF subdivision code is 'O'. *)
+      Result := 'O';
       Exit;
       end;
    if (number >= 101) and (number <= 114) then
@@ -367,17 +373,17 @@ end;
 
 (* THE WORKED STATION'S ADIF STATE (NY4I, 2026-11-24): its prefecture as
    ADIF's Primary Administrative Subdivision for Japan, '01'..'47'; Hokkaido's
-   regions 101..114 are '01' (ADIFPrefectureCode). A number ADIF's list does
-   not have (48, which allja.dom and the entry check still accept) writes no
-   STATE rather than an invalid one. *)
+   regions 101..114 are '01' and Ogasawara (48) is 'O' (ADIFPrefectureCode).
+   Where no code can be determined, no STATE is written. *)
 function TContestAllJA.ADIFWorkedStationState(const aQso: ContestExchange): string;
 begin
    Result := ADIFPrefectureCode(ReceivedPrefectureNumber(aQso));
 end;
 
 (* THE NEW CONTEST DIALOG ASKS FOR THE TWO FIELDS THE EXCHANGE SENDS (NY4I,
-   2026-11-23). The numbers are DXLog's ALLJA.txt list -- 02..48 and
-   Hokkaido's 101..114; allja.dom is a wider superset and stays. *)
+   2026-11-23). The numbers are the sponsor's list -- 02..47 the prefectures,
+   48 Ogasawara and Hokkaido's regions 101..114 -- which allja.dom now
+   lists exactly (49, 50 and 115..118 were D7 leftovers, removed 2026-11-24). *)
 procedure TContestAllJA.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
 begin
    aPrompts.AddStartUpField(ncfMyPrefecture, 'MY PREFECTURE', TC_PREFECTURE,

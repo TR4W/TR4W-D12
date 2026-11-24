@@ -593,8 +593,8 @@ begin
 end;
 
 (* A missing power letter names the letters; a number outside 02..48 and
-   101..114 (49, 50 and 115..118 are in allja.dom but not on the list) or no
-   number at all names the range. Nothing is written. *)
+   101..114 (49, 50 and 115..118 were allja.dom leftovers until 2026-11-24) or
+   no number at all names the range. Nothing is written. *)
 procedure TPossibleDomesticQTHEntryTests.Test_AllJARefusesWithAReasonAndWritesNothing;
 const
    MODES: array[0..2] of ModeType = (CW, Phone, Digital);
@@ -674,7 +674,8 @@ begin
    CheckEquals('47', ADIFPrefectureCode('47'), 'Okinawa');
    CheckEquals('02', ADIFPrefectureCode('2'), 'a bare digit is the two-digit code');
    CheckEquals('', ADIFPrefectureCode(''), 'nothing in, nothing out');
-   CheckEquals('', ADIFPrefectureCode('48'), '48 is not on ADIF''s list: omitted');
+   CheckEquals('O', ADIFPrefectureCode('48'), '48 is Ogasawara, ADIF''s O');
+   CheckEquals('', ADIFPrefectureCode('49'), '49 is not a prefecture: omitted');
    CheckEquals('', ADIFPrefectureCode('115'), '115 is not a region: omitted');
    CheckEquals('', ADIFPrefectureCode('XX'), 'not a number: omitted');
 end;
