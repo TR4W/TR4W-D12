@@ -13137,3 +13137,8 @@ msgstr "Difuzare UDP"
 #, fuzzy
 msgid "Web Server"
 msgstr "Server webComment"
+
+#: uappstrings.slanguagefileoverrides
+#, fuzzy
+msgid "Language file %s overrides the built-in translations (dated %s)"
+msgstr ""

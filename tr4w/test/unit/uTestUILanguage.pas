@@ -48,6 +48,7 @@ type
       procedure Test_NoCatalogueCreditsTheEnglishAuthor;
       procedure Test_EveryIdentifierReachesTheEmbeddedCatalogue;
       procedure Test_ALineBreakSurvivesTheEmbeddedCatalogue;
+      procedure Test_ALooseCatalogueIsNamedWithItsDate;
    public
       procedure RunAllTests; override;
    end;
@@ -838,6 +839,72 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------
+  A LOOSE CATALOGUE IS REPORTED (2026-11-24).
+
+  languages\<lang>\tr4w.po in the data directory overrides the embedded
+  catalogue. Twenty-one forgotten test copies did that for three months with
+  one Info line as the only trace, so the loader now records the file and its
+  date and the program shows a notice. LoadEmbeddedTranslation itself is not
+  called here: it rewrites the resource-string table and installs the form
+  translator for every later test in this binary.
+  --------------------------------------------------------------------- *)
+
+procedure TUILanguageTests.Test_ALooseCatalogueIsNamedWithItsDate;
+const
+   SAMPLE_FILE = 'C:\TR4W\languages\de\tr4w.po';
+var
+   text: string;
+{$IFDEF WINDOWS}
+   dated: TDateTime;
+   savedDir, scratch, found: string;
+{$ENDIF}
+begin
+   BeginTest('a loose catalogue is named, with its date, and nothing else is');
+
+   (* This binary loads no catalogue, so nothing is reported. *)
+   CheckEquals('', ActiveCatalogueFile, 'no loose file is in force');
+   CheckEquals('', LooseCatalogueNotice, 'so there is no notice');
+   CheckEquals('', LooseCatalogueNoticeText('', EncodeDate(2026, 8, 28)),
+               'no file, no notice -- whatever the date');
+
+   text := LooseCatalogueNoticeText(SAMPLE_FILE, EncodeDate(2026, 8, 28));
+   CheckTrue(Pos(SAMPLE_FILE, text) > 0, 'the notice names the file: ' + text);
+   CheckTrue(Pos('2026-08-28', text) > 0, 'and its date: ' + text);
+   CheckTrue(Pos(SAMPLE_FILE, text) < Pos('2026-08-28', text),
+             'the file first, then the date -- the order the specifiers say');
+
+{$IFDEF WINDOWS}
+   (* THE PROBE THE LOADER USES. On Windows the data directory is the
+     working directory (uAppPaths.AppDir), so a scratch directory stands in
+     for tr4w\target. Off Windows it is not, and this half is skipped. *)
+   savedDir := GetCurrentDir;
+   scratch := IncludeTrailingPathDelimiter(GetTempDir) +
+              Format('tr4w-loosepo-%d', [Random(1000000000)]);
+   ForceDirectories(scratch + '\languages\xx');
+   try
+      SetCurrentDir(scratch);
+      found := LooseCatalogueFile('yy', dated);
+      CheckEquals('', found, 'no file for a language with none');
+      CheckTrue(dated = 0, 'and no date');
+
+      WriteText(scratch + '\languages\xx\tr4w.po', 'msgid ""' + LineEnding +
+                'msgstr ""' + LineEnding);
+      found := LooseCatalogueFile('xx', dated);
+      CheckTrue(SameText(ExpandFileName(found),
+                         ExpandFileName(scratch + '\languages\xx\tr4w.po')),
+                'the file in the data directory is found: ' + found);
+      CheckTrue(dated > EncodeDate(2026, 1, 1), 'with its date');
+   finally
+      SetCurrentDir(savedDir);
+      DeleteFile(scratch + '\languages\xx\tr4w.po');
+      RemoveDir(scratch + '\languages\xx');
+      RemoveDir(scratch + '\languages');
+      RemoveDir(scratch);
+   end;
+{$ENDIF}
+end;
+
 procedure TUILanguageTests.RunAllTests;
 begin
    Randomize;
@@ -861,6 +928,7 @@ begin
    Test_NoCatalogueCreditsTheEnglishAuthor;
    Test_EveryIdentifierReachesTheEmbeddedCatalogue;
    Test_ALineBreakSurvivesTheEmbeddedCatalogue;
+   Test_ALooseCatalogueIsNamedWithItsDate;
 end;
 
 end.

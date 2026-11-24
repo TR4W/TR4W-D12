@@ -999,16 +999,23 @@ object PrefsForm: TPrefsForm
         Height = 25
         Top = 296
         Width = 130
+        AutoSize = True
         Caption = 'Open log file'
+        Constraints.MinWidth = 130
         TabOrder = 6
         OnClick = btnOpenLogFileClick
       end
       object lblLogFilePath: TLabel
+        AnchorSideLeft.Control = btnOpenLogFile
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = btnOpenLogFile
+        AnchorSideTop.Side = asrCenter
         Left = 152
         Height = 17
-        Top = 301
+        Top = 304
         Width = 500
         AutoSize = False
+        BorderSpacing.Left = 10
       end
       object lblLogFilesHeading: TLabel
         Left = 12

@@ -12877,3 +12877,8 @@ msgstr "Εκπομπή UDP"
 #, fuzzy
 msgid "Web Server"
 msgstr "Εξυπηρετητής ιστού"
+
+#: uappstrings.slanguagefileoverrides
+#, fuzzy
+msgid "Language file %s overrides the built-in translations (dated %s)"
+msgstr ""

@@ -30,6 +30,30 @@
    resource. That copy is for measurement only -- it is not a build, and the
    words in it are unreviewed machine output. Layout truth, not language truth.
 
+   IT REMOVES WHAT IT INSTALLED (2026-11-24). A loose languages\<lang>\tr4w.po
+   overrides the embedded catalogue for EVERY later run that finds it, so a
+   forgotten copy hides every translation fix made after it. Twenty-one copies
+   from 2026-08-28 did exactly that in tr4w\target\languages for three months.
+   So the sweep records each file po_defuzz writes for it and, in a finally
+   block (success, failure or Ctrl-C), deletes those files, then each language
+   folder and the languages folder only if this run created it and it is now
+   empty, and prints what it removed. It REFUSES TO START if the languages
+   folder it installs into already exists: it cannot tell those files from its
+   own, and must not delete or overwrite somebody else's.
+
+   -SkipInstall installs nothing, checks nothing and deletes nothing: it
+   measures against whatever catalogues are already in place. Since a normal
+   run now cleans up, files for a -SkipInstall run have to be installed by hand
+   (python tools\i18n\po_defuzz.py <po> --install --exe-dir <dir>) -- and
+   whoever installed them removes them afterwards.
+
+   KNOWN MISMATCH, NOT FIXED HERE: the program reads languages\ from its
+   WORKING directory (uAppPaths.DataFilePath; Invoke-MenuSmoke starts it in
+   tr4w\target), not from beside the exe where this installs. And since
+   2026-09-21 the embedded catalogue ships fuzzy entries anyway. Whether the
+   install step is still needed at all is NY4I's call; installing into
+   tr4w\target instead would recreate the hazard described above.
+
    WHAT IT CANNOT SEE. Anything painted rather than placed: the main window's
    own elements, owner-drawn list items, grid cells. Those still need eyes.
    And it cannot tell you a translation is WRONG -- only that it does not fit.
@@ -47,7 +71,8 @@ param(
    [string]   $Repo = (Split-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) -Parent),
    [string]   $Exe,
    # Skip the po_defuzz step. Use when the languages are already installed and
-   # you are re-running the measurement.
+   # you are re-running the measurement. Nothing is installed, so nothing is
+   # removed -- see "IT REMOVES WHAT IT INSTALLED" above.
    [switch]   $SkipInstall,
    # Forwarded to Invoke-MenuSmoke. Its default set is the converted windows.
    [int[]]    $Command,
@@ -67,6 +92,9 @@ if (-not (Test-Path $Exe)) { throw "no exe at $Exe -- build first" }
 # the EMBEDDED catalogue instead -- and that one has every fuzzy entry dropped,
 # so almost nothing is translated and nothing overruns. A clean sweep for
 # entirely the wrong reason.
+#
+# STALE (2026-11-24): the program now resolves it from the WORKING directory
+# (uAppPaths.DataFilePath), which is tr4w\target -- see KNOWN MISMATCH above.
 $exeDir = Split-Path $Exe -Parent
 
 $logPath = Join-Path $target 'tr4w.log'
@@ -123,9 +151,39 @@ function Read-RunLogs
 $results = @()
 $coverage = @()
 
+# WHAT THIS RUN INSTALLED, and so may remove -- nothing else is ever deleted.
+$langRoot         = Join-Path $exeDir 'languages'
+$installedFiles   = New-Object System.Collections.ArrayList
+$createdLangRoot  = $false
+
+if (-not $SkipInstall)
+   {
+   # REFUSE rather than mix our copies with files we did not write: we could
+   # not tell them apart afterwards, and deleting them is not ours to do.
+   if (Test-Path -LiteralPath $langRoot)
+      {
+      throw ("$langRoot already exists. Its catalogues override the embedded ones " +
+             "and are not this run's to replace or delete. Move or remove it, " +
+             "or pass -SkipInstall to measure against it as it is.")
+      }
+   $createdLangRoot = $true
+   }
+
+# The folder the program actually reads (its working directory) -- warn, do
+# not touch: it is the operator's, and a copy in it overrides every language.
+$targetLangRoot = Join-Path $target 'languages'
+if (Test-Path -LiteralPath $targetLangRoot)
+   {
+   Write-Host (("WARNING: {0} exists. Any languages\<lang>\tr4w.po in it overrides " +
+                "the embedded catalogue for every run started from {1}.") -f
+               $targetLangRoot, $target)
+   }
+
 # Whatever was in target\ before the sweep belongs to the operator, not to us.
 [void](Move-LogsAside '_before')
 
+try
+{
 foreach ($code in $Lang)
    {
    $po = Join-Path $i18n ("tr4w_{0}.po" -f $code)
@@ -137,6 +195,10 @@ foreach ($code in $Lang)
 
    if (-not $SkipInstall)
       {
+      # Recorded BEFORE the call: a run that fails half-way may still have
+      # written the file, and the finally block only deletes what exists.
+      # The folder name is po_defuzz's: the code lower-cased.
+      [void]$installedFiles.Add((Join-Path (Join-Path $langRoot $code.ToLower()) 'tr4w.po'))
       & python $defuzz $po --install --exe-dir $exeDir 2>&1 | Out-Null
       if ($LASTEXITCODE -ne 0) { throw "po_defuzz failed for $code" }
       }
@@ -305,5 +367,41 @@ if ($coverage.Count -gt 1)
 
 $results | Export-Csv -NoTypeInformation -Path (Join-Path $Repo 'build-out\textfit-sweep.csv')
 Write-Host ('  full results: {0}' -f (Join-Path $Repo 'build-out\textfit-sweep.csv'))
+}
+finally
+{
+   # ONLY WHAT THIS RUN WROTE. The refusal above guarantees the languages
+   # folder did not exist before an installing run, so every file in the list
+   # is ours; a folder is removed only once it is empty.
+   $removed = 0
+   foreach ($f in $installedFiles)
+      {
+      if (Test-Path -LiteralPath $f)
+         {
+         Remove-Item -LiteralPath $f -Force
+         $removed++
+         }
+      $dir = Split-Path $f -Parent
+      if ((Test-Path -LiteralPath $dir) -and
+          -not (Get-ChildItem -LiteralPath $dir -Force | Select-Object -First 1))
+         {
+         Remove-Item -LiteralPath $dir -Force
+         }
+      }
+   if ($createdLangRoot -and (Test-Path -LiteralPath $langRoot) -and
+       -not (Get-ChildItem -LiteralPath $langRoot -Force | Select-Object -First 1))
+      {
+      Remove-Item -LiteralPath $langRoot -Force
+      }
+   if ($installedFiles.Count -gt 0)
+      {
+      Write-Host ('Sweep-TextFit: removed {0} installed catalogue(s) from {1}, so they cannot override a later run.' -f
+                  $removed, $langRoot)
+      if (Test-Path -LiteralPath $langRoot)
+         {
+         Write-Host ('  {0} is NOT empty -- something else wrote there during the run; left as it is.' -f $langRoot)
+         }
+      }
+}
 
 exit ([int] ($results.Count -gt 0))

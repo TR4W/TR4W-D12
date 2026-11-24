@@ -12685,3 +12685,8 @@ msgstr "Difusión UDP"
 #, fuzzy
 msgid "Web Server"
 msgstr "Servidor web"
+
+#: uappstrings.slanguagefileoverrides
+#, fuzzy
+msgid "Language file %s overrides the built-in translations (dated %s)"
+msgstr ""

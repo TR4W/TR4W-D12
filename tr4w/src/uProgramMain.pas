@@ -3375,6 +3375,18 @@ begin
     QuickDisplay(SysUtils.Format(TC_TRMASTERDTAS, [CD.ActiveFilename]));
   end;
 
+   (* A LOOSE CATALOGUE IS IN FORCE: say so on the screen, not only in the
+     log.  LoadEmbeddedTranslation ran long before there was a window, so it
+     recorded the file and logged a warning; this is the first point a notice
+     can be seen.  Once per start, because this routine runs once.  Twenty-one
+     forgotten test copies hid every translation fix for three months with
+     only an Info line to show for it (2026-11-24).  A later notice -- the
+     CTY.DAT check -- may replace the line; the warning in the log stays. *)
+   if LooseCatalogueNotice <> '' then
+      begin
+      QuickDisplay(LooseCatalogueNotice);
+      end;
+
 {$IF not tDebugMode}
   // THE LAST CONTEST OPENED, recorded in settings\tr4w.json (NY4I, 2026-08-16).
   //

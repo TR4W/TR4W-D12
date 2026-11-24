@@ -13569,3 +13569,8 @@ msgstr "UDP 방송"
 #, fuzzy
 msgid "Web Server"
 msgstr "웹 서버"
+
+#: uappstrings.slanguagefileoverrides
+#, fuzzy
+msgid "Language file %s overrides the built-in translations (dated %s)"
+msgstr ""

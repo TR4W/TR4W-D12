@@ -2246,6 +2246,14 @@ resourcestring
      command; nothing is refused -- the command is still sent. *)
    SRadioPTTByCATNotSupported = '%s: PTT via CAT is not supported by this radio. Use a hardware PTT line, or turn off "Key the transmitter with a CAT command".';
 
+   (* A LOOSE CATALOGUE IN FORCE (2026-11-24).  Shown once per start, after the
+     main window is up, when languages\<lang>\tr4w.po in the data directory
+     replaced the translations built into the program.  The first %s is the
+     file's full path, the second its date (yyyy-mm-dd); keep them in that
+     order.  Twenty-one such files sat unnoticed for three months and hid
+     every later translation fix, with one information line in the log. *)
+   SLanguageFileOverrides     = 'Language file %s overrides the built-in translations (dated %s)';
+
 implementation
 
 end.

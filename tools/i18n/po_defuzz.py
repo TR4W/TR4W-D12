@@ -23,14 +23,22 @@ caption clip. Measured 2026-08-27, Spanish went from 385 usable entries to 1008.
 It says nothing about whether the words are right -- machine output stays machine
 output, and that is what the fuzzy flag is recording.
 
-WHERE THE FILE GOES. Beside the EXE, not beside the working directory:
-uEmbeddedTranslations builds its path from ExtractFilePath(ParamStr(0)) and a
-file there wins over the embedded catalogue. So for a build-out binary run from
-tr4w/target, the target is build-out/app-x86_64-win64/languages/<lang>/tr4w.po.
---install does that for you. The program says which one it used:
+WHERE THE FILE GOES. --install writes <exe-dir>/languages/<lang>/tr4w.po. NOTE
+(2026-11-24): the program does NOT read it from beside the exe.
+uEmbeddedTranslations asks uAppPaths.DataFilePath, which on Windows is the
+WORKING directory -- tr4w/target for a build-out binary run the usual way. So
+the file only takes effect when --exe-dir names the directory the program is
+STARTED in. The program says when one is used, as a WARNING with the file's
+date, and shows a notice once its window is up:
 
-    UI language: "es" selected by ... loaded from <path> (overriding the
-    embedded catalogue)
+    UI language: "es" selected by ... loaded from <path> dated <date>
+    (OVERRIDING the embedded catalogue ...)
+
+AN INSTALLED FILE OVERRIDES THE EMBEDDED CATALOGUE FOR EVERY RUN THAT FINDS IT,
+AND MUST BE DELETED WHEN THE TEST IS DONE. Nothing in the program removes it:
+21 copies from 2026-08-28 sat in tr4w/target/languages for three months and hid
+every later translation fix. tr4w/test/ui/Sweep-TextFit.ps1 deletes the copies
+it installs (in a finally block); a file installed by hand is yours to delete.
 
 Usage
 -----
@@ -164,6 +172,10 @@ def main():
    print('\nTHIS IS A TEST ARTIFACT. It carries unreviewed machine translation and')
    print('must never be shipped -- the installer takes the embedded catalogue,')
    print('which still has the fuzzy entries removed. Delete it when done.')
+   if args.install:
+      print('WHILE IT EXISTS it overrides the embedded catalogue for every run that')
+      print('finds it. Nothing in TR4W removes it; Sweep-TextFit.ps1 removes only')
+      print('the copies it installed itself.')
    return 0
 
 

@@ -12887,3 +12887,8 @@ msgstr ""
 #, fuzzy
 msgid "Web Server"
 msgstr ""
+
+#: uappstrings.slanguagefileoverrides
+#, fuzzy
+msgid "Language file %s overrides the built-in translations (dated %s)"
+msgstr ""

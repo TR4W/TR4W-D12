@@ -392,7 +392,13 @@ before it was understood:
   writes beside the exe, while on Windows a loose file is looked for under the working
   directory. Whether the sweep's copy is the one actually loaded has not been checked;
   the log line says which was used. The defuzzed copy is for measurement only — the words in it
-  are unreviewed machine output. *Layout truth, not language truth.*
+  are unreviewed machine output. *Layout truth, not language truth.* **Since 2026-11-24 the
+  sweep deletes the copies it installed** (in a `finally`, success, failure or Ctrl-C), and it
+  refuses to start if its `languages` folder already exists; `-SkipInstall` installs and
+  deletes nothing. A loose `languages\<lang>\tr4w.po` overrides the embedded catalogue for every
+  run that finds it — 21 forgotten copies hid every translation fix for three months — so the
+  program now logs it as a WARNING with the file's date and shows a notice once its window is up
+  (`SLanguageFileOverrides`). A copy installed by hand is yours to delete.
 - **It measures from inside the program**, not by walking the window tree. A `TLabel`
   is a `TGraphicControl` with no window handle, and most captions in the converted
   forms are labels — which is why the older `Test-TextFit.ps1` reported nothing

@@ -13095,3 +13095,8 @@ msgstr "UDP vysílání"
 #, fuzzy
 msgid "Web Server"
 msgstr "Web Server"
+
+#: uappstrings.slanguagefileoverrides
+#, fuzzy
+msgid "Language file %s overrides the built-in translations (dated %s)"
+msgstr ""

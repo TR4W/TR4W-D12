@@ -87,6 +87,30 @@ function UILanguageCaption(const aCode: string): string;
   still a loaded catalogue. }
 function ActiveUILanguage: string;
 
+(* A LOOSE CATALOGUE IN FORCE: the languages\<lang>\tr4w.po file the loader
+  read instead of the embedded copy, and that file's date -- '' and 0 when
+  the catalogue is embedded, or when none is loaded (English).
+
+  A loose file overrides the embedded catalogue completely, so a stale one
+  hides every later translation fix. Twenty-one test copies did exactly that
+  for three months (2026-08-28 to 2026-11-24) with one Info line in the log
+  as the only trace. So the loader logs it as a WARNING and uProgramMain
+  shows LooseCatalogueNotice once the main window is up. *)
+function ActiveCatalogueFile: string;
+function ActiveCatalogueFileDate: TDateTime;
+
+(* The file the loader would read for aCode, with its date, or '' (and 0)
+  when there is none. The one probe the loader uses, so a test can ask it. *)
+function LooseCatalogueFile(const aCode: string; out aDate: TDateTime): string;
+
+(* The operator-facing sentence for a loose catalogue, or '' when aFile is
+  ''. Pure, so it can be pinned without a window. *)
+function LooseCatalogueNoticeText(const aFile: string; aDate: TDateTime): string;
+
+(* LooseCatalogueNoticeText for the catalogue in force: '' unless a loose
+  file was loaded at startup. *)
+function LooseCatalogueNotice: string;
+
 const
    (* The resourcestring's unit-qualified name -- the #: line the loader
      matches on. *)
@@ -184,6 +208,7 @@ esh.inc --
    MainUnit,          // logger
   uTR4WStrings,
   utils_text,
+   uAppStrings,       // SLanguageFileOverrides
    uAppPaths;
 
 (* THE CODE TO LOAD, AND A SENTENCE SAYING WHERE IT CAME FROM.
@@ -281,6 +306,10 @@ var
    (* The catalogue's own translator credit, read when it is installed --
      see ActiveTranslationAuthor. *)
    GActiveAuthor:    string;
+   (* The loose file read instead of the embedded copy, and its date -- see
+     ActiveCatalogueFile. '' and 0 for an embedded catalogue. *)
+   GActiveFile:      string;
+   GActiveFileDate:  TDateTime;
 
 
 function EnumLangProc(hModule: TFPResourceHMODULE; lpType, lpName: PAnsiChar;
@@ -550,6 +579,53 @@ begin
    Result := GActiveAuthor;
 end;
 
+function ActiveCatalogueFile: string;
+begin
+   Result := GActiveFile;
+end;
+
+function ActiveCatalogueFileDate: TDateTime;
+begin
+   Result := GActiveFileDate;
+end;
+
+function LooseCatalogueFile(const aCode: string; out aDate: TDateTime): string;
+var
+   candidate: string;
+begin
+   Result := '';
+   aDate := 0;
+   candidate := LanguageFilePath(aCode);
+   (* FileAge answers False for a missing file, so it is the existence test
+     and the date in one call. *)
+   if FileAge(candidate, aDate) then
+      begin
+      Result := candidate;
+      end
+   else
+      begin
+      aDate := 0;
+      end;
+end;
+
+function LooseCatalogueNoticeText(const aFile: string; aDate: TDateTime): string;
+begin
+   Result := '';
+   if aFile = '' then
+      begin
+      Exit;
+      end;
+   (* UnicodeFormat, not SysUtils.Format: the path may hold characters the
+     ANSI code page cannot. *)
+   Result := UnicodeFormat(SLanguageFileOverrides,
+                           [aFile, FormatDateTime('yyyy-mm-dd', aDate)]);
+end;
+
+function LooseCatalogueNotice: string;
+begin
+   Result := LooseCatalogueNoticeText(GActiveFile, GActiveFileDate);
+end;
+
 (* A translation from a loaded catalogue by identifier, or '' -- by the rule
   TPOFile.Translate applies: a fuzzy entry counts as absent. *)
 function ReviewedTranslation(po: TPOFile; const aIdentifier: string): string;
@@ -611,10 +687,13 @@ var
    rs:     TResourceStream;
    po:     TPOFile;
    fileCandidate: string;
+   fileDate: TDateTime;
 begin
    Result := '';
    GActiveLang := '';
    GActiveAuthor := '';
+   GActiveFile := '';
+   GActiveFileDate := 0;
    lang := ResolveLang(aSetting, source);
    if (lang = '') or SameText(lang, COMPILED_IN_LANGUAGE) then
       begin
@@ -640,8 +719,8 @@ begin
    // A FILE BESIDE THE EXE WINS. Same layout SetDefaultLang searches, so a
    // catalogue dropped there for testing or as a patch behaves the same way it
    // did before this unit existed.
-   fileCandidate := LanguageFilePath(lang);
-   if FileExists(fileCandidate) then
+   fileCandidate := LooseCatalogueFile(lang, fileDate);
+   if fileCandidate <> '' then
       begin
       try
          // No try..finally around po: ApplyCatalogue owns it from here, and the
@@ -652,10 +731,17 @@ begin
             begin
             Result := lang;
             RecordActiveCatalogue(lang, po);
+            GActiveFile := fileCandidate;
+            GActiveFileDate := fileDate;
             LoadLCLCatalogue(lang);
-            logger.Info('UI language: "' + lang + '" selected by ' + source +
-                        ', loaded from ' + fileCandidate +
-                        ' (overriding the embedded catalogue)');
+            (* A WARNING, not information: a loose file replaces every
+              translation the program carries, and a forgotten one hides each
+              later fix. uProgramMain also shows it once the window is up. *)
+            logger.Warn('UI language: "' + lang + '" selected by ' + source +
+                        ', loaded from ' + fileCandidate + ' dated ' +
+                        FormatDateTime('yyyy-mm-dd hh:nn', fileDate) +
+                        ' (OVERRIDING the embedded catalogue -- delete the ' +
+                        'file to use the translations built into this program)');
             Exit;
             end;
       except
