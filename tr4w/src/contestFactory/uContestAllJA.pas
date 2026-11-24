@@ -71,8 +71,11 @@ const
 
 (* THE ADIF PRIMARY ADMINISTRATIVE SUBDIVISION for an ALL JA prefecture number
    (NY4I, 2026-11-24): the ALL JA's Hokkaido regions 101..114 all fall under
-   ADIF's single Hokkaido, '01'; every other number is its own code. Public so
-   a test can pin it. *)
+   ADIF's single Hokkaido, '01'; every other number is its own code. WHERE NO
+   CODE CAN BE DETERMINED -- a number ADIF's list does not have (48, which
+   allja.dom and the entry check still accept), text, nothing -- THE ANSWER IS
+   '' AND THE STATE IS OMITTED, for MY_STATE and STATE alike. Public so a test
+   can pin it. *)
 function ADIFPrefectureCode(const aPrefecture: string): string;
 
 (* THE RECEIVED POWER CLASS LETTER (H M L P) of a logged ALL JA QSO -- the
@@ -153,11 +156,19 @@ function ADIFPrefectureCode(const aPrefecture: string): string;
 var
    number, code: integer;
 begin
-   Result := Trim(aPrefecture);
-   ValChecked(Result, number, code);
-   if (code = 0) and (number >= 101) and (number <= 114) then
+   Result := '';
+   ValChecked(Trim(aPrefecture), number, code);
+   if code <> 0 then
       begin
-      Result := '01';
+      Exit;
+      end;
+   if (number >= 101) and (number <= 114) then
+      begin
+      number := 1;
+      end;
+   if (number >= 1) and (number <= 47) then
+      begin
+      Result := SysUtils.Format('%.2d', [number]);
       end;
 end;
 
@@ -360,15 +371,8 @@ end;
    not have (48, which allja.dom and the entry check still accept) writes no
    STATE rather than an invalid one. *)
 function TContestAllJA.ADIFWorkedStationState(const aQso: ContestExchange): string;
-var
-   number, code: integer;
 begin
    Result := ADIFPrefectureCode(ReceivedPrefectureNumber(aQso));
-   ValChecked(Result, number, code);
-   if (code <> 0) or (number < 1) or (number > 47) then
-      begin
-      Result := '';
-      end;
 end;
 
 (* THE NEW CONTEST DIALOG ASKS FOR THE TWO FIELDS THE EXCHANGE SENDS (NY4I,

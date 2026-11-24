@@ -672,7 +672,11 @@ begin
    CheckEquals('02', ADIFPrefectureCode('02'), 'Aomori');
    CheckEquals('12', ADIFPrefectureCode('12'), 'Chiba');
    CheckEquals('47', ADIFPrefectureCode('47'), 'Okinawa');
+   CheckEquals('02', ADIFPrefectureCode('2'), 'a bare digit is the two-digit code');
    CheckEquals('', ADIFPrefectureCode(''), 'nothing in, nothing out');
+   CheckEquals('', ADIFPrefectureCode('48'), '48 is not on ADIF''s list: omitted');
+   CheckEquals('', ADIFPrefectureCode('115'), '115 is not a region: omitted');
+   CheckEquals('', ADIFPrefectureCode('XX'), 'not a number: omitted');
 end;
 
 procedure TPossibleDomesticQTHEntryTests.UseDomesticFile(const aFileName: string);
