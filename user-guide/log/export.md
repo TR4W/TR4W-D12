@@ -37,7 +37,7 @@ Generating a file does not submit it to the sponsor. Retain the submitted file a
 
 ADIF, Cabrillo, and CSV files are written beside the contest database using its basename and the appropriate extension. Check the preview path before replacing an earlier export. Station facts saved with individual QSOs are used for their applicable exported station/location fields.
 
-ADIF includes the worked station's `DXCC` when it writes `STATE`. JTTY and FT2 use `MODE=MFSK` with their respective `SUBMODE` under ADIF 3.1.8. Older TR4W JTTY records remain importable.
+ADIF includes the worked station's `DXCC` when it writes `STATE`. In a contest where the other station sends a Maidenhead grid, `STATE` is written when that grid lies in exactly one state or province of the station's own country (the 50 states and DC, or a Canadian province; the grid list is the ARRL's VUCC list); a grid that straddles two or more of them, or a call from any other country, gets no `STATE`. JTTY and FT2 use `MODE=MFSK` with their respective `SUBMODE` under ADIF 3.1.8. Older TR4W JTTY records remain importable.
 
 ADIF exports a set of linked county-line or rover rows as one contact. For two counties, check `USACA_COUNTIES` for the worked station and `MY_USACA_COUNTIES` for your own locations, as applicable. A longer county list uses TR4W extension fields. Check how the receiving application reads those fields. Vermont's separate `-ft.adi` is written when the log contains contacts assigned to that export.
 

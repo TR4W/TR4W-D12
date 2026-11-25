@@ -120,6 +120,11 @@ type
                                       const aQso: ContestExchange;
                                       aExchangeCarriesRST: boolean): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      (* POTA WRITES ITS OWN STATE AND DXCC in EmitADIFExchangeFields, so it
+         answers '' to the base's grid rule: uADIF would otherwise write a
+         second DXCC beside the one this class writes. A hunter's grid-derived
+         state is written there, after its DXCC. *)
+      function ADIFWorkedStationState(const aQso: ContestExchange): string; override;
       (* ADIF IMPORT. *)
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
@@ -439,8 +444,20 @@ begin
          IsADIFGridSquare(string(aQso.ExchString)) then
          begin
          Result := Result + EmitADIFField('GRIDSQUARE', string(aQso.ExchString));
+         (* THE HUNTER SENT A GRID, NO STATE (NY4I, 2026-11-25): its state when
+            the grid lies in one state and ADIF allows it for the call's
+            country. DXCC was written above, so it is not repeated. *)
+         Result := Result + EmitADIFField('STATE',
+            ADIFStateOfGridSquare(string(aQso.ExchString),
+                                  string(aQso.QTH.CountryID)));
          end;
       end;
+end;
+
+function TContestPOTA.ADIFWorkedStationState(const aQso: ContestExchange): string;
+begin
+   (* POTA writes its own STATE -- see the declaration. *)
+   Result := '';
 end;
 
 (* THE PARK WORKED, IN ALL THREE TAGS ADIF HAS FOR IT -- SIG, SIG_INFO and

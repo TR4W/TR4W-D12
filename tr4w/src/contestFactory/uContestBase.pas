@@ -3120,9 +3120,36 @@ type
          D7, AND THIS PROGRAM UNTIL Q76, wrote the PARTY's state on every QSO
          carrying a QTH -- a Michigan log said STATE:MI for a station in DC
          -- and British Columbia none at all, because the old test wanted a
-         two-letter QSOPartyArea and BC's is 'VE7'. Base '': no other
-         contest's QTH is known to be a state, so none writes one here. *)
+         two-letter QSOPartyArea and BC's is 'VE7'.
+
+         THE BASE ANSWERS FROM THE GRID THE STATION SENT (NY4I, 2026-11-25:
+         "if we can determine the state from the actual grid sent, it seems
+         reasonable to set the state"): ADIFReceivedGridSquare, when it has
+         one, goes through uADIF.ADIFStateOfGridSquare -- the state only when
+         the grid lies in exactly ONE state AND ADIF allows that state for the
+         CALL's CTY country (a VE or KP4 call in a border grid gets none).
+         '' for every other contest: no other QTH is known to be a state.
+
+         PRECEDENCE: A CLASS THAT OVERRIDES THIS IS AUTHORITATIVE. The QSO
+         parties, the ALL JA and POTA state their own rule and the grid is
+         never consulted for them, even when they answer ''. Because this is
+         the one answer EmitADIFRecord asks, the export file and every
+         external logger payload (one generator, ADIFContactForExternal)
+         agree. The state is NOT written into QTHString or DomesticQTH: those
+         drive multipliers. *)
       function ADIFWorkedStationState(const aQso: ContestExchange): string; virtual;
+
+      (* THE MAIDENHEAD GRID THE WORKED STATION SENT, '' when this contest's
+         exchange carries none -- the grid ADIF's GRIDSQUARE is written from.
+         The same tests PostUnit applies before it writes GRIDSQUARE: the
+         contest's exchange text may hold a grid
+         (ExchangeTextMayHoldGridSquare) or its exchange is one
+         (ReceivesGridSquareExchange), a domestic QTH that is never a grid
+         (the RDA district) is not one, and the text is a well-formed locator
+         (IsADIFGridSquare). DomesticQTH first, else QTHString (the digital
+         contests keep the grid in both). The RECEIVED grid only: our own
+         (MyGridSquare) is never read here. *)
+      function ADIFReceivedGridSquare(const aQso: ContestExchange): string;
 
       (* DOES ADIF EXPORT WRITE CNTY (state,county) FOR A QSO OF THIS PARTY?
          -- PostUnit's CNTY block, beside ADIFCountyState, which is the
@@ -7988,8 +8015,34 @@ end;
 
 function TContestBase.ADIFWorkedStationState(const aQso: ContestExchange): string;
 begin
-   (* Not a QSO party: no ADIF STATE -- see the declaration. *)
+   (* Not a QSO party: a state only from the grid the station sent -- see
+      the declaration. *)
+   Result := ADIFStateOfGridSquare(ADIFReceivedGridSquare(aQso),
+                                   string(aQso.QTH.CountryID));
+end;
+
+function TContestBase.ADIFReceivedGridSquare(const aQso: ContestExchange): string;
+var
+   candidate: string;
+begin
    Result := '';
+   if not (ExchangeTextMayHoldGridSquare or ReceivesGridSquareExchange) then
+      begin
+      Exit;
+      end;
+   if DomesticQTHIsNeverAGrid then
+      begin
+      Exit;
+      end;
+   candidate := Trim(string(aQso.DomesticQTH));
+   if candidate = '' then
+      begin
+      candidate := Trim(string(aQso.QTHString));
+      end;
+   if IsADIFGridSquare(candidate) then
+      begin
+      Result := candidate;
+      end;
 end;
 
 function TContestBase.WritesADIFCounty: boolean;

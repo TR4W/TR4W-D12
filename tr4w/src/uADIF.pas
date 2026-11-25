@@ -678,6 +678,23 @@ function ADIFPartyQTHKey(const aQso: ContestExchange): string;
 function ADIFStateOfPartyQSO(const aCountyState: string;
                              const aQso: ContestExchange): string;
 
+(* THE ADIF STATE OF A RECEIVED MAIDENHEAD GRID (NY4I, 2026-11-25: "if we can
+   determine the state from the actual grid sent, it seems reasonable to set
+   the state"). aGrid is the grid the worked station SENT, 4, 6 or 8
+   characters; aCountryID is the CTY country the engine resolved for its CALL.
+   The answer is the state only when BOTH hold:
+     - among the subdivisions OF THE CALL'S DXCC ENTITY that the grid reaches
+       there is exactly ONE (uGridLookup.StateOfGridForEntity -- vuccgrids.dat:
+       CN88 is WA for a K call and BC for a VE call, CN81 is CA and OR so no
+       state, a grid the table lacks gives none, never a guess), and
+     - that state is a primary subdivision ADIF allows for that entity
+       (IsADIFPrimarySubdivisionOfDXCC: K, KL, KH6, VE, with Canada's ADIF
+       codes NL and QC), so a XE or KP4 station in a border grid, or any DX
+       call, gets none.
+   The country is the call's, never the grid's. '' otherwise. *)
+function ADIFStateOfGridSquare(const aGrid: string;
+                               const aCountryID: string): string;
+
 // Build the RST-normalized SRX_STRING value: if ExchString already
 // starts with the literal RSTReceived (e.g. operator typed `599 HIL`),
 // return ExchString unchanged; otherwise prepend `RSTReceived ` so
@@ -727,6 +744,8 @@ uses
    uPOTAReference,
    (* IsIOTAReference -- the one shape test for an IOTA reference. *)
    uStationFieldCheck,
+   (* StateOfGrid -- the one grid-to-state table (issue 52). A leaf. *)
+   uGridLookup,
    (* TDictionary -- MergeLinkedADIFContacts' set id to written record. *)
    Generics.Collections;
 
@@ -2352,6 +2371,31 @@ begin
    else
       begin
       Result := '';
+      end;
+end;
+
+function ADIFStateOfGridSquare(const aGrid: string;
+                               const aCountryID: string): string;
+var
+   state: string;
+   entity: integer;
+begin
+   Result := '';
+   (* The call's DXCC entity is what the grid is judged against: CN88 is WA
+      for a K call and BC for a VE one. An entity with no subdivision list
+      (any DX call, KP4, XE) has no state in any grid. *)
+   entity := ADIFDXCCOfCTYEntity(aCountryID);
+   if entity = 0 then
+      begin
+      Exit;
+      end;
+   if StateOfGridForEntity(aGrid, entity, state) <> gskUnique then
+      begin
+      Exit;
+      end;
+   if IsADIFPrimarySubdivisionOfDXCC(entity, state) then
+      begin
+      Result := state;
       end;
 end;
 

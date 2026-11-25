@@ -74,6 +74,7 @@ type
       procedure Test_ADIFStateIsWithItsDXCC;
       procedure Test_EveryPartyAndOnlyAPartyWritesAState;
       procedure Test_BCQPExportsStateBCAndNoCounty;
+      procedure Test_ADIFStateFromTheReceivedGrid;
    end;
 
 implementation
@@ -1162,6 +1163,86 @@ begin
    CheckTrue(Pos('<STATE:2>MI ', text) = 0, 'and not the host''s MI: ' + text);
 end;
 
+(* THE STATE OF THE GRID THE WORKED STATION SENT (NY4I, 2026-11-25). UNRUN when
+   written: the sandbox that wrote it was told not to run the unit suite.
+   EmitADIFRecord is the ONE generator -- PostUnit's export and
+   ADIFContactForExternal (DXKeeper, WRL, Cloudlog, Club Log, ACLog) both reach
+   it through EmitADIFContact -- so what is pinned here is what every payload
+   carries. *)
+procedure TContestExportTests.Test_ADIFStateFromTheReceivedGrid;
+
+   function GridQSO(aContest: ContestType; const aCall, aGrid,
+                    aCountry: string): ContestExchange;
+   begin
+      Result := Default(ContestExchange);
+      Result.ceContest := ContestHandleOf(aContest);
+      Result.ceRecordKind := rkQSO;
+      Result.Callsign := ShortString(aCall);
+      Result.Band := Band20;
+      Result.Mode := CW;
+      Result.QTHString := ShortString(aGrid);
+      Result.DomesticQTH := ShortString(aGrid);
+      Result.QTH.CountryID := ShortString(aCountry);
+   end;
+
+   procedure Pin(const aWhy, aGrid, aCountry, aExpected: string);
+   begin
+      CheckEquals(aExpected,
+                  GetADIFStateForQSO(GridQSO(ARRLDIGI, 'K1ABC', aGrid, aCountry)),
+                  aWhy + ': ' + aGrid + ' for a ' + aCountry + ' call');
+   end;
+
+var
+   text: string;
+begin
+   BeginTest('Test_ADIFStateFromTheReceivedGrid');
+
+   (* ONE STATE: DM78 is Colorado only, EN61 is IL, IN and MI. The table is
+      the ARRL's vuccgrids.dat, judged per DXCC entity of the CALL. *)
+   Pin('a grid in one state', 'DM78', 'K', 'CO');
+   Pin('a border grid is the call''s own country''s', 'CN88', 'K', 'WA');
+   Pin('the same grid for a Canadian call', 'CN88', 'VE', 'BC');
+   Pin('Washington only for the USA', 'CN78', 'K', 'WA');
+   Pin('two US states in the grid', 'CN81', 'K', '');
+   Pin('Arizona touches the edge, so Utah shares it', 'DM37', 'K', '');
+   Pin('Minnesota only for a US call', 'EN29', 'K', 'MN');
+   Pin('Manitoba and Ontario for a Canadian call', 'EN29', 'VE', '');
+   Pin('Newfoundland is ADIF NL', 'GN29', 'VE', 'NL');
+   Pin('Quebec is ADIF QC', 'FO10', 'VE', 'QC');
+   Pin('six characters are looked up by four', 'DM78AB', 'K', 'CO');
+   Pin('Hawaii is its own DXCC entity', 'BL11', 'KH6', 'HI');
+   Pin('Alaska is its own DXCC entity', 'BP51', 'KL', 'AK');
+   Pin('an ambiguous grid is no state, never a guess', 'EN61', 'K', '');
+   Pin('a grid the table does not hold', 'JO31', 'K', '');
+   Pin('not a grid at all', 'XX', 'K', '');
+
+   (* THE CALL'S COUNTRY, NEVER THE GRID'S. *)
+   Pin('a Canadian call in a US-only grid', 'DM78', 'VE', '');
+   Pin('Puerto Rico is not a 291 subdivision', 'DM78', 'KP4', '');
+   Pin('a DX call', 'DM78', 'DL', '');
+   Pin('an unresolved country', 'DM78', '', '');
+   Pin('Hawaii is not DXCC 291', 'BL11', 'K', '');
+
+   (* WRITTEN WITH ITS DXCC, ONCE EACH, and before the exchange. *)
+   text := EmitADIFRecord(GridQSO(ARRLDIGI, 'K1ABC', 'DM78', 'K'), nil);
+   CheckEquals(1, CountADIFTag(text, 'STATE'), 'STATE written once: ' + text);
+   CheckTrue(Pos('<STATE:2>CO ', text) > 0, 'STATE:CO: ' + text);
+   CheckEquals(1, CountADIFTag(text, 'DXCC'), 'DXCC written once: ' + text);
+   text := EmitADIFRecord(GridQSO(ARRLDIGI, 'K1ABC', 'EN61', 'K'), nil);
+   CheckEquals(0, CountADIFTag(text, 'STATE'), 'an ambiguous grid writes no STATE: ' + text);
+
+   (* A CLASS THAT STATES ITS OWN RULE IS AUTHORITATIVE: a party's QTH is a
+      county, state or province, and a grid-shaped QTH is not read as a grid. *)
+   (* The party answers by ITS OWN rule (it gives 'FL' for this made-up QTH);
+      what must never happen is the grid's state, CO, appearing. *)
+   CheckTrue(GetADIFStateForQSO(GridQSO(FLORIDAQSOPARTY, 'K1ABC', 'DM78', 'K')) <> 'CO',
+             'a state party never reads a grid');
+   (* POTA writes its own STATE and DXCC (EmitADIFExchangeFields): the base's
+      answer must be '' or DXCC would be written twice. *)
+   CheckEquals('', GetADIFStateForQSO(GridQSO(POTA, 'K1ABC', 'DM78', 'K')),
+               'POTA states its own rule');
+end;
+
 procedure TContestExportTests.RunAllTests;
 begin
    Test_AContestWithNoRuleOfItsOwnCallsAHelper;
@@ -1185,6 +1266,7 @@ begin
    Test_ADIFStateIsWithItsDXCC;
    Test_EveryPartyAndOnlyAPartyWritesAState;
    Test_BCQPExportsStateBCAndNoCounty;
+   Test_ADIFStateFromTheReceivedGrid;
 end;
 
 end.

@@ -1118,7 +1118,7 @@ read live against `Station` (`LOGEDIT.DoingDXMults` and its siblings).
 | `GetCabrilloSentExchange`, `GetCabrilloReceivedExchange` | the error marker | reproduce the column widths exactly |
 | `EmitADIFReportFields`, `EmitADIFReceivedFields` | RST on every QSO; exactly what `GetReceivedExchangeFields` declares | so a field your list forgets silently leaves the ADIF file. `ADIFPowerTag` moves the power tag |
 | `FormatADIFReceivedExchange`, `EmitADIFExchangeFields`, `EmitADIFContestFields` | the `SRX_STRING`; nothing more | override to write tags BESIDE it |
-| `ADIFWorkedStationState`, `ADIFCountyState`, `WritesADIFCounty`, `SplitsRoverCallOnExport` | `''`, False | the party base answers them per QSO |
+| `ADIFWorkedStationState`, `ADIFCountyState`, `WritesADIFCounty`, `SplitsRoverCallOnExport` | the state of the received grid (`ADIFReceivedGridSquare`; one state, valid for the call's country) else `''`; `''`; False; False | the party base answers them per QSO; an override is authoritative and the grid is not consulted |
 | `WritesADIFContestId` | True | General QSO and POTA say False |
 | `ApplyADIFImport(aTemps, aSession, var aExch)` | grid, else the domestic QTH, else `SRX_STRING` | runs after the whole record is read, so tag order cannot matter. A new tag to capture is a `TADIFRecordTemps` field plus `uADIF` entries. It is ALSO the live path for a QSO WSJT-X or the N1MM listener sends (2026-11-25): those fields are the QSO, nothing is re-parsed, so a field this leaves only in `ExchString` is not read |
 | `CabrilloQSOLineFormat`, `CabrilloModeString`, `CabrilloContestName`, `GetRequiresCabrilloLocation`, `CabrilloHeaderLinesBeforeTag` | the standard line; CW/PH/...; the Cabrillo name; False; none | |
