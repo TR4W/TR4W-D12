@@ -1426,7 +1426,14 @@ begin
          begin
          if DomesticQTHAndKeyOf(state, domesticQTH, key) then
             begin
+            (* THE STATE AS THE TABLE RESOLVES IT, not the text alone: the
+               inbound path no longer parses the QTH as typed text
+               (2026-11-25), so the domestic QTH and its multiplier key
+               are written here, from the lookup this already made --
+               what typed entry's FoundDomesticQTH writes. *)
             aExch.QTHString := ShortString(state);
+            aExch.DomesticQTH := ShortString(domesticQTH);
+            aExch.DomMultQTH := ShortString(key);
             logger.Debug('[uWSJTX] grid %s is only in %s: state taken from the grid',
                          [grid, state]);
             end;

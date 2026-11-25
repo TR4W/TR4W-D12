@@ -57,9 +57,29 @@ function InboundQsoMode(aParsed: ModeType; out aFellBack: boolean): ModeType;
 function ParseInboundADIF(const aAdif: string; var aExch: ContestExchange): boolean;
 
 (* Step 2: check and log what step 1 produced.  aSource names the sender for the
-  log ('WSJT-X', 'N1MM listener').  aExch is cleared after a logged QSO. *)
+  log ('WSJT-X', 'N1MM listener').  aExch is cleared after a logged QSO.
+
+  THE RECORD'S FIELDS ARE THE QSO (2026-11-25, NY4I: "we should parse the
+  adif record into the qso record properly regardless of the contest"): the
+  check is ParametersOkay in its pre-parsed mode, so nothing is read back out
+  of text -- a WSJT-X grid in the General QSO stays the QTH, not a name, and
+  the received -12 stays -12.  A record that lacks a field the contest needs
+  is LOGGED, and one status line names the field (ContestMissingFieldsHint,
+  SInboundLoggedWithout); a WSJT-X grid comment shown after it replaces it on
+  screen, and both are in the log. *)
 function LogParsedInboundQso(var aExch: ContestExchange;
                              const aSource: string): TInboundQsoResult;
+
+(* The check half of step 2, everything before the log write: the band,
+  frequency and mode a record lacks, ParametersOkay (pre-parsed), and the
+  QSO's own S&P flag and computer ID.  False is iqRefused.  Public so the
+  unit tests drive the real path short of LogContact. *)
+function CheckParsedInboundQso(var aExch: ContestExchange;
+                               const aSource: string): boolean;
+
+(* The status line for a checked record that lacks a field the open contest
+  needs ('' when nothing is missing). *)
+function InboundMissingFieldsNotice(const aExch: ContestExchange): string;
 
 implementation
 
@@ -77,7 +97,11 @@ uses
    LOGWIND,            // OpMode
    LogK1EA,            // tElapsedTimeFromLastQSO
    uMainForm,          // QueueClearCallAndFocus
-   uCabrilloFormat;    // tCabrilloFreqString
+   uCabrilloFormat,    // tCabrilloFreqString
+   uContestFactory,    // ActiveContest
+   PostUnit,           // Contest
+   uExchangeHint,      // ContestMissingFieldsHint
+   uAppStrings;        // SInboundLoggedWithout
 
 function InboundQsoMode(aParsed: ModeType; out aFellBack: boolean): ModeType;
 begin
@@ -108,31 +132,31 @@ begin
    SetDXQTHAndPrefix(aExch);
 end;
 
-function LogParsedInboundQso(var aExch: ContestExchange;
-                             const aSource: string): TInboundQsoResult;
+function InboundMissingFieldsNotice(const aExch: ContestExchange): string;
+var
+   missing: string;
+begin
+   Result := '';
+   missing := ContestMissingFieldsHint(ActiveContest(Contest), aExch);
+   if missing <> '' then
+      begin
+      Result := UnicodeFormat(SInboundLoggedWithout,
+                              [string(aExch.Callsign), missing]);
+      end;
+end;
+
+function CheckParsedInboundQso(var aExch: ContestExchange;
+                               const aSource: string): boolean;
 var
    tempBand: BandType;
    tempFreq: integer;
    tempMode: ModeType;
    fellBack: boolean;
 begin
-   if aExch.Callsign = '' then
-      begin
-      logger.Warn('[Inbound] %s: a record with no callsign was not logged',
-                  [aSource]);
-      Result := iqNoCall;
-      Exit;
-      end;
-
-   // ParseADIFRecord populates QTHString (state/grid/zone) for most
-   // contests but does not always copy it into ExchString.
-   // ParametersOkay requires a non-empty ExchString to call
-   // ProcessExchange -- fall back to QTHString when ExchString is empty.
-   if aExch.ExchString = '' then
-      begin
-      aExch.ExchString := aExch.QTHString;
-      end;
-
+   (* NO ExchString IS MADE UP FROM THE QTH, AND NOTHING IS PARSED AS TYPED
+     TEXT: until 2026-11-25 an empty ExchString took QTHString and
+     ParametersOkay ran the contest's typed parser over it, so a General QSO
+     grid became the Name and the record's report the default 599. *)
    if aExch.Band <> NoBand then
       begin
       tempBand := aExch.Band;
@@ -169,18 +193,50 @@ begin
       aExch.ExtMode := eData;
       end;
 
-   if not ParametersOkay(aExch.Callsign, aExch.ExchString, tempBand,
-                         tempMode, tempFreq, aExch) then
+   Result := ParametersOkay(aExch.Callsign, aExch.ExchString, tempBand,
+                            tempMode, tempFreq, aExch, True);
+   if not Result then
+      begin
+      Exit;
+      end;
+
+   (* THE IMPORT'S DomesticQTH STANDS: the contest's ApplyADIFImport has
+     resolved it (an alias to its file QTH, with the multiplier key), and
+     this line used to overwrite it with the raw text.  Only a record that
+     came with a QTH and no domestic QTH takes the text, as it always did. *)
+   if (aExch.DomesticQTH = '') and
+      (aExch.QTHString <> '') then
+      begin
+      aExch.DomesticQTH := aExch.QTHString;
+      end;
+   // Set these on the record actually being logged, not ReceivedData --
+   // otherwise the QSO logs with a blank Computer ID and an unset S&P flag.
+   aExch.ceSearchAndPounce := OpMode = SearchAndPounceOpMode;
+   aExch.ceComputerID := Settings.Computer.Id;
+end;
+
+function LogParsedInboundQso(var aExch: ContestExchange;
+                             const aSource: string): TInboundQsoResult;
+var
+   notice: string;
+begin
+   if aExch.Callsign = '' then
+      begin
+      logger.Warn('[Inbound] %s: a record with no callsign was not logged',
+                  [aSource]);
+      Result := iqNoCall;
+      Exit;
+      end;
+
+   if not CheckParsedInboundQso(aExch, aSource) then
       begin
       Result := iqRefused;
       Exit;
       end;
 
-   aExch.DomesticQTH := aExch.QTHString;
-   // Set these on the record actually being logged, not ReceivedData --
-   // otherwise the QSO logs with a blank Computer ID and an unset S&P flag.
-   aExch.ceSearchAndPounce := OpMode = SearchAndPounceOpMode;
-   aExch.ceComputerID := Settings.Computer.Id;
+   (* Asked before the write: LogContact's record is the one being judged,
+     and it is cleared below. *)
+   notice := InboundMissingFieldsNotice(aExch);
 
    (* NOT IN THE LOG (2026-11-18: a full disk, or a read-only log): LogContact
      has said why on the status line, with a beep.  Nothing below runs -- no
@@ -206,6 +262,12 @@ begin
    EscapeDeletedCallEntry := CallWindowString;
    QueueClearCallAndFocus;
    CleanUpDisplay;
+   (* After CleanUpDisplay, which clears the status line. Non-modal. *)
+   if notice <> '' then
+      begin
+      logger.Warn('[Inbound] %s: %s', [aSource, notice]);
+      QuickDisplay(notice);
+      end;
    Result := iqLogged;
 end;
 

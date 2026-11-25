@@ -23,7 +23,22 @@ Globals in `MainUnit`: `wsjtx: TWSJTXServer`, `externalLogger: TExternalLogger`.
 ## WSJT-X
 
 UDP; sends colorization hints, receives decodes and QSOs. Enabled with
-`WSJT-X ENABLE = TRUE`.
+`WSJT-X ENABLED = TRUE`.
+
+**EVERY WSJT-X OPTION IS OFF BY DEFAULT (NY4I, 2026-11-25: most operators never
+use it).** `TWsjtxSettings.Create`: Enabled, SendHighlights, RadioControlEnabled
+and the N1MM listener False; port 2237 and the multicast text are values. A
+`tr4w.json` that states a key keeps it (the whole object is written at exit);
+one with no `Wsjtx` section reads off -- pinned by
+`uTestSettingsFreshInstall.Test_AFileThatStatesWSJTXKeepsIt`. **The server
+object is created at EVERY start** (`uProgramMain`, beside the TCI server) and
+started only when enabled, so turning it on in Preferences or the setup wizard
+starts it at once (`uSettingsEffects`); it was created only when already
+enabled, which needed a restart -- hidden while the default was True. The
+setup wizard's WSJT-X page opens SWITCHED ON when the operator ticks the item
+(`ChecklistChange`; the rest shows what is stored), and an unticked item
+writes nothing. PostUnit's FT8 report conversion calls `WSJTXSnrToRST`, not
+the server object.
 
 The UDP thread **does not write the entry fields** — that separation was a fix,
 not an accident. Highlighting had two separate defects before it worked reliably;
@@ -76,9 +91,21 @@ sockets until 2026-10-14. Check the keyword on any destructor you add.
 ## One path turns another program's ADIF into a logged QSO: `uInboundQso` (issue 45, 2026-11-22)
 
 `ParseInboundADIF` (clear, `MainUnit.ParseSessionADIFRecord`, locate the call, DX QTH / prefix) and
-`LogParsedInboundQso` (ExchString fallback, band / frequency defaults, **mode**, `ParametersOkay`,
-`LogContact`, the entry-field reset) are what `uWSJTX.EvaluateLoggedADIF` and the N1MM listener both
-call -- NY4I: a data-source-agnostic parser, one path, a future REST POST makes a third caller. The
+`LogParsedInboundQso` (`CheckParsedInboundQso`: band / frequency defaults, **mode**, `ParametersOkay`
+in its PRE-PARSED mode; then `LogContact`, the missing-field notice, the entry-field reset) are what
+`uWSJTX.EvaluateLoggedADIF` and the N1MM listener both call -- NY4I: a data-source-agnostic parser,
+one path, a future REST POST makes a third caller. **THE RECORD'S FIELDS ARE THE QSO (NY4I, 2026-11-25):** no ExchString is made from the QTH and
+no typed-exchange parser runs (`ParametersOkay(..., aPreParsed = True)` skips the blank exit, the
+on-deck / corrected call, the sent RST from text, the QTHString wipe, `ProcessExchange` and the
+ExchString overwrite; the checks, band/mode/frequency, serial, report defaults for 0, country, DX QTH /
+prefix and points still run). Before it a General QSO grid logged as the Name and RST_RCVD -12 as 599.
+The import's resolved `DomesticQTH` stands (it was overwritten with the raw QTHString). A record that
+lacks a field the contest needs is LOGGED and ONE status line names it
+(`uExchangeHint.ContestMissingFieldsHint`, `SInboundLoggedWithout`; none for a contest that accepts a
+blank exchange); a WSJT-X grid comment shown after it replaces it on screen. A field only inside
+SRX_STRING (a contest whose `ApplyADIFImport` does not read it into its field) is no longer read: the
+fix is that class's import, never a re-parse. `DeriveStateFromWSJTXGrid` writes DomesticQTH and
+DomMultQTH from its own lookup. Pinned by `uTestInboundADIFRecord`. The
 reader behind them is the file import's (`MainUnit.ReadADIFRecord`); only the tail differs.
 Facts that bite: **never `ParseADIFRecord`** (the overlay's `CONTEST_ID` rewrites the log's contest);
 WSJT-X's own work sits BETWEEN the two calls (operator-mismatch warning, `DeriveStateFromWSJTXGrid`)

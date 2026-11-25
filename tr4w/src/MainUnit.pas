@@ -742,12 +742,24 @@ function IsCWByCATActive: boolean; overload; // ny4i Issue # 111
 function DigitsIn(n: smallInt): byte;
 function GetModeFromExtendedMode(extMode: ExtendedModeType): ModeType;
 
+(* aPreParsed (2026-11-25, NY4I: "we should parse the adif record into the qso
+   record properly regardless of the contest"): RData was already filled from
+   an ADIF record by MainUnit.ReadADIFRecord and the contest's ApplyADIFImport
+   (uInboundQso -- WSJT-X, the N1MM listener), and those fields are the QSO.
+   Nothing that reads TEXT runs: no blank-exchange exit, no on-deck or
+   corrected call, no sent RST from the text, no clearing of QTHString, no
+   ProcessExchange, and ExchString is left as the record had it. Everything
+   else runs as for a typed entry: the log and call checks, band, mode,
+   frequency, the sent serial, the report defaults for a report of 0, the
+   country, the DX QTH and prefix, and the QSO's points. ExchangeString is
+   then only logged. *)
 function ParametersOkay(Call: CallString;
   ExchangeString: Str40 {CallString};
   Band: BandType;
   Mode: ModeType;
   Freq: LONGINT;
-  var RData: ContestExchange): boolean;
+  var RData: ContestExchange;
+  aPreParsed: boolean = False): boolean;
 
 (* ENTER IN CQ MODE ON AN EMPTY EXCHANGE: SAY SO? (issue 292)  True only for a
    SECOND Enter -- the call and the exchange were both already sent when this
@@ -8269,7 +8281,8 @@ function ParametersOkay(Call: CallString;
   Band: BandType;
   Mode: ModeType;
   Freq: LONGINT;
-  var RData: ContestExchange): boolean;
+  var RData: ContestExchange;
+  aPreParsed: boolean): boolean;
 
 { This function get called when a carriage return has been pressed when
  entering exchange data. It will look at the data in the exchange
@@ -8299,7 +8312,10 @@ begin
 
   GetRidOfPostcedingSpaces(ExchangeString);
 
-  LookForOnDeckCall(ExchangeString);
+  if not aPreParsed then
+     begin
+     LookForOnDeckCall(ExchangeString);
+     end;
 
   ExchangeErrorMessage := '';
   ExchangeErrorToken := '';   // Issue #1010
@@ -8331,7 +8347,9 @@ begin
     (TContestBase.AcceptsBlankExchange: BWQP, the General QSO, POTA); it was
     a test of the session's exchange shape (RSTNameAndQTH, RSTAndPOTAPark),
     and it is asked only of a blank exchange. *)
-  if (ExchangeString = '') and not ContestAcceptsBlankExchange(ActiveContest(Contest)) then
+  if (not aPreParsed) and
+     (ExchangeString = '') and
+     (not ContestAcceptsBlankExchange(ActiveContest(Contest))) then
      begin
      logger.debug('Exiting ParametersOkay early: ExchangeString=<%s>',
        [ExchangeString]);
@@ -8339,7 +8357,8 @@ begin
      end;
   { if length(ExchangeString) > 5 then // 4.96.3
   Settings.CallWindow.CallsignUpdateEnable := False;}
-  if Settings.CallWindow.CallsignUpdateEnable then
+  if (not aPreParsed) and
+     Settings.CallWindow.CallsignUpdateEnable then
      begin // This looks like the secxond line should be under IF but it was not.
      RData.Callsign := GetCorrectedCallFromExchangeString(ExchangeString);
      (* A WORD THE CONTEST READS AS ITS EXCHANGE IS NOT TAKEN AS THE CALL
@@ -8356,11 +8375,14 @@ begin
         end;
      end;
 
-  RST := GetSentRSTFromExchangeString(ExchangeString);
-
-  if RST <> 0 then
+  if not aPreParsed then
      begin
-     RData.RSTSent := RST;
+     RST := GetSentRSTFromExchangeString(ExchangeString);
+
+     if RST <> 0 then
+        begin
+        RData.RSTSent := RST;
+        end;
      end;
 
   if RData.Callsign = '' then
@@ -8370,8 +8392,13 @@ begin
   else
      begin
      end;
-  logger.debug('[ParametersOkay] Setting RData.QTHString to zero');
-  FillChar(RData.QTHString, SizeOf(RData.QTHString), 0);
+  (* A PRE-PARSED RECORD KEEPS ITS QTH: it is one of the fields the record
+     came with, and nothing below would put it back. *)
+  if not aPreParsed then
+     begin
+     logger.debug('[ParametersOkay] Setting RData.QTHString to zero');
+     FillChar(RData.QTHString, SizeOf(RData.QTHString), 0);
+     end;
 
   if ParameterOkayMode = QSLAndLog then
      begin
@@ -8419,6 +8446,11 @@ begin
 
      ParametersOkay := True;
      LogBadQSOString := ExchangeString;
+     if aPreParsed then
+        begin
+        CalculateQSOPoints(RData);
+        Exit;
+        end;
      logger.debug('Calling ProcessExchange from ParametersOkay QSLAndLog');
      ProcessExchange(ExchangeString, RData); {wli}
      (* THE TYPED TEXT IS KEPT, ACCEPTED OR REFUSED -- issue 274 item 7,
@@ -8543,13 +8575,22 @@ begin
 
   GetRidOfPrecedingSpaces(ExchangeString);
   GetRidOfPostcedingSpaces(ExchangeString);
-  logger.debug('Calling ProcessExchange from ParametersOkay');
-  ParametersOkay := ProcessExchange(ExchangeString, RData);
-
-  if ExchangeErrorMessage <> '' then
+  if aPreParsed then
      begin
-     QuickDisplayError(ExchangeErrorMessage);
-     PositionExchangeCursorAtErrorToken;   // Issue #1010: caret after the offending token
+     (* The record's fields are the exchange: nothing to parse, nothing to
+        refuse. *)
+     ParametersOkay := True;
+     end
+  else
+     begin
+     logger.debug('Calling ProcessExchange from ParametersOkay');
+     ParametersOkay := ProcessExchange(ExchangeString, RData);
+
+     if ExchangeErrorMessage <> '' then
+        begin
+        QuickDisplayError(ExchangeErrorMessage);
+        PositionExchangeCursorAtErrorToken;   // Issue #1010: caret after the offending token
+        end;
      end;
 
   if Result = False then
@@ -8567,7 +8608,10 @@ begin
        RData.RSTReceived := Settings.Log.RstSent;
        end;
 
-  RData.ExchString := ExchangeString;
+  if not aPreParsed then
+     begin
+     RData.ExchString := ExchangeString;
+     end;
   CalculateQSOPoints(Rdata);
 end;
 

@@ -69,6 +69,18 @@ function ExchangeHintText(const aFields: ExchangeInformationRecord;
    blank exchange, otherwise ExchangeHintText of its own field list. *)
 function ContestExchangeHint(aContest: TContestBase): string;
 
+(* THE FIELDS aContest's EXCHANGE CARRIES THAT aQso HAS NO VALUE FOR, in the
+   same words (2026-11-25): the inbound ADIF path logs a record that lacks a
+   field the contest needs and names it, NY4I: "W1DJG logged without <field>:
+   edit it in Edit QSO". '' for nil, for a contest that accepts a blank
+   exchange (General QSO: it needs nothing), and when nothing is missing.
+   "Has no value" is uContestBase.ReceivedFieldsHeld, plus two readings of
+   the record's own: a QTH is held when either the received text or the
+   resolved DomesticQTH is there, and the zone slot of a contest that states a
+   received year is held when TryLicenceYearOf reads one. *)
+function ContestMissingFieldsHint(aContest: TContestBase;
+                                  const aQso: ContestExchange): string;
+
 implementation
 
 uses
@@ -174,6 +186,46 @@ begin
       Result := ExchangeHintText(aContest.ReceivedExchangeFields,
                                  aContest.ReceivedYearKind);
       end;
+end;
+
+function ContestMissingFieldsHint(aContest: TContestBase;
+                                  const aQso: ContestExchange): string;
+var
+   declared: ExchangeInformationRecord;
+   held: ExchangeInformationRecord;
+   missing: ExchangeInformationRecord;
+   year: integer;
+begin
+   Result := '';
+   if (aContest = nil) or
+      ContestAcceptsBlankExchange(aContest) then
+      begin
+      Exit;
+      end;
+
+   declared := aContest.ReceivedExchangeFields;
+   held := ReceivedFieldsHeld(aQso);
+   held.QTH := held.QTH or (aQso.DomesticQTH <> '');
+   if aContest.ReceivedYearKind <> rykNone then
+      begin
+      held.Zone := TryLicenceYearOf(aQso, year);
+      end;
+
+   missing := Default(ExchangeInformationRecord);
+   missing.Age := declared.Age and not held.Age;
+   missing.Chapter := declared.Chapter and not held.Chapter;
+   missing.Check := declared.Check and not held.Check;
+   missing.ClassEI := declared.ClassEI and not held.ClassEI;
+   missing.Name := declared.Name and not held.Name;
+   missing.Power := declared.Power and not held.Power;
+   missing.Precedence := declared.Precedence and not held.Precedence;
+   missing.QSONumber := declared.QSONumber and not held.QSONumber;
+   missing.QTH := declared.QTH and not held.QTH;
+   missing.RandomChars := declared.RandomChars and not held.RandomChars;
+   missing.RST := declared.RST and not held.RST;
+   missing.TenTenNum := declared.TenTenNum and not held.TenTenNum;
+   missing.Zone := declared.Zone and not held.Zone;
+   Result := ExchangeHintText(missing, aContest.ReceivedYearKind);
 end;
 
 end.

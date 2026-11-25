@@ -2071,6 +2071,11 @@ resourcestring
    SExchangeHintFOCNumber      = 'FOC number';
    SExchangeHintRandomChars    = 'random characters';
    SExchangeHintAnd            = '%0:s and %1:s';
+   (* On the status line when a QSO another program sent (WSJT-X, the N1MM
+      listener) was logged without a field the open contest needs: %0:s is
+      the call, %1:s the missing fields in the words above ("zone and QTH").
+      The QSO IS in the log. *)
+   SInboundLoggedWithout       = '%0:s logged without %1:s: edit it in Edit QSO';
 
    (* Tools -> Commands (issue 87 step 0): one item per call-window command.
      Each caption leads with the word the call window accepts, so the menu

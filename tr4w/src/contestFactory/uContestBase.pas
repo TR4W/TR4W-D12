@@ -5091,6 +5091,19 @@ function ContestPerQSOExchangeLeadsWithSerial(aContest: TContestBase): boolean;
    (uProgramMain) asks it of the open contest. *)
 function ContestReceivedExchangeFields(aContest: TContestBase): ExchangeInformationRecord;
 
+(* THE RECEIVED FIELDS aQso HOLDS A VALUE FOR -- the one statement of "this
+   field is unset" (2026-11-25). Its readers: the ADIF export
+   (TContestBase.EmitADIFReceivedFields writes a declared field only when it
+   is held) and the inbound ADIF path's missing-field notice
+   (uExchangeHint.ContestMissingFieldsHint). The rules are the export's:
+   empty text, a zero, and the serial's -1 and $FFFF sentinels are unset.
+   QTH is the RECEIVED text (QTHString), as the export writes it. Zone is held
+   when it is neither 0 nor DUMMYZONE (a zone slot that holds a licence year is
+   the caller's to judge -- TryLicenceYearOf). RST is held when it is not 0.
+   Kids, FOCNumber and ZoneOrSociety have no single field to test and are
+   always reported held, so nothing calls them missing. *)
+function ReceivedFieldsHeld(const aQso: ContestExchange): ExchangeInformationRecord;
+
 (* DOES aContest'S RECEIVED EXCHANGE CARRY A GRID SQUARE? -- see
    TContestBase.ReceivesGridSquareExchange (M11 S9b). nil answers False: the
    classless DUMMYCONTEST ran UnknownExchange. The ADIF import asks it of the
@@ -6898,6 +6911,31 @@ begin
       end;
 end;
 
+function ReceivedFieldsHeld(const aQso: ContestExchange): ExchangeInformationRecord;
+begin
+   (* See the declaration for each rule. *)
+   Result := ExchangeFieldsNone;
+   Result.Age := aQso.Age <> 0;
+   Result.Chapter := aQso.Chapter <> '';
+   Result.Check := aQso.Check <> 0;
+   Result.ClassEI := aQso.ceClass <> '';
+   Result.FOCNumber := True;
+   Result.Kids := True;
+   Result.Name := aQso.Name <> '';
+   Result.Power := aQso.Power <> '';
+   Result.Precedence := aQso.Precedence <> #0;
+   Result.QSONumber := (aQso.NumberReceived > 0) and
+                       (aQso.NumberReceived <> $FFFF);
+   Result.QTH := aQso.QTHString <> '';
+   Result.RandomChars := aQso.RandomCharsReceived <> '';
+   Result.RST := aQso.RSTReceived <> 0;
+   Result.TenTenNum := (aQso.TenTenNum <> $FFFF) and
+                       (aQso.TenTenNum <> 0);
+   Result.Zone := (aQso.Zone <> 0) and
+                  (aQso.Zone <> DUMMYZONE);
+   Result.ZoneOrSociety := True;
+end;
+
 function ContestReceivedExchangeFields(aContest: TContestBase): ExchangeInformationRecord;
 begin
    if aContest = nil then
@@ -8203,33 +8241,36 @@ end;
 function TContestBase.EmitADIFReceivedFields(const aQso: ContestExchange): string;
 var
    declared: ExchangeInformationRecord;
+   held: ExchangeInformationRecord;
 begin
    (* The class's own statement of its exchange, asked once -- see the
       declaration for the field-to-tag table. The order is the record's
       order since D7: QTH, PRECEDENCE, CHECK, NAME, power, SRX, STX, TEN_TEN,
       AGE. *)
    declared := ReceivedExchangeFields;
+   (* What the QSO holds, by the one "unset" rule (ReceivedFieldsHeld). *)
+   held := ReceivedFieldsHeld(aQso);
    Result := '';
 
    if declared.QTH and
-      (aQso.QTHString <> '') then
+      held.QTH then
       begin
       Result := Result + EmitADIFField('QTH', string(aQso.QTHString));
       end;
 
    if declared.Precedence and
-      (aQso.Precedence <> #0) then
+      held.Precedence then
       begin
       Result := Result + EmitADIFField('PRECEDENCE', string(aQso.Precedence));
       end;
    if declared.Check and
-      (aQso.Check <> 0) then
+      held.Check then
       begin
       Result := Result + EmitADIFField('CHECK', PadInt(aQso.Check, 2));
       end;
 
    if declared.Name and
-      (aQso.Name <> '') then
+      held.Name then
       begin
       Result := Result + EmitADIFField('NAME', string(aQso.Name));
       end;
@@ -8242,7 +8283,7 @@ begin
       A contest's own APP_ tag (the membership number, the class letter) is
       not so restricted. *)
    if declared.Power and
-      (aQso.Power <> '') and
+      held.Power and
       ((ADIFPowerTag <> 'RX_PWR') or IsADIFNumber(string(aQso.Power))) then
       begin
       Result := Result + EmitADIFField(ADIFPowerTag, string(aQso.Power));
@@ -8257,8 +8298,7 @@ begin
       Without the > 0 guard a Field Day record would write <SRX:5>000-1,
       because PadInt(-1, 5) is the text "000-1". *)
    if declared.QSONumber and
-      (aQso.NumberReceived > 0) and
-      (aQso.NumberReceived <> $FFFF) then
+      held.QSONumber then
       begin
       Result := Result + EmitADIFField('SRX', PadInt(aQso.NumberReceived, 5));
       end;
@@ -8274,14 +8314,13 @@ begin
       leaves for a non-member: the old test wrote <TEN_TEN:5>00000 for any
       path that left the field 0. *)
    if declared.TenTenNum and
-      (aQso.TenTenNum <> $FFFF) and
-      (aQso.TenTenNum <> 0) then
+      held.TenTenNum then
       begin
       Result := Result + EmitADIFField('TEN_TEN', PadInt(aQso.TenTenNum, 5));
       end;
 
    if declared.Age and
-      (aQso.Age <> 0) then
+      held.Age then
       begin
       Result := Result + EmitADIFField('AGE', PadInt(aQso.Age, 3));
       end;

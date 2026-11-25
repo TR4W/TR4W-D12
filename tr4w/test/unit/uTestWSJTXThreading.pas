@@ -273,7 +273,17 @@ var
    server: TWSJTXServer;
 begin
    InstallCrashLog;
+   FSeen := '';
    server := TWSJTXServer.Create;
+   (* THE HOOK, AS IN EVERY OTHER TEST HERE: Stop below evaluates the queued
+     logged record, and without it that record went down the REAL inbound path
+     into LogContact -- against whatever log the process has, which in this
+     binary is no log name at all, so ".db" in the working directory. It was
+     harmless only while ParametersOkay refused a record with no exchange;
+     since 2026-11-25 an inbound record's fields are the QSO and a bare call
+     is logged (with a notice), so this test wrote a QSO and stood the log
+     store down for every suite after it. *)
+   server.LoggedADIFHook := RecordADIF;
    try
       (* A status, the QSO's logged message, WSJT-X's clear, a decode, and the
         next QSO's status. *)

@@ -419,6 +419,26 @@ new every launch, that broke on the second run. `FoundContest` is idempotent for
 it now and `TContestSettings.SetDomesticFilename` reduces any path to its name,
 which also heals existing logs.
 
+## AN INBOUND ADIF RECORD IS NOT TYPED TEXT (NY4I, 2026-11-25)
+
+`ParametersOkay` has a trailing `aPreParsed: boolean = False`. True is
+`uInboundQso.CheckParsedInboundQso` (WSJT-X, the N1MM listener): the record was
+read by `ReadADIFRecord` and the contest's `ApplyADIFImport`, and those fields
+are the QSO -- no blank exit, no on-deck / corrected call, no sent RST from
+text, no QTHString wipe, no `ProcessExchange`, ExchString kept. Everything else
+runs as for typed entry (log/call checks, band/mode/freq, `NumberSent`, report
+defaults for 0, `ctyLocateCallStripRover`, `SetDXQTHAndPrefix`,
+`CalculateQSOPoints`), and `LogContact` sets the dupe and multiplier flags as
+ever. So the inbound record scores exactly what the ADIF FILE import stores for
+the same record: a field that a class's import leaves only in SRX_STRING is not
+read live either -- fix that class's `ApplyADIFImport`, never re-parse. A record
+missing a field the contest needs is LOGGED with one status line
+(`uExchangeHint.ContestMissingFieldsHint`, built on
+`uContestBase.ReceivedFieldsHeld` -- the one "unset" rule, which
+`EmitADIFReceivedFields` also asks). Pinned by `uTestInboundADIFRecord`
+(General QSO, Field Day, Michigan QP, CQ WW, the N1MM shape, each compared with
+typed entry).
+
 ## Oracles
 
 ```bash

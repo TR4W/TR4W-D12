@@ -13192,3 +13192,8 @@ msgstr ""
 #, fuzzy
 msgid "The server still holds computer ID %s from your last session, retrying..."
 msgstr ""
+
+#: uappstrings.sinboundloggedwithout
+#, fuzzy
+msgid "%0:s logged without %1:s: edit it in Edit QSO"
+msgstr ""

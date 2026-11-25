@@ -1171,6 +1171,8 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
       order, duplicates, case, width, and the reset (pointer audit P5). *)
    uTestDomesticCountryList in 'uTestDomesticCountryList.pas',
    uTestSettingsFreshInstall in 'uTestSettingsFreshInstall.pas',
+   (* An inbound ADIF record keeps its fields (2026-11-25). *)
+   uTestInboundADIFRecord in 'uTestInboundADIFRecord.pas',
    uTestLegacyConversionCheck in 'uTestLegacyConversionCheck.pas',
    uLegacyConversionCheck in '..\..\src\uLegacyConversionCheck.pas',
    uTestClusterTokens   in 'uTestClusterTokens.pas',
@@ -1578,6 +1580,7 @@ begin
    RegisterSuite(TStationFactOverrideTests.Create('StationFactOverrides'));
    RegisterSuite(TStationValueKeptTests.Create('StationValueKept'));
    RegisterSuite(TSettingsFreshInstallTests.Create('SettingsFreshInstall'));
+   RegisterSuite(TInboundADIFRecordTests.Create('InboundADIFRecord'));
    RegisterSuite(TLegacyConversionCheckTests.Create('LegacyConversionCheck'));
    RegisterSuite(TUILanguageTests.Create('UILanguage'));
    RegisterSuite(TLogRepositoryTests.Create('LogRepository'));

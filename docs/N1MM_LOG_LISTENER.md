@@ -31,7 +31,9 @@ error on the status line and in `tr4w.log`; the other transport still runs.
 ## What happens to a record
 
 The record goes through the same path as a QSO from WSJT-X (`uInboundQso`): the open contest
-interprets it, the normal dupe sheet flags a repeat (a resend is logged and marked as a dupe, not
+interprets it, and its fields are the QSO -- nothing in it is re-read as typed exchange text
+(2026-11-25); a record that lacks a field the contest needs is logged and one status line names
+the field. The normal dupe sheet flags a repeat (a resend is logged and marked as a dupe, not
 refused), and an unknown mode is logged as Digital with a warning in `tr4w.log`. As with WSJT-X,
 the call and exchange boxes are cleared when the QSO is logged. Nothing is sent back to the
 sender.
