@@ -280,11 +280,11 @@ CALL, else 0), feeds that service, the `my_itu_zone` capture
 scored live (entry scores before the row is written, with no facts) and the same
 row rescored later cannot disagree. 0 is unknown and matches no zone.
 `TContestBSCI` reads it too since issue #225 (WA7BNM ref 470: "1 point per QSO
-with same ITU Zone"; DXLog `BSCC.txt` agrees). **`TContestOZCRZ` STILL reads
-`Station.MyZone`, ON PURPOSE**: no sponsor text is readable (none in the tree,
-QRZ.RU 182 unreachable, no WA7BNM entry, no DXLog file), so the transcribed D7
-rule stands, pinned by `uTestITUZoneContests.Test_OZCRZStillComparesTheStatedMyZone`
-until NY4I rules. No other ITU-zone class compares a zone (Croatian, Gagarin,
+with same ITU Zone"; DXLog `BSCC.txt` agrees). **`TContestOZCRZ` reads it too
+since NY4I's ruling of 2026-11-25**: OZCHR is the Russian Radio Teamsport
+Championship, which states that it follows the IARU HF rules, so its zones are
+ITU zones (no sponsor text is in the tree; the ruling is NY4I's reading of the
+contest). Pinned by `uTestITUZoneContests.Test_OZCRZComparesTheITUZone`. No other ITU-zone class compares a zone (Croatian, Gagarin,
 LZDX score by country/continent; OZCR-O is 1 a QSO); Jock White's
 `Station.MyZone` is an NZART branch, not a zone. Every continent/country arm
 reads the live `Station.MyContinent`/`MyCountry`; `ScoreQSO` overlays only the
@@ -419,6 +419,20 @@ new every launch, that broke on the second run. `FoundContest` is idempotent for
 it now and `TContestSettings.SetDomesticFilename` reduces any path to its name,
 which also heals existing logs.
 
+## TYPED `-08 FN41` ON A DIGITAL QSO (General QSO / RST-name-QTH parser, NY4I, 2026-11-25)
+
+`ProcessRSTNameAndQTHExchange` (shared by General QSO and the BWQP) first asks `ReadWSJTXTypedExchange`: ONLY when
+`ActiveMode = Digital` AND the first word is a signed dB report (`WSJTXReadDBReport`: `-08`, `+03`, `-8`, -30..+50) or a
+grid of 4+ characters (`IsADIFGridSquare`; a 2-letter state is never a grid). Then: the dB report is
+`RSTReceived` as its SIGNED value (-8) -- the same value `uADIF` stores for WSJT-X's `RST_RCVD` (`StrToIntDef` keeps the
+minus; only `+` is stripped), so export and Edit QSO treat typed and WSJT-X records alike, and the Cabrillo/ADIF writers
+convert a stored value below 25 on an SNR mode (`WSJTXReceivedReportForExport`); a 4+ grid is the QTH; a plain number is
+the RS(T) via `ReadReportWordOrRefuse`; any other word is the Name (a second one the QTH); no report is `DefaultRST`.
+Everything else -- `599 TOM FL` on digital, all Phone/CW entries, a leading `-` off digital -- takes the old path
+byte for byte. Risk to know: any digital entry whose first word is a 4-char `AA99` shape is now a grid, never a name.
+Pinned (unrun) in `uTestRSTWordReading.Test_GeneralQSOReadsWSJTXReportAndGridOnDigital`. UNBENCHED: Enter on the
+filled text through the real entry path (MainUnit pre-processing of the exchange was not read).
+
 ## AN INBOUND ADIF RECORD IS NOT TYPED TEXT (NY4I, 2026-11-25)
 
 `ParametersOkay` has a trailing `aPreParsed: boolean = False`. True is
@@ -438,6 +452,17 @@ missing a field the contest needs is LOGGED with one status line
 `EmitADIFReceivedFields` also asks). Pinned by `uTestInboundADIFRecord`
 (General QSO, Field Day, Michigan QP, CQ WW, the N1MM shape, each compared with
 typed entry).
+
+**THE WORKED STATION'S ADIF STATE FROM ITS GRID (NY4I, 2026-11-25).** The base
+`TContestBase.ADIFWorkedStationState` returns the state of the received grid
+(`ADIFReceivedGridSquare`, then `uADIF.ADIFStateOfGridSquare`): only a grid in
+exactly ONE state or province OF THE CALL'S DXCC ENTITY (`StateOfGridForEntity`,
+the ARRL's vuccgrids.dat; CN88 is WA for a K call, BC for a VE call) that ADIF
+allows for that entity (`IsADIFPrimarySubdivisionOfDXCC`). An overriding class (QSO parties, ALL JA,
+POTA) is authoritative even when it answers `''`. The state is export-only, never
+written into QTHString or DomesticQTH (multipliers). The file and the external
+loggers share `EmitADIFRecord`, so they agree. Pinned by
+`uTestContestExport.Test_ADIFStateFromTheReceivedGrid`.
 
 ## Oracles
 

@@ -88,6 +88,69 @@ writes `Settings.Ptt.ViaCommands`. That belongs to the radio-status snapshot wor
 never reaches it.** `TWSJTXServer`'s did not, so `FreeAndNil(wsjtx)` leaked the
 sockets until 2026-10-14. Check the keyword on any destructor you add.
 
+## WSJT-X and the call / exchange windows (2026-11-25; UNBENCHED, tests written and unrun)
+
+**The call WSJT-X put in the window was being cleared by AUTO S&P (evidence, not proof).** tr4w.log
+2026-11-25 06:00-06:08Z: `Clearing main call window` every ~30 s, 5-9 ms after a TX-starting STATUS
+(06:01:04.842 TX=True, clear 04.851; 30.129 / 30.134) and ~0.9 s after TX ends (13.693 -> 14.576).
+The radio was a K4 (`[Band/Mode] K4D-278`), `AutoSap` is on at 500 Hz (settings), and
+`uRadioPolling.ProcessFilteredStatus` queues `RunSwitchToSearchAndPounce` for any VFO move of 500..10000 Hz
+that is not near the last commanded QSY; that job runs `InitializeQSO`, which clears the call AND the exchange
+and logs only "Clearing main call window" (the exchange clear logs nothing). WSJT-X's Fake It / split moves the
+dial by about that much at TX start and back after TX. The fit is circumstantial: no log line named the caller
+(the callers were silent) and the dial is not in WSJT-X's STATUS (`f=7074000` throughout). **Fix:** the UDP
+listener stamps `WSJTXState.NoteDriving` on every STATUS with TXEnabled or Transmitting
+(`uWSJTXState`, 60 s window `WSJTX_DRIVING_WINDOW_MS`); the polling thread skips the S&P switch while
+`WSJTXState.Driving`. Behaviour without WSJT-X is unchanged. A deliberate tune of 500+ Hz while Enable Tx is on
+no longer leaves CQ mode for 60 s. **Logging added:** `tCleareCallWindow(aReason)` (default '') names its caller
+at the debug level at the sites that were silent (InitializeQSO, Escape, QSO logged, dupe, the two band map
+sites) and `RunSwitchToSearchAndPounce` logs `[AutoSAP] leaving CQ`; the suppressed case logs `[AutoSAP] dial
+moved ... call kept`. If the clears continue, the log names the caller.
+
+**THE CALL WSJT-X LOGGED IS NOT PUT BACK, BY ANY BRANCH (2026-11-25, evidence tr4w.log 07:47: LoggedADIF .147, clear .150, the next STATUS re-put KA1MXL .326, then `KA1MXL is a DUPE` every 30 s).** This supersedes the 90 s guard
+described below: after `EvaluateLoggedADIF` logs, `FLoggedCall` holds the call and BOTH the first-put and the restore
+refuse it (`uWSJTXExchangeText.WSJTXIsTheLoggedCall` / `WSJTXShouldRestoreCall`, pure) while WSJT-X's STATUS DX call is
+still that call. It ends when the STATUS DX call CHANGES (another call or none; top of `EvaluateStatus`), on a WSJT-X
+Clear (`ReadyForNextQSO`), or by the escape: an addressed decode from that call that OPENS a QSO (`WSJTXOpensANewQso`: a
+grid, plain report or class; never `R-18`/`R 3A ENY`, which a station repeats when it missed our RR73), checked in
+`EvaluateDecode` before its call-window test. NO TIMER (the stale DX call lasted minutes). Limitation: a re-work of the
+same call whose first message is an R-report, or one the operator starts from WSJT-X without a decode, does not
+auto-fill until WSJT-X's DX call changes; the operator types the call. The dupe flag stops with the put (nothing is in
+the window). `FLoggedTick` is now log-only; `WSJTX_RESTORE_GUARD_MS` is unused. UNBENCHED; tests written, unrun.
+
+**EvaluateStatus puts the call back.** With the SAME call still transmitted to and the call window EMPTY, the call
+is put back unless (a) `EscapeDeletedCallEntry` is that call (Escape, and every logging path, leave it there), or
+(b) WSJT-X logged that call in the last 90 s (`FLoggedCall` / `FLoggedTick`). The first-put branch (call changed
+or `sCallSentToWindow` empty) is untouched, so it still re-puts a just-logged call on the next TX STATUS; only the
+restore is guarded. The old "was not equal" debug line was wrong and now reads "is already the call put in the
+window".
+
+**A decode from the station being worked fills the exchange window** (`uWSJTXExchangeText`, a leaf; the 5th job
+kind `wmAddressedDecode`, letter `D`, in the same FIFO). The listener forwards a non-CQ decode only when its
+SECOND word is the last STATUS's DX call (`FLastStatusDXCall`, listener-owned); `EvaluateDecode` (main thread)
+requires the call window to hold that call, parses with the operator's call (`NY4I F6HUK -15`, `R-18`, `JN06`,
+Field Day `R 3A ENY`; RR73 / RRR / 73 carry nothing), ACCUMULATES the parts for this QSO (`FRxParts`: the grid
+comes first, the report next) and composes text from the class's own field list
+(`ContestReceivedExchangeFields`). **The report is `WSJTXSnrToRST(snr)` (-15 -> 519), not the dB**: typed entry
+(`tree.ValidRST`) reads digits only, '-15' cannot be typed. The logged QSO still keeps -15 from the ADIF. **Only
+what parses back:** RST+QTH gives `519 JN06`, class+section `3A ENY`, grid-only `JN06`; a class that lists a
+field WSJT-X cannot supply (serial, name, county ...) gets NOTHING, because the typed parsers are positional;
+the one exception is RST+name+QTH (General QSO), which gets the report alone (its typed form reads a second word
+as the NAME; the grid arrives with the logged record). The text is written only when the exchange window is
+empty or still holds the text WSJT-X wrote (`FWrittenExchange`), never twice the same, and everything is
+forgotten when the DX call changes, the QSO is logged or WSJT-X says Clear (`ForgetReceivedExchange`);
+`QueueClearCallAndFocus` clears the text after the logged QSO. The text is a convenience: if the operator
+presses Enter on it the typed path logs a QSO beside the one WSJT-X logs (a dupe, flagged, never refused).
+Pinned (unrun) in `uTestWSJTXExchangeText` and the `D` letter in `uTestWSJTXThreading`. No user-visible
+resourcestring was added.
+
+**GENERAL QSO ON A DIGITAL QSO GETS `-08 FN41` (2026-11-25, NY4I).** `WSJTXExchangeForMode(fields, parts, aDigital, text)`
+(`EvaluateDecode` passes `ActiveMode = Digital`; `WSJTXExchangeFromParts` is the non-digital wrapper): for the
+RST+Name+QTH shape (read from the declared fields) the text is the report AS WSJT-X SENT IT with its sign
+(`WSJTXFormatDBReport`: -8 -> `-08`, 3 -> `+03`) then the grid, accumulated; off digital it is the converted report
+alone as before. The typed side is `logstuff.ReadWSJTXTypedExchange` (see contest-scoring.md). Every other class shape
+is unchanged. A WSJT-X dB report is `uWSJTXReport.WSJTXReadDBReport` (-30..+50).
+
 ## One path turns another program's ADIF into a logged QSO: `uInboundQso` (issue 45, 2026-11-22)
 
 `ParseInboundADIF` (clear, `MainUnit.ParseSessionADIFRecord`, locate the call, DX QTH / prefix) and
@@ -164,8 +227,13 @@ typed NOW) reads the live radio. `<operator>` is `RXData.ceOperator`. Pinned in
 
 ## A WSJT-X grid names a state only when it lies in ONE (issue 52, 2026-11-22)
 
-`uGridLookup` holds WSJT-X's `grid.dat` COMPILED IN (695 grids, GPL v3, attribution in
-the unit header; NY4I: grids and state borders do not change). A unique grid names its
+`uGridLookup` holds the ARRL's `vuccgrids.dat` (v1.6, from TrustedQSL) COMPILED IN as a
+generated include (1844 grids; BSD-style ARRL licence, notice in the unit header and
+`docs/THIRD_PARTY_NOTICES.md`; regenerate with `tools/grids/gen_grid_state_table.py`; NY4I: grids
+and state borders do not change). It replaced a table converted from WSJT-X's `grid.dat`. The
+WSJT-X path has no call, so it asks the conservative `StateOfGrid` (one subdivision across all
+entities: CN88 is ambiguous here); the ADIF export asks the per-entity `StateOfGridForEntity`.
+The file lists edge-touching subdivisions, so more grids are ambiguous than in WSJT-X's file. A unique grid names its
 state; **a multi-state grid infers NOTHING** (the file's order is not "mostly the first")
 and the candidates are worded `possible states for EN61 are IL, IN and MI`
 (`PossibleStatesComment`). `EvaluateLoggedADIF` calls `DeriveStateFromWSJTXGrid` before
@@ -799,6 +867,8 @@ own short transaction. The key is the session pair, NOT the guid, because the gu
 message is built; `(0, 0)` and a key naming no row write nothing. **Never `pending`/`inflight`** for a
 hand-off (a pending row feeds `ExternalDeliveryCounts` and Preferences would show "Sending" for ever). A
 dropped op (shutdown, logger switched off) writes nothing. Pinned in `uTestWRLDelivery.TestHandOffRecords`.
+
+**DXKeeper failures are said in words, and Resync re-sends the failed ones (2026-11-25, NY4I: "it should have been clearer that DXKeeper was not up").** `DeliveryFailureReasonText` (the one mapper) words `DXKEEPER_NOT_DELIVERED / REPLACE_NOT_SENT / REPLACE_HALF_DONE`; `DeliveryFailureBriefText` is the short form for the Connection cell, which now appends `: <reason>` from `TDeliveryCounts.LastFailedCode` (newest failed row). The unreachable notice is ONE throttled `QuickDisplay` from the hand-off relay on the main thread (never the sender thread). **Resync for DXKeeper** is `TExternalLogger.ResendQsos`: only `failed` rows with those codes, never `synced` ones (DXKeeper cannot say what it holds, a second send may duplicate); queued with `QueueSingleCommand/QueueReplace(..., aSingleAttempt=True)` so the sender thread makes ONE attempt per QSO; the confirmation for a `HandOffOnly` provider is `ResendHandOffQsos` (no "Resend all"). The result counts QSOs handed to the sender, not arrivals. Unbuilt: an automatic retry every minute. Not run: the unit tests added for it. The External loggers window's Resync button caption and hint follow the selected row (`UpdateButtons`).
 
 ## A duplicate at the destination is a delivery, not a failure (2026-11-24, NY4I: "no harm to a duplicate")
 
