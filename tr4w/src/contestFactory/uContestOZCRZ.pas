@@ -45,15 +45,13 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   continent 3, elsewhere 5. Our zone is TStationContext.MyZone, the
   setting converted once, as IARU's class read it until issue 222.
 
-  STILL Station.MyZone, ON PURPOSE, UNTIL NY4I RULES -- issue 225
-  (2026-11-06). A STATED MY ZONE is a CQ zone, so this compares a received
-  ITU zone with a CQ zone for an operator who typed one; IARU's identical
-  test was moved to TContestBase.ScoringMyITUZone for that reason. But no
-  sponsor text says which zone OZCHR's "own zone" is: none is in the tree,
-  the QRZ.RU entry (182) could not be reached, WA7BNM has no entry and DXLog
-  no file -- not definitive, so the transcribed D7 rule stands. Pinned by
-  uTestITUZoneContests.Test_OZCRZStillComparesTheStatedMyZone; change the
-  two together.
+  OUR ZONE IS OUR ITU ZONE, as IARU's and BSCI's is (issue 225, NY4I's ruling
+  2026-11-25): TContestBase.ScoringMyITUZone, the QSO's recorded my_itu_zone,
+  else the session's. OZCHR is the Russian Radio Teamsport Championship, which
+  states that it follows the IARU HF rules, so its zones are ITU zones. This
+  compared Station.MyZone until then, and a STATED MY ZONE is a CQ zone, so an
+  operator who typed one was comparing a received ITU zone with a CQ zone.
+  Pinned by uTestITUZoneContests.Test_OZCRZComparesTheITUZone.
 
   ITS DEFAULT CQ EXCHANGE DOES SEND THE ITU ZONE (issue 225): that is what
   its export already prints (PostUnit.ZoneSentForThisContest), and an
@@ -155,6 +153,8 @@ uses
    uContestRegistry;
 
 procedure TContestOZCRZ.CalculateQSOPoints(var aQso: ContestExchange);
+var
+   myITUZone: integer;
 begin
    if aQso.DomesticQTH <> '' then
       begin
@@ -163,7 +163,10 @@ begin
       Exit;
       end;
 
-   if aQso.Zone = Station.MyZone then
+   (* MY ITU ZONE FOR THIS QSO, never the stated MY ZONE (a CQ zone) -- issue
+      225, NY4I's ruling 2026-11-25. 0 is unknown and matches nothing. *)
+   myITUZone := ScoringMyITUZone;
+   if (myITUZone > 0) and (aQso.Zone = myITUZone) then
       begin
       aQso.QSOPoints := 1;
       end

@@ -212,9 +212,11 @@ already runs every migration.
   Facts (97c832798, #223) corrects both.
 - One residual: `Station.MyZone` (the derived MY ZONE text) is derived in the
   contest's zone mode when unstated, so in an ITU contest it is an ITU zone.
-  `TContestOZCRZ` still compares it (pinned by
-  `uTestITUZoneContests.Test_OZCRZStillComparesTheStatedMyZone`, awaiting
-  NY4I's ruling on issue 225). Not part of this plan beyond question Q6.
+  `TContestOZCRZ` compared it until NY4I ruled on 2026-11-25 (OZCHR follows
+  the IARU HF rules, so its zones are ITU zones): it now uses
+  `ScoringMyITUZone` (pinned by
+  `uTestITUZoneContests.Test_OZCRZComparesTheITUZone`). Not part of this plan
+  beyond question Q6.
 
 ### 1.7 Wire and binary constraints
 

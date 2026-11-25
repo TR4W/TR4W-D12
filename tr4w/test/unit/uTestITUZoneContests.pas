@@ -71,7 +71,7 @@ type
       procedure Test_BSCIAnUnknownZoneEarnsNoSameZonePoint;
       procedure Test_BSCIContinentAndBlackSeaPoints;
       procedure Test_BSCIAnUncapturedQSOScoresFromTheSessionITUZone;
-      procedure Test_OZCRZStillComparesTheStatedMyZone;
+      procedure Test_OZCRZComparesTheITUZone;
       procedure Test_ITUContestsCQExchangeSendsTheITUZone;
       procedure Test_CQZoneContestCQExchangeSendsMyZoneText;
       procedure Test_ZoneTextSentRule;
@@ -158,7 +158,7 @@ begin
    Test_BSCIAnUnknownZoneEarnsNoSameZonePoint;
    Test_BSCIContinentAndBlackSeaPoints;
    Test_BSCIAnUncapturedQSOScoresFromTheSessionITUZone;
-   Test_OZCRZStillComparesTheStatedMyZone;
+   Test_OZCRZComparesTheITUZone;
    Test_ITUContestsCQExchangeSendsTheITUZone;
    Test_CQZoneContestCQExchangeSendsMyZoneText;
    Test_ZoneTextSentRule;
@@ -331,12 +331,15 @@ end;
    When NY4I rules (the case for switching: its point method IS D7's
    IARUQSOPointMethod, which issue 222 ruled is the ITU zone; it multiplies
    and exports ITU zones), change this test with the class. *)
-procedure TITUZoneContestTests.Test_OZCRZStillComparesTheStatedMyZone;
+(* OZCHR (the Russian Radio Teamsport Championship) follows the IARU HF rules,
+   so its same-zone point is against our ITU zone (NY4I, 2026-11-25), not the
+   stated MY ZONE, which is a CQ zone. *)
+procedure TITUZoneContestTests.Test_OZCRZComparesTheITUZone;
 var
    obj: TContestBase;
    station: TStationContext;
 begin
-   BeginTest('Test_OZCRZStillComparesTheStatedMyZone');
+   BeginTest('Test_OZCRZComparesTheITUZone');
    station := StationWithStatedCQZone;
    station.MyITUZone := @StubMyITUZone;
    GSessionITUZone := 8;
@@ -347,10 +350,10 @@ begin
       Exit;
       end;
    try
-      CheckEquals(3, ScoreWithFacts(obj, ZoneQso('W1AW', 'K', 8, NorthAmerica, ''), LoggedFacts(8)),
-                  'pinned: stated MY ZONE 5, recorded ITU 8, W1AW 8 -- still 3');
-      CheckEquals(1, ScoreWithFacts(obj, ZoneQso('W5AAA', 'K', 5, NorthAmerica, ''), LoggedFacts(8)),
-                  'pinned: stated MY ZONE 5, a station sending 5 -- still 1');
+      CheckEquals(1, ScoreWithFacts(obj, ZoneQso('W1AW', 'K', 8, NorthAmerica, ''), LoggedFacts(8)),
+                  'stated MY ZONE 5, recorded ITU 8, W1AW 8: the same ITU zone, 1');
+      CheckEquals(3, ScoreWithFacts(obj, ZoneQso('W5AAA', 'K', 5, NorthAmerica, ''), LoggedFacts(8)),
+                  'stated MY ZONE 5 is a CQ zone: a station sending 5 is not our ITU zone, 3');
       CheckEquals(1, ScoreWithFacts(obj, ZoneQso('W1AW', 'K', 8, NorthAmerica, 'RCC'), LoggedFacts(8)),
                   'a society station: 1');
       CheckEquals(5, ScoreWithFacts(obj, ZoneQso('F4HQ', 'F', 27, Europe, ''), LoggedFacts(8)),
