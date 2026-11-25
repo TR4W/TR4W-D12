@@ -402,10 +402,10 @@ UDP receive port for the WSJT-X connection. Match it to the sending application'
 | --- | --- |
 | Scope | Station |
 | Values | TRUE or FALSE |
-| Initial value in constructor | True |
+| Initial value in constructor | False |
 | Other accepted names | None listed |
 
-Controls whether TR4W enables the WSJT-X listener. The source initializes this to true. Match the UDP destination and port in WSJT-X, then verify that a completed contact reaches the intended TR4W contest.
+Controls whether TR4W enables the WSJT-X listener. The source initializes this to false: no WSJT-X option is on until the operator turns it on. Match the UDP destination and port in WSJT-X, then verify that a completed contact reaches the intended TR4W contest.
 
 [Step-by-step guide](../../station/wsjtx.md)
 
@@ -466,10 +466,10 @@ Allows frequency changes from WSJT-X to move the radio. The source initializes t
 | --- | --- |
 | Scope | Station |
 | Values | TRUE or FALSE |
-| Initial value in constructor | True |
+| Initial value in constructor | False |
 | Other accepted names | None listed |
 
-Controls whether TR4W sends callsign highlight information to WSJT-X. Receiving logged QSOs and sending highlights are separate checks; enable Accept UDP requests in WSJT-X when using the highlighting path.
+Controls whether TR4W sends callsign highlight information to WSJT-X. The source initializes this to false. Receiving logged QSOs and sending highlights are separate checks; enable Accept UDP requests in WSJT-X when using the highlighting path.
 
 [Step-by-step guide](../../station/wsjtx.md)
 

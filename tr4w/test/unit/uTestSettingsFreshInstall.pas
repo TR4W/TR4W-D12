@@ -58,6 +58,8 @@ type
       procedure Test_TheWindowSizeCommandIsRetired;
       procedure Test_TheTailEndCommandsAreRetired;
       procedure Test_TheTwoNewEntrySettings;
+      procedure Test_NoWSJTXOptionIsOnByDefault;
+      procedure Test_AFileThatStatesWSJTXKeepsIt;
       procedure Test_BuildingTheSettingsObjectDoesNotLeak;
    public
       procedure RunAllTests; override;
@@ -703,6 +705,75 @@ begin
 end;
 
 (* ---------------------------------------------------------------------
+  NO WSJT-X OPTION IS ON BY DEFAULT (NY4I, 2026-11-25): most operators never
+  use WSJT-X. Enabled and SendHighlights defaulted TRUE until then. The port
+  and the listen address are values, not options, and keep theirs.
+  --------------------------------------------------------------------- *)
+
+procedure TSettingsFreshInstallTests.Test_NoWSJTXOptionIsOnByDefault;
+var
+   s: TR4WSettings;
+begin
+   BeginTest('a fresh settings object has every WSJT-X option off');
+   s := TR4WSettings.Create;
+   try
+      CheckFalse(s.Wsjtx.Enabled, 'WSJT-X ENABLED defaults off');
+      CheckFalse(s.Wsjtx.SendHighlights, 'WSJT-X SEND HIGHLIGHTS defaults off');
+      CheckFalse(s.Wsjtx.RadioControlEnabled, 'WSJT-X RADIO CONTROL ENABLED defaults off');
+      CheckFalse(s.Wsjtx.N1mmListenerEnabled, 'ENABLE N1MM LOG LISTENER defaults off');
+      CheckEquals(2237, s.Wsjtx.BroadcastPort, 'the port keeps WSJT-X''s own default');
+      CheckEquals('', s.Wsjtx.MulticastGroup, 'no multicast group');
+   finally
+      s.Free;
+   end;
+end;
+
+(* AN EXISTING FILE KEEPS WHAT IT STATES. The whole settings object is written
+  at exit, so a file any 5.x build wrote carries Wsjtx.Enabled and
+  Wsjtx.SendHighlights, and a file that said true still says true. A file
+  that predates the keys (or has no Wsjtx section) reads the new default:
+  off. *)
+procedure TSettingsFreshInstallTests.Test_AFileThatStatesWSJTXKeepsIt;
+var
+   s: TR4WSettings;
+   obj: TJSONObject;
+begin
+   BeginTest('a tr4w.json that states WSJT-X keeps it; one that does not reads off');
+   InstallTestKeychain;
+   s := TR4WSettings.Create;
+   try
+      obj := ParseObject('{"Wsjtx":{"Enabled":true,"SendHighlights":true},' +
+                         '"Computer":{"Id":"H"}}');
+      CheckTrue(obj <> nil, 'the fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckTrue(s.Wsjtx.Enabled, 'a stated Enabled true stays true');
+      CheckTrue(s.Wsjtx.SendHighlights, 'a stated SendHighlights true stays true');
+   finally
+      s.Free;
+   end;
+
+   s := TR4WSettings.Create;
+   try
+      obj := ParseObject('{"Computer":{"Id":"H"}}');
+      CheckTrue(obj <> nil, 'the fixture must parse');
+      try
+         s.FromJSON(obj);
+      finally
+         obj.Free;
+      end;
+      CheckTrue(s.Computer.Id = 'H', 'the rest of the file loaded');
+      CheckFalse(s.Wsjtx.Enabled, 'no Wsjtx section: off');
+      CheckFalse(s.Wsjtx.SendHighlights, 'no Wsjtx section: highlights off');
+   finally
+      s.Free;
+   end;
+end;
+
+(* ---------------------------------------------------------------------
   THE SETTINGS OBJECT FREES WHAT IT BUILDS.
   --------------------------------------------------------------------- *)
 
@@ -756,6 +827,8 @@ begin
    Test_TheWindowSizeCommandIsRetired;
    Test_TheTailEndCommandsAreRetired;
    Test_TheTwoNewEntrySettings;
+   Test_NoWSJTXOptionIsOnByDefault;
+   Test_AFileThatStatesWSJTXKeepsIt;
    Test_BuildingTheSettingsObjectDoesNotLeak;
 end;
 

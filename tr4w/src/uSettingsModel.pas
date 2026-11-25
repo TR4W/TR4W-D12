@@ -539,9 +539,12 @@ type
    public
       constructor Create;
    published
-      (* Was WSJTXEnabled in uCFG, and it defaults TRUE so that a config file
-        which never mentions WSJT-X still starts the listener -- the comment
-        in uProgramMain beside the old global says exactly that. *)
+      (* Was WSJTXEnabled in uCFG. DEFAULTS FALSE since 2026-11-25 (NY4I: no
+        WSJT-X option is on by default; most operators never use it). It
+        defaulted TRUE until then, so a settings file that never mentioned
+        WSJT-X started the listener. A file that states the key keeps what it
+        states: the whole object is written at exit, so every file written
+        since this setting existed carries it. *)
       property Enabled: boolean read FEnabled write FEnabled;
       (* Was WSJTXRadioControlEnabled -- whether a frequency change in WSJT-X
         is allowed to move the radio. *)
@@ -5605,10 +5608,13 @@ end;
 constructor TWsjtxSettings.Create;
 begin
    inherited Create;
-   (* The values the typed constants in uCFG and logstuff carried. *)
-   FEnabled             := True;
+   (* The values the typed constants in uCFG and logstuff carried, except the
+     two switches: NO WSJT-X OPTION IS ON BY DEFAULT (NY4I, 2026-11-25), so
+     Enabled and SendHighlights are False like RadioControlEnabled and the
+     N1MM listener. The port and the address are values, not options. *)
+   FEnabled             := False;
    FRadioControlEnabled := False;
-   FSendHighlights      := True;
+   FSendHighlights      := False;
    FBroadcastPort       := 2237;
    FMulticastGroup      := '';
    FN1mmListenerEnabled := False;

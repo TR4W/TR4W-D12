@@ -2744,16 +2744,17 @@ begin
   // DE ENABLE = FALSE shows "Call" instead of the default "DE+Call".
   UpdateSAndPF1Caption;
 
-  if Settings.Wsjtx.Enabled then
-     begin
-     wsjtx := TWSJTXServer.Create;
-     end;
+  (* THE WSJT-X SERVER IS CREATED UNCONDITIONALLY and STARTED below only when
+    WSJT-X ENABLED is on (2026-11-25). It was created only when the setting was
+    already on, so turning it on in Preferences or the setup wizard needed a
+    restart -- hidden while the setting defaulted TRUE, and the normal case
+    once every WSJT-X option became off by default (NY4I). Creating it binds
+    no socket; Start does. uSettingsEffects starts and stops this object. *)
+  wsjtx := TWSJTXServer.Create;
 
-  // The TCI server.  Created unconditionally and STARTED only if enabled --
-  // the WSJT-X server above is created only when its enable flag is already
-  // on, which is why turning that one ON needs a program restart.  A live
-  // object with Start/Stop is what makes the Preferences check box able to
-  // take effect without one.
+  // The TCI server.  Created unconditionally and STARTED only if enabled,
+  // like the WSJT-X server above.  A live object with Start/Stop is what
+  // makes the Preferences check box able to take effect without a restart.
   TCIServer := TTCIServer.Create;
   logger.debug('[tr4w] SpotCollectorEnabled = %s',
                [BooleanToStr(Settings.SpotCollector.Enabled)]);
@@ -3456,10 +3457,12 @@ begin
 //  Format(wsprintfBuffer, 'cty.dat: "%s" version', CTY.ctyTable[cty.ctyVersion].Name);
 
 
-   if Settings.Wsjtx.Enabled then
-      begin
+   (* THE COLOURS AND THE HIGHLIGHT SWITCH ARE SET WHETHER OR NOT WSJT-X IS ON,
+     so a server turned on later in the session (uSettingsEffects) already
+     has them. Settings.Wsjtx.Enabled defaults FALSE (2026-11-25, NY4I: no
+     WSJT-X option is on by default), so a settings file that never
+     mentions WSJT-X leaves the listener stopped. *)
    // Send colors for Dupes (QSOB4)
-
    wsjtx.SetDupeBackgroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweBackG]));
    wsjtx.SetDupeForegroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweQSOB4Status].mweColor]));
 
@@ -3468,13 +3471,10 @@ begin
    wsjtx.SetMultForegroundColor(ColorToRGB(tr4wColorsArray[TWindows[mweNewMultStatus].mweColor]));
 
    wsjtx.SendColorization := Settings.Wsjtx.SendHighlights;
-   (* Settings.Wsjtx.Enabled defaults TRUE, so a config file that never
-     mentions WSJT-X still starts the listener. *)
    if Settings.Wsjtx.Enabled then
       begin
       wsjtx.Start;
       end;
-   end;
 
    (* THE N1MM LOG LISTENER (issue 45): the object always exists, and binds its
      sockets only when ENABLE N1MM LOG LISTENER is on -- so the Preferences box

@@ -3789,8 +3789,11 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
                 begin
                 if Settings.Wsjtx.Enabled then
                    begin
+                   (* The pure conversion, not the server object's method:
+                     with WSJT-X off by default (2026-11-25) the setting can be
+                     turned on in a session whose wsjtx was never created. *)
                    RSTSent := sysutils.Format( '%d',
-                      [ wsjtx.ConvertSNRToRST( TempRXData.RSTSent ) ] );
+                      [ WSJTXSnrToRST( TempRXData.RSTSent ) ] );
                    end
                 else
                    begin

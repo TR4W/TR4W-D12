@@ -384,8 +384,12 @@ begin
       frm.chkWSJTX.Checked := True;
       frm.btnNextClick(frm.btnNext);
       Check(frm.pgPages.ActivePage = frm.tsWSJTX, 'the WSJT-X page shows');
-      CheckTrue(Settings.Wsjtx.Enabled = frm.chkWSJTXEnable.Checked,
-                'the box shows the stored switch');
+      (* TICKING THE ITEM SWITCHES THE PAGE ON (NY4I, 2026-11-25), whatever
+        is stored; the rest shows what is stored. *)
+      CheckTrue(frm.chkWSJTXEnable.Checked,
+                'a ticked WSJT-X item opens the page switched on');
+      CheckTrue(frm.chkWSJTXHighlights.Enabled,
+                'and the rest of the page can be edited');
       CheckEquals(IntToStr(Settings.Wsjtx.BroadcastPort), string(frm.edtWSJTXPort.Text),
                   'the box shows the stored port');
 

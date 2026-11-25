@@ -60,7 +60,7 @@
     "guide": "../../operating/pota.md"
   },
   "WSJT-X ENABLED": {
-    "description": "Controls whether TR4W enables the WSJT-X listener. The source initializes this to true. Match the UDP destination and port in WSJT-X, then verify that a completed contact reaches the intended TR4W contest.",
+    "description": "Controls whether TR4W enables the WSJT-X listener. The source initializes this to false: no WSJT-X option is on until the operator turns it on. Match the UDP destination and port in WSJT-X, then verify that a completed contact reaches the intended TR4W contest.",
     "guide": "../../station/wsjtx.md"
   },
   "WSJT-X BROADCAST PORT": {
@@ -72,7 +72,7 @@
     "guide": "../../station/wsjtx.md"
   },
   "WSJT-X SEND HIGHLIGHTS": {
-    "description": "Controls whether TR4W sends callsign highlight information to WSJT-X. Receiving logged QSOs and sending highlights are separate checks; enable Accept UDP requests in WSJT-X when using the highlighting path.",
+    "description": "Controls whether TR4W sends callsign highlight information to WSJT-X. The source initializes this to false. Receiving logged QSOs and sending highlights are separate checks; enable Accept UDP requests in WSJT-X when using the highlighting path.",
     "guide": "../../station/wsjtx.md"
   },
   "WSJT-X RADIO CONTROL ENABLED": {

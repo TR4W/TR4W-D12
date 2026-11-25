@@ -1045,6 +1045,20 @@ begin
       begin
       (* Unticked means "leave WSJT-X as it is": back to what is stored. *)
       LoadWSJTX;
+      end
+   else if Sender = chkWSJTX then
+      begin
+      (* TICKING THE ITEM SAYS "I USE WSJT-X" (NY4I, 2026-11-25): the page
+        opens with the switch ON, whatever is stored -- every WSJT-X option is
+        off by default now, so following the stored value would make the
+        operator tick twice. Only the switch: highlights, radio control, the
+        port and the group stay as stored. It is written only if it differs
+        from what was stored (SetupWsjtxChanges), and unticking puts the
+        stored value back (LoadWSJTX, above). Asked only when the WSJT-X box
+        itself changed, so ticking another item later leaves the operator's
+        own choice on the WSJT-X page alone. *)
+      chkWSJTXEnable.Checked := True;
+      ShowWSJTXSwitch;
       end;
    FPlan := SetupPagePlan(TickedItems);
    UpdateButtons;
@@ -1769,8 +1783,8 @@ end;
 
 (* WHAT THE WSJT-X SETTINGS HOLD NOW, through the same function the Station
   page uses (StationCommandValue).  On a new install that is the model's
-  default: switched ON, port 2237, highlights on, radio control off, no
-  multicast group. *)
+  default: every option OFF (2026-11-25), port 2237, no multicast group.
+  Ticking the checklist item then switches the page ON (ChecklistChange). *)
 procedure TfrmSetupWizard.LoadWSJTX;
 begin
    FWSJTXLoaded.Enabled        := WSJTXCommandBool(WSJTX_CMD_ENABLED);
@@ -1828,8 +1842,11 @@ end;
 (* ONLY WHAT CHANGED IS WRITTEN (SetupWsjtxChanges), through Preferences' own
   path.  A refused value is reported.  From the Tools menu, some changes wait
   for a restart, and the result says so:
-    switching WSJT-X on   when its server was never made -- it is made at
-                          startup only while the switch is on (uProgramMain)
+    switching WSJT-X on   only when its server was never made -- since
+                          2026-11-25 uProgramMain makes it at every start and
+                          uSettingsEffects starts it at once, so this is the
+                          run BEFORE that point (the startup wizard), which
+                          the same start then completes
     the UDP port          bound when the server starts
     radio control         the DX Commander listener is made with the server,
                           and only when radio control is on (TWSJTXServer.Create)
@@ -1863,7 +1880,9 @@ begin
          begin
          if WriteCommand(WSJTX_CMD_ENABLED, string(BA[shown.Enabled])) and shown.Enabled then
             begin
-            needsRestart := wsjtx = nil;
+            (* The startup run comes before the server is made; that same
+              start makes it and starts it (uProgramMain). *)
+            needsRestart := (wsjtx = nil) and (not FStartupMode);
             end;
          end;
       if swfPort in changes then
