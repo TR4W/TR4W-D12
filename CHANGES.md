@@ -41,6 +41,30 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### 5.1.3 (2026-11-25) - NY4I
+
+#### WSJT-X (`uWSJTX`, `uWSJTXState`, `uWSJTXExchangeText`, `uWSJTXReport`, `uInboundQso`, `uRadioPolling`, `logstuff`, `MainUnit`, `uSettingsModel`, `ui/lcl/uSetupWizardForm`)
+
+- **Defaults**: `TWsjtxSettings` Enabled and SendHighlights default False; the server object is created at every start (it binds nothing until Start), so the wizard or Preferences takes effect without a restart; the wizard writes only changed fields.
+- **Inbound ADIF keeps its fields**: `ParametersOkay(..., aPreParsed)` skips every text-reading step; `uInboundQso.CheckParsedInboundQso` is the check half; `ContestMissingFieldsHint` and `TContestBase.ReceivedFieldsHeld` (shared with `EmitADIFReceivedFields`) give the non-modal notice.
+- **AUTO S&P**: `WSJTXState.Driving` (`WSJTX_DRIVING_WINDOW_MS` = 60000) stops `ProcessFilteredStatus` queuing `mtSwitchToSearchAndPounce` while WSJT-X drives. `tCleareCallWindow(aReason)` logs its caller. The attribution to AUTO S&P is probable, not proven.
+- **Logged call**: `FLoggedCall` blocks the first-put and restore branches of `EvaluateStatus` until the Status DX call changes, a Clear arrives, or the same station sends an opening message (`WSJTXOpensANewQso`: a grid or a plain report, not `R-nn`/RR73/73).
+- **Exchange fill**: `uWSJTXExchangeText` maps an addressed decode to the contest's declared received fields (`wmAddressedDecode`, a fifth job kind on the one FIFO; written only into an empty window or WSJT-X's own earlier text). `logstuff.ReadWSJTXTypedExchange` gives digital General QSO a signed dB report and a grid.
+
+#### ADIF STATE from the received grid (`uGridLookup`, `uGridStateTable.inc`, `uADIF`, `uContestBase`, `uContestPOTA`, `tools/grids`)
+
+- `ADIFStateOfGridSquare` / `uGridLookup.StateOfGridForEntity`: STATE and DXCC only when the grid reaches exactly one subdivision of the call's own DXCC entity and ADIF allows it for that entity; one place (`TContestBase.ADIFWorkedStationState`), so the file and every external logger agree; overriding classes stay authoritative.
+- The table is generated from the ARRL's `vuccgrids.dat` 1.6 by `tools/grids/gen_grid_state_table.py` (1844 grids; NF and PQ written as NL and QC; notice in `docs/THIRD_PARTY_NOTICES.md`). It replaces WSJT-X's `grid.dat` as converted for issue 52, which named one state for 126 grids that touch two. `arrl_digi`'s `known.adi.diff` regenerated.
+
+#### DXKeeper (`uExternalLogger`, `uExternalLoggerActions`, `uExternalLoggerStatusModel`, `uExternalDelivery`, `ui/lcl/uExternalLoggerResendUI`, `ui/lcl/uExternalLoggersStatusForm`)
+
+- `DeliveryFailureReasonText` words for the three DXKeeper failure codes; `TDeliveryCounts.LastFailedCode` puts the reason in the Connection column; a throttled non-modal notice names host and port.
+- `TExternalLogger.ResendQsos`: failed rows only, rebuilt with `BuildDXKeeperLogMessage`, one attempt each (`SingleAttempt`) on the logger's sender thread; `ResendHandOffQsos` is the dialog. The Resync button's caption and hint follow the selection. 15 new strings.
+
+#### Contests (`contestFactory/uContestOZCRZ`)
+
+- `TContestOZCRZ` scores its same-zone point from `ScoringMyITUZone` (issue 225, NY4I 2026-11-25).
+
 ### 5.1.2 (2026-11-24) - NY4I
 
 #### Cloudlog / Wavelog (`uCloudlogClient`, `uCloudlogExternalLogger`, `uExternalLoggerRegistry`, `uExternalLoggerActions`, `ui/lcl/uExternalLoggersForm`, `utils/uHTTPDownload`)

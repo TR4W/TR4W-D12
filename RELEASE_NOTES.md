@@ -48,6 +48,42 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.1.x — November 2026
 
+### 5.1.3 (2026-11-25) - NY4I
+
+#### WSJT-X
+
+- **No WSJT-X option is on by default.** Most operators never use WSJT-X, so a new install has all of them
+  off. Ticking WSJT-X in the setup wizard switches it on, and it works at once with no restart. A settings
+  file that already turns it on keeps it.
+- **What WSJT-X sends is kept as sent, in any contest.** A grid such as FN41 stays the grid, not the name,
+  and the signal report (-12) stays -12. A contest that needs a field the record lacks, such as a county or a
+  zone, still logs the QSO and shows one line saying what to fill in.
+- **The call stays through the QSO.** With AUTO S&P on, WSJT-X shifting the dial when it transmits was read
+  as you tuning away, so TR4W left CQ and cleared the call. While WSJT-X is driving, that no longer happens.
+- **A logged call no longer comes back as a dupe.** After WSJT-X logged a QSO, its next message entered the
+  same call again and flagged it. It now stays out until WSJT-X moves on to another station.
+- **The exchange window fills from the other station's reply.** In General QSO on a digital mode you see the
+  report and grid (`-08 FN41`); other contests get what WSJT-X can supply. Your own typing is never
+  overwritten.
+
+#### ADIF export
+
+- **STATE is written from the grid the other station sent**, when that grid lies in one state of that
+  station's country. A US call in CN88 is WA, and a Canadian call there is BC. A grid that reaches two
+  states gets no STATE rather than a guess. The grid data now comes from the ARRL's list, which corrects
+  grids the old table gave one state when they touch two.
+
+#### External loggers
+
+- **A DXKeeper failure says why:** "DXKeeper did not answer: it is not running, or its TCP server is off",
+  with the host and port. The QSO is safe in TR4W's log.
+- **Resync re-sends DXKeeper's failed QSOs.** It sends only those DXKeeper never received, so pressing it
+  twice cannot duplicate. The External loggers window's Resync button now names the logger it acts on.
+
+#### Contests
+
+- **OZCHR scores the same-zone point from your ITU zone,** as the IARU contests do.
+
 ### 5.1.2 (2026-11-24) - NY4I
 
 #### Cloudlog and Wavelog
