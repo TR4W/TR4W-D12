@@ -13962,3 +13962,81 @@ msgstr ""
 #, fuzzy
 msgid "%0:s logged without %1:s: edit it in Edit QSO"
 msgstr ""
+
+#: uappstrings.sloggerstatecountswhy
+#, fuzzy
+msgid "%s (%d uncertain, %d failed: %s)"
+msgstr ""
+
+#: uappstrings.sloggerwhydxkeepernotdelivered
+#, fuzzy
+msgid "DXKeeper did not answer: it is not running, or its TCP server is off. The QSO is safe in the TR4W log but was NOT sent. Start DXKeeper and enable its TCP server (default port 52001), then edit and save the QSO to send it."
+msgstr ""
+
+#: uappstrings.sloggerwhydxkeeperreplacenotsent
+#, fuzzy
+msgid "DXKeeper did not answer, so the edit was NOT sent and DXKeeper still holds the original QSO. Start DXKeeper with its TCP server on, then save the QSO again in Edit QSO."
+msgstr ""
+
+#: uappstrings.sloggerwhydxkeeperhalfdone
+#, fuzzy
+msgid "DXKeeper deleted the old record but then did not answer for the new one, so the QSO is now missing from DXKeeper (it is safe in the TR4W log). When DXKeeper is back, save the QSO again in Edit QSO."
+msgstr ""
+
+#: uappstrings.sloggerwhydxkeeperbrief
+#, fuzzy
+msgid "DXKeeper did not answer (not running, or TCP server off)"
+msgstr ""
+
+#: uappstrings.sloggerdxkeeperunreachable
+#, fuzzy
+msgid "DXKeeper: QSO %s not sent. DXKeeper did not answer at %s:%d (not running, or its TCP server is off). See Edit QSO > External loggers."
+msgstr ""
+
+#: uappstrings.sloggerdxkeeperunreachablemany
+#, fuzzy
+msgid "DXKeeper: %d QSOs not sent, the latest %s. DXKeeper did not answer at %s:%d (not running, or its TCP server is off). See Edit QSO > External loggers."
+msgstr ""
+
+#: uappstrings.sloggerresendhandoffbody
+#, fuzzy
+msgid ""
+"Send %s the QSOs of this contest it never received.\n"
+"\n"
+"DXKeeper cannot tell TR4W what it already holds, so only QSOs whose earlier send FAILED (DXKeeper did not answer) are sent again. QSOs that were sent are not sent a second time, so nothing is duplicated."
+msgstr ""
+
+#: uappstrings.sloggerresendhandoffbutton
+#, fuzzy
+msgid "Send failed QSOs"
+msgstr ""
+
+#: uappstrings.sloggerresendhandoffnone
+#, fuzzy
+msgid "%s: no QSO is waiting to be sent again."
+msgstr ""
+
+#: uappstrings.sloggerresendhandoffdone
+#, fuzzy
+msgid "%s: %d QSO(s) are being sent now, one attempt each. If DXKeeper does not answer, a line at the bottom says so and the QSO stays failed (see the Connection column); start DXKeeper with its TCP server on and press Resync again."
+msgstr ""
+
+#: uappstrings.sloggerresendhandoffhalfdone
+#, fuzzy
+msgid "%d of them were edits whose old record was already deleted in DXKeeper; they are sent as new QSOs."
+msgstr ""
+
+#: uappstrings.sloggerswindowresyncnamed
+#, fuzzy
+msgid "Resync %s..."
+msgstr ""
+
+#: uappstrings.sloggerswindowresyncnone
+#, fuzzy
+msgid "Select a logger to resync"
+msgstr ""
+
+#: uappstrings.sloggerswindowresynchint
+#, fuzzy
+msgid "Re-sends the QSOs of this contest that %s has not received. Other loggers are not touched."
+msgstr ""

@@ -31,7 +31,7 @@ function ResendRefusalText(const aCode: string): string;
 implementation
 uses
    SysUtils, Forms, Dialogs, Controls, LCLType, uAppStrings, uExternalLoggerActions,
-   uExternalLoggerStatusModel, uLogStore, utils_text;
+   uExternalLoggerStatusModel, uExternalLoggerRegistry, uLogStore, utils_text;
 
 function ResendRefusalText(const aCode: string): string;
 begin
@@ -96,8 +96,55 @@ end;
    LogStoreResendToExternalLogger's, in one transaction. The QuestionDlg
    captions are LclText (ansi) and the answer is read by RESULT, never by button
    position (GTK draws them the other way round). *)
+(* RESYNC FOR A HAND-OFF LOGGER (DXKeeper): the confirmation says DXKeeper is told
+   again only about QSOs it never received; the sends run on the logger's own
+   sender thread (one attempt each), so the answer here is how many were handed
+   to it, and a line on the quick-command panel says if DXKeeper did not answer. *)
+procedure ResendHandOffQsos(const aDefinition: TExternalLoggerDefinition);
+var
+   tally: TResendTally;
+   refusal, summary: string;
+begin
+   if QuestionDlg('TR4W',
+                  LclText(UnicodeFormat(SLoggerResendHandOffBody, [aDefinition.Name])),
+                  mtConfirmation,
+                  [mrOk, LclText(SLoggerResendHandOffButton),
+                   mrCancel, 'IsDefault', 'IsCancel'], 0) <> mrOk then
+      begin
+      Exit;
+      end;
+   tally := TResendTally.Create;
+   try
+      if LogStoreResendToExternalLogger(aDefinition.DeliveryId, rmUndelivered, tally, refusal) then
+         begin
+         if tally.Requeued = 0 then
+            begin
+            summary := UnicodeFormat(SLoggerResendHandOffNone, [aDefinition.Name]);
+            end
+         else
+            begin
+            summary := UnicodeFormat(SLoggerResendHandOffDone, [aDefinition.Name, tally.Requeued]);
+            if tally.HalfDone > 0 then
+               begin
+               summary := summary + #10#10 +
+                  UnicodeFormat(SLoggerResendHandOffHalfDone, [tally.HalfDone]);
+               end;
+            end;
+         MessageDlg(UTF8Encode(summary), mtInformation, [mbOK], 0);
+         end
+      else
+         begin
+         MessageDlg(UTF8Encode(UnicodeFormat(SLoggerResendRefused,
+            [aDefinition.Name, ResendRefusalText(refusal)])), mtWarning, [mbOK], 0);
+         end;
+   finally
+      tally.Free;
+   end;
+end;
+
 procedure ResendQsosDialog(const aDefinition: TExternalLoggerDefinition);
 var
+   registration: TExternalLoggerRegistration;
    answer: TModalResult;
    mode: TResendMode;
    tally: TResendTally;
@@ -105,6 +152,14 @@ var
 begin
    if aDefinition = nil then
       begin
+      Exit;
+      end;
+   if FindExternalLoggerRegistration(aDefinition.ProviderId, registration) and
+      registration.HandOffOnly then
+      begin
+      (* DXKeeper: one choice only. It cannot say what it already holds, so
+         only the QSOs it never received (failed rows) are sent again. *)
+      ResendHandOffQsos(aDefinition);
       Exit;
       end;
    answer := QuestionDlg('TR4W',

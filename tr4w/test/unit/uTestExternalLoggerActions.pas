@@ -499,6 +499,13 @@ begin
    CheckEquals(SLoggerWhyCloudlogNoChange, DeliveryFailureReasonText('CLOUDLOG_DELETE_UNSUPPORTED'));
    CheckEquals(SLoggerWhyInsecure, DeliveryFailureReasonText('CLOUDLOG_INSECURE_URL_REFUSED'),
       'the insecure code still wins over URL_REFUSED');
+   CheckEquals(SLoggerWhyDXKeeperNotDelivered, DeliveryFailureReasonText('DXKEEPER_NOT_DELIVERED'));
+   CheckEquals(SLoggerWhyDXKeeperReplaceNotSent, DeliveryFailureReasonText('DXKEEPER_REPLACE_NOT_SENT'));
+   CheckEquals(SLoggerWhyDXKeeperHalfDone, DeliveryFailureReasonText('DXKEEPER_REPLACE_HALF_DONE'));
+   CheckEquals(SLoggerWhyDXKeeperBrief, DeliveryFailureBriefText('DXKEEPER_NOT_DELIVERED'));
+   CheckEquals(SLoggerWhyNoFrequency, DeliveryFailureBriefText('MISSING_FREQUENCY'),
+      'another code keeps its own words in the brief form');
+   CheckEquals('', DeliveryFailureBriefText('DXKEEPER_SOMETHING_ELSE'));
 end;
 
 end.

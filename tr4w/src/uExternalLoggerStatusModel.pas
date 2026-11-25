@@ -72,7 +72,7 @@ uses uAppStrings, uExternalLoggerActions;
 function ExternalLoggerStateText(aState: TExternalLoggerState;
    const aSnapshot: TExternalLoggerSnapshot; const aCounts: TDeliveryCounts): string;
 var
-   code: string;
+   code, why: string;
 begin
    code := aSnapshot.Code;
    if code = '' then
@@ -127,8 +127,21 @@ begin
    if (aState in [elsIdle, elsSending, elsRetrying, elsPaused, elsFailed]) and
       ((aCounts.Uncertain > 0) or (aCounts.Failed > 0)) then
       begin
-      Result := UnicodeFormat(SLoggerStateCounts,
-         [Result, aCounts.Uncertain, aCounts.Failed]);
+      why := '';
+      if aCounts.Failed > 0 then
+         begin
+         why := DeliveryFailureBriefText(aCounts.LastFailedCode);
+         end;
+      if why <> '' then
+         begin
+         Result := UnicodeFormat(SLoggerStateCountsWhy,
+            [Result, aCounts.Uncertain, aCounts.Failed, why]);
+         end
+      else
+         begin
+         Result := UnicodeFormat(SLoggerStateCounts,
+            [Result, aCounts.Uncertain, aCounts.Failed]);
+         end;
       end;
 end;
 

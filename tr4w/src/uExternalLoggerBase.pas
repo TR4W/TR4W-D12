@@ -39,6 +39,10 @@ Type
       DeliveryId: string;
       SessionId: Int64;
       SessionSeq: Int64;
+      (* A resend (Resync) makes ONE attempt per command, so the sender thread
+         is not held for three connect timeouts per QSO; a failure stays
+         failed and the operator presses Resync again. *)
+      SingleAttempt: boolean;
    end;
 
 
@@ -144,7 +148,7 @@ Type
       procedure EnsureSender;
       procedure ProcessOp(op: TExternalLogOp);
       function DequeueOp: TExternalLogOp;
-      function DeliverWithRetry(const cmd: string): boolean;
+      function DeliverWithRetry(const cmd: string; aAttempts: integer): boolean;
       function SenderTerminating: boolean;
 
       function GetLoggerPort: integer;
@@ -197,10 +201,12 @@ Type
       // Issue #957 -- enqueue from the main thread (cheap; returns immediately).
       procedure QueueSingleCommand(const cmd, description: string;
                                    const aDeliveryId: string = '';
-                                   aSessionId: Int64 = 0; aSessionSeq: Int64 = 0);
+                                   aSessionId: Int64 = 0; aSessionSeq: Int64 = 0;
+                                   aSingleAttempt: boolean = False);
       procedure QueueReplace(const deleteCmd, relogCmd, description: string;
                              const aDeliveryId: string = '';
-                             aSessionId: Int64 = 0; aSessionSeq: Int64 = 0);
+                             aSessionId: Int64 = 0; aSessionSeq: Int64 = 0;
+                             aSingleAttempt: boolean = False);
       procedure ShutdownDrain(timeoutMs: integer);
 
       procedure SendToLogger(s: string); overload;
@@ -748,7 +754,8 @@ end;
 
 procedure TExternalLoggerBase.QueueSingleCommand(const cmd, description: string;
                                                  const aDeliveryId: string;
-                                                 aSessionId, aSessionSeq: Int64);
+                                                 aSessionId, aSessionSeq: Int64;
+                                                 aSingleAttempt: boolean);
 var op: TExternalLogOp;
 begin
    if FShuttingDown then
@@ -757,6 +764,7 @@ begin
       Exit;
       end;
    op := TExternalLogOp.Create;
+   op.SingleAttempt := aSingleAttempt;
    op.Kind := eloSingle;
    op.Cmd1 := cmd;
    op.Description := description;
@@ -776,7 +784,8 @@ end;
 
 procedure TExternalLoggerBase.QueueReplace(const deleteCmd, relogCmd, description: string;
                                            const aDeliveryId: string;
-                                           aSessionId, aSessionSeq: Int64);
+                                           aSessionId, aSessionSeq: Int64;
+                                           aSingleAttempt: boolean);
 var op: TExternalLogOp;
 begin
    if FShuttingDown then
@@ -785,6 +794,7 @@ begin
       Exit;
       end;
    op := TExternalLogOp.Create;
+   op.SingleAttempt := aSingleAttempt;
    op.Kind := eloReplace;
    op.Cmd1 := deleteCmd;
    op.Cmd2 := relogCmd;
@@ -826,13 +836,13 @@ begin
    Result := (FSenderThread <> nil) and FSenderThread.Terminated;
 end;
 
-function TExternalLoggerBase.DeliverWithRetry(const cmd: string): boolean;
+function TExternalLoggerBase.DeliverWithRetry(const cmd: string; aAttempts: integer): boolean;
 var
    attempt: integer;
    slept, target: integer;
 begin
    Result := False;
-   for attempt := 1 to SEND_MAX_ATTEMPTS do
+   for attempt := 1 to aAttempts do
       begin
       if SenderTerminating then
          begin
@@ -843,9 +853,9 @@ begin
          Result := True;
          Exit;
          end;
-      if attempt < SEND_MAX_ATTEMPTS then
+      if attempt < aAttempts then
          begin
-         logger.Warn('[ExternalLogger] Send attempt %d/%d failed; retrying', [attempt, SEND_MAX_ATTEMPTS]);
+         logger.Warn('[ExternalLogger] Send attempt %d/%d failed; retrying', [attempt, aAttempts]);
          // Interruptible backoff so shutdown stays responsive.
          target := attempt * SEND_RETRY_BASE_DELAY;
          slept := 0;
@@ -864,18 +874,27 @@ begin
 end;
 
 procedure TExternalLoggerBase.ProcessOp(op: TExternalLogOp);
+var
+   attempts: integer;
 begin
+   attempts := SEND_MAX_ATTEMPTS;
+   if op.SingleAttempt then
+      begin
+      attempts := 1;
+      end;
    case op.Kind of
       eloSingle:
          begin
-         if DeliverWithRetry(op.Cmd1) then
+         if DeliverWithRetry(op.Cmd1, attempts) then
             begin
             OpSettled(op, True, '');
             end
          else
             begin
-            logger.Error('[ExternalLogger] FAILED to deliver to external log after %d attempts: %s',
-                         [SEND_MAX_ATTEMPTS, op.Description]);
+            logger.Error('[ExternalLogger] FAILED to deliver to external log after %d attempts: %s '
+                         + '(the destination did not answer: it is not running, or its TCP server is off; '
+                         + 'the QSO is safe in the TR4W log but was NOT sent)',
+                         [attempts, op.Description]);
             OpSettled(op, False, 'NOT_DELIVERED');
             end;
          end;
@@ -884,13 +903,13 @@ begin
          // Atomic: re-log only if the delete went through.  Delete must be first
          // (the QSO identity is unchanged by the edit, so relog-first would let
          // the delete remove both records).
-         if not DeliverWithRetry(op.Cmd1) then
+         if not DeliverWithRetry(op.Cmd1, attempts) then
             begin
             logger.Error('[ExternalLogger] Replace ABORTED -- delete failed, re-log NOT sent (%s). '
                          + 'The external log may still hold the ORIGINAL QSO.', [op.Description]);
             OpSettled(op, False, 'REPLACE_NOT_SENT');
             end
-         else if not DeliverWithRetry(op.Cmd2) then
+         else if not DeliverWithRetry(op.Cmd2, attempts) then
             begin
             logger.Error('[ExternalLogger] Replace HALF-DONE -- delete succeeded but re-log FAILED (%s). '
                          + 'The QSO is now MISSING from the external log and must be re-entered there.', [op.Description]);

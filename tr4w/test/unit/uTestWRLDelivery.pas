@@ -1128,7 +1128,10 @@ begin
       CheckTrue(ExternalDeliveryStatusesOfQso(FFileName, tracked, statuses));
       CheckEquals(1, Length(statuses), 'one row per QSO and destination');
       CheckEquals('failed', statuses[0].State);
-      CheckEquals('failed (DXKEEPER_NOT_DELIVERED)', DeliveryStateText(statuses[0]));
+      (* The code has words now (2026-11-25): the operator reads why, not the
+         code. *)
+      CheckEquals(1, Pos('failed: DXKeeper did not answer', DeliveryStateText(statuses[0])),
+                  'a failed hand-off says DXKeeper did not answer: ' + DeliveryStateText(statuses[0]));
 
       handOff.SessionSeq := 9999;
       CheckFalse(FDelivery.RecordHandOff(handOff), 'no QSO carries that key');

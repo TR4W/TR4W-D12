@@ -328,8 +328,28 @@ begin
 end;
 
 procedure TfrmExternalLoggersStatus.UpdateButtons;
+var
+   def: TExternalLoggerDefinition;
 begin
    btnResync.Enabled := LoggerStatusCanResync(SelectedId);
+   (* THE BUTTON NAMES THE LOGGER IT ACTS ON (NY4I, 2026-11-25): the selected
+      row only, never the others. *)
+   def := nil;
+   if btnResync.Enabled and (FStore <> nil) then
+      begin
+      def := FStore.ExternalLoggers.Find(SelectedId);
+      end;
+   if def <> nil then
+      begin
+      btnResync.Caption := UTF8Encode(UnicodeFormat(SLoggersWindowResyncNamed, [def.Name]));
+      btnResync.Hint := UTF8Encode(UnicodeFormat(SLoggersWindowResyncHint, [def.Name]));
+      end
+   else
+      begin
+      btnResync.Caption := UTF8Encode(SLoggersWindowResyncNone);
+      btnResync.Hint := '';
+      end;
+   btnResync.ShowHint := btnResync.Hint <> '';
 end;
 
 procedure TfrmExternalLoggersStatus.GridSelection(Sender: TObject; aCol, aRow: integer);

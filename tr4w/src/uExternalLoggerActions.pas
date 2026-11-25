@@ -64,6 +64,9 @@ type
       (* The logger had stopped capturing after a storage failure and this
          resend resumed it. *)
       Resumed: boolean;
+      (* DXKeeper only: how many of the Requeued were a replace that had already
+         deleted the old record, sent as a plain new log. *)
+      HalfDone: integer;
       procedure Add(aVerdict: TResendVerdict);
       function Total: integer;
       (* What was put on the queue. *)
@@ -96,6 +99,11 @@ function NotDeliverableReasonText(const aCode: string): string;
    sentence says what to change). '' for any other code, so a caller falls
    back to showing the code. *)
 function DeliveryFailureReasonText(const aCode: string): string;
+
+(* The same code in a few words, for the narrow Connection column: DXKeeper's
+   three codes say 'DXKeeper did not answer ...'; any other code is
+   DeliveryFailureReasonText's, '' when it has none. *)
+function DeliveryFailureBriefText(const aCode: string): string;
 
 (* Cloudlog's station profile is normally the NUMBER of a station location. True
    when a non-empty value has a character that is not a digit (a name such as
@@ -457,6 +465,36 @@ begin
       end;
 end;
 
+function DXKeeperReasonText(const aCode: string; aBrief: boolean): string;
+begin
+   Result := '';
+   if aCode = 'DXKEEPER_NOT_DELIVERED' then
+      begin
+      Result := SLoggerWhyDXKeeperNotDelivered;
+      end
+   else if aCode = 'DXKEEPER_REPLACE_NOT_SENT' then
+      begin
+      Result := SLoggerWhyDXKeeperReplaceNotSent;
+      end
+   else if aCode = 'DXKEEPER_REPLACE_HALF_DONE' then
+      begin
+      Result := SLoggerWhyDXKeeperHalfDone;
+      end;
+   if aBrief and (Result <> '') then
+      begin
+      Result := SLoggerWhyDXKeeperBrief;
+      end;
+end;
+
+function DeliveryFailureBriefText(const aCode: string): string;
+begin
+   Result := DXKeeperReasonText(aCode, True);
+   if Result = '' then
+      begin
+      Result := DeliveryFailureReasonText(aCode);
+      end;
+end;
+
 function DeliveryFailureReasonText(const aCode: string): string;
 const
    INSECURE_SUFFIX = 'INSECURE_URL_REFUSED';
@@ -465,6 +503,10 @@ begin
    if Result = '' then
       begin
       Result := CloudlogReasonText(aCode);
+      end;
+   if Result = '' then
+      begin
+      Result := DXKeeperReasonText(aCode, False);
       end;
    if (Result = '') and (Length(aCode) >= Length(INSECURE_SUFFIX)) and
       (Copy(aCode, Length(aCode) - Length(INSECURE_SUFFIX) + 1, Length(INSECURE_SUFFIX)) =

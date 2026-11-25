@@ -22,6 +22,10 @@ type
 
    TDeliveryCounts = record
       Pending, InFlight, Synced, Uncertain, Failed: Int64;
+      (* The error code of the most recently answered failed row ('' when
+        none, or the row carries no code): the reason a stored failed count
+        can be explained in words. *)
+      LastFailedCode: string;
    end;
 
    (* ONE DESTINATION'S DELIVERY OF ONE QSO -- one external_delivery row, as
@@ -48,6 +52,9 @@ type
    TExternalHandOff = class(TObject)
    public
       Logger, Account, Logbook, ErrorCode: string;
+      (* The QSO's call sign, for the one line the operator is shown. *)
+      Description: string;
+      Port: integer;
       SessionId, SessionSeq: Int64;
       Delivered: boolean;
    end;
@@ -198,6 +205,19 @@ begin
       Result.Synced := q.FieldByName('synced').AsLargeInt;
       Result.Uncertain := q.FieldByName('uncertain').AsLargeInt;
       Result.Failed := q.FieldByName('failed').AsLargeInt;
+      q.Close;
+      if Result.Failed > 0 then
+         begin
+         q.SQL.Text := 'SELECT error_code FROM external_delivery ' +
+            'WHERE logger = :logger AND state = ''failed'' ' +
+            'ORDER BY last_sent DESC, rowid DESC LIMIT 1';
+         q.ParamByName('logger').AsUTF8String := UTF8Encode(aLogger);
+         q.Open;
+         if not q.EOF then
+            begin
+            Result.LastFailedCode := q.FieldByName('error_code').AsString;
+            end;
+         end;
    finally
       q.Free;
       database.Free;

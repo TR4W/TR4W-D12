@@ -2,7 +2,7 @@ unit uExternalLogger;
 {$I tr4w.inc}
 
 interface
-uses uExternalLoggerBase, StrUtils, SysUtils, Math, TF, VC, LOGSUBS2, LogWind, LogDupe, Tree, uCFG, PostUnit,
+uses uExternalLoggerBase, uExternalLoggerActions, uLogDatabase, uLogRepository, StrUtils, SysUtils, Math, TF, VC, LOGSUBS2, LogWind, LogDupe, Tree, uCFG, PostUnit,
      IdTCPClient, uQsoDispatcher, uHostResolve, uQsoMyFacts;
 
 
@@ -66,6 +66,16 @@ Type TExternalLogger = class(TExternalLoggerBase)
                          out aCommand1: string; out aCommand2: string): TQsoExternalOp; override;
       procedure SubmitOp(const aOp: TQsoExternalOp; const aCommand1: string;
                          const aCommand2: string; const aDescription: string); override;
+      (* RESYNC FOR DXKEEPER (NY4I, 2026-11-25). DXKeeper keeps no delivery
+         queue and cannot say whether a QSO is already there, so ONLY the QSOs
+         whose hand-off row is FAILED are sent again, whatever aMode says (a
+         synced one is never re-sent: it could duplicate). Main thread; it only
+         READS and queues ops on the sender thread (ONE attempt each), so the UI
+         never waits on a connect. The hand-off record each op leaves (OpSettled)
+         marks the row synced, or leaves it failed with the reason. *)
+      function ResendQsos(aDatabase: TLogDatabase; aRepository: TLogRepository;
+         const aDeliveryId: string; aMode: TResendMode; const aTally: TResendTally;
+         out aRefusal: string): boolean; override;
 
 end;
 
@@ -100,7 +110,8 @@ implementation
 Uses
    uExternalLoggerRegistry, uExternalLoggerConfig, uExternalLoggerService,
    uAppStrings,
-   Forms,            // Application.QueueAsyncCall -- the hand-off record
+   sqldb,            // the failed-row query of ResendQsos
+   Forms,           // Application.QueueAsyncCall -- the hand-off record
    uExternalDelivery, // TExternalHandOff
    uLogStore,        // LogStoreRecordExternalHandOff
    uADIF,         // ADIFSectionOf (ExternalLoggerARRLSection)
@@ -302,14 +313,43 @@ type
 
 var
    GHandOffRelay: TDXKeeperHandOffRelay = nil;
+   (* The notice throttle, main thread only (the relay runs there): one line per
+      window, the QSOs held back in between are counted into the next. *)
+   GUnreachableTick: QWord = 0;
+   GUnreachableHeld: integer = 0;
 
 procedure TDXKeeperHandOffRelay.Run(aData: PtrInt);
 var
    job: TExternalHandOff;
+   now: QWord;
 begin
    job := TExternalHandOff(aData);
    try
       LogStoreRecordExternalHandOff(job);
+      (* THE OPERATOR IS TOLD IN PLAIN WORDS (NY4I, 2026-11-25), once a minute,
+         on the quick-command panel and never a dialog. Not from the sender
+         thread: the panel is the main thread's. *)
+      if not job.Delivered then
+         begin
+         Inc(GUnreachableHeld);
+         now := GetTickCount64;
+         if NotDeliverableNoticeDue(now, GUnreachableTick) and (not tSilentExport) then
+            begin
+            if GUnreachableHeld = 1 then
+               begin
+               QuickDisplay(UnicodeFormat(SLoggerDXKeeperUnreachable,
+                  [job.Description, job.Account, job.Port]));
+               end
+            else
+               begin
+               QuickDisplay(UnicodeFormat(SLoggerDXKeeperUnreachableMany,
+                  [GUnreachableHeld, job.Description, job.Account,
+                   job.Port]));
+               end;
+            GUnreachableTick := now;
+            GUnreachableHeld := 0;
+            end;
+         end;
    finally
       job.Free;
    end;
@@ -329,6 +369,8 @@ begin
    job.Logger := aOp.DeliveryId;
    job.Account := Self.loggerAddress;
    job.Logbook := IntToStr(Self.loggerPort);
+   job.Description := aOp.Description;
+   job.Port := Self.loggerPort;
    job.SessionId := aOp.SessionId;
    job.SessionSeq := aOp.SessionSeq;
    job.Delivered := aDelivered;
@@ -386,6 +428,95 @@ begin
       xoReplace:
          begin
          Self.QueueReplace(aCommand1, aCommand2, aDescription);
+         end;
+   end;
+end;
+
+function TExternalLogger.ResendQsos(aDatabase: TLogDatabase; aRepository: TLogRepository;
+   const aDeliveryId: string; aMode: TResendMode; const aTally: TResendTally;
+   out aRefusal: string): boolean;
+var
+   q: TSQLQuery;
+   ids: array of Int64;
+   codes: array of string;
+   n, i: integer;
+   rec: ContestExchange;
+   facts: TQsoMyFacts;
+   sent: AnsiString;
+   cmd1, cmd2: string;
+begin
+   Result := False;
+   aRefusal := '';
+   if Self.logType <> lt_DxKeeper then
+      begin
+      aRefusal := 'RESEND_NOT_SUPPORTED';
+      Exit;
+      end;
+   try
+      (* The failed rows first, the cursor closed before the loads below use
+         the connection. *)
+      n := 0;
+      q := TSQLQuery.Create(nil);
+      try
+         q.Database := aDatabase.Connection;
+         q.Transaction := aDatabase.Transaction;
+         q.UsePrimaryKeyAsKey := False;
+         q.SQL.Text := 'SELECT q.id, MAX(d.error_code) FROM qso q ' +
+            'JOIN external_delivery d ON d.contact = q.guid AND d.logger = :logger ' +
+            'WHERE q.record_kind = ''QSO'' AND q.deleted = 0 AND d.state = ''failed'' ' +
+            'AND d.error_code IN (''DXKEEPER_NOT_DELIVERED'', ''DXKEEPER_REPLACE_NOT_SENT'', ' +
+            '''DXKEEPER_REPLACE_HALF_DONE'') GROUP BY q.id ORDER BY q.id';
+         q.ParamByName('logger').AsUTF8String := UTF8Encode(aDeliveryId);
+         q.Open;
+         while not q.EOF do
+            begin
+            SetLength(ids, n + 1);
+            SetLength(codes, n + 1);
+            ids[n] := q.Fields[0].AsLargeInt;
+            codes[n] := UTF8Decode(q.Fields[1].AsUTF8String);
+            Inc(n);
+            q.Next;
+            end;
+         q.Close;
+      finally
+         q.Free;
+      end;
+      for i := 0 to n - 1 do
+         begin
+         if not aRepository.LoadQSO(ids[i], rec) or (rec.ceRecordKind <> rkQSO) then
+            begin
+            Continue;
+            end;
+         aRepository.LoadQSOMyFacts(ids[i], facts, sent);
+         cmd1 := Self.BuildDXKeeperLogMessage(rec, facts, sent);
+         if codes[i] = 'DXKEEPER_REPLACE_NOT_SENT' then
+            begin
+            (* The edit never left: DXKeeper still holds the original, so the
+               edit is made again as it was, delete then re-log. *)
+            cmd2 := cmd1;
+            cmd1 := Self.BuildDXKeeperDeleteMessage(rec);
+            Self.QueueReplace(cmd1, cmd2, string(rec.Callsign), aDeliveryId,
+               rec.ceQSOID1, rec.ceQSOID2, True);
+            end
+         else
+            begin
+            (* NOT_DELIVERED, and HALF_DONE (the old record is already gone):
+               a plain new log. *)
+            if codes[i] = 'DXKEEPER_REPLACE_HALF_DONE' then
+               begin
+               Inc(aTally.HalfDone);
+               end;
+            Self.QueueSingleCommand(cmd1, string(rec.Callsign), aDeliveryId,
+               rec.ceQSOID1, rec.ceQSOID2, True);
+            end;
+         aTally.Add(rvRequeue);
+         end;
+      Result := True;
+   except
+      on E: Exception do
+         begin
+         aRefusal := 'RESEND_FAILED';
+         logger.Error('[DXKeeper] Resend failed (%s); nothing more was queued.', [E.ClassName]);
          end;
    end;
 end;

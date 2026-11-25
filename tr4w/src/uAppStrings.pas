@@ -64,6 +64,18 @@ resourcestring
    (* %s name; then queued, new, sent again, delivered, waiting, unknown outcome, other stations. *)
    SLoggerResendDone      = '%s: queued %d QSOs (%d new, %d sent again). Left alone: %d delivered, %d waiting, %d of unknown outcome that need review, %d logged by other stations.';
    SLoggerResendRefused   = 'Nothing was queued for %s: %s';
+   (* DXKEEPER RESYNC (NY4I, 2026-11-25). DXKeeper cannot say what it already
+      holds, so only the QSOs it never received are sent again. The sends run on
+      the logger's own thread, one attempt each; a failure is said on the
+      quick-command panel and the QSO stays failed. %s is the logger's name. *)
+   SLoggerResendHandOffBody = 'Send %s the QSOs of this contest it never received.' + #10#10 +
+      'DXKeeper cannot tell TR4W what it already holds, so only QSOs whose earlier send FAILED (DXKeeper did not answer) are sent again. QSOs that were sent are not sent a second time, so nothing is duplicated.';
+   SLoggerResendHandOffButton = 'Send failed QSOs';
+   SLoggerResendHandOffNone = '%s: no QSO is waiting to be sent again.';
+   // %s name; %d how many were handed to the sender.
+   SLoggerResendHandOffDone = '%s: %d QSO(s) are being sent now, one attempt each. If DXKeeper does not answer, a line at the bottom says so and the QSO stays failed (see the Connection column); start DXKeeper with its TCP server on and press Resync again.';
+   // %d how many.
+   SLoggerResendHandOffHalfDone = '%d of them were edits whose old record was already deleted in DXKeeper; they are sent as new QSOs.';
    SLoggerResendWhyNotRunning = 'it is not running. Save Preferences, and restart TR4W if it was added or its connection settings changed since start.';
    SLoggerResendWhyNotActive = 'Send new QSOs is off for it. Switch it on and save Preferences first.';
    SLoggerResendWhyPaused = 'its delivery is paused after a capture failure (see tr4w.log).';
@@ -128,6 +140,8 @@ resourcestring
    SLoggerStatePaused     = 'Paused: %s';
    SLoggerStateFailed     = 'Failed: %s';
    SLoggerStateCounts     = '%s (%d uncertain, %d failed)';
+   // The same, when the latest failed row has a reason in words. %s state, %d, %d, %s reason.
+   SLoggerStateCountsWhy  = '%s (%d uncertain, %d failed: %s)';
 
    // EDIT QSO -- where each external logger stands with the QSO: a button
    // on Edit QSO (shown only when the QSO has a delivery row) opens a
@@ -1966,6 +1980,18 @@ resourcestring
    SLoggerWhyCloudlogBadRequest = 'The server said the request was malformed.';
    SLoggerWhyCloudlogUnreadable = 'The server''s answer was not understood. Check that contact in Cloudlog before sending it again.';
    SLoggerWhyCloudlogNoChange = 'Cloudlog and Wavelog cannot change or delete a contact that was already sent.';
+   (* DXKEEPER FAILURES IN WORDS (NY4I, 2026-11-25: DXKeeper was not running and
+      the operator saw only "1 failed"). DeliveryFailureReasonText maps the
+      three DXKEEPER_ codes to these; the Connection column uses the BRIEF one
+      (DeliveryFailureBriefText). SLoggerDXKeeperUnreachable is the one line on
+      the quick-command panel (never a dialog; throttled): %s call sign, %s host,
+      %d port. *)
+   SLoggerWhyDXKeeperNotDelivered = 'DXKeeper did not answer: it is not running, or its TCP server is off. The QSO is safe in the TR4W log but was NOT sent. Start DXKeeper and enable its TCP server (default port 52001), then edit and save the QSO to send it.';
+   SLoggerWhyDXKeeperReplaceNotSent = 'DXKeeper did not answer, so the edit was NOT sent and DXKeeper still holds the original QSO. Start DXKeeper with its TCP server on, then save the QSO again in Edit QSO.';
+   SLoggerWhyDXKeeperHalfDone = 'DXKeeper deleted the old record but then did not answer for the new one, so the QSO is now missing from DXKeeper (it is safe in the TR4W log). When DXKeeper is back, save the QSO again in Edit QSO.';
+   SLoggerWhyDXKeeperBrief = 'DXKeeper did not answer (not running, or TCP server off)';
+   SLoggerDXKeeperUnreachable = 'DXKeeper: QSO %s not sent. DXKeeper did not answer at %s:%d (not running, or its TCP server is off). See Edit QSO > External loggers.';
+   SLoggerDXKeeperUnreachableMany = 'DXKeeper: %d QSOs not sent, the latest %s. DXKeeper did not answer at %s:%d (not running, or its TCP server is off). See Edit QSO > External loggers.';
    (* THE STANDALONE "EXTERNAL LOGGERS" WINDOW (NY4I, 2026-11-24: the status of
       every logger, Resync, and a way to the settings page, without going
       into Preferences each time). SLoggersWindowTitle is also the Windows
@@ -1973,6 +1999,10 @@ resourcestring
       Preferences grid's captions (the SLoggerGrid strings). *)
    SLoggersWindowTitle       = 'External loggers';
    SLoggersWindowResync      = 'Resync...';
+   // The button follows the selected row. %s: that logger's name.
+   SLoggersWindowResyncNamed = 'Resync %s...';
+   SLoggersWindowResyncNone  = 'Select a logger to resync';
+   SLoggersWindowResyncHint  = 'Re-sends the QSOs of this contest that %s has not received. Other loggers are not touched.';
    SLoggersWindowEdit        = 'Edit / add...';
    SLoggersWindowOn          = 'On';
    SLoggersWindowOff         = 'Off';

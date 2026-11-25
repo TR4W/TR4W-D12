@@ -146,6 +146,15 @@ begin
       'a switched-off logger carries no counts');
    CheckEquals(SLoggerStateRestart, ExternalLoggerStateText(elsRestartNeeded, snap, counts),
       'nor one that needs a restart');
+   counts.LastFailedCode := 'DXKEEPER_NOT_DELIVERED';
+   CheckEquals(UnicodeFormat(SLoggerStateCountsWhy,
+      [SLoggerStateIdle, 3, 5, SLoggerWhyDXKeeperBrief]),
+      ExternalLoggerStateText(elsIdle, snap, counts),
+      'the latest failed row''s reason follows the counts');
+   counts.LastFailedCode := 'UNKNOWN_CODE_WITH_NO_WORDS';
+   CheckEquals(UnicodeFormat(SLoggerStateCounts, [SLoggerStateIdle, 3, 5]),
+      ExternalLoggerStateText(elsIdle, snap, counts),
+      'a code with no words keeps the old format');
 end;
 
 procedure TExternalLoggerStatusModelTests.Test_RowsFollowTheDisplayOrder;
