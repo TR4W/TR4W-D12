@@ -550,6 +550,12 @@ begin
          end;
       if Assigned(aDescriptor.Finder) then
          begin
+         (* The box shows the chosen number AND its name ('2 - Countryside
+            (NY4I)'); only the number is stored as the value, the name beside
+            it for display (SplitStationChoiceText takes them apart again). *)
+         Result.Edit.Text := UTF8Encode(StationChoiceText(
+            FDefinition.FieldText(aDescriptor.Key),
+            FDefinition.FieldText(LF_LOGBOOK_NAME)));
          (* A plain text row with a Find... button (TLoggerFieldDescriptor.Finder).
             The button is the row's RefreshButton, so FitLayout, SetBusy and
             RowOf treat it as they treat a choice's Refresh. *)
@@ -1063,7 +1069,7 @@ procedure TExternalLoggersForm.ReadRows(const aTarget: TExternalLoggerDefinition
    aFinal: boolean);
 var
    row: TFieldRow;
-   text: string;
+   text, stationId, stationName: string;
    index: integer;
 begin
    for row in FRows do
@@ -1110,7 +1116,18 @@ begin
             begin
             aTarget.LegacySecretPending := False;
             end;
-         aTarget.SetFieldText(row.Descriptor.Key, text);
+         if Assigned(row.Descriptor.Finder) then
+            begin
+            (* '2 - Countryside (NY4I)' is stored as the number and, apart, the
+               name; a bare number clears the name. *)
+            SplitStationChoiceText(text, stationId, stationName);
+            aTarget.SetFieldText(row.Descriptor.Key, stationId);
+            aTarget.SetFieldText(LF_LOGBOOK_NAME, stationName);
+            end
+         else
+            begin
+            aTarget.SetFieldText(row.Descriptor.Key, text);
+            end;
          end;
       end;
 end;
@@ -1195,7 +1212,8 @@ begin
          UTF8Encode(SLoggerFindPickPrompt), items);
       if (index >= 0) and (index < aTask.Choices.Count) then
          begin
-         aRow.Edit.Text := UTF8Encode(aTask.Choices.Value[index]);
+         aRow.Edit.Text := UTF8Encode(StationChoiceText(
+            aTask.Choices.Value[index], aTask.Choices.Name[index]));
          end;
    finally
       items.Free;

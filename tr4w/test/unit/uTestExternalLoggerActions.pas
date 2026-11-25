@@ -416,6 +416,8 @@ end;
    refusal reads in words for every provider prefix, a not-deliverable QSO keeps
    its words, and any other code has none (the caller shows the code). *)
 procedure TExternalLoggerActionsTests.Test_DeliveryFailureReasonText;
+var
+   id, name: string;
 begin
    BeginTest('Reason text: plain http refused reads in words for every provider prefix');
    CheckEquals(SLoggerWhyInsecure, DeliveryFailureReasonText('CLOUDLOG_INSECURE_URL_REFUSED'));
@@ -454,6 +456,30 @@ begin
    CheckFalse(CloudlogProfileLooksWrong('12'));
    CheckFalse(CloudlogProfileLooksWrong(' 7 '), 'surrounding blanks are trimmed');
    CheckFalse(CloudlogProfileLooksWrong(''), 'empty is the setup check, not this note');
+   CheckFalse(CloudlogProfileLooksWrong('2 - Countryside (NY4I)'), 'number and name is a number');
+   BeginTest('A chosen station location: the box shows number and name, the definition stores them apart');
+   CheckEquals('2 - Countryside (NY4I)', StationChoiceText('2', 'Countryside (NY4I)'));
+   CheckEquals('2', StationChoiceText('2', ''), 'no name, just the number');
+   CheckEquals('', StationChoiceText('', 'Countryside'), 'no number, nothing');
+   SplitStationChoiceText('2 - Countryside (NY4I)', id, name);
+   CheckEquals('2', id, 'the number is what is stored and sent');
+   CheckEquals('Countryside (NY4I)', name, 'the name is kept beside it');
+   SplitStationChoiceText('  12  ', id, name);
+   CheckEquals('12', id, 'a bare number');
+   CheckEquals('', name, 'has no name');
+   SplitStationChoiceText('7 -  Home - EL88 ', id, name);
+   CheckEquals('7', id, 'only the first dash separates');
+   CheckEquals('Home - EL88', name, 'the rest is the name');
+   SplitStationChoiceText('Home-EL88', id, name);
+   CheckEquals('Home-EL88', id, 'a typed name is all id, so the advice note speaks');
+   CheckEquals('', name);
+   SplitStationChoiceText('2Countryside', id, name);
+   CheckEquals('2Countryside', id, 'digits with no dash are not a number and a name');
+   CheckEquals('', name);
+   CheckTrue(CloudlogProfileLooksWrong('2Countryside'), 'and so they get the note');
+   SplitStationChoiceText('', id, name);
+   CheckEquals('', id, 'empty stays empty');
+   CheckEquals('', name);
    CheckEquals(SLoggerWhyCloudlogReadOnly, DeliveryFailureReasonText('CLOUDLOG_READ_ONLY_KEY'));
    CheckEquals(SLoggerWhyCloudlogKeyRejected, DeliveryFailureReasonText('CLOUDLOG_KEY_REJECTED'));
    CheckEquals(SLoggerWhyCloudlogStationNotOwned, DeliveryFailureReasonText('CLOUDLOG_STATION_NOT_OWNED'));

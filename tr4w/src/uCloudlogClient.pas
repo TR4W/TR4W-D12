@@ -150,7 +150,7 @@ var
    root: TJSONData;
    item: TJSONObject;
    i: integer;
-   id, name, call, flag, text: string;
+   id, name, call, flag, text, labelText: string;
 begin
    Result := False;
    root := nil;
@@ -181,19 +181,30 @@ begin
          call := Trim(MemberText(item, 'station_callsign'));
          flag := LowerCase(Trim(MemberText(item, 'station_active')));
          text := id;
-         if name <> '' then
-            begin
-            text := text + ' - ' + name;
-            end;
+         labelText := name;
          if call <> '' then
             begin
-            text := text + ' (' + call + ')';
+            if labelText <> '' then
+               begin
+               labelText := labelText + ' ';
+               end;
+            labelText := labelText + '(' + call + ')';
+            end;
+         (* The list line: 'id - name (call)', or 'id (call)' for a station with no
+            name; the name kept for the box is 'name (call)' either way. *)
+         if name <> '' then
+            begin
+            text := text + ' - ' + labelText;
+            end
+         else if call <> '' then
+            begin
+            text := text + ' ' + labelText;
             end;
          if (flag = '0') or (flag = 'false') or (flag = 'n') or (flag = 'no') then
             begin
             text := text + ' [' + SLoggerFindInactive + ']';
             end;
-         aChoices.Add(id, text);
+         aChoices.Add(id, text, labelText);
          end;
    finally
       root.Free;

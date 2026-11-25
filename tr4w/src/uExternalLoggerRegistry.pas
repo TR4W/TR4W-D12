@@ -22,17 +22,22 @@ type
       what is stored (Value). *)
    TLoggerChoices = class
    private
-      FValues, FDisplays: array of string;
+      FValues, FDisplays, FNames: array of string;
       function GetCount: integer;
       function GetValue(aIndex: integer): string;
       function GetDisplay(aIndex: integer): string;
+      function GetName(aIndex: integer): string;
    public
-      procedure Add(const aValue, aDisplay: string);
+      (* aName is the plain NAME of the choice, kept beside its value where the
+        editor shows 'value - name' and stores them apart (a Cloudlog station
+        location: the number is what is sent, the name is for the operator). *)
+      procedure Add(const aValue, aDisplay: string; const aName: string = '');
       procedure Clear;
       function IndexOfValue(const aValue: string): integer;
       property Count: integer read GetCount;
       property Value[aIndex: integer]: string read GetValue;
       property Display[aIndex: integer]: string read GetDisplay;
+      property Name[aIndex: integer]: string read GetName;
    end;
 
    (* Fills aChoices from the provider. RUNS ON A WORKER THREAD: it may read
@@ -131,20 +136,27 @@ function TLoggerChoices.GetDisplay(aIndex: integer): string;
 begin
    Result := FDisplays[aIndex];
 end;
-procedure TLoggerChoices.Add(const aValue, aDisplay: string);
+function TLoggerChoices.GetName(aIndex: integer): string;
+begin
+   Result := FNames[aIndex];
+end;
+procedure TLoggerChoices.Add(const aValue, aDisplay: string; const aName: string = '');
 var
    n: integer;
 begin
    n := Length(FValues);
    SetLength(FValues, n + 1);
    SetLength(FDisplays, n + 1);
+   SetLength(FNames, n + 1);
    FValues[n] := aValue;
    FDisplays[n] := aDisplay;
+   FNames[n] := aName;
 end;
 procedure TLoggerChoices.Clear;
 begin
    SetLength(FValues, 0);
    SetLength(FDisplays, 0);
+   SetLength(FNames, 0);
 end;
 function TLoggerChoices.IndexOfValue(const aValue: string): integer;
 var

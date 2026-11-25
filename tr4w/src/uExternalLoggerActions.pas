@@ -103,6 +103,18 @@ function DeliveryFailureReasonText(const aCode: string): string;
    name, so the editor shows a note and never refuses the value. *)
 function CloudlogProfileLooksWrong(const aValue: string): boolean;
 
+(* A CHOSEN STATION LOCATION AS THE BOX SHOWS IT, AND AS IT IS STORED (NY4I,
+  2026-11-24: "keep the number and name in the station field, even though you
+  just send the 2"). The box reads '2 - Countryside (NY4I)'; the definition
+  stores the NUMBER ('2', what is sent and what the destination is told apart
+  by) and the NAME ('Countryside (NY4I)', display only) apart.
+  StationChoiceText joins them; SplitStationChoiceText takes a box's text back
+  apart: leading digits are the id and the rest, after an optional dash, is the
+  name. Text that does not start with a digit is all id (so a typed name still
+  reaches the advice note), and a bare number has no name. *)
+function StationChoiceText(const aId, aName: string): string;
+procedure SplitStationChoiceText(const aText: string; out aId, aName: string);
+
 (* THE NOTICE THROTTLE: one line per logger per window. Ten QSOs held back in a
    row must not scroll ten lines. aLastTick is the tick of the last line shown
    (0 = none yet), aNowTick the current one; both milliseconds. *)
@@ -290,16 +302,59 @@ begin
       end;
 end;
 
+function StationChoiceText(const aId, aName: string): string;
+begin
+   Result := Trim(aId);
+   if (Result <> '') and (Trim(aName) <> '') then
+      begin
+      Result := Result + ' - ' + Trim(aName);
+      end;
+end;
+
+procedure SplitStationChoiceText(const aText: string; out aId, aName: string);
+var
+   text: string;
+   i: integer;
+begin
+   text := Trim(aText);
+   i := 1;
+   while (i <= Length(text)) and (text[i] in ['0'..'9']) do
+      begin
+      Inc(i);
+      end;
+   if (i = 1) or (i > Length(text)) then
+      begin
+      (* No leading number, or nothing after it: all of it is the id. *)
+      aId := text;
+      aName := '';
+      Exit;
+      end;
+   aId := Copy(text, 1, i - 1);
+   aName := Trim(Copy(text, i, MaxInt));
+   if (aName <> '') and (aName[1] = '-') then
+      begin
+      aName := Trim(Copy(aName, 2, MaxInt));
+      end
+   else
+      begin
+      (* '2Countryside' or '2 12': the digits are not an id followed by a name
+         (there is no dash), so the whole text stays the id and the advice
+         note speaks. *)
+      aId := text;
+      aName := '';
+      end;
+end;
+
 function CloudlogProfileLooksWrong(const aValue: string): boolean;
 var
    i: integer;
-   text: string;
+   id, name: string;
 begin
-   text := Trim(aValue);
+   SplitStationChoiceText(aValue, id, name);
    Result := False;
-   for i := 1 to Length(text) do
+   for i := 1 to Length(id) do
       begin
-      if not (text[i] in ['0'..'9']) then
+      if not (id[i] in ['0'..'9']) then
          begin
          Result := True;
          Exit;

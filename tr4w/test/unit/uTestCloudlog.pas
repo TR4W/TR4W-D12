@@ -615,6 +615,7 @@ begin
       CheckEquals(2, c.Count);
       CheckEquals('2', c.Value[0], 'string id');
       CheckEquals('2 - Home-EL88 (NY4I)', c.Display[0]);
+      CheckEquals('Home-EL88 (NY4I)', c.Name[0], 'the plain name beside the id, for the box');
       CheckEquals('3', c.Value[1], 'numeric id');
       CheckEquals('3 - Old QTH (NY4I) [' + SLoggerFindInactive + ']', c.Display[1], 'inactive is marked');
    finally
