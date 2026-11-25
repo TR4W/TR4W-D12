@@ -12,7 +12,7 @@ REM       name files, US/UK/CA QRZ-verified prune  ->  identifies the calls that
 REM       STILL need names (history already names ~24k, so QRZ has far fewer)
 REM    3. QRZ resolver fills the still-bare names and collects grid + ARRL section
 REM       (cached; cheap on re-runs)
-REM    4. build pass 2: same inputs + the QRZ names, grids, sections -> TRMASTER.DTA
+REM    4. build pass 2: add QRZ names/grids and prefer local ISED sections
 REM
 REM  Inputs that carry history (back these up; see README):
 REM    seed\TRMASTER_seed.DTA                  curated names / FOC / HSC / orphans
@@ -31,6 +31,7 @@ set "OUT=TRMASTER.DTA"
 set "SCPDB=%WORK%\SCP.DB"
 set "NAMES=%WORK%\qrz_names.csv"
 set "GEO=%WORK%\qrz_geo.csv"
+set "ISED_SNAPSHOT=dist\fcc_lookup.sqlite.gz"
 set "QRZ_LIMIT=5000"
 set "CWOPS_URL=https://docs.google.com/spreadsheets/d/1Ew8b1WAorFRCixGRsr031atxmS0SsycvmOczS_fDqzc/export?format=csv"
 
@@ -50,29 +51,35 @@ if not exist "%SEED%" (
 )
 
 REM --- 1. refresh SCP.DB (used for the QRZ-verified prune) --------------------
-echo [1/4] downloading SCP.DB ...
+echo [1/5] downloading SCP.DB ...
 curl -sL --fail -o "%SCPDB%" https://supercheckpartial.com/downloads/SCP.DB || goto :error
 
 REM --- 2. first build (downloads MASTER.DTA + CWops; --force = fresh) ---------
-echo [2/4] build pass 1 (universe + rosters + prune) ...
+echo [2/5] build pass 1 (universe + rosters + prune) ...
 "%PYTHON%" trmaster_build.py --out "%OUT%" --existing "%SEED%" ^
     --download-master --force --cwops-url "%CWOPS_URL%" %HISTORY% ^
     --prune-qrz-unverified "%SCPDB%" || goto :error
 
 REM --- 3. QRZ name resolution for the bare calls (skips cleanly if no creds) --
-echo [3/4] QRZ name lookups (limit %QRZ_LIMIT%) ...
+echo [3/5] QRZ name lookups (limit %QRZ_LIMIT%) ...
 REM     --all + --geo-out also collects each call's grid and section from the same
 REM     QRZ response.  A call cached before geo was kept is re-fetched once, so
 REM     the first runs spend their limit on that; re-run until it stops growing.
 "%PYTHON%" trmaster_names_qrz.py --dta "%OUT%" --all --out "%NAMES%" ^
     --geo-out "%GEO%" --limit %QRZ_LIMIT% --sleep 0.2 || goto :error
 
-REM --- 4. final build with names --------------------------------------------
-echo [4/4] build pass 2 (with QRZ names) ...
+REM --- 4. final build with names and sections -------------------------------
+echo [4/5] build pass 2 (with names and sections) ...
+set "ISED_ARGS="
+if exist "%ISED_SNAPSHOT%" (
+   set ISED_ARGS=--ised-snapshot "%ISED_SNAPSHOT%"
+) else (
+   echo No FCC/ISED snapshot at "%ISED_SNAPSHOT%". Run python lookup_build.py to include ISED sections.
+)
 "%PYTHON%" trmaster_build.py --out "%OUT%" --existing "%SEED%" ^
     --download-master --cwops-url "%CWOPS_URL%" %HISTORY% ^
     --prune-qrz-unverified "%SCPDB%" --names-csv "%NAMES%" ^
-    --geo-csv "%GEO%" || goto :error
+    --geo-csv "%GEO%" %ISED_ARGS% || goto :error
 
 REM --- 5. guard: the name count must not have fallen sharply (issue 309) ------
 REM     Compares with the file deployed in target\ (skipped if there is none).

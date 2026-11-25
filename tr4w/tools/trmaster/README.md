@@ -13,8 +13,8 @@ changes).
 ## Files
 
 - **`build_trmaster.cmd`** — the monthly one-command runner. Downloads sources,
-  builds, QRZ-fills names, prunes, and deploys to `tr4w\target\TRMASTER.DTA`
-  (previous file → `.bak`). Edit the variables at the top. **Start here.**
+  builds, QRZ-fills names, prunes, and uses the local ISED snapshot if present.
+  It writes `TRMASTER.DTA` in this directory for review and manual copying.
 - **`trmaster_build.py`** — downloads sources, merges, prunes, writes, validates.
 - **`trmaster_codec.py`** — reader/writer for the `.dta` format + a self-test.
   `python trmaster_codec.py ../../target/TRMASTER.DTA` reports a field census and
@@ -44,9 +44,9 @@ changes).
   Tests: `python -I test_name_count.py`.
 - **`lookup_build.py`** -- the *daily* build of `fcc_lookup.sqlite.gz`, the downloadable
   call -> name/ZIP/county/ARRL-or-RAC-section database for the TR4W website (all active
-  US licences from FCC ULS plus every Canadian licence from ISED). Unrelated to the
-  monthly `.dta` flow above; it shares only `arrl-sections-counties.json` /
-  `county_section.py`. Uses `fcc_import.py` (FCC reader) and `ca_divisions.py`
+  US licences from FCC ULS plus every Canadian licence from ISED). The monthly
+  TRMASTER build reads the local snapshot for Canadian sections. Both use the
+  same county-to-section crosswalk. The lookup builder uses `fcc_import.py` and `ca_divisions.py`
   (Ontario postal code -> census division). **See [LOOKUP_DB.md](LOOKUP_DB.md)** for the
   schema, the one-time Statistics Canada download, scheduling and accuracy limits.
   Run with `python` (not `-I`). Tests: `python -I test_lookup_build.py`,
@@ -80,9 +80,11 @@ success. Tests: `python -I test_trmaster_patch.py` (patches a copy of
 build_trmaster.cmd
 ```
 
-On first run it seeds `seed\TRMASTER_seed.DTA` from the current
-`target\TRMASTER.DTA`, then: downloads SCP.DB (+ MASTER.DTA + CWops), builds,
-runs QRZ, builds again with names, and deploys. Re-run `trmaster_names_qrz.py`
+Put the curated seed at `seed\TRMASTER_seed.DTA` before the first run.
+The script downloads SCP.DB, MASTER.DTA and CWops data, runs the QRZ
+enrichment, and writes a candidate for review. Run `python lookup_build.py`
+first to refresh the local `dist/fcc_lookup.sqlite.gz` snapshot. The final
+TRMASTER pass uses it when present. Re-run `trmaster_names_qrz.py`
 (step 3) a few times the first month to backfill the ~44k bare calls; the cache
 makes later runs fast.
 
@@ -147,8 +149,9 @@ Name precedence, highest → lowest: **CWops > FOC > history > seed > QRZ**.
 4. FOC → `FOC` # + Name (roster name wins over history)
 5. HSC → `User2` (HSC #)
 6. `--names-csv` (QRZ) fills any remaining nameless call
-7. `--geo-csv` (QRZ) fills an **empty** `Grid` / `Section` slot; a value already in the
-   seed is curated and is never overwritten
+7. `--ised-snapshot` fills Canadian `Section` slots left empty by the seed.
+   It uses resolved sections for calls already in the build.
+8. `--geo-csv` (QRZ) fills the remaining empty `Grid` and `Section` slots.
 
 ## Name validator (issue 239)
 

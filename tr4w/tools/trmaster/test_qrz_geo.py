@@ -1,14 +1,18 @@
 """
-Tests for qrz_geo.py, the geo cache-freshness rule, load_geo_csv and the
-geo layer of merge().  Plain asserts; run:  python -I test_qrz_geo.py
+Tests for qrz_geo.py, geo cache freshness and TRMASTER geographic sources.
+Plain asserts. Run python -I test_qrz_geo.py.
 No network.
 """
 
+import gzip
 import json
 import os
+import sqlite3
 import sys
 import tempfile
 import time
+from contextlib import closing
+from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -154,6 +158,43 @@ def test_codec_round_trips_grid_and_section():
    finally:
       os.remove(path)
    check(back, calls, "round trip")
+
+
+def test_ised_sections_precede_qrz():
+   with tempfile.TemporaryDirectory() as directory:
+      path = Path(directory) / "lookup.sqlite"
+      with closing(sqlite3.connect(path)) as database:
+         database.execute("CREATE TABLE callsign (call_sign TEXT, country TEXT, arrl_section TEXT)")
+         database.executemany("INSERT INTO callsign VALUES (?, ?, ?)", [
+            ("VE3AAA", "CA", " gh "),
+            ("VE3BBB", "CA", "ONS"),
+            ("VE3CCC", "CA", "ONE"),
+            ("VE3DDD", "CA", None),
+            ("VE3NEW", "CA", "GTA"),
+            ("VE3BAD", "CA", "NOT VALID"),
+            ("K1ABC", "US", "CT"),
+         ])
+         database.commit()
+      snapshot = path.with_suffix(".sqlite.gz")
+      with gzip.open(snapshot, "wb") as archive:
+         archive.write(path.read_bytes())
+      sections = tb.load_ised_sections(snapshot)
+
+   check(sections, {"VE3AAA": "GH", "VE3BBB": "ONS", "VE3CCC": "ONE", "VE3NEW": "GTA"},
+         "load resolved Canadian sections")
+   existing = {"VE3CCC": {"Section": "ONN"}}
+   geo = {"VE3AAA": {"Grid": "FN03", "Section": "GTA"},
+          "VE3DDD": {"Section": "ONE"},
+          "K1ABC": {"Section": "WMA"}}
+   universe = {"VE3AAA", "VE3BBB", "VE3DDD", "K1ABC"}
+   out = tb.merge(universe, existing, {}, {}, {}, {}, {}, geo, sections)
+   check(out, {
+      "VE3AAA": {"Grid": "FN03", "Section": "GH"},
+      "VE3BBB": {"Section": "ONS"},
+      "VE3CCC": {"Section": "ONN"},
+      "VE3DDD": {"Section": "ONE"},
+      "K1ABC": {"Section": "WMA"},
+   }, "seed beats ISED, ISED beats QRZ, and lookup adds only sections to existing calls")
 
 
 def main():

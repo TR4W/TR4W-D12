@@ -37,12 +37,16 @@ See README.md in this directory for source URLs and the FCC/QRZ hook.
 import argparse
 import csv
 import glob as globmod
+import gzip
 import os
 import re
 import shutil
 import sqlite3
 import sys
+import tempfile
 import urllib.request
+from contextlib import closing
+from pathlib import Path
 
 import trmaster_codec as tc
 
@@ -226,6 +230,11 @@ def load_names_csv(path):
 GRID_RE = re.compile(r"^[A-R]{2}[0-9]{2}([a-x]{2})?$")
 
 
+def section_code(value):
+   section = value.strip().upper()
+   return section if 0 < len(section) <= 5 and section.isalnum() else ""
+
+
 def load_geo_csv(path):
     """Optional geo source from trmaster_names_qrz.py --geo-out:
     'CALL,GRID,SECTION' -> {CALL: {'Grid': ..., 'Section': ...}}.
@@ -246,12 +255,34 @@ def load_geo_csv(path):
             if len(row) > 1 and GRID_RE.match(row[1].strip()):
                 rec["Grid"] = row[1].strip()
             if len(row) > 2:
-                sec = row[2].strip().upper()
-                if 0 < len(sec) <= 5 and sec.isalnum():
+                sec = section_code(row[2])
+                if sec:
                     rec["Section"] = sec
             if rec:
                 out[row[0].strip().upper()] = rec
     return out
+
+
+def load_ised_sections(snapshot):
+   """Read resolved Canadian sections from the local lookup_build.py snapshot."""
+   if not snapshot:
+      return {}
+
+   sections = {}
+   with tempfile.TemporaryDirectory(prefix="trmaster-ised-") as temporary:
+      database_path = Path(temporary) / "fcc_lookup.sqlite"
+      with gzip.open(snapshot, "rb") as archive, database_path.open("wb") as extracted:
+         shutil.copyfileobj(archive, extracted, length=1024 * 1024)
+      with closing(sqlite3.connect(database_path.as_uri() + "?mode=ro", uri=True)) as database:
+         rows = database.execute(
+            "SELECT call_sign, arrl_section FROM callsign "
+            "WHERE country = 'CA' AND arrl_section IS NOT NULL"
+         )
+         for call, value in rows:
+            section = section_code(value)
+            if section:
+               sections[call] = section
+   return sections
 
 
 def resolve_history_files(patterns):
@@ -311,13 +342,14 @@ def load_history_names(paths):
 
 # --- merge ------------------------------------------------------------------
 
-def merge(universe, existing, history, cwops, foc, hsc, names, geo=None):
+def merge(universe, existing, history, cwops, foc, hsc, names, geo=None,
+          ised_sections=None):
     """Build {CALL: fields} by the documented precedence.
 
     Name precedence (high -> low): CWops > FOC > history > seed(existing) > QRZ.
 
-    Grid and Section come only from `geo` (QRZ) and only into an EMPTY slot:
-    a value already in the seed is curated and is never overwritten.
+    Grid uses QRZ when the seed has no value. Section precedence is
+    curated seed > resolved Canadian ISED section > QRZ.
 
     History calls, like the CWops/FOC/HSC rosters, expand the call universe
     (curated active participants) and are therefore never pruned.
@@ -352,7 +384,10 @@ def merge(universe, existing, history, cwops, foc, hsc, names, geo=None):
         # 6. name resolver (QRZ) fills any call still nameless
         if not f.get("Name") and call in names:
             f["Name"] = names[call]
-        # 7. geo (QRZ grid + county-derived section) fills empty slots only
+        # 7. prefer the resolved Canadian section before considering QRZ
+        if not f.get("Section") and ised_sections and call in ised_sections:
+            f["Section"] = ised_sections[call]
+        # 8. QRZ fills the remaining empty Grid and Section slots
         if geo and call in geo:
             for slot in ("Grid", "Section"):
                 if not f.get(slot) and geo[call].get(slot):
@@ -394,6 +429,7 @@ def main(argv=None):
     ap.add_argument("--names-csv", help="name source CSV (CALL,NAME) from FCC/QRZ")
     ap.add_argument("--geo-csv", help="grid/section source CSV (CALL,GRID,SECTION) "
                     "from trmaster_names_qrz.py --geo-out")
+    ap.add_argument("--ised-snapshot", help="local fcc_lookup.sqlite.gz from lookup_build.py")
     ap.add_argument("--prune-qrz-unverified", metavar="SCP.DB",
                     help="drop universe calls that SCP.DB marks NOT QRZ-verified "
                          "(removes lapsed/unverifiable calls; curated CWops/FOC/"
@@ -461,9 +497,15 @@ def main(argv=None):
 
     # 3. merge + write
     geo = load_geo_csv(args.geo_csv)
-    log(f"  geo (grid/section) entries: {len(geo)}")
+    log(f"  QRZ geo (grid/section) entries: {len(geo)}")
+    try:
+        ised_sections = load_ised_sections(args.ised_snapshot)
+    except (OSError, EOFError, sqlite3.Error) as error:
+        ap.exit(1, f"{ap.prog}: cannot read ISED snapshot {args.ised_snapshot}: {error}\n")
+    if args.ised_snapshot:
+        log(f"  ISED sections: {len(ised_sections)} from {args.ised_snapshot}")
 
-    merged = merge(universe, existing, history, cwops, foc, hsc, names, geo)
+    merged = merge(universe, existing, history, cwops, foc, hsc, names, geo, ised_sections)
     census(merged, "merged")
     size = tc.write_dta(args.out, merged)
     log(f"\nwrote {args.out}: {size} bytes")
