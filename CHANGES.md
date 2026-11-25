@@ -41,6 +41,26 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### 5.1.2 (2026-11-24) - NY4I
+
+#### Cloudlog / Wavelog (`uCloudlogClient`, `uCloudlogExternalLogger`, `uExternalLoggerRegistry`, `uExternalLoggerActions`, `ui/lcl/uExternalLoggersForm`, `utils/uHTTPDownload`)
+
+- **Station finder**: `TLoggerFieldDescriptor.Finder` puts a **Find...** button on the plain-text Station profile row; one `GET <base>/api/station_info/<key>` (`TCloudlogClient.ReadStations`, `CloudlogParseStations`) off the main thread on the editor's unsaved address, key, Allow insecure and certificate boxes; `InputCombo` pick list; failures are one sentence each in the field status line.
+- **Number and name**: the box shows `StationChoiceText(id, name)`; `SplitStationChoiceText` stores the number in `Logbook` (sent, in the fingerprint) and the name in the display-only `LogbookName` (in neither `DestinationFingerprint` nor `SettingsStamp`). `TLoggerChoices.Add` takes an optional plain name.
+- **Key in a URL path** never reaches a log line: `EncodeUrlSegment`, `ScrubSecret` masks the raw and encoded forms, `THttpRequest.FinalURL` is scrubbed.
+- **Plain words**: `CloudlogReasonText` maps every `CLOUDLOG_*` code (404 -> `/index.php`); `CloudlogUnauthorizedCode(body)` splits a 401 by the server's `reason` into `CLOUDLOG_STATION_NOT_OWNED`, `CLOUDLOG_CALLSIGN_MISMATCH`, `CLOUDLOG_KEY_REJECTED`; the pause log line names the reason (`DeliveryNoticeText`).
+- **Allow insecure**: per-definition `allowInsecure` (in `SettingsStamp`, not `DestinationFingerprint`), `<PROVIDER>_INSECURE_URL_REFUSED`, an editor note for an `http://` address, one throttled `QuickDisplay` line; `CloudlogProfileLooksWrong` advises when the profile is not a number.
+
+#### External loggers window (`ui/lcl/uExternalLoggersStatusForm`, `uExternalLoggerStatusModel`, `uExternalLoggerResendUI`, `MainUnit`, `VC`, `uMenu`)
+
+- Windows > External loggers (window slot after HamScore, menu id 10220): `ExternalLoggerStateText` and `QueryExternalLoggerState` are shared with Preferences; Resync's confirmation, summary and preflight are lifted into `uExternalLoggerResendUI`; Edit / add... opens Preferences at the External Logger page (`ShowPreferencesAtExternalLogger`).
+
+#### Multi-op (`uComputerID`, `tr4wserverUnit`, `uServerNet`, `uNet`, `uNetLink`, `uNetClient`, TR4WServerPy `tr4wserver.py`)
+
+- **Computer ID takeover**: `IsSameStation` and `JudgeTakeover` (`uComputerID`): same non-empty peer address and no disagreeing host name, HELLO version or contest -> the stale session is dropped (`uServerNet.DropStaleClient`) and the claim accepted; `ID_TAKEOVER_FLAP_WINDOW_MS` = 30000 refuses a second takeover of a letter. The same rule is in TR4WServerPy (`_claim_computer_id`, `_same_station`).
+- **Client fallback**: `uNet.HandleComputerIdRefused` / `uNetLink.JudgeIdRefusal`: quiet retry for `ID_RETRY_WINDOW_MS` = 60000, one `QuickDisplay` line, the dialog only after that.
+- **`IsOrdinaryLinkClose`** (`uNetClient`): `EIdConnClosedGracefully`, `EIdSocketError`, `EIdReadTimeout`, `EIdClosedSocket` on the reader thread log one Info line instead of `LogCaughtException`'s `[CRASH]` record and its multi-second symbol lookup.
+
 ### 5.1.1 (2026-11-24) - NY4I
 
 #### ALL JA (`contestFactory/uContestAllJA`, `trdos/logstuff`, `trdos/logdupe`, `uADIF`, `target/dom/allja.dom`) - issue #361

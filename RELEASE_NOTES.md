@@ -48,6 +48,44 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.1.x — November 2026
 
+### 5.1.2 (2026-11-24) - NY4I
+
+#### Cloudlog and Wavelog
+
+- **Find your station location.** In the Cloudlog editor, **Find...** asks your server for your station
+  locations and lets you pick one. The box keeps the number and the name, for example
+  `2 - Countryside (NY4I)`; only the number is sent. Cloudlog needs the number: a name makes it refuse the
+  QSO with "unauthorized".
+- **Errors now say what to change.** A 404 says to end the address with `/index.php` (a Cloudlog that runs
+  through `index.php` needs it). An unauthorized answer is split into its real causes: the API key, a
+  station location that is not the key owner's, or a callsign that does not match the station location. A key
+  without write permission says so.
+- **Plain http is said, not hidden.** Typing an `http://` address now tells you, once, that everything sent,
+  including the API key, travels unencrypted, and recommends https. If you must use http, tick the new
+  **Allow insecure (plain http)** box on the Cloudlog definition (Save, then restart TR4W). When a send is
+  refused for plain http, the Connection column and Edit QSO's External loggers window say why, and one
+  short, non-modal line appears on screen.
+- **A paused logger says why** instead of blaming the credentials every time.
+
+#### External loggers window
+
+- **Windows > External loggers** shows every logger with its state and counts, refreshed while it is open,
+  with a **Resync** button for each and **Edit / add...**, which opens Preferences on the External Logger page.
+  It does not take focus from the call window.
+
+#### Multi-op network
+
+- **A restarted station gets its own computer ID back.** Restarting TR4W a few minutes after closing it could
+  show "Computer ID A is already in use by another station" because the server still held your previous
+  session. The server now recognises its own station (same address, same version, same contest) and takes the
+  ID over; a second takeover within 30 seconds is refused so two stations cannot fight over one letter. This
+  needs the updated TR4WServer or TR4WServerPy, which you start yourself.
+- **A quiet retry for older servers.** If a server still refuses the ID, TR4W retries quietly for a minute with
+  one status line and shows the dialog only if it persists.
+- **A server closing the link is not a crash.** The link to TR4WServer closing, for example on an idle timeout,
+  used to write a `[CRASH]` record with a backtrace in `tr4w.log` and delayed the reconnect by several
+  seconds. It is now one plain line. Real faults still write `[CRASH]`.
+
 ### 5.1.1 (2026-11-24) - NY4I
 
 #### ALL JA
