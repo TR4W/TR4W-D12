@@ -2954,7 +2954,7 @@ begin
      DoABeep(ThreeHarmonics);
      end;
 //  EscapeDeletedCallEntry := CallWindowString;
-  tCleareCallWindow;
+  tCleareCallWindow('dupe');
 end;
 
 procedure DispalayB4(nCmdShow: integer);

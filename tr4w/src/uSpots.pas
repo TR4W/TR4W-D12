@@ -1288,7 +1288,7 @@ begin
      if (FoundCall <> Settings.My.Call) and
         (OpMode = SearchAndPounceOpMode) then // n4af 4.45.10
         begin
-        tCleareCallWindow;
+        tCleareCallWindow('band map call on frequency');
         tClearDupeInfoCall; // 4.55.6
         PutCallToCallWindow(FoundCall);
         SetEntrySel(TR4WCallEdit, 0, -1);
@@ -1304,7 +1304,7 @@ begin
   if not CallWindowEmpty then
     if (CallsignIsPastedFromBandMap)  then
        begin
-       tCleareCallWindow;
+       tCleareCallWindow('band map: left the spot frequency');
        tCleareExchangeWindow;
        //tCallWindowSetFocus;
        end

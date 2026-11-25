@@ -51,6 +51,7 @@ type
       procedure Test_GridParsersReadTheReportAsValidRSTDoes;
       procedure Test_QTHParsersReadTheReportAsValidRSTDoes;
       procedure Test_POTAReadsTheReportAsValidRSTDoes;
+      procedure Test_GeneralQSOReadsWSJTXReportAndGridOnDigital;
    end;
 
 implementation
@@ -541,8 +542,89 @@ begin
       end;
 end;
 
+(* GENERAL QSO ON A DIGITAL QSO READS WSJT-X'S '-08 FN41' (2026-11-25): the
+   signed dB report is the received RST as its signed value (what uADIF stores
+   for RST_RCVD '-08'), a grid of four characters or more is the QTH, and the
+   name is taken only from a word that is neither. Phone and CW are as they
+   were, and a conventional report on a digital QSO still reads as before. *)
+procedure TRSTWordReadingTests.Test_GeneralQSOReadsWSJTXReportAndGridOnDigital;
+var
+   rx: ContestExchange;
+   accepted: boolean;
+begin
+   BeginTest('Test_GeneralQSOReadsWSJTXReportAndGridOnDigital');
+   EnterMode(Digital);
+   try
+      rx := Default(ContestExchange);
+      accepted := ProcessRSTNameAndQTHExchange('-08 FN41', rx);
+      CheckTrue(accepted, '"-08 FN41" accepted');
+      CheckEquals(-8, Integer(rx.RSTReceived), '"-08 FN41": RST -8');
+      CheckEquals('FN41', string(rx.QTHString), '"-08 FN41": QTH');
+      CheckEquals('', string(rx.Name), '"-08 FN41": no name');
+
+      rx := Default(ContestExchange);
+      accepted := ProcessRSTNameAndQTHExchange('-18', rx);
+      CheckTrue(accepted, '"-18" accepted');
+      CheckEquals(-18, Integer(rx.RSTReceived), '"-18": RST -18');
+      CheckEquals('', string(rx.QTHString), '"-18": no QTH');
+      CheckEquals('', string(rx.Name), '"-18": no name');
+
+      rx := Default(ContestExchange);
+      accepted := ProcessRSTNameAndQTHExchange('+03 EM15', rx);
+      CheckTrue(accepted, '"+03 EM15" accepted');
+      CheckEquals(3, Integer(rx.RSTReceived), '"+03 EM15": RST 3');
+      CheckEquals('EM15', string(rx.QTHString), '"+03 EM15": QTH');
+
+      rx := Default(ContestExchange);
+      accepted := ProcessRSTNameAndQTHExchange('FN41', rx);
+      CheckTrue(accepted, '"FN41" accepted');
+      CheckEquals('FN41', string(rx.QTHString), '"FN41": the grid is the QTH');
+      CheckEquals('', string(rx.Name), '"FN41": not a name');
+      CheckEquals(599, Integer(rx.RSTReceived), '"FN41": the default report');
+
+      rx := Default(ContestExchange);
+      accepted := ProcessRSTNameAndQTHExchange('599 TOM FL', rx);
+      CheckTrue(accepted, '"599 TOM FL" digital accepted');
+      CheckEquals(599, Integer(rx.RSTReceived), '"599 TOM FL": RST');
+      CheckEquals('TOM', string(rx.Name), '"599 TOM FL": name');
+      CheckEquals('FL', string(rx.QTHString), '"599 TOM FL": QTH');
+   finally
+      LeaveMode;
+      end;
+
+   EnterMode(Phone);
+   try
+      rx := Default(ContestExchange);
+      accepted := ProcessRSTNameAndQTHExchange('59 TOM FL', rx);
+      CheckTrue(accepted, '"59 TOM FL" phone accepted');
+      CheckEquals(59, Integer(rx.RSTReceived), '"59 TOM FL": RST');
+      CheckEquals('TOM', string(rx.Name), '"59 TOM FL": name');
+      CheckEquals('FL', string(rx.QTHString), '"59 TOM FL": QTH');
+
+      (* A leading '-' off digital is not a report: as it was. *)
+      rx := Default(ContestExchange);
+      accepted := ProcessRSTNameAndQTHExchange('-08 FN41', rx);
+      CheckEquals('-08', string(rx.Name), 'phone "-08 FN41": the word is the name, as before');
+   finally
+      LeaveMode;
+      end;
+
+   EnterMode(CW);
+   try
+      rx := Default(ContestExchange);
+      accepted := ProcessRSTNameAndQTHExchange('599 TOM FL', rx);
+      CheckTrue(accepted, '"599 TOM FL" CW accepted');
+      CheckEquals(599, Integer(rx.RSTReceived), '"599 TOM FL" CW: RST');
+      CheckEquals('TOM', string(rx.Name), '"599 TOM FL" CW: name');
+      CheckEquals('FL', string(rx.QTHString), '"599 TOM FL" CW: QTH');
+   finally
+      LeaveMode;
+      end;
+end;
+
 procedure TRSTWordReadingTests.RunAllTests;
 begin
+   Test_GeneralQSOReadsWSJTXReportAndGridOnDigital;
    Test_AgeParserReadsTheReportAsValidRSTDoes;
    Test_AgeParserRefusesWhatValidRSTRefuses;
    Test_AgeParserRefusalWritesNothing;

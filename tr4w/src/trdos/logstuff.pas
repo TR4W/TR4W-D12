@@ -872,6 +872,10 @@ uses uNet,
     thread (issue 350). *)
   uLogBackupWorker,
   uPeriodicBackupService,
+  (* WSJTXReadDBReport -- WSJT-X's signed dB report, typed ('-08'); and
+    IsADIFGridSquare -- the one grid shape test. ReadWSJTXTypedExchange. *)
+  uWSJTXReport,
+  uADIF,
   Classes; // TStringList — used by ProcessRSTAndDomesticQTHExchange
 
 (* THE CONTEST THAT PARSES AND VALIDATES AN EXCHANGE -- M5b, 2026-10-02.
@@ -4442,6 +4446,86 @@ begin
     RXData);
 end;
 
+(* WHAT WSJT-X SENDS, TYPED ON A DIGITAL QSO (2026-11-25, NY4I: the exchange
+  window shows the grid and the report as WSJT-X gave it, '-08 FN41').
+
+  ONLY ON DIGITAL, ONLY WHEN THE FIRST WORD IS WSJT-X'S: a signed dB report
+  ('-08', '+03', '-8') or a grid of four characters or more. Anything else --
+  '599 TOM FL' on a digital QSO included -- is the ordinary reading, below. The
+  dB report is stored as the QSO's received RST AS ITS SIGNED VALUE (-8), the
+  same value uADIF stores for RST_RCVD '-08' (StrToIntDef keeps the sign), so
+  an edit and an export treat the two sources alike. A grid is the QTH; a word
+  that is neither is the name; a plain number is the RS(T) as ValidRST reads
+  it. No report in the entry is the session's default.
+
+  aHandled is False when the entry is not that shape (nothing written); the
+  result is the parse's own answer when it is. *)
+function ReadWSJTXTypedExchange(const aWords: array of Str10; var RXData:
+  ContestExchange; out aHandled: boolean): boolean;
+var
+   i: integer;
+   db: integer;
+   gotRST: boolean;
+   rst: smallInt;
+   parsed: ContestExchange;
+begin
+   Result := True;
+   aHandled := False;
+   if (ActiveMode <> Digital) or (aWords[0] = '') then
+      begin
+      Exit;
+      end;
+   if not (WSJTXReadDBReport(string(aWords[0]), db) or
+           ((Length(aWords[0]) >= 4) and IsADIFGridSquare(string(aWords[0])))) then
+      begin
+      Exit;
+      end;
+
+   aHandled := True;
+   parsed := RXData;
+   gotRST := False;
+   for i := 0 to High(aWords) do
+      begin
+      if aWords[i] = '' then
+         begin
+         Continue;
+         end;
+      if (not gotRST) and WSJTXReadDBReport(string(aWords[i]), db) then
+         begin
+         parsed.RSTReceived := smallInt(db);
+         gotRST := True;
+         end
+      else if (Length(aWords[i]) >= 4) and (parsed.QTHString = '') and
+              IsADIFGridSquare(string(aWords[i])) then
+         begin
+         parsed.QTHString := aWords[i];
+         end
+      else if (not gotRST) and StringIsAllNumbers(string(aWords[i])) then
+         begin
+         if not ReadReportWordOrRefuse(string(aWords[i]), rst) then
+            begin
+            Result := False;
+            Exit;
+            end;
+         parsed.RSTReceived := rst;
+         gotRST := True;
+         end
+      else if parsed.Name = '' then
+         begin
+         parsed.Name := aWords[i];
+         end
+      else if parsed.QTHString = '' then
+         begin
+         parsed.QTHString := aWords[i];
+         end;
+      end;
+   if not gotRST then
+      begin
+      parsed.RSTReceived := DefaultRST;
+      end;
+   RXData := parsed;
+end;
+
 function ProcessRSTNameAndQTHExchange(Exchange: Str80; var RXData:
   ContestExchange): boolean;
 
@@ -4462,6 +4546,7 @@ function ProcessRSTNameAndQTHExchange(Exchange: Str80; var RXData:
 
 var
   FirstString, SecondString, ThirdString: Str10 {Str20};
+  wsjtxHandled: boolean;
 
 begin
   ProcessRSTNameAndQTHExchange := True;
@@ -4476,6 +4561,16 @@ begin
      end;
 
   ParseExchange(Exchange, FirstString, SecondString, ThirdString);
+
+  (* WSJT-X's '-08 FN41' on a digital QSO (see ReadWSJTXTypedExchange). *)
+  ProcessRSTNameAndQTHExchange :=
+     ReadWSJTXTypedExchange([FirstString, SecondString, ThirdString], RXData,
+                            wsjtxHandled);
+  if wsjtxHandled then
+     begin
+     Exit;
+     end;
+  ProcessRSTNameAndQTHExchange := True;
 
   (* THE REPORT IS ReadRSTWord's READING (review H7, 2026-11-16): the first or
     the third word, when all digits, was stored as typed. One that is no

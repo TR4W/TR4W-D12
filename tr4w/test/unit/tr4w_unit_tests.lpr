@@ -207,6 +207,8 @@ uses
    uN1MMMode            in '..\..\src\uN1MMMode.pas',
    uWSJTXReport         in '..\..\src\uWSJTXReport.pas',
    uTestWSJTXReport     in 'uTestWSJTXReport.pas',
+   uWSJTXExchangeText   in '..\..\src\uWSJTXExchangeText.pas',
+   uTestWSJTXExchangeText in 'uTestWSJTXExchangeText.pas',
    uGridLookup          in '..\..\src\uGridLookup.pas',
    uTestGridLookup      in 'uTestGridLookup.pas',
    uTestN1MMMode        in 'uTestN1MMMode.pas',
@@ -1258,6 +1260,7 @@ begin
    RegisterSuite(TN1MMLogListenerTests.Create('N1MMLogListener'));
    RegisterSuite(TServerLogHealthTests.Create('ServerLogHealth'));
    RegisterSuite(TWSJTXReportTests.Create('WSJTXReport'));
+   RegisterSuite(TWSJTXExchangeTextTests.Create('WSJTXExchangeText'));
    RegisterSuite(TGridLookupTests.Create('GridLookup'));
    RegisterSuite(TUDPContactXmlTests.Create('UDPContactXml'));
    RegisterSuite(TUDPDatagramTests.Create('UDPDatagrams'));

@@ -50,6 +50,15 @@ function WSJTXModeReportsSNR(aExtMode: ExtendedModeType): Boolean;
   and above). *)
 function WSJTXSnrToRST(aSnr: integer): integer;
 
+(* A WSJT-X dB report as WSJT-X writes it, with its sign: '-08', '+03', and
+  '-8' when typed. Two digits at most, -30..+50 (WSJT-X's range). aDb is the
+  signed value. *)
+function WSJTXReadDBReport(const aWord: string; out aDb: integer): Boolean;
+
+(* The same report as WSJT-X shows it: sign and two digits (-8 is '-08', 3 is
+  '+03', 0 is '+00'). *)
+function WSJTXFormatDBReport(aDb: integer): string;
+
 (* What the Cabrillo exchange prints for a RECEIVED report.  A SNR-mode QSO whose
   stored value is below WSJTX_SNR_RST_LIMIT is converted when WSJT-X is enabled
   and is 599 when it is not; every other combination is the stored value. *)
@@ -58,6 +67,9 @@ function WSJTXReceivedReportForExport(aExtMode: ExtendedModeType;
                                       aWsjtxEnabled: Boolean): integer;
 
 implementation
+
+uses
+   SysUtils;
 
 function WSJTXModeReportsSNR(aExtMode: ExtendedModeType): Boolean;
 begin
@@ -106,6 +118,59 @@ begin
       begin
       Result := 599;
       end;
+end;
+
+function WSJTXReadDBReport(const aWord: string; out aDb: integer): Boolean;
+var
+   i: integer;
+   magnitude: integer;
+begin
+   aDb := 0;
+   Result := ((Length(aWord) = 2) or (Length(aWord) = 3)) and
+             ((aWord[1] = '+') or (aWord[1] = '-'));
+   if not Result then
+      begin
+      Exit;
+      end;
+   magnitude := 0;
+   for i := 2 to Length(aWord) do
+      begin
+      if (aWord[i] < '0') or (aWord[i] > '9') then
+         begin
+         Result := False;
+         Exit;
+         end;
+      magnitude := magnitude * 10 + (Ord(aWord[i]) - Ord('0'));
+      end;
+   if aWord[1] = '-' then
+      begin
+      aDb := -magnitude;
+      end
+   else
+      begin
+      aDb := magnitude;
+      end;
+   Result := (aDb >= -30) and (aDb <= 50);
+end;
+
+function WSJTXFormatDBReport(aDb: integer): string;
+var
+   magnitude: integer;
+begin
+   magnitude := Abs(aDb);
+   if aDb < 0 then
+      begin
+      Result := '-';
+      end
+   else
+      begin
+      Result := '+';
+      end;
+   if magnitude < 10 then
+      begin
+      Result := Result + '0';
+      end;
+   Result := Result + IntToStr(magnitude);
 end;
 
 function WSJTXReceivedReportForExport(aExtMode: ExtendedModeType;

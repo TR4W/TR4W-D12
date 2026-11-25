@@ -777,7 +777,9 @@ function EmptyExchangeEnterNeedsNotice(aCallSentBefore: boolean;
 
 procedure EditableLogWindowDblClick;
 procedure tClearDupeInfoCall;
-procedure tCleareCallWindow;
+(* aReason: who is clearing, for the debug log line (a clear nobody could
+  attribute is what the 2026-11-25 WSJT-X session left unexplained). *)
+procedure tCleareCallWindow(const aReason: string = '');
 procedure tCleareExchangeWindow;
 procedure tSetExchWindInitExchangeEntry;
 procedure HandleRepeatPOTAParks;
@@ -1567,7 +1569,7 @@ begin
          TR4WMainForm.pnlDupeInfoCall.Caption := '';
          end;
     // showint(1);
-      tCleareCallWindow;
+      tCleareCallWindow('Escape');
     // showint(2);
 
       tCleareExchangeWindow;
@@ -1718,7 +1720,7 @@ begin
   if Call_Found = True then
      begin
      EscapeDeletedCallEntry := CallWindowString;
-     tCleareCallWindow;
+     tCleareCallWindow('Escape (call found)');
      EditingCallsignSent := False;
      CallAlreadySent := False;
      ExchangeHasBeenSent := False;
@@ -2387,7 +2389,7 @@ begin
      //{WLI}
 
      EscapeDeletedCallEntry := CallWindowString;
-     tCleareCallWindow;
+     tCleareCallWindow('QSO logged');
      tCleareExchangeWindow;
      tCallWindowSetFocus;
      // sendmessage(CallWindowHandle,wm_setfocus,0,0);
@@ -8850,9 +8852,16 @@ begin
   FillChar(DupeInfoCall, SizeOf(DupeInfoCall), 0);
 end;
 
-procedure tCleareCallWindow;
+procedure tCleareCallWindow(const aReason: string);
 begin
-  logger.debug('Clearing main call window');
+  if aReason = '' then
+     begin
+     logger.debug('Clearing main call window');
+     end
+  else
+     begin
+     logger.debug('Clearing main call window (%s)', [aReason]);
+     end;
   SetEntryText(TR4WCallEdit, '');
   (* A DISCARD ends a refusal that is still showing (uEntryStatus). *)
   RefreshEntryStatus;
@@ -9059,7 +9068,7 @@ begin
   tAutoSendMode := False;
   ExchangeHasBeenSent := False;
   CallAlreadySent := False;
-  tCleareCallWindow;
+  tCleareCallWindow('InitializeQSO');
   tCleareExchangeWindow;
   tCallWindowSetFocus;
   ClearAltD; // 4.65.2

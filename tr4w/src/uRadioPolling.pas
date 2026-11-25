@@ -150,6 +150,7 @@ uses
                     // must not name a control -- see the note in PTTStatusChanged
    uMainThreadWork, // the UI work below runs on the MAIN thread -- see MarshalledJobs
    uRadioConfigStore, // ClampFrequencyPollRate -- the one guard on a radio's poll rate
+   uWSJTXState,     // WSJTXState.Driving -- WSJT-X moves the dial for its own TX
    uSettingsModel;  // Settings.AutoSap -- the tuning threshold that means S&P
 
 { ===========================================================================
@@ -176,6 +177,7 @@ uses
   the end is only correct after the QSO has been reinitialised. }
 procedure RunSwitchToSearchAndPounce;
 begin
+   logger.debug('[AutoSAP] leaving CQ: the dial was tuned away; the call and exchange are cleared');
    SetOpMode(SearchAndPounceOpMode);
    tClearDupeInfoCall;
    ClearAltD; // 4.53.7
@@ -1301,7 +1303,22 @@ begin
                   // Was seven statements inline on THIS thread.  See
                   // RunSwitchToSearchAndPounce at the top of the
                   // implementation for what they are and why they moved.
-                  RequestMainThreadJob(mtSwitchToSearchAndPounce);
+                  (* WSJT-X MOVES THE DIAL ITSELF to make room for its
+                    transmission (Fake It / split) and back afterwards: a move of
+                    a few hundred Hz at the start and end of every TX of a QSO,
+                    which cleared the call WSJT-X had just put in the window
+                    (NY4I, 2026-11-25).  While WSJT-X is running a QSO, a move of
+                    this size is not the operator tuning away. *)
+                  if WSJTXState.Driving(WSJTX_DRIVING_WINDOW_MS) then
+                     begin
+                     logger.debug('[AutoSAP] dial moved %d Hz while WSJT-X is ' +
+                                  'running a QSO: not leaving CQ, call kept',
+                                  [dif]);
+                     end
+                  else
+                     begin
+                     RequestMainThreadJob(mtSwitchToSearchAndPounce);
+                     end;
                   end;
       if rig.CurrentStatus.TxOn then
          begin

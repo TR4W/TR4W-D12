@@ -30,6 +30,7 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   ALL FOUR kinds, named by the letter PendingMessageOrder uses:
 
     C  CQ decode      S  status      X  clear      L  logged ADIF
+    D  a decode from the station being worked (fills the exchange window)
 
     * A message posted from another thread is QUEUED, not evaluated.
     * The evaluation refuses to run on any thread but the main one.
@@ -162,6 +163,20 @@ begin
               end;
            end;
 
+        (* A decode from the station WSJT-X is working, addressed to somebody:
+          the kind that fills the exchange window. *)
+        'D':
+           begin
+           if FEvaluate then
+              begin
+              FServer.EvaluateDecode('K1ABC', 'NY4I K1ABC -15');
+              end
+           else
+              begin
+              FServer.PostDecode('K1ABC', 'NY4I K1ABC -15');
+              end;
+           end;
+
         (* A second, different logged record, so order among LOGGED is visible. *)
         'M':
            begin
@@ -203,7 +218,7 @@ end;
 
 procedure TWSJTXThreadingTests.Test_EveryListenerMessageIsQueuedNotEvaluated;
 const
-   KINDS = 'CSXL';
+   KINDS = 'CSXLD';
 var
    server: TWSJTXServer;
    k: integer;
@@ -248,7 +263,7 @@ end;
 
 procedure TWSJTXThreadingTests.Test_EvaluationRefusesAnyThreadButTheMainOne;
 const
-   KINDS = 'CSXL';
+   KINDS = 'CSXLD';
 var
    server: TWSJTXServer;
    k: integer;
@@ -287,10 +302,10 @@ begin
    try
       (* A status, the QSO's logged message, WSJT-X's clear, a decode, and the
         next QSO's status. *)
-      RunListener(server, 'SLXCS', False);
+      RunListener(server, 'SDLXCS', False);
 
-      CheckEquals('SLXCS', PendingMessageOrder,
-                  'one FIFO for all four kinds: nothing is reordered, and the '
+      CheckEquals('SDLXCS', PendingMessageOrder,
+                  'one FIFO for all five kinds: nothing is reordered, and the '
                   + 'logged message sits between the messages around it');
       CheckEquals(0, server.MessagesEvaluated,
                   'none evaluated off the main thread');

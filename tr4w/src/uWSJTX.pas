@@ -32,7 +32,8 @@ uses
   IdBaseComponent, IdSocketHandle, IdGlobal, IdStackConsts,
   NetworkMessageUtils, DateUtils, StrUtils, LOGRADIO, IdThreadSafe, IdThread
   ,
-  uTR4WStrings;
+  uTR4WStrings,
+  uWSJTXExchangeText; // TWSJTXReceivedParts -- a decode as exchange text
 
 type
   TColorRec = record
@@ -80,6 +81,22 @@ type
     sCallSentToWindow: string;
     FMessagesEvaluated: integer;
     FLoggedADIFHook: TWSJTXLoggedADIFHook;
+    (* The DX call of the last STATUS: written and read by the listener only. *)
+    FLastStatusDXCall: string;
+    (* MAIN THREAD ONLY, as sCallSentToWindow: what the station WSJT-X is
+      working has sent so far, the DX call it belongs to, and the text this
+      server last wrote into the exchange window (so the operator's own typing
+      is never overwritten). *)
+    FRxParts: TWSJTXReceivedParts;
+    FRxCall: string;
+    FWrittenExchange: string;
+    (* The call of the last QSO WSJT-X logged: it is not put back while
+      WSJT-X's STATUS still names it as the DX call (cleared when that call
+      changes, on a WSJT-X Clear, or when it opens a new QSO with us).
+      FLoggedTick is when, for the log only. *)
+    FLoggedCall: string;
+    FLoggedTick: Int64;   (* not QWord: NetworkMessageUtils declares its own *)
+    procedure ForgetReceivedExchange;
     procedure SetUDPPort(nPort: integer);
     procedure SetTCPPort(nPort: integer);
     function GetNextADIFField(var sBuffer: string; var fieldName: string; var
@@ -125,6 +142,10 @@ type
       aTransmitting: boolean);
     procedure PostClear;
     procedure PostLoggedADIF(const aAdif: string);
+    (* A decode addressed to the operator from the station WSJT-X is working:
+      its text goes to the main thread, which fills the exchange window. *)
+    procedure PostDecode(const aDXCall, aMessage: string);
+    procedure EvaluateDecode(const aDXCall, aMessage: string);
     (* Main thread only, like EvaluateCQDecode: each refuses and logs anywhere
       else. EvaluateLoggedADIF is the one that LOGS A QSO. *)
     procedure EvaluateStatus(aFrequency: Int64; const aDXCall, aDXGrid: string;
@@ -166,12 +187,15 @@ type
 (* Messages handed off by the listener and not yet evaluated. *)
 function PendingMessageCount: integer;
 (* One letter per pending message, oldest first: C CQ decode, S status, X clear,
-  L logged ADIF. What a test reads to show the kinds share ONE queue and keep
+  L logged ADIF, D addressed decode. What a test reads to show the kinds share ONE queue and keep
   arrival order. *)
 function PendingMessageOrder: string;
 
 const
   KLUDGESECONDSV = 2;
+  (* A call WSJT-X logged is not put back into an emptied call window for this
+    long. *)
+  WSJTX_RESTORE_GUARD_MS = 90000;
 implementation
 
 uses
@@ -309,7 +333,8 @@ type
       procedure RunMessage(Data: PtrInt);
    end;
 
-   TWSJTXMessageKind = (wmCQDecode, wmStatus, wmClear, wmLoggedADIF);
+   TWSJTXMessageKind = (wmCQDecode, wmStatus, wmClear, wmLoggedADIF,
+                        wmAddressedDecode);
 
    (* One forwarded message, by value. Server is nil once the server has stopped
      or been freed: the job is then popped and dropped (a LOGGED one reports
@@ -323,6 +348,7 @@ type
       Grid: string;
       Id: string;
       Adif: string;
+      Text: string;      (* the decoded message of wmAddressedDecode *)
       Frequency: Int64;
       Transmitting: boolean;
    end;
@@ -448,6 +474,11 @@ begin
      wmLoggedADIF:
         begin
         aJob.Server.EvaluateLoggedADIF(aJob.Adif);
+        end;
+
+     wmAddressedDecode:
+        begin
+        aJob.Server.EvaluateDecode(aJob.Call, aJob.Text);
         end;
    end;
 end;
@@ -624,7 +655,7 @@ end;
 
 function PendingMessageOrder: string;
 const
-   KIND_LETTER: array[TWSJTXMessageKind] of char = ('C', 'S', 'X', 'L');
+   KIND_LETTER: array[TWSJTXMessageKind] of char = ('C', 'S', 'X', 'L', 'D');
 var
    i: integer;
 begin
@@ -732,6 +763,7 @@ constructor TWSJTXServer.Create;
 begin
   started := false;
   slCQMessage := TStringList.Create;
+  FRxParts := TWSJTXReceivedParts.Create;
   FSendColorization := true;
   firstTime := true;
   udpServ := TIdUDPServer.Create(nil);
@@ -928,6 +960,7 @@ begin
      end;
 
   FreeAndNil(slCQMessage);
+  FreeAndNil(FRxParts);
   inherited Destroy;
 end;
 
@@ -1054,6 +1087,14 @@ begin
                         ' DECall: ' + DECall + ' DEGrid: ' + DEGrid
                       + ' DXGrid: ' + DXGrid);
                     end;
+                 (* WSJT-X IS RUNNING A QSO: stamped here, on the listener, because
+                   the radio polling thread asks it (a dial moved for the
+                   transmission is not the operator tuning away). Atomic. *)
+                 if TXEnabled or transmitting then
+                    begin
+                    WSJTXState.NoteDriving;
+                    end;
+                 FLastStatusDXCall := DXCall;
                  (* THE REST OF THIS ARM -- following the dial frequency to a band,
                    putting the station in the call window, the display batch --
                    reads and writes main-thread state.  Hand it over. *)
@@ -1077,6 +1118,15 @@ begin
                  //logger.debug('[uWSJTX] Decode: IsNew=%s %s %d %s %d %s %s %s %s %d',
                  //               [BoolToStr(isNew),FormatDateTime('hhmm',ztime),tm,FloatToStrF(DT, ffGeneral,4,1),
                  //                DF,mode, message,timeToStr(ztime), FloatToStr(DT), tm]);
+
+                 (* A message from the station WSJT-X is working to somebody:
+                   the second word is its call. The listener only compares;
+                   whether it is addressed to US is the main thread's. *)
+                 if (MidStr(message, 1, 2) <> 'CQ') and
+                    (FLastStatusDXCall <> '') then
+                    begin
+                    PostDecode(FLastStatusDXCall, message);
+                    end;
 
                  if MidStr(message, 1, 2) = 'CQ' then
                     begin
@@ -1294,6 +1344,134 @@ begin
    HandOffMessage(job);
 end;
 
+(* A decode whose SECOND word is the station WSJT-X is working (aDXCall, the
+  last STATUS's): only those are handed over, so the queue sees one message in
+  a cycle, not every decode. The first word is checked on the main thread,
+  where the operator's call is read. Joins the ONE FIFO, so it lands in order
+  with the STATUS and LOGGED messages around it. *)
+procedure TWSJTXServer.PostDecode(const aDXCall, aMessage: string);
+var
+   job: TWSJTXMessageJob;
+   rest: string;
+   second: string;
+   gap: integer;
+begin
+   rest := TrimLeft(aMessage);
+   gap := Pos(' ', rest);
+   if gap = 0 then
+      begin
+      Exit;
+      end;
+   rest := TrimLeft(Copy(rest, gap + 1, Length(rest)));
+   gap := Pos(' ', rest);
+   if gap = 0 then
+      begin
+      second := rest;
+      end
+   else
+      begin
+      second := Copy(rest, 1, gap - 1);
+      end;
+   if WSJTXBaseCall(second) <> WSJTXBaseCall(aDXCall) then
+      begin
+      Exit;
+      end;
+
+   job := TWSJTXMessageJob.Create;
+   job.Kind := wmAddressedDecode;
+   job.Server := Self;
+   job.Call := aDXCall;
+   job.Text := aMessage;
+   HandOffMessage(job);
+end;
+
+(* The station's exchange is forgotten with its QSO: the call changed, the QSO
+  was logged, WSJT-X said Clear. *)
+procedure TWSJTXServer.ForgetReceivedExchange;
+begin
+   FRxParts.Clear;
+   FRxCall := '';
+   FWrittenExchange := '';
+end;
+
+(* A MESSAGE FROM THE STATION WSJT-X IS WORKING, as the exchange window's text.
+  Main thread: it reads and writes the entry fields.
+
+  WHAT IS WRITTEN, AND WHEN. The text is composed from everything that station
+  has sent in this QSO (the grid in its first reply, the report in the next)
+  in the contest's own fields (uWSJTXExchangeText). It goes into the exchange
+  window only when that window is EMPTY or still holds the text written here
+  earlier for this QSO, so the operator's own typing is never overwritten, and
+  never when it is already there, so a repeated decode does not flicker. The
+  call window must hold the DX call. The logged QSO still comes from the
+  LOGGED message; this is for the operator to see and fix beforehand. *)
+procedure TWSJTXServer.EvaluateDecode(const aDXCall, aMessage: string);
+var
+   text: string;
+   current: string;
+   fields: ExchangeInformationRecord;
+begin
+   if OffMainThread('EvaluateDecode') then
+      begin
+      Exit;
+      end;
+   Inc(FMessagesEvaluated);
+
+   (* THE ESCAPE FROM "LOGGED, NOT PUT BACK": the station WSJT-X logged opens a
+     new QSO with us (a grid, or a plain report -- not an R-report, which it
+     repeats when it missed our RR73). The next STATUS may then put its call.
+     Cheap and safe in both directions: a deliberate re-work of the same call
+     always starts with such a message. *)
+   if WSJTXIsTheLoggedCall(aDXCall, FLoggedCall) and
+      WSJTXOpensANewQso(aMessage, string(Settings.My.Call), aDXCall) then
+      begin
+      logger.debug('[uWSJTX] %s opens a new QSO (%s): the logged call may be put again',
+                   [aDXCall, Trim(aMessage)]);
+      FLoggedCall := '';
+      end;
+
+   if WSJTXBaseCall(EntryText(TR4WCallEdit)) <> WSJTXBaseCall(aDXCall) then
+      begin
+      Exit;
+      end;
+
+   if WSJTXBaseCall(FRxCall) <> WSJTXBaseCall(aDXCall) then
+      begin
+      ForgetReceivedExchange;
+      FRxCall := aDXCall;
+      end;
+
+   if not WSJTXParseAddressedMessage(aMessage, string(Settings.My.Call),
+                                     aDXCall, FRxParts) then
+      begin
+      Exit;
+      end;
+
+   fields := ContestReceivedExchangeFields(ActiveContest(Contest));
+   if not WSJTXExchangeForMode(fields, FRxParts, ActiveMode = Digital, text) then
+      begin
+      Exit;
+      end;
+
+   current := EntryText(TR4WExchangeEdit);
+   if current = text then
+      begin
+      FWrittenExchange := text;
+      Exit;
+      end;
+   if (current <> '') and (current <> FWrittenExchange) then
+      begin
+      logger.debug('[uWSJTX] exchange window holds the operator''s text; %s not written',
+                   [text]);
+      Exit;
+      end;
+
+   logger.debug('[uWSJTX] exchange for %s from "%s": %s',
+                [aDXCall, Trim(aMessage), text]);
+   SetEntryText(TR4WExchangeEdit, text);
+   FWrittenExchange := text;
+end;
+
 (* The STATUS message's effects: follow the dial to a band when no radio is
   defined, and put the station WSJT-X is calling in the call window. Main
   thread. sCallSentToWindow is therefore main-thread-only, with
@@ -1327,6 +1505,16 @@ begin
          end;
       end;
 
+   (* THE SUPPRESSION AFTER A LOGGED QSO ENDS WHEN WSJT-X'S DX CALL CHANGES
+     (another call, or none) -- not by a timer: tr4w.log 2026-11-25 07:47 shows
+     the logged call stay WSJT-X's DX call for minutes while it sent CQ. *)
+   if (FLoggedCall <> '') and (not WSJTXIsTheLoggedCall(aDXCall, FLoggedCall)) then
+      begin
+      logger.debug('[uWSJTX] WSJT-X DX call is now "%s": %s may be put again',
+                   [aDXCall, FLoggedCall]);
+      FLoggedCall := '';
+      end;
+
    if aTransmitting then
       begin
       logger.debug('[uWSJTX] Calling station %s, TotalContacts = %d',
@@ -1334,16 +1522,43 @@ begin
       if aDXCall <> sCallSentToWindow then
          begin
          sCallSentToWindow := aDXCall;
-         //ShowStationInformation(@DXCall);
-         PutCalltoCallWindow(aDXCall);
-         (* Was six display calls made straight from the UDP listener; the
-           grid-vs-2-character choice moved with them because it belongs
-           beside the drawing it qualifies. *)
-         QueueStationDisplay(aDXCall, aDXGrid);
+         ForgetReceivedExchange;
+         if WSJTXIsTheLoggedCall(aDXCall, FLoggedCall) then
+            begin
+            (* The call WSJT-X has just logged and still names: not put back
+              (it came back flagged a dupe, every 30 seconds). *)
+            logger.debug('[uWSJTX] %s was logged by WSJT-X and is still its DX call: not put in the window',
+                         [aDXCall]);
+            end
+         else
+            begin
+            //ShowStationInformation(@DXCall);
+            PutCalltoCallWindow(aDXCall);
+            (* Was six display calls made straight from the UDP listener; the
+              grid-vs-2-character choice moved with them because it belongs
+              beside the drawing it qualifies. *)
+            QueueStationDisplay(aDXCall, aDXGrid);
+            end;
          end
       else
          begin
-         logger.debug('DXCall (%s) was not equal to sCallSentToWindow (%s)', [aDXCall, sCallSentToWindow]);
+         (* THE SAME CALL, STILL BEING TRANSMITTED TO. It was said "was not
+           equal" here, and it IS equal -- the line was wrong. *)
+         logger.debug('[uWSJTX] DXCall (%s) is already the call put in the window', [aDXCall]);
+         (* PUT BACK A CALL SOMETHING ELSE CLEARED (NY4I, 2026-11-25: the dial
+           WSJT-X moved for its transmission cleared it, and nothing put it
+           back). The rule: the call window is EMPTY and this call is the one
+           WSJT-X is transmitting to, AND the operator did not clear it
+           (Escape and the logging paths leave the call in
+           EscapeDeletedCallEntry), AND this call is not the one WSJT-X
+           logged and still names (FLoggedCall, until its DX call changes). *)
+         if WSJTXShouldRestoreCall(aDXCall, string(EscapeDeletedCallEntry),
+                                   FLoggedCall,
+                                   EntryText(TR4WCallEdit) = '') then
+            begin
+            logger.debug('[uWSJTX] call window was empty while WSJT-X transmits to %s: put back', [aDXCall]);
+            PutCalltoCallWindow(CallString(aDXCall));
+            end;
          end;
       end
    else
@@ -1453,6 +1668,7 @@ procedure TWSJTXServer.EvaluateLoggedADIF(const adif: string);
 var
    TempRXData: ContestExchange;
    gridComment: string;
+   loggedCall: string;
 begin
    gridComment := '';
    if OffMainThread('EvaluateLoggedADIF') then
@@ -1488,9 +1704,14 @@ begin
          and the contest takes a state; an ambiguous grid is shown, not filled. *)
       DeriveStateFromWSJTXGrid(adif, TempRXData, gridComment);
 
+      (* Taken before the log write: LogParsedInboundQso clears the record. *)
+      loggedCall := string(TempRXData.Callsign);
       if LogParsedInboundQso(TempRXData, 'WSJT-X') = iqLogged then
          begin
          sCallSentToWindow := '';
+         FLoggedCall := loggedCall;
+         FLoggedTick := Int64(GetTickCount64);
+         ForgetReceivedExchange;
          (* The QSO log has no comment field, so the candidates of an
             ambiguous grid go to the status line (non-modal) and the log. *)
          if gridComment <> '' then
@@ -2351,6 +2572,8 @@ begin
   QueueClearCallAndFocus;
   QueueWSJTXUI(wjCleanUp);
   sCallSentToWindow := '';
+  FLoggedCall := '';
+  ForgetReceivedExchange;
 end;
 
 procedure TWSJTXServer.Display(p_sender: string; p_message: string);

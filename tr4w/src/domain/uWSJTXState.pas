@@ -42,13 +42,28 @@ interface
 uses
    uDomainState;
 
+const
+   (* How long after a STATUS that says WSJT-X may transmit it counts as running
+     the QSO.  Longer than a cycle pair (FT8 15 s, FT4 7.5 s, FT8 TX 13 s) and the
+     return of a shifted dial after the last transmission. *)
+   WSJTX_DRIVING_WINDOW_MS = 60000;
+
 type
    TWSJTXState = class(TDomainState)
    private
       FConnected: boolean;
+      FDrivingTick: QWord;
       function  GetConnected: boolean;
       procedure SetConnected(const aValue: boolean);
    public
+      (* WSJT-X IS RUNNING A QSO: its STATUS says it may transmit or is
+        transmitting.  Stamped by the UDP listener on every such STATUS and
+        asked by the radio polling thread, so a dial the program is moved to
+        make room for the transmission (WSJT-X's Fake It / split) is not taken
+        for the operator tuning away.  Both threads go through the lock. *)
+      procedure NoteDriving;
+      function  Driving(aWindowMs: QWord): boolean;
+
       { Set from the UDP listener thread; read from the main thread.  Both go
         through the lock, and setting it to what it already is notifies nobody
         -- a heartbeat arrives every few seconds and must not repaint on each
@@ -64,11 +79,35 @@ var
 
 implementation
 
+uses
+   SysUtils;   // GetTickCount64
+
 function TWSJTXState.GetConnected: boolean;
 begin
    Lock;
    try
       Result := FConnected;
+   finally
+      Unlock;
+   end;
+end;
+
+procedure TWSJTXState.NoteDriving;
+begin
+   Lock;
+   try
+      FDrivingTick := GetTickCount64;
+   finally
+      Unlock;
+   end;
+end;
+
+function TWSJTXState.Driving(aWindowMs: QWord): boolean;
+begin
+   Lock;
+   try
+      Result := (FDrivingTick <> 0) and
+                (GetTickCount64 - FDrivingTick <= aWindowMs);
    finally
       Unlock;
    end;

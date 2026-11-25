@@ -845,7 +845,9 @@ begin
    CheckEquals(0, Pos('UpdateWindows', refusal), 'nor updating the windows');
    CheckTrue(x < Pos('ClearQuickDisplayText;', body), 'the status line is cleared only after a save');
    CheckTrue(x < Pos('ClearContestExchange(ReceivedData);', body), 'and the exchange');
-   CheckTrue(x < Pos('tCleareCallWindow;', body), 'and the call window');
+   (* The call is passed a reason now ('QSO logged'), so the pin names the
+      routine and its opening parenthesis. *)
+   CheckTrue(x < Pos('tCleareCallWindow(', body), 'and the call window');
    CheckTrue(x < Pos('tCleareExchangeWindow;', body), 'and the exchange window');
    CheckTrue(x < Pos('CleanUpDisplay;', body), 'and the display');
    CheckTrue(x < Pos('UpdateWindows;', body), 'and the windows');
@@ -868,7 +870,7 @@ begin
    CheckEquals('', Trim(Copy(text, t + Length('TryLogContact;'),
                              q - t - Length('TryLogContact;'))),
                'directly after it');
-   CheckTrue(PosEx('Exit;', text, q) < PosEx('tCleareCallWindow;', text, q),
+   CheckTrue(PosEx('Exit;', text, q) < PosEx('tCleareCallWindow(', text, q),
              'and leaves before clearing the call window');
 
    (* THE S&P ENTER PATH: out before the several-QTH loop re-enters. *)
@@ -1033,7 +1035,7 @@ begin
    CheckTrue(Pos('entryLegs := TEntryLegs.Create;', body) < w,
              'the queued legs are taken before the entry is logged');
    CheckTrue(w < Pos('if not saved then', body), 'the answer is asked after the one write');
-   CheckTrue(Pos('if not saved then', body) < Pos('tCleareCallWindow;', body),
+   CheckTrue(Pos('if not saved then', body) < Pos('tCleareCallWindow(', body),
              'and the call window is cleared only after it');
    CheckTrue(Pos('if not saved then', body) < Pos('tCleareExchangeWindow;', body),
              'as is the exchange window');
