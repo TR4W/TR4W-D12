@@ -16,7 +16,7 @@ You own every format TR4W reads from or writes to disk for interchange.
 | Cabrillo export path | `tr4w/src/trdos/postunit.pas` |
 | country file | `tr4w/src/uctydat.pas`, `uCTYUpdate.pas` |
 | Super Check Partial | `tr4w/src/trdos/logscp.pas` (TRMASTER.DTA) |
-| binary log import | `tr4w/src/domain/uLogBinaryFile.pas`, `uLogImport.pas` |
+| binary log import | `tr4w/src/uLogBinaryFile.pas`, `uLogImport.pas` |
 | TRMASTER tooling | `tr4w/tools/trmaster/` |
 
 ## You are the corpus's subject
@@ -55,6 +55,13 @@ contest is set up. **The Cabrillo and ADIF writers READ the stored answer**
 (`uContestRegistry.StoredQSOIsXQSO`) and work no rule out; an ADIF import's
 rows are stamped by `LogStoreAppendQSOs`. A CLAIMEDQSO 0 / XQSO=Y on import is
 still the OPERATOR's flag (`ceXQSO`). See docs/LOG_SCHEMA.md.
+
+**ONE .TRW FORMAT IS IMPORTED: the one the D7 repository's master writes** (NY4I,
+2026-11-26) -- header `v1.7` AND a size that is a whole number of 376-byte records.
+Both are checked, the version first. Seen in real logs: v1.6 is 300 bytes and v1.5
+is 256 (either can divide by 376 by chance), development builds wrote 368-byte
+records marked v1.7, and one wrote v1.8. A current 4.x converts v1.5/v1.6 when it
+opens the contest. Do not add a reader for an older format.
 
 **The record carries a received year since issue 298 stage 1 (2026-11-12)** --
 `RcvdYear` (Word, 324) and `RcvdYearKnown` (326), carved from `sReserved` like

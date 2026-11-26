@@ -28,10 +28,11 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   were learned the hard way and would not have survived being re-derived:
 
   1. A LOG IS header + N * record, EXACTLY, and the record is the frozen
-     376-byte TTrwRecordV17 below.  If the file size does not divide, it was
-     written in another record size (a v1.5/v1.6 log, or a damaged file), and
-     reading at this stride yields MISALIGNED GARBAGE rather than an error.
-     Refuse instead.
+     376-byte TTrwRecordV17 below.  Reading any other layout at this stride
+     yields MISALIGNED GARBAGE rather than an error, so BOTH are required: the
+     header says v1.7 AND the size divides.  Neither is enough alone -- a v1.5
+     (256-byte) or v1.6 (300-byte) log can have a size that divides, and
+     development builds wrote 368-byte records marked v1.7.
 
   2. A SHORT READ AT THE TAIL IS END-OF-FILE, SILENTLY.  That is what the
      legacy ReadLogFile did (MainUnit): it read one record and treated
@@ -196,6 +197,11 @@ type
 const
    (* The size of one record, and of the header, in every .TRW. *)
    TRW_RECORD_SIZE = 376;
+   (* THE ONLY FORMAT THIS UNIT IMPORTS: the one the D7 repository's master
+     writes (NY4I, 2026-11-26: "we only need to import the log format in
+     current MASTER of D7 repo").  An older 4.x log is converted by opening it
+     in a current 4.x. *)
+   TRW_LOG_VERSION = 'v1.7';
    (* A note's text region: NOTE_MAX_LENGTH (uLogNote) bytes from Prefix. Stated
      here again, literally, because this is the FILE's region -- the in-memory
      one may move. *)
@@ -226,6 +232,7 @@ type
       lbCannotOpen,        (* no such file, or locked by a running TR4W *)
       lbTooSmall,          (* smaller than one header *)
       lbStrideMismatch,    (* not header + N * record -- see the header comment *)
+      lbWrongVersion,      (* the header names a format other than v1.7 *)
       lbHeaderUnreadable
    );
 
@@ -550,6 +557,27 @@ begin
       Exit;
       end;
 
+   if FStream.Read(FHeader, SizeOf(FHeader)) <> SizeOf(FHeader) then
+      begin
+      ReportFailure(lbHeaderUnreadable,
+           SysUtils.Format('The header of "%s" could not be read.', [aFileName]));
+      Exit;
+      end;
+
+   (* THE VERSION IS CHECKED, AND BEFORE THE SIZE.  The size check alone let
+     through any older log whose length happened to divide by this record, and
+     read it as rows of misaligned bytes. *)
+   if LogVersion <> TRW_LOG_VERSION then
+      begin
+      ReportFailure(lbWrongVersion,
+           SysUtils.Format('"%s" is marked "%s". TR4W imports only %s logs, the ' +
+                  'format the current TR4W 4.x writes. For an older log, open ' +
+                  'that contest in the current TR4W 4.x, which converts it, ' +
+                  'then import it here.',
+                  [aFileName, LogVersion, TRW_LOG_VERSION]));
+      Exit;
+      end;
+
    recordBytes := FStream.Size - SizeOf(FHeader);
    leftover := recordBytes mod SizeOf(TTrwRecordV17);
 
@@ -562,23 +590,16 @@ begin
       ReportFailure(lbStrideMismatch,
            SysUtils.Format('"%s" is %d bytes, which is not a header (%d) plus a whole ' +
                   'number of %d-byte records -- %d byte(s) are left over. That ' +
-                  'normally means the log was written by a version of TR4W whose ' +
-                  'QSO record was a different size (a log older than v1.7, or a ' +
-                  'damaged file), and reading it at this stride would produce ' +
-                  'misaligned data rather than an error.',
+                  'normally means the log was written by a development build of ' +
+                  'TR4W whose QSO record was a different size, or the file is ' +
+                  'damaged. Reading it at this size would produce misaligned ' +
+                  'data rather than an error.',
                   [aFileName, FStream.Size, SizeOf(FHeader),
                    SizeOf(TTrwRecordV17), leftover]));
       Exit;
       end;
 
    FExpectedRecords := recordBytes div SizeOf(TTrwRecordV17);
-
-   if FStream.Read(FHeader, SizeOf(FHeader)) <> SizeOf(FHeader) then
-      begin
-      ReportFailure(lbHeaderUnreadable,
-           SysUtils.Format('The header of "%s" could not be read.', [aFileName]));
-      Exit;
-      end;
 end;
 
 destructor TLogBinaryReader.Destroy;

@@ -36,6 +36,7 @@ type
       procedure TestUnrepresentableYearRaises;
       procedure TestMissingFileReportsRatherThanRaises;
       procedure TestStrideMismatchIsRefused;
+      procedure TestAnotherLogVersionIsRefused;
       procedure TestEveryBinaryLogFixtureReads;
       procedure TestTheRecordIsTheSameSizeEverywhere;
       procedure TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
@@ -303,6 +304,59 @@ begin
                 'a file that is not header + N*record is refused');
       CheckTrue(Pos('different size', r.Message) > 0,
                 'and the message says what that normally means');
+   finally
+      r.Free;
+   end;
+
+   DeleteFile(fn);
+end;
+
+procedure TLogBinaryFileTests.TestAnotherLogVersionIsRefused;
+const
+   (* The version text is the first four bytes of the file: 'v1.7'. *)
+   MINOR_DIGIT_AT = 3;
+var
+   fn: string;
+   src: TFileStream;
+   dst: TFileStream;
+   r: TLogBinaryReader;
+   rec: ContestExchange;
+   other: AnsiChar;
+begin
+   BeginTest('TestAnotherLogVersionIsRefused');
+
+   (* THE SIZE IS RIGHT ON PURPOSE.  An older log whose size happens to divide
+     by 376 got past the size check, which was the only one, and was read as
+     rows of misaligned bytes (2026-11-26: a v1.6 log of 94 x 300 bytes). *)
+   fn := IncludeTrailingPathDelimiter(GetTempDir) + 'tr4w_version_test_' +
+         IntToStr(GetProcessID) + '.trw';
+   if FileExists(fn) then
+      begin
+      DeleteFile(fn);
+      end;
+
+   src := TFileStream.Create(BinaryLogFixture('arktika_2026_ny4i'),
+                             fmOpenRead or fmShareDenyNone);
+   try
+      dst := TFileStream.Create(fn, fmCreate);
+      try
+         dst.CopyFrom(src, src.Size);
+         other := '6';
+         dst.Position := MINOR_DIGIT_AT;
+         dst.WriteBuffer(other, 1);
+      finally
+         dst.Free;
+      end;
+   finally
+      src.Free;
+   end;
+
+   r := TLogBinaryReader.Create(fn);
+   try
+      CheckTrue(r.Status = lbWrongVersion, 'a v1.6 header is refused');
+      CheckTrue(Pos('v1.6', r.Message) > 0, 'the message names the version found');
+      CheckTrue(Pos('v1.7', r.Message) > 0, 'and the one that is imported');
+      CheckFalse(r.ReadNext(rec), 'and no record is read from it');
    finally
       r.Free;
    end;
@@ -906,6 +960,7 @@ begin
    TestUnrepresentableYearRaises;
    TestMissingFileReportsRatherThanRaises;
    TestStrideMismatchIsRefused;
+   TestAnotherLogVersionIsRefused;
    TestEveryBinaryLogFixtureReads;
    TestTheRecordIsTheSameSizeEverywhere;
    TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
