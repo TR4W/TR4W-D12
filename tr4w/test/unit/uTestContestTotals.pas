@@ -122,7 +122,7 @@ end;
 (* A logged QSO: a QSO record, as the log's loader would count it. *)
 function LoggedQSO(const aCall: string; aBand: BandType; aMode: ModeType): ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.ceRecordKind := rkQSO;
    Result.Callsign := ShortString(aCall);
    Result.Band := aBand;
@@ -1072,7 +1072,7 @@ begin
       end
    else
       begin
-      FillChar(aQso, SizeOf(ContestExchange), 0);
+      aQso.Clear;
       end;
 end;
 

@@ -1799,7 +1799,7 @@ end;
 (* ONE FM QSO FOR aContest on 2 m -- a band every contest here credits. *)
 function FMQSO(aContest: ContestType): ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.ceContest := ContestHandleOf(aContest);
    Result.Callsign := 'W1AW';
    Result.Band := Band2;
@@ -1862,7 +1862,7 @@ end;
    then the sent exchange, then his call and what he sent. *)
 function CanonicalQSO(aContest: TContestHandle): ContestExchange; overload;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.ceContest := aContest;
    Result.Callsign := 'W1AW';
    Result.Mode := CW;

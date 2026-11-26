@@ -45,6 +45,7 @@ type
       procedure Test_TheThreeQSOIdsShareOneSize;
       procedure Test_SpotRecordInsideTheSpotMessage;
       procedure Test_TheExchangeRecordIsStillThe376ByteImportRecord;
+      procedure Test_EveryFixedRecordIsUnmanaged;
    end;
 
 implementation
@@ -141,6 +142,27 @@ begin
    CheckWire('ContestExchange', 376, SizeOf(ContestExchange));
 end;
 
+(* EVERY FIXED MESSAGE IS SENT AS ITS OWN BYTES (SendToNet(rec, SizeOf(rec))),
+  so none may hold a managed field: a string or a dynamic array would put a
+  POINTER on the wire. A run-time check, not VC's compile guard: these are
+  fixed messages whose sizes are pinned above, and ContestExchange (inside
+  TNetSynQSOInformation) has its own guard (issue 386). *)
+procedure TTestNetWireSizes.Test_EveryFixedRecordIsUnmanaged;
+begin
+   CheckFalse(IsManagedType(TMessageState), 'TMessageState');
+   CheckFalse(IsManagedType(TLogFileInformation), 'TLogFileInformation');
+   CheckFalse(IsManagedType(TIntercomMessage), 'TIntercomMessage');
+   CheckFalse(IsManagedType(TNetDXSpot), 'TNetDXSpot');
+   CheckFalse(IsManagedType(TNetSynQSOInformation), 'TNetSynQSOInformation');
+   CheckFalse(IsManagedType(TParameterToNetwork), 'TParameterToNetwork');
+   CheckFalse(IsManagedType(TStationState), 'TStationState');
+   CheckFalse(IsManagedType(TClientStatus), 'TClientStatus');
+   CheckFalse(IsManagedType(TSendSpotViaNetwork), 'TSendSpotViaNetwork');
+   CheckFalse(IsManagedType(TComputerNetID), 'TComputerNetID');
+   CheckFalse(IsManagedType(TServerMessage), 'TServerMessage');
+   CheckFalse(IsManagedType(THelloMessage), 'THelloMessage');
+end;
+
 procedure TTestNetWireSizes.RunAllTests;
 begin
    Test_RecordSizes;
@@ -148,6 +170,7 @@ begin
    Test_TheThreeQSOIdsShareOneSize;
    Test_SpotRecordInsideTheSpotMessage;
    Test_TheExchangeRecordIsStillThe376ByteImportRecord;
+   Test_EveryFixedRecordIsUnmanaged;
 end;
 
 end.

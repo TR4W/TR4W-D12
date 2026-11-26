@@ -801,7 +801,7 @@ end;
   ProcessExchange leaves; running ProcessExchange itself is the M5 capture. *)
 procedure BuildQSO(aIndex: integer; const aSpec: TMatrixQSO; out aRX: ContestExchange);
 begin
-   FillChar(aRX, SizeOf(aRX), 0);
+   aRX.Clear;
    aRX.ceRecordKind := rkQSO;
    aRX.ceContest := Contest;
    aRX.tSysTime.qtYear := 26;

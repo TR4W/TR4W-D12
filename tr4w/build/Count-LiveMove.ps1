@@ -81,7 +81,10 @@ param(
 # server-log totals went with the replace.
 # 437 -> 435, 2026-11-04: uExchangeTokens.ScanSweepstakesExchange clears its
 # fields and words with Default() (the ambiguous-serial refusal's word cutter).
-$MOVE_CEILING = 417
+# 417 -> 296, 2026-11-26: issue 386 -- ContestExchange gained Clear, so every
+# whole-record FillChar in src and the tests became .Clear, and Edit QSO's
+# field-by-field FillChar before an assignment went (Lint-ContestExchangeBytes).
+$MOVE_CEILING = 296
 # Floors for -Gate: the tree has ~800 Pascal files and several hundred live
 # calls, so fewer than these means the reader failed, not that the tree is clean.
 $FILE_FLOOR  = 300

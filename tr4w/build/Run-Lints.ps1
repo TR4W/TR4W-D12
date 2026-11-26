@@ -324,6 +324,11 @@ $lints = @(
    # -Gate, this lint: it runs its fixture first and fails below its floors.
    @{ Name = 'Count-LiveMove'; Arg = $Tr4wDir; NeedsFpc = $false; Extra = @('-Gate') }
 
+   # ContestExchange IS NOT TREATED AS RAW BYTES outside an allow-list (issue
+   # 386): .Clear and .SameBytes, not FillChar and CompareMem. The list is a
+   # ratchet; batch B of 386 empties its .TRW rows. Fixture first, fails closed.
+   @{ Name = 'Lint-ContestExchangeBytes'; Arg = $Tr4wDir; NeedsFpc = $false }
+
    # RAW FILE WRITES OUTSIDE uAppPaths / uFileText, RATCHETED DOWN (issue 165,
    # 2026-11-20). Where a written file lives is uAppPaths' answer and a safe text
    # write is uFileText's; a new raw write is a path nobody routed. Same shape as

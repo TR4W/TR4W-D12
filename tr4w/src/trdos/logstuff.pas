@@ -2218,7 +2218,7 @@ begin
           FoundDomesticQTH writes DomMultQTH / DomesticQTH onto whatever
           record it is handed. }
 
-        FillChar(ProbeRX, SizeOf(ProbeRX), 0);
+        ProbeRX.Clear;
         ProbeRX.QTHString := TempString;
 
         if FoundDomesticQTH(ProbeRX) then
@@ -4420,7 +4420,7 @@ begin
   RoverSlashPos := Pos('/', string(RXData.Callsign));
   if RoverSlashPos > 0 then
      begin
-     FillChar(RoverProbeRX, SizeOf(RoverProbeRX), 0);
+     RoverProbeRX.Clear;
      RoverProbeRX.QTHString := UpperCase(
         Copy(string(RXData.Callsign), RoverSlashPos + 1,
              Length(string(RXData.Callsign)) - RoverSlashPos));

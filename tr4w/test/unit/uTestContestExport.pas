@@ -108,7 +108,7 @@ end;
 
 function EmptyQso(aContest: TContestHandle): ContestExchange; overload;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.ceContest := aContest;
    Result.ceRecordKind := rkQSO;
 end;
@@ -806,7 +806,7 @@ end;
 function PartyQSO(aContest: TContestHandle;
                   const aQTH, aDomesticKey, aCountryID: string): ContestExchange; overload;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.ceContest := aContest;
    Result.Callsign := 'K1ABC';
    Result.Band := Band20;
@@ -1133,7 +1133,7 @@ var
    text: string;
 begin
    BeginTest('Test_BCQPExportsStateBCAndNoCounty');
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.ceContest := ContestHandleOf(BCQP);
    qso.Band := Band20;
    qso.Mode := CW;

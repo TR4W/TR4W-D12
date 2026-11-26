@@ -1086,12 +1086,21 @@ serialization because you wrote the struct straight to a file or a socket.
 Given a serializer, the in-memory type is free to be whatever suits the
 program, and a class suits it better.
 
-So `ContestExchange` and the protocol records are NOT exempt. What is real
-about them is a separate question: the ENCODING has deployed readers — existing
-binary `.dat` logs and older TR4W versions on a multi-op network — so changing
-the BYTES is a compatibility decision. Changing the TYPE behind them is not.
-Keeping those two questions apart is the whole point; the SQLite log work is
-where the encoding one gets answered.
+So the protocol records are NOT exempt. What is real about them is a separate
+question: the ENCODING has deployed readers — existing binary `.dat` logs and
+older TR4W versions on a multi-op network — so changing the BYTES is a
+compatibility decision. Changing the TYPE behind them is not. Keeping those two
+questions apart is the whole point; the SQLite log work is where the encoding
+one gets answered.
+
+**`ContestExchange` IS THE RULED EXCEPTION: IT STAYS A RECORD** (NY4I, issue
+386), and not because of an encoding -- since protocol 5 a QSO
+crosses the wire as named columns, not as the record. As a class, `b := a`
+would alias where hundreds of sites expect a copy, and `FillChar` on it would
+still compile; no need for shared identity was found. It is a value type with
+no managed field and no virtual method, held there by a compile guard in
+`VC.pas` and `Lint-ContestExchangeBytes`, and it gains methods (`Clear`,
+`SameBytes`) instead.
 
 A flags or capability set passed by value is likewise a convenience, not a
 contract.

@@ -143,7 +143,7 @@ var
    parties: integer;
 begin
    BeginTest('Test_EveryStatePartyQualifiesItsDupeKey');
-   FillChar(qso, SizeOf(ContestExchange), 0);
+   qso.Clear;
    qso.Callsign := 'W2TZ';
    qso.QTHString := 'STE';
    qso.DomesticQTH := 'STE';
@@ -266,7 +266,7 @@ var
                   aMode: ModeType; out aAccepted: boolean;
                   var aRX: ContestExchange): boolean;
    begin
-      FillChar(aRX, SizeOf(ContestExchange), 0);
+      aRX.Clear;
       ActiveMode := aMode;
       CallWindowString := CallString(aCall);
       aAccepted := ParametersOkay(CallString(aCall), Str40(aExch), aBand, aMode,

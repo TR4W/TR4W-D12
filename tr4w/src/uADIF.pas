@@ -2073,7 +2073,7 @@ const
    // Windows.MAXWORD is $FFFF; declared locally to avoid `uses Windows`.
    SENTINEL_WORD = $FFFF;
 begin
-   FillChar(exch, SizeOf(exch), 0);
+   exch.Clear;
    exch.Band           := NoBand;
    exch.Mode           := NoMode;
    exch.ExtMode        := eNoMode;

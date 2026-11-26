@@ -560,8 +560,12 @@ widget set; `uTestNetResend`) holds the decisions; `uNet` does the work.
   `ceSendToServer := True` before posting, and the caller then stored that). The
   PACKET carries sent/not-dirty; the caller stores the record as it made it
   (`LogContact` and `AddRecordToLogAndSendToNetwork` now state `False/False`
-  explicitly). `DeleteLastContact` and the QTC mark set `server_dirty`
-  before storing -- a delete made offline was lost before. (The QTC mark,
+  explicitly). An operator's edit (Edit QSO, `DeleteLastContact`) and the QTC
+  mark are stored with `server_dirty` set -- BY THE STORE since issue 386
+  (`uLogStore.OwedToTheServer`, in `LogStoreUpdateQSOAtIndex`,
+  `LogStoreUpdateNewestQSO` and `LogStoreMarkSentInQTC`; the callers no longer
+  set it). The rescore batch, a peer's edit and a catch-up do NOT mark it. A
+  delete made offline was lost before. (The QTC mark,
   issue 385: `uLogStore.LogStoreMarkSentInQTC` by row id, then
   `SendRowToServer(NET_WIRE_EDIT_ID, rowId, NetQsoTag(id1, id2))` per row;
   a (0, 0) row is not sent.)

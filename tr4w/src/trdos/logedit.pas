@@ -877,7 +877,7 @@ var
 
 begin
   MultString := 0;
-  FillChar(TempRXData, SizeOf(ContestExchange), 0);
+  TempRXData.Clear;
   TempRXData.Band := Band;
   (* ALLBANDS IS A KEY, NOT A BAND -- M8. CreateModeSpecificDomesticMultiplier-
      Info asks with it when multipliers are not counted per band, meaning
@@ -1310,7 +1310,7 @@ begin
   if countsDX or countsZones or
      ContestHasPrefixMultiplier(contestRules) then
      begin
-     FillChar(TempRXData, SizeOf(TempRXData), 0);
+     TempRXData.Clear;
      ctyLocateCall(Call, TempRXData.QTH);
      if TempRXData.QTH.Country = UNKNOWN_COUNTRY then
         begin

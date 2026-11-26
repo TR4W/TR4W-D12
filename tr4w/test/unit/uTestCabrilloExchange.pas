@@ -75,7 +75,7 @@ type
 
 function EmptyRx: ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
 end;
 
 function EmptyMy: TMyStationExchange;

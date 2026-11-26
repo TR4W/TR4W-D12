@@ -80,7 +80,7 @@ const
 (* A QSO whose multiplier fields are set, and nothing else. *)
 function Qso(const aDomMultQTH, aCountryID: string; aZone: integer): ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.Callsign := 'W1AW';
    Result.DomMultQTH := ShortString(aDomMultQTH);
    Result.QTH.CountryID := ShortString(aCountryID);

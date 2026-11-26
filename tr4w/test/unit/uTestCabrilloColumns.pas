@@ -172,7 +172,7 @@ end;
 
 function PinQso(aVariant: integer): ContestExchange;
 begin
-   FillChar(Result, SizeOf(ContestExchange), 0);
+   Result.Clear;
    Result.RSTSent := 599;
    Result.RSTReceived := 579;
    Result.NumberSent := 7;

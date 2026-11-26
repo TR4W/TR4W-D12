@@ -491,7 +491,7 @@ var
    total: Int64;
    rowId: Int64;
 begin
-   FillChar(aQso, SizeOf(aQso), 0);
+   aQso.Clear;
    Result := False;
    total := LogSourceRecordCount;
    if (aOffsetFromEnd < 1) or (total < aOffsetFromEnd) then
@@ -514,7 +514,7 @@ var
    total: Int64;
    rowId: Int64;
 begin
-   FillChar(aQso, SizeOf(aQso), 0);
+   aQso.Clear;
    Result := False;
    (* CHEAP NOW, AND IT WAS NOT. This bounds check ran a SELECT row count --
       a full table scan -- on every single row fetch, 1.3 ms of it at 8,448

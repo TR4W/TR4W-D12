@@ -41,6 +41,9 @@ type
       procedure TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
    public
       procedure TestRecordArrayStrideIsOneRecord;
+      procedure TestTheRecordStaysUnmanaged;
+      procedure TestClearZeroesEveryByte;
+      procedure TestSameBytesComparesBytesNotText;
       procedure RunAllTests; override;
    end;
 
@@ -567,10 +570,80 @@ begin
                'element 3 is three records on from the base');
 end;
 
+(* THE RUNTIME TWIN OF VC's COMPILE GUARD (issue 386). The guard,
+  TContestExchangeMustStayUnmanaged, stops the build when a managed field is
+  added; this says the same thing where the suite reports it, and also covers
+  the nested records the guard reaches through ContestExchange. *)
+procedure TLogBinaryFileTests.TestTheRecordStaysUnmanaged;
+begin
+   BeginTest('TestTheRecordStaysUnmanaged');
+   CheckFalse(IsManagedType(ContestExchange),
+              'ContestExchange holds no managed field (a value record, issue 386)');
+   CheckFalse(IsManagedType(QTHRecord), 'nor does its nested QTHRecord');
+   CheckFalse(IsManagedType(TContestHandle), 'nor its contest handle');
+   CheckFalse(IsManagedType(TLogHeader), 'nor the .TRW header');
+end;
+
+(* Clear IS Default(ContestExchange), and that must be the same bytes as the
+  FillChar it replaces -- padding included, which an assignment of a default
+  value need not promise. Filled with $FF first, so a byte Clear missed shows. *)
+procedure TLogBinaryFileTests.TestClearZeroesEveryByte;
+var
+   r: ContestExchange;
+   p: PByte;
+   i, nonZero: integer;
+begin
+   BeginTest('TestClearZeroesEveryByte');
+   FillChar(r, SizeOf(ContestExchange), $FF);
+   r.Clear;
+   p := PByte(@r);
+   nonZero := 0;
+   for i := 0 to SizeOf(ContestExchange) - 1 do
+      begin
+      if p[i] <> 0 then
+         begin
+         Inc(nonZero);
+         end;
+      end;
+   CheckEquals(0, nonZero, 'every one of the 376 bytes is zero after Clear');
+   CheckEquals(376, SizeOf(ContestExchange), 'and methods added no storage');
+end;
+
+(* SameBytes is a BYTE comparison, and says so: equal text after a longer
+  value was held is NOT the same bytes. *)
+procedure TLogBinaryFileTests.TestSameBytesComparesBytesNotText;
+var
+   a, b: ContestExchange;
+begin
+   BeginTest('TestSameBytesComparesBytesNotText');
+   a.Clear;
+   b.Clear;
+   CheckTrue(a.SameBytes(b), 'two cleared records are the same bytes');
+   a.Callsign := 'W1AW';
+   CheckFalse(a.SameBytes(b), 'a changed field is seen');
+   b.Callsign := 'W1AW';
+   CheckTrue(a.SameBytes(b), 'the same field written the same way is the same');
+   b.Callsign := 'W1AWXYZ';
+   b.Callsign := 'W1AW';
+   CheckEquals(string(a.Callsign), string(b.Callsign), 'the text reads the same');
+   CheckFalse(a.SameBytes(b),
+              'but the slack past the length byte still holds XYZ: not the same bytes');
+   a.ceRoverQTH := 'KIN';
+   b.Clear;
+   b.ceRoverQTH := 'KIN';
+   b.Callsign := 'W1AW';
+   CheckTrue(a.SameBytes(b), 'the last field is compared too');
+   b.sReserved[31] := 'x';
+   CheckFalse(a.SameBytes(b), 'and the very last byte of sReserved');
+end;
+
 procedure TLogBinaryFileTests.RunAllTests;
 begin
    (* BEFORE the Windows-only skip: this one is arithmetic, not a file. *)
    TestRecordArrayStrideIsOneRecord;
+   TestTheRecordStaysUnmanaged;
+   TestClearZeroesEveryByte;
+   TestSameBytesComparesBytesNotText;
 
 {$IFNDEF WINDOWS}
    (* SAID, NOT SILENT: a suite that quietly contributes nothing is

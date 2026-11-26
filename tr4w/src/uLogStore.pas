@@ -3938,6 +3938,26 @@ begin
       end;
 end;
 
+(* AN OPERATOR'S CHANGE TO A LOGGED QSO IS OWED TO THE MULTI-OP SERVER, and the
+  store says so (issue 386 step 3): the record written is aQso with
+  server_dirty set, so no caller can forget it. The flag is cleared when the
+  edit packet has been written to the socket (uNet.SettleServerProgress); with
+  no link the row stays owed and the resend takes it.
+
+  ONLY THE OPERATOR'S ENTRIES: LogStoreUpdateQSOAtIndex (Edit QSO) and
+  LogStoreUpdateNewestQSO (Alt-Y). The others must NOT mark the row: the
+  rescore batch (LogStoreUpdateQSOsByRowId) writes back what it read, a
+  peer's edit (LogStoreUpdateQSOBySessionIds) came FROM the network, and a
+  catch-up append is stamped sent and clean (uNetCatchUp). The QTC mark
+  (LogStoreMarkSentInQTC) and the station correction (the repository's
+  ApplyStationValueCorrection, which keeps a peer's row as it was) set it in
+  their own writes. *)
+function OwedToTheServer(const aQso: ContestExchange): ContestExchange;
+begin
+   Result := aQso;
+   Result.ceNeedSendToServerAE := True;
+end;
+
 function LogStoreUpdateNewestQSO(const aQso: ContestExchange): boolean;
 var
    rowId: Int64;
@@ -3984,7 +4004,7 @@ begin
          end;
 
       (* THE INTENDED ROW CHANGED, or nothing is committed (issue 349). *)
-      if not GRepository.UpdateQSO(rowId, aQso) then
+      if not GRepository.UpdateQSO(rowId, OwedToTheServer(aQso)) then
          begin
          AbandonUnchangedUpdate('rewriting the newest QSO', rowId);
          Exit;
@@ -4071,7 +4091,7 @@ begin
 
       (* THE INTENDED ROW CHANGED, or nothing is committed (issue 349) --
         both writes, since they are one transaction. *)
-      if not GRepository.UpdateQSO(rowId, aQso) then
+      if not GRepository.UpdateQSO(rowId, OwedToTheServer(aQso)) then
          begin
          AbandonUnchangedUpdate('rewriting a QSO by position', rowId);
          Exit;
@@ -4295,8 +4315,7 @@ begin
          rec.ceWasSendInQTC := True;
          (* The server hears of it as an edit; until the writer has sent it,
            the row is owed (a resend on the next link). *)
-         rec.ceNeedSendToServerAE := True;
-         if not GRepository.UpdateQSO(aRowIds[i], rec) then
+         if not GRepository.UpdateQSO(aRowIds[i], OwedToTheServer(rec)) then
             begin
             (* Rolls back the rows marked before it too: one transaction. *)
             AbandonUnchangedUpdate(WHAT, aRowIds[i]);

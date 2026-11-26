@@ -750,8 +750,9 @@ begin
     until the packet has been written. The row is stored dirty and the flag is
     cleared when the edit reaches the socket (uNet.SettleServerProgress). With
     no link the row simply stays dirty and goes when one comes. It was sent
-    AFTER the rewrite and the flag never set, so a delete made offline was lost. *)
-  TempRXData.ceNeedSendToServerAE := True;
+    AFTER the rewrite and the flag never set, so a delete made offline was lost.
+    The STORE sets the flag on the rewrite (uLogStore.OwedToTheServer, issue
+    386). *)
   if not LogStoreUpdateNewestQSO(TempRXData) then
      begin
      (* NOT COMMITTED: nothing toggled, nothing sent, no "deleted" message.

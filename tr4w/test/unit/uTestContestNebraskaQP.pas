@@ -109,7 +109,7 @@ end;
 
 function QsoOn(aBand: BandType; aMode: ModeType; aExtMode: ExtendedModeType): ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.Band := aBand;
    Result.Mode := aMode;
    Result.ExtMode := aExtMode;
@@ -165,7 +165,7 @@ begin
    GShapeSetsQTH := aQTH;
    contestObject := Make(NEBRASKAQSO, StationAt(aInState));
    try
-      FillChar(exch, SizeOf(exch), 0);
+      exch.Clear;
       Result := contestObject.ParseReceivedExchange('599 ' + aQTH, Session, exch, aMessage);
    finally
       contestObject.Free;

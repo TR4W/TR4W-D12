@@ -2715,7 +2715,7 @@ begin
    (* EVERY read starts from ClearContestExchange's shape, so a column this unit
      does not restore holds the same "not set" marker the program expects rather
      than a zero that looks like data. *)
-   FillChar(aQso, SizeOf(aQso), 0);
+   aQso.Clear;
    aQso.Band := NoBand;
    aQso.Mode := NoMode;
    aQso.ExtMode := eNoMode;
@@ -4434,7 +4434,7 @@ begin
       begin
       (* ContestExchange holds ShortStrings and scalars only, so clearing it
         whole is safe. *)
-      FillChar(aQso, SizeOf(aQso), 0);
+      aQso.Clear;
       end;
 end;
 
@@ -4795,7 +4795,7 @@ begin
       end
    else
       begin
-      FillChar(aQso, SizeOf(aQso), 0);
+      aQso.Clear;
       end;
    FSelectById.Close;
 end;
@@ -4813,7 +4813,7 @@ begin
       end
    else
       begin
-      FillChar(aQso, SizeOf(aQso), 0);
+      aQso.Clear;
       end;
    FSelect.Close;
 end;

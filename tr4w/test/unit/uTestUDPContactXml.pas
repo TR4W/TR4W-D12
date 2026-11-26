@@ -51,7 +51,7 @@ function ContactXml(aWhich: UDPType): string;
 var
    q: ContestExchange;
 begin
-   FillChar(q, SizeOf(ContestExchange), 0);
+   q.Clear;
    q.ceContest := ContestHandleOf(CQWWCW);
    q.Callsign := 'W1AW';
    q.Band := Band20;

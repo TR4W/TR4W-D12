@@ -311,7 +311,7 @@ begin
   for I := 1 to QTCWasSend do 
      begin
      IncrementQTCCount(QTCCallsign);
-     FillChar(QTCRXData, SizeOf(ContestExchange), 0);
+     QTCRXData.Clear;
      QTCRXData.ceRecordKind := rkQTCS;
  //    tGetQSOSystemTime(QTCRXData.tSysTime);
  //    QTCRXData.Band := ActiveBand;

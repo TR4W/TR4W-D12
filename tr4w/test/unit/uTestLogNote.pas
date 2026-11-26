@@ -63,7 +63,7 @@ var
    ce : ContestExchange;
 begin
    BeginTest('a note that is set is the note that is read');
-   FillChar(ce, SizeOf(ce), 0);
+   ce.Clear;
    ce.ceRecordKind := rkNote;
    SetNoteText(ce, 'the rig drifted 200 Hz after the band change');
    CheckEquals('the rig drifted 200 Hz after the band change',
@@ -84,15 +84,15 @@ begin
    BeginTest('SetNoteText writes exactly the bytes the note writer always wrote');
    s := 'QSY to 14.025 for the pileup';
 
-   FillChar(original, SizeOf(original), 0);
+   original.Clear;
    original.ceRecordKind := rkNote;
    Move(s[1], original.Prefix, Length(s));
 
-   FillChar(viaHelper, SizeOf(viaHelper), 0);
+   viaHelper.Clear;
    viaHelper.ceRecordKind := rkNote;
    SetNoteText(viaHelper, s);
 
-   CheckTrue(CompareMem(@original, @viaHelper, SizeOf(ContestExchange)),
+   CheckTrue(original.SameBytes(viaHelper),
              'the two records are identical, byte for byte');
 end;
 
@@ -103,7 +103,7 @@ var
 begin
    BeginTest('a note of exactly NOTE_MAX_LENGTH comes back whole');
    text := AnsiString(StringOfChar('x', NOTE_MAX_LENGTH));
-   FillChar(ce, SizeOf(ce), 0);
+   ce.Clear;
    SetNoteText(ce, text);
    CheckEquals(NOTE_MAX_LENGTH, Length(NoteText(ce)),
                'all of it, with no terminator inside the region to stop at');
@@ -117,7 +117,7 @@ var
 begin
    BeginTest('a note longer than NOTE_MAX_LENGTH keeps its first NOTE_MAX_LENGTH');
    text := AnsiString(StringOfChar('a', NOTE_MAX_LENGTH) + StringOfChar('b', 20));
-   FillChar(ce, SizeOf(ce), 0);
+   ce.Clear;
    SetNoteText(ce, text);
    CheckEquals(string(Copy(text, 1, NOTE_MAX_LENGTH)), string(NoteText(ce)),
                'truncated at the region, as the writer always truncated');
@@ -128,7 +128,7 @@ var
    ce : ContestExchange;
 begin
    BeginTest('a short note written over a long one leaves none of the long one');
-   FillChar(ce, SizeOf(ce), 0);
+   ce.Clear;
    SetNoteText(ce, AnsiString(StringOfChar('z', 60)));
    SetNoteText(ce, 'short');
    CheckEquals('short', string(NoteText(ce)),
@@ -140,7 +140,7 @@ var
    ce : ContestExchange;
 begin
    BeginTest('an empty note reads back empty');
-   FillChar(ce, SizeOf(ce), 0);
+   ce.Clear;
    SetNoteText(ce, AnsiString(StringOfChar('q', 30)));
    SetNoteText(ce, '');
    CheckEquals('', string(NoteText(ce)), 'nothing left in the region');

@@ -8,10 +8,13 @@ unit uLogNote;
   and the fields after that, terminated by the zero fill.
 
   THAT LAYOUT IS AN ENCODING WITH DEPLOYED READERS, which is why it is kept
-  rather than replaced. Every D7-written .TRW carries notes this way, and a
-  multi-op peer sends the record over the wire as it stands. Moving a note
-  somewhere else in the record would be a compatibility decision, not a
-  refactor.
+  rather than replaced. Every D7-written .TRW carries notes this way, so the
+  importer must still read it there. The multi-op wire does NOT carry the
+  record any more (protocol 5, 2026-11: a QSO or note travels as named wire
+  columns, the text in `notes` -- uQsoColumns, uWireQso), so the overlay's
+  readers are the .TRW import and this program's own in-memory record.
+  Moving a note elsewhere in the record waits on issue 386's batch B, which
+  gives the importer a frozen copy of the D7 record.
 
   WHAT WAS WRONG WAS EVERYONE REACHING INTO IT BY HAND. A writer and three
   readers each spelled the layout themselves. Two of the readers read Prefix

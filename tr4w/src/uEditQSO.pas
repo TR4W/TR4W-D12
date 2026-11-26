@@ -535,12 +535,16 @@ var
 begin
    TempString := EditQSOGetText(FLD_CALLSIGN);
 
-   FillChar(EditableQSORXData.QTH, SizeOf(EditableQSORXData.QTH), 0);
+   (* A REAL CLEAR: ctyLocateCall leaves the QTH untouched for a call that
+     begins with '/', and the old call's country must not survive that. *)
+   EditableQSORXData.QTH := Default(QTHRecord);
    ctyLocateCall(TempString, EditableQSORXData.QTH);
 
    if DoingPrefixMults then
       begin
-      FillChar(EditableQSORXData.Prefix, SizeOf(EditableQSORXData.Prefix), 0);
+      (* A real clear too: SetPrefix writes the prefix only when the contest
+        has a key for this call. *)
+      EditableQSORXData.Prefix := '';
       SetPrefix(EditableQSORXData);
       EditQSOSetText(FLD_PREFIX, string(EditableQSORXData.Prefix));
       end;
@@ -594,8 +598,6 @@ var
   IndexInMap: integer;
   lpNumberOfBytesWritten: Cardinal;
   TempInteger: integer;
-  ansiOperator: RawByteString;
-  operatorLen:  integer;
   TempString: string;
   lpTranslated: boolean;
   //  TempString                            : ShortString;
@@ -664,8 +666,13 @@ begin
 
 
     {Callsign}
-  //  EditableQSORXData.Callsign := GetDialogItemText(eq_handle, 118);
-  FillChar(EditableQSORXData.Callsign, SizeOf(CallString), 0);
+  (* PLAIN ASSIGNMENTS FROM HERE ON (issue 386). Each field used to be zeroed
+    with FillChar first. For a number that did nothing: the assignment writes
+    every byte. For a ShortString it cleared the bytes past the new length,
+    which nothing reads: the record goes to the database field by field, to
+    the network as wire columns, and to the external loggers by field, and
+    nothing compares this record by its bytes. The clears left below are
+    real ones, each saying why. *)
   EditableQSORXData.Callsign := EditQSOGetText(FLD_CALLSIGN);
 
   if not IsAGoodCall(EditableQSORXData.Callsign) then
@@ -678,7 +685,6 @@ begin
   //  LocateCall(EditableQSORXData.Callsign, EditableQSORXData.QTH, true);
   if DoingDXMults then
      begin
-     FillChar(EditableQSORXData.DXQTH, SizeOf(EditableQSORXData.DXQTH), 0);
      EditableQSORXData.DXQTH := EditableQSORXData.QTH.CountryID;
      end;
 
@@ -712,7 +718,6 @@ begin
      lpNumberOfBytesWritten := Cardinal(EditQSOGetInt(FLD_FREQUENCY, lpTranslated));
      end;
   //if lpNumberOfBytesWritten < MAXDWORD then
-  FillChar(EditableQSORXData.Frequency, SizeOf(EditableQSORXData.Frequency), 0);
   EditableQSORXData.Frequency := lpNumberOfBytesWritten;
 
   {Settings.Computer.Id}
@@ -734,29 +739,23 @@ begin
   lpNumberOfBytesWritten := Cardinal(EditQSOGetInt(FLD_AGE, lpTranslated));
   if lpNumberOfBytesWritten < MAXBYTE then
      begin
-     FillChar(EditableQSORXData.Age, SizeOf(EditableQSORXData.Age), 0);
      EditableQSORXData.Age := lpNumberOfBytesWritten;
      end;
 
   {Chapter}
-  FillChar(EditableQSORXData.Chapter, SizeOf(EditableQSORXData.Chapter), 0);
   EditableQSORXData.Chapter := EditQSOGetText(FLD_CHAPTER);
   {Check}
-  FillChar(EditableQSORXData.Check, SizeOf(EditableQSORXData.Check), 0);
   EditableQSORXData.Check := EditQSOGetInt(FLD_CHECK, lpTranslated);
   {ClassCE}
-  FillChar(EditableQSORXData.ceClass, SizeOf(EditableQSORXData.ceClass), 0);
   EditableQSORXData.ceClass := EditQSOGetText(FLD_CLASS);
 
   {NumberSent}
-  FillChar(EditableQSORXData.NumberSent, SizeOf(EditableQSORXData.NumberSent), 0);
   EditableQSORXData.NumberSent := EditQSOGetInt(FLD_NUMBERSEND, lpTranslated);
 
   {NumberReceived}
   TempInteger := EditQSOGetInt(FLD_NUMBERRECEIVED, lpTranslated);
   if lpTranslated then
      begin
-     FillChar(EditableQSORXData.NumberReceived, SizeOf(EditableQSORXData.NumberReceived), 0);
      EditableQSORXData.NumberReceived := TempInteger;
      end;
 
@@ -779,7 +778,6 @@ begin
 //  EditableQSORXData.DomMultQTH[0] := AnsiChar(Windows.GetDlgItemTextA(eq_handle, FLD_DOMMULTQTH, @EditableQSORXData.DomMultQTH[1], SizeOf(EditableQSORXData.DomMultQTH) - 1));
 
   {Prefix}
-  FillChar(EditableQSORXData.Prefix, SizeOf(EditableQSORXData.Prefix), 0);
   EditableQSORXData.Prefix := EditQSOGetText(FLD_PREFIX);
 
   {Zone}
@@ -811,14 +809,12 @@ begin
      TempByte := Byte(EditQSOGetInt(FLD_ZONE, lpTranslated));
      if lpTranslated then
         begin
-        FillChar(EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone), 0);
         EditableQSORXData.Zone := TempByte
         end
      else
         begin
         if TempByte = 0 then
            begin
-           FillChar(EditableQSORXData.Zone, SizeOf(EditableQSORXData.Zone), 0);
            EditableQSORXData.Zone := DUMMYZONE;
            end;
         end;
@@ -832,12 +828,9 @@ begin
      end;
 
   {Name}
-  FillChar(EditableQSORXData.Name, SizeOf(EditableQSORXData.Name), 0);
   EditableQSORXData.Name := EditQSOGetText(FLD_NAME);
 
   {QTHString}
-  // The next line was commented out - so test this well ny4i Issue112
-  FillChar(EditableQSORXData.QTHString, SizeOf(EditableQSORXData.QTHString), 0);
   EditableQSORXData.QTHString := EditQSOGetText(FLD_QTHSTRING);
   if DoingDomesticMults then
      begin
@@ -851,13 +844,13 @@ begin
   //windows.GetDlgItemTextA(eq_handle,FLD_POSTALCODE,EditableQSORXData.PostalCode,sizeof(PostalCodeString));
 
   {Power}
-  FillChar(EditableQSORXData.Power, SizeOf(EditableQSORXData.Power), 0);
   EditableQSORXData.Power :=
     EditQSOGetText(FLD_POWER);
 
   {Precedence}
   TempString := EditQSOGetText(FLD_PRECEDENCE);
-  FillChar(EditableQSORXData.Precedence, SizeOf(EditableQSORXData.Precedence), 0);
+  (* A real clear: an empty box means no precedence. *)
+  EditableQSORXData.Precedence := #0;
   if TempString <> '' then
      begin
      EditableQSORXData.Precedence := AnsiChar(TempString[1]);
@@ -867,7 +860,6 @@ begin
   TempByte := Byte(EditQSOGetInt(FLD_PREFECTURE, lpTranslated));
   if lpTranslated then
      begin
-     FillChar(EditableQSORXData.Prefecture, SizeOf(EditableQSORXData.Prefecture), 0);
      EditableQSORXData.Prefecture := TempByte;
      end;
 
@@ -875,7 +867,6 @@ begin
   TempWord := Word(EditQSOGetInt(FLD_TENTENNUM, lpTranslated));
   if lpTranslated then
      begin
-     FillChar(EditableQSORXData.TenTenNum, SizeOf(EditableQSORXData.TenTenNum), 0);
      EditableQSORXData.TenTenNum := TempWord;
      end;
 
@@ -883,7 +874,6 @@ begin
   TempInteger := EditQSOGetInt(FLD_RSTSEND, lpTranslated);
   if lpTranslated then
      begin
-     FillChar(EditableQSORXData.RSTSent, SizeOf(EditableQSORXData.RSTSent), 0);
      EditableQSORXData.RSTSent := TempInteger {TempWord};
      end;
 
@@ -891,7 +881,6 @@ begin
   TempInteger := EditQSOGetInt(FLD_RSTRECEIVED, lpTranslated);
   if lpTranslated then
      begin
-     FillChar(EditableQSORXData.RSTReceived, SizeOf(EditableQSORXData.RSTReceived), 0);
      EditableQSORXData.RSTReceived := TempInteger {TempWord};
      end;
 
@@ -917,21 +906,15 @@ begin
         characters or more wrote past it, over ceSentRST and whatever follows.
 
     Convert once, bound it, and leave room for the terminator. }
-  (* AnsiString: ceOperator is written to the binary log and exported, and
-    every other text field of the record is assigned the same way. WinAnsi
-    would have given this one field a different encoding from its
-    neighbours in the same record. *)
-  ansiOperator := AnsiString(EditQSOGetText(FLD_OPERATOR));
-  FillChar(EditableQSORXData.ceOperator, SizeOf(EditableQSORXData.ceOperator), 0);
-  operatorLen := Length(ansiOperator);
-  if operatorLen > SizeOf(EditableQSORXData.ceOperator) - 1 then
-     begin
-     operatorLen := SizeOf(EditableQSORXData.ceOperator) - 1;
-     end;
-  if operatorLen > 0 then
-     begin
-     Move(ansiOperator[1], EditableQSORXData.ceOperator[0], operatorLen);
-     end;
+  (* AnsiString: every other text field of the record is assigned the same
+    way, so this one gets the same encoding as its neighbours. The copy is
+    SetCharBufferBytes (issue 386): at most High() bytes and a terminator
+    right after them -- the bound and terminator the FillChar and Move here
+    used to do by hand. Bytes after the terminator are not read: the
+    database takes CharBufferBytes, which stops at it. Pinned in
+    uTestUtilsText.Test_SetCharBuffer_OperatorLogin. *)
+  SetCharBufferBytes(EditableQSORXData.ceOperator,
+                     AnsiString(EditQSOGetText(FLD_OPERATOR)));
   IndexInMap := IndexOfItemInLogForEdit;
   {SAP}
   EditableQSORXData.ceSearchAndPounce :=
@@ -992,9 +975,9 @@ begin
     direction. LogStoreUpdateQSOAtIndex opens what it needs. *)
 
   (* THE ROW IS STORED DIRTY, so the server hears of the edit even when no
-     link is up now: the flag is cleared when the packet reaches the socket
-     (uNet.SettleServerProgress). Set before the write, which stores it. *)
-  EditableQSORXData.ceNeedSendToServerAE := True;
+     link is up now -- the STORE sets it on this write (uLogStore.
+     OwedToTheServer, issue 386), and the flag is cleared when the packet
+     reaches the socket (uNet.SettleServerProgress). *)
 
   (* NO DIVISION ANY MORE, AND THAT DIVISION WAS A BUG.
 

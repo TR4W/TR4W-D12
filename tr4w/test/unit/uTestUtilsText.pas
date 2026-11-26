@@ -457,6 +457,7 @@ end;
 procedure TUtilsTextTests.Test_SetCharBuffer_OperatorLogin;
 var
    op: OperatorType;
+   rec: ContestExchange;
 begin
    BeginTest('SetCharBuffer on an OperatorType: whole calls, no stale tail');
 
@@ -482,6 +483,21 @@ begin
    SetCharBuffer(op, 'VP2E/W1ABC/P');
    CheckEquals('VP2E/W1ABC', CharBufferText(op), 'an over-long call is cut to High(op)');
    CheckEquals(0, Ord(op[10]), 'and the last byte is still the terminator');
+
+   (* AND THE SAME FIELD AS EDIT QSO WRITES IT (issue 386): its Save writes
+     ceOperator with SetCharBufferBytes(AnsiString(text)) now, where it once
+     Moved UTF-16 code units in and kept only 'N' of NY4I (2026-08-28). Read
+     back the two ways the program reads it: the database's bytes and the
+     string conversion. *)
+   rec.Clear;
+   SetCharBufferBytes(rec.ceOperator, AnsiString('K1ABCDEFGHIJ'));
+   CheckEquals('K1ABCDEFGH', string(CharBufferBytes(rec.ceOperator)),
+               'an over-long operator is cut to the field');
+   SetCharBufferBytes(rec.ceOperator, AnsiString('NY4I'));
+   CheckEquals('NY4I', string(CharBufferBytes(rec.ceOperator)),
+               'the operator is the whole call, not its first letter');
+   CheckEquals('NY4I', string(rec.ceOperator),
+               'and the string conversion stops at the terminator, not the old tail');
 end;
 
 procedure TUtilsTextTests.Test_CharBufferText_StopsAtNul;

@@ -188,7 +188,7 @@ end;
 
 function SampleQSO: ContestExchange;
 begin
-   FillChar(Result, SizeOf(ContestExchange), 0);
+   Result.Clear;
    Result.ceContest := ContestHandleOf(CQWWCW);
    Result.Callsign  := 'W1AW';
    Result.Band      := Band20;

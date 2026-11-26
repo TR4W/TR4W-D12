@@ -145,7 +145,7 @@ end;
    imported record does. *)
 function Worked(const aQTH: string): ContestExchange;
 begin
-   FillChar(Result, SizeOf(ContestExchange), 0);
+   Result.Clear;
    Result.Band := Band20;
    Result.Mode := CW;
    Result.QTHString := ShortString(aQTH);
@@ -381,7 +381,7 @@ var
 
    function Logged(const aCall: string; const aQTH: string): ContestExchange;
    begin
-      FillChar(Result, SizeOf(ContestExchange), 0);
+      Result.Clear;
       Result.ceRecordKind := rkQSO;
       Result.Callsign := CallString(aCall);
       Result.Band := Band20;

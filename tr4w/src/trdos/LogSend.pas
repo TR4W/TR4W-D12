@@ -386,7 +386,7 @@ begin
             TempString := ExchangeWindowString;
             GetRidOfPrecedingSpaces(TempString);
             GetRidOfPostcedingSpaces(TempString);
-            FillChar(TempReceivedData, SizeOf(TempReceivedData), 0);
+            TempReceivedData.Clear;
             ProcessExchange(TempString, TempReceivedData);
             if TempReceivedData.Name <> '' then
                begin

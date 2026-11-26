@@ -138,7 +138,7 @@ uses
    The record's own contest is set, as the log's loader sets it. *)
 function SSBQSO(aBand: BandType; aMode: ModeType; aExt: ExtendedModeType): ContestExchange;
 begin
-   FillChar(Result, SizeOf(ContestExchange), 0);
+   Result.Clear;
    Result.ceRecordKind := rkQSO;
    Result.ceContest := ContestHandleOf(CQWWSSB);
    Result.Callsign := 'DL1ABC';
@@ -511,7 +511,7 @@ begin
       end
    else
       begin
-      FillChar(aQso, SizeOf(ContestExchange), 0);
+      aQso.Clear;
       end;
 end;
 

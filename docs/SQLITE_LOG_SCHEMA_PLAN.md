@@ -714,6 +714,13 @@ Three consequences worth being explicit about:
 
 ### 4e. The class — wanted, and where its `Save` should live
 
+> **SUPERSEDED (issue 386, 2026-11-26): `ContestExchange` stays a RECORD.** NY4I ruled it a value
+> type with no managed field and no virtual method, guarded at compile time
+> (`VC.TContestExchangeMustStayUnmanaged`) and given methods (`Clear`, `SameBytes`). The aliasing
+> hazard below is the reason; the "self-aware dirty flag" argument is met by the store instead:
+> `uLogStore.OwedToTheServer` sets `server_dirty` on every operator edit it writes. What follows is
+> the history of the decision, not the plan. See `SQLITE_MIGRATION_TASKS.md` F1.
+
 NY4I, 2026-08-29:
 
 > *"From an object-oriented standpoint I really do like the idea of ContestExchange essentially

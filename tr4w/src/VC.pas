@@ -2023,9 +2023,12 @@ type
      WHY THE FIELD STAYS WHEN THE MEANING DOES NOT. ContestExchange is read as
      RAW BYTES out of the .TRW -- 376 per record, Windows.ReadFile straight into
      the record -- so removing a field moves every field after it and misreads
-     every binary log an operator has, plus all thirteen golden-corpus fixtures.
-     It is blitted over the multi-station wire for the same reason. The SLOT
-     survives; nothing reads it.
+     every binary log an operator has. (It is NOT sent over the multi-station
+     wire any more: since protocol 5 a QSO travels as named wire columns,
+     uWireQso. Id 1060's TNetSynQSOInformation still embeds the record and is
+     still framed by its size, but nothing in this tree fills or sends it --
+     issue 386, batch B.)
+     The SLOT survives; nothing reads it.
 
      FOLDED AT THE THREE PLACES OLD DATA ENTERS: the v1_5 and v1_6 log upgraders
      and the database reader. Never written again. If you are adding a consumer,
@@ -2204,9 +2207,50 @@ type
    peer's packet carries ITS rover place, which is that QSO's own fact, so a
    receiver keeps it; the .TRW reader clears it. *)
 {11}  ceRoverQTH:          string[10];
-{32} sReserved:               string[31]
+{32} sReserved:               string[31];
+
+(* METHODS (issue 386). A record's methods add no storage: SizeOf stays 376 and
+   no offset moves (pinned in uTestLogBinaryFile). Only STATIC methods -- a
+   virtual method or a management operator would give the record hidden state
+   and end every byte operation on it. *)
+
+   (* Every field zero, every padding byte too: the same bytes as
+      FillChar(Self, SizeOf(ContestExchange), 0), and the one spelling the
+      program uses for "an empty QSO". *)
+   procedure Clear;
+
+   (* TRUE WHEN THE TWO RECORDS HOLD THE SAME BYTES -- ALL 376, NOT THE SAME
+      FIELDS. A ShortString keeps whatever lies past its length byte, so two
+      records whose text reads the same can differ here when one of them once
+      held a longer value in that field. Use it where "nothing was written"
+      is the question (the rescore's before/after); never as QSO equality. *)
+   function SameBytes(const aOther: ContestExchange): boolean;
    end;
 {*)}
+
+(* THE COMPILE GUARD: ContestExchange MUST STAY A RECORD WITH NO MANAGED FIELD
+   (issue 386, NY4I's ruling: a value type, no class). The program copies it
+   by assignment, clears it by byte, compares it by byte (SameBytes), and the
+   .TRW importer and AskConvertLog read and write it as raw bytes. A string,
+   AnsiString, dynamic array, interface or Variant field -- directly or in a
+   nested record -- would make every one of those wrong with no warning.
+
+   FPC refuses a type that needs initialisation or finalisation in a variant
+   part, so this never-used type stops such a field AT COMPILE TIME, here:
+   "Data types which require initialization/finalization cannot be used in
+   variant records" (measured 2026-11-26 by adding a string field). The
+   runtime twin is uTestLogBinaryFile's IsManagedType check.
+
+   BEFORE REMOVING IT: every FillChar, Move, CompareMem/CompareByte, typed
+   file and raw stream read or write of the record must be gone or proven
+   field-wise (Lint-ContestExchangeBytes lists them), and SameBytes must be
+   replaced by a field comparison with a test that fails when a field is
+   missing from it. *)
+type
+  TContestExchangeMustStayUnmanaged = record
+     case byte of
+        0: (guard: ContestExchange);
+  end;
 
 const
   SizeOfContestExchange                 = SizeOf(ContestExchange);
@@ -3935,6 +3979,18 @@ end;
 function TContestHandle.ToByte: Byte;
 begin
    Result := FNumber;
+end;
+
+procedure ContestExchange.Clear;
+begin
+   Self := Default(ContestExchange);
+end;
+
+(* CompareByte, System's, not SysUtils.CompareMem: VC uses no SysUtils, and
+   this tree resolves names by use-order. *)
+function ContestExchange.SameBytes(const aOther: ContestExchange): boolean;
+begin
+   Result := CompareByte(Self, aOther, SizeOf(ContestExchange)) = 0;
 end;
 
 procedure InitializeStringTables;

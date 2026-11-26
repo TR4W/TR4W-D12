@@ -465,7 +465,7 @@ begin
 
    (* The shape ClearContestExchange leaves: not-set markers that are the type's
      MAXIMUM, not zero. Crosswalk finding 3. *)
-   FillChar(before, SizeOf(before), 0);
+   before.Clear;
    before.Band := Band20;
    before.Mode := CW;
    before.ExtMode := eCW;
@@ -521,7 +521,7 @@ var
 begin
    BeginTest('TestEveryRowGetsItsOwnGuid');
 
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.id := '5cd6c61f69cf4422baef44f93b2cbbd2';   (* a real corpus id *)
    qso.tSysTime.qtYear := 26;
    qso.tSysTime.qtMonth := 2;
@@ -555,7 +555,7 @@ begin
      5cd6c61f69cf4422baef44f93b2cbbd2. One exchange, two QSOs. Making the
      record's id the unique row key fails on the second of these -- which is
      every county line in every QSO party. *)
-   FillChar(pin, SizeOf(pin), 0);
+   pin.Clear;
    pin.ceRecordKind := rkQSO;
    pin.Callsign := 'W4THY';
    pin.id := '5cd6c61f69cf4422baef44f93b2cbbd2';
@@ -610,7 +610,7 @@ begin
    fn := TempLogName('sandp.db');
    Scrub(fn);
 
-   FillChar(before, SizeOf(before), 0);
+   before.Clear;
    before.ceRecordKind := rkQSO;
    before.Callsign := 'W1AW';
    before.ceSearchAndPounce := True;      (* so is_run must be 0 *)
@@ -653,7 +653,7 @@ begin
    fn := TempLogName('kids.db');
    Scrub(fn);
 
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.ceRecordKind := rkQSO;
    qso.Callsign := 'DL8UHJ';
    qso.Kids := 'SOME EXCHANGE';
@@ -732,7 +732,7 @@ begin
    fn := TempLogName('reimport.db');
    Scrub(fn);
 
-   FillChar(a, SizeOf(a), 0);
+   a.Clear;
    a.ceRecordKind := rkQSO;
    a.Callsign := 'W1AW';
    a.QTHString := 'CT';
@@ -798,7 +798,7 @@ begin
    fn := TempLogName('reimport2.db');
    Scrub(fn);
 
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.ceRecordKind := rkQSO;
    qso.Callsign := 'W1AW';
    qso.QTHString := 'CT';
@@ -849,7 +849,7 @@ begin
    fn := TempLogName('noguid.db');
    Scrub(fn);
 
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.ceRecordKind := rkQSO;
    qso.Callsign := 'W1AW';
    qso.tSysTime.qtYear := 26;
@@ -898,7 +898,7 @@ begin
    fn := TempLogName('update.db');
    Scrub(fn);
 
-   FillChar(before, SizeOf(before), 0);
+   before.Clear;
    before.ceRecordKind := rkQSO;
    before.Callsign := 'W1AW';
    before.QTHString := 'CT';
@@ -955,7 +955,7 @@ begin
    fn := TempLogName('nosuchrow.db');
    Scrub(fn);
 
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.ceRecordKind := rkQSO;
    qso.Callsign := 'W1AW';
 
@@ -1128,7 +1128,7 @@ begin
       try
          for i := 0 to High(calls) do
             begin
-            FillChar(qso, SizeOf(qso), 0);
+            qso.Clear;
             qso.ceRecordKind := rkQSO;
             qso.Callsign := calls[i];
             qso.NumberReceived := i + 1;
@@ -1253,7 +1253,7 @@ begin
    (* The way the program writes a note. uTestLogNote proves SetNoteText
      produces the same bytes the old writer did. *)
    s := NOTE_TEXT;
-   FillChar(before, SizeOf(ContestExchange), 0);
+   before.Clear;
    before.ceRecordKind := rkNote;
    SetNoteText(before, s);
 
@@ -1389,7 +1389,7 @@ procedure TLogRepositoryTests.MakeDistinctQSO(out aQso: ContestExchange;
 begin
    (* ContestExchange holds ShortStrings and scalars only, so clearing it
      whole is safe; the reader does the same. *)
-   FillChar(aQso, SizeOf(aQso), 0);
+   aQso.Clear;
    aQso.ceRecordKind := rkQSO;
    aQso.ceContest := NoContest;
    aQso.id := 'exchange' + IntToStr(aSeed);

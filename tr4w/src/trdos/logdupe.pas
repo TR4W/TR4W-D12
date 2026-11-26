@@ -752,7 +752,7 @@ begin
      Result := False;
      Exit;
      end;
-  FillChar(scratch, SizeOf(ContestExchange), 0);
+  scratch.Clear;
   (* The cast is a received QTH returning to the width it was typed in. *)
   scratch.QTHString := ShortString(aQTH);
   Result := FoundDomesticQTH(scratch);
@@ -1008,7 +1008,7 @@ procedure ClearContestExchange(var Exchange: ContestExchange);
 
 begin
   logger.Trace('>>> Entering ClearContestExchange');
-  FillChar(Exchange, SizeOf(ContestExchange), 0);
+  Exchange.Clear;
   Exchange.Band := NoBand;
   Exchange.Mode := NoMode;
   Exchange.ExtMode := eNoMode;

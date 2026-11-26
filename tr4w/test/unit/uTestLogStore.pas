@@ -148,6 +148,7 @@ type
       procedure TestALeftoverTrwChangesNothingInTheMark;
       procedure TestAQTCMarkIgnoresZeroAndCollidingIds;
       procedure TestAQTCMarkThatCannotCommitIsReported;
+      procedure TestAnOperatorsEditIsOwedToTheServer;
       (* A raw connection on FDb holding the write lock, and its release. *)
       function HoldWriteLock: TObject;
       procedure ReleaseWriteLock(var aHolder: TObject);
@@ -320,7 +321,7 @@ var
    reader: TLogBinaryReader;
    rec: ContestExchange;
 begin
-   FillChar(aLast, SizeOf(ContestExchange), 0);
+   aLast.Clear;
    reader := TLogBinaryReader.Create(FTrw);
    try
       while reader.ReadNext(rec) do
@@ -3241,6 +3242,56 @@ begin
    end;
 end;
 
+(* THE STORE OWNS "THIS EDIT IS OWED TO THE SERVER" (issue 386 step 3). Edit
+  QSO and Alt-Y used to set ceNeedSendToServerAE themselves before writing;
+  the store's two operator entries set it now, whatever the record says. The
+  rescore batch must NOT: it writes back what it read, so a clean row it
+  rewrites stays clean. *)
+procedure TLogStoreTests.TestAnOperatorsEditIsOwedToTheServer;
+const
+   SQL_FIRST_DIRTY  = 'SELECT server_dirty FROM qso ORDER BY id LIMIT 1';
+   SQL_NEWEST_DIRTY = 'SELECT server_dirty FROM qso ORDER BY id DESC LIMIT 1';
+   SQL_SECOND_ID    = 'SELECT id FROM qso ORDER BY id LIMIT 1 OFFSET 1';
+   SQL_SECOND_DIRTY = 'SELECT server_dirty FROM qso ORDER BY id LIMIT 1 OFFSET 1';
+var
+   rec: ContestExchange;
+   pending: TLogRowUpdates;
+begin
+   BeginTest('an operator''s edit is stored owed to the server; a rescore''s rewrite is not');
+
+   PrepareMigration(FIXTURE_SET);
+   pending := TLogRowUpdates.Create;
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+
+      (* Edit QSO's entry, with a record that does NOT say dirty. *)
+      CheckTrue(LogSourceReadAtIndex(0, rec), 'the first QSO reads');
+      rec.ceNeedSendToServerAE := False;
+      rec.Age := 42;
+      CheckTrue(LogStoreUpdateQSOAtIndex(0, rec), 'the edit is saved');
+      CheckEquals(1, ScalarFromFile(FDb, SQL_FIRST_DIRTY), 'and the row is owed to the server');
+
+      (* Alt-Y's entry, the same. *)
+      CheckTrue(LogSourceReadFromEnd(1, rec), 'the newest QSO reads');
+      rec.ceNeedSendToServerAE := False;
+      rec.ceQSO_Deleted := True;
+      CheckTrue(LogStoreUpdateNewestQSO(rec), 'the delete is saved');
+      CheckEquals(1, ScalarFromFile(FDb, SQL_NEWEST_DIRTY), 'and the newest row is owed too');
+
+      (* The rescore's batch writes the record as it is: clean stays clean. *)
+      CheckTrue(LogSourceReadAtIndex(1, rec), 'the second QSO reads');
+      rec.ceNeedSendToServerAE := False;
+      rec.QSOPoints := rec.QSOPoints + 1;
+      pending.Add(ScalarFromFile(FDb, SQL_SECOND_ID), rec);
+      CheckTrue(LogStoreUpdateQSOsByRowId(pending), 'the batch is written');
+      CheckEquals(0, ScalarFromFile(FDb, SQL_SECOND_DIRTY),
+                  'and a rescored row is NOT marked owed');
+   finally
+      pending.Free;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -3282,6 +3333,7 @@ begin
    TestALeftoverTrwChangesNothingInTheMark;
    TestAQTCMarkIgnoresZeroAndCollidingIds;
    TestAQTCMarkThatCannotCommitIsReported;
+   TestAnOperatorsEditIsOwedToTheServer;
 end;
 
 end.

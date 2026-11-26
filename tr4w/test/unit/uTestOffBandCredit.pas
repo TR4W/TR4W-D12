@@ -318,7 +318,7 @@ var
    var
       rx: ContestExchange;
    begin
-      FillChar(rx, SizeOf(rx), 0);
+      rx.Clear;
       rx.ceRecordKind := rkQSO;
       rx.Callsign := 'W7ABC';
       rx.Band := aBand;

@@ -195,7 +195,7 @@ end;
 
 function NewExch(const aCall, aCountry: string): ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.Callsign := ShortString(aCall);
    Result.QTH.CountryID := ShortString(aCountry);
    Result.Zone := DUMMYZONE;

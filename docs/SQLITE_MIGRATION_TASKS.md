@@ -690,7 +690,7 @@ sets `EXCHANGE RECEIVED`, `DOMESTIC MULTIPLIER`, `QSO POINT METHOD`,
 
 | # | task |
 |---|---|
-| **F1** | `ContestExchange` becomes a class. With B1 in place this is a parameter type on the repository, not a rewrite. **B5 is done, so this is unblocked** |
+| **F1** | **REVISED (NY4I, issue 386): `ContestExchange` STAYS A RECORD WITH A COMPILE GUARD, not a class.** A value type with no managed field and no virtual method, gaining methods where they remove duplication (`Clear`, `SameBytes`). The guard is `VC.TContestExchangeMustStayUnmanaged` (a variant part refuses a managed field at compile time); `Lint-ContestExchangeBytes` ratchets every byte operation on it outside an allow-list; the store owns the server-dirty flag on an operator's edit (`uLogStore.OwedToTheServer`). Batch B (the frozen D7 record for the `.TRW` importer, `TLogHeader.lhDummy`, id 1060) must land before the record may widen. Why not a class: aliasing (`b := a`) and `FillChar` both compile silently wrong, and no need for shared identity was found -- issue 386 |
 | **F2** | Harvest per-contest initial state out of `fcontest.pas`; the `config` table becomes the factory's input rather than a file |
 | **F3** | `case Contest of` -> the factory: scoring, multipliers, exchange parsing |
 | **F4** | The **sending** half of the rover problem. `MyGrid` is substituted textually into the F-key memories once, at `fcontest.pas:481-482`, so an operator who edits it mid-contest **keeps sending the old grid and exports the new one**. C fixes the export half; only the factory fixes this half |

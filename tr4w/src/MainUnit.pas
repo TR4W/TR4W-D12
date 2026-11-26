@@ -1321,7 +1321,7 @@ begin
               [string(Call), SlashPos]);
   if (SlashPos > 0) and ContestStripsRoverCountyFromCall(aContest) then
      begin
-     FillChar(ProbeRX, SizeOf(ProbeRX), 0);
+     ProbeRX.Clear;
      ProbeSuffix := UpperCase(
         Copy(string(LookupCall), SlashPos + 1,
              Length(string(LookupCall)) - SlashPos));
@@ -1391,7 +1391,7 @@ begin
 
   // Validate the suffix against the domestic-mults table using a scratch
   // ContestExchange so we don't disturb any global state.
-  FillChar(ProbeRX, SizeOf(ProbeRX), 0);
+  ProbeRX.Clear;
   ProbeRX.QTHString := RoverCounty;
   if not FoundDomesticQTH(ProbeRX) then
      begin
@@ -4424,7 +4424,7 @@ begin
      begin
      i := 80;
      end;
-  FillChar(TempRXData, SizeOf(ContestExchange), 0);
+  TempRXData.Clear;
   TempRXData.ceRecordKind := rkNote;
   SetNoteText(TempRXData, Copy(s, 1, i));
   (* WHERE THE NOTE WAS WRITTEN (issue 21): the active radio's frequency, read
@@ -10198,10 +10198,13 @@ begin
     rescore could have come from the rewrite rather than from the store.
 
     ONLY CHANGED ROWS ARE WRITTEN, which the mapping got for free: a record the
-    rescore did not touch was simply left alone in the file. CompareMem against
-    a snapshot restores that property, and it matters -- a rescore of a
-    thousand-QSO log would otherwise issue a thousand UPDATEs to write back
-    values that never changed.
+    rescore did not touch was simply left alone in the file. A byte comparison
+    with a snapshot (SameBytes) restores that property, and it matters -- a
+    rescore of a thousand-QSO log would otherwise issue a thousand UPDATEs to
+    write back values that never changed. A BYTE comparison can over-report: a
+    ShortString rewritten shorter keeps its old tail past the length byte, so
+    such a row is written although its text did not change. That costs one
+    UPDATE, never a lost one.
 
     ONE READ, ONE WRITE -- section 9c, F1 and F4 (2026-10-14). The records
     came from LogSourceReadAtIndex, which is an OFFSET walk to find the row
@@ -10398,7 +10401,7 @@ begin
         end;
      (* The mapping wrote back implicitly; this says so. Collected here and
        written below, once the cursor is closed. *)
-     if not CompareMem(@RescoredBefore, @RescoredRXData, SizeOf(ContestExchange)) then
+     if not RescoredRXData.SameBytes(RescoredBefore) then
         begin
         Pending.Add(RowId, RescoredRXData);
         if Itemised then

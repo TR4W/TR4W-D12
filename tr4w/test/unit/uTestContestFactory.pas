@@ -176,7 +176,7 @@ function PointsFor(aContest: TContestBase; aMode: ModeType;
 var
    qso: ContestExchange;
 begin
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.Band := aBand;
    qso.Mode := aMode;
    qso.QSOPoints := 99;
@@ -418,7 +418,7 @@ end;
    no state or province key is, CountryID K. *)
 function HostCountyQSO(aContest: ContestType): ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.ceContest := ContestHandleOf(aContest);
    Result.Callsign := 'K1ABC';
    Result.QTHString := 'XYZ';
@@ -699,27 +699,27 @@ begin
    obj := MakeContest(ARKTIKA_SPRING);
    CheckTrue(obj <> nil, 'Arktika Spring has no registered class');
    try
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := CW;
       qso.DomMultQTH := 'AR';
       obj.ScoreQSO(qso);
       CheckEquals(3, qso.QSOPoints, 'a domestic multiplier QTH is three points');
 
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := CW;
       qso.DomesticQTH := 'AR';
       obj.ScoreQSO(qso);
       CheckEquals(1, qso.QSOPoints,
                   'the rule reads DomMultQTH, not DomesticQTH');
 
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := Phone;
       obj.ScoreQSO(qso);
       CheckEquals(1, qso.QSOPoints, 'no domestic multiplier QTH is one point');
 
       (* MODE DOES NOT ENTER INTO IT, which is worth pinning because most of
          the arms around this one are mode-shaped. *)
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := Digital;
       qso.DomMultQTH := 'AR';
       obj.ScoreQSO(qso);
@@ -798,14 +798,14 @@ begin
       station.MyGrid := 'EL88';
       obj.SetStation(station);
 
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := Digital;
       qso.QTHString := 'EL88';
       qso.DomesticQTH := 'EL88';
       obj.ScoreQSO(qso);
       CheckEquals(2, qso.QSOPoints, 'a station in our own grid is two points');
 
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := Digital;
       qso.QTHString := 'CM87';
       qso.DomesticQTH := 'CM87';
@@ -818,7 +818,7 @@ begin
       (* A SHORT HOP IS THE OTHER END OF THE SAME RULE: under 500 km scores the
          plus-one alone, which is 2 -- the same number as the same-grid case
          and arrived at a different way. *)
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := Digital;
       qso.QTHString := 'EL98';
       qso.DomesticQTH := 'EL98';
@@ -856,7 +856,7 @@ begin
       station.MyGrid := '';
       obj.SetStation(station);
 
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := Digital;
       qso.QTHString := 'CM87';
       qso.DomesticQTH := 'CM87';
@@ -869,7 +869,7 @@ begin
       station.MyGrid := 'EL88';
       obj.SetStation(station);
 
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := Digital;
       qso.QTHString := 'CM87';
       qso.QSOPoints := 99;
@@ -1165,7 +1165,7 @@ var
    var
       qso: ContestExchange;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Mode := aMode;
       qso.Callsign := aCall;
       qso.QTHString := ShortString(aQTH);
@@ -1234,7 +1234,7 @@ var
    var
       qso: ContestExchange;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       (* 20 m: the zeroed record's band is 160 m, which NC does not credit
          ("No 160, WARC, or above 2 meters"). *)
       qso.Band := Band20;
@@ -2072,7 +2072,7 @@ var
    var
       rx: ContestExchange;
    begin
-      FillChar(rx, SizeOf(rx), 0);
+      rx.Clear;
       rx.Band := aBand;
       rx.Mode := aMode;
       rx.DomesticQTH := ShortString(aDomesticQTH);
@@ -2937,7 +2937,7 @@ var
    var
       rx: ContestExchange;
    begin
-      FillChar(rx, SizeOf(rx), 0);
+      rx.Clear;
       rx.Band := aBand;
       rx.Mode := aMode;
       rx.DomesticQTH := ShortString(aDomesticQTH);
@@ -3000,7 +3000,7 @@ begin
    (* THE HELPER ALONE, as the classless engine path calls it: no override
       stated leaves the record untouched and answers False. *)
    FillChar(station, SizeOf(station), 0);
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.Mode := CW;
    qso.QSOPoints := 99;
    CheckFalse(ApplyQSOPointOverride(station.PointOverrides, qso),
@@ -3239,7 +3239,7 @@ function LocustPoints(aContest: TContestBase; aMode: ModeType; aBand: BandType;
 var
    qso: ContestExchange;
 begin
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.Band := aBand;
    qso.Mode := aMode;
    qso.Callsign := aCall;
@@ -3316,7 +3316,7 @@ var
    var
       qso: ContestExchange;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Band := Band40;
       qso.Mode := aMode;
       qso.QTH.CountryID := aCountry;
@@ -3396,7 +3396,7 @@ function PointsAtRecordedTime(aContest: TContestBase; aBand: BandType;
 var
    qso: ContestExchange;
 begin
-   FillChar(qso, SizeOf(qso), 0);
+   qso.Clear;
    qso.Band := aBand;
    qso.Mode := CW;
    qso.Callsign := aCall;
@@ -3571,7 +3571,7 @@ var
    var
       qso: ContestExchange;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Band := Band160;
       qso.Mode := CW;
       qso.Callsign := CallString(aCall);
@@ -3679,7 +3679,7 @@ var
    var
       qso: ContestExchange;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Band := Band20;
       qso.Mode := CW;
       qso.Callsign := CallString(aCall);
@@ -3826,7 +3826,7 @@ var
    var
       qso: ContestExchange;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Band := aBand;
       qso.Mode := CW;
       qso.Callsign := CallString(aCall);
@@ -3940,7 +3940,7 @@ var
    procedure Fresh(aBand: BandType; aMode: ModeType; const aCountry: string;
                    aContinent: ContinentType);
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Band := aBand;
       qso.Mode := aMode;
       qso.QTH.CountryID := CallString(aCountry);
@@ -4115,7 +4115,7 @@ var
    var
       qso: ContestExchange;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Band := aBand;
       qso.Mode := CW;
       qso.Callsign := CallString(aCall);
@@ -4224,7 +4224,7 @@ var
    var
       qso: ContestExchange;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Band := Band160;
       qso.Mode := CW;
       qso.Callsign := 'G3ABC';

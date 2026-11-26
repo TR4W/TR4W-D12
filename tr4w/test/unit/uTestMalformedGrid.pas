@@ -148,7 +148,7 @@ var
 
    function Score(const aQTH: string): integer;
    begin
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Callsign := 'W1AW';
       qso.Band := Band20;
       qso.Mode := CW;

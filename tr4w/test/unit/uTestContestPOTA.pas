@@ -92,7 +92,7 @@ uses
 (* A QSO WITH THE FIELDS THE POTA RULES READ, everything else zero. *)
 function POTAQso(const aQTH, aExch: string): ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.ceContest := ContestHandleOf(POTA);
    Result.Band := Band20;
    Result.Mode := CW;

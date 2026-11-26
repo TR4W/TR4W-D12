@@ -173,7 +173,7 @@ procedure TQSOPartyBandsTests.Test_IN7QPNEScoresOnTheJudgingPartysBands;
       station.MyState := 'KS';
       contestObject := Make(IN7QPNE, station);
       try
-         FillChar(qso, SizeOf(qso), 0);
+         qso.Clear;
          qso.Band := aBand;
          qso.Mode := CW;
          qso.QTHString := ShortString(aQTH);

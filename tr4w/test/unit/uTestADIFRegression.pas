@@ -78,7 +78,7 @@ begin
    // ~156 contests whose ContestsArray[].ADIFName is empty (CQ-WW, CQ-WPX,
    // ARRL-DX, ...).  It must fall back to the parallel ContestTypeSA[] string,
    // which is the standard ADIF Contest_ID for the majors.
-   FillChar(rec, SizeOf(rec), 0);
+   rec.Clear;
    rec.ceContest := ContestHandleOf(CQWWCW);
    rec.Band      := Band20;
    rec.Callsign  := 'KG1S';
@@ -197,7 +197,7 @@ procedure TADIFRegressionTests.Test_Emit_ContestID_WritesOnlyTheNewSpelling;
       rec : ContestExchange;
       s   : string;
    begin
-      FillChar(rec, SizeOf(rec), 0);
+      rec.Clear;
       rec.ceContest := ContestHandleOf(aContest);
       rec.Band      := Band20;
       rec.Callsign  := 'KG1S';
@@ -265,7 +265,7 @@ begin
       obj := contests[k];
       who := ContestWho(obj);
 
-      FillChar(rec, SizeOf(rec), 0);
+      rec.Clear;
       rec.ceContest := HandleOf(obj);
       rec.Band      := Band20;
       rec.Callsign  := 'KG1S';

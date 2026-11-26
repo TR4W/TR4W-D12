@@ -1361,6 +1361,38 @@ must not make the log unreadable.
   demotes. A running WRL worker fails on its own connection by itself.
   (The QTC mark's refusal is on the status line since issue 385; see below.)
 
+## ContestExchange STAYS A GUARDED RECORD WITH METHODS (issue 386 batch A, 2026-11-26)
+
+NY4I ruled: a value type, no managed field, no virtual method, no class.
+Batch B (later) frees it from the D7 376-byte layout; until then the size
+and every offset are unchanged (pins in `uTestLogBinaryFile`).
+
+- **The compile guard**: `VC.TContestExchangeMustStayUnmanaged` (a variant
+  part holding the record). A `string`/`AnsiString`/dynamic array/interface/
+  Variant field anywhere inside stops the build at the guard line, "Data types
+  which require initialization/finalization cannot be used in variant records"
+  (proved 2026-11-26 with a `string` field). Runtime twin:
+  `uTestLogBinaryFile.TestTheRecordStaysUnmanaged` (`IsManagedType`), and
+  `uTestNetWireSizes.Test_EveryFixedRecordIsUnmanaged` for the blitted wire
+  messages (no compile guard there; their sizes are pinned).
+- **Methods**: `Clear` (`Self := Default(ContestExchange)`, every byte zero,
+  pinned against a $FF fill) and `SameBytes` (CompareByte over the 376 --
+  BYTES, so equal text after a longer ShortString is NOT the same; the
+  rescore's changed-row test uses it and can only over-report). Whole-record
+  `FillChar` is `.Clear` everywhere outside the allow-list.
+- **`Lint-ContestExchangeBytes`** (in Run-Lints): FillChar/Move/CompareMem/
+  CompareByte/raw file and stream I/O on the record or sized by it, plus
+  `file of ContestExchange`, outside a per-file ratchet. Allowed today: VC
+  (SameBytes), `uLogBinaryFile` (BATCH B), `MainUnit.AskConvertLog` (no caller;
+  BATCH B), `uTestLogBinaryFile` (the $FF fill), `uTestLogReceivedYear` and
+  `uTestServerLogHealth` (.TRW fixtures; BATCH B). It cannot see a variable of
+  the type declared in another unit, a pointer, a `with`, or uLogNote's
+  overlay from `Prefix` (a field argument is not a hit).
+- **The store owns `server_dirty` on an operator's edit**:
+  `uLogStore.OwedToTheServer` in `LogStoreUpdateQSOAtIndex`,
+  `LogStoreUpdateNewestQSO` and the QTC mark. NOT the rescore batch, a peer's
+  edit or a catch-up. Pinned: `uTestLogStore.TestAnOperatorsEditIsOwedToTheServer`.
+
 ## THE WAE QTC MARK IS WRITTEN BY ROW ID THROUGH THE STORE (issue 385, 2026-11-26)
 
 `uQTCS.SetSendedQSOs` scanned the `.TRW` (`OpenLogFile`) for each QSO's id

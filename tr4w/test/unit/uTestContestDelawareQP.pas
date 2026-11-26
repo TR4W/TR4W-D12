@@ -118,7 +118,7 @@ var
 begin
    contestObject := Make(DELAWAREQSOPARTY, StationAt(aInState));
    try
-      FillChar(qso, SizeOf(qso), 0);
+      qso.Clear;
       qso.Band := aBand;
       qso.Mode := aMode;
       qso.QSOPoints := 99;
@@ -164,7 +164,7 @@ begin
    GShapeSetsQTH := aQTH;
    contestObject := Make(DELAWAREQSOPARTY, StationAt(aInState));
    try
-      FillChar(exch, SizeOf(exch), 0);
+      exch.Clear;
       Result := contestObject.ParseReceivedExchange('599 ' + aQTH, Session, exch, aMessage);
    finally
       contestObject.Free;

@@ -61,7 +61,7 @@ end;
 
 function MakeRx: ContestExchange;
 begin
-   FillChar(Result, SizeOf(Result), 0);
+   Result.Clear;
    Result.RSTSent     := 599;
    Result.RSTReceived := 599;
    Result.NumberSent  := 7;
