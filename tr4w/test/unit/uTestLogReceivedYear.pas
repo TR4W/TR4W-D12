@@ -471,11 +471,13 @@ begin
 end;
 
 (* A D7 RECORD NEVER CARRIES A YEAR. Whatever its bytes 324..326 hold (they
-  were sReserved), the reader hands the record over with none. *)
+  are D7's sReserved), the reader hands the record over with none. The file is
+  written through the FROZEN D7 record (uLogBinaryFile), never ContestExchange. *)
 procedure TLogReceivedYearTests.Test_TheReaderClearsTheYearBytesOfAD7Record;
 var
    source: string;
    s: TMemoryStream;
+   trw: TTrwRecordV17;
    rec: ContestExchange;
    reader: TLogBinaryReader;
 begin
@@ -486,14 +488,14 @@ begin
    try
       s.LoadFromFile(ExtractFilePath(ParamStr(0)) + 'fixtures' + PathDelim +
                      'binarylog' + PathDelim + 'arktika_2026_ny4i.trw');
-      CheckEquals(2 * SizeOf(ContestExchange), s.Size, 'a header and one record');
-      s.Position := SizeOf(ContestExchange);
-      s.ReadBuffer(rec, SizeOf(rec));
-      CheckFalse(rec.RcvdYearKnown, 'precondition: the fixture''s bytes are zero');
-      rec.RcvdYear := 4321;
-      rec.RcvdYearKnown := True;
-      s.Position := SizeOf(ContestExchange);
-      s.WriteBuffer(rec, SizeOf(rec));
+      CheckEquals(2 * TRW_RECORD_SIZE, s.Size, 'a header and one record');
+      s.Position := TRW_RECORD_SIZE;
+      s.ReadBuffer(trw, SizeOf(trw));
+      CheckEquals('', string(trw.sReserved), 'precondition: the fixture''s bytes are zero');
+      (* Garbage where 5.x keeps the year: bytes 324..327. *)
+      trw.sReserved := #$E1#$10#$01;
+      s.Position := TRW_RECORD_SIZE;
+      s.WriteBuffer(trw, SizeOf(trw));
       s.SaveToFile(source);
    finally
       s.Free;
@@ -517,13 +519,14 @@ procedure TLogReceivedYearTests.Test_AnImportedYearContestTakesItsYearsFromTheZo
 var
    source, fn: string;
    s: TMemoryStream;
-   header, rec: ContestExchange;
+   header: TTrwHeaderV17;
+   trwRec: TTrwRecordV17;
    res: TLogImportResult;
 
    procedure WriteTrw(aContest: TContestHandle; const aZones: array of integer);
    var
       i: integer;
-      one: ContestExchange;
+      one: TTrwRecordV17;
    begin
       Scrub(source);
       s := TMemoryStream.Create;
@@ -531,15 +534,15 @@ var
          s.WriteBuffer(header, SizeOf(header));
          for i := Low(aZones) to High(aZones) do
             begin
-            one := rec;
-            one.ceContest := aContest;
+            one := trwRec;
+            one.ceContest := aContest.ToByte;
             one.Zone := Byte(aZones[i]);
             one.ceQSOID2 := 100 + i;
             one.tSysTime.qtMinute := i;
             one.id := ShortString('trwyear' + IntToStr(i));
-            (* Garbage where the year now lives: the reader must not believe it. *)
-            one.RcvdYear := 4321;
-            one.RcvdYearKnown := True;
+            (* Garbage where 5.x keeps the year (D7's sReserved): the reader
+              must not believe it. *)
+            one.sReserved := #$E1#$10#$01;
             s.WriteBuffer(one, SizeOf(one));
             end;
          s.SaveToFile(source);
@@ -559,7 +562,7 @@ begin
                      'binarylog' + PathDelim + 'arktika_2026_ny4i.trw');
       s.Position := 0;
       s.ReadBuffer(header, SizeOf(header));
-      s.ReadBuffer(rec, SizeOf(rec));
+      s.ReadBuffer(trwRec, SizeOf(trwRec));
    finally
       s.Free;
    end;
@@ -571,9 +574,9 @@ begin
    CheckEquals('85,0,N', YearsOf(fn), 'each year from its zone; no zone is no year');
    Scrub(fn);
 
-   CheckFalse(ContestKeepsYearInZoneSlot(rec.ceContest),
+   CheckFalse(ContestKeepsYearInZoneSlot(TContestHandle.FromByte(trwRec.ceContest)),
               'precondition: the fixture''s own contest keeps zones in its slot');
-   WriteTrw(rec.ceContest, [14, 0, 255]);
+   WriteTrw(TContestHandle.FromByte(trwRec.ceContest), [14, 0, 255]);
    res := ImportBinaryLog(source, fn);
    CheckTrue(res.Ok, 'the zone contest''s .TRW imports: ' + res.Message);
    CheckEquals('N,N,N', YearsOf(fn), 'and none of its zones becomes a year');

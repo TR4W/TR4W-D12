@@ -294,7 +294,8 @@ been aligned to 328 leaving an uninitialised pad byte at 327. Byte 327 was
 `SERVERLOG.TRW`, a protocol-3 packet -- reads "no year" with no conversion.
 **Every size is unchanged** (record 376, QSO packet 384, `SERVERLOG.TRW` stride
 376); both servers store and relay the record whole and read none of it.
-Pinned in `uTestLogBinaryFile` (offsets 327/328/330, end 374, total 376).
+(Pinned in `uTestLogBinaryFile` until issue 386 batch B, 2026-11-26: no file or
+packet carries the live record now, so its size and offsets are no contract.)
 
 - **Filled on the sender in ONE place per path.** A QSO this station has just
   made is stamped by `uContestFactory.StampSessionSentYear` (over
@@ -734,11 +735,17 @@ resend at the start of the download had got it to the server first.
   `ShowServerProblems` also reads `appender.WriteFailures` (Log4D counts instead of
   raising), checked in `DisplayRCVDBytes`. The tr4w APP's own tr4w.log counter is not
   yet shown anywhere.
-- **Torn tail at start:** `OfferTornLogRepair` (before `OpenOrCreateServerLog`) -> only a
-  file whose first record is the CURRENT header is offered a backup-then-trim
-  (`BackupAndTrimServerLog`: copy, size check, then truncate; `<file>.torn-<stamp>.bak`).
-  Size alone cannot tell a torn tail from an older record size, the header can. Any other
-  wrong-size log is still refused, untouched.
+- ~~**Torn tail at start:** `OfferTornLogRepair`~~ -- **DELETED.** Its caller went with
+  SERVERLOG.TRW (the server's log is the SQLite `SERVERLOG.tr4wsrv` store); the four
+  routines it called (`JudgeServerLogSize`, `ServerLogHeaderMatches`,
+  `PlanServerLogRepair`, `BackupAndTrimServerLog`) and their tests were removed by issue
+  386 batch B (2026-11-26), because they sized the file by `SizeOf(ContestExchange)`.
+  `uServerLogHealth` keeps only the notice texts.
+- **Id 1060 (`NET_TAKESERVERQSO_ID`)**: only D7's server ever sent it (one log record).
+  Nothing in 5.x or TR4WServerPy sends or handles it. Its record `TNetSynQSOInformation`
+  is DELETED (issue 386 batch B); `uNetFraming` frames it by the literal
+  `VC.NET_TAKESERVERQSO_SIZE` = 382, like `NET_TIMESYN_SIZE`, so a stray one is skipped.
+  **No fixed message carries `ContestExchange` any more**; its size is no wire contract.
 - TR4WServerPy (other repository) has none of this; parity is open.
 
 ## A server that lost its log: the catch-up is TWO-WAY (the restock, 2026-10-28)

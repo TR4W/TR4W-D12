@@ -28,6 +28,9 @@
                    uEditQSO.pas                         the operator's checkbox
                    uContestMatrix.pas                   prints the STORED flag
                    VC.pas                               declares the field
+                   uLogBinaryFile.pas                   the frozen D7 record has
+                                                        it; the .TRW converter
+                                                        carries it
                    uADIF.pas (WRITE ONLY)               the import arms store
                                                         what the file states
      ceOffContest  contestFactory\uContestRegistry.pas  StampOffContest writes
@@ -37,7 +40,6 @@
                    uEditQSO.pas                         greys the box when only
                                                         the rule says X-QSO
                    VC.pas                               declares the field
-                   uLogBinaryFile.pas (WRITE ONLY)      a .TRW carries none
 
    FENCE 2 -- THE JUDGE. QSOIsOffContest, QSOIsXQSO, LoggedQSOIsXQSO,
    QSOCountsTowardTotals and StampOffContest work the contest's rule out NOW.
@@ -97,6 +99,7 @@ $FIELDS = [ordered]@{
          'uEditQSO.pas'                        = 'the operator''s checkbox -- his statement'
          'uContestMatrix.pas'                  = 'prints the STORED flag (xqso=)'
          'VC.pas'                              = 'declares the field'
+         'uLogBinaryFile.pas'                  = 'the frozen D7 record declares it; the converter carries what the file states'
       }
       WriteOnly = [ordered]@{
          'uADIF.pas' = 'the import arms store what the file states'
@@ -109,8 +112,9 @@ $FIELDS = [ordered]@{
          'uEditQSO.pas'                        = 'greys the X-QSO box when only the rule says so'
          'VC.pas'                              = 'declares the field'
       }
+      # uLogBinaryFile left this table with issue 386 batch B (2026-11-26): the
+      # .TRW converter starts from Clear and never names the field.
       WriteOnly = [ordered]@{
-         'uLogBinaryFile.pas' = 'a .TRW carries no stamp: the reader clears it'
       }
    }
 }

@@ -4,10 +4,12 @@
 # WHY (issue 386, NY4I's ruling: ContestExchange stays a RECORD -- a value type
 # with no managed field -- and gains methods; it is not converted to a class).
 # A byte operation on the record is right only while the record is plain data
-# laid out the way the code assumes. Every new FillChar, Move, CompareMem or raw
-# read of it is one more place that must be found before the record may change
-# shape (batch B of issue 386 frees it from the D7 376-byte layout). The ways the
-# program SHOULD say these things are the record's own methods:
+# laid out the way the code assumes. Batch B of issue 386 (2026-11-26) freed the
+# record from the D7 376-byte layout: the .TRW is read through uLogBinaryFile's
+# frozen TTrwRecordV17 and converted field by field, so NO file, packet or
+# stream carries ContestExchange's bytes any more. Keep it that way: a new byte
+# operation on it would tie its layout to something again. The ways the program
+# SHOULD say these things are the record's own methods:
 #
 #   FillChar(x, SizeOf(ContestExchange), 0)      ->  x.Clear
 #   CompareMem(@a, @b, SizeOf(ContestExchange))  ->  a.SameBytes(b)
@@ -21,7 +23,7 @@
 # WHAT A TEXT LINT CANNOT SEE -- said plainly, because a green run is not a proof:
 #   * a variable of the type declared in ANOTHER unit and used here by its bare
 #     name (a global such as logsubs2's TempRXData used from MainUnit), or reached
-#     through a pointer (ContestExchangePtr, ContestExchangeArray) or a `with`;
+#     through a pointer (ContestExchangePtr) or a `with`;
 #   * a size written as a NUMBER (376) or as SizeOf of a variable of another unit;
 #   * a routine with an UNTYPED buffer parameter that is not in $VERBS (uNet's
 #     SendToNet(var buf; Len), utils_file's wrappers are in; others are not);
@@ -54,24 +56,15 @@ param(
 )
 
 # Relative path (from the tr4w directory) -> the most hits it may hold, and why.
-# Batch B of issue 386 is to empty the rows marked BATCH B.
+# Batch B of issue 386 (2026-11-26) emptied every BATCH B row: the .TRW reader
+# reads the frozen D7 record (uLogBinaryFile), AskConvertLog was deleted (no
+# caller), the tests build .TRW files from the frozen record, and the SERVERLOG.TRW
+# torn-tail repair and its tests were deleted (no caller).
 $ALLOWED = [ordered]@{
    # The record's own method: SameBytes compares SizeOf(ContestExchange) bytes.
    'src\VC.pas'                          = 1
-   # BATCH B: the .TRW importer reads 376 raw bytes straight into the live record
-   # (and clears it first). It is to read a FROZEN copy of the D7 record instead.
-   'src\uLogBinaryFile.pas'              = 2
-   # BATCH B: AskConvertLog (v1.5/v1.6 .TRW upgrader) declares a typed
-   # `file of ContestExchange` and writes it twice. It has NO CALLER (searched
-   # 2026-11-26); delete it.
-   'src\MainUnit.pas'                    = 3
    # The test of Clear fills the record with $FF first, on purpose.
    'test\unit\uTestLogBinaryFile.pas'    = 1
-   # BATCH B: builds .TRW files to import by streaming the live record; to
-   # stream the frozen D7 record instead.
-   'test\unit\uTestLogReceivedYear.pas'  = 6
-   # BATCH B: writes a fake SERVERLOG.TRW record by its size (uServerLogHealth).
-   'test\unit\uTestServerLogHealth.pas'  = 1
 }
 
 $VERBS = @(

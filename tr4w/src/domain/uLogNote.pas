@@ -7,14 +7,16 @@ unit uLogNote;
   NOTE_MAX_LENGTH bytes run on across Prefix, the pad byte after it, Callsign
   and the fields after that, terminated by the zero fill.
 
-  THAT LAYOUT IS AN ENCODING WITH DEPLOYED READERS, which is why it is kept
-  rather than replaced. Every D7-written .TRW carries notes this way, so the
-  importer must still read it there. The multi-op wire does NOT carry the
-  record any more (protocol 5, 2026-11: a QSO or note travels as named wire
-  columns, the text in `notes` -- uQsoColumns, uWireQso), so the overlay's
-  readers are the .TRW import and this program's own in-memory record.
-  Moving a note elsewhere in the record waits on issue 386's batch B, which
-  gives the importer a frozen copy of the D7 record.
+  THE OVERLAY IS NOW IN-MEMORY ONLY (issue 386, batch B, 2026-11-26). It
+  depends on 80 CONTIGUOUS BYTES from Prefix lying inside the record -- not on
+  the record's size, and not on which fields those bytes happen to be.
+  Nothing stores those bytes: the log keeps the text in its `notes` column,
+  the multi-op wire in its `notes` wire column (protocol 5), and a D7 .TRW is
+  read through uLogBinaryFile's FROZEN record, whose own region
+  (TrwNoteText) is converted into this one with SetNoteText. So a field may
+  be added to ContestExchange, or the note moved to a field of its own,
+  without touching any stored data; uTestLogNote pins that the region stays
+  inside the record.
 
   WHAT WAS WRONG WAS EVERYONE REACHING INTO IT BY HAND. A writer and three
   readers each spelled the layout themselves. Two of the readers read Prefix

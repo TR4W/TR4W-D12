@@ -39,8 +39,12 @@ type
       procedure TestEveryBinaryLogFixtureReads;
       procedure TestTheRecordIsTheSameSizeEverywhere;
       procedure TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
+      procedure TestTheConverterCarriesEveryByte;
+      procedure TestTheConverterLeavesThe5xFieldsUnset;
+      procedure TestTheLegacyDeleteFlagIsFolded;
+      procedure TestANoteCrossesAsText;
+      procedure TestAQTCRecordCrosses;
    public
-      procedure TestRecordArrayStrideIsOneRecord;
       procedure TestTheRecordStaysUnmanaged;
       procedure TestClearZeroesEveryByte;
       procedure TestSameBytesComparesBytesNotText;
@@ -50,7 +54,8 @@ type
 implementation
 
 uses
-   SysUtils, Classes, DateUtils, VC, uLogBinaryFile;
+   SysUtils, Classes, DateUtils, VC, uLogBinaryFile,
+   uLogNote;   (* NoteText -- a converted note's text *)
 
 (* The suite runs from test\unit (ParamStr(0)); fixtures sit beside the exe. *)
 function TLogBinaryFileTests.BinaryLogFixture(const aSet: string): string;
@@ -367,144 +372,424 @@ begin
       end;
 end;
 
-(* THE ON-DISK FORMAT IS THE IN-MEMORY LAYOUT, SO ITS SIZE IS A CONTRACT.
+(* THE .TRW RECORD IS FROZEN, AND ITS SIZE IS A CONTRACT (issue 386, batch B).
 
-  ContestExchange is a plain `record` -- not `packed` -- and TLogBinaryReader
-  fills one with a single FStream.Read of SizeOf(aRecord) straight into it. The
-  file format therefore IS whatever the compiler chose to lay the record out
-  as, which is the DOS/Win32 idiom CLAUDE.md describes: the in-memory layout WAS
-  the serialization.
+  The reader reads one record of the FROZEN type TTrwRecordV17 (uLogBinaryFile)
+  and carries it into ContestExchange field by field. Until 2026-11-26 it read
+  straight into ContestExchange, so these pins were on the live record; they
+  are on the frozen one now, against LITERAL numbers, and the live record is
+  free to change.
 
-  THAT IS FINE UNTIL THERE IS A SECOND ARCHITECTURE. Field offsets and total
-  size come from the target's alignment rules, and nothing in this tree pins
-  them -- there is no {$PACKRECORDS} directive anywhere. If aarch64 aligns one
-  field differently from i386, the same bytes decode into different fields and
-  the failure is SILENT: a QSO reads back with a plausible-looking wrong value.
-
-  376 IS NOT A NUMBER CHOSEN HERE. It is what D7 wrote, what every corpus log
-  on disk is made of, and what MainUnit's offset arithmetic assumes -- record k
-  begins at (k + 1) * 376. Deployed logs have it; it cannot be changed without
-  a format migration.
-
-  SO THIS TEST IS A PORTABILITY GATE, not a tautology. On a platform where it
-  fails, TR4W cannot read an existing log correctly and must not pretend to. *)
+  376 IS NOT A NUMBER CHOSEN HERE. It is what D7 wrote and what every old log
+  on disk is made of. A plain `record`, not `packed`: the file format is the
+  x86 natural alignment D7 used, so this is also a PORTABILITY GATE -- on a
+  platform where it fails, TR4W cannot read an old log and must not pretend to.
+  The compile-time {$IF SizeOf} check in uLogBinaryFile says the same. *)
 procedure TLogBinaryFileTests.TestTheRecordIsTheSameSizeEverywhere;
 begin
    BeginTest('TestTheRecordIsTheSameSizeEverywhere');
-   CheckEquals(376, SizeOf(ContestExchange),
-               'ContestExchange is 376 bytes -- the size D7 wrote and every '
-               + 'corpus log on disk is made of');
+   CheckEquals(376, SizeOf(TTrwRecordV17),
+               'the frozen D7 record is 376 bytes -- the size every old log is made of');
+   CheckEquals(376, TRW_RECORD_SIZE, 'and the named size says so');
+   CheckEquals(376, SizeOf(TTrwHeaderV17), 'the header is one record');
+   CheckEquals(6, SizeOf(TTrwQSOTimeV17), 'the time is six bytes');
+   CheckEquals(32, SizeOf(TTrwQTHRecordV17), 'the QTH record is 32 bytes');
 end;
 
-(* SIZE IS NOT ENOUGH, AND THIS TEST EXISTS BECAUSE I LEARNED THAT THE HARD
-  WAY (2026-09-08).
+(* SIZE IS NOT ENOUGH (2026-09-08): the record was 376 bytes on aarch64-darwin
+  too, and QTH.Continent still decoded as 86 ('V') there, because padding moves
+  between fields while the sum stays the same. So EVERY field's offset and size
+  is pinned, and the pins must TILE the record: each field starts where the
+  last one ended, except at the two pad gaps D7's alignment left (198..199
+  before NumberReceived, 374..375 at the end). A field missing from this list
+  leaves a gap and fails here.
 
-  TestTheRecordIsTheSameSizeEverywhere PASSES on aarch64-darwin -- 376 bytes,
-  same as Windows and Linux -- and the record still decodes WRONG there. The
-  same corpus QSO yields QTH.Continent = 1 on x86_64-linux and 86 on
-  aarch64-darwin. 86 is ASCII 'V': the reader is picking up a neighbouring
-  field's byte.
+  THE NUMBERS WERE TAKEN FROM ContestExchange ON 2026-11-26, at the split, and
+  compared field for field (every offset equal). From now on they are the
+  FILE's numbers and do not follow the live record.
 
-  TOTAL SIZE CAN MATCH WHILE OFFSETS DIFFER, because padding moves between
-  fields and the sum comes out the same. A size check is therefore a test that
-  gives CONFIDENCE WITHOUT COVERAGE, which is worse than no test -- it is what
-  let me conclude the layout was safe.
-
-  ContestExchange is a plain `record` with no {$PACKRECORDS} anywhere, and
-  TLogBinaryReader block-reads a file straight into one, so the on-disk format
-  is whatever the target's alignment rules produce.
-
-  THE FIELDS BELOW ARE NOT ARBITRARY. Each sits after a differently-sized
-  neighbour, which is where padding decisions show up; QTH is the nested record
-  the live defect was found in. If this test fails on a platform, TR4W CANNOT
-  IMPORT A LEGACY LOG THERE and must not pretend otherwise.
-
-  NY4I, 2026-09-08: "Nothing should be reading from a binary file. It's the
-  database or JSON. That's it." Exactly so -- which is why this guards the
-  IMPORT path and nothing else. The binary reader exists to carry a D7 log into
-  SQLite once. It still has to do that correctly. *)
+  The TLogFileInformation pins are the multi-op log-compare packet, which
+  carries the contest byte too. *)
 procedure TLogBinaryFileTests.TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
 var
-   r: ContestExchange;
+   r: TTrwRecordV17;
    info: TLogFileInformation;
    base: PtrUInt;
+   expectNext: integer;
 
-   function Off(const aAddr): PtrUInt;
+   function Off(const aAddr): integer;
    begin
-      Result := PtrUInt(@aAddr) - base;
+      Result := integer(PtrUInt(@aAddr) - base);
+   end;
+
+   procedure Pin(const aName: string; aOffset, aSize, aActualOffset, aActualSize: integer);
+   begin
+      CheckEquals(aOffset, aActualOffset, aName + ' offset');
+      CheckEquals(aSize, aActualSize, aName + ' size');
+      if expectNext = 198 then
+         begin
+         expectNext := 200;   (* D7's pad before NumberReceived *)
+         end;
+      CheckEquals(expectNext, aActualOffset, aName + ' starts where the previous field ended');
+      expectNext := aActualOffset + aActualSize;
    end;
 
 begin
    BeginTest('TestTheRecordHasTheSameFIELD_OFFSETSEverywhere');
    base := PtrUInt(@r);
+   expectNext := 0;
 
-   CheckEquals(0,   Off(r.tSysTime),        'tSysTime is first');
-   CheckEquals(6,   Off(r.Band),            'Band follows the 6-byte time');
-   CheckEquals(7,   Off(r.Mode),            'Mode follows Band');
-   CheckEquals(290, Off(r.id),              'id, a string[32], sits at 290');
-   CheckEquals(376, SizeOf(ContestExchange), 'and the whole record is 376');
+   Pin('tSysTime',             0,   6, Off(r.tSysTime),             SizeOf(r.tSysTime));
+   Pin('Band',                 6,   1, Off(r.Band),                 SizeOf(r.Band));
+   Pin('Mode',                 7,   1, Off(r.Mode),                 SizeOf(r.Mode));
+   Pin('ceQSOID1',             8,   4, Off(r.ceQSOID1),             SizeOf(r.ceQSOID1));
+   Pin('ceQSOID2',             12,  4, Off(r.ceQSOID2),             SizeOf(r.ceQSOID2));
+   Pin('Frequency',            16,  4, Off(r.Frequency),            SizeOf(r.Frequency));
+   Pin('ceQSO_Deleted',        20,  1, Off(r.ceQSO_Deleted),        SizeOf(r.ceQSO_Deleted));
+   Pin('ceComputerID',         21,  1, Off(r.ceComputerID),         SizeOf(r.ceComputerID));
+   Pin('ceOperatorID',         22,  1, Off(r.ceOperatorID),         SizeOf(r.ceOperatorID));
+   Pin('ceRecordKind',         23,  1, Off(r.ceRecordKind),         SizeOf(r.ceRecordKind));
+   Pin('ceQSO_Skiped',         24,  1, Off(r.ceQSO_Skiped),         SizeOf(r.ceQSO_Skiped));
+   Pin('ceSendToServer',       25,  1, Off(r.ceSendToServer),       SizeOf(r.ceSendToServer));
+   Pin('ceNeedSendToServerAE', 26,  1, Off(r.ceNeedSendToServerAE), SizeOf(r.ceNeedSendToServerAE));
+   Pin('ceDupe',               27,  1, Off(r.ceDupe),               SizeOf(r.ceDupe));
+   Pin('PostalCode_old',       28,  7, Off(r.PostalCode_old),       SizeOf(r.PostalCode_old));
+   Pin('ZERO_01',              35,  1, Off(r.ZERO_01),              SizeOf(r.ZERO_01));
+   Pin('Prefix',               36,  7, Off(r.Prefix),               SizeOf(r.Prefix));
+   Pin('ZERO_02',              43,  1, Off(r.ZERO_02),              SizeOf(r.ZERO_02));
+   Pin('Callsign',             44,  14, Off(r.Callsign),            SizeOf(r.Callsign));
+   Pin('Age',                  58,  1, Off(r.Age),                  SizeOf(r.Age));
+   Pin('ceWasSendInQTC',       59,  1, Off(r.ceWasSendInQTC),       SizeOf(r.ceWasSendInQTC));
+   Pin('DomesticMult',         60,  1, Off(r.DomesticMult),         SizeOf(r.DomesticMult));
+   Pin('DXMult',               61,  1, Off(r.DXMult),               SizeOf(r.DXMult));
+   Pin('PrefixMult',           62,  1, Off(r.PrefixMult),           SizeOf(r.PrefixMult));
+   Pin('ZoneMult',             63,  1, Off(r.ZoneMult),             SizeOf(r.ZoneMult));
+   Pin('ExtMode',              64,  1, Off(r.ExtMode),              SizeOf(r.ExtMode));
+   Pin('ExchString',           65,  41, Off(r.ExchString),          SizeOf(r.ExchString));
+   Pin('ceClass',              106, 4, Off(r.ceClass),              SizeOf(r.ceClass));
+   Pin('ZERO_04',              110, 1, Off(r.ZERO_04),              SizeOf(r.ZERO_04));
+   Pin('Precedence',           111, 1, Off(r.Precedence),           SizeOf(r.Precedence));
+   Pin('ceRadio',              112, 1, Off(r.ceRadio),              SizeOf(r.ceRadio));
+   Pin('Check',                113, 1, Off(r.Check),                SizeOf(r.Check));
+   Pin('QTH',                  114, 32, Off(r.QTH),                 SizeOf(r.QTH));
+   Pin('DXQTH',                146, 6, Off(r.DXQTH),                SizeOf(r.DXQTH));
+   Pin('ZERO_05',              152, 1, Off(r.ZERO_05),              SizeOf(r.ZERO_05));
+   Pin('Radio',                153, 1, Off(r.Radio),                SizeOf(r.Radio));
+   Pin('DomMultQTH',           154, 11, Off(r.DomMultQTH),          SizeOf(r.DomMultQTH));
+   Pin('ZERO_06',              165, 1, Off(r.ZERO_06),              SizeOf(r.ZERO_06));
+   Pin('DomesticQTH',          166, 11, Off(r.DomesticQTH),         SizeOf(r.DomesticQTH));
+   Pin('ZERO_07',              177, 1, Off(r.ZERO_07),              SizeOf(r.ZERO_07));
+   Pin('Name',                 178, 11, Off(r.Name),                SizeOf(r.Name));
+   Pin('ZERO_08',              189, 1, Off(r.ZERO_08),              SizeOf(r.ZERO_08));
+   Pin('Power',                190, 7, Off(r.Power),                SizeOf(r.Power));
+   Pin('ZERO_09',              197, 1, Off(r.ZERO_09),              SizeOf(r.ZERO_09));
+   Pin('NumberReceived',       200, 4, Off(r.NumberReceived),       SizeOf(r.NumberReceived));
+   Pin('NumberSent',           204, 4, Off(r.NumberSent),           SizeOf(r.NumberSent));
+   Pin('RSTSent',              208, 2, Off(r.RSTSent),              SizeOf(r.RSTSent));
+   Pin('RSTReceived',          210, 2, Off(r.RSTReceived),          SizeOf(r.RSTReceived));
+   Pin('QTHString',            212, 11, Off(r.QTHString),           SizeOf(r.QTHString));
+   Pin('ZERO_10',              223, 1, Off(r.ZERO_10),              SizeOf(r.ZERO_10));
+   Pin('RandomCharsSent',      224, 6, Off(r.RandomCharsSent),      SizeOf(r.RandomCharsSent));
+   Pin('TenTenNum',            230, 2, Off(r.TenTenNum),            SizeOf(r.TenTenNum));
+   Pin('Chapter',              232, 5, Off(r.Chapter),              SizeOf(r.Chapter));
+   Pin('ZERO_11',              237, 1, Off(r.ZERO_11),              SizeOf(r.ZERO_11));
+   Pin('ceClearDupeSheet',     238, 1, Off(r.ceClearDupeSheet),     SizeOf(r.ceClearDupeSheet));
+   Pin('ceSearchAndPounce',    239, 1, Off(r.ceSearchAndPounce),    SizeOf(r.ceSearchAndPounce));
+   Pin('Prefecture',           240, 1, Off(r.Prefecture),           SizeOf(r.Prefecture));
+   Pin('InhibitMults',         241, 1, Off(r.InhibitMults),         SizeOf(r.InhibitMults));
+   Pin('Zone',                 242, 1, Off(r.Zone),                 SizeOf(r.Zone));
+   Pin('NameSent',             243, 1, Off(r.NameSent),             SizeOf(r.NameSent));
+   Pin('Kids',                 244, 21, Off(r.Kids),                SizeOf(r.Kids));
+   Pin('ceContest',            265, 1, Off(r.ceContest),            SizeOf(r.ceContest));
+   Pin('QSOPoints',            266, 2, Off(r.QSOPoints),            SizeOf(r.QSOPoints));
+   Pin('RandomCharsReceived',  268, 8, Off(r.RandomCharsReceived),  SizeOf(r.RandomCharsReceived));
+   Pin('ZERO_13',              276, 1, Off(r.ZERO_13),              SizeOf(r.ZERO_13));
+   Pin('ceClearMultSheet',     277, 1, Off(r.ceClearMultSheet),     SizeOf(r.ceClearMultSheet));
+   Pin('MP3Record',            278, 1, Off(r.MP3Record),            SizeOf(r.MP3Record));
+   Pin('ceOperator',           279, 11, Off(r.ceOperator),          SizeOf(r.ceOperator));
+   Pin('id',                   290, 33, Off(r.id),                  SizeOf(r.id));
+   Pin('ceXQSO',               323, 1, Off(r.ceXQSO),               SizeOf(r.ceXQSO));
+   Pin('sReserved',            324, 50, Off(r.sReserved),           SizeOf(r.sReserved));
+   CheckEquals(374, expectNext, 'the fields end at 374; 374..375 are D7''s padding');
 
-   (* THE RECEIVED YEAR (issue 298, stage 1), carved out of sReserved as
-     ceXQSO was: the bytes after ceXQSO, so nothing before them moved. Zero in
-     every fixture record (measured 2026-11-12), and cleared by the reader. *)
-   CheckEquals(323, Off(r.ceXQSO),          'ceXQSO sits at 323');
-   CheckEquals(324, Off(r.RcvdYear),        'RcvdYear, a Word, sits at 324');
-   CheckEquals(2,   SizeOf(r.RcvdYear),     'and is two bytes');
-   CheckEquals(326, Off(r.RcvdYearKnown),   'RcvdYearKnown sits at 326');
-   (* THE SENT YEAR (issue 300, protocol 4): the Boolean first, so the Word is
-     aligned without a pad byte; byte 327 was sReserved's always-zero length
-     byte, so every older record reads "no year". *)
-   CheckEquals(327, Off(r.YearSentKnown),   'YearSentKnown sits at 327');
-   CheckEquals(328, Off(r.YearSent),        'YearSent, a Word, sits at 328');
-   CheckEquals(2,   SizeOf(r.YearSent),     'and is two bytes');
-   (* THE CONTEST'S RULE AS STAMPED (log schema 10), one Boolean carved from
-     sReserved's front: byte 330 was its always-zero length byte, so every
-     older record reads False -- and the reader clears it anyway. *)
-   CheckEquals(330, Off(r.ceOffContest),    'ceOffContest sits at 330');
-   CheckEquals(1,   SizeOf(r.ceOffContest), 'and is one byte');
-   (* WHERE A ROVER SENT IT FROM (log schema 12), a string[10] carved from
-     sReserved's front: byte 331 was its always-zero length byte, so every
-     older record reads '' -- and the reader clears it anyway. *)
-   CheckEquals(331, Off(r.ceRoverQTH),      'ceRoverQTH sits at 331');
-   CheckEquals(11,  SizeOf(r.ceRoverQTH),   'and is a string[10]');
-   CheckEquals(342, Off(r.sReserved),       'sReserved, now a string[31], from 342');
-   CheckEquals(374, Off(r.sReserved) + SizeOf(r.sReserved),
-               'and ends at 374, where it always did; 374..375 are padding');
+   (* INSIDE THE NESTED QTH RECORD, where the aarch64 defect was. Relative to
+     QTH, so "where is QTH" and "how is QTH laid out" fail separately. *)
+   CheckEquals(6,  Off(r.QTH.Zone) - Off(r.QTH),         'QTH.Zone at +6');
+   CheckEquals(7,  Off(r.QTH.reserved) - Off(r.QTH),     'QTH.reserved at +7');
+   CheckEquals(8,  Off(r.QTH.Prefix) - Off(r.QTH),       'QTH.Prefix at +8');
+   CheckEquals(15, Off(r.QTH.Continent) - Off(r.QTH),    'QTH.Continent at +15');
+   CheckEquals(16, Off(r.QTH.StandardCall) - Off(r.QTH), 'QTH.StandardCall at +16');
+   CheckEquals(30, Off(r.QTH.Country) - Off(r.QTH),      'QTH.Country at +30');
 
-   (* THE CONTEST BYTE -- a registry handle since Q108 S2, an enum before it.
-     Measured against HEAD's VC.pas and the handle's, 2026-10-16: offset 265
-     and one byte in both, so a .TRW record, a multi-op packet and the
-     server's log keep their layout. A legacy contest's handle IS its legacy
-     number, so the byte's MEANING is unchanged too. *)
-   CheckEquals(265, Off(r.ceContest),       'ceContest, the contest byte, sits at 265');
-   CheckEquals(1,   SizeOf(r.ceContest),    'and is one byte');
-   CheckEquals(1,   SizeOf(TContestHandle), 'a contest handle is one byte');
-   (* AND THE LOG-COMPARE PACKET (NET_LOGCOMPARE), the other record that
-     carries the byte over the wire: 19 bytes, the contest last. *)
+   (* THE LOG-COMPARE PACKET (NET_LOGCOMPARE): 19 bytes, the contest last. *)
+   CheckEquals(1, SizeOf(TContestHandle), 'a contest handle is one byte');
    CheckEquals(19, SizeOf(TLogFileInformation), 'TLogFileInformation is 19 bytes');
-   CheckEquals(18, PtrUInt(@info.liContest) - PtrUInt(@info),
+   CheckEquals(18, integer(PtrUInt(@info.liContest) - PtrUInt(@info)),
                'liContest, the contest byte, is its last');
+end;
 
-   (* INSIDE THE NESTED RECORD, which is where the live defect was: the
-     four offsets above all match on aarch64-darwin and QTH.Continent
-     still decodes as 86 there. Its own annotations claim
-     6+1+1+7+1+14+2 = 32 bytes, so each field's offset is stated by the
-     type and can be checked. *)
-   CheckEquals(32, SizeOf(QTHRecord),        'QTHRecord is 32 bytes');
-   (* Absolute, unlike the rest: QTH itself sits at 114 in the outer
-     record, and every check below is RELATIVE to this field so the two
-     questions -- where is QTH, and how is QTH laid out -- fail
-     separately and say which. *)
-   CheckEquals(114, Off(r.QTH.CountryID),    'QTH starts at 114');
-   CheckEquals(6,  Off(r.QTH.Zone) - Off(r.QTH.CountryID),  'Zone at +6');
-   CheckEquals(8,  Off(r.QTH.Prefix) - Off(r.QTH.CountryID),'Prefix at +8');
-   CheckEquals(15, Off(r.QTH.Continent) - Off(r.QTH.CountryID),
-               'Continent at +15');
-   CheckEquals(16, Off(r.QTH.StandardCall) - Off(r.QTH.CountryID),
-               'StandardCall at +16');
-   CheckEquals(30, Off(r.QTH.Country) - Off(r.QTH.CountryID),
-               'Country at +30');
-   CheckEquals(1,  SizeOf(ContinentType),    'ContinentType is ONE byte');
+type
+   (* THE FILE'S BYTES, for the tests that write a byte of a D7 record by
+     offset (a note's region, the byte-flip test): an overlay, so no Move and
+     no pointer. The frozen record IS a byte layout; ContestExchange is not. *)
+   TTrwRecordBytes = record
+      case Byte of
+         0: (rec: TTrwRecordV17);
+         1: (bytes: array[0..375] of Byte);
+   end;
+
+(* A note record whose file region (36 onward) holds aText. *)
+function TrwNoteRecord(const aText: AnsiString): TTrwRecordV17;
+var
+   view: TTrwRecordBytes;
+   i: integer;
+begin
+   view.rec := Default(TTrwRecordV17);
+   view.rec.ceRecordKind := Ord(rkNote);
+   for i := 1 to Length(aText) do
+      begin
+      view.bytes[35 + i] := Ord(aText[i]);
+      end;
+   Result := view.rec;
+end;
+
+(* A frozen record with every field set and every string at FULL length, so a
+  change to any byte of it -- content or length -- is visible after the
+  conversion. The two delete flags are False, so either one turned on shows. *)
+function FullTrwRecord: TTrwRecordV17;
+var
+   i: integer;
+begin
+   Result := Default(TTrwRecordV17);
+   Result.tSysTime.qtYear := 26;
+   Result.tSysTime.qtMonth := 11;
+   Result.tSysTime.qtDay := 26;
+   Result.tSysTime.qtHour := 12;
+   Result.tSysTime.qtMinute := 34;
+   Result.tSysTime.qtSecond := 56;
+   Result.Band := 3;
+   Result.Mode := 2;
+   Result.ceQSOID1 := $11223344;
+   Result.ceQSOID2 := $55667788;
+   Result.Frequency := 14025123;
+   Result.ceComputerID := 'B';
+   Result.ceOperatorID := 7;
+   Result.ceRecordKind := 0;
+   Result.ceSendToServer := True;
+   Result.ceNeedSendToServerAE := True;
+   Result.ceDupe := True;
+   Result.PostalCode_old := 'POSTAL';
+   Result.ZERO_01 := 1;
+   Result.Prefix := 'PREFIX';
+   Result.ZERO_02 := 2;
+   Result.Callsign := 'CALLSIGN12345';
+   Result.Age := 42;
+   Result.ceWasSendInQTC := True;
+   Result.DomesticMult := True;
+   Result.DXMult := True;
+   Result.PrefixMult := True;
+   Result.ZoneMult := True;
+   Result.ExtMode := 5;
+   Result.ExchString := StringOfChar('E', 40);
+   Result.ceClass := '10A';
+   Result.ZERO_04 := 4;
+   Result.Precedence := 'Q';
+   Result.ceRadio := 2;
+   Result.Check := 77;
+   Result.QTH.CountryID := 'CNTRY';
+   Result.QTH.Zone := 14;
+   Result.QTH.reserved := 9;
+   Result.QTH.Prefix := 'QPREFX';
+   Result.QTH.Continent := 3;
+   Result.QTH.StandardCall := 'STANDARDCALL1';
+   Result.QTH.Country := $1234;
+   Result.DXQTH := 'DXQTH';
+   Result.ZERO_05 := 5;
+   Result.Radio := 11;
+   Result.DomMultQTH := 'DOMMULTQTH';
+   Result.ZERO_06 := 6;
+   Result.DomesticQTH := 'DOMESTICQT';
+   Result.ZERO_07 := 7;
+   Result.Name := 'NAMEFIELD1';
+   Result.ZERO_08 := 8;
+   Result.Power := 'POWER1';
+   Result.ZERO_09 := 9;
+   Result.NumberReceived := $01020304;
+   Result.NumberSent := $05060708;
+   Result.RSTSent := $0599;
+   Result.RSTReceived := $0579;
+   Result.QTHString := 'QTHSTRING1';
+   Result.ZERO_10 := 10;
+   Result.RandomCharsSent := 'RCSNT';
+   Result.TenTenNum := $4321;
+   Result.Chapter := 'CHAP';
+   Result.ZERO_11 := 11;
+   Result.ceClearDupeSheet := True;
+   Result.ceSearchAndPounce := True;
+   Result.Prefecture := 47;
+   Result.InhibitMults := True;
+   Result.Zone := 33;
+   Result.NameSent := True;
+   Result.Kids := StringOfChar('K', 20);
+   Result.ceContest := 12;
+   Result.QSOPoints := $0302;
+   Result.RandomCharsReceived := 'RCRCVD7';
+   Result.ZERO_13 := 13;
+   Result.ceClearMultSheet := True;
+   Result.MP3Record := True;
+   for i := 0 to 10 do
+      begin
+      Result.ceOperator[i] := AnsiChar(Ord('a') + i);
+      end;
+   Result.id := StringOfChar('I', 32);
+   Result.ceXQSO := True;
+end;
+
+(* EVERY BYTE OF THE FILE'S RECORD REACHES THE QSO -- except D7's two pad gaps
+  and sReserved, which D7 never wrote. Each byte of a full record is changed in
+  turn (a length byte DOWN, so the shorter string still fits), the record is
+  converted, and the QSO must differ from the unchanged one's. A field the
+  converter forgets, or carries from the wrong place, fails here by offset. *)
+procedure TLogBinaryFileTests.TestTheConverterCarriesEveryByte;
+var
+   base: TTrwRecordV17;
+   changed: TTrwRecordBytes;
+   baseQso, changedQso: ContestExchange;
+   i, missed: integer;
+begin
+   BeginTest('TestTheConverterCarriesEveryByte');
+   base := FullTrwRecord;
+   TrwRecordToQso(base, baseQso);
+   missed := 0;
+   for i := 0 to SizeOf(TTrwRecordV17) - 1 do
+      begin
+      if (i = 198) or (i = 199) or (i >= 324) then
+         begin
+         Continue;   (* pads and sReserved: not carried, by design *)
+         end;
+      changed.rec := base;
+      if changed.bytes[i] > 0 then
+         begin
+         changed.bytes[i] := changed.bytes[i] - 1;
+         end
+      else
+         begin
+         changed.bytes[i] := 1;
+         end;
+      TrwRecordToQso(changed.rec, changedQso);
+      if changedQso.SameBytes(baseQso) then
+         begin
+         Inc(missed);
+         CheckTrue(False, 'byte ' + IntToStr(i) + ' of the D7 record does not reach the QSO');
+         end;
+      end;
+   CheckEquals(0, missed, 'every byte from 0 to 323 but the pad reaches the QSO');
+end;
+
+(* THE 5.x FIELDS DO NOT EXIST IN A D7 FILE and come out unset, whatever lies in
+  D7's sReserved -- exactly what the old reader's clearing gave. *)
+procedure TLogBinaryFileTests.TestTheConverterLeavesThe5xFieldsUnset;
+var
+   trw: TTrwRecordV17;
+   q: ContestExchange;
+begin
+   BeginTest('TestTheConverterLeavesThe5xFieldsUnset');
+   trw := FullTrwRecord;
+   trw.sReserved := StringOfChar('x', 49);
+   (* The destination holds a value in every 5.x field first: the converter
+     must clear them, not merely leave them alone. *)
+   q.Clear;
+   q.RcvdYear := 4321;
+   q.RcvdYearKnown := True;
+   q.YearSent := 1234;
+   q.YearSentKnown := True;
+   q.ceOffContest := True;
+   q.ceRoverQTH := 'KIN';
+   q.sReserved := 'junk';
+   q.ceQSO_Skiped := True;
+   TrwRecordToQso(trw, q);
+   CheckEquals(0, integer(q.RcvdYear), 'no received year');
+   CheckFalse(q.RcvdYearKnown, 'and it is not known');
+   CheckEquals(0, integer(q.YearSent), 'no sent year');
+   CheckFalse(q.YearSentKnown, 'and it is not known');
+   CheckFalse(q.ceOffContest, 'not stamped off-contest');
+   CheckEquals('', string(q.ceRoverQTH), 'no rover place');
+   CheckEquals('', string(q.sReserved), 'and nothing of sReserved');
+   CheckTrue(q.ceXQSO, 'but a D7 X-QSO is carried: D7 itself had ceXQSO');
+   CheckFalse(q.ceQSO_Skiped, 'the legacy delete flag is never set');
+end;
+
+(* The legacy Alt-Y flag is folded into the one delete flag, at this door. *)
+procedure TLogBinaryFileTests.TestTheLegacyDeleteFlagIsFolded;
+var
+   trw: TTrwRecordV17;
+   q: ContestExchange;
+begin
+   BeginTest('TestTheLegacyDeleteFlagIsFolded');
+   trw := FullTrwRecord;
+   trw.ceQSO_Skiped := True;
+   TrwRecordToQso(trw, q);
+   CheckTrue(q.ceQSO_Deleted, 'a skipped QSO is a deleted QSO');
+   CheckFalse(q.ceQSO_Skiped, 'and the old flag is not passed on');
+   trw := FullTrwRecord;
+   TrwRecordToQso(trw, q);
+   CheckFalse(q.ceQSO_Deleted, 'neither flag: not deleted');
+end;
+
+(* A NOTE IS A BYTE REGION, not fields: 80 bytes from Prefix, across Callsign
+  and the fields after it into QTH. It must arrive as the same text. *)
+procedure TLogBinaryFileTests.TestANoteCrossesAsText;
+var
+   trw: TTrwRecordV17;
+   q: ContestExchange;
+   text: AnsiString;
+begin
+   BeginTest('TestANoteCrossesAsText');
+   CheckEquals(36, integer(PtrUInt(@trw.Prefix) - PtrUInt(@trw)), 'the region starts at Prefix, 36');
+   CheckTrue(36 + TRW_NOTE_REGION <= SizeOf(TTrwRecordV17), 'and lies inside the record');
+
+   text := 'the rig drifted 200 Hz after the band change, CQ on 14025 again';
+   trw := TrwNoteRecord(text);
+   trw.Band := Ord(Band20);
+   CheckEquals(string(text), string(TrwNoteText(trw)), 'the file region reads back');
+   TrwRecordToQso(trw, q);
+   CheckTrue(q.ceRecordKind = rkNote, 'a note stays a note');
+   CheckEquals(string(text), string(NoteText(q)), 'and its text crosses whole');
+   CheckTrue(q.Band = Band20, 'the fields outside the region are carried too');
+
+   text := StringOfChar('n', TRW_NOTE_REGION);
+   trw := TrwNoteRecord(text);
+   TrwRecordToQso(trw, q);
+   CheckEquals(string(text), string(NoteText(q)), 'a full 80-byte note, no NUL, crosses whole');
+end;
+
+(* A WAE QTC record (rkQTCS) is ordinary fields: the QTC callsign in Kids, the
+  QSO time in NumberSent, the serial in NumberReceived, the series in
+  QSOPoints. They become the Cabrillo QTC: lines, so each is checked by name. *)
+procedure TLogBinaryFileTests.TestAQTCRecordCrosses;
+var
+   trw: TTrwRecordV17;
+   q: ContestExchange;
+begin
+   BeginTest('TestAQTCRecordCrosses');
+   trw := Default(TTrwRecordV17);
+   trw.ceRecordKind := Ord(rkQTCS);
+   trw.Callsign := 'DL1ABC';
+   trw.Kids := 'OH2XYZ';
+   trw.NumberSent := 1234;
+   trw.NumberReceived := 56;
+   trw.QSOPoints := 3;
+   trw.RandomCharsSent := '3/10';
+   trw.ceContest := 7;
+   TrwRecordToQso(trw, q);
+   CheckTrue(q.ceRecordKind = rkQTCS, 'a sent QTC stays a sent QTC');
+   CheckEquals('DL1ABC', string(q.Callsign), 'the station the series went to');
+   CheckEquals('OH2XYZ', string(q.Kids), 'the callsign inside the QTC');
+   CheckEquals(1234, q.NumberSent, 'the QSO time');
+   CheckEquals(56, q.NumberReceived, 'the serial');
+   CheckEquals(3, integer(q.QSOPoints), 'the series');
+   CheckEquals('3/10', string(q.RandomCharsSent), 'the series/count text');
+   CheckEquals(7, integer(q.ceContest.ToByte), 'the contest byte');
 end;
 
 (* WINDOWS-ONLY, AND THAT IS A SCOPE CORRECTION RATHER THAN A RETREAT.
@@ -518,57 +803,19 @@ end;
   has one to bring -- those are new platforms -- and a suite that reads one
   there is testing a situation that cannot arise.
 
-  IT WAS ALSO FAILING THERE, FOR A REAL REASON. ContestExchange is a plain
-  record and the reader block-reads a file straight into it, so the on-disk
-  format is the target's alignment layout: QTH lands at 114 on i386 and
-  x86_64, and at 116 on aarch64. Every field from there on decodes wrong --
-  measured, the same QSO gives Continent = 1 on Linux and 86 on macOS.
+  IT WAS ALSO FAILING THERE, FOR A REAL REASON. The frozen record (until
+  2026-11-26, ContestExchange itself) is a plain record the reader block-reads
+  a file into, so the on-disk format is the target's alignment layout: QTH
+  lands at 114 on i386 and x86_64, and at 116 on aarch64. Every field from
+  there on decodes wrong -- measured, the same QSO gives Continent = 1 on
+  Linux and 86 on macOS.
 
   THAT DEFECT IS NOT FIXED BY THIS GATE, it is SCOPED by it. Windows is where
   import runs, Windows is where it is tested, and
   TestTheRecordHasTheSameFIELD_OFFSETSEverywhere stays as the thing that says
-  why if anyone tries to widen it again. *)
-(* THE STRIDE THE SERVER'S RESCORE WALKS BY, pinned at both ends.
-
-  tr4wserverUnit used to advance one record with
-
-      RescoredRXData := Pointer(Cardinal(RescoredRXData) + SizeOfContestExchange);
-
-  which truncates the pointer to 32 bits, so on Win64 every record after the
-  first lands wherever the low half happens to point. It is an INDEXED walk
-  over ContestExchangeArrayPtr now, and this asserts the two things that walk
-  depends on: that indexing advances by exactly one record, and that the
-  address of element 0 is the base itself.
-
-  IT IS PLATFORM-NEUTRAL ON PURPOSE -- the arithmetic it guards is the thing
-  that differs between 32- and 64-bit, so the test must run on both and say
-  the same thing. That is also why it is OUTSIDE the {$IFNDEF WINDOWS} skip
-  below: it reads no file and has nothing to do with the D7 migration path.
-
-  MORE THAN ONE RECORD, which the 64-bit plan asked for specifically: a walk
-  that truncates is correct for element 0 and wrong from element 1, so a
-  single-record check would pass on a broken build. *)
-procedure TLogBinaryFileTests.TestRecordArrayStrideIsOneRecord;
-var
-   buf: TBytes;
-   view: ContestExchangeArrayPtr;
-   base: PByte;
-begin
-   BeginTest('indexing a ContestExchange array advances by exactly one record');
-
-   SetLength(buf, SizeOfContestExchange * 4);
-   view := ContestExchangeArrayPtr(@buf[0]);
-   base := @buf[0];
-
-   CheckTrue(PByte(@view^[0]) = base,
-             'element 0 is the base of the buffer');
-   CheckEquals(Int64(SizeOfContestExchange),
-               Int64(PByte(@view^[1]) - PByte(@view^[0])),
-               'element 1 is one record on from element 0');
-   CheckEquals(Int64(SizeOfContestExchange) * 3,
-               Int64(PByte(@view^[3]) - base),
-               'element 3 is three records on from the base');
-end;
+  why if anyone tries to widen it again. The converter tests are arithmetic on
+  records, not files, so they run everywhere -- but their offsets are x86's,
+  so they too sit after the skip. *)
 
 (* THE RUNTIME TWIN OF VC's COMPILE GUARD (issue 386). The guard,
   TContestExchangeMustStayUnmanaged, stops the build when a managed field is
@@ -581,7 +828,8 @@ begin
               'ContestExchange holds no managed field (a value record, issue 386)');
    CheckFalse(IsManagedType(QTHRecord), 'nor does its nested QTHRecord');
    CheckFalse(IsManagedType(TContestHandle), 'nor its contest handle');
-   CheckFalse(IsManagedType(TLogHeader), 'nor the .TRW header');
+   CheckFalse(IsManagedType(TTrwRecordV17), 'nor the frozen .TRW record');
+   CheckFalse(IsManagedType(TTrwHeaderV17), 'nor the .TRW header');
 end;
 
 (* Clear IS Default(ContestExchange), and that must be the same bytes as the
@@ -605,8 +853,7 @@ begin
          Inc(nonZero);
          end;
       end;
-   CheckEquals(0, nonZero, 'every one of the 376 bytes is zero after Clear');
-   CheckEquals(376, SizeOf(ContestExchange), 'and methods added no storage');
+   CheckEquals(0, nonZero, 'every byte of the record is zero after Clear');
 end;
 
 (* SameBytes is a BYTE comparison, and says so: equal text after a longer
@@ -639,8 +886,7 @@ end;
 
 procedure TLogBinaryFileTests.RunAllTests;
 begin
-   (* BEFORE the Windows-only skip: this one is arithmetic, not a file. *)
-   TestRecordArrayStrideIsOneRecord;
+   (* BEFORE the Windows-only skip: these are arithmetic, not a file. *)
    TestTheRecordStaysUnmanaged;
    TestClearZeroesEveryByte;
    TestSameBytesComparesBytesNotText;
@@ -663,6 +909,11 @@ begin
    TestEveryBinaryLogFixtureReads;
    TestTheRecordIsTheSameSizeEverywhere;
    TestTheRecordHasTheSameFIELD_OFFSETSEverywhere;
+   TestTheConverterCarriesEveryByte;
+   TestTheConverterLeavesThe5xFieldsUnset;
+   TestTheLegacyDeleteFlagIsFolded;
+   TestANoteCrossesAsText;
+   TestAQTCRecordCrosses;
 end;
 
 end.

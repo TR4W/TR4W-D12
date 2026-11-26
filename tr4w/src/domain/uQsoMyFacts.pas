@@ -10,9 +10,10 @@ unit uQsoMyFacts;
   THE QSO WAS LOGGED, never today's settings (Q13: a logged QSO reads its
   record, not live state).
 
-  ContestExchange cannot carry these -- it is a frozen 376-byte record with
-  deployed readers -- so they travel beside it, in this record, and live in
-  their own columns.
+  They travel beside ContestExchange, in this record, and live in their own
+  columns. (They were put here because ContestExchange was then a frozen
+  376-byte record with deployed readers; since issue 386 batch B it is not,
+  but nothing has moved them.)
 
   A RECORD BECAUSE IT IS AN INTERFACE PARAMETER, the exemption CLAUDE.md
   grants: the argument of the repository's insert, update and read, handed

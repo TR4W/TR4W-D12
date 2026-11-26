@@ -191,11 +191,15 @@ function Invoke-LiveMoveSelfTest
       if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force }
    }
 
+   # Write-Host, NOT Write-Output: output inside a function is part of its RETURN
+   # VALUE, so a failing fixture returned @('...FAIL...', $false) -- a non-empty
+   # array, which `-not` reads as True -- and the self-test PASSED (measured
+   # 2026-11-26 with the expected count set wrong: exit 0).
    $ok = ($got.Count -eq $expected)
    if (-not $ok) {
-      Write-Output ("Count-LiveMove SELFTEST FAIL: expected {0} live call(s), got {1}:" -f $expected, $got.Count)
+      Write-Host ("Count-LiveMove SELFTEST FAIL: expected {0} live call(s), got {1}:" -f $expected, $got.Count)
       foreach ($g in $got) {
-         Write-Output ("   fixture line {0}: {1}   <- {2}" -f $g.Line, $g.Routine, $fixture[$g.Line - 1].Trim())
+         Write-Host ("   fixture line {0}: {1}   <- {2}" -f $g.Line, $g.Routine, $fixture[$g.Line - 1].Trim())
       }
    }
    return $ok

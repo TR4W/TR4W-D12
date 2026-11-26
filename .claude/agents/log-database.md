@@ -831,7 +831,8 @@ The year first licensed (EUHFC, KVP) is a standard field. Detail:
 - **`ContestExchange.RcvdYear: Word` (324) + `RcvdYearKnown: Boolean` (326)**,
   carved from `sReserved` (now `string[46]`). **Still 376 bytes, no offset
   before them moved** -- `.TRW`, `SERVERLOG.TRW` and the 384-byte packet keep
-  their layout. Pinned in `uTestLogBinaryFile`'s offsets test.
+  their layout. (Pinned in `uTestLogBinaryFile` until issue 386 batch B,
+  which moved the pins to the frozen D7 record; the live offsets are free now.)
 - **NOT "0 = none".** 00 is a year (first licensed 2000), and a zero-filled
   record must read as no year: `RcvdYearKnown` False. Column NULL = no year.
 - **`qso.rcvd_year`** last in the table (`LOG_V6_QSO_YEAR_COLUMN`), updatable.
@@ -997,7 +998,8 @@ column classes: `docs/LOG_SCHEMA.md`.
   the bonus view (they agree with the stored value except between a rule
   change and the next rescore). Tests: `uTestLogOffContest`,
   `uTestAutomaticXQSO` (the rule flipped under a logged QSO), `uTestLogStore`
-  (`TestAnAppendStoresTheContestsRule`), `uTestLogBinaryFile` (offset 330).
+  (`TestAnAppendStoresTheContestsRule`). (The offset-330 pin left
+  `uTestLogBinaryFile` with issue 386 batch B: the live record is no file format.)
 
 ## SCHEMA 11: SIXTEEN UNUSED COLUMNS REMOVED BY A TABLE REBUILD (issue 94, 2026-11-19)
 
@@ -1364,8 +1366,8 @@ must not make the log unreadable.
 ## ContestExchange STAYS A GUARDED RECORD WITH METHODS (issue 386 batch A, 2026-11-26)
 
 NY4I ruled: a value type, no managed field, no virtual method, no class.
-Batch B (later) frees it from the D7 376-byte layout; until then the size
-and every offset are unchanged (pins in `uTestLogBinaryFile`).
+**Batch B (2026-11-26) freed it from the D7 376-byte layout: the record may
+widen and gain fields now** (see the next section). It changed no field.
 
 - **The compile guard**: `VC.TContestExchangeMustStayUnmanaged` (a variant
   part holding the record). A `string`/`AnsiString`/dynamic array/interface/
@@ -1376,18 +1378,56 @@ and every offset are unchanged (pins in `uTestLogBinaryFile`).
   `uTestNetWireSizes.Test_EveryFixedRecordIsUnmanaged` for the blitted wire
   messages (no compile guard there; their sizes are pinned).
 - **Methods**: `Clear` (`Self := Default(ContestExchange)`, every byte zero,
-  pinned against a $FF fill) and `SameBytes` (CompareByte over the 376 --
+  pinned against a $FF fill) and `SameBytes` (CompareByte over every byte --
   BYTES, so equal text after a longer ShortString is NOT the same; the
   rescore's changed-row test uses it and can only over-report). Whole-record
   `FillChar` is `.Clear` everywhere outside the allow-list.
 - **`Lint-ContestExchangeBytes`** (in Run-Lints): FillChar/Move/CompareMem/
   CompareByte/raw file and stream I/O on the record or sized by it, plus
-  `file of ContestExchange`, outside a per-file ratchet. Allowed today: VC
-  (SameBytes), `uLogBinaryFile` (BATCH B), `MainUnit.AskConvertLog` (no caller;
-  BATCH B), `uTestLogBinaryFile` (the $FF fill), `uTestLogReceivedYear` and
-  `uTestServerLogHealth` (.TRW fixtures; BATCH B). It cannot see a variable of
-  the type declared in another unit, a pointer, a `with`, or uLogNote's
-  overlay from `Prefix` (a field argument is not a hit).
+  `file of ContestExchange`, outside a per-file ratchet. Allowed after batch
+  B: VC (SameBytes, 1) and `uTestLogBinaryFile` (Clear's deliberate $FF fill, 1).
+  It cannot see a variable of the type declared in another unit, a pointer, a
+  `with`, or uLogNote's overlay from `Prefix` (a field argument is not a hit).
+  A name declared ContestExchange anywhere in a file is treated as one
+  everywhere in it -- name a frozen-record variable `trw`, not `a`/`rec`.
+
+## THE .TRW IS READ THROUGH A FROZEN D7 RECORD (issue 386 batch B, 2026-11-26)
+
+- **`uLogBinaryFile.TTrwRecordV17`** is the D7 v1.7 record, byte for byte as
+  ContestExchange was at the split, with LITERAL types (`string[13]`, enums as
+  `Byte`, its own `TTrwQSOTimeV17`/`TTrwQTHRecordV17`), so no change in VC can
+  move a byte of it. `{$IF SizeOf(...) <> TRW_RECORD_SIZE}{$ERROR}` and
+  `uTestLogBinaryFile.TestTheRecordHasTheSameFIELD_OFFSETSEverywhere` (every
+  field, literal offsets, tiling with D7's two pad gaps 198..199 and
+  374..375) pin it. **DO NOT EDIT IT.** It keeps D7's `ceXQSO` (D7 had it)
+  and D7's `sReserved: string[49]`; the 5.x fields carved from sReserved are
+  not in it. `TTrwHeaderV17` is the header, a literal 376 (was
+  `VC.TLogHeader`, padded by `SizeOfContestExchange` -- deleted).
+- **`TrwRecordToQso(trw, qso)`**: `qso.Clear`, then FIELD BY FIELD (no Move),
+  the legacy delete fold (`Deleted or Skiped`, Skiped False), the contest via
+  `TContestHandle.FromByte`, and for `rkNote` the note's TEXT from the file's
+  80-byte region (`TrwNoteText`) into `SetNoteText` -- a field copy alone
+  would cut the note at each ShortString's length. A field ADDED to
+  ContestExchange stays unset for an old log until someone decides otherwise.
+  Pinned: `TestTheConverterCarriesEveryByte` (each byte 0..323 but the pad,
+  changed in turn, must change the QSO), `...Leaves5xFieldsUnset`,
+  `...LegacyDeleteFlagIsFolded`, `TestANoteCrossesAsText`, `TestAQTCRecordCrosses`.
+- **Equivalence measured at the split**: the six fixtures plus copies of two
+  real logs (an ARRL-FD with 2 notes, a DARC-WAEDC with 10 sent QTCs) imported
+  by the old and the new reader gave identical databases, every column
+  (guid/set ids compared by first-seen order). Not a tracked test.
+- **One behaviour moved**: D7's `sReserved` is no longer passed through (the
+  live sReserved is '' after import); D7 never wrote it.
+- **Deleted as dead (no caller)**: `MainUnit.AskConvertLog` and VC's
+  `ContestExchangev1_5`/`v1_6` (a v1.5/v1.6 log is refused by the stride
+  check, as it always was in practice), `ContestExchangeArray(Ptr)`,
+  `SizeOfContestExchange`, `TLogHeader`/`LogHeader`/`SizeOfTLogHeader`.
+- **Proved, once**: with 124 bytes appended (a 500-byte ContestExchange) the
+  app, server and tests built; the fixture imports were identical; the only
+  suite failures were `uTestLogImport.TestImportRefusesAContestNumberItDoesNotKnow`
+  (it patched a .TRW at `SizeOf(ContestExchange)` -- repointed to the frozen
+  record) and the split-proof check itself. Not re-run with the pad after
+  that fix.
 - **The store owns `server_dirty` on an operator's edit**:
   `uLogStore.OwedToTheServer` in `LogStoreUpdateQSOAtIndex`,
   `LogStoreUpdateNewestQSO` and the QTC mark. NOT the rescore batch, a peer's

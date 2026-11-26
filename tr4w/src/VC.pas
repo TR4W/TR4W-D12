@@ -576,7 +576,14 @@ const
   NET_WIRE_OFFLINE_ID                   = 1057;
   NET_THIS_QTC_WAS__SEND_ID             = 1056;
 
+  (* NET_TAKESERVERQSO_ID: D7's server sent one log record in it (the id, the
+    376-byte ContestExchange, four reserved bytes). No 5.x build and no
+    TR4WServerPy sends or handles it (searched 2026-11-26), and its record,
+    TNetSynQSOInformation, is DELETED (issue 386 batch B) because it froze
+    ContestExchange's size into the wire. The id and the 382-byte frame stay,
+    literal, so uNetFraming can still skip one if a D7 server ever sends it. *)
   NET_TAKESERVERQSO_ID                  = 1060;
+  NET_TAKESERVERQSO_SIZE                = 382;
   (* NET_TIMESYN_ID: REMOVED 2026-11-03; KEPT SO AN OLDER STATION'S PACKET IS
     SKIPPED, NOT PARSED FOR EVER. "Synchronize time on all computers" let one
     station set every other station's system clock, which is a permissions
@@ -1981,15 +1988,14 @@ type
 
   {(*}
 
-(* The TLogHeader type had a dependency on the size of the ContestExchange
-   to build the dummy area of its type definition. This meant that to add something
-   to ContestExchange, you had to go to find TLogRecord to change the number of
-   bytes in ther dummy array. I changed this (at bottom of VC.pas) so the size
-   is derived on the sizes so no change elsewhere required.
-   I found this because I added a field to CE and the program complained as the
-   TRN file was not the right size. This should eliminate that maintenance
-   step. de NY4I
-*)
+(* ContestExchange IS THE PROGRAM'S QSO RECORD, NOT A FILE FORMAT (issue 386,
+   batch B, 2026-11-26). A D7 .TRW is read through uLogBinaryFile's frozen copy
+   of the old 376-byte layout, TTrwRecordV17, and carried across field by field
+   (TrwRecordToQso); the log is SQLite rows and the multi-op wire is named
+   columns (uWireQso). So this record's size and offsets are no contract any
+   more: a field may be added (TrwRecordToQso leaves it unset for an old log)
+   and the record may grow. It stays a value record with no managed field --
+   see the compile guard below. *)
 
 type
   ContestExchange = record
@@ -2008,7 +2014,7 @@ type
 {01}  ceOperatorID:        Byte;
 {01}  ceRecordKind:        LogRecordKind;
 
-(* LEGACY, AND KEPT ONLY BECAUSE THE BYTES ARE.
+(* LEGACY, AND KEPT ONLY BECAUSE THE BYTES WERE.
 
      ceQSO_Skiped WAS a second delete flag -- Alt-Y set this one, the QSO
      editor's checkbox set ceQSO_Deleted, and EVERY consumer treated the two
@@ -2020,19 +2026,16 @@ type
      is almost legend in this code base but it seems it is unneeded. so yes
      let's just unify them into the Deleted name").
 
-     WHY THE FIELD STAYS WHEN THE MEANING DOES NOT. ContestExchange is read as
-     RAW BYTES out of the .TRW -- 376 per record, Windows.ReadFile straight into
-     the record -- so removing a field moves every field after it and misreads
-     every binary log an operator has. (It is NOT sent over the multi-station
-     wire any more: since protocol 5 a QSO travels as named wire columns,
-     uWireQso. Id 1060's TNetSynQSOInformation still embeds the record and is
-     still framed by its size, but nothing in this tree fills or sends it --
-     issue 386, batch B.)
-     The SLOT survives; nothing reads it.
+     WHY THE FIELD STAYS WHEN THE MEANING DOES NOT. Until issue 386 batch B
+     (2026-11-26) ContestExchange WAS the .TRW record -- 376 raw bytes read
+     straight into it -- so removing a field misread every old log. The .TRW
+     is read through uLogBinaryFile's frozen TTrwRecordV17 now, which keeps its
+     own ceQSO_Skiped, so this slot COULD go; batch B changed no field, so it
+     is still here. Nothing reads it.
 
-     FOLDED AT THE THREE PLACES OLD DATA ENTERS: the v1_5 and v1_6 log upgraders
-     and the database reader. Never written again. If you are adding a consumer,
-     you want ceQSO_Deleted. *)
+     FOLDED AT THE TWO PLACES OLD DATA ENTERS: the .TRW converter
+     (uLogBinaryFile.TrwRecordToQso) and the database reader. Never written
+     again. If you are adding a consumer, you want ceQSO_Deleted. *)
 {01}  ceQSO_Skiped:        boolean;   // legacy -- see above; use ceQSO_Deleted
 {01}  ceSendToServer:      boolean;
 {01}  ceNeedSendToServerAE:    boolean;
@@ -2150,8 +2153,8 @@ type
    and the multi-op QSO packet keep their layout. sReserved went from
    string[49] to string[46]. Those bytes (324..326) were zero in every record
    of the six binary-log fixtures (measured 2026-11-12) and nothing ever wrote
-   sReserved; the .TRW reader clears them anyway (uLogBinaryFile.ReadNext),
-   because a D7 log never carries a year here.
+   sReserved; the .TRW converter leaves them unset anyway
+   (uLogBinaryFile.TrwRecordToQso), because a D7 log never carries a year.
 
    TWO FIELDS, NOT A SENTINEL. 0 is a real value (00 = first licensed in 2000;
    0 years licensed), and a zero-filled record -- FillChar, an older peer, an
@@ -2209,17 +2212,16 @@ type
 {11}  ceRoverQTH:          string[10];
 {32} sReserved:               string[31];
 
-(* METHODS (issue 386). A record's methods add no storage: SizeOf stays 376 and
-   no offset moves (pinned in uTestLogBinaryFile). Only STATIC methods -- a
-   virtual method or a management operator would give the record hidden state
-   and end every byte operation on it. *)
+(* METHODS (issue 386). A record's methods add no storage. Only STATIC methods
+   -- a virtual method or a management operator would give the record hidden
+   state and end every byte operation on it. *)
 
    (* Every field zero, every padding byte too: the same bytes as
       FillChar(Self, SizeOf(ContestExchange), 0), and the one spelling the
       program uses for "an empty QSO". *)
    procedure Clear;
 
-   (* TRUE WHEN THE TWO RECORDS HOLD THE SAME BYTES -- ALL 376, NOT THE SAME
+   (* TRUE WHEN THE TWO RECORDS HOLD THE SAME BYTES -- EVERY ONE, NOT THE SAME
       FIELDS. A ShortString keeps whatever lies past its length byte, so two
       records whose text reads the same can differ here when one of them once
       held a longer value in that field. Use it where "nothing was written"
@@ -2230,8 +2232,9 @@ type
 
 (* THE COMPILE GUARD: ContestExchange MUST STAY A RECORD WITH NO MANAGED FIELD
    (issue 386, NY4I's ruling: a value type, no class). The program copies it
-   by assignment, clears it by byte, compares it by byte (SameBytes), and the
-   .TRW importer and AskConvertLog read and write it as raw bytes. A string,
+   by assignment, clears it by byte (Clear) and compares it by byte
+   (SameBytes). (The .TRW importer no longer reads it as raw bytes since issue
+   386 batch B: it reads a frozen copy and converts field by field.) A string,
    AnsiString, dynamic array, interface or Variant field -- directly or in a
    nested record -- would make every one of those wrong with no warning.
 
@@ -2252,308 +2255,9 @@ type
         0: (guard: ContestExchange);
   end;
 
-const
-  SizeOfContestExchange                 = SizeOf(ContestExchange);
 type
   ContestExchangePtr = ^ContestExchange;
 
-  (* A RUN OF RECORDS, INDEXED RATHER THAN STEPPED.
-
-    The server's rescore walked its log buffer with
-    `Pointer(Cardinal(p) + SizeOfContestExchange)`, which TRUNCATES THE POINTER
-    TO 32 BITS on every record -- harmless on Win32, wrong from the second
-    record on in a Win64 build. This is what the 64-bit plan asks for instead:
-    an index encodes the STRIDE and the BOUNDS, and the compiler computes the
-    offset at whatever pointer width it is building for.
-
-    THE HIGH BOUND IS NOMINAL, as it is for every view type of this shape: the
-    caller knows the real count and the array is a WINDOW over a buffer it
-    already owns, not an allocation. *)
-  ContestExchangeArray = array[0..MaxInt div SizeOf(ContestExchange) - 1] of ContestExchange;
-  ContestExchangeArrayPtr = ^ContestExchangeArray;
-
-type
-
-  ContestExchangev1_6 = record
-{COMMON START}
-
-{06}  tSysTime:            TQSOTime;
-{01}  Band:                BandType;
-{01}  Mode:                ModeType;
-
-{04}  ceQSOID1:            Cardinal;
-{04}  ceQSOID2:            Cardinal;
-{04}  Frequency:           LONGINT;
-
-{01}  ceQSO_Deleted:       boolean;
-{01}  ceComputerID:        AnsiChar;
-{01}  ceOperatorID:        Byte;
-{01}  ceRecordKind:        LogRecordKind;
-
-{01}  ceQSO_Skiped:        boolean;
-{01}  ceSendToServer:      boolean;
-{01}  ceNeedSendToServerAE:    boolean;
-{01}  ceDupe:              boolean;
-
-{07}  PostalCode_old:          PostalCodeString;
-{01}  ZERO_01:             DummyByte;
-
-{COMMON END}
-
-{07}  Prefix:              PrefixMultiplierString;
-{01}  ZERO_02:             DummyByte;
-
-{14}  Callsign:            CallString;
-{01}  Age:                 byte;
-{01}  ceWasSendInQTC:      Boolean;
-
-{01}  DomesticMult:        boolean;
-{01}  DXMult:              boolean;
-{01}  PrefixMult:          boolean;
-{01}  ZoneMult:            boolean;
-      ExtMode:             ExtendedModeType;
-      ExchString:          Str40;  // What is entered as SRX exchange
-{04}  ceClass:             string[3]{10}; { Field day class }
-
-{01}  ZERO_04:             DummyByte;
-{01}  Precedence:          AnsiChar;
-{01}  ceRadio:             RadioType;
-{01}  Check:               Byte;           {The CHECK is two numbers (year)}
-
-{32}  QTH:                 QTHRecord;
-
-{06}  DXQTH:               DXMultiplierString;
-{01}  ZERO_05:             DummyByte;
-{01}  Radio:               InterfacedRadioType;
-
-{11}  DomMultQTH:          DomesticMultiplierString; //String for dom mult count
-{01}  ZERO_06:             DummyByte;
-
-{11}  DomesticQTH:         Str10;//Corrected QTH - if it is need  - i.e. AF1 -> AF-001 in IOTA contest.
-{01}  ZERO_07:             DummyByte;
-
-{11}  Name:                Str10;
-{01}  ZERO_08:             DummyByte;
-
-{07}  Power:               string[6];
-{01}  ZERO_09:             DummyByte;
-
-{04}  NumberReceived:      integer;
-{04}  NumberSent:          integer;
-
-{02}  RSTSent:             smallInt; {Word;}
-{02}  RSTReceived:         smallInt; {Word;}  // if this was an int, I could put ft8 reports here.
-
-{11}  QTHString:           Str10;//QTH received by user (literal)
-{01}  ZERO_10:             DummyByte;
-
-{06} RandomCharsSent:      string[5];
-{02} TenTenNum:            word;
-
-{05}  Chapter:             string[4];
-{01}  ZERO_11:             DummyByte;
-{01}  ceClearDupeSheet:    boolean;
-{01}  ceSearchAndPounce:   boolean;
-
-{01}  Prefecture:          Byte;
-{01}  InhibitMults:        boolean;
-{01}  Zone:                Byte;
-{01}  NameSent:            boolean;
-
-{21}  Kids:                Str20; { Used for whole ex string }
-{01}  ceContest:           ContestType;
-{02}  QSOPoints:           word{Smallint};
-
-{08}  RandomCharsReceived: string[7];
-
-{01}  ZERO_13:             DummyByte;
-{01}  ceClearMultSheet:    Boolean;
-{01}  MP3Record:           Boolean;
-{01}  res3:                Byte;
-
-{******************************}
-{07}  ceOperator:          OperatorType;
-
-{01}//  res4:                Byte;
-{01}//  res5:                Byte;
-{01}//  res6:                Byte;
-{01}//  res7:                Byte;
-
-{01}//  res8:                Byte;
-{01}//  res9:                Byte;
-{01}//  res10:               Byte;
-{******************************}
-
-{01}//  res11:               Byte;
-
-{01}//  res12:               Byte;
-{01}//  res13:               Byte;
-{01}//  res14:               Byte;
-{01}  res15:               Byte;
-
-{01}  res16:               Byte;
-{01}  res17:               Byte;
-{01}  res18:               Byte;
-{01}  res19:               Byte;
-
-{01}  res20:               Byte;
-{01}  res21:               Byte;
-{01}  res22:               Byte;
-{01}  res23:               Byte;
-
-//{01}  res25:               Byte;
-   end;
-{*)}
-
-const
-  SizeOfContestExchangev1_6                 = SizeOf(ContestExchangev1_6);
-type
-  ContestExchangePtrv1_6 = ^ContestExchangev1_6;
-
-// This is another declaration of ContestExchange for version 1.5. This is used to convert
-
-  ContestExchangev1_5 = record
-{COMMON START}
-
-{06}  tSysTime:            TQSOTime;
-{01}  Band:                BandType;
-{01}  Mode:                ModeType;
-
-{04}  ceQSOID1:            Cardinal;
-{04}  ceQSOID2:            Cardinal;
-{04}  Frequency:           LONGINT;
-
-{01}  ceQSO_Deleted:       boolean;
-{01}  ceComputerID:        AnsiChar;
-{01}  ceOperatorID:        Byte;
-{01}  ceRecordKind:        LogRecordKind;
-
-{01}  ceQSO_Skiped:        boolean;
-{01}  ceSendToServer:      boolean;
-{01}  ceNeedSendToServerAE:    boolean;
-{01}  ceDupe:              boolean;
-
-{07}  PostalCode_old:          PostalCodeString;
-{01}  ZERO_01:             DummyByte;
-
-{COMMON END}
-
-{07}  Prefix:              PrefixMultiplierString;
-{01}  ZERO_02:             DummyByte;
-
-{14}  Callsign:            CallString;
-{01}  Age:                 byte;
-{01}  ceWasSendInQTC:      Boolean;
-
-{01}  DomesticMult:        boolean;
-{01}  DXMult:              boolean;
-{01}  PrefixMult:          boolean;
-{01}  ZoneMult:            boolean;
-{04}  ceClass:             string[3]{10}; { Field day class }
-
-{01}  ZERO_04:             DummyByte;
-{01}  Precedence:          AnsiChar;
-{01}  ceRadio:             RadioType;
-{01}  Check:               Byte;           {The CHECK is two numbers (year)}
-
-{32}  QTH:                 QTHRecord;
-
-{06}  DXQTH:               DXMultiplierString;
-{01}  ZERO_05:             DummyByte;
-{01}  Radio:               InterfacedRadioType;
-
-{11}  DomMultQTH:          DomesticMultiplierString; //String for dom mult count
-{01}  ZERO_06:             DummyByte;
-
-{11}  DomesticQTH:         Str10;//Corrected QTH - if it is need  - i.e. AF1 -> AF-001 in IOTA contest.
-{01}  ZERO_07:             DummyByte;
-
-{11}  Name:                Str10;
-{01}  ZERO_08:             DummyByte;
-
-{07}  Power:               string[6];
-{01}  ZERO_09:             DummyByte;
-
-{04}  NumberReceived:      integer;
-{04}  NumberSent:          integer;
-
-{02}  RSTSent:             smallInt; {Word;}
-{02}  RSTReceived:         smallInt; {Word;}  // if this was an int, I could put ft8 reports here.
-
-{11}  QTHString:           Str10;//QTH received by user (literal)
-{01}  ZERO_10:             DummyByte;
-
-{06} RandomCharsSent:      string[5];
-{02} TenTenNum:            word;
-
-{05}  Chapter:             string[4];
-{01}  ZERO_11:             DummyByte;
-{01}  ceClearDupeSheet:    boolean;
-{01}  ceSearchAndPounce:   boolean;
-
-{01}  Prefecture:          Byte;
-{01}  InhibitMults:        boolean;
-{01}  Zone:                Byte;
-{01}  NameSent:            boolean;
-
-{21}  Kids:                Str20; { Used for whole ex string }
-{01}  ceContest:           ContestType;
-{02}  QSOPoints:           word{Smallint};
-
-{08}  RandomCharsReceived: string[7];
-
-{01}  ZERO_13:             DummyByte;
-{01}  ceClearMultSheet:    Boolean;
-{01}  MP3Record:           Boolean;
-{01}  res3:                Byte;
-
-{******************************}
-{07}  ceOperator:          OperatorType;
-
-{01}//  res4:                Byte;
-{01}//  res5:                Byte;
-{01}//  res6:                Byte;
-{01}//  res7:                Byte;
-
-{01}//  res8:                Byte;
-{01}//  res9:                Byte;
-{01}//  res10:               Byte;
-{******************************}
-
-{01}//  res11:               Byte;
-
-{01}//  res12:               Byte;
-{01}//  res13:               Byte;
-{01}//  res14:               Byte;
-{01}  res15:               Byte;
-
-{01}  res16:               Byte;
-{01}  res17:               Byte;
-{01}  res18:               Byte;
-{01}  res19:               Byte;
-
-{01}  res20:               Byte;
-{01}  res21:               Byte;
-{01}  res22:               Byte;
-{01}  res23:               Byte;
-
-//{01}  res25:               Byte;
-   end;
-
-   const
-  SizeOfContestExchangev1_5                 = SizeOf(ContestExchangev1_5);
-type
-  ContestExchangePtrv1_5 = ^ContestExchangev1_5;
-//----------------------------------------------------------------------------------------
-type
-  TNetSynQSOInformation = packed record
-    qsID: Word;
-    qsInformation: ContestExchange;
-    qsRes1: Byte;
-    qsRes2: Byte;
-    qsRes3: Byte;
-    qsRes4: Byte;
-  end;
 
 (* TNetQSOInformation (the fixed 384-byte QSO packet: id, ContestExchange, a tick,
   the sender's ordinal) was DELETED with protocol 5 (2026-11-22). A QSO is a
@@ -2640,9 +2344,6 @@ type
 //type  ContestExchangePtr = ^ContestExchange;
 type
   TStationStatePtr = ^TStationState;
-
-type
-  TNetSynQSOInformationPtr = ^TNetSynQSOInformation;
 
 type
   TParameterToNetwork = packed record
@@ -3916,36 +3617,10 @@ const
       wcbackground: ptr4wColors;
     end;
 
-  // Well this is bizzare. In order for the file size check to match, TLogHeader needs to be the same size as the ContestExchange record.
-  // So it looks like lhDummy is used to pad this out.
-  // But rather than keep this in the same place like when you change contestexchange, you have to figure that out.
-  // The better way to do this is to take SIZEOFCONTEXTEXCHANGE - the used bytes in log header as the size of the lhDummy char array de NY4I
-  const SizeOfLHVersionString = 8;
-  const SizeOfLHFileDesc = 16;
-  const SizeOfLHWarningString = 36;
-  const SizeOfLHValid = (SizeOfLHVersionString + SizeOfLHFileDesc + SizeOfLHWarningString);
-
-  type TLogHeader = record
-      lhVersionString: array[0..(SizeOfLHVersionString-1)] of AnsiChar;
-      lhFileDesc: array[0..(SizeOfLHFileDesc-1)] of AnsiChar;
-      lhWarningString: array[0..(SizeOfLHWarningString-1)] of AnsiChar;
-      lhDummy: array[0..(SizeOfContestExchange-SizeOfLHValid-1)] of AnsiChar;  // three fields above are 60 bytes
-   //   lhDummy: array[0..(SizeOfContestExchange-SizeOfTLogHeader-1)] of Char;  // three fields above are 60 bytes
-
-    end;
-
-  const
-    LogHeader                           : TLogHeader =
-      (
-      lhVersionString: (LOGVERSION1, LOGVERSION2, LOGVERSION3, LOGVERSION4, #0, #$20, #13, #10);
-      lhFileDesc: ('T', 'R', '4', 'W', ' ', 'L', 'O', 'G', ' ', 'F', 'I', 'L', 'E', ' ', #13, #10);
-      lhWarningString: ('W', 'A', 'R', 'N', 'I', 'N', 'G', ':', ' ', 'D', 'O', ' ', 'N', 'O', 'T', ' ', 'E', 'D', 'I', 'T', ' ', 'T', 'H', 'I', 'S', ' ', 'F', 'I', 'L', 'E', '!', #13, #10, #13, #10, #0);
-      );
-
-  const
-    SizeOfTLogHeader                    = SizeOf(TLogHeader);
-
-
+  (* TLogHeader, LogHeader and SizeOfTLogHeader -- the .TRW file's first record,
+    padded to SizeOfContestExchange -- are gone (issue 386, batch B). Nothing
+    writes a .TRW any more; the reader's frozen copy is uLogBinaryFile's
+    TTrwHeaderV17, a literal 376 bytes. *)
 
   var
     tr4wBrushArray                      : array[tr4wColors] of HBRUSH;

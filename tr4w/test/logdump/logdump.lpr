@@ -295,7 +295,7 @@ begin
 
       WriteLnOut('{"_meta":true,"logVersion":"' +
                  JsonEscape(reader.LogVersion) + '","recordSize":' +
-                 IntToStr(SizeOfContestExchange) + '}');
+                 IntToStr(TRW_RECORD_SIZE) + '}');
 
       recCount     := 0;
       goodCount    := 0;

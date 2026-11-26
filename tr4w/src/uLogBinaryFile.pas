@@ -27,14 +27,15 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   it out, not later" -- and this reader carries two pieces of knowledge that
   were learned the hard way and would not have survived being re-derived:
 
-  1. A LOG IS header + N * record, EXACTLY.  If the file size does not divide,
-     it was written by a TR4W whose SizeOfContestExchange differed -- a field
-     added or removed since -- and reading at the current stride yields
-     MISALIGNED GARBAGE rather than an error.  Refuse instead.
+  1. A LOG IS header + N * record, EXACTLY, and the record is the frozen
+     376-byte TTrwRecordV17 below.  If the file size does not divide, it was
+     written in another record size (a v1.5/v1.6 log, or a damaged file), and
+     reading at this stride yields MISALIGNED GARBAGE rather than an error.
+     Refuse instead.
 
   2. A SHORT READ AT THE TAIL IS END-OF-FILE, SILENTLY.  That is what the
-     legacy ReadLogFile does (MainUnit): it reads SizeOf(ContestExchange) and
-     treats "fewer bytes than that" as the end.  Anything stricter reports
+     legacy ReadLogFile did (MainUnit): it read one record and treated
+     "fewer bytes than that" as the end.  Anything stricter reports
      corruption on files TR4W itself considers fine, and anything looser
      invents a record out of trailing bytes.  Real cases: a log written by an
      older TR4W, or a file truncated mid-write.
@@ -59,6 +60,166 @@ interface
 uses
    Classes, SysUtils, VC;
 
+(* THE D7 v1.7 ON-DISK RECORD, FROZEN (issue 386, batch B, 2026-11-26).
+
+  A .TRW is a header record plus N records of exactly this layout: what D7
+  wrote, and what every TR4W up to 5.0.x appended. It was ContestExchange
+  itself until this batch -- the reader did one Read of 376 bytes straight into
+  the live record -- so the program's QSO record could not change without
+  misreading every old log. Now the file format is THIS type and nothing else,
+  and ContestExchange is free to change: TrwRecordToQso carries it across field
+  by field.
+
+  FROZEN MEANS LITERAL. Every string is written as string[n], the operator as
+  an AnsiChar array, every enum as the Byte it is on disk, and the time and QTH
+  records are this unit's own copies -- so widening CallString, Str10, an enum
+  or QTHRecord in VC can never move a byte here. The offsets and the size are
+  pinned against literal numbers in uTestLogBinaryFile, and the size again at
+  compile time below. DO NOT EDIT THIS TYPE: there are files on disk in it.
+
+  IT IS A PLAIN record, NOT packed, ON PURPOSE: the layout IS the x86 natural
+  alignment D7 used (two pad bytes before NumberReceived, two at the end), and
+  the pins say so. The importer is a Windows migration path; on aarch64 the
+  natural alignment differs and the pins fail there -- see
+  uTestLogBinaryFile, TestTheRecordHasTheSameFIELD_OFFSETSEverywhere.
+
+  WHAT 5.x CARVED OUT OF sReserved IS NOT HERE. RcvdYear, YearSent, the
+  off-contest stamp and the rover place were carved from D7's sReserved in the
+  live record; no D7 file holds them, so this record keeps D7's sReserved
+  (string[49]) and the converter leaves those fields unset. ceXQSO IS here: D7
+  itself carved it (D7 issue #750), so a D7 log can carry an X-QSO. *)
+type
+   TTrwQSOTimeV17 = packed record
+      qtYear: Byte;
+      qtMonth: Byte;
+      qtDay: Byte;
+      qtHour: Byte;
+      qtMinute: Byte;
+      qtSecond: Byte;
+   end;
+
+   TTrwQTHRecordV17 = record
+      CountryID: string[5];
+      Zone: Byte;
+      reserved: Byte;
+      Prefix: string[6];
+      Continent: Byte;              (* ContinentType *)
+      StandardCall: string[13];
+      Country: Word;
+   end;
+
+   TTrwRecordV17 = record
+      tSysTime: TTrwQSOTimeV17;
+      Band: Byte;                   (* BandType *)
+      Mode: Byte;                   (* ModeType *)
+      ceQSOID1: Cardinal;
+      ceQSOID2: Cardinal;
+      Frequency: LongInt;
+      ceQSO_Deleted: Boolean;
+      ceComputerID: AnsiChar;
+      ceOperatorID: Byte;
+      ceRecordKind: Byte;           (* LogRecordKind *)
+      ceQSO_Skiped: Boolean;        (* the old Alt-Y delete flag; folded into ceQSO_Deleted *)
+      ceSendToServer: Boolean;
+      ceNeedSendToServerAE: Boolean;
+      ceDupe: Boolean;
+      PostalCode_old: string[6];
+      ZERO_01: Byte;
+      Prefix: string[6];            (* a note's 80-byte text region starts here *)
+      ZERO_02: Byte;
+      Callsign: string[13];
+      Age: Byte;
+      ceWasSendInQTC: Boolean;
+      DomesticMult: Boolean;
+      DXMult: Boolean;
+      PrefixMult: Boolean;
+      ZoneMult: Boolean;
+      ExtMode: Byte;                (* ExtendedModeType *)
+      ExchString: string[40];
+      ceClass: string[3];
+      ZERO_04: Byte;
+      Precedence: AnsiChar;
+      ceRadio: Byte;                (* RadioType *)
+      Check: Byte;
+      QTH: TTrwQTHRecordV17;
+      DXQTH: string[5];
+      ZERO_05: Byte;
+      Radio: Byte;                  (* InterfacedRadioType *)
+      DomMultQTH: string[10];
+      ZERO_06: Byte;
+      DomesticQTH: string[10];
+      ZERO_07: Byte;
+      Name: string[10];
+      ZERO_08: Byte;
+      Power: string[6];
+      ZERO_09: Byte;
+      NumberReceived: Integer;
+      NumberSent: Integer;
+      RSTSent: SmallInt;
+      RSTReceived: SmallInt;
+      QTHString: string[10];
+      ZERO_10: Byte;
+      RandomCharsSent: string[5];
+      TenTenNum: Word;
+      Chapter: string[4];
+      ZERO_11: Byte;
+      ceClearDupeSheet: Boolean;
+      ceSearchAndPounce: Boolean;
+      Prefecture: Byte;
+      InhibitMults: Boolean;
+      Zone: Byte;
+      NameSent: Boolean;
+      Kids: string[20];
+      ceContest: Byte;              (* the D7 ContestType ordinal = the legacy contest number *)
+      QSOPoints: Word;
+      RandomCharsReceived: string[7];
+      ZERO_13: Byte;
+      ceClearMultSheet: Boolean;
+      MP3Record: Boolean;
+      ceOperator: array[0..10] of AnsiChar;
+      id: string[32];
+      ceXQSO: Boolean;
+      sReserved: string[49];        (* never written by D7; not carried *)
+   end;
+
+   (* THE D7 HEADER: the first record of the file, padded to one record. It was
+     VC.TLogHeader, whose padding was SizeOfContestExchange minus the 60 used
+     bytes -- so a bigger QSO record would have misread every header. Now it is
+     a literal 376, tied to the frozen record by the compile-time check below. *)
+   TTrwHeaderV17 = record
+      lhVersionString: array[0..7] of AnsiChar;
+      lhFileDesc: array[0..15] of AnsiChar;
+      lhWarningString: array[0..35] of AnsiChar;
+      lhDummy: array[0..315] of AnsiChar;
+   end;
+
+const
+   (* The size of one record, and of the header, in every .TRW. *)
+   TRW_RECORD_SIZE = 376;
+   (* A note's text region: NOTE_MAX_LENGTH (uLogNote) bytes from Prefix. Stated
+     here again, literally, because this is the FILE's region -- the in-memory
+     one may move. *)
+   TRW_NOTE_REGION = 80;
+
+{$IF SizeOf(TTrwRecordV17) <> TRW_RECORD_SIZE}
+{$ERROR TTrwRecordV17 is not the 376-byte D7 v1.7 record: it is frozen, do not edit it}
+{$ENDIF}
+{$IF SizeOf(TTrwHeaderV17) <> TRW_RECORD_SIZE}
+{$ERROR TTrwHeaderV17 is not one 376-byte record}
+{$ENDIF}
+
+(* ONE D7 RECORD -> ONE QSO, FIELD BY FIELD. aQso is cleared first, so every
+  field the file does not have (the 5.x ones: the received and sent year, the
+  off-contest stamp, the rover place) comes out unset. Also folds the legacy
+  delete flag, and carries a note's text, which is a byte region rather than
+  fields. NO Move OF THE RECORD: a new field in ContestExchange is unset here
+  until someone decides what an old log means for it. *)
+procedure TrwRecordToQso(const aTrw: TTrwRecordV17; var aQso: ContestExchange);
+
+(* The text of a note record (rkNote), read from the FILE's region: bytes up to
+  the first NUL, or all TRW_NOTE_REGION of them. *)
+function TrwNoteText(const aTrw: TTrwRecordV17): AnsiString;
+
 type
    TLogBinaryStatus = (
       lbOK,
@@ -77,7 +238,7 @@ type
       FFileName: string;
       FStatus: TLogBinaryStatus;
       FMessage: string;
-      FHeader: TLogHeader;
+      FHeader: TTrwHeaderV17;
       FExpectedRecords: Int64;
       FRecordsRead: Int64;
 
@@ -96,7 +257,7 @@ type
       (* Empty when Status is lbOK. Otherwise a sentence for a human. *)
       property Message: string read FMessage;
       property FileName: string read FFileName;
-      property Header: TLogHeader read FHeader;
+      property Header: TTrwHeaderV17 read FHeader;
 
       (* 'v1.7' -- the first four bytes of the header's version string. *)
       function LogVersion: string;
@@ -131,7 +292,8 @@ function UnixUTCToQSOTime(aUnix: Int64): TQSOTime;
 implementation
 
 uses
-   DateUtils;
+   DateUtils,
+   uLogNote;   (* SetNoteText -- where a note lives in the live record *)
 
 const
    (* The epoch TR4W's on-disk byte is relative to. Named rather than repeated. *)
@@ -198,6 +360,153 @@ end;
 
 (* --------------------------------------------------------------------------- *)
 
+function TrwNoteText(const aTrw: TTrwRecordV17): AnsiString;
+var
+   region : array[0..TRW_NOTE_REGION - 1] of AnsiChar;
+   n      : integer;
+   i      : integer;
+begin
+   (* The region is wider than Prefix: that is the D7 encoding of a note (see
+     uLogNote). It lies wholly inside the frozen record -- Prefix is at 36, so
+     36..115 -- which uTestLogBinaryFile pins. *)
+   Move(aTrw.Prefix, region, SizeOf(region));
+
+   n := 0;
+   while (n < SizeOf(region)) and (region[n] <> #0) do
+      begin
+      Inc(n);
+      end;
+
+   SetLength(Result, n);
+   for i := 1 to n do
+      begin
+      Result[i] := region[i - 1];
+      end;
+end;
+
+procedure TrwRecordToQso(const aTrw: TTrwRecordV17; var aQso: ContestExchange);
+var
+   i: integer;
+begin
+   aQso.Clear;
+
+   aQso.tSysTime.qtYear   := aTrw.tSysTime.qtYear;
+   aQso.tSysTime.qtMonth  := aTrw.tSysTime.qtMonth;
+   aQso.tSysTime.qtDay    := aTrw.tSysTime.qtDay;
+   aQso.tSysTime.qtHour   := aTrw.tSysTime.qtHour;
+   aQso.tSysTime.qtMinute := aTrw.tSysTime.qtMinute;
+   aQso.tSysTime.qtSecond := aTrw.tSysTime.qtSecond;
+   aQso.Band := BandType(aTrw.Band);
+   aQso.Mode := ModeType(aTrw.Mode);
+   aQso.ceQSOID1 := aTrw.ceQSOID1;
+   aQso.ceQSOID2 := aTrw.ceQSOID2;
+   aQso.Frequency := aTrw.Frequency;
+
+   (* THE LEGACY DELETE FLAG IS FOLDED HERE, AT THE ONE DOOR OLD RECORDS COME
+     THROUGH. A .TRW written before 2026-09-02 carries ceQSO_Skiped -- Alt-Y set
+     it -- and nothing downstream reads that field any more. The importer writes
+     is_skipped as False, so without the fold the deletion would be lost on the
+     way in and the QSO would come back scored and exported.
+
+     MEASURED, NOT REASONED: without it the golden corpus went from 24 passed
+     to 16 passed / 8 FAILED -- eight logs whose deleted QSOs reappeared in the
+     Cabrillo. See ceQSO_Skiped in VC.pas. *)
+   aQso.ceQSO_Deleted := aTrw.ceQSO_Deleted or aTrw.ceQSO_Skiped;
+   aQso.ceQSO_Skiped := False;
+
+   aQso.ceComputerID := aTrw.ceComputerID;
+   aQso.ceOperatorID := aTrw.ceOperatorID;
+   aQso.ceRecordKind := LogRecordKind(aTrw.ceRecordKind);
+   aQso.ceSendToServer := aTrw.ceSendToServer;
+   aQso.ceNeedSendToServerAE := aTrw.ceNeedSendToServerAE;
+   aQso.ceDupe := aTrw.ceDupe;
+   aQso.PostalCode_old := aTrw.PostalCode_old;
+   aQso.ZERO_01 := aTrw.ZERO_01;
+   aQso.Prefix := aTrw.Prefix;
+   aQso.ZERO_02 := aTrw.ZERO_02;
+   aQso.Callsign := aTrw.Callsign;
+   aQso.Age := aTrw.Age;
+   aQso.ceWasSendInQTC := aTrw.ceWasSendInQTC;
+   aQso.DomesticMult := aTrw.DomesticMult;
+   aQso.DXMult := aTrw.DXMult;
+   aQso.PrefixMult := aTrw.PrefixMult;
+   aQso.ZoneMult := aTrw.ZoneMult;
+   aQso.ExtMode := ExtendedModeType(aTrw.ExtMode);
+   aQso.ExchString := aTrw.ExchString;
+   aQso.ceClass := aTrw.ceClass;
+   aQso.ZERO_04 := aTrw.ZERO_04;
+   aQso.Precedence := aTrw.Precedence;
+   aQso.ceRadio := RadioType(aTrw.ceRadio);
+   aQso.Check := aTrw.Check;
+
+   aQso.QTH.CountryID := aTrw.QTH.CountryID;
+   aQso.QTH.Zone := aTrw.QTH.Zone;
+   aQso.QTH.reserved := aTrw.QTH.reserved;
+   aQso.QTH.Prefix := aTrw.QTH.Prefix;
+   aQso.QTH.Continent := ContinentType(aTrw.QTH.Continent);
+   aQso.QTH.StandardCall := aTrw.QTH.StandardCall;
+   aQso.QTH.Country := aTrw.QTH.Country;
+
+   aQso.DXQTH := aTrw.DXQTH;
+   aQso.ZERO_05 := aTrw.ZERO_05;
+   aQso.Radio := InterfacedRadioType(aTrw.Radio);
+   aQso.DomMultQTH := aTrw.DomMultQTH;
+   aQso.ZERO_06 := aTrw.ZERO_06;
+   aQso.DomesticQTH := aTrw.DomesticQTH;
+   aQso.ZERO_07 := aTrw.ZERO_07;
+   aQso.Name := aTrw.Name;
+   aQso.ZERO_08 := aTrw.ZERO_08;
+   aQso.Power := aTrw.Power;
+   aQso.ZERO_09 := aTrw.ZERO_09;
+   aQso.NumberReceived := aTrw.NumberReceived;
+   aQso.NumberSent := aTrw.NumberSent;
+   aQso.RSTSent := aTrw.RSTSent;
+   aQso.RSTReceived := aTrw.RSTReceived;
+   aQso.QTHString := aTrw.QTHString;
+   aQso.ZERO_10 := aTrw.ZERO_10;
+   aQso.RandomCharsSent := aTrw.RandomCharsSent;
+   aQso.TenTenNum := aTrw.TenTenNum;
+   aQso.Chapter := aTrw.Chapter;
+   aQso.ZERO_11 := aTrw.ZERO_11;
+   aQso.ceClearDupeSheet := aTrw.ceClearDupeSheet;
+   aQso.ceSearchAndPounce := aTrw.ceSearchAndPounce;
+   aQso.Prefecture := aTrw.Prefecture;
+   aQso.InhibitMults := aTrw.InhibitMults;
+   aQso.Zone := aTrw.Zone;
+   aQso.NameSent := aTrw.NameSent;
+   aQso.Kids := aTrw.Kids;
+   (* A legacy contest's handle IS its legacy number (Q108 S2); the importer
+     refuses a number above the legacy range. *)
+   aQso.ceContest := TContestHandle.FromByte(aTrw.ceContest);
+   aQso.QSOPoints := aTrw.QSOPoints;
+   aQso.RandomCharsReceived := aTrw.RandomCharsReceived;
+   aQso.ZERO_13 := aTrw.ZERO_13;
+   aQso.ceClearMultSheet := aTrw.ceClearMultSheet;
+   aQso.MP3Record := aTrw.MP3Record;
+   for i := Low(aTrw.ceOperator) to High(aTrw.ceOperator) do
+      begin
+      aQso.ceOperator[i] := aTrw.ceOperator[i];
+      end;
+   aQso.id := aTrw.id;
+   aQso.ceXQSO := aTrw.ceXQSO;
+
+   (* NOT CARRIED, because no D7 file holds them (they were D7's sReserved, which
+     nothing ever wrote) and Clear left them unset: RcvdYear/RcvdYearKnown (the
+     importer refills the year from Zone for a year contest), YearSent/
+     YearSentKnown (the importer stamps the file's STX_STRING year),
+     ceOffContest (the store's one-shot stamp judges every row) and ceRoverQTH. *)
+
+   (* A NOTE IS A BYTE REGION, NOT FIELDS: its text runs on from Prefix across
+     the fields above, so the copies just made hold fragments of it. Carry the
+     text itself, from the file's region into the live one. *)
+   if aQso.ceRecordKind = rkNote then
+      begin
+      SetNoteText(aQso, TrwNoteText(aTrw));
+      end;
+end;
+
+(* --------------------------------------------------------------------------- *)
+
 procedure TLogBinaryReader.ReportFailure(aStatus: TLogBinaryStatus; const aMessage: string);
 begin
    FStatus := aStatus;
@@ -242,27 +551,27 @@ begin
       end;
 
    recordBytes := FStream.Size - SizeOf(FHeader);
-   leftover := recordBytes mod SizeOf(ContestExchange);
+   leftover := recordBytes mod SizeOf(TTrwRecordV17);
 
    (* THE CHECK THAT PREVENTS GARBAGE. See the unit header: a stride mismatch
-     means a different SizeOfContestExchange, and reading anyway produces
-     plausible-looking nonsense rather than a failure. *)
+     means a file whose records are not the 376-byte D7 v1.7 record, and
+     reading anyway produces plausible-looking nonsense rather than a
+     failure. *)
    if leftover <> 0 then
       begin
       ReportFailure(lbStrideMismatch,
            SysUtils.Format('"%s" is %d bytes, which is not a header (%d) plus a whole ' +
                   'number of %d-byte records -- %d byte(s) are left over. That ' +
                   'normally means the log was written by a version of TR4W whose ' +
-                  'QSO record was a different size, and reading it at this ' +
-                  'stride would produce misaligned data rather than an error. ' +
-                  'Open the log in a current TR4W and save it to upgrade it in ' +
-                  'place, then import again.',
+                  'QSO record was a different size (a log older than v1.7, or a ' +
+                  'damaged file), and reading it at this stride would produce ' +
+                  'misaligned data rather than an error.',
                   [aFileName, FStream.Size, SizeOf(FHeader),
-                   SizeOf(ContestExchange), leftover]));
+                   SizeOf(TTrwRecordV17), leftover]));
       Exit;
       end;
 
-   FExpectedRecords := recordBytes div SizeOf(ContestExchange);
+   FExpectedRecords := recordBytes div SizeOf(TTrwRecordV17);
 
    if FStream.Read(FHeader, SizeOf(FHeader)) <> SizeOf(FHeader) then
       begin
@@ -288,8 +597,9 @@ end;
 function TLogBinaryReader.ReadNext(out aRecord: ContestExchange): boolean;
 var
    got: longint;
+   trw: TTrwRecordV17;
 begin
-   FillChar(aRecord, SizeOf(aRecord), 0);
+   aRecord.Clear;
    Result := False;
 
    if FStream = nil then
@@ -297,49 +607,21 @@ begin
       Exit;
       end;
 
-   got := FStream.Read(aRecord, SizeOf(aRecord));
+   (* THE FILE'S RECORD, NOT THE PROGRAM'S: read into the frozen D7 type and
+     carried across field by field (TrwRecordToQso), which also folds the
+     legacy delete flag and leaves every 5.x field unset. *)
+   got := FStream.Read(trw, SizeOf(trw));
 
    (* A SHORT READ IS END OF FILE, NOT AN ERROR -- and it is not reported,
      because the legacy reader does not report it either and the corpus
      compares our record count against what ExportToADIF saw. See the unit
      header. *)
-   if got <> SizeOf(aRecord) then
+   if got <> SizeOf(trw) then
       begin
       Exit;
       end;
 
-   (* THE LEGACY DELETE FLAG IS FOLDED HERE, AT THE ONE DOOR OLD RECORDS COME
-     THROUGH. A .TRW written before 2026-09-02 carries ceQSO_Skiped -- Alt-Y set
-     it -- and nothing downstream reads that field any more. Folding it in the
-     DATABASE reader is not enough: the importer reads a .TRW through THIS
-     routine and then writes is_skipped as False, so the deletion would be lost
-     on the way in and the QSO would come back scored and exported.
-
-     MEASURED, NOT REASONED: without this the golden corpus went from 24 passed
-     to 16 passed / 8 FAILED -- eight logs whose deleted QSOs reappeared in the
-     Cabrillo. See ceQSO_Skiped in VC.pas. *)
-   aRecord.ceQSO_Deleted := aRecord.ceQSO_Deleted or aRecord.ceQSO_Skiped;
-   aRecord.ceQSO_Skiped  := False;
-
-   (* NO .TRW CARRIES A RECEIVED YEAR (issue 298, stage 1). Those bytes were
-     sReserved, which nothing ever wrote -- zero in every fixture record, but
-     a D7 log is somebody else's file, so they are cleared here rather than
-     believed. A contest that kept its year in the zone slot gets it from
-     there: the importer's job (uLogImport), because it knows the contest and
-     this reader does not. *)
-   aRecord.RcvdYear      := 0;
-   aRecord.RcvdYearKnown := False;
-   (* AND NO .TRW CARRIES A SENT YEAR (issue 300, protocol 4): the same bytes of
-     sReserved, cleared for the same reason. The importer stamps the file's
-     STX_STRING year itself (ApplyImportedSentYear). *)
-   aRecord.YearSent      := 0;
-   aRecord.YearSentKnown := False;
-   (* NOR WHETHER ITS CONTEST CREDITS IT (log schema 10): that byte was
-     sReserved's too. The importer marks the new log for the store's one-shot
-     stamp, which judges every row once the contest is set up. *)
-   aRecord.ceOffContest  := False;
-   (* NOR WHERE A ROVER SENT IT FROM (log schema 12): sReserved's again. *)
-   aRecord.ceRoverQTH    := '';
+   TrwRecordToQso(trw, aRecord);
 
    Inc(FRecordsRead);
    Result := True;

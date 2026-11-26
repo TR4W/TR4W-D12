@@ -223,7 +223,6 @@ var
     A flag rather than a Disconnect from here: the engine runs on the main
     thread and the connection belongs to its own. *)
   DropRequested                         : boolean = False;
-  NetSynQSOInformation                 : TNetSynQSOInformation = (qsID: NET_TAKESERVERQSO_ID);
 
   TempLongBool                          : LongBool;
   CorrectPortNumber                     : LongBool;

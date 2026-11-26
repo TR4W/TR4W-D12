@@ -263,7 +263,7 @@ begin
       // and fall to the else: unknown. A QSO is now NET_WIRE_*_ID, whose size
       // is in its own header (NetIsWireId).
 
-      NET_TAKESERVERQSO_ID:    Result := SizeOf(TNetSynQSOInformation);
+      NET_TAKESERVERQSO_ID:    Result := NET_TAKESERVERQSO_SIZE;   // D7 server only, frame kept (VC)
       NET_TIMESYN_ID:          Result := NET_TIMESYN_SIZE;   // removed feature, frame kept (VC)
       NET_PARAMETER_ID:        Result := SizeOf(TParameterToNetwork);
       NET_STATIONSTATUS_ID:    Result := SizeOf(TStationState);

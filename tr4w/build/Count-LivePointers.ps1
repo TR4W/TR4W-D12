@@ -172,7 +172,11 @@ function Invoke-LivePointerSelfTest
       'C5-objects'        = 2
       'C5-tag'            = 1
       'C5-lparam'         = 2
-      'C5-data'           = 1
+      # 3, not the 1 this said until 2026-11-26: the rule matches the word TNode
+      # too, and the fixture's linked-list type is named TNode (lines 3 and 4).
+      # The old count was never checked -- the self-test's Write-Output joined
+      # its return value and every failure read as a pass.
+      'C5-data'           = 3
       'C6-object-type'    = 1
       'C6-ptr-named'      = 5
       'C7-proc-type'      = 1
@@ -190,19 +194,22 @@ function Invoke-LivePointerSelfTest
       }
    }
 
+   # Write-Host, NOT Write-Output: output inside a function joins its RETURN
+   # VALUE, and the non-empty array that made read as a PASS (Count-LiveMove had
+   # the same shape; measured 2026-11-26).
    $ok = $true
    foreach ($k in $script:Rules.Keys) {
       if (-not $expected.Contains($k)) {
-         Write-Output ("Count-LivePointers SELFTEST FAIL: rule {0} has no expected count in the fixture." -f $k)
+         Write-Host ("Count-LivePointers SELFTEST FAIL: rule {0} has no expected count in the fixture." -f $k)
          $ok = $false
          continue
       }
       $hits = @($got | Where-Object { $_.Rule -eq $k })
       if ($hits.Count -ne $expected[$k]) {
          $ok = $false
-         Write-Output ("Count-LivePointers SELFTEST FAIL: {0} expected {1}, got {2}:" -f $k, $expected[$k], $hits.Count)
+         Write-Host ("Count-LivePointers SELFTEST FAIL: {0} expected {1}, got {2}:" -f $k, $expected[$k], $hits.Count)
          foreach ($h in $hits) {
-            Write-Output ("   fixture line {0}: '{1}'   <- {2}" -f $h.Line, $h.Match, $fixture[$h.Line - 1].Trim())
+            Write-Host ("   fixture line {0}: '{1}'   <- {2}" -f $h.Line, $h.Match, $fixture[$h.Line - 1].Trim())
          }
       }
    }

@@ -609,7 +609,7 @@ var
    res: TLogImportResult;
    s: TMemoryStream;
    b: Byte;
-   probe: ContestExchange;
+   probe: TTrwRecordV17;
 begin
    CheckTrue(aNumber > Ord(High(ContestType)),
              aWhat + ': the number is above every legacy contest');
@@ -620,10 +620,12 @@ begin
    Scrub(fn);
    s := TMemoryStream.Create;
    try
+      (* THE FILE'S layout, the frozen D7 record -- never ContestExchange,
+        which is free to change (issue 386, batch B). *)
       s.LoadFromFile(BinaryLogFixture('arktika_2026_ny4i'));
-      CheckEquals(2 * SizeOf(ContestExchange), s.Size,
+      CheckEquals(2 * TRW_RECORD_SIZE, s.Size,
                   'the fixture is a header and one record');
-      s.Position := SizeOf(ContestExchange) +
+      s.Position := TRW_RECORD_SIZE +
                     (PtrUInt(@probe.ceContest) - PtrUInt(@probe));
       b := aNumber;
       s.WriteBuffer(b, 1);

@@ -58,8 +58,10 @@ still the OPERATOR's flag (`ceXQSO`). See docs/LOG_SCHEMA.md.
 
 **The record carries a received year since issue 298 stage 1 (2026-11-12)** --
 `RcvdYear` (Word, 324) and `RcvdYearKnown` (326), carved from `sReserved` like
-`ceXQSO`; still 376 bytes, no earlier offset moved. `TLogBinaryReader.ReadNext`
-CLEARS both (a D7 log never wrote them), and `uLogImport` refills them from
+`ceXQSO`; still 376 bytes, no earlier offset moved. The .TRW reader leaves both
+unset (a D7 log never wrote them; since issue 386 batch B the file is read through
+the frozen `uLogBinaryFile.TTrwRecordV17` and `TrwRecordToQso`, which does not
+carry them), and `uLogImport` refills them from
 `Zone` for a contest that kept its year there (`ContestKeepsYearInZoneSlot`).
 ADIF and Cabrillo still read the zone slot until stage 3. **ADIF IMPORT TAKES
 THE YEAR since stage 2 (2026-11-12)** -- in the contest's `ApplyADIFImport` (the

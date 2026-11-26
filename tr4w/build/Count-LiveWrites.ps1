@@ -64,7 +64,7 @@ param(
 # with why it is not converted yet.
 # 40 -> 39, 2026-11-26: MainUnit.OpenLogFile (the .TRW opened read-write)
 # deleted with the other .TRW file routines (issue 385).
-$WRITE_CEILING = 39
+$WRITE_CEILING = 32
 # Floors for -Gate: fewer than these means the reader failed, not that the tree
 # is clean.
 $FILE_FLOOR  = 300
@@ -160,11 +160,14 @@ function Invoke-LiveWriteSelfTest
       if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force }
    }
 
+   # Write-Host, NOT Write-Output: output inside a function joins its RETURN
+   # VALUE, and the non-empty array that made read as a PASS (Count-LiveMove had
+   # the same shape; measured 2026-11-26).
    $ok = ($got.Count -eq $expected)
    if (-not $ok) {
-      Write-Output ("Count-LiveWrites SELFTEST FAIL: expected {0} live write(s), got {1}:" -f $expected, $got.Count)
+      Write-Host ("Count-LiveWrites SELFTEST FAIL: expected {0} live write(s), got {1}:" -f $expected, $got.Count)
       foreach ($g in $got) {
-         Write-Output ("   fixture line {0}: {1}   <- {2}" -f $g.Line, $g.Call, $fixture[$g.Line - 1].Trim())
+         Write-Host ("   fixture line {0}: {1}   <- {2}" -f $g.Line, $g.Call, $fixture[$g.Line - 1].Trim())
       }
    }
    return $ok

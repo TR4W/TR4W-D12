@@ -573,7 +573,6 @@ var
 
 {(*}
   MyStationState                        : TStationState        ;// = (ssID: NET_STATIONSTATUS_ID);
-  NetSynQSOInformation                  : TNetSynQSOInformation;// = (qsID: NET_TAKESERVERQSO_ID);//262
   (* NetDXSpot, NetIntercomMessage and SendSpotViaNetwork are no
     longer global (2026-10-27). Their id initialisers were commented out when
     the Network window stopped assigning them, and nothing else did, so every

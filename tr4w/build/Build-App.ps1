@@ -448,7 +448,7 @@ if ($countsAreComplete -and ($warnLines.Count -lt $WARN_CEILING))
 # and uCFG lost two more the same way. Measured by the full build.
 # 1165 -> 1159, 2026-11-26: the .TRW file routines deleted (issue 385); measured
 # by the full build of that work.
-$NARROW_CEILING = 1159
+$NARROW_CEILING = 1158
 
 $narrowLines = $output | Select-String -Pattern 'Implicit string type conversion with potential data loss'
 Write-Host "narrowing string conversions: $($narrowLines.Count) (ceiling $NARROW_CEILING)"

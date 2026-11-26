@@ -44,7 +44,6 @@ type
       procedure Test_TheFramerAgreesWithEachRecord;
       procedure Test_TheThreeQSOIdsShareOneSize;
       procedure Test_SpotRecordInsideTheSpotMessage;
-      procedure Test_TheExchangeRecordIsStillThe376ByteImportRecord;
       procedure Test_EveryFixedRecordIsUnmanaged;
    end;
 
@@ -74,7 +73,7 @@ begin
    CheckWire('TLogFileInformation (1010)',      19,  SizeOf(TLogFileInformation));
    CheckWire('TIntercomMessage (1020)',         84,  SizeOf(TIntercomMessage));
    CheckWire('TNetDXSpot (1030)',               106, SizeOf(TNetDXSpot));
-   CheckWire('TNetSynQSOInformation (1060)',    382, SizeOf(TNetSynQSOInformation));
+   CheckWire('NET_TAKESERVERQSO_SIZE (1060, D7 server)', 382, NET_TAKESERVERQSO_SIZE);
    CheckWire('NET_TIMESYN_SIZE (1070, removed)', 20, NET_TIMESYN_SIZE);
    CheckWire('TParameterToNetwork (1080)',      514, SizeOf(TParameterToNetwork));
    CheckWire('TStationState (1090)',            46,  SizeOf(TStationState));
@@ -132,28 +131,22 @@ begin
                'TNetDXSpot must be the id Word plus exactly one TSpotRecord');
 end;
 
-(* THE 376-BYTE ContestExchange IS NO LONGER THE WIRE (protocol 5): TNetQSOInformation
-  (id + record + computer id + 2 bytes = 384) was deleted with the three fixed QSO
-  ids. The record stays what the .TRW reader and the station's own code use; its
-  size and the ceContest offset (265) are pinned in uTestLogBinaryFile. This pin
-  keeps the record the size the importer reads. *)
-procedure TTestNetWireSizes.Test_TheExchangeRecordIsStillThe376ByteImportRecord;
-begin
-   CheckWire('ContestExchange', 376, SizeOf(ContestExchange));
-end;
+(* ContestExchange IS NOT ON THE WIRE (protocol 5 deleted the fixed 384-byte QSO
+  packet) and, since issue 386 batch B, not the .TRW record either: its size is
+  no contract, so it is not pinned here. The file's record is uLogBinaryFile's
+  frozen TTrwRecordV17, pinned in uTestLogBinaryFile. *)
 
 (* EVERY FIXED MESSAGE IS SENT AS ITS OWN BYTES (SendToNet(rec, SizeOf(rec))),
   so none may hold a managed field: a string or a dynamic array would put a
   POINTER on the wire. A run-time check, not VC's compile guard: these are
-  fixed messages whose sizes are pinned above, and ContestExchange (inside
-  TNetSynQSOInformation) has its own guard (issue 386). *)
+  fixed messages whose sizes are pinned above. No fixed message carries
+  ContestExchange any more (issue 386, batch B, deleted TNetSynQSOInformation). *)
 procedure TTestNetWireSizes.Test_EveryFixedRecordIsUnmanaged;
 begin
    CheckFalse(IsManagedType(TMessageState), 'TMessageState');
    CheckFalse(IsManagedType(TLogFileInformation), 'TLogFileInformation');
    CheckFalse(IsManagedType(TIntercomMessage), 'TIntercomMessage');
    CheckFalse(IsManagedType(TNetDXSpot), 'TNetDXSpot');
-   CheckFalse(IsManagedType(TNetSynQSOInformation), 'TNetSynQSOInformation');
    CheckFalse(IsManagedType(TParameterToNetwork), 'TParameterToNetwork');
    CheckFalse(IsManagedType(TStationState), 'TStationState');
    CheckFalse(IsManagedType(TClientStatus), 'TClientStatus');
@@ -169,7 +162,6 @@ begin
    Test_TheFramerAgreesWithEachRecord;
    Test_TheThreeQSOIdsShareOneSize;
    Test_SpotRecordInsideTheSpotMessage;
-   Test_TheExchangeRecordIsStillThe376ByteImportRecord;
    Test_EveryFixedRecordIsUnmanaged;
 end;
 
