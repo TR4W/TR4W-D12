@@ -1086,7 +1086,7 @@ end;
   silence a command that still does something.
 *)
 const
-   RETIRED_COMMANDS: array[0..110] of string = (
+   RETIRED_COMMANDS: array[0..113] of string = (
       'AUTO ALT-D ENABLE',
       'BACKCOPY ENABLE',
       'BAND MAP ENABLE',
@@ -1267,7 +1267,15 @@ const
       'TAIL END CW MESSAGE',
       'TAIL END KEY',
       'TAIL END MESSAGE',
-      'TAIL END SSB MESSAGE'
+      'TAIL END SSB MESSAGE',
+      (* RETIRED 2026-11-26 (NY4I, from the D7 settings audit): no 5.x setting
+        owns these three, so an old file or a stored statement naming one was
+        refused. PADDLE PORT and STEREO CONTROL PIN went with the parallel
+        port; SERIAL PORT DEBUG was withdrawn earlier (TRACE logging covers
+        it). Accepted and ignored. *)
+      'PADDLE PORT',
+      'SERIAL PORT DEBUG',
+      'STEREO CONTROL PIN'
       );
 
 function RetiredCommandCount: integer;

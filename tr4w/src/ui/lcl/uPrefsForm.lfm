@@ -445,12 +445,16 @@ object PrefsForm: TPrefsForm
         object cbxCW1: TComboBox
           AnchorSideLeft.Control = lblCWOutput1
           AnchorSideLeft.Side = asrBottom
+          AnchorSideRight.Control = grpProfile
+          AnchorSideRight.Side = asrBottom
           Left = 385
           Height = 22
           Top = 62
-          Width = 140
+          Width = 250
+          Anchors = [akTop, akLeft, akRight]
           AutoSize = False
           BorderSpacing.Left = 5
+          BorderSpacing.Right = 12
           ItemHeight = 0
           TabOrder = 5
           OnChange = cbxCW1Change
@@ -500,12 +504,16 @@ object PrefsForm: TPrefsForm
         object cbxCW2: TComboBox
           AnchorSideLeft.Control = lblCWOutput2
           AnchorSideLeft.Side = asrBottom
+          AnchorSideRight.Control = grpProfile
+          AnchorSideRight.Side = asrBottom
           Left = 385
           Height = 22
           Top = 122
-          Width = 140
+          Width = 250
+          Anchors = [akTop, akLeft, akRight]
           AutoSize = False
           BorderSpacing.Left = 5
+          BorderSpacing.Right = 12
           ItemHeight = 0
           TabOrder = 8
           OnChange = cbxCW2Change
@@ -3166,17 +3174,26 @@ object PrefsForm: TPrefsForm
         TabOrder = 4
       end
       object lblNetTailcatHint: TLabel
+        AnchorSideLeft.Control = edtNetTailcat
+        AnchorSideTop.Control = edtNetTailcat
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = layNetwork
+        AnchorSideRight.Side = asrBottom
         Left = 160
         Height = 52
         Top = 160
         Width = 500
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 4
+        BorderSpacing.Right = 15
         Caption = 'To reach a server on another network, paste the address its operator gave you and tick Use Tailcat. Server above is then not used. Treat the address like a password.'
         Font.Color = clGrayText
         ParentFont = False
         WordWrap = True
       end
       object lblNetComputerID: TLabel
+        AnchorSideTop.Control = edtNetComputerID
+        AnchorSideTop.Side = asrCenter
         Left = 12
         Height = 17
         Top = 222
@@ -3185,70 +3202,104 @@ object PrefsForm: TPrefsForm
         Caption = 'This station:'
       end
       object edtNetComputerID: TEdit
+        AnchorSideTop.Control = lblNetTailcatHint
+        AnchorSideTop.Side = asrBottom
         Left = 160
         Height = 22
         Top = 218
         Width = 60
         AutoSize = False
+        BorderSpacing.Top = 6
         TabOrder = 5
       end
       object lblNetComputerIDHint: TLabel
+        AnchorSideLeft.Control = edtNetComputerID
+        AnchorSideLeft.Side = asrBottom
+        AnchorSideTop.Control = edtNetComputerID
+        AnchorSideTop.Side = asrCenter
+        AnchorSideRight.Control = layNetwork
+        AnchorSideRight.Side = asrBottom
         Left = 230
         Height = 17
         Top = 222
         Width = 300
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Left = 10
+        BorderSpacing.Right = 15
         Caption = 'a single letter, unique in the network'
         Font.Color = clGrayText
         ParentFont = False
+        WordWrap = True
       end
       object chkNetAutoSync: TCheckBox
+        AnchorSideTop.Control = lblNetComputerIDHint
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
         Top = 254
         Width = 500
         AutoSize = False
+        BorderSpacing.Top = 15
         Caption = 'Synchronize the log when connecting'
         TabOrder = 6
       end
       object chkMultiMultsOnly: TCheckBox
+        AnchorSideTop.Control = chkNetAutoSync
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
         Top = 280
         Width = 520
+        BorderSpacing.Top = 4
         Caption = 'Pass only new multipliers around the network'
         TabOrder = 7
       end
       object chkIntercomFile: TCheckBox
+        AnchorSideTop.Control = chkMultiMultsOnly
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
         Top = 306
         Width = 520
+        BorderSpacing.Top = 4
         Caption = 'Log network messages to INTERCOM.TXT'
         TabOrder = 8
       end
       object chkNetAutoConnect: TCheckBox
+        AnchorSideTop.Control = chkIntercomFile
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
         Top = 332
         Width = 520
+        BorderSpacing.Top = 4
         Caption = 'Connect to the multi-op server when TR4W starts'
         TabOrder = 9
       end
       object chkNetShareSpots: TCheckBox
+        AnchorSideTop.Control = chkNetAutoConnect
+        AnchorSideTop.Side = asrBottom
         Left = 12
         Height = 22
         Top = 358
         Width = 520
+        BorderSpacing.Top = 4
         Caption = 'Share DX spots around the network'
         TabOrder = 10
       end
       object lblNetHint: TLabel
+        AnchorSideLeft.Control = chkNetShareSpots
+        AnchorSideTop.Control = chkNetShareSpots
+        AnchorSideTop.Side = asrBottom
+        AnchorSideRight.Control = layNetwork
+        AnchorSideRight.Side = asrBottom
         Left = 12
         Height = 40
         Top = 386
         Width = 620
-        AutoSize = False
+        Anchors = [akTop, akLeft, akRight]
+        BorderSpacing.Top = 6
+        BorderSpacing.Right = 26
         Caption = 'TR4WServer runs on one machine and every operating position connects to it.  It holds the shared log, the multipliers and the serial numbers.'
         Font.Color = clGrayText
         ParentFont = False

@@ -315,6 +315,7 @@ uses
    uRadioKenwoodBase in '..\..\src\radioFactory\uRadioKenwoodBase.pas',
    uTestPrefsSearch in 'uTestPrefsSearch.pas',
    uTestPrefsPlacement in 'uTestPrefsPlacement.pas',
+   uTestPrefsLayout in 'uTestPrefsLayout.pas',
    uAccelerators in '..\..\src\uAccelerators.pas',
    uTestAccelerators in 'uTestAccelerators.pas',
    uMenu in '..\..\src\uMenu.pas',
@@ -619,6 +620,7 @@ uses
    uCWKeyerCPU in '..\..\src\uCWKeyerCPU.pas',
    uTestCWKeyer in 'uTestCWKeyer.pas',
    uTestCPUKeyerRing in 'uTestCPUKeyerRing.pas',
+   uTestKeyerPortApply in 'uTestKeyerPortApply.pas',
    uRadioIcom78 in '..\..\src\radioFactory\uRadioIcom78.pas',
    uRadioIcom707 in '..\..\src\radioFactory\uRadioIcom707.pas',
    uRadioIcom725 in '..\..\src\radioFactory\uRadioIcom725.pas',
@@ -1525,6 +1527,7 @@ begin
    RegisterSuite(TEditingKeysTests.Create('EditingKeys'));
    RegisterSuite(TPrefsSearchTests.Create('PrefsSearch'));
    RegisterSuite(TPrefsPlacementTests.Create('PrefsPlacement'));
+   RegisterSuite(TPrefsLayoutTests.Create('PrefsLayout'));
    RegisterSuite(TRadioStatusTests.Create('RadioStatus'));
    RegisterSuite(TElecraftIFTests.Create('ElecraftIF'));
    RegisterSuite(TAutoInfoTests.Create('AutoInfo'));
@@ -1625,6 +1628,7 @@ begin
    RegisterSuite(TCWByCATTimerTests.Create('CWByCATTimer'));
    RegisterSuite(TRadioConfigStoreTests.Create('RadioConfigStore'));
    RegisterSuite(TRadioConfigLegacyMapTests.Create('RadioConfigLegacyMap'));
+   RegisterSuite(TKeyerPortApplyTests.Create('KeyerPortApply'));
    RegisterSuite(TKeyerConfigStoreTests.Create('KeyerConfigStore'));
    RegisterSuite(TWebSocketFramingTests.Create('WebSocketFraming'));
    RegisterSuite(TWebSocketLoopbackTests.Create('WebSocketLoopback'));

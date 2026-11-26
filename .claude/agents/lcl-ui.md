@@ -518,6 +518,16 @@ External logger editor's labels below the rows now hang from sibling sides in th
 `[akLeft, akTop]` was never affected. A hand layout that places parent-anchored children
 from OnShow is the shape to look for.
 
+**Never copy a parent's `ClientWidth` once at creation inside a page that has not been
+shown** (2026-11-26, 5.1.3 on all three platforms). Preferences' placed blocks did
+`Width := aParent.ClientWidth`, and the parent was a page's alClient scroll box still at
+its 150 px class default, so every row control at x=330 was clipped. The block now hangs
+both sides from the parent's edges (`AnchorSideLeft`/`AnchorSideRight` to the parent,
+`asrLeft`/`asrRight` in code, `asrTop`/`asrBottom` in an `.lfm`). **`MakeDesignedPagesScroll`
+re-points any anchor to the page at the scroll box**: the LCL silently ignores an anchor
+to a control that is neither parent nor sibling (`TAnchorSide.CheckSidePosition`).
+`uTestPrefsLayout` shows the form and measures every placed block.
+
 **A test that streams a form and never shows it cannot see geometry.** Position, anchors
 and alignment are applied when the form is shown. `uTestPasswordRevealLayout` shows the
 form off screen (as `uTestNewContestForm` does), calls `Application.ProcessMessages` and

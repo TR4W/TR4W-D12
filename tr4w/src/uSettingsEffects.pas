@@ -537,6 +537,16 @@ begin
       VisibleLog.ShowRemainingMultipliers;
       end;
 
+   if UnicodeSameText(aPath, ALERT_COLOR) then
+      begin
+      (* THE ALERT COLOUR ON SCREEN NOW (2026-11-26, the Preferences Colors
+        page offers it). The token arm above set VC's ordinal; the sweep
+        repaints the elements that read it -- a disconnected radio's name and
+        frequency and an inhibited PTT box. The entry status panel reads it at
+        each show (uMainForm.ShowEntryStatus). *)
+      RefreshMainWindowElementColors;
+      end;
+
    if UnicodeSameText(aPath, SHOW_DOMESTIC_NAME) then
       begin
       (* A COLUMN WIDTH, not a caption: showing the domestic multiplier's

@@ -1642,6 +1642,10 @@ function PrefsPlacements: TPrefsPlacements;
   it starts with one of PREFS_HOLDING_PREFIXES. *)
 function IsHoldingPageKey(const aKey: string): boolean;
 
+(* The Name of the placed block BuildPlacedBlock hangs in aParent (a page's
+  scroll box). One rule, read by uTestPrefsLayout to find the block. *)
+function PlacedBlockName(const aParent: TWinControl): string;
+
 implementation
 
 {$R *.lfm}
@@ -1869,8 +1873,13 @@ begin
    aTable.Place('wsjtx.n1mmListenAddress',                NAV_WSJTX, SPrefsGroupN1MMListener);
 
    (* Appearance > Colors: the band map's colour roles (issue 59, NY4I
-     2026-11-15), in a block under the main window's grid. *)
-   aTable.Place('bandmap.selectionColor',                 NAV_COLORS, SPrefsGroupBandMapColors);
+     2026-11-15), in a block under the main window's grid.
+     ALERT COLOR first and with no group, so it sits above the band map's
+     heading (2026-11-26, NY4I): it had no control anywhere in 5.x. In D7 it
+     was the last row of the Colors window, one colour, not a pair, so it is
+     a row here and not a grid line. *)
+   aTable.Place('appearance.alertColor',                  NAV_COLORS);
+   aTable.Place('bandmap.selectionColor',                NAV_COLORS, SPrefsGroupBandMapColors);
    aTable.Place('bandmap.dupeColor',                      NAV_COLORS, SPrefsGroupBandMapColors);
    aTable.Place('bandmap.multColor',                      NAV_COLORS, SPrefsGroupBandMapColors);
    (* NY4I, 2026-11-22: a colour option belongs with the colours, not on the page
@@ -3074,6 +3083,14 @@ begin
       end;
 
    SelectByTag(aCombo, aSelected);
+
+   (* THE OPEN LIST SHOWS WHOLE ITEMS (2026-11-26): 'Radio keyer port (COM6)'
+     and a keyer's summary are wider than a closed box may be. ItemWidth is
+     the LCL's minimum drop-down width, applied at each drop-down
+     (AdjustDropDown); win32 and gtk2 honour it, and a cocoa pop-up is as wide
+     as its items anyway. *)
+   aCombo.ItemWidth := WidestText(aCombo.Font, aCombo.Items) +
+                       Scale96ToForm(DROPDOWN_CHROME_96);
 
    { The tags actually on offer, so the harness can assert that a radio
      declaring rcCWByCAT is given the CAT choice. }
@@ -4485,6 +4502,11 @@ begin
    Result := string(aPage.Name) + '_scroll';
 end;
 
+function PlacedBlockName(const aParent: TWinControl): string;
+begin
+   Result := 'gen_block_' + string(aParent.Name);
+end;
+
 function TPrefsForm.PageHost(const aPage: TWinControl): TWinControl;
 var
    i: integer;
@@ -4513,10 +4535,14 @@ end;
   parent's tab list in the order it was moved, so the designed TabOrder is
   recorded first and written back after.
 
-  Nothing anchors to a page panel (checked in the .lfm), so no anchor loses its
-  reference; the controls all move together and keep their anchors to each
-  other. The horizontal bar is switched off: the pages are laid out to the
-  panel's width and a sideways scroll would only be a defect. *)
+  AN ANCHOR TO THE PAGE IS RE-POINTED AT THE BOX. The LCL ignores an anchor
+  whose control is neither the parent nor a sibling (TAnchorSide.
+  CheckSidePosition), so a designed control anchored to its page's edge would
+  silently lose that anchor once it lives in the box. The Network page's hints
+  anchor to the page's right edge (2026-11-26); the controls otherwise move
+  together and keep their anchors to each other. The horizontal bar is
+  switched off: the pages are laid out to the panel's width and a sideways
+  scroll would only be a defect. *)
 procedure TPrefsForm.MakeDesignedPagesScroll;
 var
    i, j, n, k: integer;
@@ -4527,6 +4553,7 @@ var
    keys: array of integer;
    swapW: TWinControl;
    swapK: integer;
+   side: TAnchorKind;
 begin
    for i := 0 to layContent.ControlCount - 1 do
       begin
@@ -4570,6 +4597,13 @@ begin
       for j := 0 to n - 1 do
          begin
          moving[j].Parent := box;
+         for side := Low(TAnchorKind) to High(TAnchorKind) do
+            begin
+            if moving[j].AnchorSide[side].Control = page then
+               begin
+               moving[j].AnchorSide[side].Control := box;
+               end;
+            end;
          end;
 
       (* Sort by the recorded tab position (a short insertion sort -- a page
@@ -4679,20 +4713,36 @@ var
 begin
    Result := TPanel.Create(Self);
    Result.Parent      := aParent;
+   (* NAMED BEFORE THE CAPTION IS CLEARED (TControl.SetName copies the name
+     onto a caption that still equals the old one), and named at all so
+     uTestPrefsLayout can find the block. One block per parent, and the
+     previous build's roots are freed before this one starts. *)
+   Result.Name        := AnsiString(PlacedBlockName(aParent));
    Result.BevelOuter  := bvNone;
    Result.Color       := clWindow;
    Result.ParentColor := False;
    Result.Caption     := '';
    TrackGeneratedRoot(Result);
 
+   (* AS WIDE AS ITS PARENT BY ANCHORS, NEVER BY A COPIED ClientWidth
+     (2026-11-26, every BuildPlacedBlock page on all three platforms). The
+     parent is a page's scroll box (MakeDesignedPagesScroll), created alClient
+     inside a page that has not been shown, so at this moment it still has the
+     class default width of 150 px: a Width copied from it once clipped every
+     row control at GENERATED_CTRL_X (330) out of sight. Both sides hang from
+     the parent's edges instead, so the host follows the box whenever the
+     LCL lays it out; the top still hangs from aBelow. *)
    if aBelow <> nil then
       begin
-      Result.Left  := 0;
-      Result.Width := aParent.ClientWidth;
-      Result.AnchorSideTop.Control := aBelow;
-      Result.AnchorSideTop.Side    := asrBottom;
-      Result.BorderSpacing.Top     := 12;
-      Result.Anchors := [akLeft, akTop];
+      Result.AnchorSideLeft.Control  := aParent;
+      Result.AnchorSideLeft.Side     := asrLeft;
+      Result.AnchorSideRight.Control := aParent;
+      Result.AnchorSideRight.Side    := asrRight;
+      Result.AnchorSideTop.Control   := aBelow;
+      Result.AnchorSideTop.Side      := asrBottom;
+      Result.BorderSpacing.Top       := 12;
+      Result.BorderSpacing.Bottom    := 12;   // room under the last row when it scrolls into view
+      Result.Anchors := [akLeft, akTop, akRight];
       end;
 
    aY := 0;

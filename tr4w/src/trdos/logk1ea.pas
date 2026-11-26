@@ -484,6 +484,12 @@ function AutoCallTerminateIsDue: boolean;
 function CWAutoCallTerminatePending: boolean;
 
 var
+  (* ONE "THE CPU KEYER CANNOT KEY THIS RADIO" WARN PER RADIO (index 1, 2),
+    set by uCWKeyerCPU.WarnIfCPUKeyerCannotKey and cleared by InitializeKeyer,
+    so a re-applied profile or Reset Radio Ports reports again. Main thread
+    only, both sides. *)
+  CPUKeyerCannotKeyReported             : array[1..2] of boolean;
+
   DoingPaddle                           : boolean;
   tDoingFootSwitchEnable                : boolean;
 
@@ -1708,11 +1714,18 @@ procedure OpenKeyerPortFor(const aRadio: RadioPtr);
 var
   port: TSerialPort;
   stopBits: Byte;
+  baud: integer;
+  portName: string;
 begin
+  (* NO KEYER PORT IS THE COMMON CASE (CAT, a WinKeyer, no CW at all), so it
+    is not reported here. A station that sends CW through the CPU keyer with
+    no port hears about it from uCWKeyerCPU.WarnIfCPUKeyerCannotKey. *)
   if (aRadio = nil) or (not (aRadio^.KeyerPortKind = pkSerial)) then
      begin
      Exit;
      end;
+
+  portName := EffectiveDeviceName(aRadio^.tKeyerPortName, aRadio^.tKeyerPort);
 
   port := CPUKeyer.SerialPortObject[aRadio^.tKeyerPort];
 
@@ -1746,8 +1759,19 @@ begin
         stopBits := 1;
         end;
 
+     (* THE CAT BAUD RATE, AS ALWAYS -- a DTR/RTS keying line carries no data,
+       so the rate only has to be one the driver accepts. The rendered BAUD
+       RATE key is never 0 (BaudRateValue), for a network radio too; this
+       guard is for a record nothing has configured, which would otherwise
+       fail to open. A serial radio's non-zero rate is untouched. *)
+     baud := aRadio^.RadioBaudRate;
+     if baud <= 0 then
+        begin
+        baud := 9600;
+        end;
+
      try
-        port.OpenRaw(aRadio^.RadioBaudRate, 8, stopBits, 0, True, True);
+        port.OpenRaw(baud, 8, stopBits, 0, True, True);
         (* Both lines released, as InitializeSerialPort did on every open.
           Whatever the operator nominated below then asserts what it wants. *)
         port.SetDTR(False);
@@ -1755,8 +1779,8 @@ begin
      except
         on E: Exception do
            begin
-           logger.Warn('[Keyer] %s is not available for keying: %s',
-                       [PortTypeSA[aRadio^.tKeyerPort], E.Message]);
+           logger.Warn('[Keyer] %s keyer port %s is not available for keying: %s',
+                       [aRadio^.RadioName, portName, E.Message]);
            Exit;
            end;
      end;
@@ -1764,10 +1788,19 @@ begin
 
   if not port.IsOpen then
      begin
+     logger.Warn('[Keyer] %s keyer port %s did not open; CW and PTT on it will not key',
+                 [aRadio^.RadioName, portName]);
      Exit;
      end;
 
   aRadio^.tKeyerSerialPort := port;
+  (* SAID ON EVERY OPEN, including the second radio adopting a port the first
+    already opened -- the line that was missing when a network K4 keyed
+    nothing on COM6 (2026-11-26). *)
+  logger.Info('[Keyer] %s keyer port %s open: DTR=%s RTS=%s',
+              [aRadio^.RadioName, portName,
+               tr4w_RTSDTRTypeSA[aRadio^.tr4w_keyer_DTR_state],
+               tr4w_RTSDTRTypeSA[aRadio^.tr4w_keyer_rts_state]]);
 
   if aRadio^.tr4w_keyer_DTR_state = RtsDtr_ON then
      begin
@@ -1810,6 +1843,11 @@ begin
 //  PTTAsserted := False;
   PTTDelayCount := 0;
 //  TurnOffActivePort;
+
+  (* A NEW CONFIGURATION, SO A NEW REPORT: uCWKeyerCPU warns once per radio
+    per keyer initialisation when CW cannot reach a line. *)
+  CPUKeyerCannotKeyReported[1] := False;
+  CPUKeyerCannotKeyReported[2] := False;
 
   (* THE SAME FORTY LINES STOOD HERE FOR EACH RADIO. See OpenKeyerPortFor. *)
   OpenKeyerPortFor(@Radio1);

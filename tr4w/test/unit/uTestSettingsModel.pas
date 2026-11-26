@@ -1009,8 +1009,9 @@ begin
      parallel-port names retired: LPT1/2/3 BASE ADDRESS, RELAY CONTROL PORT,
      STEREO CONTROL PORT and USE CONTROL PORT. 106 later that day: ROW COUNT.
      107 the same day: WINDOW SIZE. 111 since 2026-11-22: the four TAIL END
-     names (issue 60). *)
-   CheckTrue(RetiredCommandCount >= 111, 'the retired list has not shrunk');
+     names (issue 60). 114 since 2026-11-26: PADDLE PORT, SERIAL PORT DEBUG
+     and STEREO CONTROL PIN. *)
+   CheckTrue(RetiredCommandCount >= 114, 'the retired list has not shrunk');
 end;
 
 (* ---------------------------------------------------------------------

@@ -94,6 +94,27 @@ procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
 
                            const aNamesAKeyerDevice: boolean = False);
 
+(* THE PORT NAMES ONE SLOT IS GIVEN, decided in one place (pure: no globals).
+
+  aCATPortName is the radio's serial control port, and '' for a network radio
+  -- its link is TCP, and a stale COM name would make CATPortKind call it a
+  serial radio.
+
+  aKeyerPortName is KeyerPortForSlot's answer for a radio of ANY transport.
+  The DTR/RTS keying line is a serial cable beside the radio, not part of its
+  CAT link, so a network K4 keying on COM6 is an ordinary station.  Until
+  2026-11-26 this was gated on rtSerial with the CAT port, so a network radio
+  never got its keyer port and F1 keyed nothing, in silence.
+
+  aKeyerInvert is the radio's KeyerInvert, False for no radio. *)
+procedure SlotPortNamesFor(const aSlot: integer;
+                           const aRadio: TRadioDefinition;
+                           const aProfile: TStationProfile;
+                           const aNamesAKeyerDevice: boolean;
+                           out aCATPortName: string;
+                           out aKeyerPortName: string;
+                           out aKeyerInvert: boolean);
+
 // The whole sequence: stop both radios, write both slots, regroup the ini,
 // restart.  Returns False with aError set if the profile cannot be applied at
 // all (unknown radio names); a radio that merely fails to CONNECT is not an
@@ -457,14 +478,14 @@ const
      parallel-port names NY4I confirmed retired that day: LPT1/2/3 BASE
      ADDRESS, RELAY CONTROL PORT, STEREO CONTROL PORT and USE CONTROL
      PORT. ROW COUNT left later the same day, when it was retired, and so
-     did WINDOW SIZE (plan stage e6). *)
-   MIGRATED_COMMANDS: array[0..230] of string =
+     did WINDOW SIZE (plan stage e6). PADDLE PORT left on 2026-11-26, when it
+     joined the retired list. *)
+   MIGRATED_COMMANDS: array[0..229] of string =
    (
       'BAND MAP CUTOFF FREQUENCY',
       'FREQUENCY MEMORY',
       'CONTEST NAME',
       'CONTEST',
-      'PADDLE PORT',
       'QUICK QSL CW MESSAGE',
       'QUICK QSL CW MESSAGE1',
       'QUICK QSL MESSAGE 1',
@@ -2199,6 +2220,49 @@ begin
       end;
 end;
 
+procedure SlotPortNamesFor(const aSlot: integer;
+                           const aRadio: TRadioDefinition;
+                           const aProfile: TStationProfile;
+                           const aNamesAKeyerDevice: boolean;
+                           out aCATPortName: string;
+                           out aKeyerPortName: string;
+                           out aKeyerInvert: boolean);
+var
+   (* KeyerPortForSlot settles the port and cwByCAT together; only the port is
+     wanted here, since CW BY CAT is still a rendered key. *)
+   keyerByCAT: boolean;
+begin
+   aCATPortName   := '';
+   aKeyerPortName := '';
+   aKeyerInvert   := False;
+
+   if aRadio = nil then
+      begin
+      Exit;
+      end;
+
+   if aRadio.Transport = rtSerial then
+      begin
+      aCATPortName := DeviceNameFromStoredPort(aRadio.ControlPort);
+      end;
+
+   (* THE KEYER PORT IS A DECISION, NOT A FIELD, and KeyerPortForSlot is where
+     it is made -- the profile can release the port entirely when a WinKeyer
+     or YCCC box owns it, or when CW goes by CAT.  Assigning
+     aRadio.KeyerOutputPort straight through here would have LOGK1EA key
+     DTR/RTS on a port the keyer had already opened exclusively, which is the
+     "Access is denied" failure of 2026-08-08.
+
+     NOT GATED ON TRANSPORT: KeyerPortForSlot reads no transport, and the
+     keying cable does not care how CAT reaches the radio. *)
+   aKeyerPortName := KeyerPortForSlot(aSlot, aRadio, aProfile,
+                                      aNamesAKeyerDevice, keyerByCAT);
+   (* THE INVERTED-INTERFACE FLAG, which was smuggled into the old keyer-port
+     key as the word INVERT and read by a crA hook.  It is a stored field now,
+     so it survives a value the old parser could not read. *)
+   aKeyerInvert := aRadio.KeyerInvert;
+end;
+
 procedure ApplyRadioToSlot(const aRadio: TRadioDefinition;
                            const aSlot: integer;
                            const aProfile: TStationProfile;
@@ -2208,9 +2272,9 @@ var
    rendered: TConfigKeyValues;
    i: integer;
    typeRendering: TRadioTypeRendering;
-   (* KeyerPortForSlot settles the port and cwByCAT together; only the port is
-     wanted here, since CW BY CAT is still a rendered key. *)
-   keyerByCAT: boolean;
+   catPortName: string;
+   keyerPortName: string;
+   keyerInvert: boolean;
    accepted: boolean;
 begin
    (* RECORDED HERE, AT THE RENDER, NOT AT THE CALL SITES.
@@ -2327,55 +2391,26 @@ begin
      from serial to network, must not keep the old name -- CATPortKind reads
      the name BEFORE the ordinal, so a stale one would leave a cleared slot
      still claiming to be a serial radio. *)
+   SlotPortNamesFor(aSlot, aRadio, aProfile, aNamesAKeyerDevice,
+                    catPortName, keyerPortName, keyerInvert);
    if aSlot = 1 then
       begin
-      Radio1.tCATPortName   := '';
-      Radio1.tKeyerPortName := '';
-      Radio1.tKeyerPort     := NoPort;
-      Radio1SerialInvert    := False;
+      Radio1.tCATPortName   := catPortName;
+      Radio1.tKeyerPortName := keyerPortName;
+      (* THE ORDINAL SHADOWS THE NAME, and is empty for /dev/ttyUSB0 -- which
+        is why the name is what LOGK1EA actually opens. *)
+      Radio1.tKeyerPort     := PortValueFromDeviceName(keyerPortName);
+      Radio1SerialInvert    := keyerInvert;
       end
    else
       begin
-      Radio2.tCATPortName   := '';
-      Radio2.tKeyerPortName := '';
-      Radio2.tKeyerPort     := NoPort;
-      Radio2SerialInvert    := False;
+      Radio2.tCATPortName   := catPortName;
+      Radio2.tKeyerPortName := keyerPortName;
+      Radio2.tKeyerPort     := PortValueFromDeviceName(keyerPortName);
+      Radio2SerialInvert    := keyerInvert;
       end;
-
-   if (aRadio <> nil) and (aRadio.Transport = rtSerial) then
-      begin
-      if aSlot = 1 then
-         begin
-         Radio1.tCATPortName   := DeviceNameFromStoredPort(aRadio.ControlPort);
-         (* THE KEYER PORT IS A DECISION, NOT A FIELD, and KeyerPortForSlot
-           is where it is made -- the profile can release the port entirely
-           when a WinKeyer or YCCC box owns it.  Assigning aRadio.KeyerOutputPort
-           straight through here would have LOGK1EA key DTR/RTS on a port the
-           keyer had already opened exclusively, which is the "Access is
-           denied" failure of 2026-08-08.
-
-           It used to arrive through the rendered 'KEYER RADIO ONE OUTPUT
-           PORT' key, whose row is gone -- and which could not have carried a
-           device name anyway, its vocabulary being PortTypeSA. *)
-         Radio1.tKeyerPortName := KeyerPortForSlot(aSlot, aRadio, aProfile,
-                                                  aNamesAKeyerDevice, keyerByCAT);
-         (* THE ORDINAL SHADOWS THE NAME, and is empty for /dev/ttyUSB0 --
-           which is why the name above is what LOGK1EA actually opens. *)
-         Radio1.tKeyerPort     := PortValueFromDeviceName(Radio1.tKeyerPortName);
-         (* AND THE INVERTED-INTERFACE FLAG, which was smuggled into that same
-           key as the word INVERT and read by a crA hook.  It is a stored
-           field now, so it survives a value the old parser could not read. *)
-         Radio1SerialInvert    := aRadio.KeyerInvert;
-         end
-      else
-         begin
-         Radio2.tCATPortName   := DeviceNameFromStoredPort(aRadio.ControlPort);
-         Radio2.tKeyerPortName := KeyerPortForSlot(aSlot, aRadio, aProfile,
-                                                  aNamesAKeyerDevice, keyerByCAT);
-         Radio2.tKeyerPort     := PortValueFromDeviceName(Radio2.tKeyerPortName);
-         Radio2SerialInvert    := aRadio.KeyerInvert;
-         end;
-      end;
+   logger.Debug('[ApplyProfile] radio %d CAT port "%s", keyer port "%s"',
+                [aSlot, catPortName, keyerPortName]);
 
    rendered := RenderRadioKeys(aSlot, aRadio, typeRendering, aProfile, aNamesAKeyerDevice);
 

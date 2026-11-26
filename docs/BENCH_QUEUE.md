@@ -188,6 +188,25 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-26 -- PREFERENCES: PLACED ROWS NO LONGER CLIPPED, NETWORK HINTS FLOW, CW OUTPUT WIDER, ALERT COLOR HAS A CONTROL (lcl-ui)
+
+A placed block (`uPrefsForm.NewGeneratedBlock`) is now as wide as its page by anchors; in 5.1.3 it copied a 150 px width from a page that had not been shown, and every row control at x=330 was cut off. `uTestPrefsLayout` measures it on a shown form; it had not been run when this item was written.
+
+- [ ] **The nine pages on Windows, Linux and macOS:** Band Map, Hardware, Station, SCP, Network, Audio, Two-radio, WSJT-X, Bands. EXPECT each page's lower rows to show their captions AND their controls (check box, drop-down, text box) inside the page, with no sideways scroll. The last row on each can be scrolled to. On Bands, the band plan's Edit... button shows and opens the editor.
+- [ ] **Network page on Linux (gtk2):** the Tailcat hint, the "a single letter" hint and the TR4WServer note do not overlap the rows below them. Each row moves down as far as its hint needs.
+- [ ] **Hardware > Radios > Station profile:** CW output 1 and 2 show `Radio keyer port (COM6)` whole, and a long `WinKeyer [...]` entry too. The open list shows whole items on Windows and Linux. The drop-downs end inside the group box.
+- [ ] **Appearance > Colors: "Alert Color"** is a drop-down above the band map colours. Pick another colour and Save. EXPECT a disconnected radio's name and frequency to take the new colour at once, and the "QSO not saved" / "Log read-only" panel to use it the next time it shows. An inhibited key-up's `INH` box uses it too. Restart: the choice is kept.
+
+## Added 2026-11-26 -- A NETWORK RADIO KEYS CW ON ITS OWN SERIAL KEYER PORT (cw-keying, radio-factory)
+
+`uRadioConfigApply.SlotPortNamesFor` gives a radio of ANY transport its keyer port; only the CAT port is serial-only. Before, a network radio never got one and F1 keyed nothing, in silence. Unit-pinned (`uTestKeyerPortApply`); no line has been seen to move.
+
+- [ ] **Network K4 (K4D-278), keyer port COM6, keyer DTR = CW, keyer RTS = PTT, profile CW output RADIOPORT, no WinKeyer, CW by CAT off.** Start TR4W (or Activate the profile). EXPECT in `tr4w.log`: `[Keyer] Radio 1 keyer port COM6 open: DTR=CW RTS=PTT`. Press F1: the rig keys the CQ on DTR, and PTT asserts on RTS before the first element and drops after the last (PTT VIA CAT must be OFF for the K4, or `PTTOn` uses CAT and RTS never moves). Check the PTT delay and the hang time by ear.
+- [ ] **The same with COM6 unplugged or held by another program.** EXPECT `[Keyer] Radio 1 keyer port COM6 is not available for keying: <reason>` at start, and on F1 ONE `[Keyer] CPU keyer: CW will not key Radio 1 -- keyer port COM6 is configured but not open ...`; a second F1 logs nothing more. Reset Radio Ports or Activate: it may say it once again.
+- [ ] **Keyer DTR and RTS both set to something other than CW.** F1 logs ONE `... neither DTR nor RTS is set to CW`.
+- [ ] **A serial radio with a keyer port** (any station that keyed DTR before): unchanged, plus the new `open` Info line.
+- [ ] **SO2R, two radios naming the same keyer port.** Both lines say `open`; each radio keys its own DTR/RTS role on the shared port.
+
 ## Added 2026-11-22 -- TOOLS > CORRECT STATION FACTS: A WRONG MY ZONE FIXED ON QSOs ALREADY LOGGED (issue 223; log-database, lcl-ui, integrations, multi-op-network)
 
 Built in an edit-only session: the store and its transaction are unit-tested (`uTestLogStore`), the dialog and what follows the commit (rescore, UDP, server, the edit events) are NOT. Use a COPY of a real log with Club Log and/or WRL configured (a test logbook), and a CQ WW log -- NOT EUHFC/KVP: there MY ZONE is the licence year, which is `year_sent` and is not in this tool; the CQ zone column there holds MY CALL's CTY zone.

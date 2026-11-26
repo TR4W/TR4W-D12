@@ -50,6 +50,17 @@ type
       function KeyedRadio: RadioPtr; override;
    end;
 
+(* WHY THE CPU KEYER CANNOT KEY THIS RADIO, or '' when it can: an open keyer
+  port with DTR or RTS set to CW. Pure -- reads only the radio record.
+  LOGK1EA.DriveCWLine exits in silence on each of these, so this is what puts
+  them into words. Log text, not operator text: no resourcestring. *)
+function CPUKeyerCannotKeyReason(const aRadio: RadioPtr): string;
+
+(* ONE WARN PER RADIO when CW goes to the CPU keyer and the reason above is not
+  '', until LOGK1EA.InitializeKeyer clears CPUKeyerCannotKeyReported. MAIN
+  THREAD ONLY, and never from the element timing path. *)
+procedure WarnIfCPUKeyerCannotKey(const aRadio: RadioPtr);
+
 implementation
 
 uses
@@ -60,8 +71,77 @@ uses
    TF,         // tCreateThread
    MainUnit,   // PTTOn, logger
    uConfigValues, // Config.PTTEnable and the paddle settings
-   LogK1EA,    // CPUKeyer, CWThreadProc
-   uWinKey;    // wkBusy (Q8)
+   LogK1EA,    // CPUKeyer, CWThreadProc, CPUKeyerCannotKeyReported
+   uWinKey,    // wkBusy (Q8)
+   uPortAddress; // pkSerial, EffectiveDeviceName -- the one port-name rule
+
+function CPUKeyerCannotKeyReason(const aRadio: RadioPtr): string;
+var
+   portName: string;
+begin
+   Result := '';
+   if aRadio = nil then
+      begin
+      Result := 'no radio is selected';
+      Exit;
+      end;
+
+   if aRadio^.KeyerPortKind <> pkSerial then
+      begin
+      Result := 'no keyer port is configured (Radio settings: keyer output port, ' +
+                'and the profile''s CW output)';
+      Exit;
+      end;
+
+   portName := EffectiveDeviceName(aRadio^.tKeyerPortName, aRadio^.tKeyerPort);
+   if aRadio^.tKeyerSerialPort = nil then
+      begin
+      Result := 'keyer port ' + portName + ' is configured but not open ' +
+                '(see the [Keyer] line logged when the keyer was initialised)';
+      Exit;
+      end;
+
+   if (aRadio^.tr4w_keyer_DTR_state <> RtsDtr_CW) and
+      (aRadio^.tr4w_keyer_rts_state <> RtsDtr_CW) then
+      begin
+      Result := 'keyer port ' + portName + ' is open but neither DTR nor RTS is set to CW';
+      end;
+end;
+
+procedure WarnIfCPUKeyerCannotKey(const aRadio: RadioPtr);
+var
+   slot: integer;
+   reason: string;
+begin
+   if aRadio = @Radio2 then
+      begin
+      slot := 2;
+      end
+   else
+      begin
+      slot := 1;
+      end;
+   if CPUKeyerCannotKeyReported[slot] then
+      begin
+      Exit;
+      end;
+
+   reason := CPUKeyerCannotKeyReason(aRadio);
+   if reason = '' then
+      begin
+      Exit;
+      end;
+
+   CPUKeyerCannotKeyReported[slot] := True;
+   if aRadio = nil then
+      begin
+      logger.Warn('[Keyer] CPU keyer: CW will not key -- ' + reason);
+      end
+   else
+      begin
+      logger.Warn('[Keyer] CPU keyer: CW will not key ' + aRadio^.RadioName + ' -- ' + reason);
+      end;
+end;
 
 function TCWKeyerCPU.KeyedRadio: RadioPtr;
 begin
@@ -77,6 +157,15 @@ end;
 
 procedure TCWKeyerCPU.SendString(const Msg: Str160; Tone: integer);
 begin
+   (* SAID BEFORE ANYTHING IS QUEUED, once per radio per keyer initialisation:
+     a CPU keyer with no line to drive used to run its thread and key nothing,
+     in silence (a network K4 with its keyer port never applied, 2026-11-26).
+     Not for '' -- the sidetone toggle sends one. *)
+   if Msg <> '' then
+      begin
+      WarnIfCPUKeyerCannotKey(KeyedRadio);
+      end;
+
    // Verbatim move of LogCW.AddStringToBuffer's CPU arm.
    if ActiveRadioPtr.tPTTStatus = PTT_OFF then
       begin

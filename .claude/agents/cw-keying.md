@@ -179,6 +179,24 @@ for every End <> 0. Pinned by `Test_DeleteLastCharacterAtEndZero`.
 (`uNet` reads them), and `K1EAKeyer` is still an old-style `object` -- audit
 item 6.5, its conversion to a class, was not part of P6.
 
+## The CPU keyer's port belongs to a radio of ANY transport (2026-11-26)
+
+A network K4 with its keyer port on COM6 (DTR = CW, RTS = PTT, CW output
+RADIOPORT) keyed nothing on F1, and nothing was logged: `ApplyRadioToSlot`
+assigned `tKeyerPortName`/`tKeyerPort`/`Radio<n>SerialInvert` only inside
+`Transport = rtSerial`, beside the CAT port, so `OpenKeyerPortFor` and
+`DriveCWLine` exited in silence. **`uRadioConfigApply.SlotPortNamesFor` is the
+one decision now** (pure, pinned by `uTestKeyerPortApply`): the keyer port from
+`KeyerPortForSlot` for any transport, the CAT port name for serial only, the
+WinKeyer/YCCC/CAT release unchanged. **Do not gate the keyer port on
+transport again** -- the keying cable does not care how CAT reaches the radio.
+`OpenKeyerPortFor` logs Info on every open (radio, port NAME, DTR/RTS roles)
+and Warn with the port name on a failure; `TCWKeyerCPU.SendString` logs ONE
+Warn per radio (`uCWKeyerCPU.CPUKeyerCannotKeyReason`: no port, not open, no
+line set to CW) until `InitializeKeyer` clears `CPUKeyerCannotKeyReported`.
+Log only -- no notice, no new user-visible string. PTT on the keyer port still
+loses to `wkTurnPTT` and `tPTTVIACAT` in `PTTOn`. Bench: `docs/BENCH_QUEUE.md`.
+
 ## An edited memory is an operator statement, and the log keeps it (Q9, Q113)
 
 `LogCW` latches every function-key memory the operator edits.
