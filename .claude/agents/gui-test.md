@@ -36,6 +36,9 @@ assertions are.
 
 ## Hard rules
 
+- **Never pass `--unattended` from the GUI harness.** That switch ends TR4W as soon as a window
+  would wait for an answer, and these cases drive those windows. It is for headless runs only
+  (`tr4w/test/Run-Headless.ps1`).
 - **Bitness must match; Windows TR4W is 64-bit only.** The app is x86_64 and the guest Python is
   `C:\TR4W-Test\.venv\Scripts\python.exe` (3.15.2, 64-bit, pywinauto 0.6.9, Pillow 13, pywin32, comtypes;
   present and verified 2026-11-12, **NOT yet exercised against the x64 app**), one definition

@@ -85,7 +85,7 @@ $report = Join-Path $WorkDir 'editqso-fieldcheck.txt'
 if (Test-Path $report) { Remove-Item $report -Force }
 
 Write-Output "Invoke-FieldCheck: $Exe"
-$proc = Start-Process -FilePath $Exe -ArgumentList '/FIELDCHECK' -WorkingDirectory $WorkDir -Wait -PassThru
+$proc = Start-Process -FilePath $Exe -ArgumentList '/FIELDCHECK', '--unattended' -WorkingDirectory $WorkDir -Wait -PassThru
 $code = $proc.ExitCode
 
 if (Test-Path $report) {

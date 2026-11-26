@@ -514,7 +514,9 @@ uses
   NetworkMessageUtils,
   uTR4WStrings,
    uContestFileKind,   (* what kind of file did the operator pick as a contest *)
-   uOpenLogRelaunch;   (* File > Open Log's relaunch: the child waits for the lock *)
+   uOpenLogRelaunch,   (* File > Open Log's relaunch: the child waits for the lock *)
+   uStartupArgs,       (* what the command line asks for; --unattended *)
+   uUnattendedGuard;   (* --unattended: no window may wait for an answer *)
   (* ~~uContestSession~~ was here for ContestSession.Exchange, which the
      settings-gap check handed in; it asks the contest what its exchange
      carries since M11 S9d, so nothing here reads the session. *)
@@ -696,69 +698,6 @@ end;
 
   Anything starting with - or / is a switch. TR4W's own /EXPORT uses the slash
   form and takes no value. }
-(* THE FILE /IMPORT NAMES.
-
-  FOUND WHEREVER THE SWITCH APPEARS, not at a fixed position. uProgramMain
-  already records what testing ParamStr(2) SPECIFICALLY cost -- `tr4w.exe
-  /EXPORT` with no contest file in front of it answered no and started an
-  interactive session -- and an import line carries --settings as well, so the
-  argument after the switch is the only stable way to say "the next one". *)
-function ImportFileFromCommandLine: string;
-var
-   i: integer;
-begin
-   Result := '';
-   for i := 1 to ParamCount - 1 do
-      begin
-      if SameText(AnsiString(ParamStr(i)), AnsiString('/IMPORT')) then
-         begin
-         Result := ParamStr(i + 1);
-         Exit;
-         end;
-      end;
-end;
-
-
-(* IS THIS A HEADLESS RUN? Asked of the WHOLE command line.
-
-  A headless mode has no operator, so nothing may open a dialog and nothing may
-  wait for an answer -- see the note at the assignment of tSilentExport for the
-  two ways this was got wrong before.
-
-  /FIELDCHECK is deliberately absent: it is handled far earlier, halts before
-  any of this, and never reaches a contest file. *)
-function IsHeadlessSwitch(const aArg: string): boolean;
-begin
-   (* THE CASTS ARE EXPLICIT AND THEY ARE THE POINT. SameText resolves to the
-     AnsiString overload here, so without them aArg and both literals are
-     narrowed SILENTLY -- which is what the build ratchet counts. Qualifying
-     it as SysUtils.SameText does not help: the literals still narrow.
-
-     A switch name is ASCII, so the conversion is lossless by construction.
-     Saying so explicitly is the difference between a conversion that was
-     thought about and one that just happened. *)
-   Result := SameText(AnsiString(aArg), AnsiString('/EXPORT')) or
-             SameText(AnsiString(aArg), AnsiString('/RESCORE')) or
-             SameText(AnsiString(aArg), AnsiString('/IMPORT')) or
-             SameText(AnsiString(aArg), AnsiString('/MATRIX')) or
-             SameText(AnsiString(aArg), AnsiString('/MATRIXLIST'));
-end;
-
-function HasHeadlessSwitch: boolean;
-var
-   i: integer;
-begin
-   Result := False;
-   for i := 1 to ParamCount do
-      begin
-      if IsHeadlessSwitch(ParamStr(i)) then
-         begin
-         Result := True;
-         Exit;
-         end;
-      end;
-end;
-
 function FirstNonSwitchArgument: string;
 var
    i:   integer;
@@ -824,8 +763,8 @@ var
    target: string;
    res: TLogImportResult;
 begin
-   source := ParamStr(2);
-   target := ParamStr(3);
+   source := PositionalArgument(2);
+   target := PositionalArgument(3);
 
    if source = '' then
       begin
@@ -992,6 +931,8 @@ begin
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
       '  /MATRIX <out> <id> write this contest''s legacy-fixture record, then exit' + sLineBreak +
       '  /MATRIXLIST <out>  list every contest for the matrix, then exit' + sLineBreak +
+      '  --unattended       nobody is here: exit with code 5 unless the line' + sLineBreak +
+      '                     names a headless job, or if a question would be asked' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
       '                     convert a binary log to a SQLite log, then exit' + sLineBreak +
       '                     (reports to tr4w-early.log; exit 0 ok, 2 failed)' + sLineBreak +
@@ -1100,9 +1041,8 @@ begin
       end;
 
    (* NOBODY TO TELL IN A SCRIPTED RUN, and the notice must not be spent
-     there: TakeWritableRootNotice records it as shown. /IMPORTLOG is not one
-     of IsHeadlessSwitch's switches but promises "no dialog" too. *)
-   if tSilentExport or SameText(AnsiString(ParamStr(1)), AnsiString('/IMPORTLOG')) then
+     there: TakeWritableRootNotice records it as shown. *)
+   if tSilentExport then
       begin
       Exit;
       end;
@@ -1501,6 +1441,7 @@ var
   yearContest                           : boolean;
   // What /IMPORT tells the operator, for the headless run's own trace.
   importReport                          : string;
+  importFile                            : string;
   (* Which tier the setup wizard's country file came from, for the log line. *)
   wizardCtyTier                         : string;
   wizardCtyPath                         : string;
@@ -1518,6 +1459,19 @@ var
   //rgb                                   : cardinal;
                                                                        // This way we can log before we read the DEBUG LOG LEVEL the legacy method in uCFG. // ny4i
 begin
+  (* --unattended WITH NOTHING TO DO STOPS HERE, before any window, lock or
+    file.  A switch the shell rewrote is not recognised, and an unrecognised
+    line starts TR4W as for an operator -- which is what waited all night
+    (uStartupArgs). *)
+  if ArgumentsRequestUnattended(CommandLineStartupArgs) and
+     (not ArgumentsNameAHeadlessJob(CommandLineStartupArgs)) then
+     begin
+     EarlyTrace('[Unattended] this command line names no headless job, so TR4W '
+                + 'would start for an operator who is not there. Arguments: '
+                + string(CmdLine));
+     Halt(EXITCODE_UNATTENDED);
+     end;
+
   { Before anything else: no window, no config, no catalogue read. }
   if ShowCommandLineUsage then
      begin
@@ -1560,6 +1514,13 @@ begin
    // inside it is in uAppInputHooks.
    InitLCLApplication;
 
+   (* AS SOON AS THERE IS AN APPLICATION TO HOOK.  The check at the top of this
+     routine refuses a line with no job; this ends a job that stops to ask. *)
+   if ArgumentsRequestUnattended(CommandLineStartupArgs) then
+      begin
+      InstallUnattendedGuard;
+      end;
+
    // HEADLESS FIELD ROUND-TRIP:  tr4w.exe /FIELDCHECK
    //
    // Puts a probe value through every input control of the Edit QSO form and
@@ -1574,7 +1535,7 @@ begin
    // It exists because Lint-EditQSOTemplate proves the WIRING and cannot prove
    // that a VALUE survives -- which is what the MaxLength truncation
    // (4f0339d4) was: right wiring, right-looking .lfm, callsign silently cut.
-   if SameText(ParamStr(1), '/FIELDCHECK') then
+   if UnicodeSameText(PositionalArgument(1), '/FIELDCHECK') then
       begin
       Halt(RunEditQSOFieldCheck);
       end;
@@ -1621,7 +1582,7 @@ begin
 
       The switch is looked for wherever it appears now. IsHeadlessSwitch owns
       the list, so there is one place to add the next one. *)
-   tSilentExport := HasHeadlessSwitch;
+   tSilentExport := ArgumentsHaveHeadlessSwitch(CommandLineStartupArgs);
 
    (* SINGLE INSTANCE IS ENFORCED ON WINDOWS ONLY, and that is a GAP rather
      than a decision (2026-09-08). A named mutex is the Win32 idiom; the POSIX
@@ -1865,7 +1826,7 @@ begin
      Manager and CaptureChangedSettings recorded them in every record. A
      record must be identical on any machine and must never hold a secret;
      the in-memory vault starts empty and the real one is never read. *)
-   if SameText(AnsiString(ParamStr(2)), AnsiString('/MATRIX')) then
+   if UnicodeSameText(PositionalArgument(2), '/MATRIX') then
       begin
       InstallTestKeychain;
       end;
@@ -1921,16 +1882,16 @@ begin
      script, which is how a season of logs gets converted. It reports through
      tr4w.log and the exit code. A menu item is where this belongs for a single
      log, and that comes with the UI work. }
-   if UpperCase(ParamStr(1)) = '/IMPORTLOG' then
+   if UnicodeSameText(PositionalArgument(1), '/IMPORTLOG') then
       begin
       Halt(RunLogImport);
       end;
 
    (* /MATRIXLIST -- the contest matrix's list of every known contest. It reads
      only compiled tables, so it needs nothing below; see uContestMatrix. *)
-   if UpperCase(ParamStr(1)) = '/MATRIXLIST' then
+   if UnicodeSameText(PositionalArgument(1), '/MATRIXLIST') then
       begin
-      Halt(RunContestMatrixList(ParamStr(2)));
+      Halt(RunContestMatrixList(PositionalArgument(2)));
       end;
 
    { THE SETTINGS REGISTRY, AND THIS IS THE 'once at startup' ITS OWN COMMENT
@@ -2939,7 +2900,7 @@ begin
      and the row version has to earn, and it is exactly what exercises the
      read-modify-write loop: read every row, recompute, write back only what
      changed. tr4w/test/corpus/test-rescore.sh asserts it. *)
-  if SameText(AnsiString(ParamStr(2)), AnsiString('/RESCORE')) then
+  if UnicodeSameText(PositionalArgument(2), '/RESCORE') then
      begin
      (* ~~/NOFACTORY~~ IS GONE (2026-09-29). It rescored through the legacy
         `case` so the two paths could be diffed, and it could only work while
@@ -2988,15 +2949,16 @@ begin
      import path against them. That is the check nothing has today: every ADIF
      test in the suite parses a string, and none of them puts a record in a
      log. *)
-  if ImportFileFromCommandLine <> '' then
+  importFile := ImportFileOf(CommandLineStartupArgs);
+  if importFile <> '' then
      begin
-     EarlyTrace('[Import] importing ' + ImportFileFromCommandLine);
+     EarlyTrace('[Import] importing ' + importFile);
      (* ALL OR NOTHING, AND THE EXIT CODE SAYS WHICH (NY4I, 2026-10-14).
        This used to Halt(0) whatever happened, so a script was told the file
        was imported when part of it, or none of it, was. The report is the
        sentence the operator's dialog carries; it is in tr4w.log as well.
        2 for failure, /IMPORTLOG's and /RESCORE's convention. *)
-     if not ImportFromADIF(ImportFileFromCommandLine, importReport) then
+     if not ImportFromADIF(importFile, importReport) then
         begin
         EarlyTrace('[Import] FAILED: ' + importReport);
         Halt(2);
@@ -3012,12 +2974,12 @@ begin
      contest set up and the log opened, by the same path an operator's start
      takes. It captures that contest's set-up, scoring and export and halts.
      See uContestMatrix and tr4w/test/contest-matrix. *)
-  if SameText(AnsiString(ParamStr(2)), AnsiString('/MATRIX')) then
+  if UnicodeSameText(PositionalArgument(2), '/MATRIX') then
      begin
-     Halt(RunContestMatrix(ParamStr(3), ParamStr(4)));
+     Halt(RunContestMatrix(PositionalArgument(3), PositionalArgument(4)));
      end;
 
-  if SameText(ParamStr(2), '/EXPORT') then
+  if UnicodeSameText(PositionalArgument(2), '/EXPORT') then
      begin
      (* /EXPORTDB AND /EXPORTTRW ARE BOTH GONE -- 2026-09-24, NY4I.
 
@@ -3574,6 +3536,14 @@ begin
     THE HEADLESS PATHS NEVER REACH THIS LINE. /EXPORT and /RESCORE halt far
     above, before any window exists. *)
   ScheduleMainWindowActivation;
+
+  (* --unattended NEVER ENTERS THE MESSAGE LOOP: nothing would ever end it. *)
+  if ArgumentsRequestUnattended(CommandLineStartupArgs) then
+     begin
+     EarlyTrace('[Unattended] startup finished without the headless job ending '
+                + 'the run; not waiting for an operator');
+     Halt(EXITCODE_UNATTENDED);
+     end;
 
   RunLCLApplication;
 end;

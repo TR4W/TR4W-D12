@@ -194,7 +194,7 @@ roundtrip_one() {
    cp "$d/log.cfg" "$WORK.CFG" || return
 
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /IMPORT "$(cygpath -d "$input")" \
-      --settings "$SETTINGS_WIN" >/dev/null 2>&1
+      --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1
    rc=$?
    if [ "$rc" -ne 0 ]; then
       printf "  FAIL  %-28s import exited %s\n" "$name" "$rc"
@@ -202,7 +202,7 @@ roundtrip_one() {
    fi
 
    MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT \
-      --settings "$SETTINGS_WIN" >/dev/null 2>&1
+      --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1
    rc=$?
    if [ "$rc" -ne 0 ]; then
       printf "  FAIL  %-28s export exited %s\n" "$name" "$rc"

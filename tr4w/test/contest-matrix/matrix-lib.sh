@@ -210,7 +210,7 @@ matrix_run_one(){
 
    ( cd "$MATRIX_TARGET" && MSYS_NO_PATHCONV=1 timeout 60 "./$MATRIX_EXE" \
         "$(cygpath -w "$run/MATRIX.CFG")" /MATRIX "$(cygpath -w "$run/out.matrix")" \
-        "$id" --settings "$(cygpath -w "$run/tr4w.json")" >/dev/null 2>&1 )
+        "$id" --unattended --settings "$(cygpath -w "$run/tr4w.json")" >/dev/null 2>&1 )
    rc=$?
 
    matrix_line "### variant $label: MY CALL=$call MY STATE=$state MY SECTION=$section MY GRID=$grid" >> "$rec"
@@ -265,7 +265,7 @@ matrix_run(){
 
    rm -f "$list"
    ( cd "$MATRIX_TARGET" && MSYS_NO_PATHCONV=1 timeout 60 "./$MATRIX_EXE" \
-        /MATRIXLIST "$(cygpath -w "$list")" >/dev/null 2>&1 )
+        /MATRIXLIST "$(cygpath -w "$list")" --unattended >/dev/null 2>&1 )
    rc=$?
    if [ "$rc" -ne 0 ] || [ ! -s "$list" ]; then
       echo "contest-matrix: /MATRIXLIST failed ($(matrix_exit_reason "$rc")) -- nothing to run" >&2

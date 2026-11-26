@@ -62,14 +62,14 @@ cp "$BINLOG" "$WORK.TRW" || exit 1
 rows() { python -c "import sqlite3,sys;print(sqlite3.connect(sys.argv[1]).execute('SELECT COUNT(*) FROM qso').fetchone()[0])" "$WORK.db" 2>/dev/null || echo 0; }
 qsos() { grep -ci '<eor>' "$WORK.adi" 2>/dev/null || echo 0; }
 
-MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1
+MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1
 before_rows=$(rows); before_qsos=$(qsos)
 
 # The loss.  Not a truncation -- the file simply is not there, which is what an
 # operator sees after a bad copy, a wrong folder, or a restore that missed it.
 rm -f "$WORK.adi" "$WORK.log" "$WORK.TRW"
 
-MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1
+MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1
 after_rows=$(rows); after_qsos=$(qsos)
 
 echo "  with the binary log:   $before_rows row(s), $before_qsos QSO(s) exported"

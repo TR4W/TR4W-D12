@@ -357,7 +357,12 @@ const
     (another instance) and from 1 (a file that IS there and is the wrong
     kind), because those three want different things done about them. }
   EXITCODE_NO_CONTEST_FILE              = 4;
-  MASKEVENT                             = False;
+
+  (* --unattended, and the run could not finish by itself: no headless job on
+    the command line, or a window that waits for an answer was about to open
+    (uStartupArgs). *)
+  EXITCODE_UNATTENDED                   = 5;
+  MASKEVENT                            = False;
   ICOM_LONG_MODECOMMAND                 = True ;
 
 // LANG is selected by passing -DLANG_xxx to DCC32 (e.g. -DLANG_RUS).

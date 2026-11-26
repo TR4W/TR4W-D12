@@ -450,6 +450,22 @@ vendored because the gate must run on a clean clone with no network; it is Pytho
 leave its indentation alone and record any patch in `VENDORED.md`. `uTestADIF` also pins every tag
 TR4W writes against ADIF 3.1.6's field list (`ADIF_SPEC_VERSION` in `uADIF`).
 
+### MANDATORY: a headless run of the app goes through the launcher, or does what it does
+
+`tr4w/test/Run-Headless.ps1 <app arguments>`. It runs from `tr4w/target` (so the tracked
+`cty.dat` is used and nothing is downloaded), passes `--unattended` and a `--settings` under
+`build-out`, ends the process at a time limit (exit 124) and prints the exit code.
+
+**`--unattended` means nobody is there** (`src/uStartupArgs.pas`): a command line that names no
+headless job exits with code 5 before any window, and so does a run about to open a window that
+waits for an answer (`src/ui/lcl/uUnattendedGuard.pas`; the call stack goes to
+`tr4w-early.log`). **Every scripted headless launch passes it** -- the test runners do.
+`tools/gui_test` does **not**: it drives dialogs on purpose. `tr4w/test/Test-Unattended.ps1`
+checks the behaviour against the built program.
+
+**Git Bash rewrites `/IMPORTLOG` into a path.** From bash, prefix `MSYS_NO_PATHCONV=1`. The
+rewritten line is an ordinary start, which on 2026-11-26 asked a question and waited all night.
+
 **3. Integration / bench** -- `tr4w/test/integration/` drives real serial radios (or
 `tools/radiosim`) via `run-bench.ps1`. `tr4w/test/bench/` holds the **measuring instruments**
 (`bench_*.lpr`, built by `tr4w/build/Build-Bench.ps1`): programs that ask a real radio a question

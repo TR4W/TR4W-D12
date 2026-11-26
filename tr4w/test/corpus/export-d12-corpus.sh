@@ -203,7 +203,7 @@ for m in "$here"/*/manifest.json; do
       echo "corpus: STOPPED before exporting $slug -- the run is incomplete." >&2
       exit 1
    fi
-   ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$log")" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1 )
+   ( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 45 "./$EXE_NAME" "$(towin "$log")" /EXPORT --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1 )
    rc=$?
 
    # THE EXIT CODE IS EVIDENCE AND IT WAS BEING THROWN AWAY.

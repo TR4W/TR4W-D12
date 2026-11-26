@@ -62,7 +62,7 @@ cp "$log" "$work/$(basename "$log")"
 cfg_win=$(cygpath -d "$PWD/$work/$(basename "$cfg")")
 exe_leaf=$(basename "$EXE_SRC")
 [ "$EXE_SRC" = "tr4w/target/tr4w.exe" ] || cp "$EXE_SRC" "tr4w/target/$exe_leaf"
-( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 120 "./$exe_leaf" "$cfg_win" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1 ) || true
+( cd tr4w/target && MSYS_NO_PATHCONV=1 timeout 120 "./$exe_leaf" "$cfg_win" /EXPORT --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1 ) || true
 made=$(ls "$work"/*.db 2>/dev/null | head -1 || true)
 [ -n "$made" ] || { echo "ERROR: the export produced no log database in $work" >&2; exit 1; }
 # The app only READS the settings fixture; a run that rewrote it fails.

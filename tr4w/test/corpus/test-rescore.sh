@@ -100,10 +100,10 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    # comes from that read, so a rescore would treat every callsign as DX.  See
    # the longer note in test-contest-factory.sh.
    ids_before=$(idcount)
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --settings "$SETTINGS_WIN" >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1
    first=$(digest)
    ids_after=$(idcount)
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --settings "$SETTINGS_WIN" >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1
    second=$(digest)
 
    if [ "$ids_before" != "$ids_after" ]; then

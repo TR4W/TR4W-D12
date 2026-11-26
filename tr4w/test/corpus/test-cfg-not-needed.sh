@@ -94,14 +94,14 @@ for d in "$REPO_ROOT"/tr4w/test/corpus/*/; do
    # corpus fixture is the log itself since 2026-09-24 -- see corpus-lib.sh --
    # so the log is simply copied.  The QUESTION is unchanged: does emptying
    # the .cfg change the exported bytes?)
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1
    with=$(mktemp -d); cp "$WORK.adi" "$WORK.log" "$with/" 2>/dev/null
    produced=$(ls "$with" 2>/dev/null)
 
    # Without it.  The file stays -- it names the contest -- but says nothing.
    : > "$WORK.CFG"
    rm -f "$WORK.adi" "$WORK.log"
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$SETTINGS_WIN" >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --unattended --settings "$SETTINGS_WIN" >/dev/null 2>&1
 
    ok=1; detail=""
    if [ -z "$produced" ]; then

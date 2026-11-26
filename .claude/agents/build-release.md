@@ -392,6 +392,15 @@ workflow after a site deploy (DOCS.md). Written 2026-11-23, **never run on GitHu
 
 `docs/RELEASE_WORKFLOW.md` sections 5–8 (1–4 are superseded by `BUILD.md`).
 
+## Running the app headless (2026-11-26)
+
+By hand: `tr4w/test/Run-Headless.ps1 <app arguments>`, and nothing else -- it sets the
+working directory, `--settings`, `--unattended`, a time limit that ends the process (exit
+124) and prints the exit code. A new test runner that launches the app passes
+`--unattended` and a time limit itself, with `MSYS_NO_PATHCONV=1` from bash. Exit 5 means
+the run could not finish by itself; `tr4w-early.log` in the working directory says why.
+`tr4w/test/Test-Unattended.ps1` checks this against the built program.
+
 ## Non-negotiable git rules
 
 - **Never force-push `main`** — no `--force`, no `--force-with-lease`, no

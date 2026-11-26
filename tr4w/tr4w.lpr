@@ -202,6 +202,8 @@ uses
   uLogNote in 'src\domain\uLogNote.pas',
 uContestFileKind in 'src\domain\uContestFileKind.pas',
   uOpenLogRelaunch in 'src\uOpenLogRelaunch.pas',
+  uStartupArgs in 'src\uStartupArgs.pas',
+  uUnattendedGuard in 'src\ui\lcl\uUnattendedGuard.pas',
   uLogRepository in 'src\uLogRepository.pas',
   uLogContestStatements in 'src\uLogContestStatements.pas',
   uLogImport in 'src\uLogImport.pas',

@@ -130,9 +130,9 @@ for d in "$CORPUS"/*/; do
    #
    # The same two commands as test-contest-factory.sh, so a fresh freeze and
    # the gate cannot disagree about how the log was produced.
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --settings "$(corpus_settings_win)" >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /RESCORE --unattended --settings "$(corpus_settings_win)" >/dev/null 2>&1
    rm -f "$WORK.adi" "$WORK.log"
-   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --settings "$(corpus_settings_win)" >/dev/null 2>&1
+   MSYS_NO_PATHCONV=1 timeout 60 "./$EXE" "$WORK.CFG" /EXPORT --unattended --settings "$(corpus_settings_win)" >/dev/null 2>&1
 
    cbr="$WORK.log"; [ -f "$cbr" ] || cbr=""
    if [ ! -f "$WORK.adi" ] || [ -z "$cbr" ]; then

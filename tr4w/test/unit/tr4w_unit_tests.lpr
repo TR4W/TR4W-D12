@@ -805,6 +805,8 @@ uContestFileKind           in '..\..\src\domain\uContestFileKind.pas',
 uTestContestFileKind       in 'uTestContestFileKind.pas',
    uOpenLogRelaunch     in '..\..\src\uOpenLogRelaunch.pas',
    uTestOpenLogRelaunch in 'uTestOpenLogRelaunch.pas',
+   uStartupArgs         in '..\..\src\uStartupArgs.pas',
+   uTestStartupArgs     in 'uTestStartupArgs.pas',
    uLogImport           in '..\..\src\uLogImport.pas',
    uTestLogImport       in 'uTestLogImport.pas',
    (* uLogStore itself, through its entry points -- a write never assumes the
@@ -1555,6 +1557,7 @@ begin
    RegisterSuite(TCaptionTextTests.Create('CaptionText'));
    RegisterSuite(TStartupTaskBarTests.Create('StartupTaskBar'));
    RegisterSuite(TOpenLogRelaunchTests.Create('OpenLogRelaunch'));
+   RegisterSuite(TStartupArgsTests.Create('StartupArgs'));
    RegisterSuite(TCommandHelpTests.Create('CommandHelp'));
    RegisterSuite(TSpotStoreTests.Create('SpotStore'));
    RegisterSuite(TTelnetTraceTests.Create('TelnetTrace'));
