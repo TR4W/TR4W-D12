@@ -609,6 +609,7 @@ const
 implementation
 uses
    uSettingsModel,     // Settings -- the settings that have left CFGCA
+   uQTCSeries,         (* a peer's QTC record: QTCRecordCounts, the series *)
    uAppTimers,   (* StartAppTimer / StopAppTimer -- LCL TTimers, not SetTimer *)
   Menus,          { TMenuItem -- the Network menu row }
   uMenu,          { TopLevelMenuItem }
@@ -935,11 +936,13 @@ begin
          end;
       rkQTCR, rkQTCS:
          begin
-         if rec.ceRecordKind = rkQTCS then
+         (* The loader's rules (uQTCSeries): the series number only rises, and
+           a deleted QTC record counts nowhere. *)
+         NumberQTCBooksSent := QTCSeriesHighWater(NumberQTCBooksSent, rec);
+         if QTCRecordCounts(rec) then
             begin
-            NumberQTCBooksSent := rec.QSOPoints;
+            IncrementQTCCount(rec.Callsign);
             end;
-         IncrementQTCCount(rec.Callsign);
          DisplayTotalScore;
          UpdateTotals2;
          end;

@@ -1416,6 +1416,16 @@ that file's stale records over the rows (read, not run on the old code).
   `SendRowToServer(NET_WIRE_EDIT_ID, rowId, NetQsoTag(...))` per marked row
   with a network identity (a (0, 0) row is not sent, `SendRecordToServer`'s
   rule). False: Warn line, `LogStoreChangeNotSavedText`, beep.
+- **SUPERSEDED FOR THE SAVE (2026-11-26): a series and its marks are ONE
+  transaction.** `TLogRepository.AppendBatch` takes `aBeforeCommit:
+  TBatchStep` (run after the last row, before `CommitBatch`; a raise rolls the
+  batch back); `uLogStore.AppendLiveRecords` is the live append's one body
+  (`LogStoreAppendLiveQSOs` is it with nil), and `LogStoreAppendQTCSeries(
+  records, markRowIds, aMarked)` passes a step that runs the mark loop
+  (`MarkRowsSentInQTC`, shared with `LogStoreMarkSentInQTC`; same skip rules).
+  The windows' one save is `uQTCS.CommitQTCSeries` (stamp, read-only recovery
+  precheck, the store call, then count / publish / marks). `MarkQTCBookSent`
+  remains for the tests of issue 385. Pinned by `uTestWAEQTC`.
 - **The `.TRW` routines are DELETED** with it: `OpenLogFile`, `CloseLogFile`,
   `tSetFilePointer`, `ReadVersionBlock`, `VC.LogHandle`; the ADIF import's
   optional `.TRW` open is gone. Import (`uLogImport`) has its own reader.

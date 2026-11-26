@@ -198,6 +198,17 @@ The mark was written through the old `.TRW` file, which this build does not writ
 - [ ] **Multi-op (two stations, TR4WServer):** send a QTC book on station A. EXPECT no error on B, and on B the same ten QSOs not offered in B's next QTC book (B received the marks as edits).
 - [ ] **A log with a `.TRW` left beside it** (a log migrated from 4.x): the QTC works as above and the `.TRW`'s date does not change.
 
+## Added 2026-11-26 -- WAE QTC: THE CONFIRMED COUNT IS LOGGED, A SERIES SAVES ALL OR NOTHING, WHO MAY BE REPORTED (contest-scoring, log-database, multi-op-network)
+
+A stopped series is logged as `n/<confirmed>` (was the offered count); a series and the marks on its QSOs are one transaction, counted and sent only after it commits; a book no longer offers X-QSOs, zero-point QSOs or the receiving station's own QSO by base call (DL1AA/P = DL1AA); the receive window refuses a line naming our own station; a deleted QTC record counts nowhere; a second book in a session starts at nothing sent (the LCL form had dropped the reset). Unit-tested on a real log, including the Cabrillo `QTC:` lines; never run in the program.
+
+- [ ] **Stopped send:** non-EU station, ask an EU station for a QTC (QTC 1/10 offered), send 6, press Stop, confirm message 6. EXPECT six rows in the log each showing `1/6`, the Cabrillo's six `QTC:` lines carry `1/6`, and the next book is `QTC 2/...` starting at the 7th QSO.
+- [ ] **Second book, same session:** right after a saved book, ask another EU station. EXPECT the send window starts at line 1 with nothing marked sent.
+- [ ] **Short receive:** EU station, receive `2/10`, enter 4 lines, save and say Yes to saving a short series. EXPECT four rows logged `2/4`, and the QSL on the air is `QSL 2/4 TU`.
+- [ ] **Own QSO refused on receive:** type our own call (or our call with `/P`) in a received line. EXPECT the status line "That QSO is with us: a QTC may not report it back" and the caret stays on the call.
+- [ ] **Not offered:** mark a QSO X-QSO, log one on 160 m, log one with the receiving station's call plus `/P`. EXPECT none of them in the next book.
+- [ ] **A refused save (full disk, D:):** fill the disk, send a book to the end and say QSL. EXPECT the status line says not saved, the window stays open, the QTC count and score do not move, and no QSO is marked; free space, press Next (or Stop): EXPECT it saves once, without asking about message N again.
+
 ## Added 2026-11-26 -- PREFERENCES: PLACED ROWS NO LONGER CLIPPED, NETWORK HINTS FLOW, CW OUTPUT WIDER, ALERT COLOR HAS A CONTROL (lcl-ui)
 
 A placed block (`uPrefsForm.NewGeneratedBlock`) is now as wide as its page by anchors; in 5.1.3 it copied a 150 px width from a page that had not been shown, and every row control at x=330 was cut off. `uTestPrefsLayout` measures it on a shown form; it had not been run when this item was written.

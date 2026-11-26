@@ -117,6 +117,7 @@ function NumberAvailableQTCsForThisCall(Call: CallString): integer;
 implementation
 uses
    uQTCR,
+   uQTCSeries,   (* QSOMayBeReportedInQTC -- which QSOs a book may offer *)
    (* Which store a log READ comes from -- step B4.  See uLogSource. *)
    uLogSource,
   MainUnit,
@@ -293,24 +294,24 @@ begin
   1:
   if LogSourceNextWithRowId( rowId, TempRXData ) then
      begin
-     if GoodLookingQSO then
-       if TempRXData.ceDupe = False then
-          begin
-          if (TempRXData.ceWasSendInQTC = False) and (TempRXData.Callsign <> Call) then
-             begin
-             inc(QTCs);
-             QTCsToBeSendArray[QTCs].qsTime := TempRXData.tSysTime.qtHour * 100 + TempRXData.tSysTime.qtMinute;
-             QTCsToBeSendArray[QTCs].qsCall := TempRXData.Callsign;
-             QTCsToBeSendArray[QTCs].qsNumber := TempRXData.NumberReceived;
-             QTCsToBeSendArray[QTCs].qsQSOID1 := TempRXData.ceQSOID1;
-             QTCsToBeSendArray[QTCs].qsQSOID2 := TempRXData.ceQSOID2;
-             QTCsToBeSendRowIds[QTCs] := rowId;
-             end;
-          if QTCs = 10 then
-             begin
-             goto 2;
-             end;
-          end;
+     (* WHICH QSOS MAY BE OFFERED IS uQTCSeries.QSOMayBeReportedInQTC
+       (2026-11-26): it added X-QSOs, zero-point QSOs, and the receiving
+       station by BASE call (DL1AA/P is DL1AA) to the deleted / dupe /
+       already-sent / exact-call tests this read inline. *)
+     if QSOMayBeReportedInQTC(TempRXData, string(Call)) then
+        begin
+        inc(QTCs);
+        QTCsToBeSendArray[QTCs].qsTime := TempRXData.tSysTime.qtHour * 100 + TempRXData.tSysTime.qtMinute;
+        QTCsToBeSendArray[QTCs].qsCall := TempRXData.Callsign;
+        QTCsToBeSendArray[QTCs].qsNumber := TempRXData.NumberReceived;
+        QTCsToBeSendArray[QTCs].qsQSOID1 := TempRXData.ceQSOID1;
+        QTCsToBeSendArray[QTCs].qsQSOID2 := TempRXData.ceQSOID2;
+        QTCsToBeSendRowIds[QTCs] := rowId;
+        if QTCs = 10 then
+           begin
+           goto 2;
+           end;
+        end;
      goto 1;
      end;
   2:

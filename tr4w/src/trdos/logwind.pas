@@ -913,6 +913,7 @@ implementation
 
 uses
    uRoverState,        // RovingCall -- DEPlusMyCall while roving (issues 133, 87)
+   uQTCSeries,         (* QTCQuotaKey -- DecrementQTCCount's key *)
    uSettingsModel,     // Settings.BandMap -- the eight display filters
    uWindowTable,   { tr4w_WindowsArray, tWindowsExist -- moved out of VC/TF }
   uMainForm,   { the call field, named -- wh[] round 3 }
@@ -2476,6 +2477,8 @@ begin
 
   if (NumberQTCStations = 0) or (Count = 0) then Exit;
 
+  (* The quota's key: the base call (LOGSTUFF.NumberQTCsThisStation). *)
+  Call := CallString(QTCQuotaKey(string(Call)));
   for Station := 0 to NumberQTCStations - 1 do
     if QTCDataArray[Station].Call = Call then
        begin

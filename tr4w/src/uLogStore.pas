@@ -220,6 +220,19 @@ function LogStoreUpdateQSOsByRowId(aUpdates: TLogRowUpdates): boolean;
 function LogStoreMarkSentInQTC(const aRowIds: array of Int64;
                                aMarked: TLogRowUpdates): boolean;
 
+(* A WAE QTC SERIES, ALL OR NOTHING (2026-11-26): its QTC records appended as
+  the live append writes them (LogStoreAppendLiveQSOs), and -- for a series we
+  SENT -- the QSOs it reported marked "sent in a QTC" exactly as
+  LogStoreMarkSentInQTC marks them, in ONE transaction. A received series
+  passes no row ids. aMarked (the caller's, empty) receives the marked rows,
+  for the network, only after a True. True only after the COMMIT; on False no
+  record and no mark is in the log, and the failure has taken the live
+  append's rules (busy retried whole, a full disk read-only, else Disable).
+  Never raises. *)
+function LogStoreAppendQTCSeries(const aRecords: array of ContestExchange;
+                                 const aMarkRowIds: array of Int64;
+                                 aMarked: TLogRowUpdates): boolean;
+
 type
    (* Re-exported for the same reason as TLogRowUpdates. *)
    TLogQsoAppends = uLogRepository.TLogQsoAppends;
@@ -3616,6 +3629,7 @@ begin
 end;
 
 procedure WriteLiveLegs(const aLegs: array of ContestExchange;
+                        aBeforeCommit: TBatchStep;
                         out aFacts: TLiveQsoFacts;
                         out aRowIds: TLiveQsoRowIds); forward;
 
@@ -3630,6 +3644,7 @@ procedure WriteLiveLegs(const aLegs: array of ContestExchange;
   TLogRepository.AppendBatch, which is the same begin, insert and commit for
   one row and ONE transaction for several. *)
 function AppendLiveQSOsOnce(const aLegs: array of ContestExchange;
+                            aBeforeCommit: TBatchStep;
                             aLastAttempt: boolean;
                             out aFacts: TLiveQsoFacts;
                             out aRowIds: TLiveQsoRowIds;
@@ -3709,7 +3724,7 @@ begin
         happens there -- but the store's promise cannot rest on its caller
         having opened it first. *)
 
-      WriteLiveLegs(aLegs, aFacts, aRowIds);
+      WriteLiveLegs(aLegs, aBeforeCommit, aFacts, aRowIds);
 
       (* AND ONLY NOW. *)
       GLastAppendedMyFacts := aFacts[High(aFacts)];
@@ -3747,6 +3762,7 @@ end;
   AppendLiveQSOsOnce's attempt, after the log is open and writable. Raises
   on any failure; AppendBatch has then rolled the whole entry back. *)
 procedure WriteLiveLegs(const aLegs: array of ContestExchange;
+                        aBeforeCommit: TBatchStep;
                         out aFacts: TLiveQsoFacts;
                         out aRowIds: TLiveQsoRowIds);
 var
@@ -3833,7 +3849,8 @@ begin
         "a county line commits per QSO" decision of section 9b). An operator
         who loses power loses at most the entry in progress. The commit is
         the contact. *)
-      GRepository.AppendBatch(appends, failedIndex, aRowIds, hook, True);
+      GRepository.AppendBatch(appends, failedIndex, aRowIds, hook, True,
+                              aBeforeCommit);
 
       SetLength(aFacts, appends.Count);
       for i := 0 to appends.Count - 1 do
@@ -3857,9 +3874,26 @@ end;
   AN ENTRY OF SEVERAL LEGS IS RETRIED WHOLE, NEVER HALF (plan commit 2): every
   attempt is the whole batch, captured again, and a busy failure rolls back
   every leg the attempt had written. *)
+function AppendLiveRecords(const aLegs: array of ContestExchange;
+                           aBeforeCommit: TBatchStep;
+                           out aFacts: TLiveQsoFacts;
+                           out aRowIds: TLiveQsoRowIds): boolean; forward;
+
 function LogStoreAppendLiveQSOs(const aLegs: array of ContestExchange;
                                 out aFacts: TLiveQsoFacts;
                                 out aRowIds: TLiveQsoRowIds): boolean;
+begin
+   Result := AppendLiveRecords(aLegs, nil, aFacts, aRowIds);
+end;
+
+(* THE LIVE APPEND, with aBeforeCommit (nil for none) run inside the same
+  transaction after the last row: LogStoreAppendLiveQSOs and the WAE QTC
+  series (LogStoreAppendQTCSeries) are this one path. A busy retry runs the
+  step again, inside the new attempt. *)
+function AppendLiveRecords(const aLegs: array of ContestExchange;
+                           aBeforeCommit: TBatchStep;
+                           out aFacts: TLiveQsoFacts;
+                           out aRowIds: TLiveQsoRowIds): boolean;
 var
    attempt, i: integer;
    busy: boolean;
@@ -3896,7 +3930,8 @@ begin
 
    for attempt := 1 to LOG_WRITE_ATTEMPTS do
       begin
-      Result := AppendLiveQSOsOnce(legs, attempt = LOG_WRITE_ATTEMPTS,
+      Result := AppendLiveQSOsOnce(legs, aBeforeCommit,
+                                   attempt = LOG_WRITE_ATTEMPTS,
                                    aFacts, aRowIds, busy);
       if Result or (not busy) then
          begin
@@ -4260,13 +4295,158 @@ begin
    end;
 end;
 
-function LogStoreMarkSentInQTC(const aRowIds: array of Int64;
-                               aMarked: TLogRowUpdates): boolean;
 const
-   WHAT = 'marking QSOs sent in a QTC';
+   MARKING_SENT_IN_QTC = 'marking QSOs sent in a QTC';
+
+(* THE MARK ITSELF, inside a transaction the caller has begun: each row read
+  fresh, skipped if gone / deleted / not a QSO / already marked (logged),
+  else sent_in_qtc and server_dirty set and the external-logger capture
+  taken, and the row added to aMarked. False, with aUnchangedRowId, when an
+  update changed no row; the caller rolls back. *)
+function MarkRowsSentInQTC(const aRowIds: array of Int64;
+                           aMarked: TLogRowUpdates;
+                           out aUnchangedRowId: Int64): boolean;
 var
    i: integer;
    rec: ContestExchange;
+begin
+   Result := True;
+   aUnchangedRowId := 0;
+   for i := Low(aRowIds) to High(aRowIds) do
+      begin
+      if not GRepository.LoadQSO(aRowIds[i], rec) then
+         begin
+         if logger <> nil then
+            begin
+            logger.Warn('[LogStore] %s: row %d is not in the log -- not marked',
+                        [MARKING_SENT_IN_QTC, aRowIds[i]]);
+            end;
+         Continue;
+         end;
+      if (rec.ceRecordKind <> rkQSO) or rec.ceQSO_Deleted then
+         begin
+         if logger <> nil then
+            begin
+            logger.Warn('[LogStore] %s: row %d (%s) is no longer a QSO in the ' +
+                        'log -- not marked',
+                        [MARKING_SENT_IN_QTC, aRowIds[i], string(rec.Callsign)]);
+            end;
+         Continue;
+         end;
+      if rec.ceWasSendInQTC then
+         begin
+         Continue;
+         end;
+
+      rec.ceWasSendInQTC := True;
+      (* The server hears of it as an edit; until the writer has sent it,
+        the row is owed (a resend on the next link). *)
+      if not GRepository.UpdateQSO(aRowIds[i], OwedToTheServer(rec)) then
+         begin
+         aUnchangedRowId := aRowIds[i];
+         Result := False;
+         Exit;
+         end;
+      if externalLogger <> nil then
+         begin
+         externalLogger.CaptureSavedQso(GDatabase, GRepository, aRowIds[i], False);
+         end;
+      aMarked.Add(aRowIds[i], rec);
+      end;
+end;
+
+type
+   (* THE MARK AS A BATCH STEP of the series' own append. Each attempt (a busy
+     retry runs the step again) collects into a fresh list; the caller's list
+     is filled only after the commit. *)
+   TQTCMarkStep = class(TObject)
+   private
+      FRowIds: array of Int64;
+      FMarked: TLogRowUpdates;
+   public
+      constructor Create(const aRowIds: array of Int64);
+      destructor Destroy; override;
+      procedure Run;
+      procedure HandOver(aInto: TLogRowUpdates);
+   end;
+
+constructor TQTCMarkStep.Create(const aRowIds: array of Int64);
+var
+   i: integer;
+begin
+   inherited Create;
+   SetLength(FRowIds, Length(aRowIds));
+   for i := 0 to High(aRowIds) do
+      begin
+      FRowIds[i] := aRowIds[Low(aRowIds) + i];
+      end;
+   FMarked := TLogRowUpdates.Create;
+end;
+
+destructor TQTCMarkStep.Destroy;
+begin
+   FMarked.Free;
+   inherited Destroy;
+end;
+
+procedure TQTCMarkStep.Run;
+var
+   unchanged: Int64;
+begin
+   FMarked.Free;
+   FMarked := TLogRowUpdates.Create;
+   if not MarkRowsSentInQTC(FRowIds, FMarked, unchanged) then
+      begin
+      (* Raised, so the batch rolls back the series' rows with the marks. *)
+      raise Exception.CreateFmt('%s: row %d was NOT changed (no such row)',
+                                [MARKING_SENT_IN_QTC, unchanged]);
+      end;
+end;
+
+procedure TQTCMarkStep.HandOver(aInto: TLogRowUpdates);
+var
+   i: integer;
+begin
+   for i := 0 to FMarked.Count - 1 do
+      begin
+      aInto.Add(FMarked.RowId(i), FMarked.Row(i));
+      end;
+end;
+
+function LogStoreAppendQTCSeries(const aRecords: array of ContestExchange;
+                                 const aMarkRowIds: array of Int64;
+                                 aMarked: TLogRowUpdates): boolean;
+var
+   step: TQTCMarkStep;
+   facts: TLiveQsoFacts;
+   rowIds: TLiveQsoRowIds;
+begin
+   Result := False;
+   step := TQTCMarkStep.Create(aMarkRowIds);
+   try
+      if Length(aMarkRowIds) > 0 then
+         begin
+         Result := AppendLiveRecords(aRecords, step.Run, facts, rowIds);
+         end
+      else
+         begin
+         Result := AppendLiveRecords(aRecords, nil, facts, rowIds);
+         end;
+      if Result then
+         begin
+         step.HandOver(aMarked);
+         end;
+   finally
+      step.Free;
+   end;
+end;
+
+function LogStoreMarkSentInQTC(const aRowIds: array of Int64;
+                               aMarked: TLogRowUpdates): boolean;
+const
+   WHAT = MARKING_SENT_IN_QTC;
+var
+   unchanged: Int64;
    rebuilt: boolean;
 begin
    (* FALSE UNTIL A COMMIT SAYS OTHERWISE -- AppendLiveQSOsOnce's rule. *)
@@ -4287,45 +4467,11 @@ begin
          end;
       BeginMainWrite;
 
-      for i := Low(aRowIds) to High(aRowIds) do
+      if not MarkRowsSentInQTC(aRowIds, aMarked, unchanged) then
          begin
-         if not GRepository.LoadQSO(aRowIds[i], rec) then
-            begin
-            if logger <> nil then
-               begin
-               logger.Warn('[LogStore] %s: row %d is not in the log -- not marked',
-                           [WHAT, aRowIds[i]]);
-               end;
-            Continue;
-            end;
-         if (rec.ceRecordKind <> rkQSO) or rec.ceQSO_Deleted then
-            begin
-            if logger <> nil then
-               begin
-               logger.Warn('[LogStore] %s: row %d (%s) is no longer a QSO in the ' +
-                           'log -- not marked', [WHAT, aRowIds[i], string(rec.Callsign)]);
-               end;
-            Continue;
-            end;
-         if rec.ceWasSendInQTC then
-            begin
-            Continue;
-            end;
-
-         rec.ceWasSendInQTC := True;
-         (* The server hears of it as an edit; until the writer has sent it,
-           the row is owed (a resend on the next link). *)
-         if not GRepository.UpdateQSO(aRowIds[i], OwedToTheServer(rec)) then
-            begin
-            (* Rolls back the rows marked before it too: one transaction. *)
-            AbandonUnchangedUpdate(WHAT, aRowIds[i]);
-            Exit;
-            end;
-         if externalLogger <> nil then
-            begin
-            externalLogger.CaptureSavedQso(GDatabase, GRepository, aRowIds[i], False);
-            end;
-         aMarked.Add(aRowIds[i], rec);
+         (* Rolls back the rows marked before it too: one transaction. *)
+         AbandonUnchangedUpdate(WHAT, unchanged);
+         Exit;
          end;
 
       if aMarked.Count > 0 then

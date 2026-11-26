@@ -487,6 +487,7 @@ implementation
 
 uses
   Math,                    // Max, the serial width floor (issue 91)
+  uQTCSeries,              (* QTCRecordCounts -- Cabrillo QTC lines, summary *)
   uEmbeddedTranslations,   // ActiveUILanguage -- see CabrilloLanguageTag
   uSettingsModel,          // Settings.My -- the station's own facts
   uCabrilloHeader,   // the Cabrillo header, from settings\tr4w.json not tr4w.ini
@@ -1398,7 +1399,7 @@ procedure TallySummaryTotals( aNext: TSummaryRecordReader );
      (* A QTC IS COUNTED BY DIRECTION FIRST (issue 182): one record per QTC,
         sent or received, unless deleted. It is never a QSO, so the predicate
         below then skips it. *)
-     if not TempRXData.ceQSO_Deleted then
+     if QTCRecordCounts( TempRXData ) then
         begin
         if TempRXData.ceRecordKind = rkQTCS then
            begin
@@ -3973,7 +3974,9 @@ procedure CollectCabrilloActivations( aActivations: TCabrilloActivations;
              FillChar(PreviousQTHString, SizeOf( PreviousQTHString ), 0);
              PreviousQTHString := TempRXData.QTHString;
 
-             if TempRXData.ceRecordKind in [ rkQTCR, rkQTCS ] then
+             (* A DELETED QTC RECORD IS NOT A QTC: QTCRecordCounts, the
+                loader's and the summary's predicate (it was written here). *)
+             if QTCRecordCounts( TempRXData ) then
                 begin
 
                 cKids                := string( TempRXData.Kids );

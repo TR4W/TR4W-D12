@@ -13261,3 +13261,8 @@ msgstr ""
 #, fuzzy
 msgid "Re-sends the QSOs of this contest that %s has not received. Other loggers are not touched."
 msgstr ""
+
+#: uappstrings.sqtcreportsourownqso
+#, fuzzy
+msgid "That QSO is with us: a QTC may not report it back"
+msgstr ""

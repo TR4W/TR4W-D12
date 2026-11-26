@@ -2389,6 +2389,11 @@ resourcestring
      every later translation fix, with one information line in the log. *)
    SLanguageFileOverrides     = 'Language file %s overrides the built-in translations (dated %s)';
 
+   (* WAE QTC RECEIVE WINDOW (2026-11-26): a line naming our own station is
+     refused -- WAE section 7, a QTC may not be reported back to the original
+     station. Shown on the window's status line. *)
+   SQTCReportsOurOwnQSO       = 'That QSO is with us: a QTC may not report it back';
+
 implementation
 
 end.

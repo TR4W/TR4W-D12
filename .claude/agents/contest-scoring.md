@@ -1234,6 +1234,29 @@ SAME SCORE"): `ClaimedScore` is read ONCE and handed to
 `tGenerateSummaryPortionOfCabrilloFile`, which no longer reads it itself.
 There is no per-activation score anywhere; do not add one.
 
+**THE WAE QTC RULES ARE `src/uQTCSeries.pas` (2026-11-26), and nothing else
+writes them.** A series is logged `<series>/<QTCs transferred>` -- a book
+offered 10 and stopped after 6 is `n/6`, on every row and so in Cabrillo
+(rules section 7 overrides D7, which logged the offered count); the receive
+side logs `<group>/<lines received>` and QSLs the same text. A QTC record
+counts (points, quota, Cabrillo, summary, a peer's row) only through
+`QTCRecordCounts` (not deleted); the series number is `QTCSeriesHighWater`,
+the highest rkQTCS ever logged, DELETED ROWS INCLUDED, so a number announced
+on the air is never reused. Which QSOs a book offers is
+`QSOMayBeReportedInQTC` (contact, not dupe, not `StoredQSOIsXQSO`, points >
+0 -- a WAE CW/SSB QSO is 0 only on 160 m or same side --, not already sent,
+not the receiver by BASE call); serial 000 is still offered (open question).
+The per-pair quota keys on `QTCQuotaKey` = `RootCall` (EA8/DL1AA is DL1AA)
+in Increment / NumberQTCsThisStation / Decrement. **A series is ONE
+transaction:** `uLogStore.LogStoreAppendQTCSeries` = the live append
+(`AppendLiveRecords`) with a `TBatchStep` run before `AppendBatch`'s commit
+that marks the reported QSOs; quota, numbering, record count, network and
+marks move only after it, and a refusal keeps the window
+(`QTCSeriesSavePending`: Next/Stop save again without re-asking). The windows
+cannot delete a QTC row (Edit QSO and Alt-Y refuse non-QSO rows, as in D7); a
+deleted one arrives only from a peer, the server or an import. Pinned by
+`uTestWAEQTC` (including real Cabrillo `QTC:` lines).
+
 **ERMAK IS DELETED, FLAG AND ALL (issue 74, closed as not planned, 2026-11-22).**
 `cfErmakSpecification` is out of `TContestFlags` and every class's `GetFlags`; the
 `ErmakSpecification` global, the ERMAK menu caption and the `ERMAKREPORT` header

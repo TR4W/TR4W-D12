@@ -277,6 +277,8 @@ procedure ExitProgram(Ask: boolean);
   body.  Public since issue #104: ShutDownRadioInterface needs the answer. *)
 function WaitForPollingThreadWithMessages(ARig: RadioPtr; TimeoutMs: DWORD): boolean;
 function tAddQSOToLog(RXData: ContestExchange): boolean;
+(* After a commit of aCount new records: the count and the log windows. *)
+procedure ShowRecordsAppendedToLog(aCount: integer);
 function ConvertBandTypeToUDPContactBand(band: BandType): string;
 implementation
 
@@ -3035,7 +3037,16 @@ begin
      Exit;
      end;
 
-  inc(tRestartInfo.riTotalRecordsInLog, Length(aQsos));
+  ShowRecordsAppendedToLog(Length(aQsos));
+  Result := True;
+end;
+
+(* AFTER A COMMIT OF aCount NEW RECORDS: the record count and the windows that
+  show the log. tAddQSOsToLog's tail, shared with the WAE QTC series
+  (uQTCS / uQTCR), which commits through its own store call. *)
+procedure ShowRecordsAppendedToLog(aCount: integer);
+begin
+  inc(tRestartInfo.riTotalRecordsInLog, aCount);
   (* ONE MORE RECORD, AND SHOW IT.
 
     THE TRIM IS GONE WITH THE FIXED WINDOW. This deleted row 0 and re-added at
@@ -3053,7 +3064,6 @@ begin
     beside the log, so a QSO logged while it is up has to reach it -- see
     LogSearchRefreshIfOpen. *)
   LogSearchRefreshIfOpen;
-  Result := True;
 //  SendStationStatus;
 end;
 (* THE dynamicresults XML, AS A STRING.  Split out of SendScoreToUDP so a test

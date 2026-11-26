@@ -952,7 +952,7 @@ begin
    w := Pos('if not LogStoreAppendLiveQSOs(aQsos, aFacts, rowIds) then', part);
    CheckTrue(w > 0, 'the append is the live, all-or-none store call');
    CheckTrue((PosEx('Exit;', part, w) > w) and
-             (PosEx('Exit;', part, w) < Pos('inc(tRestartInfo.riTotalRecordsInLog', part)),
+             (PosEx('Exit;', part, w) < Pos('ShowRecordsAppendedToLog(Length(aQsos));', part)),
              'and a refusal leaves before anything counts or shows the record');
 
    (* RELEASE POSTS -- the packet, then the message -- and lets go first. *)
@@ -1381,15 +1381,39 @@ begin
    body := Copy(text, p, e - p);
    w := Pos('if tAddQSOToLog(CE) then', body);
    CheckTrue(w > 0, 'the log is written first and its answer is the condition');
-   CheckTrue(PosEx('SendRecordToServer(NET_WIRE_QSO_ID, CE)', body, w) > w,
+   (* The send is PublishCommittedRecord since the WAE QTC series (2026-11-26)
+     shares it; that routine is the one SendRecordToServer. *)
+   CheckTrue(PosEx('PublishCommittedRecord(CE)', body, w) > w,
              'the packet is sent after it, inside that branch');
-   CheckEquals(0, PosEx('SendRecordToServer(', body,
-                        PosEx('SendRecordToServer(', body, w) + 1),
-               'and there is no other send');
+   CheckEquals(0, Pos('SendRecordToServer(', body), 'and there is no other send');
    CheckTrue(Pos('did NOT commit', body) >
-             PosEx('SendRecordToServer(NET_WIRE_QSO_ID, CE)', body, w),
+             PosEx('PublishCommittedRecord(CE)', body, w),
              'a refusal is reported at Error, after the send branch');
    CheckTrue(Pos('Result := False;', body) > 0, 'a refused record answers False (no pacing)');
+   p := Pos('function PublishCommittedRecord(const CE: ContestExchange): boolean;' +
+            sLineBreak + 'begin', text);
+   e := PosEx('function AddRecordToLogAndSendToNetwork(', text, p);
+   body := Copy(text, p, e - p);
+   CheckTrue((p > 0) and (e > p) and
+             (Pos('SendRecordToServer(NET_WIRE_QSO_ID, CE);', body) > 0),
+             'PublishCommittedRecord is the one send');
+
+   (* WAE QTC (2026-11-26): A DELETED QTC RECORD COUNTS NOWHERE, and the series
+     number only rises -- the loader and a peer's row cannot run headless, so
+     their gates are read here (uTestWAEQTC drives the predicate). *)
+   CheckTrue(Pos('if QTCRecordCounts(TempRXData) then', text) > 0,
+             'LoadinLog counts a QTC record through QTCRecordCounts');
+   CheckTrue(Pos('NumberQTCBooksSent := QTCSeriesHighWater(NumberQTCBooksSent, TempRXData);',
+                 text) > 0, 'and takes the series number as a high-water mark');
+   text := SourceText('uNet.pas');
+   CheckTrue(Pos('if QTCRecordCounts(rec) then', text) > 0,
+             'a peer''s QTC record counts through QTCRecordCounts');
+   CheckTrue(Pos('NumberQTCBooksSent := QTCSeriesHighWater(NumberQTCBooksSent, rec);',
+                 text) > 0, 'and its series number only rises');
+   text := SourceText('trdos' + PathDelim + 'postunit.pas');
+   p := Pos('if QTCRecordCounts( TempRXData ) then', text);
+   CheckTrue((p > 0) and (PosEx('if QTCRecordCounts( TempRXData ) then', text, p + 1) > p),
+             'the summary and the Cabrillo QTC: line ask it too');
 end;
 
 procedure TAutomaticXQSOTests.RunAllTests;

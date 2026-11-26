@@ -230,6 +230,7 @@ uses
   uCbrSum,
   uQTCR,
   uQTCS,
+  uQTCSeries,
   uGetServerLog,
   TF,
   uFreqTimeFormat,

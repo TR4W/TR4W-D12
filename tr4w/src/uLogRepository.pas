@@ -254,6 +254,12 @@ type
      in the log. *)
    TQsoRowHook = procedure(aRowId: Int64) of object;
 
+   (* MORE WRITES IN THE SAME TRANSACTION, after the last row and before the
+     COMMIT (2026-11-26): a WAE QTC series marks the QSOs it reported in the
+     commit that stores its rows. A step that raises fails the batch, which is
+     rolled back whole. *)
+   TBatchStep = procedure of object;
+
    (* QSOS TO APPEND IN ONE TRANSACTION -- TLogRepository.AppendBatch.
 
       The ADIF import's batch (NY4I, 2026-10-14: all or nothing). Its rows
@@ -1085,7 +1091,8 @@ type
                             out aFailedIndex: integer;
                             out aRowIds: TInt64Array;
                             aAfterEachRow: TQsoRowHook;
-                            aCursorMayClose: boolean = False); overload;
+                            aCursorMayClose: boolean = False;
+                            aBeforeCommit: TBatchStep = nil); overload;
       property InBatch: boolean read FInBatch;
 
       (* True while OpenSequentialRead's cursor is open. A commit then would
@@ -4548,7 +4555,8 @@ procedure TLogRepository.AppendBatch(aQsos: TLogQsoAppends;
                                      out aFailedIndex: integer;
                                      out aRowIds: TInt64Array;
                                      aAfterEachRow: TQsoRowHook;
-                                     aCursorMayClose: boolean);
+                                     aCursorMayClose: boolean;
+                                     aBeforeCommit: TBatchStep);
 var
    i: integer;
 begin
@@ -4579,6 +4587,10 @@ begin
          end;
       (* Every row is in; a failure from here on is the transaction's. *)
       aFailedIndex := -1;
+      if Assigned(aBeforeCommit) then
+         begin
+         aBeforeCommit;
+         end;
       CommitBatch;
    except
       (* As WriteBatch: ANY exception, and the log is left exactly as it was

@@ -512,6 +512,11 @@ procedure ClearLog;
 procedure tGetSystemTime;
 procedure SystemTimeChanging;
 function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
+(* THE TWO HALVES OF IT, for a caller that commits several records in one
+  store call (the WAE QTC series): stamp each record as this station's, new,
+  now; then, only after the commit, send it. *)
+procedure StampLocalLogRecord(var CE: ContestExchange);
+function PublishCommittedRecord(const CE: ContestExchange): boolean;
 procedure CompleteCallsign;
 function GetRealVirtualKey(var Key: integer): Byte;
 procedure Escape_proc;
@@ -830,6 +835,7 @@ implementation
 
 uses
    uSettingsModel,   // Settings -- where retired CFGCA rows live
+   uQTCSeries,       (* QTCRecordCounts, QTCSeriesHighWater -- LoadinLog *)
    Version,          (* TR4W_WEBSITE -- Help > Home Page *)
    uCategoryWindow,  (* CategoryOpeningWindow -- issue 201 *)
    uScoreCellStyle,  (* PointsTotalBold -- LayOutMainWindow *)
@@ -9236,15 +9242,15 @@ begin
      // if tRestartInfo.riTotalRecordsInLog = 3057 then
      // tRestartInfo.riTotalRecordsInLog := 3057;
      // if tTotalRecordsInLog mod 1000 = 0 then DispalyLoadedQSOs(tTotalRecordsInLog);
-     if TempRXData.ceRecordKind in [rkQTCR, rkQTCS] then
+     (* A QTC RECORD COUNTS UNLESS DELETED -- uQTCSeries.QTCRecordCounts, the
+       one predicate the exports and a peer's row ask too. The SERIES NUMBER
+       is the highest ever logged, deleted rows included: a number announced
+       on the air is never used again (it was the last row's, deleted or not). *)
+     if QTCRecordCounts(TempRXData) then
         begin
         IncrementQTCCount(TempRXData.Callsign);
         end;
-
-     if TempRXData.ceRecordKind = rkQTCS then
-        begin
-        NumberQTCBooksSent := TempRXData.QSOPoints;
-        end;
+     NumberQTCBooksSent := QTCSeriesHighWater(NumberQTCBooksSent, TempRXData);
 
      if TempRXData.ceRecordKind = rkQSO then
        if (not TempRXData.ceQSO_Deleted) and (TempRXData.Band <> NoBand) and
@@ -10875,7 +10881,7 @@ begin
   TR4WMainForm.pnlDate.Caption := LclText(GetDateString);
 end;
 
-function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
+procedure StampLocalLogRecord(var CE: ContestExchange);
 begin
   CE.ceQSOID1 := STARTTIMEOFTHETR4W;
   (* UNIQUE WITHIN THIS RUN, not just a tick: the QTC loops that call this make
@@ -10897,6 +10903,22 @@ begin
     merely posted. *)
   CE.ceSendToServer := False;
   CE.ceNeedSendToServerAE := False;
+end;
+
+(* A COMMITTED RECORD TO THE NETWORK. False when it was not posted, and the
+  row is then owed to the server (tUSQ). *)
+function PublishCommittedRecord(const CE: ContestExchange): boolean;
+begin
+  Result := SendRecordToServer(NET_WIRE_QSO_ID, CE);
+  if not Result then
+     begin
+     inc(tUSQ);
+     end;
+end;
+
+function AddRecordToLogAndSendToNetwork(var CE: ContestExchange): boolean;
+begin
+  StampLocalLogRecord(CE);
 
   (* COMMIT FIRST, THEN SEND (issue 347, NY4I 2026-11-21: "Notes and QTC
     records commit first, then send"). The record reaches the network only
@@ -10919,11 +10941,7 @@ begin
   Result := False;
   if tAddQSOToLog(CE) then
      begin
-     Result := SendRecordToServer(NET_WIRE_QSO_ID, CE);
-     if not Result then
-        begin
-        inc(tUSQ);
-        end;
+     Result := PublishCommittedRecord(CE);
      end
   else
      begin

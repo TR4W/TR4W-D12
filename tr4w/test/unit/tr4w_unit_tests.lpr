@@ -879,6 +879,7 @@ uTestContestFileKind       in 'uTestContestFileKind.pas',
    uTestLogMyFacts      in 'uTestLogMyFacts.pas',
    uTestPostUnitReports in 'uTestPostUnitReports.pas',
    uTestDistinctAdditionalExport in 'uTestDistinctAdditionalExport.pas',
+   uTestWAEQTC in 'uTestWAEQTC.pas',
    uTestCabrilloActivation in 'uTestCabrilloActivation.pas',
    uTestQTCCounts       in 'uTestQTCCounts.pas',
    uTestScoringMyFacts  in 'uTestScoringMyFacts.pas',
@@ -1613,6 +1614,7 @@ begin
    RegisterSuite(TLogMyFactsTests.Create('LogMyFacts'));
    RegisterSuite(TPostUnitReportsTests.Create('PostUnitReports'));
    RegisterSuite(TDistinctAdditionalExportTests.Create('DistinctAdditionalExport'));
+   RegisterSuite(TWAEQTCTests.Create('WAEQTC'));
    RegisterSuite(TCabrilloActivationTests.Create('CabrilloActivation'));
    RegisterSuite(TQTCCountsTests.Create('QTCCounts'));
    RegisterSuite(TScoringMyFactsTests.Create('ScoringMyFacts'));

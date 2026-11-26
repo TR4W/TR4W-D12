@@ -115,6 +115,10 @@ implementation
 uses
   SysUtils,
   uQTCReceiveForm,
+  uQTCSeries,      (* the series text, the record, the one-station rule *)
+  uQTCS,           (* CommitQTCSeries -- the one save of a series *)
+  uSettingsModel,  (* Settings.My.Call -- our own station *)
+  uAppStrings,     (* SQTCReportsOurOwnQSO *)
   MainUnit;
 
 var
@@ -228,6 +232,16 @@ begin
       Exit;
       end;
 
+   (* A QTC MAY NOT BE REPORTED BACK TO THE ORIGINAL STATION (WAE section 7):
+     a line naming OUR OWN station, by base call (DL1AA/P is DL1AA), is
+     refused here, before it can be counted. *)
+   if SameQTCStation(string(Call), string(Settings.My.Call)) then
+      begin
+      frm.SetStatus(SQTCReportsOurOwnQSO);
+      frm.FocusField(aRow, qcCall);
+      Exit;
+      end;
+
    if StrToIntDef(Trim(frm.RowNumber(aRow)), -1) < 0 then
       begin
       { No message here, as before: the number is self-evidently missing and the
@@ -277,7 +291,13 @@ begin
       Exit;
       end;
 
-   inc(QTCsReceived);
+   (* THE LINES RECEIVED ARE THE ROWS ACCEPTED SO FAR, by row: Enter again on
+     the last row after the log refused the save saves the same lines, where
+     a count would have grown by one. *)
+   if aRow > QTCsReceived then
+      begin
+      QTCsReceived := aRow;
+      end;
 
    if QTCsReceived < QTCsInCurrentGroup then
       begin
@@ -291,11 +311,24 @@ begin
       end;
 end;
 
+(* A RECEIVED SERIES, SAVED ALL OR NOTHING (2026-11-26).
+
+  LOGGED AS '<group>/<lines received>': a series announced as 3/10 and saved
+  after 6 lines (the operator answered "save it anyway") is the series 3/6 --
+  WAE section 7, the second figure is the QTCs in the series. The typed text
+  was logged until now, whatever was received. The QSL sent on the air says
+  the same 3/6, so the sender hears what we logged.
+
+  ONE TRANSACTION for every line (uLogStore.LogStoreAppendQTCSeries, with no
+  QSO to mark). Only after its COMMIT are the per-pair quota and the record
+  count moved, the rows sent to the network and the QSL sent; a refusal says
+  so on the status line and leaves the window and its lines as they are, so
+  Enter on the last line saves the same series again. *)
 procedure SaveQTCR;
 var
    i        : integer;
    frm      : TfrmQTCReceive;
-   QTCRXData: ContestExchange;
+   records  : array of ContestExchange;
    QTCNr    : AnsiString;
 begin
    if QTCsReceived = 0 then
@@ -330,26 +363,21 @@ begin
       QTCsReceived := QTCsInCurrentGroup;
       end;
 
-   QTCNr := frm.QTCNrText;
+   QTCNr := AnsiString(QTCSeriesText(CurrentGroup, QTCsReceived));
 
+   SetLength(records, QTCsReceived);
    for i := 1 to QTCsReceived do
       begin
-      IncrementQTCCount(QTCCallsign);
-      QTCRXData.Clear;
-      QTCRXData.ceRecordKind := rkQTCR;
-      QTCRXData.Callsign := QTCCallsign;
-      {Time}
-      QTCRXData.NumberSent := StrToIntDef(Trim(frm.RowTime(i)), 0);
-      {EU Callsign}
-      QTCRXData.Kids := frm.RowCall(i);
-      {Number}
-      QTCRXData.NumberReceived := StrToIntDef(Trim(frm.RowNumber(i)), 0);
-      {QTCNumber}
-      QTCRXData.RandomCharsReceived := QTCNr;
-      if AddRecordToLogAndSendToNetwork(QTCRXData) then
-         begin
-         Sleep(50);
-         end;
+      records[i - 1] := ReceivedQTCRecord(string(QTCCallsign), CurrentGroup,
+                                          QTCsReceived,
+                                          StrToIntDef(Trim(frm.RowTime(i)), 0),
+                                          string(frm.RowCall(i)),
+                                          StrToIntDef(Trim(frm.RowNumber(i)), 0));
+      end;
+
+   if not CommitQTCSeries(records, [], 50) then
+      begin
+      Exit;
       end;
 
    SendStringAndStop(AnsiString('QSL ') + QTCNr + AnsiString(' TU'));

@@ -827,6 +827,7 @@ function BandIsEnabledForContest(const aBand: BandType): boolean;
 implementation
 
 uses uNet,
+   uQTCSeries,          (* QTCQuotaKey -- the per-pair QTC quota's key *)
    uUDPBroadcastConfig, (* TUDPStream / usRotor *)
    uUDPBroadcaster,     (* the one place that knows where a stream goes *)
    uQsoDispatcher,      (* the thread that sends it *)
@@ -1315,6 +1316,9 @@ begin
      Exit;
      end;
 
+  (* BY BASE CALL (2026-11-26): DL1AA/P and DL1AA are one station, and
+    share one quota of ten (uQTCSeries.QTCQuotaKey). *)
+  Call := CallString(QTCQuotaKey(string(Call)));
   for Station := 0 to NumberQTCStations - 1 do
     if QTCDataArray[Station].Call = Call then
        begin
@@ -1329,6 +1333,8 @@ var
 begin
   inc(TotalNumberQTCsProcessed);
 
+  (* The quota's key: the base call (NumberQTCsThisStation). *)
+  Call := CallString(QTCQuotaKey(string(Call)));
   if NumberQTCStations = 0 then
      begin
      QTCDataArray[NumberQTCStations].Call := Call;

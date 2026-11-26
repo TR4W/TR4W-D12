@@ -61,6 +61,17 @@ procedure SaveQTCS;
   status line says NOT SAVED, and nothing is sent. *)
 function MarkQTCBookSent(aCount: integer): boolean;
 
+(* ONE QTC SERIES TO THE LOG, ALL OR NOTHING -- the send and the receive
+  windows' one save (2026-11-26). Each record is stamped as this station's,
+  the read-only log is tried again first, then the rows (and, for a sent
+  series, the marks on aMarkRowIds) are ONE commit. Only after it: the record
+  count, the per-pair quota, the series number, the network (paced aPaceMs
+  between records) and the marks' edits. False: nothing moved, the status
+  line says NOT SAVED, the caller keeps its window. *)
+function CommitQTCSeries(var aRecords: array of ContestExchange;
+                         const aMarkRowIds: array of Int64;
+                         aPaceMs: integer): boolean;
+
 const
   // QTC_HK_* and RegQTCSHotKeys are GONE with the dialog.  PageUp, PageDown and
   // F10 were registered as SYSTEM-WIDE hotkeys, because a Win32 dialog's
@@ -97,6 +108,9 @@ var
   // and the form closes itself.
   QTCWasSend                            : integer ;
   LastSendedQTCHour                     : integer = -1;
+  (* THE LOG REFUSED THE LAST SAVE OF THIS SERIES: NEXT and STOP save it again
+    with the count already confirmed, rather than send more or ask again. *)
+  QTCSeriesSavePending                  : boolean = False;
 
 // the WAE QTC send window.
 //
@@ -119,6 +133,7 @@ uses
   LOGWAE,
   uQTCSendForm,
   uSettingsModel,   { Settings.Qtc.Minutes }
+  uQTCSeries,       (* the series text, the record, the high-water mark *)
   MainUnit;
 
 procedure QTCSendCommand(const aCommand: integer);
@@ -128,6 +143,13 @@ begin
    case aCommand of
       QTC_SEND_NEXT:
          begin
+         (* A SERIES THE LOG REFUSED IS SAVED AGAIN, NOT EXTENDED: the
+           operator's answers stand (see QTCSeriesSavePending). *)
+         if QTCSeriesSavePending then
+            begin
+            SaveQTCS;
+            Exit;
+            end;
          if QTCWasSend = NumberMessagesToBeSent then
             begin
             { The whole book has gone out; ask for the QSL and save. }
@@ -190,6 +212,13 @@ begin
 
       QTC_SEND_STOP:
          begin
+         (* After a refused save the confirmed count is already decided:
+           asking "was message N confirmed?" again would take one more off. *)
+         if QTCSeriesSavePending then
+            begin
+            SaveQTCS;
+            Exit;
+            end;
          if YesOrNo(TC_DOYOUREALLYWANTSTOPNOW) = IDNO then
             begin
             Exit;
@@ -302,40 +331,143 @@ begin
   SendStringAndStop(TempString);
 end;
 
+(* THE FIRST aCount ROWS OF THE BOOK, as the store takes them. *)
+function QTCBookRowIds(aCount: integer): TLiveQsoRowIds;
+var
+   i: integer;
+begin
+   Result := nil;
+   if aCount > High(QTCsToBeSendRowIds) then
+      begin
+      aCount := High(QTCsToBeSendRowIds);
+      end;
+   if aCount < 1 then
+      begin
+      Exit;
+      end;
+   SetLength(Result, aCount);
+   for i := 1 to aCount do
+      begin
+      Result[i - 1] := QTCsToBeSendRowIds[i];
+      end;
+end;
+
+(* THE SERVER HEARS OF EACH MARK ONLY ONCE IT IS IN THE LOG (issue 349), BY
+  ROW: the id pair is only the settle tag. A row with no pair (an import's)
+  cannot be settled by the server, so it is not sent -- SendRecordToServer's
+  rule. The send is queued to the writer thread. *)
+procedure SendQTCMarksToServer(aMarked: TLogRowUpdates);
+var
+   i: integer;
+   rec: ContestExchange;
+begin
+   for i := 0 to aMarked.Count - 1 do
+      begin
+      rec := aMarked.Row(i);
+      if QsoHasNetworkIdentity(rec) then
+         begin
+         SendRowToServer(NET_WIRE_EDIT_ID, aMarked.RowId(i),
+                         NetQsoTag(rec.ceQSOID1, rec.ceQSOID2));
+         end;
+      end;
+end;
+
+(* A SENT SERIES, SAVED ALL OR NOTHING (2026-11-26).
+
+  THE SERIES IS THE QTCs CONFIRMED: QTCWasSend of them, logged as
+  '<series>/<QTCWasSend>' on every row -- not the count offered on the air
+  ('QTC 3/10' stopped after 6 is the series 3/6). WAE section 7: "the second
+  figure denotes the number of QTCs in the series", and only a QTC "correctly
+  transferred" counts. D7 logged the offered count.
+
+  ONE TRANSACTION: the QTC rows and the "sent in a QTC" marks on the QSOs they
+  reported (uLogStore.LogStoreAppendQTCSeries). Only after its COMMIT are the
+  per-pair quota, the series number and the record count moved, the rows sent
+  to the network and the marks sent; a refusal moves, marks and sends
+  nothing, says so on the status line, and leaves the window open so the
+  operator can press NEXT or STOP to save the same series again. *)
+function CommitQTCSeries(var aRecords: array of ContestExchange;
+                         const aMarkRowIds: array of Int64;
+                         aPaceMs: integer): boolean;
+var
+  I                                     : integer;
+  marked                                : TLogRowUpdates;
+begin
+  Result := False;
+  if Length(aRecords) = 0 then
+     begin
+     Exit;
+     end;
+  for I := 0 to High(aRecords) do
+     begin
+     StampLocalLogRecord(aRecords[I]);
+     end;
+
+  (* A LOG MADE READ-ONLY BY A FULL DISK IS TRIED AGAIN FIRST -- delete-last's
+    and the QSO entry's precheck -- so a series kept after a refusal can be
+    saved once space is freed. A log stood down for any other reason stays
+    down for the session: the store has said so. *)
+  if LogStoreTryRecoverWrites then
+     begin
+     LogStoreShowRecoveryNotice;
+     marked := TLogRowUpdates.Create;
+     try
+        Result := LogStoreAppendQTCSeries(aRecords, aMarkRowIds, marked);
+        if Result then
+           begin
+           ShowRecordsAppendedToLog(Length(aRecords));
+           for I := 0 to High(aRecords) do
+              begin
+              IncrementQTCCount(aRecords[I].Callsign);
+              NumberQTCBooksSent := QTCSeriesHighWater(NumberQTCBooksSent, aRecords[I]);
+              if PublishCommittedRecord(aRecords[I]) and (aPaceMs > 0) then
+                 begin
+                 Sleep(aPaceMs);
+                 end;
+              end;
+           SendQTCMarksToServer(marked);
+           end;
+     finally
+        marked.Free;
+     end;
+     end;
+
+  if not Result then
+     begin
+     logger.Error('[QTC] series %s (%d QTC(s)) with %s was NOT saved: no QTC is ' +
+                  'counted, no QSO is marked and nothing was sent; the window stays open',
+                  [string(aRecords[0].RandomCharsReceived), Length(aRecords),
+                   string(aRecords[0].Callsign)]);
+     QuickDisplay(LogStoreChangeNotSavedText);
+     DoABeep(Warning);
+     end;
+end;
+
 procedure SaveQTCS;
 var
   I                                     : integer;
-  QTCRXData                             : ContestExchange;
-
+  records                               : array of ContestExchange;
 begin
-  for I := 1 to QTCWasSend do 
+  if QTCWasSend < 1 then
      begin
-     IncrementQTCCount(QTCCallsign);
-     QTCRXData.Clear;
-     QTCRXData.ceRecordKind := rkQTCS;
- //    tGetQSOSystemTime(QTCRXData.tSysTime);
- //    QTCRXData.Band := ActiveBand;
- //    QTCRXData.Mode := ActiveMode;
- //    QTCRXData.ceComputerID := Settings.Computer.Id;
-     QTCRXData.Callsign := QTCCallsign;
-     {Time}
-     QTCRXData.NumberSent := QTCsToBeSendArray[I].qsTime;
-     {EU Callsign}
-     QTCRXData.Kids := QTCsToBeSendArray[I].qsCall;
-     {Number}
-     QTCRXData.NumberReceived := QTCsToBeSendArray[I].qsNumber;
-     {QTCNumber}
-     QTCRXData.RandomCharsReceived := IntToStr(QTCNumber) + '/' + IntToStr(NumberMessagesToBeSent);
-     {QTCNumberQTCBooksSent}
-     QTCRXData.QSOPoints := QTCNumber;
- //    tAddQSOToLog(QTCRXData);
-     if AddRecordToLogAndSendToNetwork(QTCRXData) then
-        begin
-        Sleep(100);
-        end;
+     Exit;
      end;
-  inc(NumberQTCBooksSent);
-  MarkQTCBookSent(QTCWasSend);
+
+  SetLength(records, QTCWasSend);
+  for I := 1 to QTCWasSend do
+     begin
+     records[I - 1] := SentQTCRecord(string(QTCCallsign), QTCNumber, QTCWasSend,
+                                     QTCsToBeSendArray[I].qsTime,
+                                     string(QTCsToBeSendArray[I].qsCall),
+                                     QTCsToBeSendArray[I].qsNumber);
+     end;
+
+  QTCSeriesSavePending := not CommitQTCSeries(records, QTCBookRowIds(QTCWasSend), 100);
+  if QTCSeriesSavePending then
+     begin
+     Exit;
+     end;
+
   { The book is saved, so the window goes WITHOUT asking whether the operator
     means to abandon it -- EndDialog had the same property, it did not go back
     through WM_CLOSE. }
@@ -351,26 +483,16 @@ end;
   with that file's stale records. *)
 function MarkQTCBookSent(aCount: integer): boolean;
 var
-   rowIds: array of Int64;
+   rowIds: TLiveQsoRowIds;
    marked: TLogRowUpdates;
-   rec: ContestExchange;
-   i: integer;
 begin
    Result := True;
-   if aCount > High(QTCsToBeSendRowIds) then
-      begin
-      aCount := High(QTCsToBeSendRowIds);
-      end;
-   if aCount < 1 then
+   rowIds := QTCBookRowIds(aCount);
+   if Length(rowIds) = 0 then
       begin
       Exit;
       end;
-
-   SetLength(rowIds, aCount);
-   for i := 1 to aCount do
-      begin
-      rowIds[i - 1] := QTCsToBeSendRowIds[i];
-      end;
+   aCount := Length(rowIds);
 
    marked := TLogRowUpdates.Create;
    try
@@ -384,19 +506,7 @@ begin
          Exit;
          end;
 
-      (* THE SERVER HEARS OF THE MARK ONLY ONCE IT IS IN THE LOG (issue 349),
-        BY ROW: the id pair is only the settle tag. A row with no pair (an
-        import's) cannot be settled by the server, so it is not sent --
-        SendRecordToServer's rule. The send is queued to the writer thread. *)
-      for i := 0 to marked.Count - 1 do
-         begin
-         rec := marked.Row(i);
-         if QsoHasNetworkIdentity(rec) then
-            begin
-            SendRowToServer(NET_WIRE_EDIT_ID, marked.RowId(i),
-                            NetQsoTag(rec.ceQSOID1, rec.ceQSOID2));
-            end;
-         end;
+      SendQTCMarksToServer(marked);
    finally
       marked.Free;
    end;
@@ -404,6 +514,13 @@ end;
 
 procedure ShowQTCSend;
 begin
+   (* A NEW BOOK STARTS AT NOTHING SENT. The Win32 dialog reset these on
+     WM_INITDIALOG; the LCL form (d017a8ff5) dropped the reset, so a second
+     book began with the first one's count -- and would have saved that many
+     lines, reading QTCsToBeSendArray past the QSOs this book offered. *)
+   QTCWasSend := 0;
+   LastSendedQTCHour := -1;
+   QTCSeriesSavePending := False;
    ShowQTCSendWindow;
 end;
 end.
