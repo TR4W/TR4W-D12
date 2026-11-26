@@ -48,6 +48,26 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.1.x — November 2026
 
+### 5.1.4 (2026-11-26) - NY4I
+
+#### Preferences
+
+- **Missing settings are back.** Since 5.1.1, the lower part of several Preferences pages showed labels with
+  no boxes to change them: Band Map, Hardware, SCP, Network (including Computer Name), Audio, Two-radio,
+  WSJT-X and Bands, including the band plan **Edit** button. This happened on Windows, Linux and macOS. Your
+  saved values were not affected.
+- **Network page on Linux:** the explanations no longer overlap the fields below them.
+- **CW output** drop-downs on the Radios page are wide enough to show the port.
+- **Alert Color** can be set again, at the top of the Colors page.
+- **Old settings files:** Paddle Port, Serial Port Debug and Stereo Control Pin are no longer used. A file
+  that names them now loads without a complaint.
+
+#### CW keying
+
+- **DTR/RTS keying now works for radios connected over the network,** such as a K4 connected by Ethernet with
+  its keying on a COM port. The port was ignored, so CW did nothing. The log now says when the keying port
+  opens, and why CW cannot be sent if it does not.
+
 ### 5.1.3 (2026-11-25) - NY4I
 
 #### WSJT-X

@@ -41,6 +41,23 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### 5.1.4 (2026-11-26) - NY4I
+
+#### Keyer port (`uRadioConfigApply`, `trdos/logk1ea`, `uCWKeyerCPU`)
+
+- `ApplyRadioToSlot` copied the keyer port only for `rtSerial`, so a network radio's `keyerOutputPort` was cleared and `OpenKeyerPortFor` / `DriveCWLine` exited silently. `SlotPortNamesFor` gives every transport its keyer port through `KeyerPortForSlot`; the CAT port name stays serial-only.
+- A successful open is logged, a failed one names radio and port, and `WarnIfCPUKeyerCannotKey` (pure `CPUKeyerCannotKeyReason`) warns once per radio until the keyer is initialised again. Open: sharing one port between CAT and keying (issue 384).
+
+#### Preferences (`ui/lcl/uPrefsForm`, `uSettingsEffects`)
+
+- `NewGeneratedBlock` copied `aParent.ClientWidth` before the hidden page had been aligned (150 px class default, since `ed88a6b7e`), putting every control at x=330 outside the block; it now anchors to both parent edges. `uTestPrefsLayout` shows the form and checks each placed page.
+- Network hints are AutoSize with the rows hung from them; `MakeDesignedPagesScroll` re-points anchors aimed at the page panel to its scroll box (the LCL drops an anchor to a non-sibling).
+- CW output combos anchor to the group and set `ItemWidth` to the longest item. `appearance.alertColor` is placed on the Colors page and repaints the main window on Save.
+
+#### Retired names (`uCFG`)
+
+- `PADDLE PORT`, `SERIAL PORT DEBUG` and `STEREO CONTROL PIN` join `RETIRED_COMMANDS`; `PADDLE PORT` left `MIGRATED_COMMANDS`. `docs/D7_SETTINGS_PARITY.md` audits every D7-settable option.
+
 ### 5.1.3 (2026-11-25) - NY4I
 
 #### WSJT-X (`uWSJTX`, `uWSJTXState`, `uWSJTXExchangeText`, `uWSJTXReport`, `uInboundQso`, `uRadioPolling`, `logstuff`, `MainUnit`, `uSettingsModel`, `ui/lcl/uSetupWizardForm`)
