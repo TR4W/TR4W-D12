@@ -146,7 +146,13 @@ function FoundMyStateInDomFile: boolean;
 procedure SetUpNameAndStateExchange;
 procedure SetUpRSTQSONumberExchange;
 procedure SetUpRSTMyStateExchange;
-procedure SetUpRSTMyZoneExchange(const aZoneText: string; aSendsStateAfterZone: boolean);
+procedure SetUpRSTMyZoneExchange(const aZoneText: string;
+                                 aSendsStateAfterZone: boolean;
+                                 const aReport: string);
+
+(* THE REPORT A ZONE EXCHANGE'S DEFAULT MESSAGES SEND: '5NN', or '599' for a
+  contest that uses RTTY and not CW. *)
+function ZoneExchangeReport(aContest: TContestBase): string;
 
 implementation
 
@@ -464,12 +470,16 @@ end;
   WHETHER THE SENT STATE FOLLOWS THE ZONE IS THE CONTEST'S ANSWER -- M11 S7,
   2026-10-14 (TContestBase.SendsStateAfterZone, CQ WW RTTY's), handed in by
   FoundContest. It was a test of the session's exchange shape,
-  RSTZoneAndPossibleDomesticQTH, which CQ WW RTTY alone runs. *)
-procedure SetUpRSTMyZoneExchange(const aZoneText: string; aSendsStateAfterZone: boolean);
+  RSTZoneAndPossibleDomesticQTH, which CQ WW RTTY alone runs.
+
+  THE REPORT IS HANDED IN TOO (NY4I, 2026-11-26: contesters send 5NN, not 599,
+  in the default CW messages).  This was a constant '599'.  See
+  ZoneExchangeReport for the one case that keeps it. *)
+procedure SetUpRSTMyZoneExchange(const aZoneText: string;
+                                 aSendsStateAfterZone: boolean;
+                                 const aReport: string);
 var
   zoneText: string;
-const
-  Code599 = '599';
 begin
   zoneText := aZoneText;
 
@@ -478,16 +488,32 @@ begin
      zoneText := zoneText + ' ' + SentMyState;
      end;
 
-  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Code599 + ' ' + zoneText);
-  SetContestDefaultCQMemoryString(CW, F3, UTF8Encode(' ' + Code599 + ' ' + zoneText));
-  SetContestDefaultEXMemoryString(CW, F3, Code599);
+  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + aReport + ' ' + zoneText);
+  SetContestDefaultCQMemoryString(CW, F3, UTF8Encode(' ' + aReport + ' ' + zoneText));
+  SetContestDefaultEXMemoryString(CW, F3, UTF8Encode(aReport));
   SetContestDefaultEXMemoryString(CW, F4, UTF8Encode(zoneText));
-  SetContestDefaultEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + Code599 + ' ' + zoneText));
+  SetContestDefaultEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + aReport + ' ' + zoneText));
   SetContestDefaultEXMemoryString(CW, AltF3, 'RST?');
   SetContestDefaultEXMemoryString(CW, AltF4, 'NR?');
   Settings.Messages.RepeatSpExchangeCw :=
-     UTF8Encode(' ' + Code599 + ' ' + zoneText + ' ' + zoneText);
-  Settings.Messages.SpExchangeCw := UTF8Encode(' ' + Code599 + ' ' + zoneText);
+     UTF8Encode(' ' + aReport + ' ' + zoneText + ' ' + zoneText);
+  Settings.Messages.SpExchangeCw := UTF8Encode(' ' + aReport + ' ' + zoneText);
+end;
+
+(* THESE "CW" MESSAGES ARE WHAT RTTY SENDS TOO: in Digital mode F2 and the CQ
+  exchange send CqExchangeCw and SpExchangeCw, and the characters reach MMTTY
+  as written.  So a contest that uses RTTY and not CW keeps '599' -- what D7
+  sent from this routine with its RTTY switch (MMTTYMODE) on.  A contest that
+  allows CW gets '5NN'. *)
+function ZoneExchangeReport(aContest: TContestBase): string;
+begin
+  Result := '5NN';
+  if (aContest <> nil)                  and
+     aContest.UsesMode(Digital, eRTTY)  and
+     (not aContest.UsesMode(CW, eCW))   then
+     begin
+     Result := '599';
+     end;
 end;
 
 procedure SetUpNameAndStateExchange;
@@ -589,14 +615,16 @@ end;
 
 procedure TEngineExchangeMessageWriters.WriteRSTZone(aStateAfterZone: boolean);
 begin
-  SetUpRSTMyZoneExchange(SessionZoneTextSent(FContest), aStateAfterZone);
+  SetUpRSTMyZoneExchange(SessionZoneTextSent(FContest), aStateAfterZone,
+                         ZoneExchangeReport(FContest));
 end;
 
 procedure TEngineExchangeMessageWriters.WriteRSTStateOrZone(aStateAfterZone: boolean);
 begin
   if SentMyState = '' then
      begin
-     SetUpRSTMyZoneExchange(SessionZoneTextSent(FContest), aStateAfterZone);
+     SetUpRSTMyZoneExchange(SessionZoneTextSent(FContest), aStateAfterZone,
+                            ZoneExchangeReport(FContest));
      end
   else
      begin

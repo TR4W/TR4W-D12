@@ -77,6 +77,7 @@ type
       FSavedSilent: boolean;
       FTrw: string;
       FDb: string;
+      procedure Test_TheZoneExchangeSends5NN;
       procedure Test_AStatedCQMemoryIsNotADefault;
       procedure Test_ReSelectingTheContestKeepsAnEditedCQMemory;
       procedure Test_Q113_AnEditedMemorySurvivesARestart;
@@ -1177,8 +1178,51 @@ begin
    end;
 end;
 
+(* NY4I, 2026-11-26: the default CW messages send 5NN. The zone exchange was
+  the one writer that sent 599. A contest that uses RTTY and not CW keeps 599,
+  because RTTY sends these same messages as written. *)
+procedure TOperatorCQMemoryTests.Test_TheZoneExchangeSends5NN;
+
+   function ReportFor(const aId: string): string;
+   var
+      handle: TContestHandle;
+   begin
+      Result := '';
+      if FindContestById(aId, handle) then
+         begin
+         Result := ZoneExchangeReport(ContestIdentity(handle));
+         end
+      else
+         begin
+         CheckTrue(False, 'no contest with the id ' + aId);
+         end;
+   end;
+
+begin
+   BeginTest('Test_TheZoneExchangeSends5NN');
+   CheckEquals('5NN', ReportFor('CQ-WW-CW'), 'CQ WW CW');
+   CheckEquals('5NN', ReportFor('CQ-WW-SSB'), 'CQ WW SSB uses neither: 5NN');
+   CheckEquals('599', ReportFor('CQ-WW-RTTY'), 'CQ WW RTTY sends it over RTTY');
+   CheckEquals('5NN', ReportFor('IARU-HF'), 'a mixed contest');
+   CheckEquals('5NN', ZoneExchangeReport(nil), 'no contest');
+
+   SaveProgramMemories;
+   try
+      SetUpRSTMyZoneExchange('5', False, '5NN');
+      CheckEquals(' 5NN 5', string(Settings.Messages.CqExchangeCw),
+                  'CQ exchange');
+      CheckEquals(' 5NN 5', string(Settings.Messages.SpExchangeCw),
+                  'S&P exchange');
+      CheckEquals(' 5NN 5 5', string(Settings.Messages.RepeatSpExchangeCw),
+                  'repeat S&P exchange');
+   finally
+      RestoreProgramMemories;
+   end;
+end;
+
 procedure TOperatorCQMemoryTests.RunAllTests;
 begin
+   Test_TheZoneExchangeSends5NN;
    Test_AStatedCQMemoryIsNotADefault;
    Test_ReSelectingTheContestKeepsAnEditedCQMemory;
    Test_Q113_AnEditedMemorySurvivesARestart;
