@@ -1459,17 +1459,24 @@ var
   //rgb                                   : cardinal;
                                                                        // This way we can log before we read the DEBUG LOG LEVEL the legacy method in uCFG. // ny4i
 begin
-  (* --unattended WITH NOTHING TO DO STOPS HERE, before any window, lock or
-    file.  A switch the shell rewrote is not recognised, and an unrecognised
-    line starts TR4W as for an operator -- which is what waited all night
+  (* --unattended, DEALT WITH BEFORE ANYTHING CAN ASK A QUESTION.  The hook
+    goes on first, because the usage text below is already a dialog;
+    Application exists from Interfaces' initialization.
+
+    Then a line with nothing to do stops here, before any window, lock or file.
+    A switch the shell rewrote is not recognised, and an unrecognised line
+    starts TR4W as for an operator -- which is what waited all night
     (uStartupArgs). *)
-  if ArgumentsRequestUnattended(CommandLineStartupArgs) and
-     (not ArgumentsNameAHeadlessJob(CommandLineStartupArgs)) then
+  if ArgumentsRequestUnattended(CommandLineStartupArgs) then
      begin
-     EarlyTrace('[Unattended] this command line names no headless job, so TR4W '
-                + 'would start for an operator who is not there. Arguments: '
-                + string(CmdLine));
-     Halt(EXITCODE_UNATTENDED);
+     InstallUnattendedGuard;
+     if not ArgumentsNameAHeadlessJob(CommandLineStartupArgs) then
+        begin
+        EarlyTrace('[Unattended] this command line names no headless job, so '
+                   + 'TR4W would start for an operator who is not there. '
+                   + 'Arguments: ' + string(CmdLine));
+        Halt(EXITCODE_UNATTENDED);
+        end;
      end;
 
   { Before anything else: no window, no config, no catalogue read. }
@@ -1513,13 +1520,6 @@ begin
    // GetMessage loop that owned the program until then is gone; what lived
    // inside it is in uAppInputHooks.
    InitLCLApplication;
-
-   (* AS SOON AS THERE IS AN APPLICATION TO HOOK.  The check at the top of this
-     routine refuses a line with no job; this ends a job that stops to ask. *)
-   if ArgumentsRequestUnattended(CommandLineStartupArgs) then
-      begin
-      InstallUnattendedGuard;
-      end;
 
    // HEADLESS FIELD ROUND-TRIP:  tr4w.exe /FIELDCHECK
    //

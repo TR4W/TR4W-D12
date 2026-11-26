@@ -15,7 +15,7 @@ unit uUnattendedGuard;
 
 interface
 
-(* Call once, after Application.Initialize. *)
+(* Call once, before anything that can open a window. *)
 procedure InstallUnattendedGuard;
 
 implementation

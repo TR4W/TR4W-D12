@@ -59,6 +59,11 @@ Test-Run 'a file that is not a log does not wait' 5 @($notALog)
 
 Test-Run '/IMPORTLOG still imports' 0 @('/IMPORTLOG', $trw, (Join-Path $work 'b.db'))
 
+# THE CASE THAT REACHES THE DIALOG HOOK. The line names a job, so the command-line
+# check passes it, and --help then opens the usage box.
+Test-Run 'a dialog in a headless job ends the run' 5 `
+   @((Join-Path $work 'b.db'), '/EXPORT', '--help')
+
 if (-not (Test-Path (Join-Path $work 'b.db'))) {
    Write-Output '  FAIL  /IMPORTLOG wrote no database'
    $script:failures++
