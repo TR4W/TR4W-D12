@@ -140,6 +140,14 @@ type
       procedure TestALiveEntryIsAllOrNothing;
       procedure TestAFullDiskRefusesTheWholeEntryAndTheRetryWritesOneSet;
       procedure TestALockedLogRefusesTheWholeEntry;
+      (* ISSUE 385 (2026-11-26): a WAE QTC book marks the QSOs it sent as
+         "sent in a QTC" in the SQLite log, with no .TRW beside it, and a
+         second book does not offer them again. *)
+      procedure TestAQTCMarksItsQSOsWithNoTrw;
+      procedure TestAStoppedQTCMarksOnlyWhatWasSent;
+      procedure TestALeftoverTrwChangesNothingInTheMark;
+      procedure TestAQTCMarkIgnoresZeroAndCollidingIds;
+      procedure TestAQTCMarkThatCannotCommitIsReported;
       (* A raw connection on FDb holding the write lock, and its release. *)
       function HoldWriteLock: TObject;
       procedure ReleaseWriteLock(var aHolder: TObject);
@@ -164,6 +172,8 @@ uses
    sqlite3conn,     (* sofReadWrite -- the lock holder's connection *)
    LOGWIND,         (* LastCQFrequency -- a session-state value to change *)
    LogStuff,        (* Sheet -- DupeAndMultSheet.SaveRestartFile *)
+   LOGWAE,          (* NumberAvailableQTCsForThisCall, QTCsToBeSendArray -- a QTC book *)
+   uQTCS,           (* QTCWasSend, MarkQTCBookSent -- the book's mark *)
    PostUnit;   (* ExportToADIF -- the export a deleted QSO must not reach *)
 
 const
@@ -2958,6 +2968,279 @@ begin
    end;
 end;
 
+(* ---------------------------------------------------------------------------
+  ISSUE 385 -- the WAE QTC mark
+  --------------------------------------------------------------------------- *)
+
+const
+   (* The station the QTC book is for -- in none of the fixture's QSOs. *)
+   QTC_CALL = 'DL0QTC';
+   SQL_QTC_MARKED = 'SELECT COUNT(*) FROM qso WHERE sent_in_qtc <> 0';
+
+(* THE BOOK'S CALLS, in order, '|'-joined: what a book offered. *)
+function QTCBookCalls(aCount: integer): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 1 to aCount do
+      begin
+      Result := Result + string(QTCsToBeSendArray[i].qsCall) + '|';
+      end;
+end;
+
+(* THE BOOK'S ROW IDS, the first aCount, ',' -joined in book order. *)
+function QTCBookRowIds(aFirst, aCount: integer): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := aFirst to aFirst + aCount - 1 do
+      begin
+      Result := Result + IntToStr(QTCsToBeSendRowIds[i]) + ',';
+      end;
+end;
+
+(* THE ROWS THE FILE aDb HOLDS MARKED SENT IN A QTC, ',' -joined in id order,
+  read through a connection of the test's own. *)
+function MarkedRowIdsIn(const aDb: string): string;
+var
+   db: TLogDatabase;
+   q: TSQLQuery;
+begin
+   Result := '';
+   db := TLogDatabase.Create;
+   try
+      db.OpenReadOnly(aDb);
+      q := TSQLQuery.Create(nil);
+      try
+         q.DataBase := db.Connection;
+         q.Transaction := db.Transaction;
+         q.UsePrimaryKeyAsKey := False;
+         q.SQL.Text := 'SELECT id FROM qso WHERE sent_in_qtc <> 0 ORDER BY id';
+         q.Open;
+         while not q.EOF do
+            begin
+            Result := Result + IntToStr(q.Fields[0].AsLargeInt) + ',';
+            q.Next;
+            end;
+         q.Close;
+      finally
+         q.Free;
+      end;
+   finally
+      db.Free;
+   end;
+end;
+
+(* The whole file, for "unchanged". *)
+function FileBytes(const aPath: string): RawByteString;
+var
+   s: TFileStream;
+begin
+   Result := '';
+   s := TFileStream.Create(aPath, fmOpenRead or fmShareDenyNone);
+   try
+      SetLength(Result, s.Size);
+      if s.Size > 0 then
+         begin
+         s.ReadBuffer(Result[1], s.Size);
+         end;
+   finally
+      s.Free;
+   end;
+end;
+
+procedure TLogStoreTests.TestAQTCMarksItsQSOsWithNoTrw;
+var
+   offered, before: integer;
+   firstBook, secondBook, firstRows: string;
+   i: integer;
+begin
+   BeginTest('issue 385: a QTC book marks its QSOs in the SQLite log with no .TRW, ' +
+             'and the next book does not offer them again');
+
+   PrepareMigration(FIXTURE_SET);
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      LogStoreClose;
+      DeleteFile(FTrw);
+      CheckFalse(FileExists(FTrw), 'precondition: no .TRW beside the log');
+      before := integer(ScalarFromFile(FDb, SQL_QTC_MARKED));
+      CheckEquals(0, before, 'precondition: the fixture holds no marked QSO');
+
+      CheckTrue(LogStoreEnsureOpen, 'the store reopens the log');
+      offered := NumberAvailableQTCsForThisCall(QTC_CALL);
+      CheckEquals(10, offered, 'a book of ten QSOs is offered');
+      firstBook := QTCBookCalls(offered);
+      firstRows := QTCBookRowIds(1, offered);
+
+      (* The whole book confirmed, as SaveQTCS marks it. *)
+      QTCWasSend := offered;
+      CheckTrue(MarkQTCBookSent(QTCWasSend), 'the mark reports itself saved');
+      LogStoreClose;
+
+      CheckEquals(before + offered, ScalarFromFile(FDb, SQL_QTC_MARKED),
+                  'on disk: every QSO of the book is marked sent in a QTC');
+      CheckEquals(firstRows, MarkedRowIdsIn(FDb),
+                  'and the marked rows are exactly the book''s');
+      CheckEquals(offered, ScalarFromFile(FDb,
+                  'SELECT COUNT(*) FROM qso WHERE sent_in_qtc <> 0 AND server_dirty <> 0'),
+                  'each marked row owes the server the edit');
+
+      (* AFTER A REOPEN, as after a restart. *)
+      CheckTrue(LogStoreEnsureOpen, 'the store reopens the log');
+      offered := NumberAvailableQTCsForThisCall(QTC_CALL);
+      CheckEquals(10, offered, 'a second book of ten is offered');
+      secondBook := QTCBookCalls(offered);
+      CheckTrue(firstBook <> secondBook,
+                'the next book does not offer the same QSOs again: ' + firstBook);
+      for i := 1 to offered do
+         begin
+         CheckEquals(0, Pos(',' + IntToStr(QTCsToBeSendRowIds[i]) + ',', ',' + firstRows),
+                     'no row of the first book is in the second');
+         end;
+      LogStoreClose;
+      CheckFalse(FileExists(FTrw), 'and no .TRW was created');
+   finally
+      QTCWasSend := 0;
+      LogStoreForgetFailureForTests;
+      Restore;
+   end;
+end;
+
+procedure TLogStoreTests.TestAStoppedQTCMarksOnlyWhatWasSent;
+var
+   offered: integer;
+   book, rest: string;
+begin
+   BeginTest('issue 385: a QTC book stopped after three marks those three only, ' +
+             'and the other seven are offered first next time');
+
+   PrepareMigration(FIXTURE_SET);
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      offered := NumberAvailableQTCsForThisCall(QTC_CALL);
+      CheckEquals(10, offered, 'a book of ten QSOs is offered');
+      book := QTCBookRowIds(1, 3);
+      rest := QTCBookRowIds(4, 7);
+
+      CheckTrue(MarkQTCBookSent(3), 'three confirmed: the mark is saved');
+      LogStoreClose;
+      CheckEquals(book, MarkedRowIdsIn(FDb), 'on disk: the three sent, and only they');
+
+      CheckTrue(LogStoreEnsureOpen, 'the store reopens the log');
+      offered := NumberAvailableQTCsForThisCall(QTC_CALL);
+      CheckEquals(rest, QTCBookRowIds(1, 7),
+                  'the next book begins with the seven that were not sent');
+      LogStoreClose;
+   finally
+      LogStoreForgetFailureForTests;
+      Restore;
+   end;
+end;
+
+procedure TLogStoreTests.TestALeftoverTrwChangesNothingInTheMark;
+var
+   offered: integer;
+   book: string;
+   trwBefore: RawByteString;
+   editedRow: Int64;
+begin
+   BeginTest('issue 385: a .TRW left beside the log is neither read nor written by the ' +
+             'mark, and an edit made since the book was offered is kept');
+
+   PrepareMigration(FIXTURE_SET);
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      CheckTrue(FileExists(FTrw), 'precondition: the migrated .TRW is still beside the log');
+      offered := NumberAvailableQTCsForThisCall(QTC_CALL);
+      CheckEquals(10, offered, 'a book of ten QSOs is offered');
+      book := QTCBookRowIds(1, offered);
+      editedRow := QTCsToBeSendRowIds[1];
+      LogStoreClose;
+
+      (* AN EDIT WHILE THE BOOK IS ON THE AIR -- the row no longer matches
+        the .TRW record at its position. *)
+      ExecOnFile(FDb, ['UPDATE qso SET callsign = ''N0EDIT'' WHERE id = ' +
+                       IntToStr(editedRow)]);
+      trwBefore := FileBytes(FTrw);
+
+      CheckTrue(MarkQTCBookSent(offered), 'the mark is saved');
+      LogStoreClose;
+
+      CheckEquals(book, MarkedRowIdsIn(FDb), 'on disk: exactly the book''s rows are marked');
+      CheckEquals(1, ScalarFromFile(FDb, 'SELECT COUNT(*) FROM qso WHERE callsign = ''N0EDIT'' ' +
+                  'AND sent_in_qtc <> 0 AND id = ' + IntToStr(editedRow)),
+                  'the edited row is marked and keeps its edit');
+      CheckTrue(trwBefore = FileBytes(FTrw), 'the .TRW is unchanged');
+   finally
+      LogStoreForgetFailureForTests;
+      Restore;
+   end;
+end;
+
+procedure TLogStoreTests.TestAQTCMarkIgnoresZeroAndCollidingIds;
+var
+   offered: integer;
+   book: string;
+begin
+   BeginTest('issue 385: QSOs whose id pair is (0, 0) or shared by others are ' +
+             'marked by their own row, and no other row is');
+
+   PrepareMigration(FIXTURE_SET);
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      LogStoreClose;
+      (* Half the rows an import's (0, 0), the rest one shared pair. *)
+      ExecOnFile(FDb, ['UPDATE qso SET session_id = 0, session_seq = 0 WHERE id % 2 = 0',
+                       'UPDATE qso SET session_id = 5, session_seq = 5 WHERE id % 2 = 1']);
+
+      CheckTrue(LogStoreEnsureOpen, 'the store reopens the log');
+      offered := NumberAvailableQTCsForThisCall(QTC_CALL);
+      CheckEquals(10, offered, 'a book of ten QSOs is offered');
+      book := QTCBookRowIds(1, offered);
+      CheckTrue(MarkQTCBookSent(offered), 'the mark is saved');
+      LogStoreClose;
+
+      CheckEquals(book, MarkedRowIdsIn(FDb), 'on disk: exactly the book''s rows are marked');
+   finally
+      LogStoreForgetFailureForTests;
+      Restore;
+   end;
+end;
+
+procedure TLogStoreTests.TestAQTCMarkThatCannotCommitIsReported;
+var
+   offered: integer;
+begin
+   BeginTest('issue 385: a QTC mark whose COMMIT fails answers False and the log ' +
+             'holds no mark');
+
+   PrepareMigration(FIXTURE_SET);
+   try
+      CheckTrue(LogStoreEnsureOpen, 'the open migrates the log');
+      LogStoreClose;
+      (* THE R2 TRAP: a deferred foreign key, checked only at COMMIT. *)
+      ExecOnFile(FDb, ['CREATE TABLE commit_trap_parent (id INTEGER PRIMARY KEY)',
+                       'CREATE TABLE commit_trap (parent_id INTEGER REFERENCES ' +
+                       'commit_trap_parent(id) DEFERRABLE INITIALLY DEFERRED)',
+                       'CREATE TRIGGER commit_trap_on_update AFTER UPDATE ON qso ' +
+                       'BEGIN INSERT INTO commit_trap (parent_id) VALUES (-1); END']);
+
+      CheckTrue(LogStoreEnsureOpen, 'the store reopens the trapped log');
+      offered := NumberAvailableQTCsForThisCall(QTC_CALL);
+      CheckEquals(10, offered, 'a book of ten QSOs is offered');
+      CheckFalse(MarkQTCBookSent(offered), 'a mark whose commit fails answers False');
+      LogStoreForgetFailureForTests;
+      LogStoreClose;
+      CheckEquals(0, ScalarFromFile(FDb, SQL_QTC_MARKED), 'on disk: no QSO is marked');
+   finally
+      LogStoreForgetFailureForTests;
+      Restore;
+   end;
+end;
+
 procedure TLogStoreTests.RunAllTests;
 begin
    TestTheClearBackupNameRule;
@@ -2994,6 +3277,11 @@ begin
    TestALiveEntryIsAllOrNothing;
    TestAFullDiskRefusesTheWholeEntryAndTheRetryWritesOneSet;
    TestALockedLogRefusesTheWholeEntry;
+   TestAQTCMarksItsQSOsWithNoTrw;
+   TestAStoppedQTCMarksOnlyWhatWasSent;
+   TestALeftoverTrwChangesNothingInTheMark;
+   TestAQTCMarkIgnoresZeroAndCollidingIds;
+   TestAQTCMarkThatCannotCommitIsReported;
 end;
 
 end.

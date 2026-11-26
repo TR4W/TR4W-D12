@@ -1359,8 +1359,40 @@ must not make the log unreadable.
   still disables -- the log is not viewable then. The ADIF import's batch
   (`LogStoreAppendQSOs`) rolls back and stays writable; the next write
   demotes. A running WRL worker fails on its own connection by itself.
-  `uQTCS` marks a QTC through `LogStoreUpdateQSOAtIndex` with no status-line
-  refusal (logged only).
+  (The QTC mark's refusal is on the status line since issue 385; see below.)
+
+## THE WAE QTC MARK IS WRITTEN BY ROW ID THROUGH THE STORE (issue 385, 2026-11-26)
+
+`uQTCS.SetSendedQSOs` scanned the `.TRW` (`OpenLogFile`) for each QSO's id
+pair and rewrote the DB row at the same FILE POSITION. Reproduced on a
+SQLite-only log (`uTestLogStore.TestAQTCMarksItsQSOsWithNoTrw`, old code):
+0 of 10 marked, the same ten offered again. With a leftover `.TRW` it wrote
+that file's stale records over the rows (read, not run on the old code).
+
+- **The book records its rows**: `LOGWAE.NumberAvailableQTCsForThisCall`
+  reads through `LogSourceNextWithRowId` and fills `QTCsToBeSendRowIds[1..10]`
+  beside `QTCsToBeSendArray` (the record's layout is unchanged). Not the id
+  pair: (0, 0) on imports, not unique in old logs.
+- **`uLogStore.LogStoreMarkSentInQTC(rowIds, aMarked)`**: in ONE transaction,
+  each row `LoadQSO` (fresh -- an edit made while the book was on the air is
+  kept), skipped if gone / deleted / not a QSO / already marked, else
+  `sent_in_qtc = 1`, `server_dirty = 1` via `UpdateQSO` (an existing write
+  path; no new kept statement), external-logger capture, COMMIT; True only
+  after it. Failure = `Disable` (busy refused, full disk read-only).
+- **`uQTCS.MarkQTCBookSent(aCount)`** (was `SetSendedQSOs`): marks the first
+  `aCount` (a stopped book marks what was confirmed), then
+  `SendRowToServer(NET_WIRE_EDIT_ID, rowId, NetQsoTag(...))` per marked row
+  with a network identity (a (0, 0) row is not sent, `SendRecordToServer`'s
+  rule). False: Warn line, `LogStoreChangeNotSavedText`, beep.
+- **The `.TRW` routines are DELETED** with it: `OpenLogFile`, `CloseLogFile`,
+  `tSetFilePointer`, `ReadVersionBlock`, `VC.LogHandle`; the ADIF import's
+  optional `.TRW` open is gone. Import (`uLogImport`) has its own reader.
+- **Not recovered**: logs whose QSOs were sent in a QTC under 5.0.x before
+  this fix hold the `rkQTCS` records (Kids = call, NumberSent = HHMM,
+  NumberReceived = serial) but no mark on the QSOs. Matching them back is
+  possible; not built (NY4I to decide).
+- Tests (`uTestLogStore`): no `.TRW` + reopen, a stopped book, a leftover
+  `.TRW` with an edited row, (0, 0) and colliding pairs, a failed COMMIT.
 
 ## TOOLS > CORRECT STATION FACTS: ONE my_* VALUE ON EVERY LOGGED QSO (issue 223, 2026-11-22)
 
@@ -1456,8 +1488,8 @@ UDP, HamScore and the multi-op server BEFORE the write.
   beeps, and returns False so the form stays open with its fields.
   `logsubs2.DeleteLastContact` (Alt-Y) writes first; only on True flips
   `tLastLogEntryIsDeleted`, posts, sends, reloads and shows the message.
-  BULK/PEER: `uQTCS` sends the QTC mark to the server only after a True and
-  logs a False; `uNet.FindAndUpdateQSOInLog` already rescored only on True;
+  BULK/PEER: `uQTCS` sends the QTC mark to the server only after a True
+  (issue 385: `LogStoreMarkSentInQTC`, by row id); `uNet.FindAndUpdateQSOInLog` already rescored only on True;
   the rescore (`LogStoreUpdateQSOsByRowId`) already returned a checked
   boolean.
 - **`LogStoreChangeNotSavedText`** (`SLogChangeNotSaved`) is the status line

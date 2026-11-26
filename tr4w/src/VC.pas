@@ -159,8 +159,8 @@ type
     These values -- $378, $278, $3BC -- are x86 I/O PORT ADDRESSES. They are
     not opened, not closed, and are never returned by the operating system.
     They were nonetheless declared `THandle` at every one of their eight
-    declaration sites, in exactly the way VC's own LogHandle comment describes
-    for a file handle typed HWND: the type said one thing while the code said
+    declaration sites, in exactly the way the .TRW file handle (now deleted)
+    was once typed HWND: the type said one thing while the code said
     another, and nothing objected because on Win32 both are 32-bit.
 
     IT STOPPED BEING HARMLESS THE MOMENT A SECOND TARGET EXISTED, and it took a
@@ -3280,11 +3280,6 @@ var
 
   UTC                                   : SYSTEMTIME;
 //  tLV_ITEM                              : TLVItem;
-  (* A FILE HANDLE, not a window. It goes to SetFilePointer, ReadFile,
-    SetEndOfFile, GetFileSize and CloseHandle. It was declared HWND and
-    compiled, because every Win32 handle is pointer-sized -- so the type said
-    "window" for years while the code said "file". *)
-  LogHandle                             : THandle;
 
 //  NET_CLEARLOG_MESSAGE                  : DWORD = 3030001000;
   NET_LOGINFO_MESSAGE                   : DWORD = 3030002000;
@@ -3326,7 +3321,8 @@ var
   CWThreadCounter                       : Cardinal;
   CWThreadID                            : TThreadID;
   (* A THREAD HANDLE, not a window: assigned from tCreateThread, passed to
-    SetThreadPriority and CloseHandle. Same mistyping as LogHandle above. *)
+    SetThreadPriority and CloseHandle. It was declared HWND, as the .TRW
+    file handle once was. *)
   CWThreadHandle                        : TThreadID;
   BnadmapThreadID                       : Cardinal;
 

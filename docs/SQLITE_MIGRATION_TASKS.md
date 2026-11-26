@@ -150,9 +150,11 @@ their logs in, it is covered by unit tests, and six D7 fixtures in
 `tr4w/test/unit/fixtures/binarylog/` pin it. Reading a `.TRW` to convert it is a
 different question from selecting one as a live source, and only the second was
 removed. A call-graph walk from the externally-referenced symbols confirmed the
-removal orphaned nothing: `MainUnit`'s `OpenLogFile`, `ReadVersionBlock`,
-`ReadLogFile` and `CloseLogFile` all retain live callers in `uNet`, `uQTCS`,
-`uLogCompareForm` and `MainUnit` itself.
+removal orphaned nothing at the time. (Those binary-file routines --
+`OpenLogFile`, `ReadVersionBlock`, `ReadLogFile`, `CloseLogFile`,
+`tSetFilePointer` and the `LogHandle` global -- are all DELETED since: the last
+live caller, the WAE QTC mark, now writes through the store; issue 385,
+2026-11-26.)
 
 **B4 IS DONE.** Every log READ goes through `uLogSource` and the default is the
 database: `tr4w/test/corpus/export-d12-corpus.sh` passes against the D7

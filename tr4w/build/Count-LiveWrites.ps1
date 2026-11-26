@@ -62,7 +62,9 @@ param(
 # uAppPaths + uFileText instead.
 # 42 at birth: the residual list is in the issue 165 commit message, each site
 # with why it is not converted yet.
-$WRITE_CEILING = 40
+# 40 -> 39, 2026-11-26: MainUnit.OpenLogFile (the .TRW opened read-write)
+# deleted with the other .TRW file routines (issue 385).
+$WRITE_CEILING = 39
 # Floors for -Gate: fewer than these means the reader failed, not that the tree
 # is clean.
 $FILE_FLOOR  = 300

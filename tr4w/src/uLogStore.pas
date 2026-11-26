@@ -134,9 +134,8 @@ function LogStoreCurrentMyFacts: TQsoMyFacts;
   them, so its ADIF is the record the export will write later. *)
 function CaptureMyFactsNow(const aQso: ContestExchange): TQsoMyFacts;
 
-(* Rewrites the log's newest row -- the three sites that used to seek back one
-  record in the binary log (DeleteLastContact, uNet.UpdateRec,
-  uQTCS.SetSendedQSOs).  Writes even when this call migrated the log: the .TRW
+(* Rewrites the log's newest row -- what Alt-Y (DeleteLastContact) rewrites.
+  Writes even when this call migrated the log: the .TRW
   never holds the rewrite.  Never raises.
 
   TRUE ONLY WHEN THE REWRITE IS COMMITTED (issue 349, 2026-11-22): the row
@@ -205,6 +204,21 @@ type
   the same rule as every other write here: LogStoreIsUsable then says so,
   which is what /RESCORE's exit code reads. Never raises. *)
 function LogStoreUpdateQSOsByRowId(aUpdates: TLogRowUpdates): boolean;
+
+(* MARKS THE QSOS OF A WAE QTC BOOK "SENT IN A QTC", BY ROW ID, IN ONE
+  TRANSACTION (issue 385). aRowIds are the rows the book was offered from
+  (LOGWAE captures them). Each row is READ HERE, inside the transaction, and
+  only its sent_in_qtc and server_dirty change -- an edit made since the book
+  was offered is kept. A row that is gone, deleted, not a QSO or already
+  marked is skipped (logged). aMarked (the caller's, empty) receives every
+  row as written, for the network; read it only after a True.
+
+  True only after the COMMIT (also when nothing needed marking). False for
+  a disabled or read-only store or a failed write, which takes the store's
+  usual failure rules (Disable: busy refused, full disk read-only) and
+  leaves the log as it was. Never raises. *)
+function LogStoreMarkSentInQTC(const aRowIds: array of Int64;
+                               aMarked: TLogRowUpdates): boolean;
 
 type
    (* Re-exported for the same reason as TLogRowUpdates. *)
@@ -4222,6 +4236,95 @@ begin
          Disable('rewriting ' + string(IntToStr(aUpdates.Count)) + ' QSOs in one ' +
                  'transaction -- ROLLED BACK, so the log is as it was ' +
                  'before this pass', E);
+         end;
+   end;
+end;
+
+function LogStoreMarkSentInQTC(const aRowIds: array of Int64;
+                               aMarked: TLogRowUpdates): boolean;
+const
+   WHAT = 'marking QSOs sent in a QTC';
+var
+   i: integer;
+   rec: ContestExchange;
+   rebuilt: boolean;
+begin
+   (* FALSE UNTIL A COMMIT SAYS OTHERWISE -- AppendLiveQSOsOnce's rule. *)
+   Result := False;
+   if GDisabled then
+      begin
+      Exit;
+      end;
+
+   try
+      if not EnsureOpen(rebuilt) then
+         begin
+         Exit;
+         end;
+      if RefuseReadOnly(WHAT) then
+         begin
+         Exit;
+         end;
+      BeginMainWrite;
+
+      for i := Low(aRowIds) to High(aRowIds) do
+         begin
+         if not GRepository.LoadQSO(aRowIds[i], rec) then
+            begin
+            if logger <> nil then
+               begin
+               logger.Warn('[LogStore] %s: row %d is not in the log -- not marked',
+                           [WHAT, aRowIds[i]]);
+               end;
+            Continue;
+            end;
+         if (rec.ceRecordKind <> rkQSO) or rec.ceQSO_Deleted then
+            begin
+            if logger <> nil then
+               begin
+               logger.Warn('[LogStore] %s: row %d (%s) is no longer a QSO in the ' +
+                           'log -- not marked', [WHAT, aRowIds[i], string(rec.Callsign)]);
+               end;
+            Continue;
+            end;
+         if rec.ceWasSendInQTC then
+            begin
+            Continue;
+            end;
+
+         rec.ceWasSendInQTC := True;
+         (* The server hears of it as an edit; until the writer has sent it,
+           the row is owed (a resend on the next link). *)
+         rec.ceNeedSendToServerAE := True;
+         if not GRepository.UpdateQSO(aRowIds[i], rec) then
+            begin
+            (* Rolls back the rows marked before it too: one transaction. *)
+            AbandonUnchangedUpdate(WHAT, aRowIds[i]);
+            Exit;
+            end;
+         if externalLogger <> nil then
+            begin
+            externalLogger.CaptureSavedQso(GDatabase, GRepository, aRowIds[i], False);
+            end;
+         aMarked.Add(aRowIds[i], rec);
+         end;
+
+      if aMarked.Count > 0 then
+         begin
+         GRepository.Commit;
+         end;
+
+      (* AND ONLY NOW. *)
+      Result := True;
+      if aMarked.Count > 0 then
+         begin
+         LogStoreStartExternalDelivery;
+         end;
+   except
+      on E: Exception do
+         begin
+         Result := False;
+         Disable(WHAT, E);
          end;
    end;
 end;

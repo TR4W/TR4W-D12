@@ -601,9 +601,6 @@ type
         False when there is no such row. *)
       function UpdateQSO(aRowId: Int64; const aQso: ContestExchange): boolean;
 
-      (* The newest row, which is what the three "seek back one record" sites
-        want: DeleteLastContact, uNet.UpdateRec and uQTCS.SetSendedQSOs all
-        rewrite the record they have just written. *)
       (* THE LOG'S CONTEST, WHICH IS NOT ON THE QSO ROW.
 
         ceContest is stored once, on the contest row, because one log is one

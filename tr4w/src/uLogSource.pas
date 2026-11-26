@@ -168,7 +168,7 @@ function LogSourceReadNewestStation(out aFacts: TQsoMyFacts;
 
 (* HOW MANY QSO RECORDS THE LOG HOLDS.  -1 if it cannot be read.
 
-  Callers asked this with Windows.GetFileSize(LogHandle) arithmetic, which is
+  Callers asked this with GetFileSize arithmetic on the .TRW, which is
   three separate assumptions about the store: that it is a file, that its
   records are fixed width, and that its header is one record long. A count is
   the question they were actually asking.
@@ -192,8 +192,7 @@ function LogSourceHasRoverQSO: boolean;
 
 (* THE aOffsetFromEnd'th RECORD BACK FROM THE END: 1 is the last one logged.
 
-  What a reverse scan wants, and what `tSetFilePointer(-n * SizeOf(rec),
-  FILE_END)` meant. Independent of any sequential read in progress, so a caller
+  What a reverse scan wants (the old .TRW seek from FILE_END). Independent of any sequential read in progress, so a caller
   may use it without disturbing an open cursor. False when there is no such
   record. *)
 function LogSourceReadFromEnd(aOffsetFromEnd: Int64;
@@ -251,10 +250,8 @@ var
    GOpen: boolean = False;
 
 (* THE READ SOURCE IS A SINGLE GLOBAL CURSOR, so it cannot be opened twice --
-  and neither could the thing it replaces: MainUnit's OpenLogFile stores one
-  handle in the LogHandle global, so a nested open OVERWRITES it, leaks the
-  first, and then CloseLogFile shuts the inner one while the outer loop believes
-  it is still reading.
+  and neither could the binary-file reader it replaced (one global handle: a
+  nested open overwrote and leaked the first).
 
   That is a real hazard in this file's shape. PostUnit's readers each open and
   close, and one of them -- GetOperatorsFromLog -- is called from inside another

@@ -66,6 +66,10 @@ type
 
 var
   QTCsToBeSendArray                     : array[1..10] of TQTCsToBeSend;
+  (* THE LOG ROW OF EACH QSO IN THE BOOK, captured when the book is offered
+    (issue 385). The mark is written to THESE rows: the id pair is (0, 0) on
+    an imported QSO and not unique in old logs, so it cannot name a row. *)
+  QTCsToBeSendRowIds                    : array[1..10] of Int64;
 //  QTCNote                          : Str80;
   (* QTCExtraSpace and QTCQRS are gone (2026-09-12) --
     Settings.Qtc.ExtraSpace and Settings.Qtc.Qrs. *)
@@ -273,15 +277,21 @@ label
   1, 2;
 var
   QTCs                                  : integer;
+  rowId                                 : Int64;
 begin
   Result := 0;
   if not LogSourceOpen then Exit;
   QTCs := 0;
   LogSourceRewind;
   FillChar(QTCsToBeSendArray, SizeOf(QTCsToBeSendArray), 0);
+  for QTCs := Low(QTCsToBeSendRowIds) to High(QTCsToBeSendRowIds) do
+     begin
+     QTCsToBeSendRowIds[QTCs] := 0;
+     end;
+  QTCs := 0;
   QTCsToBeSendArray[1].qsID := NET_THIS_QTC_WAS__SEND_ID;
   1:
-  if LogSourceNext( TempRXData ) then
+  if LogSourceNextWithRowId( rowId, TempRXData ) then
      begin
      if GoodLookingQSO then
        if TempRXData.ceDupe = False then
@@ -294,6 +304,7 @@ begin
              QTCsToBeSendArray[QTCs].qsNumber := TempRXData.NumberReceived;
              QTCsToBeSendArray[QTCs].qsQSOID1 := TempRXData.ceQSOID1;
              QTCsToBeSendArray[QTCs].qsQSOID2 := TempRXData.ceQSOID2;
+             QTCsToBeSendRowIds[QTCs] := rowId;
              end;
           if QTCs = 10 then
              begin

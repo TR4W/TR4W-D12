@@ -502,17 +502,12 @@ procedure SetWindowSize;
 (* The scale globals -- ws, ws2, MainWindowChildsWidth -- for aWS.
   SetWindowSize is this at the starting scale, MainWindowScale. *)
 procedure ApplyMainWindowScale(const aWS: integer);
-function OpenLogFile: boolean;
-function tSetFilePointer(lDistanceToMove: LONGINT; aOrigin: Longint): Int64;
-
-procedure CloseLogFile;
 procedure ShowPreviousDupeQSOsWnd(show: boolean);
 procedure TryPutSpaceinExchangeWindow;
 procedure ShowInformation;
 procedure QuickQSLProcedure(Key: Char);
 procedure StartSendingNow(FromKeyBoard: boolean);
 procedure ClearLog;
-procedure ReadVersionBlock;
 //function TryToCheckTheLatestVersion: boolean;
 procedure tGetSystemTime;
 procedure SystemTimeChanging;
@@ -10472,63 +10467,10 @@ begin
      end;
 end;
 
-(* THE BINARY .TRW PRIMITIVES, ON THE RTL (2026-09-08, NY4I).
-
-  These four are one set -- they all act on the LogHandle global -- so they
-  convert together or not at all. FileOpen, FileSeek, FileRead and FileClose
-  take the very same THandle and on Windows ARE CreateFile, SetFilePointer,
-  ReadFile and CloseHandle, so this is a spelling change.
-
-  WHAT THIS IS STILL FOR, since the database is the default read source: the
-  historical .TRW is what an operator upgrading actually has on disk, and it is
-  what the ADIF import appends to and what the version-block reader walks. It
-  is a converter's path, not the log-reading path -- ReCalculateHourDisplay was
-  the last routine using it to ask a question the database can answer, and it
-  no longer does.
-
-  fmShareDenyNone matches FILE_SHARE_READ or FILE_SHARE_WRITE. There is no RTL
-  equivalent of FILE_FLAG_SEQUENTIAL_SCAN and none is wanted: it is a cache
-  hint, not semantics. *)
-function tSetFilePointer(lDistanceToMove: LONGINT; aOrigin: Longint): Int64;
-begin
-  (* SysUtils' fsFrom* origins, not Win32's dwMoveMethod. The VALUES are
-    identical -- FILE_BEGIN/CURRENT/END and fsFromBeginning/fsFromCurrent/
-    fsFromEnd are both 0/1/2 -- so this is the same seek; what changes is that
-    the two remaining callers no longer import Windows constants.
-
-    Longint, not Classes' TSeekOrigin: fsFrom* ARE Longint constants in
-    SysUtils, and FileSeek's Int64 overload takes a Longint origin. Those two
-    spellings are easy to confuse and the compiler catches it.
-
-    IT RETURNS THE NEW POSITION NOW. The old body threw SetFilePointer's result
-    away and returned Low(Cardinal) unconditionally, so every caller that
-    looked at it saw 0 whether the seek worked or not. No caller did look;
-    returning the truth costs nothing and removes a trap. *)
-  Result := FileSeek(LogHandle, Int64(lDistanceToMove), aOrigin);
-end;
-
-function OpenLogFile: boolean;
-var
-  h: THandle;
-begin
-  h := FileOpen(CharBufferText(TR4W_LOG_FILENAME), fmOpenReadWrite or fmShareDenyNone);
-  Result := h <> THandle(feInvalidHandle);
-  if Result then
-     begin
-     LogHandle := h;
-     end;
-end;
-
-procedure CloseLogFile;
-begin
-  FileClose(LogHandle);
-end;
-
-(* ReadLogFile STOOD HERE and is gone (2026-10-27): its last caller was the
-  offline resend, uNet.CommitChangesInLocalLog, which read the .TRW record by
-  record and was replaced by a read of the SQLite log (Phase 1, C5). The two
-  that remain have live callers: OpenLogFile (uQTCS.SetSendedQSOs and the ADIF
-  import's optional binary-log append) and ReadVersionBlock (uQTCS). *)
+(* THE BINARY .TRW FILE ROUTINES ARE GONE (OpenLogFile, CloseLogFile,
+  ReadLogFile, tSetFilePointer, ReadVersionBlock and the LogHandle global;
+  issue 385, 2026-11-26). Every log read and write goes through the SQLite
+  store; a .TRW is only ever IMPORTED, by uLogImport's own reader. *)
 
 (* THE B4 LIST AND THE LOG SHARE ONE RECTANGLE, so showing either hides the
   other. Both are LCL grids now -- see TR4WPreviousDupesShow, which owns the
@@ -10808,11 +10750,6 @@ begin
 
 end;
 }
-
-procedure ReadVersionBlock;
-begin
-  tSetFilePointer(SizeOfTLogHeader, fsFromBeginning);
-end;
 
 (* MakeTestLog WAS DELETED HERE (2026-09-08). It wrote 30,000 random QSOs
   into a hardcoded C:	est.trw with sWriteFile -- a developer scratch routine
@@ -11647,9 +11584,6 @@ var
   cbmKey              : string;
   cbmKeyIdx           : Integer;
   priorQTHForKey      : string;
-  (* Whether THIS routine opened the binary log, so it closes only what it
-    opened -- CloseLogFile closes LogHandle unconditionally. *)
-  binaryLogOpen       : boolean;
 
   procedure DisplayLoadedQSOs;
   begin
@@ -11854,22 +11788,8 @@ begin
      Exit;
      end;
 
-  (* THE BINARY LOG IS OPTIONAL HERE, AND THAT IS THE WHOLE POINT OF THIS
-    ROUTINE NOW.
-
-    Nothing between here and CloseLogFile writes a byte to it -- the records go
-    to the contest database through LogStoreAppendQSOs below, which is the only
-    append path left. The open and the seek are what remain of the days when an
-    import appended to the .TRW.
-
-    REFUSING WITHOUT ONE BROKE THE CASE THIS EXISTS FOR. A contest converted
-    from a D7 ADIF has no .TRW at all -- that is what makes it a conversion --
-    so demanding one turned "import my old log" into "Cannot open log file"
-    with nothing imported (NY4I, 2026-09-12: export from D7, import here).
-
-    So it is opened if it is there, because an operator who still has one
-    should keep whatever that buys, and its absence is a log line rather than
-    a refusal. *)
+  (* AN IMPORT WRITES TO THE CONTEST DATABASE ONLY (LogStoreAppendQSOs, below);
+    no .TRW is opened, read or needed. *)
   (* THIS CONTEST'S STATION, AS A QSO LOGGED NOW WOULD RECORD IT -- what an
     imported record that names none is given (NY4I, 2026-10-18). Taken once:
     nothing in the import changes it. *)
@@ -11883,17 +11803,6 @@ begin
      differExample[myField] := '';
      end;
   myFactsNote := '';
-
-  binaryLogOpen := OpenLogFile;
-  if binaryLogOpen then
-     begin
-     tSetFilePointer(0, fsFromEnd);
-     end
-  else
-     begin
-     logger.Info('[Import] no binary log to open -- importing into the '
-                 + 'contest database only, which is where the QSOs go anyway');
-     end;
 
   AssignFile(adif, adifFileName);
   QSOCounter := 0;
@@ -12027,11 +11936,6 @@ begin
           end;
        end;
     CloseFile(adif);
-
-    if binaryLogOpen then
-       begin
-       CloseLogFile;
-       end;
 
     (* THE CONTEST REFUSED A RECORD: NOTHING IS IMPORTED (Q112's ruling, see
       the loop). Reported before the station question is asked -- there is

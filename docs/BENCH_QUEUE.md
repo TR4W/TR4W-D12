@@ -188,6 +188,16 @@ at what they cover; this is the list of what they cannot see.
 
 ---
 
+## Added 2026-11-26 -- WAE: QSOs SENT IN A QTC ARE MARKED IN THE LOG AND NOT OFFERED AGAIN (issue 385; log-database, contest-scoring, multi-op-network)
+
+The mark was written through the old `.TRW` file, which this build does not write, so on a new log no QSO was ever marked sent and the next QTC offered the same ones again. It now goes to the SQLite log by row, in one transaction. Unit-tested on a real log; never run in the program.
+
+- [ ] **Non-European station (QTC sender), new WAE log, no `.TRW` in the contest folder.** Log at least 15 QSOs with EU stations. Put a further EU call in the call window and press the QTC key. EXPECT "QTC 1/10" and a send window listing the first ten QSOs. Send all ten (Enter through the book) and answer Yes to "QSL 1/10 ?". Then call a different EU station and ask for a QTC again. EXPECT the book to start with the 11th QSO, none of the first ten.
+- [ ] **The mark survives a restart:** close TR4W, reopen the log, and ask for a QTC. EXPECT the same as above: none of the first ten. Edit QSO on one of them: nothing in it changed, and tr4w.log has no "[QTC] ... NOT saved" line.
+- [ ] **A stopped book:** start a book, send three, press Stop, answer that QTC 3 was confirmed. EXPECT the next book to start with the 4th QSO of the stopped one.
+- [ ] **Multi-op (two stations, TR4WServer):** send a QTC book on station A. EXPECT no error on B, and on B the same ten QSOs not offered in B's next QTC book (B received the marks as edits).
+- [ ] **A log with a `.TRW` left beside it** (a log migrated from 4.x): the QTC works as above and the `.TRW`'s date does not change.
+
 ## Added 2026-11-26 -- PREFERENCES: PLACED ROWS NO LONGER CLIPPED, NETWORK HINTS FLOW, CW OUTPUT WIDER, ALERT COLOR HAS A CONTROL (lcl-ui)
 
 A placed block (`uPrefsForm.NewGeneratedBlock`) is now as wide as its page by anchors; in 5.1.3 it copied a 150 px width from a page that had not been shown, and every row control at x=330 was cut off. `uTestPrefsLayout` measures it on a shown form; it had not been run when this item was written.

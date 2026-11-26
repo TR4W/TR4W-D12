@@ -54,7 +54,12 @@ procedure QTCSendCommand(const aCommand: integer);
 
 procedure SendQTC(QTC: integer);
 procedure SaveQTCS;
-procedure SetSendedQSOs;
+
+(* MARKS THE FIRST aCount QSOS OF THE BOOK (LOGWAE.QTCsToBeSendRowIds) "SENT
+  IN A QTC" in the log, in one transaction, and only then tells the server of
+  each (issue 385). False when the log did not take the mark: logged, the
+  status line says NOT SAVED, and nothing is sent. *)
+function MarkQTCBookSent(aCount: integer): boolean;
 
 const
   // QTC_HK_* and RegQTCSHotKeys are GONE with the dialog.  PageUp, PageDown and
@@ -108,6 +113,8 @@ uses
      cycle. uLogStore never raises and never blocks logging. }
    uLogStore,
   uNet,
+  uNetResend,       (* QsoHasNetworkIdentity, NetQsoTag -- the mark's send *)
+  LogK1EA,          (* DoABeep -- a mark the log did not take *)
   LOGSUBS2,
   LOGWAE,
   uQTCSendForm,
@@ -328,84 +335,71 @@ begin
         end;
      end;
   inc(NumberQTCBooksSent);
-  SetSendedQSOs;
+  MarkQTCBookSent(QTCWasSend);
   { The book is saved, so the window goes WITHOUT asking whether the operator
     means to abandon it -- EndDialog had the same property, it did not go back
     through WM_CLOSE. }
   CloseQTCSendWindow;
 end;
 
-procedure SetSendedQSOs;
-label
-  1, 2;
+(* THE MARK GOES TO THE ROWS THE BOOK WAS OFFERED FROM (issue 385).
+
+  This scanned the binary .TRW for each QSO's id pair and rewrote the
+  database row at the same FILE POSITION. Nothing writes a .TRW any more, so
+  on a log made by this build it found no file and marked nothing: the same
+  QSOs were offered in the next book. With a leftover .TRW it rewrote rows
+  with that file's stale records. *)
+function MarkQTCBookSent(aCount: integer): boolean;
 var
-  pNumberOfBytesRead                    : LongInt;   { FileRead's result }
- 
-  SignedQSOs                            : integer;
-  (* WHICH record the scan is standing on, 0-based.  See the update below. *)
-  RecordIndex                           : integer;
+   rowIds: array of Int64;
+   marked: TLogRowUpdates;
+   rec: ContestExchange;
+   i: integer;
 begin
-  if not OpenLogFile then Exit;
-  ReadVersionBlock;
-  SignedQSOs := 1;
-  RecordIndex := -1;
-  1:
-  (* FileRead RETURNS the count that ReadFile delivered through a var
-       parameter, and -1 on failure. The variable is signed now so a
-       failure stays negative instead of becoming a huge Cardinal; the
-       test below is unchanged either way, since neither equals the
-       record size. *)
-  pNumberOfBytesRead := FileRead(LogHandle, TempRXData, SizeOf(ContestExchange));
-  if pNumberOfBytesRead = SizeOf(ContestExchange) then
-     begin
-     inc(RecordIndex);
-     if TempRXData.ceWasSendInQTC = True then
-        begin
-        goto 1;
-        end;
-     if (TempRXData.ceQSOID1 = QTCsToBeSendArray[SignedQSOs].qsQSOID1) and (TempRXData.ceQSOID2 = QTCsToBeSendArray[SignedQSOs].qsQSOID2) then
-        begin
-        TempRXData.ceWasSendInQTC := True;
+   Result := True;
+   if aCount > High(QTCsToBeSendRowIds) then
+      begin
+      aCount := High(QTCsToBeSendRowIds);
+      end;
+   if aCount < 1 then
+      begin
+      Exit;
+      end;
 
-        (* BY INDEX, NOT "THE NEWEST" -- and calling it "the newest" was wrong.
+   SetLength(rowIds, aCount);
+   for i := 1 to aCount do
+      begin
+      rowIds[i - 1] := QTCsToBeSendRowIds[i];
+      end;
 
-           This scan runs FORWARD from ReadVersionBlock, so the seek above is
-           -1 from CURRENT: the record just read, anywhere in the log. The
-           database call beside it said LogStoreUpdateNewestQSO, which rewrote
-           the LAST row instead. So the binary log marked the right QSO as sent
-           in a QTC and the database marked a different one -- and since B4 the
-           database is what every window and every export reads.
+   marked := TLogRowUpdates.Create;
+   try
+      Result := LogStoreMarkSentInQTC(rowIds, marked);
+      if not Result then
+         begin
+         logger.Warn('[QTC] the "sent in a QTC" mark on %d QSO(s) of QTC %d was ' +
+                     'NOT saved; nothing was sent to the server', [aCount, QTCNumber]);
+         QuickDisplay(LogStoreChangeNotSavedText);
+         DoABeep(Warning);
+         Exit;
+         end;
 
-           The three sites that legitimately mean "the newest" all seek
-           FILE_END; this one never did. *)
-        TempRXData.ceNeedSendToServerAE := True;
-        (* THE SERVER HEARS OF THE MARK ONLY ONCE IT IS IN THE LOG (issue
-           349). A mark the log did not take is logged (the store has said
-           why) and not sent; the QTC itself has gone, so the scan goes on. *)
-        if LogStoreUpdateQSOAtIndex(RecordIndex, TempRXData) then
-           begin
-           if SendRecordToServer(NET_WIRE_EDIT_ID, TempRXData) then
-              begin
-              Sleep(50);
-              end;
-           end
-        else
-           begin
-           logger.Warn('[QTC] the "sent in a QTC" mark on record %d (%s) was ' +
-                       'NOT saved; not sent to the server',
-                       [RecordIndex, string(TempRXData.Callsign)]);
-           end;
-        if SignedQSOs = QTCWasSend then
-           begin
-           goto 2;
-           end;
-        inc(SignedQSOs);
-        end;
-     goto 1;
-     end;
-  2:
-  CloseLogFile;
-
+      (* THE SERVER HEARS OF THE MARK ONLY ONCE IT IS IN THE LOG (issue 349),
+        BY ROW: the id pair is only the settle tag. A row with no pair (an
+        import's) cannot be settled by the server, so it is not sent --
+        SendRecordToServer's rule. The send is queued to the writer thread. *)
+      for i := 0 to marked.Count - 1 do
+         begin
+         rec := marked.Row(i);
+         if QsoHasNetworkIdentity(rec) then
+            begin
+            SendRowToServer(NET_WIRE_EDIT_ID, marked.RowId(i),
+                            NetQsoTag(rec.ceQSOID1, rec.ceQSOID2));
+            end;
+         end;
+   finally
+      marked.Free;
+   end;
 end;
 
 procedure ShowQTCSend;

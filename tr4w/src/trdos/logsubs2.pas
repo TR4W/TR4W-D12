@@ -3562,7 +3562,7 @@ end;
 // good QSO via HamScoreOnLog so the server can rebuild its view from
 // scratch.  Pairs with HamScoreResyncFromScratch which enqueues the
 // <deletelog> separator first.  Mirrors SendFullLogToUDP's iteration
-// pattern (same OpenLogFile / ReadLogFile / GoodLookingQSO trio).
+// pattern (LogSourceOpen / LogSourceNext / GoodLookingQSO).
 function DeliverLogToHamScore(aSink: THamScoreRowSink): integer;
 var
   nCount: Integer;
@@ -3574,7 +3574,6 @@ begin
   if not LogSourceOpen then
      begin
      logger.Error('[SendFullLogToHamScore] Could not open log file');
-     FileClose(tReportFileWrite);   { a FILE handle -- postunit.pas:191 }
      Exit;
      end;
   try
@@ -3616,7 +3615,6 @@ begin
    if not LogSourceOpen then
       begin
       logger.error('[SendFullLogToUDP] Could not open log file');
-      FileClose(tReportFileWrite);   { a FILE handle -- postunit.pas:191 }
       Exit;
       end;
 
@@ -3650,10 +3648,13 @@ begin
                end;
             end;
          end;
-      CloseLogFile;
       Logger.Info('%d records sent to UDP',[nCount]);
       QuickDisplay(SysUtils.Format(AnsiString('%d log records sent to UDP'), [nCount]));
    finally
+      (* LogSourceOpen's pair. This called CloseLogFile, which closed the
+        stale .TRW handle number in LogHandle -- a file it never opened --
+        and left the log source open. *)
+      LogSourceClose;
       replay.Free;
       FormatSettings.DecimalSeparator := SaveDecimalSeparator;
    end;
