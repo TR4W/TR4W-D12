@@ -100,14 +100,21 @@ def qso_lines(folder):
    return found
 
 
+def same_form(token):
+   return str(int(token)) if token.isdigit() else token
+
+
 def check_line(line, case):
    """QSO: freq mode date time mycall <sent...> call <received...>.  The
-   frequency, mode, date and time are the run's own and are not checked."""
+   frequency, mode, date and time are the run's own and are not checked.
+   A field that is all digits on both sides is compared as a number: sponsors'
+   samples write serial 1 where a logger writes 001.  A report stays exact in
+   effect (59 and 599 are different numbers)."""
    tokens = line.split()
    expected = ([case['station']['MY CALL']] + case['sent'] +
                [case['worked']] + case['received'])
    actual = tokens[5:]
-   if actual != expected:
+   if [same_form(t) for t in actual] != [same_form(t) for t in expected]:
       return ['expected: ' + ' '.join(expected),
               'got:      ' + ' '.join(actual),
               'line:     ' + line]
@@ -133,7 +140,7 @@ def run_case(exe, case):
 
    start = log_size()
    code = run(exe, [log, '/ENTERQSO', case['worked'], case['typed'],
-                    '--settings', settings, '--new-contest-from=' + handoff])
+                    case['band'], case['mode'], '--settings', settings, '--new-contest-from=' + handoff])
    refused = refused_settings(start)
    if refused is None:
       return ['no %s, so a refused setting could not be seen' % PROGRAM_LOG]

@@ -929,7 +929,8 @@ begin
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
       '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
-      '  /ENTERQSO <call> <exchange>  log one contact as Enter does, then exit' + sLineBreak +
+      '  /ENTERQSO <call> <exchange> <band> <mode>' + sLineBreak +
+      '                     log one contact as Enter does, then exit' + sLineBreak +
       '  /MATRIX <out> <id> write this contest''s legacy-fixture record, then exit' + sLineBreak +
       '  /MATRIXLIST <out>  list every contest for the matrix, then exit' + sLineBreak +
       '  --unattended       nobody is here: exit with code 5 unless the line' + sLineBreak +
@@ -1410,6 +1411,38 @@ begin
                    'so New Contest is shown instead', [handOff]);
       Result := True;
       end;
+end;
+
+(* THE BAND AND MODE OF A /ENTERQSO CONTACT, spelled as TR4W shows them
+  ('80', 'SSB'). With no radio the program starts on 160 m CW, which many
+  contests refuse, so the caller says. False for a name that is neither. *)
+function SetEntryBandAndMode(const aBand, aMode: string): boolean;
+var
+   band: BandType;
+   mode: ModeType;
+   bandFound, modeFound: boolean;
+begin
+   bandFound := False;
+   for band := Low(BandType) to High(BandType) do
+      begin
+      if UnicodeSameText(BandStringsArrayWithOutSpaces[band], aBand) then
+         begin
+         ActiveBand := band;
+         bandFound := True;
+         Break;
+         end;
+      end;
+   modeFound := False;
+   for mode := Low(ModeType) to High(ModeType) do
+      begin
+      if UnicodeSameText(ModeStringArray[mode], aMode) then
+         begin
+         ActiveMode := mode;
+         modeFound := True;
+         Break;
+         end;
+      end;
+   Result := bandFound and modeFound;
 end;
 
 procedure RunTR4W;
@@ -2983,7 +3016,7 @@ begin
      Halt(RunContestMatrix(PositionalArgument(3), PositionalArgument(4)));
      end;
 
-  (* <log> /ENTERQSO <call> <exchange> -- ONE CONTACT, ENTERED AS ENTER
+  (* <log> /ENTERQSO <call> <exchange> <band> <mode> -- ONE CONTACT, ENTERED AS ENTER
     DOES (issue 390): the per-contest export test types into the two entry
     strings and calls MainUnit.TryLogContact, which parses, scores, commits
     and publishes. Exit 0 saved; 6 refused or not saved, with the reason in
@@ -2994,6 +3027,12 @@ begin
        record its contest. Without it the contact carries no contest and the
        append stamps the log with that. *)
      ClearContestExchange(ReceivedData);
+     if not SetEntryBandAndMode(PositionalArgument(5), PositionalArgument(6)) then
+        begin
+        logger.Error('[EnterQSO] not a band and a mode: "%s" "%s"',
+                     [PositionalArgument(5), PositionalArgument(6)]);
+        Halt(EXITCODE_ENTRY_REFUSED);
+        end;
      CallWindowString := ShortString(PositionalArgument(3));
      ExchangeWindowString := ShortString(PositionalArgument(4));
      if TryLogContact then

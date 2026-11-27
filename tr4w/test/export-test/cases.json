@@ -14,8 +14,201 @@
       },
       "worked": "JA1ABC",
       "typed": "599 25M",
-      "sent": ["599", "10M"],
-      "received": ["599", "25M"],
+      "band": "80",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "10M"
+      ],
+      "received": [
+         "599",
+         "25M"
+      ],
       "source": "JARL e-log format page, ALL JA sample '599 10M 599 25M', http://www.jarl.org/Japanese/1_Tanoshimo/1-1_Contest/logformat.html (read 2026-11-26). Power letter joined: NY4I, Q1, 2026-10-15. Prefecture 10 and class M are test values, not NY4I's station."
+   },
+   {
+      "name": "CQ-WPX-CW",
+      "contest": "CQ-WPX-CW",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA"
+      },
+      "worked": "S50A",
+      "typed": "599 4",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "1"
+      ],
+      "received": [
+         "599",
+         "4"
+      ],
+      "source": "CQ WPX sponsor, https://cqwpx.com/cabrillo.htm sample 'AA1ZZZ 599 1 S50A 599 4': RST and serial, both sides (read 2026-11-26)"
+   },
+   {
+      "name": "CQ-WW-SSB",
+      "contest": "CQ-WW-SSB",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA"
+      },
+      "worked": "K9QZO",
+      "typed": "59 4",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "05"
+      ],
+      "received": [
+         "59",
+         "04"
+      ],
+      "source": "CQ WW sponsor, https://cqww.com/cabrillo.htm sample 'AA1ZZZ 59 05 K9QZO 59 04': RS and CQ zone, both sides (read 2026-11-26)"
+   },
+   {
+      "name": "NA-SPRINT-CW",
+      "contest": "NA-SPRINT-CW",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA",
+         "MY NAME": "TOM"
+      },
+      "worked": "N6TR",
+      "typed": "1 TREE OR",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "1",
+         "TOM",
+         "FL"
+      ],
+      "received": [
+         "1",
+         "TREE",
+         "OR"
+      ],
+      "source": "NCJ, https://ncjweb.com/Sprint_Cabrillo_Template.txt sample 'AA0ZZZ 1 JOE MO N6TR 1 TREE OR': serial, name, location (read 2026-11-26)"
+   },
+   {
+      "name": "MICHIGAN-QP",
+      "contest": "MICHIGAN QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA"
+      },
+      "worked": "K8MQP",
+      "typed": "599 WASH",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "WASH"
+      ],
+      "source": "MiQP sponsor, https://miqp.org/index.php/cabrillo-information/ field order 'SentCall, SentRST, SentQth, RcvCall, RcvRST, RcvQth' (read 2026-11-26)"
+   },
+   {
+      "name": "FLORIDA-QP",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "PIN",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA"
+      },
+      "worked": "K9NW",
+      "typed": "599 IN",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "PIN"
+      ],
+      "received": [
+         "599",
+         "IN"
+      ],
+      "source": "FQP sponsor, docs/ContestRules/QSOParties/Florida/FL-QSO-PARTY-Cabrillo.txt sample 'K4KG 599 POL K9NW 599 IN'"
+   },
+   {
+      "name": "ARRL-SS-SSB",
+      "contest": "ARRL-SS-SSB",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA",
+         "MY CHECK": "80",
+         "MY PREC": "U"
+      },
+      "worked": "K8MM",
+      "typed": "1 Q 92 MI",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "1",
+         "U",
+         "80",
+         "WCF"
+      ],
+      "received": [
+         "1",
+         "Q",
+         "92",
+         "MI"
+      ],
+      "source": "ARRL, https://www.arrl.org/cabrillo-format-tutorial sample 'W1AW 1 M 38 CT K8MM 1 Q 92 MI': serial, precedence, check, section (read 2026-11-26). Check 80 and precedence U: NY4I, 2026-11-26"
+   },
+   {
+      "name": "WINTER-FD",
+      "contest": "WINTER FIELD DAY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA",
+         "MY FD CLASS": "1I"
+      },
+      "worked": "N2WFD",
+      "typed": "1H WI",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "1I",
+         "WCF"
+      ],
+      "received": [
+         "1H",
+         "WI"
+      ],
+      "source": "WFD sponsor, docs/ContestRules/WinterFieldDay/WFD-2027-Rules-v3.md sample 'K4SCO 3O AL N2WFD 1H WI': class and section. 1I WCF: NY4I, 2026-11-26"
    }
 ]
