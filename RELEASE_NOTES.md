@@ -48,6 +48,38 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.1.x — November 2026
 
+### 5.1.5 (2026-11-26) - NY4I
+
+#### Default exchange messages
+
+- **CW contests send 5NN.** In contests with a zone exchange, such as CQ WW and IARU, the default messages
+  sent 599.
+- **RTTY contests send 599.** CQ WPX RTTY, the ARRL RTTY Roundup, UR-DX RTTY and the Russian WW Digi sent
+  5NN. CQ WW RTTY still sends 599.
+- Contests that allow both CW and RTTY use the same messages for both.
+- Messages you have edited yourself are not changed.
+
+#### WAE QTCs
+
+- **QSOs sent in a QTC are marked as sent again,** so they are not offered a second time. QSOs already sent
+  with an earlier 5.x release are not marked retroactively.
+- **A series stopped early** is logged with the number actually transferred.
+- **No longer offered:** X-QSOs, zero-point QSOs and QSOs with the station receiving the QTC. A received QTC
+  reporting your own call is refused. The limit of 10 per station ignores portable suffixes such as /P.
+- **Deleted QTCs** no longer count in the score or appear in the Cabrillo file. Their series numbers are not
+  used again.
+- **If saving a series fails,** the window stays open so you can try again.
+
+#### Importing old logs
+
+- **Only logs in the current TR4W 4.x format are imported.** An older log is now refused with instructions,
+  instead of sometimes being read incorrectly.
+
+#### Scripts
+
+- **`/IMPORTLOG` no longer shows a warning** when another TR4W is running.
+- **New `--unattended` switch:** TR4W exits with an error instead of waiting for an answer.
+
 ### 5.1.4 (2026-11-26) - NY4I
 
 #### Preferences

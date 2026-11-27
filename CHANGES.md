@@ -41,6 +41,26 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### 5.1.5 (2026-11-26) - NY4I
+
+#### Report in the default exchange messages (`contestFactory`, `trdos/fcontest`)
+
+- New virtual `TContestBase.DefaultSignalReport`: `5NN`, overridden to `599` by CQ WW RTTY, CQ WPX RTTY, ARRL RTTY Roundup, UR-DX RTTY and Russian WW Digi. The zone, state and serial writers and the session's serial memories take it from the contest; each had its own literal (`599` for zone, `5NN` for the others). Nothing is converted at send time. A contest with CW and RTTY has one report, because Digital mode sends the CW memories.
+
+#### WAE QTCs (`uQTCSeries`, `uQTCS`, `uQTCR`, `trdos/logwae`, `uLogStore`, `uLogRepository`) — Issue #385
+
+- **Sent marks**: marking scanned the `.TRW`, which nothing writes; it is now `LogStoreMarkSentInQTC` by row id, and the unused `.TRW` file routines are removed.
+- A series records the transferred count; X-QSOs, zero-point QSOs, the receiving station and our own call are excluded; a deleted QTC row counts nowhere (one predicate, `QTCRecordCounts`); the series number is the highest ever logged; a series and its marks commit in one transaction.
+
+#### `ContestExchange` (`VC`, `uLogBinaryFile`) — Issue #386
+
+- Stays a record: a variant-part compile guard keeps it free of managed fields, `Clear` and `SameBytes` replace whole-record `FillChar`/`CompareMem`, and `Lint-ContestExchangeBytes` gates byte operations. The log store owns the server-dirty flag.
+- The `.TRW` reader has its own frozen `TTrwRecordV17` and converter, so the record's size is free. It requires header `v1.7` **and** a whole number of 376-byte records (`lbWrongVersion`); size alone let an older log through.
+
+#### Unattended runs (`uStartupArgs`, `ui/lcl/uUnattendedGuard`, `uProgramMain`)
+
+- `--unattended` exits 5 when the command line names no headless job, or when a modal window is about to open (`Application.AddOnModalBeginHandler`). `/IMPORTLOG` is on the headless list, and `--unattended`, `--settings` and `--lang` no longer move positional arguments. `test/Run-Headless.ps1` adds a time limit; `test/Test-Unattended.ps1` checks the built program.
+
 ### 5.1.4 (2026-11-26) - NY4I
 
 #### Keyer port (`uRadioConfigApply`, `trdos/logk1ea`, `uCWKeyerCPU`)
