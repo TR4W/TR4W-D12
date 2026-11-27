@@ -12,6 +12,23 @@ python tr4w/test/export-test/run-export-test.py [NAME ...]
 Make sure TR4W is not running. Each run writes a new folder under
 `build-out/export-test/` and deletes nothing.
 
+## The safeguards
+
+1. **Expected fields are written from the sponsor's documents by someone who has
+   not seen this program's code or output.** When agents prepare cases, they are
+   given only `docs/ContestRules` and told to read nothing under `tr4w/`. The
+   runner of the test reviews their cases and does not edit expected fields to
+   match output.
+2. **Setup is realistic.** `station` may hold only what New Contest asks this
+   contest (the program says: `/NEWCONTESTPROMPTS`); anything else fails the
+   case and belongs in `station_settings`.
+3. **Every contest has a status.** A full run writes
+   `build-out/export-test/status.md`: each contest pass, fail, or unverified
+   with a reason from `unverified.json` (else "no case written yet").
+
+A failure is investigated against the sponsor's text before it is called a
+defect: several have been the case's own mistake.
+
 ## The one rule
 
 **The expected fields come from the sponsor, and `source` says where.** Never
@@ -26,6 +43,7 @@ no case; it is unverified, not passed.
 |---|---|
 | `contest` | the contest's id, as the log records it |
 | `station` | the commands New Contest would queue; `MY CALL` is required. The command for the CQ zone is `MY ZONE` |
+| `i_am_in` | true when the case ticks the dialog's "I am in ..." box, which asks further rows |
 | `station_settings` | optional: what Preferences > Station holds (`State`, ...). **Not the same as `station`:** a value in `station` is the contest's own statement. IARU shipped sending the everyday state in place of the zone because the two were one thing to the test |
 | `worked`, `typed` | the call window and the exchange window |
 | `band`, `mode` | as TR4W shows them (`80`, `SSB`). With no radio the program starts on 160 m CW, and a contact the contest refuses is exported as `X-QSO`, so the case finds no `QSO:` line |

@@ -4,13 +4,16 @@
       "contest": "ALL JA",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
-         "MY SECTION": "WCF",
-         "MY GRID": "EL88PA",
          "MY PREFECTURE": "10",
          "MY POWER CLASS": "M"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "JA1ABC",
       "typed": "599 25M",
@@ -30,12 +33,15 @@
       "name": "CQ-WPX-CW",
       "contest": "CQ-WPX-CW",
       "station": {
-         "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
-         "MY SECTION": "WCF",
-         "MY GRID": "EL88PA"
+         "MY CALL": "NY4I"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "S50A",
       "typed": "599 4",
@@ -55,12 +61,15 @@
       "name": "CQ-WW-SSB",
       "contest": "CQ-WW-SSB",
       "station": {
-         "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
-         "MY SECTION": "WCF",
-         "MY GRID": "EL88PA"
+         "MY CALL": "NY4I"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "K9QZO",
       "typed": "59 4",
@@ -81,12 +90,16 @@
       "contest": "NA-SPRINT-CW",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
          "MY STATE": "FL",
-         "MY SECTION": "WCF",
-         "MY GRID": "EL88PA",
          "MY NAME": "TOM"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "N6TR",
       "typed": "1 TREE OR",
@@ -109,11 +122,15 @@
       "contest": "MICHIGAN QSO PARTY",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
-         "MY SECTION": "WCF",
-         "MY GRID": "EL88PA"
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "K8MQP",
       "typed": "599 WASH",
@@ -134,11 +151,15 @@
       "contest": "FLORIDA QSO PARTY",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "PIN",
-         "MY SECTION": "WCF",
-         "MY GRID": "EL88PA"
+         "MY STATE": "PIN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "K9NW",
       "typed": "599 IN",
@@ -159,13 +180,17 @@
       "contest": "ARRL-SS-SSB",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
          "MY SECTION": "WCF",
-         "MY GRID": "EL88PA",
          "MY CHECK": "80",
          "MY PREC": "U"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "K8MM",
       "typed": "1 Q 92 MI",
@@ -190,12 +215,16 @@
       "contest": "WINTER FIELD DAY",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
          "MY SECTION": "WCF",
-         "MY GRID": "EL88PA",
          "MY FD CLASS": "1I"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "N2WFD",
       "typed": "1H WI",
@@ -216,11 +245,15 @@
       "contest": "ARRL-DX-CW",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
-         "MY SECTION": "WCF",
-         "MY GRID": "EL88PA"
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "DL1ABC",
       "typed": "599 100",
@@ -241,11 +274,15 @@
       "contest": "ARRL-DIGI",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
-         "MY SECTION": "WCF",
          "MY GRID": "EL88PA"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "W1AW",
       "typed": "FN31",
@@ -263,14 +300,15 @@
       "name": "IARU-HF",
       "contest": "IARU-HF",
       "station": {
-         "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY SECTION": "WCF",
-         "MY GRID": "EL88PA"
+         "MY CALL": "NY4I"
       },
       "station_settings": {
-         "State": "FL"
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "DL1ABC",
       "typed": "599 28",
@@ -291,12 +329,13 @@
       "contest": "IARU-HF",
       "station": {
          "MY CALL": "W1AW",
-         "MY ITU ZONE": "8",
          "MY STATE": "ARRL"
       },
       "station_settings": {
+         "ItuZone": 8,
          "State": "CT"
       },
+      "i_am_in": true,
       "worked": "DL1ABC",
       "typed": "599 28",
       "band": "20",
@@ -316,12 +355,16 @@
       "contest": "ARRL-FD",
       "station": {
          "MY CALL": "NY4I",
-         "MY ZONE": "5",
-         "MY ITU ZONE": "8",
-         "MY STATE": "FL",
          "MY SECTION": "WCF",
-         "MY GRID": "EL88PA",
          "MY FD CLASS": "1D"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
       },
       "worked": "W1AW",
       "typed": "3A CT",
@@ -336,5 +379,505 @@
          "CT"
       ],
       "source": "docs/ContestRules/ARRL/2026-Field-Day-Rules.pdf rule 5, example '3A CT': class and section. Rule 8.7: Cabrillo is not required, accepted in place of a dupe sheet; the column order is Cabrillo's. 1D WCF: NY4I, 2026-11-26"
+   },
+   {
+      "name": "BC-QP-OUT",
+      "contest": "BCQP",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "VE7AGN",
+      "typed": "599 CML",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "CML"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/BritishColumbia/BC-QSO-PARTY-Rules.txt: 'British Columbia stations send: RS(T) and District (three letter abbreviation). Non-British Columbia stations send: RS(T) and state/province/territory or DX.' Column order from the 'Cabrillo 3.0 format sample'. District list: BC-QSO-PARTY-Districts.txt."
+   },
+   {
+      "name": "BC-QP-IN",
+      "contest": "BCQP",
+      "station": {
+         "MY CALL": "VA7SPK",
+         "MY STATE": "VAC"
+      },
+      "station_settings": {
+         "State": "BC"
+      },
+      "worked": "K7CUL",
+      "typed": "599 AZ",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "VAC"
+      ],
+      "received": [
+         "599",
+         "AZ"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/BritishColumbia/BC-QSO-PARTY-Rules.txt: 'British Columbia stations send: RS(T) and District (three letter abbreviation)'. VAC = Vancouver Centre in BC-QSO-PARTY-Districts.txt."
+   },
+   {
+      "name": "FLORIDA-QP-OUT",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "CT"
+      },
+      "station_settings": {
+         "State": "CT"
+      },
+      "worked": "K4KG",
+      "typed": "599 POL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "CT"
+      ],
+      "received": [
+         "599",
+         "POL"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/Florida/FL-QSO-PARTY-Rules.txt: 'Signal report (RS or RST) and location'; 'US (including KH6/KL7) operators send State.' Column order from FL-QSO-PARTY-Cabrillo.txt: 'info sent ... info rcvd', 'call rst exch call rst exch'. POL = POLK in FL-QSO-PARTY-Counties.txt."
+   },
+   {
+      "name": "GEORGIA-QP-OUT",
+      "contest": "GA-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "KU8E",
+      "typed": "599 HARR",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "HARR"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/Georgia/GA-QSO-PARTY-Rules.txt: 'NON-GEORGIA US stations - Send signal report and STATE (U.S.P.S. abbreviation)'; columns 'YOUR CALL, RST Sent, QTH Sent, CALL Worked, RST Received, QTH Received. DO NOT ADD ADDITIONAL COLUMNS.'"
+   },
+   {
+      "name": "GEORGIA-QP-IN",
+      "contest": "GA-QSO-PARTY",
+      "station": {
+         "MY CALL": "KU8E",
+         "MY STATE": "HARR"
+      },
+      "station_settings": {
+         "State": "GA"
+      },
+      "worked": "AA3B",
+      "typed": "599 PA",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "HARR"
+      ],
+      "received": [
+         "599",
+         "PA"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/Georgia/GA-QSO-PARTY-Rules.txt: 'GEORGIA stations - Send signal report and GA county abbreviation.' Harris = HARR in the county table. Columns: 'YOUR CALL, RST Sent, QTH Sent, CALL Worked, RST Received, QTH Received.'"
+   },
+   {
+      "name": "HAWAII-QP-OUT",
+      "contest": "HI-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "KH6LC",
+      "typed": "599 HIL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "HIL"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/Hawaii/HI-QSO-PARTY-Rules.txt: 'Hawai'i stations send signal report plus Hawai'i Multiplier'; 'Non-Hawai'i stations send signal report plus State or Province as appropriate.' Column order from the sample in hawaii-qso-party-rules.md ('Grid squares'). District codes: HI-QSO-PARTY-Districts.txt."
+   },
+   {
+      "name": "HAWAII-QP-IN",
+      "contest": "HI-QSO-PARTY",
+      "station": {
+         "MY CALL": "KH6TU",
+         "MY STATE": "MAU"
+      },
+      "station_settings": {
+         "State": "HI"
+      },
+      "worked": "W6OAT",
+      "typed": "599 CA",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "MAU"
+      ],
+      "received": [
+         "599",
+         "CA"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/Hawaii/HI-QSO-PARTY-Rules.txt: 'Hawai'i stations send signal report plus Hawai'i Multiplier'; MAU = Maui in HI-QSO-PARTY-Districts.txt. Column order from the sample in hawaii-qso-party-rules.md."
+   },
+   {
+      "name": "MINNESOTA-QP-OUT",
+      "contest": "MINNESOTA QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL",
+         "MY NAME": "TOM"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "AC0W",
+      "typed": "BILL MOW",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "TOM",
+         "FL"
+      ],
+      "received": [
+         "BILL",
+         "MOW"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/Minnesota/MN-QSO-PARTY-Rules.txt: 'MN Stations: First name & county (three letter designator). W/VE Stations: First name and state / province (two letter abbreviation).' Template: 'call ex1 ex2 call ex1 ex2'; 'ex1: Name'. No signal report."
+   },
+   {
+      "name": "MINNESOTA-QP-IN",
+      "contest": "MINNESOTA QSO PARTY",
+      "station": {
+         "MY CALL": "AC0W",
+         "MY STATE": "MOW",
+         "MY NAME": "BILL"
+      },
+      "station_settings": {
+         "State": "MN",
+         "Name": "BILL"
+      },
+      "worked": "N2CU",
+      "typed": "TOM NY",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "BILL",
+         "MOW"
+      ],
+      "received": [
+         "TOM",
+         "NY"
+      ],
+      "source": "c:/tr4w-d12/docs/ContestRules/QSOParties/Minnesota/MN-QSO-PARTY-Rules.txt: 'MN Stations: First name & county (three letter designator).' Template: 'call ex1 ex2 call ex1 ex2'; 'ex2: MN - 3 letter county abbrev., W/VE - 2 letter state/province'."
+   },
+   {
+      "name": "NEW-MEXICO-QP-OUT",
+      "contest": "NM-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "N5ZGT",
+      "typed": "599 BER",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "BER"
+      ],
+      "source": "docs/ContestRules/QSOParties/NewMexico/NM-QSO-PARTY-Rules.txt: section 6 'Non-New Mexico stations: RS(T) + State/Province/DXCC entity'; Cabrillo template 'QSO: FREQ MO DATE  TIME CALL             RST QTH   CALL      RST QTH'; 'QTH is three letter NM county abbreviation, or two-letter State/Province abbreviation, or \"DX\".'; check sheet 'Bernalillo  BER'."
+   },
+   {
+      "name": "NEW-MEXICO-QP-IN",
+      "contest": "NM-QSO-PARTY",
+      "station": {
+         "MY CALL": "N5ZGT",
+         "MY STATE": "BER"
+      },
+      "station_settings": {
+         "State": "NM"
+      },
+      "worked": "W1AW",
+      "typed": "599 CT",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "BER"
+      ],
+      "received": [
+         "599",
+         "CT"
+      ],
+      "source": "docs/ContestRules/QSOParties/NewMexico/NM-QSO-PARTY-Rules.txt: section 6 'New Mexico stations: RS(T) + New Mexico county'; Cabrillo template 'RST QTH   CALL      RST QTH'; the sample log's right-hand column shows '599 BER   W1AW      599 CT'; check sheet 'Bernalillo  BER'."
+   },
+   {
+      "name": "NEW-YORK-QP-OUT",
+      "contest": "NY-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "N2MG",
+      "typed": "599 ONE",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "ONE"
+      ],
+      "source": "docs/ContestRules/QSOParties/NewYork/NY-QSO-PARTY-Rules-2026-v1.1.md: EXCHANGE 'New York stations send signal report and three-letter county abbreviation.' and 'Stations outside of New York send signal report plus state or Canadian province'; county list 'Oneida ONE'; Sample Cabrillo File shows sent RST, sent location, call, received RST, received location (e.g. '599 MON    KH7X          599 HI')."
+   },
+   {
+      "name": "NEW-YORK-QP-IN",
+      "contest": "NY-QSO-PARTY",
+      "station": {
+         "MY CALL": "N2ZN",
+         "MY STATE": "MON"
+      },
+      "station_settings": {
+         "State": "NY"
+      },
+      "worked": "W1RM",
+      "typed": "599 CT",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "MON"
+      ],
+      "received": [
+         "599",
+         "CT"
+      ],
+      "source": "docs/ContestRules/QSOParties/NewYork/NY-QSO-PARTY-Rules-2026-v1.1.md: EXCHANGE 'New York stations send signal report and three-letter county abbreviation.'; county list 'Monroe MON'; Sample Cabrillo File line for W1RM '599 MON    W1RM          599 CT'."
+   },
+   {
+      "name": "OKLAHOMA-QP-OUT",
+      "contest": "OK-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K5CM",
+      "typed": "599 MUS",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "MUS"
+      ],
+      "source": "docs/ContestRules/QSOParties/Oklahoma/OK-QSO-PARTY-Rules.txt: 'Oklahoma stations send signal report and county.' 'W/VE stations (including KH6/KL7) send signal report and state or province.' 'Use Cabrillo format as shown below'; docs/ContestRules/QSOParties/Oklahoma/OK-QSO-PARTY-Counties.txt: 'MUS Muskogee (40)'."
+   },
+   {
+      "name": "OKLAHOMA-QP-IN",
+      "contest": "OK-QSO-PARTY",
+      "station": {
+         "MY CALL": "K5CM",
+         "MY STATE": "MAY"
+      },
+      "station_settings": {
+         "State": "OK"
+      },
+      "worked": "N2JJ",
+      "typed": "599 NY",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "MAY"
+      ],
+      "received": [
+         "599",
+         "NY"
+      ],
+      "source": "docs/ContestRules/QSOParties/Oklahoma/OK-QSO-PARTY-Rules.txt: 'Oklahoma stations send signal report and county.' and sample 'QSO: 14038 CW 2014-03-22 1514 K5CM   599 MAY  N2JJ    599 NY'; docs/ContestRules/QSOParties/Oklahoma/OK-QSO-PARTY-Counties.txt: 'MAY Mayes (22)'."
+   },
+   {
+      "name": "SOUTH-CAROLINA-QP-OUT",
+      "contest": "SC-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W4GKF",
+      "typed": "599 CHAR",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "CHAR"
+      ],
+      "source": "docs/ContestRules/QSOParties/SouthCarolina/SC-QSO-PARTY-Rules.txt: 5.1 'Signal report and county abbreviation'; 5.2 'Signal report and two-letter state abbreviation.'; 14.1 'Charleston    CHAR'; 14.2 'Florida     FL'; section 15 Cabrillo Log File Example."
+   },
+   {
+      "name": "SOUTH-CAROLINA-QP-IN",
+      "contest": "SC-QSO-PARTY",
+      "station": {
+         "MY CALL": "KN4QD",
+         "MY STATE": "MARI"
+      },
+      "station_settings": {
+         "State": "SC"
+      },
+      "worked": "W8CAR",
+      "typed": "599 OH",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "MARI"
+      ],
+      "received": [
+         "599",
+         "OH"
+      ],
+      "source": "docs/ContestRules/QSOParties/SouthCarolina/SC-QSO-PARTY-Rules.txt: 5.1 'Signal report and county abbreviation'; 14.1 'Marion        MARI'; 14.2 'Ohio         OH'; section 15 line 'QSO: 7000 CW 2007-04-15 2159 KN4QD 599 MARI W8CAR 599 OH'."
+   },
+   {
+      "name": "WISCONSIN-QP-OUT",
+      "contest": "WISCONSIN QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W9HNW",
+      "typed": "RAC",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "FL"
+      ],
+      "received": [
+         "RAC"
+      ],
+      "source": "docs/ContestRules/QSOParties/Wisconsin/WI-QSO-PARTY-Rules.txt: 'Wisconsin stations send County.' 'Non-Wisconsin stations send State or Province or Country.'; docs/ContestRules/QSOParties/Wisconsin/WI-QSO-PARTY-Cabrillo.txt: 'the same as the ARRL 160M contest example in the Cabrillo specification except that RST columns are not needed.' and 'Non-Wisconsin stations must have their state or province in the sent exchange field and the county of the Wisconsin station worked in the received exchange field.'; WI-QSO-PARTY-Multipliers.txt: 'RAC Racine', 'FL Florida'."
+   },
+   {
+      "name": "WISCONSIN-QP-IN",
+      "contest": "WISCONSIN QSO PARTY",
+      "station": {
+         "MY CALL": "W9HNW",
+         "MY STATE": "RAC"
+      },
+      "station_settings": {
+         "State": "WI"
+      },
+      "worked": "VE1OP",
+      "typed": "NS",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "RAC"
+      ],
+      "received": [
+         "NS"
+      ],
+      "source": "docs/ContestRules/QSOParties/Wisconsin/WI-QSO-PARTY-Cabrillo.txt: 'Wisconsin stations must have their current county in the sent exchange field and the received S/P/C or county in the received exchange field.' and sample 'QSO: 14022 CW 2020-03-15 1933 W9HNW RAC VE1OP NS'; WI-QSO-PARTY-Multipliers.txt: 'RAC Racine', 'NS Nova Scotia'."
    }
 ]

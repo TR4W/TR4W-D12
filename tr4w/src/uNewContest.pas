@@ -158,6 +158,17 @@ procedure DetachNewContestForm;
   stands for and the value it holds. *)
 procedure QueueNewContestRows;
 
+(* tr4w.exe /NEWCONTESTPROMPTS <out-file> -- WHAT NEW CONTEST ASKS, FOR EVERY
+  CONTEST, one line each:
+
+     contest id|active (1/0)|"I am in" box (1/0)|asked;...|asked when ticked;...
+
+  where each asked entry is the command the dialog queues for that row. The
+  per-contest export test reads it, so a test case cannot answer a question
+  the dialog never asks (issue 390). The CATEGORY rows and MY CALL are asked
+  of every contest and are not listed. Returns the process exit code. *)
+function WriteNewContestPromptList(const aOutFile: string): integer;
+
 implementation
 uses
    (* SetCharBuffer / CharBufferText -- a fixed AnsiChar buffer written
@@ -165,6 +176,10 @@ uses
      PAnsiChar(@buf[0]). *)
   uAppPaths,   // ContestDir -- where an operator's contest files live
   SysUtils,            // Format, Trim, FreeAndNil -- the RTL, not TF shims
+  Classes,             (* TStringList -- WriteNewContestPromptList *)
+  StrUtils,            (* IfThen -- the same *)
+  uCrashLog,           (* EarlyTrace -- /NEWCONTESTPROMPTS runs before tr4w.log *)
+  uFileText,           (* TryWriteAllTextUTF8 -- its output file *)
   Controls,            // mrOk -- the modal results
   Dialogs,             (* QuestionDlg -- a taken log name, asked natively (issue 276) *)
   uCaptionText,        (* DisplayedText -- a box caption quoted in a question (issue 167) *)
@@ -1338,6 +1353,82 @@ begin
       form := frmNewContest;
       DetachNewContestForm;
       form.Free;
+   end;
+end;
+
+function WriteNewContestPromptList(const aOutFile: string): integer;
+var
+   list: TStringList;
+   known: TContestHandleList;
+   identity: TContestBase;
+   prompts: TNewContestPrompts;
+   k, i: integer;
+   asked, inside: string;
+   reason: string;
+   box: boolean;
+
+   procedure Take(var aList: string; const aPrompt: TNewContestPrompt);
+   begin
+      if aPrompt.Kind in [npkIAmIn, npkIAmInCaption] then
+         begin
+         box := True;
+         end
+      else
+         begin
+         aList := aList + InitialCommandsSA[aPrompt.Field] + ';';
+         end;
+   end;
+
+begin
+   if aOutFile = '' then
+      begin
+      EarlyTrace('[Prompts] usage: tr4w.exe /NEWCONTESTPROMPTS <out-file>');
+      Result := 1;
+      Exit;
+      end;
+
+   list := TStringList.Create;
+   try
+      known := KnownContests;
+      for k := 0 to High(known) do
+         begin
+         if known[k] = NoContest then
+            begin
+            Continue;
+            end;
+         identity := ContestIdentity(known[k]);
+         asked := '';
+         inside := '';
+         box := False;
+         prompts := TNewContestPrompts.Create;
+         try
+            identity.DescribeNewContestPrompts(prompts);
+            for i := 0 to prompts.ChoiceCount - 1 do
+               begin
+               Take(asked, prompts.Choice(i));
+               end;
+            for i := 0 to prompts.InsideCount - 1 do
+               begin
+               Take(inside, prompts.Inside(i));
+               end;
+         finally
+            prompts.Free;
+         end;
+         list.Add(AnsiString(string(ContestId(known[k])) + '|' +
+                             IfThen(identity.IsActive, '1', '0') + '|' +
+                             IfThen(box, '1', '0') + '|' + asked + '|' + inside));
+         end;
+      if TryWriteAllTextUTF8(aOutFile, string(list.Text), reason) then
+         begin
+         Result := 0;
+         end
+      else
+         begin
+         EarlyTrace('[Prompts] could not write ' + aOutFile + ': ' + reason);
+         Result := 2;
+         end;
+   finally
+      list.Free;
    end;
 end;
 

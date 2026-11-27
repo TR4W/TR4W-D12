@@ -164,7 +164,8 @@ begin
              UnicodeSameText(aArg, '/IMPORTLOG') or
              UnicodeSameText(aArg, '/MATRIX') or
              UnicodeSameText(aArg, '/MATRIXLIST') or
-             UnicodeSameText(aArg, '/ENTERQSO');
+             UnicodeSameText(aArg, '/ENTERQSO') or
+             UnicodeSameText(aArg, '/NEWCONTESTPROMPTS');
 end;
 
 function ArgumentsHaveHeadlessSwitch(const aArgs: array of string): boolean;
@@ -190,6 +191,7 @@ begin
    second := PositionalArgumentOf(aArgs, 2);
    Result := UnicodeSameText(first, '/IMPORTLOG') or
              UnicodeSameText(first, '/MATRIXLIST') or
+             UnicodeSameText(first, '/NEWCONTESTPROMPTS') or
              UnicodeSameText(first, '/FIELDCHECK') or
              UnicodeSameText(second, '/EXPORT') or
              UnicodeSameText(second, '/RESCORE') or

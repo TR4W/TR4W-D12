@@ -51,6 +51,8 @@ begin
    BeginTest('TestEveryHeadlessJobIsAJob');
    CheckTrue(ArgumentsNameAHeadlessJob(['/IMPORTLOG', 'a.trw']), '/IMPORTLOG');
    CheckTrue(ArgumentsNameAHeadlessJob(['/MATRIXLIST', 'out']), '/MATRIXLIST');
+   CheckTrue(ArgumentsNameAHeadlessJob(['/NEWCONTESTPROMPTS', 'out']),
+             '/NEWCONTESTPROMPTS');
    CheckTrue(ArgumentsNameAHeadlessJob(['/FIELDCHECK']), '/FIELDCHECK');
    CheckTrue(ArgumentsNameAHeadlessJob(['a.db', '/EXPORT']), '/EXPORT');
    CheckTrue(ArgumentsNameAHeadlessJob(['a.db', '/RESCORE']), '/RESCORE');

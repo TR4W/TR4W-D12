@@ -933,6 +933,7 @@ begin
       '                     log one contact as Enter does, then exit' + sLineBreak +
       '  /MATRIX <out> <id> write this contest''s legacy-fixture record, then exit' + sLineBreak +
       '  /MATRIXLIST <out>  list every contest for the matrix, then exit' + sLineBreak +
+      '  /NEWCONTESTPROMPTS <out>  list what New Contest asks, then exit' + sLineBreak +
       '  --unattended       nobody is here: exit with code 5 unless the line' + sLineBreak +
       '                     names a headless job, or if a question would be asked' + sLineBreak +
       '  /IMPORTLOG <log.trw> [<log.db>]' + sLineBreak +
@@ -1927,6 +1928,13 @@ begin
    if UnicodeSameText(PositionalArgument(1), '/MATRIXLIST') then
       begin
       Halt(RunContestMatrixList(PositionalArgument(2)));
+      end;
+
+   (* /NEWCONTESTPROMPTS, for the same reason: compiled tables only. See
+     uNewContest.WriteNewContestPromptList. *)
+   if UnicodeSameText(PositionalArgument(1), '/NEWCONTESTPROMPTS') then
+      begin
+      Halt(WriteNewContestPromptList(PositionalArgument(2)));
       end;
 
    { THE SETTINGS REGISTRY, AND THIS IS THE 'once at startup' ITS OWN COMMENT

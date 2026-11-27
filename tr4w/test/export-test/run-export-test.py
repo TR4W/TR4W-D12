@@ -42,6 +42,73 @@ PROGRAM_LOG = os.path.join(TARGET, 'tr4w.log')
 REFUSED = 'was refused and is not set'
 
 
+def new_contest_questions(exe):
+   """What New Contest asks, asked of the program itself:
+   {contest id: (active, asked, asked_when_the_box_is_ticked)}."""
+   os.makedirs(WORK, exist_ok=True)
+   out = os.path.join(WORK, 'new-contest-questions.txt')
+   if os.path.isfile(out):
+      os.replace(out, out + '.previous')
+   code = run(exe, ['/NEWCONTESTPROMPTS', out, '--settings', SETTINGS_COPY()])
+   if code != 0 or not os.path.isfile(out):
+      return None
+   found = {}
+   for line in io.open(out, encoding='utf-8').read().splitlines():
+      contest, active, _box, asked, inside = line.split('|')
+      found[contest] = (active == '1',
+                        {a.upper() for a in asked.split(';') if a},
+                        {a.upper() for a in inside.split(';') if a})
+   return found
+
+
+def SETTINGS_COPY():
+   """A throwaway copy: nothing may be pointed at the tracked fixture."""
+   path = os.path.join(WORK, 'questions-settings.json')
+   shutil.copy(SETTINGS, path)
+   return path
+
+
+def unasked_answers(case, questions):
+   """THE REALISM SAFEGUARD.  'station' is what New Contest queues, so it may
+   hold only what New Contest asks this contest.  Anything else belongs in
+   'station_settings'.  An answer the dialog never asks makes the contest's
+   own statement out of an everyday setting -- which hid the IARU defect."""
+   if case['contest'] not in questions:
+      return ['no contest %r in the program' % case['contest']]
+   _active, asked, inside = questions[case['contest']]
+   allowed = {'MY CALL'} | asked
+   if case.get('i_am_in'):
+      allowed |= inside
+   return ['New Contest does not ask %r here: move it to station_settings' % key
+           for key in case['station']
+           if key.upper() not in allowed and not key.upper().startswith('CATEGORY-')]
+
+
+def write_status(questions, results):
+   """THE COVERAGE SAFEGUARD: every contest the program knows, each pass, fail
+   or unverified with a reason, so what is not covered stays visible."""
+   reasons = json.load(io.open(os.path.join(HERE, 'unverified.json'), encoding='utf-8'))
+   rows, counts = [], {'pass': 0, 'fail': 0, 'unverified': 0}
+   for contest in sorted(questions):
+      outcomes = results.get(contest)
+      if outcomes is None:
+         state, why = 'unverified', reasons.get(contest, 'no case written yet')
+      elif all(outcomes):
+         state, why = 'pass', '%d case(s)' % len(outcomes)
+      else:
+         state, why = 'fail', '%d of %d case(s) failed' % (outcomes.count(False), len(outcomes))
+      counts[state] += 1
+      active = '' if questions[contest][0] else ' (inactive)'
+      rows.append('| %s%s | %s | %s |' % (contest, active, state, why))
+   path = os.path.join(WORK, 'status.md')
+   text = ('# Export test status\n\n%d contests: %d pass, %d fail, %d unverified.\n\n'
+           '| contest | status | detail |\n|---|---|---|\n' %
+           (len(rows), counts['pass'], counts['fail'], counts['unverified']))
+   io.open(path, 'w', encoding='utf-8').write(text + '\n'.join(rows) + '\n')
+   print('=== all contests: %d pass, %d fail, %d unverified of %d -- %s ===' %
+         (counts['pass'], counts['fail'], counts['unverified'], len(rows), path))
+
+
 def write_handoff(path, case):
    """The station first and CONTEST last: setting CONTEST builds the contest
    from the values before it."""
@@ -185,6 +252,11 @@ def main():
    exe = os.path.join(TARGET, 'tr4w.exe')
    shutil.copy(options.exe, exe)
 
+   questions = new_contest_questions(exe)
+   if not questions:
+      print('export-test: the program did not list what New Contest asks')
+      return 1
+
    cases = json.load(io.open(os.path.join(HERE, 'cases.json'), encoding='utf-8'))
    if options.names:
       cases = [c for c in cases if c['name'] in options.names]
@@ -193,13 +265,17 @@ def main():
       return 1
 
    failed = 0
+   results = {}
    for case in cases:
-      problems = run_case(exe, case)
+      problems = unasked_answers(case, questions) or run_case(exe, case)
+      results.setdefault(case['contest'], []).append(not problems)
       print('%s  %s' % ('FAIL' if problems else 'PASS', case['name']))
       for problem in problems:
          print('      ' + problem)
       failed += 1 if problems else 0
    print('=== export test: %d passed, %d failed ===' % (len(cases) - failed, failed))
+   if not options.names:          # a partial run must not report coverage
+      write_status(questions, results)
    return 1 if failed else 0
 
 
