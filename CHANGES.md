@@ -41,6 +41,12 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### 5.1.6 (2026-11-26) - NY4I
+
+#### ALL JA Cabrillo columns (`uContestAllJA`) — Issue #361
+
+- Both columns now start with the RST, with the power letter joined to the prefecture (Q1). The old layout read DXLog's `SENT` and `RCVD1` as something other than the two reports. `Test_TheALLJALineIsJARLsSample` is written from JARL's sample line; the previous pins had been taken from the program's output.
+
 ### 5.1.5 (2026-11-26) - NY4I
 
 #### Report in the default exchange messages (`contestFactory`, `trdos/fcontest`)

@@ -48,6 +48,14 @@ user-facing — no file paths or source-level jargon.
 
 ## 5.1.x — November 2026
 
+### 5.1.6 (2026-11-26) - NY4I
+
+#### ALL JA Cabrillo
+
+- **The Cabrillo file now includes the signal reports.** Each QSO line was missing both the report you sent
+  and the report you received. The power letter is now written with the prefecture number, as in `10M`.
+  If you made an ALL JA Cabrillo file with an earlier 5.x release, export it again before sending it.
+
 ### 5.1.5 (2026-11-26) - NY4I
 
 #### Default exchange messages
