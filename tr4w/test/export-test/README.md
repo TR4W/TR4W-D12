@@ -29,6 +29,13 @@ Make sure TR4W is not running. Each run writes a new folder under
 A failure is investigated against the sponsor's text before it is called a
 defect: several have been the case's own mistake.
 
+**DXLog.net's definition files confirm, they do not decide** (NY4I,
+2026-11-27): `C:\Program Files (x86)\DXLog.net\Contest\*.txt` -- county codes
+(`CFG_MULT_RGX_CHECK`), the column order (`CABRILLO_LINE`) and the contest name
+(`CABRILLO_CONTEST_NAME`). It is another logger's reading of the rules: the
+sponsor wins, and a disagreement is recorded. It has codes, not county names,
+which is all a case needs.
+
 ## The one rule
 
 **The expected fields come from the sponsor, and `source` says where.** Never
@@ -48,6 +55,7 @@ no case; it is unverified, not passed.
 | `worked`, `typed` | the call window and the exchange window |
 | `band`, `mode` | as TR4W shows them (`80`, `SSB`). With no radio the program starts on 160 m CW, and a contact the contest refuses is exported as `X-QSO`, so the case finds no `QSO:` line |
 | `sent`, `received` | the fields expected after my call, and after the worked call. All-digit fields compare as numbers (`1` is `001`) |
+| `lines` | instead of `sent` and `received` when one typed contact makes several QSO lines (a county line): a list of `{sent, received}`; the lines may come in either order |
 | `source` | the sponsor's rule or sample behind `sent` and `received` |
 
 ## How it drives the program
@@ -59,6 +67,12 @@ the program itself rather than through `Run-Headless.ps1`, because PowerShell
 splits `--new-contest-from=C:\...` at the colon.
 
 It does not drive the entry window. `tools/gui_test` does that.
+
+**It cannot yet operate FROM a county line.** The operator keeps the home
+county in MY STATE and sets the line with the ROVER command, which
+`/ENTERQSO` does not do. Putting `AAA/BBB` in MY STATE is not the same: the
+station is then not recognized as in state. Working a station ON a line is
+covered (`lines`).
 
 A setting the program refuses is only a warning in `tr4w.log`; the runner reads
 the lines its own run added and fails the case.

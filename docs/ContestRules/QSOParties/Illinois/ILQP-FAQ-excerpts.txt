@@ -1,0 +1,11 @@
+Illinois QSO Party -- excerpts from the sponsor's website FAQ
+(https://w9awe.org/ilqp/, "ILQP FAQ Section"), pasted by NY4I 2026-11-27.
+NY4I also states: ILQP allows up to a 4 county line operation.
+
+Q: I want to operate from a three or four county corner. I think I know the exact location of the corner (from a map or posted signs), but how close do I have to park to this spot to qualify?
+
+A: The traditional answer to this has been: "As close as possible, keeping safety uppermost in mind." To claim three or four counties, the operator should 1) As nearly as possible, locate the exact corner; 2) Find a safe spot as close as possible to the corner to set up the station; 3) Obtain permission from land-owners if at all possible; 4) Arrange portions of the antenna system to be physically placed in all three (or four) counties if possible.
+
+Q: I'd like to work some PSK31 along with other modes in ILQP. How do I score these contacts?
+
+A: All digital modes other than CW count two points per contact. You may not work a station on the same band on both CW and another digital mode for additional contact credit.

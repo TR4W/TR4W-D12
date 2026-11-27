@@ -879,5 +879,1728 @@
          "NS"
       ],
       "source": "docs/ContestRules/QSOParties/Wisconsin/WI-QSO-PARTY-Cabrillo.txt: 'Wisconsin stations must have their current county in the sent exchange field and the received S/P/C or county in the received exchange field.' and sample 'QSO: 14022 CW 2020-03-15 1933 W9HNW RAC VE1OP NS'; WI-QSO-PARTY-Multipliers.txt: 'RAC Racine', 'NS Nova Scotia'."
+   },
+   {
+      "name": "ATLANTIC-CANADA-QP-OUT-OF-STATE",
+      "contest": "AC-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "VE1RGO",
+      "typed": "599 NSANP",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "NSANP"
+      ],
+      "source": "docs/ContestRules/QSOParties/AtlanticCanada/ACQP-Rules-B-V26.0.1.pdf p2: 'Atlantic Canada stations send signal report RS(T), 5-letter province + county/division code' and 'Non-Atlantic Canada stations (out of region) send signal report RS(T) AND province/state abbreviation.' Column order: the p4 Cabrillo example. NSANP is Annapolis in ACQP-Province-County-Division-Abbreviations-1.2-Sheet2.pdf."
+   },
+   {
+      "name": "ATLANTIC-CANADA-QP-IN-STATE",
+      "contest": "AC-QSO-PARTY",
+      "station": {
+         "MY CALL": "VE1RGO",
+         "MY STATE": "NSANP"
+      },
+      "station_settings": {
+         "State": "NS"
+      },
+      "worked": "VE3YT",
+      "typed": "599 ON",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "NSANP"
+      ],
+      "received": [
+         "599",
+         "ON"
+      ],
+      "source": "docs/ContestRules/QSOParties/AtlanticCanada/ACQP-Rules-B-V26.0.1.pdf p2: 'Atlantic Canada stations send signal report RS(T), 5-letter province + county/division code' and 'out of region ... send signal report RS(T) AND province/state abbreviation.' p4 Cabrillo example."
+   },
+   {
+      "name": "ATLANTIC-CANADA-QP-PHONE",
+      "contest": "AC-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "VE1RGO",
+      "typed": "59 NSDIG",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "NSDIG"
+      ],
+      "source": "docs/ContestRules/QSOParties/AtlanticCanada/ACQP-Rules-B-V26.0.1.pdf p1: 'SSB, CW, or Mixed modes'; p2 exchange; p4 PH lines use 59."
+   },
+   {
+      "name": "ATLANTIC-CANADA-QP-DX",
+      "contest": "AC-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "VE1RGO",
+      "typed": "599 NSANP",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "NSANP"
+      ],
+      "source": "docs/ContestRules/QSOParties/AtlanticCanada/ACQP-Rules-B-V26.0.1.pdf p2: 'All other non-VE/W stations send RS(T) and DX.'"
+   },
+   {
+      "name": "ATLANTIC-CANADA-QP-COUNTY-LINE",
+      "contest": "AC-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "VE1RGO",
+      "typed": "599 NSANP/NSDIG",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "NSANP"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "NSDIG"
+            ]
+         }
+      ],
+      "source": "docs/ContestRules/QSOParties/AtlanticCanada/ACQP-Rules-B-V26.0.1.pdf p2-3: 'If Mobile or Portable stations operate on county/division lines/corners, a separate QSO and complete exchange must be logged for each county/division' and 'The Cabrillo log must include separate QSO entries for each county/division included in the exchange'."
+   },
+   {
+      "name": "CANADIAN-PRAIRIES-QP-OUT-OF-STATE",
+      "contest": "CP-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "VE5SF",
+      "typed": "599 RGW",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "RGW"
+      ],
+      "source": "docs/ContestRules/QSOParties/CanadianPrairies/cpqp-rules.md: 'VE/VA 4, 5 and 6 stations send RS/RST and 3-letter district abbreviation.' 'Stations outside ... send RS/RST and 2-letter State, Canadian provincial abbreviation, or DX.' Column order: the rule 12 examples."
+   },
+   {
+      "name": "CANADIAN-PRAIRIES-QP-IN-STATE",
+      "contest": "CP-QSO-PARTY",
+      "station": {
+         "MY CALL": "VE5CPU",
+         "MY STATE": "RGQ"
+      },
+      "station_settings": {
+         "State": "SK"
+      },
+      "worked": "N0JDP",
+      "typed": "599 SD",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "RGQ"
+      ],
+      "received": [
+         "599",
+         "SD"
+      ],
+      "source": "docs/ContestRules/QSOParties/CanadianPrairies/cpqp-rules.md: exchange items 1 and 2; rule 12 example 'VE5CPU 59 RGQ N0JDP 59 SD' (PH)."
+   },
+   {
+      "name": "CANADIAN-PRAIRIES-QP-PHONE",
+      "contest": "CP-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "VE5SF",
+      "typed": "59 RGW",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "RGW"
+      ],
+      "source": "docs/ContestRules/QSOParties/CanadianPrairies/cpqp-rules.md: 'MODES: CW, Phone'; exchange items 1 and 2; rule 12 PH examples use 59."
+   },
+   {
+      "name": "CANADIAN-PRAIRIES-QP-DX",
+      "contest": "CP-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "VE5SF",
+      "typed": "599 RGW",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "RGW"
+      ],
+      "source": "docs/ContestRules/QSOParties/CanadianPrairies/cpqp-rules.md: 'send RS/RST and 2-letter State, Canadian provincial abbreviation, or DX' and 'Stations outside the USA and Canada should be logged as DX.'"
+   },
+   {
+      "name": "CANADIAN-PRAIRIES-QP-COUNTY-LINE",
+      "contest": "CP-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "VE5CPU",
+      "typed": "599 RGQ/RGW",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "RGQ"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "RGW"
+            ]
+         }
+      ],
+      "source": "docs/ContestRules/QSOParties/CanadianPrairies/cpqp-rules.md rule 12: 'If a rover station operates on a district line (junction between two or more districts), a separate QSO and complete exchange must be made and logged for each FED worked.'"
+   },
+   {
+      "name": "NEW-JERSEY-QP-OUT-OF-STATE",
+      "contest": "NJ-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W2ABC",
+      "typed": "599 BURL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "BURL"
+      ],
+      "source": "docs/ContestRules/QSOParties/NewJersey/NJ-QSO-PARTY-Rules.txt: 'New Jersey Stations: RS(T), 4-character county' and 'Outside of New Jersey Stations: RS(T), 2-character state abbreviation, Canadian province abbreviation, or DX'. BURL = Burlington in NJ-QSO-PARTY-Counties.txt."
+   },
+   {
+      "name": "NEW-JERSEY-QP-IN-STATE",
+      "contest": "NJ-QSO-PARTY",
+      "station": {
+         "MY CALL": "K2ABC",
+         "MY STATE": "BURL"
+      },
+      "station_settings": {
+         "State": "NJ"
+      },
+      "worked": "W1AW",
+      "typed": "599 CT",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "BURL"
+      ],
+      "received": [
+         "599",
+         "CT"
+      ],
+      "source": "docs/ContestRules/QSOParties/NewJersey/NJ-QSO-PARTY-Rules.txt: exchange section, as for the out-of-state case."
+   },
+   {
+      "name": "NEW-JERSEY-QP-PHONE",
+      "contest": "NJ-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W2ABC",
+      "typed": "59 BURL",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "BURL"
+      ],
+      "source": "docs/ContestRules/QSOParties/NewJersey/NJ-QSO-PARTY-Rules.txt: 'Modes CW and Phone.' Exchange 'RS(T)'."
+   },
+   {
+      "name": "NEW-JERSEY-QP-DX",
+      "contest": "NJ-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W2ABC",
+      "typed": "599 BURL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "BURL"
+      ],
+      "source": "docs/ContestRules/QSOParties/NewJersey/NJ-QSO-PARTY-Rules.txt: 'Outside of New Jersey Stations: RS(T), 2-character state abbreviation, Canadian province abbreviation, or DX'."
+   },
+   {
+      "name": "MICHIGAN-QP-OUT-OF-STATE",
+      "contest": "MICHIGAN QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K8MQP",
+      "typed": "599 OAKL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "OAKL"
+      ],
+      "source": "docs/ContestRules/QSOParties/Michigan/MI-QSO-PARTY-Rules.txt: 'Michigan stations send a RST, and their Michigan county.' 'Non-Michigan W/VE stations (including KH6/KL7) send a RST, and their state or province.' The rules' example has K8MQP in OAKL."
+   },
+   {
+      "name": "MICHIGAN-QP-IN-STATE",
+      "contest": "MICHIGAN QSO PARTY",
+      "station": {
+         "MY CALL": "K8MQP",
+         "MY STATE": "OAKL"
+      },
+      "station_settings": {
+         "State": "MI"
+      },
+      "worked": "W1AW",
+      "typed": "599 CT",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "OAKL"
+      ],
+      "received": [
+         "599",
+         "CT"
+      ],
+      "source": "docs/ContestRules/QSOParties/Michigan/MI-QSO-PARTY-Rules.txt: Contest Exchange section."
+   },
+   {
+      "name": "MICHIGAN-QP-PHONE",
+      "contest": "MICHIGAN QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K8MQP",
+      "typed": "59 OAKL",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "OAKL"
+      ],
+      "source": "docs/ContestRules/QSOParties/Michigan/MI-QSO-PARTY-Rules.txt: 'CW and SSB on 80, 40, 20, 15 and 10 meters.' Exchange 'a RST'."
+   },
+   {
+      "name": "MICHIGAN-QP-DX",
+      "contest": "MICHIGAN QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "K8MQP",
+      "typed": "599 OAKL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "OAKL"
+      ],
+      "source": "docs/ContestRules/QSOParties/Michigan/MI-QSO-PARTY-Rules.txt: 'Stations outside of the U.S.A. (including KP2/KP4) or Canada send a RST, and DX.'"
+   },
+   {
+      "name": "ALABAMA-QP-OUT-OF-STATE",
+      "contest": "AL-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K4ABC",
+      "typed": "599 JEFF",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "JEFF"
+      ],
+      "source": "docs/ContestRules/QSOParties/Alabama/AL-QSO-PARTY-Rules.txt, Contest Exchange: 'Alabama stations send signal report and county abbreviations.' 'W/VE stations (including KH6/KL7) send signal report and state or VE province.' JEFF = Jefferson in AL-QSO-PARTY-Counties.txt."
+   },
+   {
+      "name": "ALABAMA-QP-IN-STATE",
+      "contest": "AL-QSO-PARTY",
+      "station": {
+         "MY CALL": "K4ABC",
+         "MY STATE": "JEFF"
+      },
+      "station_settings": {
+         "State": "AL"
+      },
+      "worked": "W1AW",
+      "typed": "599 CT",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "JEFF"
+      ],
+      "received": [
+         "599",
+         "CT"
+      ],
+      "source": "docs/ContestRules/QSOParties/Alabama/AL-QSO-PARTY-Rules.txt, Contest Exchange items a and c."
+   },
+   {
+      "name": "ALABAMA-QP-PHONE",
+      "contest": "AL-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K4ABC",
+      "typed": "59 JEFF",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "JEFF"
+      ],
+      "source": "docs/ContestRules/QSOParties/Alabama/AL-QSO-PARTY-Rules.txt: Modes include 'Phone only'; '599 DL (CW) or 59 Delta Lima (Phone)'."
+   },
+   {
+      "name": "ALABAMA-QP-DX",
+      "contest": "AL-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "K4ABC",
+      "typed": "599 JEFF",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DL"
+      ],
+      "received": [
+         "599",
+         "JEFF"
+      ],
+      "source": "docs/ContestRules/QSOParties/Alabama/AL-QSO-PARTY-Rules.txt: 'DX stations will send 59 + Country prefix. For example a German station would send: 599 DL (CW) or 59 Delta Lima (Phone).'"
+   },
+   {
+      "name": "ARKANSAS-QP-OUT-OF-STATE",
+      "contest": "AR-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K5ABC",
+      "typed": "599 BEN",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "BEN"
+      ],
+      "source": "docs/ContestRules/QSOParties/Arkansas/AR-QSO-PARTY-Rules.txt: 'Arkansas stations send signal report and three-letter county abbreviation' and 'Non-Arkansas stations send signal report and U.S. State or Canadian Province, or DX if in another country.'"
+   },
+   {
+      "name": "ARKANSAS-QP-IN-STATE",
+      "contest": "AR-QSO-PARTY",
+      "station": {
+         "MY CALL": "K5ABC",
+         "MY STATE": "BEN"
+      },
+      "station_settings": {
+         "State": "AR"
+      },
+      "worked": "W1AW",
+      "typed": "599 CT",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "BEN"
+      ],
+      "received": [
+         "599",
+         "CT"
+      ],
+      "source": "docs/ContestRules/QSOParties/Arkansas/AR-QSO-PARTY-Rules.txt: Exchange section; its phone example has the AR station in BEN and the other station sending CT."
+   },
+   {
+      "name": "ARKANSAS-QP-PHONE",
+      "contest": "AR-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K5ABC",
+      "typed": "59 BEN",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "BEN"
+      ],
+      "source": "docs/ContestRules/QSOParties/Arkansas/AR-QSO-PARTY-Rules.txt: Modes 'PHONE'; example 'you're 59 in Benton Co' and 'you're 59 Charlie Tango (CT)'."
+   },
+   {
+      "name": "ARKANSAS-QP-DX",
+      "contest": "AR-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "K5ABC",
+      "typed": "599 BEN",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "BEN"
+      ],
+      "source": "docs/ContestRules/QSOParties/Arkansas/AR-QSO-PARTY-Rules.txt: 'or DX if in another country'; 'Use DX for all stations outside of the U.S. and Canada.'"
+   },
+   {
+      "name": "ARKANSAS-QP-COUNTY-LINE",
+      "contest": "AR-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K5ABC",
+      "typed": "599 BEN/WAS",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "BEN"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "WAS"
+            ]
+         }
+      ],
+      "source": "docs/ContestRules/QSOParties/Arkansas/AR-QSO-PARTY-Rules.txt: 'Mobile, Rover or Portable stations that are within three miles of a county line ... can transmit county abbreviations for all of the applicable counties. ... The county abbreviations can all be sent in the same transmission.' and 'A separate QSO should be logged for each Arkansas county sent/received.' WAS = Washington in AR-QSO-PARTY-Counties.txt."
+   },
+   {
+      "name": "DELAWARE-QP-OUT-OF-STATE",
+      "contest": "DELAWARE QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K3AAA",
+      "typed": "599 NDE",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "NDE"
+      ],
+      "source": "Delaware/DE-QSO-PARTY-Rules.txt: \"Delaware stations send signal report and county. Stations outside Delaware send signal report and state, province or DX.\" Codes NDE, KDE, SDE. No Cabrillo column order in the saved documents; the sponsor's exchange order is used."
+   },
+   {
+      "name": "DELAWARE-QP-IN-STATE",
+      "contest": "DELAWARE QSO PARTY",
+      "station": {
+         "MY CALL": "K3AAA",
+         "MY STATE": "NDE"
+      },
+      "station_settings": {
+         "State": "DE"
+      },
+      "worked": "NY4I",
+      "typed": "599 FL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "NDE"
+      ],
+      "received": [
+         "599",
+         "FL"
+      ],
+      "source": "Delaware/DE-QSO-PARTY-Rules.txt: \"Delaware stations send signal report and county. Stations outside Delaware send signal report and state, province or DX.\" and \"Delaware stations work everyone.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "DELAWARE-QP-PHONE",
+      "contest": "DELAWARE QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K3BBB",
+      "typed": "59 SDE",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "SDE"
+      ],
+      "source": "Delaware/DE-QSO-PARTY-Rules.txt: \"The three valid mode categories are CW, Phone, and Digital.\" and \"Stations outside Delaware send signal report and state, province or DX.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "DELAWARE-QP-DX",
+      "contest": "DELAWARE QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "K3AAA",
+      "typed": "599 NDE",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "NDE"
+      ],
+      "source": "Delaware/DE-QSO-PARTY-Rules.txt: \"Stations outside Delaware send signal report and state, province or DX.\" and \"DX stations should use DX.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "DELAWARE-QP-COUNTY-LINE",
+      "contest": "DELAWARE QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K3CCC",
+      "typed": "599 NDE/KDE",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "NDE"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "KDE"
+            ]
+         }
+      ],
+      "source": "Delaware/DE-QSO-PARTY-Rules.txt: \"County line QSOs should be logged as two separate QSOs\". No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "ILLINOIS-QP-OUT-OF-STATE",
+      "contest": "IL-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K9AAA",
+      "typed": "599 COOK",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "COOK"
+      ],
+      "source": "Illinois/IL-QSO-PARTY-Rules.txt: \"IL stations give RS/T and county; others give RS/T and state, province or country\". Order from 'QSO Record Minimum Data': \"the call sign of your station; the RS(T) sent; the location of your station; the call sign of the station contacted; the RS(T) received; and the location of the station contacted.\" COOK from ILQP-Counties-Abbreviations.pdf."
+   },
+   {
+      "name": "ILLINOIS-QP-IN-STATE",
+      "contest": "IL-QSO-PARTY",
+      "station": {
+         "MY CALL": "K9AAA",
+         "MY STATE": "COOK"
+      },
+      "station_settings": {
+         "State": "IL"
+      },
+      "worked": "NY4I",
+      "typed": "599 FL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "COOK"
+      ],
+      "received": [
+         "599",
+         "FL"
+      ],
+      "source": "Illinois/IL-QSO-PARTY-Rules.txt: \"IL stations give RS/T and county; others give RS/T and state, province or country\"; order from 'QSO Record Minimum Data': RS(T) sent, your location, call contacted, RS(T) received, location contacted."
+   },
+   {
+      "name": "ILLINOIS-QP-PHONE",
+      "contest": "IL-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K9BBB",
+      "typed": "59 SANG",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "SANG"
+      ],
+      "source": "Illinois/IL-QSO-PARTY-Rules.txt: \"Scoring: Phone QSO: 1 point\" and \"IL stations give RS/T and county; others give RS/T and state, province or country\"; order from 'QSO Record Minimum Data'. SANG from ILQP-Counties-Abbreviations.pdf."
+   },
+   {
+      "name": "INDIANA-QP-OUT-OF-STATE",
+      "contest": "IN QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K9CCC",
+      "typed": "599 INMRN",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "INMRN"
+      ],
+      "source": "Indiana/IN-QSO-PARTY-Rules.txt: \"an Indiana station in Marion county would send \"59 INMRN\". Non-Indiana stations in the USA and Canada send RS(T) and state, province or territory.\" IN-QSO-PARTY-Counties.txt: \"Indiana stations should log states by their standard two letter postal abbreviations.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "INDIANA-QP-IN-STATE",
+      "contest": "IN QSO PARTY",
+      "station": {
+         "MY CALL": "K9CCC",
+         "MY STATE": "INMRN"
+      },
+      "station_settings": {
+         "State": "IN"
+      },
+      "worked": "NY4I",
+      "typed": "599 FL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "INMRN"
+      ],
+      "received": [
+         "599",
+         "FL"
+      ],
+      "source": "Indiana/IN-QSO-PARTY-Rules.txt: \"Indiana stations send RS(T) plus their INQP exchange from this list\"; IN-QSO-PARTY-Counties.txt: \"Indiana stations should log states by their standard two letter postal abbreviations.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "INDIANA-QP-PHONE",
+      "contest": "IN QSO PARTY",
+      "station": {
+         "MY CALL": "K9DDD",
+         "MY STATE": "INHAM"
+      },
+      "station_settings": {
+         "State": "IN"
+      },
+      "worked": "NY4I",
+      "typed": "59 FL",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "INHAM"
+      ],
+      "received": [
+         "59",
+         "FL"
+      ],
+      "source": "Indiana/IN-QSO-PARTY-Rules.txt: \"Count two points for each complete two-way QSO (both CW and Phone)\" and \"Indiana stations send RS(T) plus their INQP exchange\"; INHAM = Hamilton. No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "INDIANA-QP-DX",
+      "contest": "IN QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "K9CCC",
+      "typed": "599 INMRN",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "INMRN"
+      ],
+      "source": "Indiana/IN-QSO-PARTY-Rules.txt: \"All others send RS(T) and \"DX\".\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "INDIANA-QP-COUNTY-LINE",
+      "contest": "IN QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K9EEE",
+      "typed": "599 INMRN/INHAM",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "INMRN"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "INHAM"
+            ]
+         }
+      ],
+      "source": "Indiana/IN-QSO-PARTY-Rules.txt: \"Stations on county boundaries may be worked for multiple county credit ... Contacts with such stations should be logged in either of two ways: as multiple QSOs, one per county. as one QSO with each county duly noted.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "IOWA-QP-OUT-OF-STATE",
+      "contest": "IA-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W0AAA",
+      "typed": "599 POL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "POL"
+      ],
+      "source": "Iowa/IA-QSO-PARTY-Rules.txt: \"Iowa Stations: send RS/T and county\" and \"All Other US/Canada Stations: send RS/T and state/province\"; FL from IAQP-State-Province-List-2018-08-12.pdf; POL = Polk. No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "IOWA-QP-IN-STATE",
+      "contest": "IA-QSO-PARTY",
+      "station": {
+         "MY CALL": "W0AAA",
+         "MY STATE": "POL"
+      },
+      "station_settings": {
+         "State": "IA"
+      },
+      "worked": "NY4I",
+      "typed": "599 FL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "POL"
+      ],
+      "received": [
+         "599",
+         "FL"
+      ],
+      "source": "Iowa/IA-QSO-PARTY-Rules.txt: \"Iowa Stations: send RS/T and county\"; \"All operators must use these abbreviations in their exchanges and in their logs.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "IOWA-QP-PHONE",
+      "contest": "IA-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W0BBB",
+      "typed": "59 LIN",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "LIN"
+      ],
+      "source": "Iowa/IA-QSO-PARTY-Rules.txt: \"Each phone contact is worth one (1) point.\" and the Exchange section (RS/T and county; RS/T and state/province); LIN = Linn. No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "IOWA-QP-DX",
+      "contest": "IA-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W0AAA",
+      "typed": "599 POL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "POL"
+      ],
+      "source": "Iowa/IA-QSO-PARTY-Rules.txt: \"DX Stations (outside US and Canada): send RS/T and “DX”\". No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KANSAS-QP-OUT-OF-STATE",
+      "contest": "KS-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W0CCC",
+      "typed": "599 SED",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "SED"
+      ],
+      "source": "Kansas/KS-QSO-PARTY-Rules.txt: \"Kansas stations send signal report and county. Stations outside of Kansas send signal report and state, Canadian province, or DX.\" and \"3-character county abbreviations. Log all other contacts with 2-character abbreviations.\" SED = Sedgwick. No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KANSAS-QP-IN-STATE",
+      "contest": "KS-QSO-PARTY",
+      "station": {
+         "MY CALL": "W0CCC",
+         "MY STATE": "SED"
+      },
+      "station_settings": {
+         "State": "KS"
+      },
+      "worked": "NY4I",
+      "typed": "599 FL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "SED"
+      ],
+      "received": [
+         "599",
+         "FL"
+      ],
+      "source": "Kansas/KS-QSO-PARTY-Rules.txt: \"Kansas stations send signal report and county.\" and \"Stations in Kansas work everyone.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KANSAS-QP-PHONE",
+      "contest": "KS-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W0DDD",
+      "typed": "59 JOH",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "JOH"
+      ],
+      "source": "Kansas/KS-QSO-PARTY-Rules.txt: \"Complete non-duplicate Phone contacts are worth 2 points\" and the EXCHANGE section; JOH = Johnson. No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KANSAS-QP-DX",
+      "contest": "KS-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W0CCC",
+      "typed": "599 SED",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "SED"
+      ],
+      "source": "Kansas/KS-QSO-PARTY-Rules.txt: \"Stations outside of Kansas send signal report and state, Canadian province, or DX.\" and \"Use abbreviation DX for stations outside of the United States and Canada.\" No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KANSAS-QP-COUNTY-LINE",
+      "contest": "KS-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W0EEE",
+      "typed": "599 SED/HVY",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "SED"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "HVY"
+            ]
+         }
+      ],
+      "source": "Kansas/KS-QSO-PARTY-Rules.txt: \"If a Kansas station is on a county line between two or more Kansas counties, a separate QSO must be logged for each county. Don't log multiple-county QSOs on one line.\" SED = Sedgwick, HVY = Harvey. No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KENTUCKY-QP-OUT-OF-STATE",
+      "contest": "KY-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K4AAA",
+      "typed": "599 JEF",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "JEF"
+      ],
+      "source": "Kentucky/KY-QSO-PARTY-Rules.txt (sponsor text, 2027 draft): \"KY stations: RS(T) + County Abbreviation. USA stations (non-KY): RS(T) + State\". JEF = Jefferson. No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KENTUCKY-QP-IN-STATE",
+      "contest": "KY-QSO-PARTY",
+      "station": {
+         "MY CALL": "K4AAA",
+         "MY STATE": "JEF"
+      },
+      "station_settings": {
+         "State": "KY"
+      },
+      "worked": "NY4I",
+      "typed": "599 FL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "JEF"
+      ],
+      "received": [
+         "599",
+         "FL"
+      ],
+      "source": "Kentucky/KY-QSO-PARTY-Rules.txt (2027 draft): \"KY stations: RS(T) + County Abbreviation\" and \"KY stations log USA state (not ARRL section), including DC\". No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KENTUCKY-QP-PHONE",
+      "contest": "KY-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K4BBB",
+      "typed": "59 FAY",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "FAY"
+      ],
+      "source": "Kentucky/KY-QSO-PARTY-Rules.txt (2027 draft): \"Phone (SSB/FM)\" and the 'Exchange Sent' section; FAY = Fayette. No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KENTUCKY-QP-DX",
+      "contest": "KY-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "K4AAA",
+      "typed": "599 JEF",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "JEF"
+      ],
+      "source": "Kentucky/KY-QSO-PARTY-Rules.txt (2027 draft): \"DX: RS(T) + “DX”\". No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "KENTUCKY-QP-COUNTY-LINE",
+      "contest": "KY-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "N4TY",
+      "typed": "599 SCO/FAY",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "SCO"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "FAY"
+            ]
+         }
+      ],
+      "source": "Kentucky/KY-QSO-PARTY-Rules.txt (2027 draft): \"KY Mobile and Expedition stations may setup on a county line ... send the exchange as: 599 SCO/FAY. Operators must log you twice\". No Cabrillo column order saved; exchange order used."
+   },
+   {
+      "name": "ILLINOIS-QP-WORKS-2-LINE",
+      "contest": "IL-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W9AWE",
+      "typed": "599 KEND/GRUN",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "KEND"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "GRUN"
+            ]
+         }
+      ],
+      "source": "docs/ContestRules/QSOParties/Illinois/IL-QSO-PARTY-Rules.txt: \"Contacts with/by stations at the border of 2/3/4 counties count as 2/3/4 counties and 2/3/4 QSOs\", and every log record (line) carries the locations; ILQP-FAQ-excerpts.txt (NY4I: up to a 4 county line). One line per county. County codes are the sponsor's; that these counties meet is not checked. Written by the test author from the sponsor text, not by a blind agent."
+   },
+   {
+      "name": "ILLINOIS-QP-WORKS-3-CORNER",
+      "contest": "IL-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W9AWE",
+      "typed": "599 KEND/GRUN/WILL",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "KEND"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "GRUN"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "WILL"
+            ]
+         }
+      ],
+      "source": "docs/ContestRules/QSOParties/Illinois/IL-QSO-PARTY-Rules.txt: \"Contacts with/by stations at the border of 2/3/4 counties count as 2/3/4 counties and 2/3/4 QSOs\", and every log record (line) carries the locations; ILQP-FAQ-excerpts.txt (NY4I: up to a 4 county line). One line per county. County codes are the sponsor's; that these counties meet is not checked. Written by the test author from the sponsor text, not by a blind agent."
+   },
+   {
+      "name": "ILLINOIS-QP-WORKS-4-CORNER",
+      "contest": "IL-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W9AWE",
+      "typed": "599 KEND/GRUN/WILL/DUPG",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "KEND"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "GRUN"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "WILL"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "DUPG"
+            ]
+         }
+      ],
+      "source": "docs/ContestRules/QSOParties/Illinois/IL-QSO-PARTY-Rules.txt: \"Contacts with/by stations at the border of 2/3/4 counties count as 2/3/4 counties and 2/3/4 QSOs\", and every log record (line) carries the locations; ILQP-FAQ-excerpts.txt (NY4I: up to a 4 county line). One line per county. County codes are the sponsor's; that these counties meet is not checked. Written by the test author from the sponsor text, not by a blind agent."
+   },
+   {
+      "name": "IOWA-QP-WORKS-3-JUNCTION",
+      "contest": "IA-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W0YL",
+      "typed": "599 STR/MSL/HDN",
+      "band": "20",
+      "mode": "CW",
+      "lines": [
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "STR"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "MSL"
+            ]
+         },
+         {
+            "sent": [
+               "599",
+               "FL"
+            ],
+            "received": [
+               "599",
+               "HDN"
+            ]
+         }
+      ],
+      "source": "docs/ContestRules/QSOParties/Iowa/IA-QSO-PARTY-Rules.txt: stations on a line or junction \"represent all counties at the intersection simultaneously ... All intersecting counties may be worked in a single exchange\" (its example: STR, MSL, HDN). One Cabrillo line per county is the author's reading: no sample is saved. Written by the test author from the sponsor text, not by a blind agent."
    }
 ]

@@ -181,21 +181,35 @@ def same_form(token):
    return str(int(token)) if token.isdigit() else token
 
 
-def check_line(line, case):
-   """QSO: freq mode date time mycall <sent...> call <received...>.  The
+def expected_lines(case):
+   """One QSO line from 'sent' and 'received', or one per entry of 'lines' (a
+   county line is one typed contact and a line for each county)."""
+   if 'lines' in case:
+      return case['lines']
+   return [{'sent': case['sent'], 'received': case['received']}]
+
+
+def line_fields(line):
+   return [same_form(t) for t in line.split()[5:]]
+
+
+def check_lines(found, case):
+   """Every expected QSO line, field by field and in order within the line:
+   QSO: freq mode date time mycall <sent...> call <received...>.  The
    frequency, mode, date and time are the run's own and are not checked.
+   The lines themselves may come in either order.
    A field that is all digits on both sides is compared as a number: sponsors'
    samples write serial 1 where a logger writes 001.  A report stays exact in
    effect (59 and 599 are different numbers)."""
-   tokens = line.split()
-   expected = ([case['station']['MY CALL']] + case['sent'] +
-               [case['worked']] + case['received'])
-   actual = tokens[5:]
-   if [same_form(t) for t in actual] != [same_form(t) for t in expected]:
-      return ['expected: ' + ' '.join(expected),
-              'got:      ' + ' '.join(actual),
-              'line:     ' + line]
-   return []
+   wanted = []
+   for line in expected_lines(case):
+      wanted.append([case['station']['MY CALL']] + line['sent'] +
+                    [case['worked']] + line['received'])
+   if sorted([same_form(t) for t in w] for w in wanted) == sorted(line_fields(l) for l in found):
+      return []
+   return (['expected: ' + ' '.join(w) for w in wanted] +
+           ['got:      ' + ' '.join(l.split()[5:]) for l in found] +
+           ['line:     ' + l for l in found])
 
 
 def run_case(exe, case):
@@ -234,9 +248,11 @@ def run_case(exe, case):
       return ['export: exit %s (folder %s)' % (code, folder)]
 
    lines = qso_lines(folder)
-   if len(lines) != 1:
-      return ['expected one Cabrillo QSO line, found %d (folder %s)' % (len(lines), folder)]
-   return check_line(lines[0], case)
+   if len(lines) != len(expected_lines(case)):
+      return (['expected %d Cabrillo QSO line(s), found %d (folder %s)'
+               % (len(expected_lines(case)), len(lines), folder)] +
+              ['line:     ' + line for line in lines])
+   return check_lines(lines, case)
 
 
 def main():
