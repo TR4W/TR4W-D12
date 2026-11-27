@@ -54,6 +54,7 @@ type
       procedure RunAllTests; override;
    private
       procedure Test_ChoicesListEveryContestOnce;
+      procedure Test_IARUSendsASocietyOnlyWhenStatedForTheContest;
       procedure Test_ChoicesActiveFirstThenByDisplayName;
       procedure Test_ChoicesShowDisplayNamesAndMarkInactive;
       procedure Test_ChoiceCaptionsAreUnique;
@@ -97,9 +98,10 @@ uses
    uTestRegisteredContests;
 
 const
-   (* NY4I, 2026-10-01/02: inactive, kept for old logs. Add one only on his
-      word, and in the same commit as its class's GetIsActive. *)
-   INACTIVE_CONTESTS: array[0..1] of ContestType = (SASPRINT, LQP);
+   (* NY4I, 2026-10-01/02, and Arktika Spring 2026-11-26: inactive, kept for
+      old logs. Add one only on his word, and in the same commit as its
+      class's GetIsActive. *)
+   INACTIVE_CONTESTS: array[0..2] of ContestType = (SASPRINT, LQP, ARKTIKA_SPRING);
 
 (* Asked of the walked object (issue #96): a contest registered by its id is
   no legacy member, so it is never on the list -- it must be active. *)
@@ -121,6 +123,41 @@ end;
 (* ------------------------------------------------------------------------ *)
 (* THE NEW CONTEST DROP-DOWN                                                 *)
 (* ------------------------------------------------------------------------ *)
+
+(* THE SPONSOR'S RULE 4 (docs/ContestRules/ARRL/IARU-HF-Rules.pdf): all
+  stations send a report and ITU zone; a headquarters station sends its
+  society instead. The station's everyday MY STATE was sent in the zone's
+  place (2026-11-26). Empty session state is what makes every writer use the
+  zone. *)
+procedure TContestUITests.Test_IARUSendsASocietyOnlyWhenStatedForTheContest;
+
+   function SessionFor(aStated: boolean; out aSentState: string): boolean;
+   var
+      station: TStationContext;
+      session: TSessionDefaults;
+   begin
+      station := Default(TStationContext);
+      station.MyState := 'FL';
+      station.MyStateStatedForContest := aStated;
+      session := TSessionDefaults.Create;
+      try
+         ContestIdentity(IARU).DescribeSession(station, session);
+         Result := session.IsStated(svSentState);
+         aSentState := session.SentState;
+      finally
+         session.Free;
+      end;
+   end;
+
+var
+   sent: string;
+begin
+   BeginTest('Test_IARUSendsASocietyOnlyWhenStatedForTheContest');
+   CheckTrue(SessionFor(False, sent), 'the station''s own state: the session states what is sent');
+   CheckEquals('', sent, 'and sends nothing there, so the zone is sent');
+   CheckFalse(SessionFor(True, sent),
+              'a value stated for this contest is left to be sent');
+end;
 
 procedure TContestUITests.Test_ChoicesListEveryContestOnce;
 var
@@ -1102,6 +1139,7 @@ end;
 
 procedure TContestUITests.RunAllTests;
 begin
+   Test_IARUSendsASocietyOnlyWhenStatedForTheContest;
    Test_ChoicesListEveryContestOnce;
    Test_ChoicesActiveFirstThenByDisplayName;
    Test_ChoicesShowDisplayNamesAndMarkInactive;

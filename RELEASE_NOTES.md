@@ -44,6 +44,18 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+#### Contests
+
+- **IARU HF now sends your ITU zone.** If your station settings held a state, it was sent in place of the
+  zone: in the function keys, the Cabrillo file and the ADIF file. A headquarters or member station is sent
+  as before when you enter its abbreviation in New Contest. If you made an IARU HF Cabrillo file with an
+  earlier 5.x release, check it and export it again if it shows your state. Messages you edited yourself are
+  not changed.
+- **ARRL Digital sends a four-character grid square,** as the rules require, even when your station grid has
+  six. Your log keeps the full grid.
+- **Arktika Spring is now listed as inactive.** New Contest shows it after the active contests, and your
+  existing Arktika logs still open.
+
 ---
 
 ## 5.1.x — November 2026

@@ -722,7 +722,12 @@ the target shape, the M-step migration order and the open questions.
   CW+RTTY contest has one report for both. **AN EXPECTED CABRILLO LINE COMES
   FROM THE SPONSOR, NOT FROM THE PROGRAM (issue 361): ALL JA shipped with no
   report in either column while its pins, GUI case and matrix record, all taken
-  from the output, agreed. Cite the sponsor's sample or spec in the test.** **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
+  from the output, agreed. Cite the sponsor's sample or spec in the test.**
+  Add a case in `tr4w/test/export-test` for a new or changed export. **MY
+  STATE'S PLACE IN AN EXCHANGE: the station's everyday MY STATE is not the same
+  as one stated for the contest (`TStationContext.MyStateStatedForContest`).
+  IARU sent the former as a headquarters society. OZCR, WWPMC, WRTC and BSCI
+  use the same state-or-zone writer and have not been checked.** **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
   2026-10-14: "yes QSO parties allow it but in any contest NY4I/7 or
   VP9/NY4I is a valid call")**: `StripsRoverCountyFromCall` and the export's
   `SplitsRoverCallOnExport` (a `TContestBase` virtual since then) are True

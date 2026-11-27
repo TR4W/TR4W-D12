@@ -131,6 +131,10 @@ type
                                      var aExch: ContestExchange;
                                      out aErrorMessage: string): boolean; override;
    public
+      (* SET-UP -- what is sent where MY STATE goes. See
+         TContestBase.DescribeSession. *)
+      procedure DescribeSession(const aStation: TStationContext;
+                                aSession: TSessionDefaults); override;
       (* LogCfg's default CQ exchange -- see TContestBase.CQExchangeDefault. *)
       function CQExchangeDefault(const aStation: TStationContext): string; override;
    public
@@ -347,7 +351,9 @@ end;
    WHICH ONE FOLLOWS FROM WHO IS SENDING, on both sides independently: a society
    station sends its abbreviation, everybody else sends a zone. So our side asks
    whether aMy.MyState is set and his side asks whether the QSO carried a QTH
-   string -- the same question asked of the two stations.
+   string -- the same question asked of the two stations. aMy.MyState here is
+   what this SESSION sends, which DescribeSession leaves empty unless an
+   abbreviation was stated for this contest.
 
    THE ZONE IS THE ITU ZONE, AND aMy.MyZone IS WHERE THAT LIVES.
    PostUnit.ZoneSentForThisContest resolves CQ-versus-ITU per contest and puts
@@ -417,6 +423,25 @@ begin
    if ADIFTextIsAlphabetic(srxExchange) then
       begin
       aExch.QTHString := ShortString(srxExchange);
+      end;
+end;
+
+(* A SOCIETY IS SENT ONLY WHEN IT WAS STATED FOR THIS CONTEST -- the "HQ or
+   member" row of New Contest, or the contest's own .cfg or log.
+
+   The sponsor: "All stations send a signal report and ITU zone.
+   Headquarters stations ... send the abbreviation for their society instead
+   of zone" (docs/ContestRules/ARRL/IARU-HF-Rules.pdf, rule 4). The
+   station's everyday MY STATE is not a society, and was sent as one: NY4I's
+   Cabrillo, CQ exchange and function keys read '599 FL' for '599 8'
+   (2026-11-26, found by tr4w/test/export-test). *)
+procedure TContestIARU.DescribeSession(const aStation: TStationContext;
+                                       aSession: TSessionDefaults);
+begin
+   inherited DescribeSession(aStation, aSession);
+   if not aStation.MyStateStatedForContest then
+      begin
+      aSession.SentState := '';
       end;
 end;
 

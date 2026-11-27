@@ -387,6 +387,7 @@ begin
       read it back; it reads the session's value now, so every contest sees
       exactly what it saw. *)
    Result.MyState := SentMyState;
+   Result.MyStateStatedForContest := Settings.My.HasContestOverride(sfState);
    Result.ContestTitle := Settings.Contest.Title;
    Result.MyCall := Settings.My.Call;
    (* FoundContest's own in-state decision -- see TStationContext.InHostState. *)

@@ -210,5 +210,131 @@
          "WI"
       ],
       "source": "WFD sponsor, docs/ContestRules/WinterFieldDay/WFD-2027-Rules-v3.md sample 'K4SCO 3O AL N2WFD 1H WI': class and section. 1I WCF: NY4I, 2026-11-26"
+   },
+   {
+      "name": "ARRL-DX-CW",
+      "contest": "ARRL-DX-CW",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 100",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FL"
+      ],
+      "received": [
+         "599",
+         "100"
+      ],
+      "source": "docs/ContestRules/ARRL/DX-Rules.pdf rule 4: signal report, then the state for W/VE and the power for DX; no sample QSO line, so the column order is Cabrillo's (my call and exchange, then theirs), the official ARRL format by ELOG.1"
+   },
+   {
+      "name": "ARRL-DIGI",
+      "contest": "ARRL-DIGI",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA"
+      },
+      "worked": "W1AW",
+      "typed": "FN31",
+      "band": "20",
+      "mode": "DIGI",
+      "sent": [
+         "EL88"
+      ],
+      "received": [
+         "FN31"
+      ],
+      "source": "docs/ContestRules/ARRL/Digital-Rules.pdf rule 4.1: the 4-digit grid square only; no sample QSO line, so the column order is Cabrillo's (my call and exchange, then theirs), the official ARRL format by ELOG.1"
+   },
+   {
+      "name": "IARU-HF",
+      "contest": "IARU-HF",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA"
+      },
+      "station_settings": {
+         "State": "FL"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 28",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "8"
+      ],
+      "received": [
+         "599",
+         "28"
+      ],
+      "source": "docs/ContestRules/ARRL/IARU-HF-Rules.pdf rule 4: signal report, then ITU zone; no sample QSO line, so the column order is Cabrillo's (my call and exchange, then theirs), the official ARRL format by ELOG.1"
+   },
+   {
+      "name": "IARU-HF-HQ",
+      "contest": "IARU-HF",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY ITU ZONE": "8",
+         "MY STATE": "ARRL"
+      },
+      "station_settings": {
+         "State": "CT"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 28",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ARRL"
+      ],
+      "received": [
+         "599",
+         "28"
+      ],
+      "source": "docs/ContestRules/ARRL/IARU-HF-Rules.pdf rule 4.2.1: a member society headquarters station sends its society's abbreviation; the rules' example is that W1AW sends ARRL. Column order is Cabrillo's (ELOG.1)"
+   },
+   {
+      "name": "ARRL-FD",
+      "contest": "ARRL-FD",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA",
+         "MY FD CLASS": "1D"
+      },
+      "worked": "W1AW",
+      "typed": "3A CT",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "1D",
+         "WCF"
+      ],
+      "received": [
+         "3A",
+         "CT"
+      ],
+      "source": "docs/ContestRules/ARRL/2026-Field-Day-Rules.pdf rule 5, example '3A CT': class and section. Rule 8.7: Cabrillo is not required, accepted in place of a dupe sheet; the column order is Cabrillo's. 1D WCF: NY4I, 2026-11-26"
    }
 ]

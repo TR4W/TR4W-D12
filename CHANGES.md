@@ -41,6 +41,16 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+#### IARU HF and ARRL Digital sent exchanges (`contestFactory`)
+
+- IARU's `DescribeSession` sends nothing in MY STATE's place unless MY STATE was stated for the contest (new `TStationContext.MyStateStatedForContest`). Its writers and `CQExchangeDefault` all read the session's sent state, so the station's everyday state had replaced the ITU zone.
+- ARRL Digital cuts the sent grid to four characters in the Cabrillo column and `STX_STRING`.
+- Arktika Spring is inactive (NY4I).
+
+#### Per-contest export test (`test/export-test`, `/ENTERQSO`) — Issue #390
+
+- A new log, one contact entered as Enter does, and the whole Cabrillo `QSO:` line checked against the sponsor's exchange. It found both defects above.
+
 ### 5.1.6 (2026-11-26) - NY4I
 
 #### ALL JA Cabrillo columns (`uContestAllJA`) — Issue #361

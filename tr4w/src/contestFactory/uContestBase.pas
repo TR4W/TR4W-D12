@@ -371,6 +371,16 @@ type
          CW. A rule that reads this must say what it does with cmCW. *)
       MyCategoryMode: tCategoryMode;
 
+      (* WAS MY STATE STATED FOR THIS CONTEST -- New Contest, its .cfg or its
+         log -- rather than being the station's everyday MY STATE?
+
+         Added 2026-11-26 for the IARU HF, where the field in MY STATE's place
+         is a headquarters or member station's society: a value stated for the
+         contest is one, and the station's own state is not (it was sent in
+         place of the ITU zone). MyState cannot say which it is. False is the
+         zero value: nothing stated for this contest. *)
+      MyStateStatedForContest: boolean;
+
       (* THE REST OF THE STATION'S OWN EXCHANGE -- MY NAME, MY FD CLASS, MY
          SECTION, MY PREC and MY CHECK, as text.
 

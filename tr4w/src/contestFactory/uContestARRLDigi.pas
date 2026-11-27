@@ -301,17 +301,28 @@ begin
    Result := True;
 end;
 
+(* THE GRID THIS CONTEST SENDS IS FOUR CHARACTERS -- rule 4.1, "4-digit
+   Maidenhead grid square locator" (docs/ContestRules/ARRL/Digital-Rules.pdf).
+   The station's MY GRID is usually six, and was sent whole (2026-11-26,
+   found by tr4w/test/export-test). Only what is SENT is cut: the QSO keeps
+   the full grid, and ADIF MY_GRIDSQUARE writes it. *)
+function WithSentGrid(const aMy: TMyStationExchange): TMyStationExchange;
+begin
+   Result := aMy;
+   Result.MyGrid := Copy(aMy.MyGrid, 1, 4);
+end;
+
 function TContestARRLDigi.GetADIFSentExchange(const aMy: TMyStationExchange;
                                               const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentGrid(aMy, aQso);
+   Result := ADIFSentGrid(WithSentGrid(aMy), aQso);
 end;
 
 function TContestARRLDigi.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                   const aQso: ContestExchange;
                                                   const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentGrid(aMy, aQso, aCtx);
+   Result := CabrilloSentGrid(WithSentGrid(aMy), aQso, aCtx);
 end;
 
 function TContestARRLDigi.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;

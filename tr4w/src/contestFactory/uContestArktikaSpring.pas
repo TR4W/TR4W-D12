@@ -84,6 +84,8 @@ type
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
       function GetIsUSQSOParty: boolean; override;
+      (* Inactive -- see TContestBase.GetIsActive. *)
+      function GetIsActive: boolean; override;
 
       (* THE NARROWER CABRILLO QSO LINE -- taken over from PostUnit, where it
          was written as an `if Contest = ARKTIKA_SPRING`.
@@ -166,6 +168,14 @@ end;
 function TContestArktikaSpring.GetCabrilloQSOLineFormat: string;
 begin
    Result := '%s%-12s%-10s%-10s' + #13#10;
+end;
+
+(* INACTIVE, ON NY4I'S WORD (2026-11-26: "Move Arktika to inactive
+   contests"). The New Contest drop-down lists it after every active contest,
+   marked; an old log still opens. *)
+function TContestArktikaSpring.GetIsActive: boolean;
+begin
+   Result := False;
 end;
 
 function TContestArktikaSpring.GetDisplayName: string;

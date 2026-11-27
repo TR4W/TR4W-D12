@@ -51,6 +51,16 @@ def write_handoff(path, case):
    io.open(path, 'w', encoding='utf-8', newline='\r\n').write('\n'.join(lines) + '\n')
 
 
+def write_settings(path, case):
+   """The run's own settings: the tracked fixture, plus the case's station
+   settings -- what Preferences > Station holds on a real station, as opposed
+   to what New Contest asks for one contest."""
+   data = json.load(io.open(SETTINGS, encoding='utf-8'))
+   if case.get('station_settings'):
+      data.setdefault('settings', {})['My'] = dict(case['station_settings'])
+   io.open(path, 'w', encoding='utf-8').write(json.dumps(data, indent=2))
+
+
 def run(exe, arguments):
    try:
       done = subprocess.run([exe] + arguments + ['--unattended'], cwd=TARGET,
@@ -136,7 +146,7 @@ def run_case(exe, case):
    settings = os.path.join(folder, 'tr4w.json')
    log = os.path.join(folder, case['name'] + '.db')
    write_handoff(handoff, case)
-   shutil.copy(SETTINGS, settings)
+   write_settings(settings, case)
 
    start = log_size()
    code = run(exe, [log, '/ENTERQSO', case['worked'], case['typed'],

@@ -544,7 +544,31 @@ begin
                '579 012'],
               aSent, aRec);
          end;
-      ARRLDIGI, MAKROTHEN, BATAVIA_FT8:
+      ARRLDIGI:
+         begin
+         (* WE SEND FOUR CHARACTERS -- rule 4.1, "4-digit Maidenhead grid
+            square locator" (docs/ContestRules/ARRL/Digital-Rules.pdf). The
+            fixture's six and ten are cut; what he sent is written as logged. *)
+         Take(aVariant,
+              ['EL88       ',
+               '           ',
+               'EL88       ',
+               'EL88       ',
+               'EL88       ',
+               'EL88       ',
+               'EL88       ',
+               'EL88       '],
+              ['GA         ',
+               '           ',
+               'ABCDEFGHIJ ',
+               'TRC        ',
+               'GA         ',
+               'GA         ',
+               '           ',
+               'GA         '],
+              aSent, aRec);
+         end;
+      MAKROTHEN, BATAVIA_FT8:
          begin
          Take(aVariant,
               ['EL88AA     ',
@@ -1706,7 +1730,7 @@ procedure TCabrilloColumnsTests.Test_EachHelperWritesItsColumn;
 
 begin
    BeginTest('Test_EachHelperWritesItsColumn');
-   CheckHelper('CabrilloSentGrid', CabrilloSentGrid, ARRLDIGI, psUS, True);
+   CheckHelper('CabrilloSentGrid', CabrilloSentGrid, MAKROTHEN, psUS, True);
    CheckHelper('CabrilloSentRSTNameState', CabrilloSentRSTNameState, BWQP, psUS, True);
    CheckHelper('CabrilloSentQSONumberName', CabrilloSentQSONumberName, CWOPEN, psUS, True);
    CheckHelper('CabrilloSentRSTPostalCode', CabrilloSentRSTPostalCode, RSGB_ROPOCO_CW, psUS, True);

@@ -325,7 +325,15 @@ begin
                      '599 ABCDEFGHIJKLMNOPQRST',
                      '599 TRC    ');
          end;
-      ARRLDIGI, MAKROTHEN, BATAVIA_FT8, WWDIGI:
+      ARRLDIGI:
+         begin
+         (* Four characters: rule 4.1, as the Cabrillo column. *)
+         Result := Pick(aVariant, 'EL88',
+                     '',
+                     'EL88',
+                     'EL88');
+         end;
+      MAKROTHEN, BATAVIA_FT8, WWDIGI:
          begin
          Result := Pick(aVariant, 'EL88AA',
                      '',
