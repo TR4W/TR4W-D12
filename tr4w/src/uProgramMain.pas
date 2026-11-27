@@ -929,6 +929,7 @@ begin
       '  /EXPORT            headless ADIF and Cabrillo export, then exit' + sLineBreak +
       '  /IMPORT <file.adi> headless ADIF import into this contest, then exit' + sLineBreak +
       '  /RESCORE           recompute every QSO''s scoring, then exit' + sLineBreak +
+      '  /ENTERQSO <call> <exchange>  log one contact as Enter does, then exit' + sLineBreak +
       '  /MATRIX <out> <id> write this contest''s legacy-fixture record, then exit' + sLineBreak +
       '  /MATRIXLIST <out>  list every contest for the matrix, then exit' + sLineBreak +
       '  --unattended       nobody is here: exit with code 5 unless the line' + sLineBreak +
@@ -1826,7 +1827,8 @@ begin
      Manager and CaptureChangedSettings recorded them in every record. A
      record must be identical on any machine and must never hold a secret;
      the in-memory vault starts empty and the real one is never read. *)
-   if UnicodeSameText(PositionalArgument(2), '/MATRIX') then
+   if UnicodeSameText(PositionalArgument(2), '/MATRIX') or
+      UnicodeSameText(PositionalArgument(2), '/ENTERQSO') then
       begin
       InstallTestKeychain;
       end;
@@ -2359,7 +2361,9 @@ begin
              a content difference -- which sends the reader looking for a
              scoring or export regression that does not exist. Fail where the
              cause is. *)
-           if tSilentExport then
+           (* UNLESS A NEW CONTEST WAS HANDED OVER (issue 390): then the
+             missing file is the log about to be created. *)
+           if tSilentExport and (not HasNewContestChoices) then
               begin
               logger.Error('Contest file does not exist or cannot be read, ' +
                            'and this is a headless run: %s',
@@ -2977,6 +2981,31 @@ begin
   if UnicodeSameText(PositionalArgument(2), '/MATRIX') then
      begin
      Halt(RunContestMatrix(PositionalArgument(3), PositionalArgument(4)));
+     end;
+
+  (* <log> /ENTERQSO <call> <exchange> -- ONE CONTACT, ENTERED AS ENTER
+    DOES (issue 390): the per-contest export test types into the two entry
+    strings and calls MainUnit.TryLogContact, which parses, scores, commits
+    and publishes. Exit 0 saved; 6 refused or not saved, with the reason in
+    tr4w.log. The export is a second run, so it reads the log from disk. *)
+  if UnicodeSameText(PositionalArgument(2), '/ENTERQSO') then
+     begin
+     (* AS STARTUP DOES BELOW, before the first entry: it also gives the
+       record its contest. Without it the contact carries no contest and the
+       append stamps the log with that. *)
+     ClearContestExchange(ReceivedData);
+     CallWindowString := ShortString(PositionalArgument(3));
+     ExchangeWindowString := ShortString(PositionalArgument(4));
+     if TryLogContact then
+        begin
+        EarlyTrace('[EnterQSO] saved ' + PositionalArgument(3));
+        Halt(0);
+        end;
+     logger.Error('[EnterQSO] not logged: call "%s" exchange "%s" -- %s',
+                  [PositionalArgument(3), PositionalArgument(4),
+                   string(ExchangeErrorMessage)]);
+     EarlyTrace('[EnterQSO] refused: ' + string(ExchangeErrorMessage));
+     Halt(EXITCODE_ENTRY_REFUSED);
      end;
 
   if UnicodeSameText(PositionalArgument(2), '/EXPORT') then

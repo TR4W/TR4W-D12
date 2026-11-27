@@ -357,6 +357,8 @@ const
     (another instance) and from 1 (a file that IS there and is the wrong
     kind), because those three want different things done about them. }
   EXITCODE_NO_CONTEST_FILE              = 4;
+  (* /ENTERQSO: the contact was refused, or the log did not take it. *)
+  EXITCODE_ENTRY_REFUSED                = 6;
 
   (* --unattended, and the run could not finish by itself: no headless job on
     the command line, or a window that waits for an answer was about to open

@@ -1,0 +1,21 @@
+[
+   {
+      "name": "ALL-JA",
+      "contest": "ALL JA",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY ZONE": "5",
+         "MY ITU ZONE": "8",
+         "MY STATE": "FL",
+         "MY SECTION": "WCF",
+         "MY GRID": "EL88PA",
+         "MY PREFECTURE": "10",
+         "MY POWER CLASS": "M"
+      },
+      "worked": "JA1ABC",
+      "typed": "599 25M",
+      "sent": ["599", "10M"],
+      "received": ["599", "25M"],
+      "source": "JARL e-log format page, ALL JA sample '599 10M 599 25M', http://www.jarl.org/Japanese/1_Tanoshimo/1-1_Contest/logformat.html (read 2026-11-26). Power letter joined: NY4I, Q1, 2026-10-15. Prefecture 10 and class M are test values, not NY4I's station."
+   }
+]

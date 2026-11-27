@@ -163,7 +163,8 @@ begin
              UnicodeSameText(aArg, '/IMPORT') or
              UnicodeSameText(aArg, '/IMPORTLOG') or
              UnicodeSameText(aArg, '/MATRIX') or
-             UnicodeSameText(aArg, '/MATRIXLIST');
+             UnicodeSameText(aArg, '/MATRIXLIST') or
+             UnicodeSameText(aArg, '/ENTERQSO');
 end;
 
 function ArgumentsHaveHeadlessSwitch(const aArgs: array of string): boolean;
@@ -193,6 +194,7 @@ begin
              UnicodeSameText(second, '/EXPORT') or
              UnicodeSameText(second, '/RESCORE') or
              UnicodeSameText(second, '/MATRIX') or
+             UnicodeSameText(second, '/ENTERQSO') or
              (ImportFileOf(aArgs) <> '');
 end;
 

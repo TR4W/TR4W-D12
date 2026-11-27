@@ -56,6 +56,10 @@ begin
    CheckTrue(ArgumentsNameAHeadlessJob(['a.db', '/RESCORE']), '/RESCORE');
    CheckTrue(ArgumentsNameAHeadlessJob(['a.db', '/MATRIX', 'o', 'id']),
              '/MATRIX');
+   CheckTrue(ArgumentsNameAHeadlessJob(['a.db', '/ENTERQSO', 'W1AW', '599 CT']),
+             '/ENTERQSO');
+   CheckTrue(ArgumentsHaveHeadlessSwitch(['a.db', '/ENTERQSO', 'W1AW', '5']),
+             '/ENTERQSO runs with no operator');
    CheckTrue(ArgumentsNameAHeadlessJob(['a.cfg', '/IMPORT', 'a.adi']),
              '/IMPORT');
    CheckTrue(ArgumentsNameAHeadlessJob(['a.db', '/export']), 'any case');
