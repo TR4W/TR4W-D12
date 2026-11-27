@@ -110,6 +110,10 @@ type
          (M11 S3). *)
       function PrefixMultiplierKey(const aQso: ContestExchange;
                                    out aKey: PrefixMultiplierString): boolean; override;
+   public
+      (* AN RTTY CONTEST SENDS 599 -- see
+         TContestBase.DefaultSignalReport. *)
+      function DefaultSignalReport: string; override;
    end;
 
 implementation
@@ -222,6 +226,11 @@ function TContestCQWPXRTTY.ParseReceivedExchangeFormat(const aText: string;
                                                        var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTQSONumber(aText, aExch);
+end;
+
+function TContestCQWPXRTTY.DefaultSignalReport: string;
+begin
+   Result := RTTY_DEFAULT_REPORT;
 end;
 
 procedure TContestCQWPXRTTY.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);

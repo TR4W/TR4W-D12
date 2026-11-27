@@ -190,6 +190,10 @@ type
       function HasPrefixMultiplier: boolean; override;
       (* THE EXCHANGE CARRIES A DOMESTIC QTH -- a Russian station's oblast. *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* AN RTTY CONTEST SENDS 599 -- see
+         TContestBase.DefaultSignalReport. *)
+      function DefaultSignalReport: string; override;
    end;
 
 implementation
@@ -382,6 +386,11 @@ function TContestRusWWDigi.ParseReceivedExchangeFormat(const aText: string;
                                                        var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTDomesticQTHOrQSONumber(aText, aExch);
+end;
+
+function TContestRusWWDigi.DefaultSignalReport: string;
+begin
+   Result := RTTY_DEFAULT_REPORT;
 end;
 
 procedure TContestRusWWDigi.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);

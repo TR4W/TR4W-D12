@@ -77,7 +77,8 @@ type
       FSavedSilent: boolean;
       FTrw: string;
       FDb: string;
-      procedure Test_TheZoneExchangeSends5NN;
+      procedure Test_OnlyTheRTTYContestsReport599;
+      procedure Test_TheDefaultMessagesSendTheReportGiven;
       procedure Test_AStatedCQMemoryIsNotADefault;
       procedure Test_ReSelectingTheContestKeepsAnEditedCQMemory;
       procedure Test_Q113_AnEditedMemorySurvivesARestart;
@@ -132,6 +133,7 @@ uses
    cfgdef,               (* UpdateSAndPF1Caption -- startup's last default writer *)
    uCFG,                 (* CFGCommandValueAsString *)
    uContestRegistry,
+   uContestBase,         (* the default signal reports *)
    sqldb,
    utils_text,           (* CharBufferText / SetCharBuffer -- TR4W_LOG_FILENAME *)
    uLogSchema,
@@ -164,7 +166,7 @@ begin
    GSetUpContestId := string(aContestId);
    Inc(GSetUpCalls);
    ForgetMemoryStatementsOfOtherContests(ContestHandleOf(CQWPXCW));
-   SetUpRSTQSONumberExchange;
+   SetUpRSTQSONumberExchange(CW_DEFAULT_REPORT);
    Result := True;
 end;
 
@@ -230,7 +232,7 @@ var
    procedure SetUpForContest(aContest: ContestType);
    begin
       ForgetMemoryStatementsOfOtherContests(ContestHandleOf(aContest));
-      SetUpRSTQSONumberExchange;
+      SetUpRSTQSONumberExchange(CW_DEFAULT_REPORT);
    end;
 
 begin
@@ -299,7 +301,7 @@ end;
 procedure TOperatorCQMemoryTests.SetUpContest(aContest: ContestType);
 begin
    ForgetMemoryStatementsOfOtherContests(ContestHandleOf(aContest));
-   SetUpRSTQSONumberExchange;
+   SetUpRSTQSONumberExchange(CW_DEFAULT_REPORT);
 end;
 
 procedure TOperatorCQMemoryTests.Restart;
@@ -1178,43 +1180,77 @@ begin
    end;
 end;
 
-(* NY4I, 2026-11-26: the default CW messages send 5NN. The zone exchange was
-  the one writer that sent 599. A contest that uses RTTY and not CW keeps 599,
-  because RTTY sends these same messages as written. *)
-procedure TOperatorCQMemoryTests.Test_TheZoneExchangeSends5NN;
-
-   function ReportFor(const aId: string): string;
-   var
-      handle: TContestHandle;
-   begin
-      Result := '';
-      if FindContestById(aId, handle) then
+(* NY4I, 2026-11-26: the default CW messages send 5NN, and "in an RTTY
+  contest, you should always send 599". Every registered contest is asked, so
+  one that gains or loses 599 is named here. AN RTTY CONTEST ADDED LATER MUST
+  BE ADDED TO THIS LIST AS WELL AS STATING IT ON ITS CLASS. *)
+procedure TOperatorCQMemoryTests.Test_OnlyTheRTTYContestsReport599;
+const
+   RTTY_CONTESTS: array[0..4] of string =
+      ('ARRL-RTTY', 'CQ-WPX-RTTY', 'CQ-WW-RTTY', 'RUS-WW-DIGI', 'URC-DX-RTTY');
+var
+   handles: TContestHandleList;
+   i, j: integer;
+   id: string;
+   expected: string;
+   found: integer;
+begin
+   BeginTest('Test_OnlyTheRTTYContestsReport599');
+   handles := KnownContests;
+   found := 0;
+   for i := 0 to High(handles) do
+      begin
+      id := string(ContestId(handles[i]));
+      expected := CW_DEFAULT_REPORT;
+      for j := Low(RTTY_CONTESTS) to High(RTTY_CONTESTS) do
          begin
-         Result := ZoneExchangeReport(ContestIdentity(handle));
-         end
-      else
-         begin
-         CheckTrue(False, 'no contest with the id ' + aId);
+         if SameText(id, RTTY_CONTESTS[j]) then
+            begin
+            expected := RTTY_DEFAULT_REPORT;
+            Inc(found);
+            end;
          end;
+      CheckEquals(expected,
+                  ContestDefaultSignalReport(ContestIdentity(handles[i])), id);
+      end;
+   CheckEquals(Length(RTTY_CONTESTS), found, 'every listed contest is registered');
+   CheckEquals('5NN', ContestDefaultSignalReport(nil), 'no contest');
+end;
+
+(* The three writers put the report they are given into every default message
+  that carries one. *)
+procedure TOperatorCQMemoryTests.Test_TheDefaultMessagesSendTheReportGiven;
+
+   procedure CheckMessages(const aWhich, aCQ, aSP, aRepeat, aMemoryF3: string);
+   begin
+      CheckEquals(aCQ, string(Settings.Messages.CqExchangeCw), aWhich + ' CQ exchange');
+      CheckEquals(aSP, string(Settings.Messages.SpExchangeCw), aWhich + ' S&P exchange');
+      CheckEquals(aRepeat, string(Settings.Messages.RepeatSpExchangeCw),
+                  aWhich + ' repeat S&P exchange');
+      CheckEquals(aMemoryF3, string(GetEXMemoryString(CW, F3)), aWhich + ' exchange F3');
    end;
 
 begin
-   BeginTest('Test_TheZoneExchangeSends5NN');
-   CheckEquals('5NN', ReportFor('CQ-WW-CW'), 'CQ WW CW');
-   CheckEquals('5NN', ReportFor('CQ-WW-SSB'), 'CQ WW SSB uses neither: 5NN');
-   CheckEquals('599', ReportFor('CQ-WW-RTTY'), 'CQ WW RTTY sends it over RTTY');
-   CheckEquals('5NN', ReportFor('IARU-HF'), 'a mixed contest');
-   CheckEquals('5NN', ZoneExchangeReport(nil), 'no contest');
-
+   BeginTest('Test_TheDefaultMessagesSendTheReportGiven');
    SaveProgramMemories;
    try
-      SetUpRSTMyZoneExchange('5', False, '5NN');
-      CheckEquals(' 5NN 5', string(Settings.Messages.CqExchangeCw),
-                  'CQ exchange');
-      CheckEquals(' 5NN 5', string(Settings.Messages.SpExchangeCw),
-                  'S&P exchange');
-      CheckEquals(' 5NN 5 5', string(Settings.Messages.RepeatSpExchangeCw),
-                  'repeat S&P exchange');
+      SetUpRSTMyZoneExchange('5', False, RTTY_DEFAULT_REPORT);
+      CheckMessages('zone', ' 599 5', ' 599 5', ' 599 5 5', '599');
+      SetUpRSTQSONumberExchange(RTTY_DEFAULT_REPORT);
+      CheckMessages('serial', ' 599 #', ' 599 #', ' 599 #', '599');
+      CheckEquals('599 #', string(GetCQMemoryString(CW, F3)), 'serial CQ F3');
+      CheckEquals('@ DE \ 599 #', string(GetEXMemoryString(CW, F5)), 'serial exchange F5');
+      SetUpRSTQSONumberExchange(CW_DEFAULT_REPORT);
+      CheckMessages('serial CW', ' 5NN #', ' 5NN #', ' 5NN #', '5NN');
+      (* The state sent depends on the session, so only the report is pinned. *)
+      SetUpRSTMyStateExchange(RTTY_DEFAULT_REPORT);
+      CheckEquals(1, Pos(' 599 ', string(Settings.Messages.CqExchangeCw)), 'state CQ exchange');
+      CheckEquals(1, Pos('~ %599 ', string(Settings.Messages.SpExchangeCw)), 'state S&P exchange');
+      CheckEquals('599', string(GetEXMemoryString(CW, F3)), 'state exchange F3');
+      CheckEquals(0, Pos('5NN', string(GetCQMemoryString(CW, F3)) +
+                                string(GetEXMemoryString(CW, F5)) +
+                                string(Settings.Messages.RepeatSpExchangeCw)),
+                  'no 5NN anywhere in the RTTY state messages');
    finally
       RestoreProgramMemories;
    end;
@@ -1222,7 +1258,8 @@ end;
 
 procedure TOperatorCQMemoryTests.RunAllTests;
 begin
-   Test_TheZoneExchangeSends5NN;
+   Test_OnlyTheRTTYContestsReport599;
+   Test_TheDefaultMessagesSendTheReportGiven;
    Test_AStatedCQMemoryIsNotADefault;
    Test_ReSelectingTheContestKeepsAnEditedCQMemory;
    Test_Q113_AnEditedMemorySurvivesARestart;

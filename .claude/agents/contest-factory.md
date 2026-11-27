@@ -712,7 +712,14 @@ the target shape, the M-step migration order and the open questions.
   the IDENTITY because no station decides it (pinned); and the log's
   Sweepstakes columns ask the field list (`uExchangeFields`). Pinned by
   `uTestExchangeKindReaders`. `SuppressZoneExchangeMessages` and
-  `uGridShape.GRID_CARRYING_EXCHANGES` are deleted. **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
+  `uGridShape.GRID_CARRYING_EXCHANGES` are deleted. **THE REPORT IN THOSE
+  MESSAGES IS THE CONTEST'S (`DefaultSignalReport`, NY4I, 2026-11-26): the
+  base says `5NN`; an RTTY contest's class says `599`, always.** All three
+  report writers and the session's serial memories read it. Never work it out
+  from `UsesMode` (most classes state no modes), and never convert at send
+  time: what a function key shows is what is sent. Pinned for every contest by
+  `Test_OnlyTheRTTYContestsReport599`. RTTY sends the CW memories, so a
+  CW+RTTY contest has one report for both. **THE ROVER IS A QSO PARTY'S (Q94 with Q90, NY4I,
   2026-10-14: "yes QSO parties allow it but in any contest NY4I/7 or
   VP9/NY4I is a valid call")**: `StripsRoverCountyFromCall` and the export's
   `SplitsRoverCallOnExport` (a `TContestBase` virtual since then) are True

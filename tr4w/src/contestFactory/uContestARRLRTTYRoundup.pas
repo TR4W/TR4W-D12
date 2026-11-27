@@ -143,6 +143,10 @@ type
       (* THE SITE'S FILE STEM, typed here: it is not the Cabrillo name
          for every contest. See TContestBase.CallHistorySiteName. *)
       function CallHistorySiteName: string; override;
+   public
+      (* AN RTTY CONTEST SENDS 599 -- see
+         TContestBase.DefaultSignalReport. *)
+      function DefaultSignalReport: string; override;
    end;
 
 implementation
@@ -246,6 +250,11 @@ function TContestARRLRTTYRoundup.ParseReceivedExchangeFormat(const aText: string
                                                              var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTDomesticQTHOrQSONumber(aText, aExch);
+end;
+
+function TContestARRLRTTYRoundup.DefaultSignalReport: string;
+begin
+   Result := RTTY_DEFAULT_REPORT;
 end;
 
 procedure TContestARRLRTTYRoundup.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);

@@ -144,15 +144,11 @@ procedure AddRussianDomesticCountrys;
 function FoundMyStateInDomFile: boolean;
 
 procedure SetUpNameAndStateExchange;
-procedure SetUpRSTQSONumberExchange;
-procedure SetUpRSTMyStateExchange;
+procedure SetUpRSTQSONumberExchange(const aReport: string);
+procedure SetUpRSTMyStateExchange(const aReport: string);
 procedure SetUpRSTMyZoneExchange(const aZoneText: string;
                                  aSendsStateAfterZone: boolean;
                                  const aReport: string);
-
-(* THE REPORT A ZONE EXCHANGE'S DEFAULT MESSAGES SEND: '5NN', or '599' for a
-  contest that uses RTTY and not CW. *)
-function ZoneExchangeReport(aContest: TContestBase): string;
 
 implementation
 
@@ -472,9 +468,8 @@ end;
   FoundContest. It was a test of the session's exchange shape,
   RSTZoneAndPossibleDomesticQTH, which CQ WW RTTY alone runs.
 
-  THE REPORT IS HANDED IN TOO (NY4I, 2026-11-26: contesters send 5NN, not 599,
-  in the default CW messages).  This was a constant '599'.  See
-  ZoneExchangeReport for the one case that keeps it. *)
+  THE REPORT IS HANDED IN TOO, as it is to the other two: the contest states
+  it (TContestBase.DefaultSignalReport).  This was a constant '599'. *)
 procedure SetUpRSTMyZoneExchange(const aZoneText: string;
                                  aSendsStateAfterZone: boolean;
                                  const aReport: string);
@@ -500,22 +495,6 @@ begin
   Settings.Messages.SpExchangeCw := UTF8Encode(' ' + aReport + ' ' + zoneText);
 end;
 
-(* THESE "CW" MESSAGES ARE WHAT RTTY SENDS TOO: in Digital mode F2 and the CQ
-  exchange send CqExchangeCw and SpExchangeCw, and the characters reach MMTTY
-  as written.  So a contest that uses RTTY and not CW keeps '599' -- what D7
-  sent from this routine with its RTTY switch (MMTTYMODE) on.  A contest that
-  allows CW gets '5NN'. *)
-function ZoneExchangeReport(aContest: TContestBase): string;
-begin
-  Result := '5NN';
-  if (aContest <> nil)                  and
-     aContest.UsesMode(Digital, eRTTY)  and
-     (not aContest.UsesMode(CW, eCW))   then
-     begin
-     Result := '599';
-     end;
-end;
-
 procedure SetUpNameAndStateExchange;
 begin
   Settings.Messages.CqExchangeCw := UTF8Encode(' ' + Settings.My.ResolvedName + ' ' + SentMyState);
@@ -523,31 +502,32 @@ begin
   Settings.Messages.SpExchangeCw := Settings.Messages.CqExchangeCw;
 end;
 
-procedure SetUpRSTMyStateExchange;
+procedure SetUpRSTMyStateExchange(const aReport: string);
 begin
-  Settings.Messages.CqExchangeCw := UTF8Encode(' 5NN ' + SentMyState);
-  Settings.Messages.RepeatSpExchangeCw := UTF8Encode('5NN ' + SentMyState);
-  Settings.Messages.SpExchangeCw := UTF8Encode('~ %5NN ' + SentMyState);
+  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + aReport + ' ' + SentMyState);
+  Settings.Messages.RepeatSpExchangeCw := UTF8Encode(aReport + ' ' + SentMyState);
+  (* '~' and '%' are the greeting and the name; the report follows them. *)
+  Settings.Messages.SpExchangeCw := UTF8Encode('~ %' + aReport + ' ' + SentMyState);
 
-  SetContestDefaultCQMemoryString(CW, F3, UTF8Encode('5NN ' + SentMyState));
+  SetContestDefaultCQMemoryString(CW, F3, UTF8Encode(aReport + ' ' + SentMyState));
 
-  SetContestDefaultEXMemoryString(CW, F3, '5NN');
+  SetContestDefaultEXMemoryString(CW, F3, UTF8Encode(aReport));
   SetContestDefaultEXMemoryString(CW, F4, UTF8Encode(SentMyState));
-  SetContestDefaultEXMemoryString(CW, F5, UTF8Encode('@ DE \ 5NN ' + SentMyState));
+  SetContestDefaultEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + aReport + ' ' + SentMyState));
   SetContestDefaultEXMemoryString(CW, AltF3, 'RST?');
   SetContestDefaultEXMemoryString(CW, AltF4, 'QTH?');
 end;
 
-procedure SetUpRSTQSONumberExchange;
+procedure SetUpRSTQSONumberExchange(const aReport: string);
 begin
-  Settings.Messages.CqExchangeCw := ' 5NN #';
-  Settings.Messages.RepeatSpExchangeCw := ' 5NN #';
-  Settings.Messages.SpExchangeCw := ' 5NN #';
-  SetContestDefaultCQMemoryString(CW, F3, '5NN #');
+  Settings.Messages.CqExchangeCw := UTF8Encode(' ' + aReport + ' #');
+  Settings.Messages.RepeatSpExchangeCw := UTF8Encode(' ' + aReport + ' #');
+  Settings.Messages.SpExchangeCw := UTF8Encode(' ' + aReport + ' #');
+  SetContestDefaultCQMemoryString(CW, F3, UTF8Encode(aReport + ' #'));
 
-  SetContestDefaultEXMemoryString(CW, F3, '5NN');
+  SetContestDefaultEXMemoryString(CW, F3, UTF8Encode(aReport));
   SetContestDefaultEXMemoryString(CW, F4, 'NR #');
-  SetContestDefaultEXMemoryString(CW, F5, '@ DE \ 5NN #');
+  SetContestDefaultEXMemoryString(CW, F5, UTF8Encode('@ DE \ ' + aReport + ' #'));
   SetContestDefaultEXMemoryString(CW, AltF3, 'RST?');
   SetContestDefaultEXMemoryString(CW, AltF4, 'NR?');
 
@@ -576,6 +556,7 @@ type
       (issue 225) without a second ActiveContest fetch. Not owned; nil is
       the classless DUMMYCONTEST, which writes nothing anyway. *)
     FContest: TContestBase;
+    function Report: string;
   public
     constructor Create(aContest: TContestBase);
     procedure WriteNameAndState; override;
@@ -591,6 +572,11 @@ begin
   FContest := aContest;
 end;
 
+function TEngineExchangeMessageWriters.Report: string;
+begin
+  Result := ContestDefaultSignalReport(FContest);
+end;
+
 procedure TEngineExchangeMessageWriters.WriteNameAndState;
 begin
   SetUpNameAndStateExchange;
@@ -598,25 +584,25 @@ end;
 
 procedure TEngineExchangeMessageWriters.WriteRSTQSONumber;
 begin
-  SetUpRSTQSONumberExchange;
+  SetUpRSTQSONumberExchange(Report);
 end;
 
 procedure TEngineExchangeMessageWriters.WriteRSTStateOrQSONumber;
 begin
   if SentMyState = '' then
      begin
-     SetUpRSTQSONumberExchange;
+     SetUpRSTQSONumberExchange(Report);
      end
   else
      begin
-     SetUpRSTMyStateExchange;
+     SetUpRSTMyStateExchange(Report);
      end;
 end;
 
 procedure TEngineExchangeMessageWriters.WriteRSTZone(aStateAfterZone: boolean);
 begin
   SetUpRSTMyZoneExchange(SessionZoneTextSent(FContest), aStateAfterZone,
-                         ZoneExchangeReport(FContest));
+                         Report);
 end;
 
 procedure TEngineExchangeMessageWriters.WriteRSTStateOrZone(aStateAfterZone: boolean);
@@ -624,11 +610,11 @@ begin
   if SentMyState = '' then
      begin
      SetUpRSTMyZoneExchange(SessionZoneTextSent(FContest), aStateAfterZone,
-                            ZoneExchangeReport(FContest));
+                            Report);
      end
   else
      begin
-     SetUpRSTMyStateExchange;
+     SetUpRSTMyStateExchange(Report);
      end;
 end;
 
@@ -695,7 +681,8 @@ end;
   its order), the messages, then the operator name set when asked for. No
   value here reads another, and no arm wrote one value twice except a
   memory, whose order the list keeps. *)
-procedure ApplySessionDefaults(aSession: TSessionDefaults;
+procedure ApplySessionDefaults(aContest: TContestBase;
+                               aSession: TSessionDefaults;
                                var aDomesticFileName: string);
 var
   i: integer;
@@ -840,7 +827,7 @@ begin
 
   if aSession.IsStated(svRSTQSONumberExchangeMemories) then
      begin
-     SetUpRSTQSONumberExchange;
+     SetUpRSTQSONumberExchange(ContestDefaultSignalReport(aContest));
      end;
 
   for i := 0 to aSession.MemoryCount - 1 do
@@ -1082,7 +1069,7 @@ begin
      session := TSessionDefaults.Create;
      try
         definition.DescribeSession(CurrentStation, session);
-        ApplySessionDefaults(session, TempDomesticQTHDataFileName);
+        ApplySessionDefaults(definition, session, TempDomesticQTHDataFileName);
         (* SO AN EMPTY LIST IS REPORTED ONLY WHERE IT IS WRONG -- a contest
           that states none (CQ WW) runs on an empty one by design. *)
         DomesticCountries.RecordContestSetUp(

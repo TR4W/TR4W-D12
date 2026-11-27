@@ -1073,6 +1073,7 @@ comment; read it there.
 | `DescribeSession(aStation, aSession)` | states nothing | session values (bands, mode, memories, domestic countries, `SentState`, ...) on a `TSessionDefaults`. **A stated value is stated even when False**; state only what you set. A choice that depends on the entrant is stated both ways on `aStation` (`uContestARRLDXBase`). What you SEND where MY STATE goes is `SentState`, never MY STATE |
 | `CQExchangeDefault`, `RepeatSPExchangeDefault` | `''` | used only where the operator has none |
 | `WriteDefaultExchangeMessages` | none | call ONE engine writer by name (`WriteRSTQSONumber`, `WriteRSTZone`, ...) |
+| `DefaultSignalReport` | `5NN` | **an RTTY contest answers `RTTY_DEFAULT_REPORT` (`599`)** -- NY4I, 2026-11-26: RTTY always sends 599. State it on the class, and add the id to `Test_OnlyTheRTTYContestsReport599`. RTTY has no memories of its own, so a contest with CW and RTTY has one report for both. A report a class writes itself (`CQExchangeDefault`, a session memory) does not read this: write `599` there too |
 | `GetIsActive` | True | False only on NY4I's word; an inactive contest still opens old logs |
 
 ### Bands, dupes and multipliers

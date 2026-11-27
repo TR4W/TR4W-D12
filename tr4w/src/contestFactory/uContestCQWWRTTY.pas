@@ -148,6 +148,10 @@ type
          digital mode are automatic X-QSOs. *)
       function UsesBand(aBand: BandType): boolean; override;
       function UsesMode(aMode: ModeType; aExtMode: ExtendedModeType): boolean; override;
+   public
+      (* AN RTTY CONTEST SENDS 599 -- see
+         TContestBase.DefaultSignalReport. *)
+      function DefaultSignalReport: string; override;
    end;
 
 implementation
@@ -254,6 +258,11 @@ function TContestCQWWRTTY.ParseReceivedExchangeFormat(const aText: string;
                                                       var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTZoneAndPossibleDomesticQTH(aText, aExch);
+end;
+
+function TContestCQWWRTTY.DefaultSignalReport: string;
+begin
+   Result := RTTY_DEFAULT_REPORT;
 end;
 
 procedure TContestCQWWRTTY.WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters);

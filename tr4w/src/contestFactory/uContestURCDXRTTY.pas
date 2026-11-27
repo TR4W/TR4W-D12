@@ -160,6 +160,10 @@ type
       (* THE EXCHANGE CARRIES A DOMESTIC QTH -- the territory code; the
          readiness check then asks for MY STATE. *)
       function ExchangeCarriesDomesticQTH: boolean; override;
+   public
+      (* AN RTTY CONTEST SENDS 599 -- see
+         TContestBase.DefaultSignalReport. *)
+      function DefaultSignalReport: string; override;
    end;
 
 implementation
@@ -441,6 +445,11 @@ function TContestURCDXRTTY.ParseReceivedExchangeFormat(const aText: string;
                                                        var aExch: ContestExchange): boolean;
 begin
    Result := aParsers.ParseRSTDomesticQTH(aText, aExch);
+end;
+
+function TContestURCDXRTTY.DefaultSignalReport: string;
+begin
+   Result := RTTY_DEFAULT_REPORT;
 end;
 
 (* RST AND MY STATE -- my territory code. The writer falls back to a serial

@@ -3719,6 +3719,20 @@ type
          contest states its set in WriteDefaultExchangeMessages. *)
       procedure SetUpDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
 
+      (* THE SIGNAL REPORT IN THOSE DEFAULT MESSAGES, and in the ones a
+         session asks for (UseRSTQSONumberExchangeMemories). THE BASE ANSWERS
+         CW_DEFAULT_REPORT. AN RTTY CONTEST ANSWERS RTTY_DEFAULT_REPORT, on its
+         own class (NY4I, 2026-11-26: "In an RTTY contest, you should always
+         send 599, not 5NN" -- in Baudot "5NN" costs a figures shift and a
+         letters shift that "599" does not).
+
+         STATED, NOT WORKED OUT FROM UsesMode: most classes state no modes, so
+         the base's "every mode" would answer for them.
+
+         RTTY has no function-key memories of its own; it sends the CW ones as
+         written. So a contest with both CW and RTTY has one report for both. *)
+      function DefaultSignalReport: string; virtual;
+
       (* THE CQ EXCHANGE A CONTEST OFFERS WHEN THE OPERATOR HAS NONE -- M7a.
 
          LogCfg.tSetupExchangeNumbers asks it once the whole configuration is
@@ -4512,6 +4526,10 @@ type
    TExtendedModeSet = set of ExtendedModeType;
 
 const
+   (* THE TWO DEFAULT SIGNAL REPORTS -- see TContestBase.DefaultSignalReport. *)
+   CW_DEFAULT_REPORT   = '5NN';
+   RTTY_DEFAULT_REPORT = '599';
+
    (* RTTY, normal or reversed: one mode to every sponsor that names RTTY. *)
    RTTY_SUBMODES: TExtendedModeSet = [eRTTY, eRTTY_R];
 
@@ -5142,6 +5160,10 @@ function ContestReceivesGridSquareExchange(aContest: TContestBase): boolean;
    False: the classless DUMMYCONTEST ran UnknownExchange, outside the old
    set. *)
 function ContestExchangeTextMayHoldGridSquare(aContest: TContestBase): boolean;
+
+(* THE REPORT IN aContest's DEFAULT MESSAGES -- see
+   TContestBase.DefaultSignalReport. nil answers as the base does. *)
+function ContestDefaultSignalReport(aContest: TContestBase): string;
 
 (* SET-UP'S DEFAULT CW EXCHANGE MESSAGES FOR aContest -- see
    TContestBase.SetUpDefaultExchangeMessages (M11 S9e part 1). nil writes
@@ -6999,6 +7021,18 @@ begin
       end;
 end;
 
+function ContestDefaultSignalReport(aContest: TContestBase): string;
+begin
+   if aContest = nil then
+      begin
+      Result := CW_DEFAULT_REPORT;
+      end
+   else
+      begin
+      Result := aContest.DefaultSignalReport;
+      end;
+end;
+
 procedure ContestSetUpDefaultExchangeMessages(aContest: TContestBase;
                                               aMessages: TExchangeMessageWriters);
 begin
@@ -8476,6 +8510,11 @@ procedure TContestBase.WriteDefaultExchangeMessages(aMessages: TExchangeMessageW
 begin
    (* None: the old `case` had no arm for most shapes -- see the
       declaration. *)
+end;
+
+function TContestBase.DefaultSignalReport: string;
+begin
+   Result := CW_DEFAULT_REPORT;
 end;
 
 procedure TContestBase.SetUpDefaultExchangeMessages(aMessages: TExchangeMessageWriters);
