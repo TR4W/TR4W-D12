@@ -307,39 +307,48 @@ begin
 end;
 
 (* THE ALL JA'S STX_STRING (NY4I, 2026-11-23): the prefecture, a space and
-   the power letter -- '12 H'. No RST: the sponsor's log carries none. *)
+   the power letter -- '12 H'. No RST, as DXLog's STX_STRING has none; the RSTs are
+   RST_SENT and RST_RCVD. *)
 function TContestAllJA.GetADIFSentExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange): string;
 begin
    Result := Trim(aMy.MyPrefecture + ' ' + UpperCase(aMy.MyPowerClass));
 end;
 
-(* THE CABRILLO SENT COLUMNS -- DXLog's ALLJA.txt CABRILLO_LINE:
-     SENT STATE{F=R,3} EXCHANGE{F=L,2} ... RCVD1 RCVD2{F=R,3} RECINFO
-   the prefecture right-aligned in three, the power letter left-aligned in
-   two. NO RST in the line. *)
+(* THE CABRILLO SENT COLUMNS: the RST we sent, then our prefecture and power
+   letter as ONE word -- '599 10M'.
+
+   THE RST IS PART OF THE LINE. JARL, the sponsor, logs a sent RST and a
+   received RST (its e-log format page's ALL JA sample: '599 10M 599 25M'),
+   and DXLog's ALLJA.txt CABRILLO_LINE names SENT and RCVD1, which DXLog's
+   field definitions give as the sent and the received RST. Until 2026-11-26
+   this class read those two keys as something else and wrote neither (issue
+   361).
+
+   THE LETTER IS JOINED TO THE NUMBER -- NY4I, Q1 (2026-10-15): "JARL I would
+   defer to JARL's example being they are the sponsor", over DXLog's two
+   columns (docs/F26_EXCHANGE_LAYOUTS.md). JARL's own Cabrillo pages that were
+   read cover the All Asian DX only; no ALL JA Cabrillo line was found. *)
 function TContestAllJA.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange;
                                                const aCtx: TCabrilloQSOContext): string;
 begin
-   (* The trailing space is the separator from the received call (DXLog's
-      EXCHANGE{F=L,2, }); without it the line reads '  10 MW1AW'. *)
-   Result := UnicodeFormat('%3s %-2s ', [aMy.MyPrefecture, UpperCase(aMy.MyPowerClass)]);
+   (* The trailing space is the separator from the received call. *)
+   Result := UnicodeFormat('%-3s %-4s ', [aCtx.RSTSent,
+                                          aMy.MyPrefecture +
+                                          UpperCase(aMy.MyPowerClass)]);
 end;
 
-(* THE CABRILLO RECEIVED COLUMNS: the other station's prefecture number,
-   right-aligned in three, then its power letter (AllJAReceivedPowerClass:
-   Power, else an older log's Precedence) left-aligned in two -- the sent
-   layout mirrored.
-   DXLog's line names RCVD1 and RCVD2{F=R,3}; WHAT ITS RCVD2 IS, IS NOT
-   UNDERSTOOD (no sponsor text on file says), so this writes the number and
-   the letter and does not guess a third field. *)
+(* THE CABRILLO RECEIVED COLUMNS: the RST received, then the other station's
+   prefecture number and power letter (AllJAReceivedPowerClass: Power, else an
+   older log's Precedence) -- the sent layout mirrored. *)
 function TContestAllJA.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                    const aQso: ContestExchange;
                                                    const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := UnicodeFormat('%3s %-2s', [ReceivedPrefectureNumber(aQso),
-                                        AllJAReceivedPowerClass(aQso)]);
+   Result := UnicodeFormat('%-3s %-4s', [aCtx.RSTReceived,
+                                         ReceivedPrefectureNumber(aQso) +
+                                         AllJAReceivedPowerClass(aQso)]);
 end;
 
 (* OUR PREFECTURE AND POWER CLASS IN THE ADIF RECORD -- NY4I, 2026-11-23: the

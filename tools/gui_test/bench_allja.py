@@ -11,10 +11,10 @@ bench-allja  on a fixture with NO contest log, so New Contest opens:
        the our-station group's Prefecture and Power class boxes read an
        enabled 10 and M; the closed log's row holds my_prefecture 10 and
        my_power_class M.
-   (c) File > Export > Cabrillo: CONTEST: ALL-JA, and the QSO line carries the
-       sent prefecture right-aligned in three, one space, the power letter
-       left-aligned in two, a separating space, then the received call -- and
-       no RST anywhere in the line (uContestAllJA.GetCabrilloSentExchange).
+   (c) File > Export > Cabrillo: CONTEST: ALL-JA, and the QSO line reads, as
+       JARL's sample does (issue 361), the sent RST and our prefecture and
+       power letter as one word, the received call, then the received RST and
+       exchange: '599 10M  JA1ABC  599 12H'.
 
 Failures are collected per item and returned, so an application defect reads
 FAIL; an exception means the driver could not observe (ERROR).
@@ -48,7 +48,6 @@ REFUSED_WORDS = "notonethiscontestaccepts"
 # (uNewContest.SetCommentAndEnableEditControl), so only the last -- the power
 # class -- is ever shown; it is recorded, not asserted.
 PROMPT_WORDS = ("myprefecture", "mypowerclass")
-RST_TOKEN = re.compile(r"\b(599|59|5NN)\b")
 
 
 def ok_button(startup):
@@ -145,23 +144,18 @@ def cabrillo_checks(text):
       failures.append("Expected one QSO line, found " + str(len(qsos)) + ": " + repr(qsos))
       return facts, failures
    line = qsos[0]
-   # The sent call, the column pad, then the class's '%3s %-2s ' and the call.
-   match = re.search(r"\bW1AW( +)(\S+) (\S+)( +)" + RECEIVED_CALL + r"\b", line)
+   # The sent RST and exchange, the column pad, the call, the received pair.
+   match = re.search(r"\bW1AW +(\S+) +(\S+) +" + RECEIVED_CALL + r" +(\S+) +(\S+)\s*$", line)
    if match is None:
-      failures.append("QSO line does not read W1AW, prefecture, power, received call: " + repr(line))
+      failures.append("QSO line does not read W1AW, RST, exchange, received call, RST, exchange: "
+         + repr(line))
       return facts, failures
-   facts.update({"sent_prefecture": match.group(2), "sent_power": match.group(3),
-      "gap_before_received_call": len(match.group(4)),
-      "received_part": line[match.end():]})
-   if match.group(2) != SENT_PREFECTURE or match.group(3) != SENT_POWER:
-      failures.append("Sent columns read " + repr(match.group(2) + " " + match.group(3)) + ", expected '10 M'")
-   # '%-2s ' of one letter is the letter, its pad and the separator: two spaces.
-   if len(match.group(4)) != 2:
-      failures.append("Expected the power letter, its pad and one separating space (2 spaces) before "
-         + RECEIVED_CALL + ", found " + str(len(match.group(4))) + ": " + repr(line))
-   rst = RST_TOKEN.findall(line)
-   if rst:
-      failures.append("QSO line carries an RST " + repr(rst) + ": " + repr(line))
+   found = list(match.groups())
+   facts.update({"sent_rst": found[0], "sent_exchange": found[1],
+      "received_rst": found[2], "received_exchange": found[3]})
+   expected = ["599", SENT_PREFECTURE + SENT_POWER] + RECEIVED_EXCHANGE.split()
+   if found != expected:
+      failures.append("Exchange columns read " + repr(found) + ", expected " + repr(expected))
    return facts, failures
 
 

@@ -77,6 +77,7 @@ type
       procedure Test_EachHelperWritesItsColumn;
       procedure Test_TheBaseWritesTheMarker;
       procedure Test_SerialWidthIsTheLogs;
+      procedure Test_TheALLJALineIsJARLsSample;
    end;
 
 implementation
@@ -352,33 +353,33 @@ begin
          end;
       ALLJA:
          begin
-         (* DXLog's ALLJA.txt line, 2026-11-23: SENT prefecture {F=R,3} then
-            the power letter {F=L,2}, no RST; RECEIVED the other station's
-            number and letter, the same layout. The shared fixture states no
-            MY PREFECTURE or MY POWER CLASS, so the sent columns are blank
-            (the filled case is uTestCabrilloExchange's); the received number
-            is the QTH text with no resolved DomesticQTH. *)
+         (* RST, then prefecture and power letter as one word, sent and
+            received (issue 361; JARL logs both reports, and Q1 joins the
+            letter). The shared fixture states no MY PREFECTURE or MY POWER
+            CLASS, so only the sent RST shows; the filled line is
+            Test_TheALLJALineIsJARLsSample's. The received number is the QTH
+            text with no resolved DomesticQTH. *)
          Take(aVariant,
-              ['       ',
-               '       ',
-               '       ',
-               '       ',
-               '       ',
-               '       ',
-               '       ',
-               '       '],
+              ['599      ',
+               '59       ',
+               '599      ',
+               '599      ',
+               '599      ',
+               '599      ',
+               '599      ',
+               '599      '],
               (* The received class is the record's Power field since
                  2026-11-24 (the fixture's '100', '123456'), no longer its
                  Precedence ('B'); Precedence is read only when Power is
                  empty, and variant 1 has neither. *)
-              [' GA 100',
-               '      ',
-               'ABCDEFGHIJ 123456',
-               'TRC 100',
-               ' GA 100',
-               ' GA 100',
-               ' XY 100',
-               '    100'],
+              ['579 GA100',
+               '58      ',
+               '579 ABCDEFGHIJ123456',
+               '579 TRC100',
+               '579 GA100',
+               '579 GA100',
+               '579 XY100',
+               '579 100 '],
               aSent, aRec);
          end;
       DUMMYCONTEST, ARCI, COUNTYHUNTER, FISTS, GRIDLOC, JALONGPREFECT,
@@ -1844,9 +1845,46 @@ begin
    CheckEquals('00042', Copy(tail, Length(tail) - 4, 5), 'the zone-and-serial received shape');
 end;
 
+(* WRITTEN FROM THE SPONSOR'S SAMPLE, NOT FROM THIS PROGRAM'S OUTPUT (issue
+   361). JARL's e-log format page, its ALL JA example:
+      20**-04-29 22:15 7 CW JE3*** 599 10M 599 25M
+   http://www.jarl.org/Japanese/1_Tanoshimo/1-1_Contest/logformat.html
+   The pins above were once taken from the output, and agreed for three days
+   that the line had no report in it. *)
+procedure TCabrilloColumnsTests.Test_TheALLJALineIsJARLsSample;
+var
+   obj: TContestBase;
+   my: TMyStationExchange;
+   qso: ContestExchange;
+   ctx: TCabrilloQSOContext;
+begin
+   BeginTest('Test_TheALLJALineIsJARLsSample');
+   my := PinMy(1);
+   my.MyPrefecture := '10';
+   my.MyPowerClass := 'M';
+   qso := PinQso(1);
+   qso.DomesticQTH := '25';
+   qso.Power := 'M';
+   ctx := PinCtx(1);
+   ctx.RSTSent := '599';
+   ctx.RSTReceived := '599';
+
+   obj := Make(ALLJA, PinStation(psUS, ALLJA));
+   try
+      CheckEquals('599 10M  ', obj.FormatCabrilloSentExchange(my, qso, ctx), 'sent');
+      CheckEquals('599 25M ', obj.FormatCabrilloReceivedExchange(my, qso, ctx), 'received');
+      (* A Hokkaido region is three digits and fills the column. *)
+      my.MyPrefecture := '106';
+      CheckEquals('599 106M ', obj.FormatCabrilloSentExchange(my, qso, ctx), 'Hokkaido, sent');
+   finally
+      obj.Free;
+      end;
+end;
+
 procedure TCabrilloColumnsTests.RunAllTests;
 begin
    Test_SerialWidthIsTheLogs;
+   Test_TheALLJALineIsJARLsSample;
    Test_EveryContestWritesItsPinnedColumns;
    Test_EachHelperWritesItsColumn;
    Test_TheBaseWritesTheMarker;
