@@ -50,6 +50,7 @@ uses
 type
   TfrmMessagesList = class(TForm)
     lstCommands: TListBox;
+    lblBraces: TLabel;
     btnOK: TButton;
     btnCancel: TButton;
     procedure HandleShow(Sender: TObject);
@@ -77,6 +78,7 @@ uses
   uProcessCommand,  // sCommands, sCommandsArray
   uMessagesList,    // GetInsertableCommand, LastSelectedCommand
   uMessageText,     // MessagePickerText -- a command goes in as {NAME}
+  uAppStrings,      // SMessagesListBracesHint
   MainUnit,         // logger
   uLCLFormHelpers,
   Log4D;
@@ -90,6 +92,8 @@ var
 begin
 
    Caption := string(TC_LIST_OF_COMMAND);
+   (* UTF8Encode: the LCL's strings are UTF-8, and the hint is translated. *)
+   lblBraces.Caption := UTF8Encode(SMessagesListBracesHint);
 
    lstCommands.Items.BeginUpdate;
    try

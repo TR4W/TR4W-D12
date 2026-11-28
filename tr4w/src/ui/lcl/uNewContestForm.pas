@@ -138,6 +138,7 @@ type
        217. Typed fields the view owns: the row's identity is never read
        back from the control's text. *)
     FPicking: array[1..9] of boolean;
+    FKeepFocus: boolean;
     FPickValues: array[1..9] of TNewContestRowValues;
     (* EVERY CONTEST THE DIALOG OFFERS, in order, with its caption -- built
        once (FillContests) and owned here. The search narrows what is SHOWN;
@@ -248,6 +249,10 @@ type
       equivalent of a SetDlgItemText / EnableWindow / ShowWindow pair, so the
       contest case statement calls the same shapes it always did. }
     procedure SetComment(const aText: string);
+    (* TRUE WHILE ROWS ARE ASKED AGAIN AS THE OPERATOR TYPES MY CALL: a row
+       shown then must not take the keyboard from the call box.  A row shown
+       because a contest was chosen, or a box ticked, still takes it. *)
+    property KeepFocus: boolean read FKeepFocus write FKeepFocus;
     procedure ClearRows;
     procedure EnableRow(aRow: integer; const aCaption: string);
     procedure ShowIAmIn(const aText: string);
@@ -1672,7 +1677,7 @@ begin
       begin
       FRows[aRow].Field.Visible := True;
       (* Showing first -- see ShowRowPick. *)
-      if Showing and FRows[aRow].Field.CanFocus then
+      if Showing and (not FKeepFocus) and FRows[aRow].Field.CanFocus then
          begin
          FRows[aRow].Field.SetFocus;
          end;
@@ -1747,7 +1752,7 @@ begin
    FRows[aRow].Caption.Visible := True;
    (* SHOWING FIRST: a form that is not on screen cannot take focus, and
       the LCL raises rather than ignoring it. *)
-   if Showing and FRows[aRow].Pick.CanFocus then
+   if Showing and (not FKeepFocus) and FRows[aRow].Pick.CanFocus then
       begin
       FRows[aRow].Pick.SetFocus;
       end;
@@ -1768,7 +1773,7 @@ begin
    FRows[aRow].Field.Visible := True;
    FRows[aRow].Caption.Caption := UTF8Encode(aCaption);
    FRows[aRow].Caption.Visible := True;
-   if Showing and FRows[aRow].Field.CanFocus then
+   if Showing and (not FKeepFocus) and FRows[aRow].Field.CanFocus then
       begin
       FRows[aRow].Field.SetFocus;
       end;

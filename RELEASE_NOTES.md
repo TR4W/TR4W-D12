@@ -68,6 +68,15 @@ user-facing — no file paths or source-level jargon.
   the report, and the Wisconsin QSO Party's exchanges no longer include one.
 - **ARRL Sweepstakes ADIF:** the received exchange is written with its parts spaced and in the
   sponsor's order (`43 M 31 CT`), however you typed it.
+- **ARRL DX from outside the US and Canada uses a power, not your state.** New Contest asks `MY POWER` for
+  such a callsign (and `MY STATE` for a US or Canadian one). Enter a number or an abbreviation (`100`, `K`,
+  `KW`); your everyday state is never sent in its place. A log that held the power in `MY STATE` keeps
+  working.
+- **ARRL DX: the Cabrillo file of a station outside the US and Canada was missing the state or province you
+  received.** If you made one with an earlier 5.x release, export it again.
+- **List of commands:** the rover words are listed without braces, like the other commands, and
+  double-clicking adds them. A line under the list reminds you to type the braces when you type a command
+  yourself.
 - **Arktika Spring is now listed as inactive.** New Contest shows it after the active contests, and your
   existing Arktika logs still open.
 

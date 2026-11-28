@@ -1,5 +1,12 @@
 # Bench queue — what is waiting for a real run
 
+- [ ] **ARRL DX power, on the air side (2026-11-27).** Unit and export tests cover the files; nothing has
+  sent or edited it in the app. With a DX call (say DL1xx) in ARRL DX CW and `MY POWER` = `KW`: (1) the CQ
+  exchange and F-key memories send `5NN KW`; (2) the sent-exchange line in the main window shows `KW`;
+  (3) Edit QSO on a logged contact: change the power box to `100`, save, export: Cabrillo sends `100`;
+  (4) change `MY POWER` mid-contest: later contacts and messages follow, earlier ones keep their power;
+  (5) in ALL JA, Edit QSO refuses `100` as a power class.
+
 - [ ] **QSO parties, DX entry in the entry window (2026-11-27).** The same rule now covers the other
   parties whose DX stations send a country (release notes); try one that accepts `DX` (Illinois: `DX`,
   `DL` and the prefilled value all log) and Florida: The exports and the refusal are

@@ -6703,6 +6703,9 @@ begin
    (* MY STATE derives exactly. MY QTH is the older spelling of the same
      setting and is ADDED, not substituted. *)
    AlsoKnownAs('MY QTH', 'My.State');
+   (* MY POWER is what ARRL DX sends (2026-11-27), kept where MY POWER CLASS,
+     the derived name and the ALL JA's, already is. ADDED, as MY QTH is. *)
+   AlsoKnownAs('MY POWER', 'My.PowerClass');
 
    (* ALL FIVE WSJT-X NAMES, for the one reason given on TWsjtxSettings:
      the command spelling has a hyphen in it and a Pascal identifier

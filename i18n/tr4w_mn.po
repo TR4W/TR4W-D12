@@ -13321,3 +13321,23 @@ msgstr ""
 #, fuzzy
 msgid "A DX station sends its country prefix: %s"
 msgstr ""
+
+#: uappstrings.snewcontestenterpowersent
+#, fuzzy
+msgid "Enter the power you send: a number, or an abbreviation such as K or KW:"
+msgstr ""
+
+#: uappstrings.snewcontestenterstatesent
+#, fuzzy
+msgid "Enter the state or province you send:"
+msgstr ""
+
+#: uappstrings.sstationfieldpower
+#, fuzzy
+msgid "The power is up to eight letters, digits or decimal points: 100, KW, H."
+msgstr ""
+
+#: uappstrings.smessageslistbraceshint
+#, fuzzy
+msgid "Double-click inserts a command with its braces. If you type one instead, put it in braces, like {SPOTME}."
+msgstr ""

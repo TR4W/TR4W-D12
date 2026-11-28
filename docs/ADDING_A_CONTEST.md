@@ -1028,10 +1028,15 @@ The suggestions below come from running it on many contests.
   those rows (`/NEWCONTESTPROMPTS`); any run of the export test writes the list
   to `build-out/export-test/new-contest-questions.txt`.
 - **Read the prompt, not only the row's name.** `MY STATE` is an ARRL section
-  outside Pennsylvania, the power for an ARRL DX station outside North America,
-  and the age for the Youth Championship RF. `MY LICENSE YEAR` asks for two
+  outside Pennsylvania and the age for the Youth Championship RF. `MY LICENSE YEAR` asks for two
   digits. If the prompt is unclear, look at the dialog; the GUI test machine
   can take the screenshot (`tools/gui_test`).
+- **A value of its own gets a field of its own.** ARRL DX sent its power in
+  `MY STATE` until 2026-11-27; it asks `MY POWER` now. A contest whose rows
+  depend on the entrant's side reads `TNewContestPrompts.MyCountry` in
+  `DescribeNewContestPrompts`, and asks every row while it is `''` (no call
+  yet, and `/NEWCONTESTPROMPTS`). The dialog asks again when the call changes
+  the list.
 
 **Entering the contact**
 

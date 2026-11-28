@@ -59,7 +59,9 @@ unit uContestAllJA;
 interface
 
 uses
-   VC, uContestBase;
+   VC, uContestBase,
+   (* TStationFact -- StationFactProblem's parameter. *)
+   uSettingsModel;
 
 const
    (* WHAT THE TWO STARTUP FIELDS TAKE -- whole-value patterns (NY4I,
@@ -123,6 +125,11 @@ type
 
       (* Its yes/no facts -- see TContestBase.GetFlags (M10 S5). *)
       function GetFlags: TContestFlags; override;
+   public
+      (* The power class is H, M, L or P here -- see the body. *)
+      function StationFactProblem(aFact: TStationFact;
+                                  const aValue: string): string; override;
+   protected
       function GetIsUSQSOParty: boolean; override;
       (* THE CONTEST'S OWN RULE -- see the header. Protected, as on
          TContestBase: ScoreQSO is the one public scoring entry. *)
@@ -407,6 +414,27 @@ begin
                             ALLJA_PREFECTURE_PATTERN, nitNumeric);
    aPrompts.AddStartUpField(ncfMyPowerClass, 'MY POWER CLASS', SNewContestEnterPowerClass,
                             ALLJA_POWER_CLASS_PATTERN, nitAlpha);
+end;
+
+(* THE FIELD TAKES ANY POWER SINCE 2026-11-27 (ARRL DX sends '100' or 'KW'
+   in it), so this contest states its own four letters, the same ones its New
+   Contest prompt takes. Empty is "not stated". *)
+function TContestAllJA.StationFactProblem(aFact: TStationFact;
+                                          const aValue: string): string;
+var
+   value: string;
+begin
+   Result := inherited StationFactProblem(aFact, aValue);
+   value := UpperCase(Trim(aValue));
+   if (aFact = sfPowerClass) and
+      (value <> '')  and
+      (value <> 'H') and
+      (value <> 'M') and
+      (value <> 'L') and
+      (value <> 'P') then
+      begin
+      Result := SStationFieldPowerClass;
+      end;
 end;
 
 function TContestAllJA.GetFlags: TContestFlags;

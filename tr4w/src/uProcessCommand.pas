@@ -149,9 +149,10 @@ const
 (caCommand: ' ~ = Salutation - no name'; caAddress: scEXCHANGERADIOS),
 (caCommand: '  \ = My Call (never the rover''s places)'; caAddress: scEXCHANGERADIOS),
 // The two TOKENS (2026-11-20) -- display rows like the cryptic characters
-// above: the picker inserts the braced word itself, and the CW sender keys it.
-(caCommand: ' {ROVERCALL} = My call, with the rover''s places while roving'; caAddress: scEXCHANGERADIOS),
-(caCommand: ' {ROVERQTH} = The place sent now (the rover''s places while roving)'; caAddress: scEXCHANGERADIOS),
+// above, and the CW sender keys them. Listed bare, as a command is: the picker
+// adds the braces (NY4I, 2026-11-27).
+(caCommand: ' ROVERCALL = My call, with the rover''s places while roving'; caAddress: scEXCHANGERADIOS),
+(caCommand: ' ROVERQTH = The place sent now (the rover''s places while roving)'; caAddress: scEXCHANGERADIOS),
 (caCommand: ' | = Name from Exch Window'; caAddress: scEXCHANGERADIOS),
 (caCommand: ' [ = Wait for # (RST)'; caAddress: scEXCHANGERADIOS),
 (caCommand: ' ] = Repeat last RST from ['; caAddress: scEXCHANGERADIOS),

@@ -470,7 +470,7 @@ begin
            moment two settings were added, which is exactly what it is for --
            a derived name that invents a command TR4W never had would start
            claiming a multi-op peer message. *)
-         CheckEquals(323, names.Count,
+         CheckEquals(324, names.Count,
                      'one name per migrated setting, plus the eleven that'
                      + ' answer to more than one -- MY STATE/MY QTH, the'
                      + ' eight mode-less message spellings, and QUICK QSL'
@@ -551,7 +551,9 @@ begin
                      + ' ENABLE N1MM LOG LISTENER and N1MM LISTEN ADDRESS'
                      + ' (new, no CFGCA row, issue 45), 2026-11-22; 323 with'
                      + ' MY PREFECTURE and MY POWER CLASS, the ALL JA'
-                     + ' station facts (new, no CFGCA row, issue 361), 2026-11-23');
+                     + ' station facts (new, no CFGCA row, issue 361), 2026-11-23;'
+                     + ' 324 with MY POWER, a second name of MY POWER CLASS for'
+                     + ' the power ARRL DX sends, 2026-11-27');
       finally
          names.Free;
       end;
@@ -2006,6 +2008,7 @@ const
       + '"MY NAME",'
       + '"MY PARK",'
       + '"MY POSTAL CODE",'
+      + '"MY POWER",'
       + '"MY POWER CLASS",'
       + '"MY PREC",'
       + '"MY PREFECTURE",'

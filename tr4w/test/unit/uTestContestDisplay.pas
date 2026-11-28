@@ -364,11 +364,15 @@ begin
          end;
       ARRLDXCW:
          begin
-         Result := StepComment(TC_ENTERYOURQTHORPOWER, ncfMyState);
+         (* The call is not known here, so both sides' rows are listed. *)
+         Result := StepComment(SNewContestEnterStateSent, ncfMyState) +
+                   StepComment(SNewContestEnterPowerSent, ncfMyPower);
          end;
       ARRLDXSSB:
          begin
-         Result := StepComment(TC_ENTERYOURQTHORPOWER, ncfMyState);
+         (* The call is not known here, so both sides' rows are listed. *)
+         Result := StepComment(SNewContestEnterStateSent, ncfMyState) +
+                   StepComment(SNewContestEnterPowerSent, ncfMyPower);
          end;
       ARRLFIELDDAY:
          begin
@@ -858,10 +862,6 @@ begin
          Result := StepComment(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
          end;
       ARRL160:
-         begin
-         Result := StepComment(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
-         end;
-      ARRLDXCW:
          begin
          Result := StepComment(TC_ENTERTHEQTHTHATYOUWANTTOSEND, ncfMyState);
          end;

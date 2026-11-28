@@ -4644,5 +4644,92 @@
          "K"
       ],
       "source": "docs/ContestRules/ARRL/DX-Rules.md: 'DX stations send a signal report and power as a number or abbreviation.' Its sample exchange answers '59 KW'. NY4I, 2026-11-27: people send K or KW to represent it; \"We send it as we copied it so allow alpha in power\". Sent side as ARRL-DX-SSB-WVE."
+   },
+   {
+      "name": "ARRL-DX-SSB-DX",
+      "contest": "ARRL-DX-SSB",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY POWER": "100"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "W1AW",
+      "typed": "59 CT",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "100"
+      ],
+      "received": [
+         "59",
+         "CT"
+      ],
+      "source": "rules/ARRL-DX/DX-Rules.md rule 4.2.2: 'DX stations send a signal report and power as a number or abbreviation'; sample https://wwrof.org/cabrillo/cabrillo-qso-data/ (read 2026-11-27) shows HC8N '59 700' / W1AW '59 CT'. DL1ABC is a test station. ASSUMPTION ABOUT INPUT: New Contest asks this contest only MY STATE, so the DX station's power (100) is put there; the sponsor says nothing about how a logger is told the power. NY4I, 2026-11-27: the DX side enters its power as MY POWER."
+   },
+   {
+      "name": "ARRL-DX-SSB-DX-SENDS-KW",
+      "contest": "ARRL-DX-SSB",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY POWER": "KW"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "W1AW",
+      "typed": "59 CT",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "KW"
+      ],
+      "received": [
+         "59",
+         "CT"
+      ],
+      "source": "docs/ContestRules/ARRL/DX-Rules.md: 'DX stations send a signal report and power as a number or abbreviation.' NY4I, 2026-11-27: allow letters. The station's everyday State (FL here) must not be sent. Received: the W station's state, as in ARRL-DX-SSB-DX."
+   },
+   {
+      "name": "ARRL-DX-SSB-DX-OLDER-LOG-POWER",
+      "contest": "ARRL-DX-SSB",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY STATE": "100"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "W1AW",
+      "typed": "59 CT",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "100"
+      ],
+      "received": [
+         "59",
+         "CT"
+      ],
+      "source": "rules/ARRL-DX/DX-Rules.md rule 4.2.2: 'DX stations send a signal report and power as a number or abbreviation'; sample https://wwrof.org/cabrillo/cabrillo-qso-data/ (read 2026-11-27) shows HC8N '59 700' / W1AW '59 CT'. DL1ABC is a test station. ASSUMPTION ABOUT INPUT: New Contest asks this contest only MY STATE, so the DX station's power (100) is put there; the sponsor says nothing about how a logger is told the power. A log made before MY POWER holds the power as the contest's MY STATE (NY4I approved keeping that, 2026-11-27)."
    }
 ]

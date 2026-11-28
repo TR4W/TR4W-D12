@@ -14,7 +14,7 @@ object frmMessagesList: TfrmMessagesList
   OnShow = HandleShow
   object lstCommands: TListBox
     Left = 5
-    Height = 280
+    Height = 242
     Top = 5
     Width = 450
     ItemHeight = 0
@@ -22,6 +22,14 @@ object frmMessagesList: TfrmMessagesList
     Sorted = True
     TabOrder = 0
     OnDblClick = lstCommandsDblClick
+  end
+  object lblBraces: TLabel
+    Left = 5
+    Height = 36
+    Top = 253
+    Width = 450
+    AutoSize = False
+    WordWrap = True
   end
   object btnOK: TButton
     Left = 145

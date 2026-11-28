@@ -61,7 +61,18 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
 - Sweepstakes `SRX_STRING` is built from the record (serial, precedence, check, section) when the record
   has typed text (`TContestARRLSSBase.FormatADIFReceivedExchange`); a record with none gains no tag.
 
-#### Per-contest export test (`test/export-test`, `/ENTERQSO`) — Issue #390
+#### ARRL DX sent power (`uContestARRLDXBase`, `uNewContest`, `uStationFieldCheck`)
+
+- `MY POWER` is a second name of `MY POWER CLASS` (same per-QSO column, no schema or wire change). The DX
+  side's `DescribeSession` sends it as `SentState` (else nothing, unless MY STATE was stated for the
+  contest), and its writers prefer the QSO's power over its state.
+- The received Cabrillo column follows the side: `Power` for a W/VE entrant, the logged state otherwise.
+  It wrote `Power` for both, so a DX entrant's column was blank.
+- `TNewContestPrompts.MyCountry`; the dialog asks again when the call changes the rows.
+- The power's value rule takes any short power or abbreviation; the ALL JA's H/M/L/P moved to
+  `TContestBase.StationFactProblem`, asked by Edit QSO and the bulk correction.
+
+, `/ENTERQSO`) — Issue #390
 
 - A new log, one contact entered as Enter does, and the whole Cabrillo `QSO:` line checked against the sponsor's exchange. It found both defects above.
 

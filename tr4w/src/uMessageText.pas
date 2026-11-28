@@ -140,8 +140,8 @@ function UpgradeMessageBookends(const aText: AnsiString;
 
 (* WHAT THE COMMAND PICKER INSERTS for aInsertable (the picker row's own
   token): {aInsertable} when it names a registered command, with or without
-  an argument; otherwise aInsertable itself -- a cryptic character, a
-  display row. *)
+  an argument, or a token (ROVERCALL); otherwise aInsertable itself -- a
+  cryptic character, a display row, a word already in braces. *)
 function MessagePickerText(const aInsertable: AnsiString): AnsiString;
 
 implementation
@@ -538,7 +538,8 @@ begin
       begin
       Exit;
       end;
-   if MessageBodyKind(aInsertable, name, argument, hasArgument, inactiveRadio) = mwCommand then
+   if MessageBodyKind(aInsertable, name, argument, hasArgument, inactiveRadio) in
+      [mwCommand, mwToken] then
       begin
       Result := '{' + aInsertable + '}';
       end;

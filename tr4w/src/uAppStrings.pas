@@ -1059,6 +1059,8 @@ resourcestring
    SStationFieldPrefecture =
       'A prefecture is a JARL number of up to three digits, or a two-letter code.';
    SStationFieldPowerClass = 'The power class is one letter: H, M, L or P.';
+   SStationFieldPower =
+      'The power is up to eight letters, digits or decimal points: 100, KW, H.';
    SStationFieldLicenseYear =
       'The license year is up to four digits: 1985, 85, or a number of years.';
    (* The line under the Station fields when a save is refused because a field
@@ -1094,6 +1096,11 @@ resourcestring
    (* THE ALL JA'S POWER CLASS PROMPT (NY4I, 2026-11-23). *)
    SNewContestEnterPowerClass =
       'Enter your power class (H, M, L or P):';
+   (* ARRL DX, the row chosen by the callsign. *)
+   SNewContestEnterStateSent =
+      'Enter the state or province you send:';
+   SNewContestEnterPowerSent =
+      'Enter the power you send: a number, or an abbreviation such as K or KW:';
    (* A STARTUP FIELD WHOSE VALUE ITS CONTEST'S PATTERN REFUSES
      (uNewContest; TNewContestPrompt.Pattern): %s the row's label. *)
    SNewContestFieldValueRefused =
@@ -2052,6 +2059,9 @@ resourcestring
       message, {NAME} is a command from the List of commands, or {ROVERCALL}
       or {ROVERQTH}. %0:s is the word as typed, without its braces. The
       editor refuses to save the message; the dialog stays open. *)
+   (* Under the List of commands (NY4I, 2026-11-27). *)
+   SMessagesListBracesHint    =
+      'Double-click inserts a command with its braces. If you type one instead, put it in braces, like {SPOTME}.';
    SMessageEditUnknownWord    = 'TR4W does not know the word {%0:s}. Use a command from the List of commands, {ROVERCALL} or {ROVERQTH}, and press OK again.';
    (* On the status line when a message being sent names a word TR4W does
       not know: the word is skipped and nothing of it is sent. %0:s is the

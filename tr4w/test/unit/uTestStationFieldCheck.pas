@@ -157,14 +157,18 @@ begin
                'a four-digit prefecture says why');
 end;
 
-(* MY POWER CLASS (2026-11-23): one of H, M, L, P, either case. *)
+(* MY POWER and MY POWER CLASS, one value under two names. ANY POWER since
+  2026-11-27 (ARRL DX sends '100' or 'KW'); the ALL JA's four letters are that
+  contest's own rule (uTestContestUI). *)
 procedure TStationFieldCheckTests.Test_PowerClassIsOneOfHMLP;
 begin
    BeginTest('Test_PowerClassIsOneOfHMLP');
    Accepted('MY POWER CLASS', ['H', 'M', 'L', 'P', 'h', ' p ']);
-   Refused('MY POWER CLASS', ['X', 'HM', '1', 'Q']);
-   CheckEquals(string(SStationFieldPowerClass), StationFieldProblem('MY POWER CLASS', 'X'),
-               'X is no power class, and says so');
+   Accepted('MY POWER CLASS', ['100', 'K', 'KW', 'kw', '1.5KW', '5', '']);
+   Accepted('MY POWER', ['100', 'K', 'KW', 'H']);
+   Refused('MY POWER', ['1 KW', '100W/QRP', 'KILOWATTS', '-5']);
+   CheckEquals(string(SStationFieldPower), StationFieldProblem('MY POWER', '1 KW'),
+               'a power with a blank says why');
 end;
 
 procedure TStationFieldCheckTests.Test_Zones;

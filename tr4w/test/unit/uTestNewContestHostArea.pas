@@ -44,6 +44,7 @@ type
       procedure Test_APartyWithoutTheBoxKeepsFreeEntry;
       procedure Test_ALicenseYearRowQueuesMyLicenseYear;
       procedure Test_ACWTMemberRowQueuesMyState;
+      procedure Test_ChangingTheCallSwapsARRLDXsOneRow;
    public
       procedure RunAllTests; override;
    end;
@@ -481,6 +482,88 @@ begin
    end;
 end;
 
+(* ARRL DX's one row follows MY CALL (2026-11-27). The first build of it
+  asked again INSIDE the asking-again, because clearing a row raises the same
+  changed event, and left rows captioned twice and a CATEGORY drop-down
+  captioned MY POWER (found on the GUI test machine). *)
+procedure TNewContestHostAreaTests.Test_ChangingTheCallSwapsARRLDXsOneRow;
+var
+   frm: TfrmNewContest;
+
+   (* Every row's caption, in row order, blanks left out. *)
+   function Labels: string;
+   var
+      i: integer;
+   begin
+      Result := '';
+      for i := 1 to frm.Rows do
+         begin
+         if (frm.RowCaption(i) <> '') and
+            (Copy(frm.RowCaption(i), 1, 9) <> 'CATEGORY-') then
+            begin
+            Result := Result + frm.RowCaption(i) + ';';
+            end;
+         end;
+   end;
+
+   function Categories: string;
+   var
+      i: integer;
+   begin
+      Result := '';
+      (* Every row below the three a contest asks into. *)
+      for i := 4 to frm.Rows do
+         begin
+         Result := Result + IntToStr(i) + '=' + frm.RowCaption(i) + ';';
+         end;
+   end;
+
+var
+   categoriesAtStart: string;
+begin
+   BeginTest('Test_ChangingTheCallSwapsARRLDXsOneRow');
+
+   frm := NewDialog;
+   try
+      frm.SetMyCall('NY4I');
+      CheckTrue(Choose(frm, ContestHandleOf(ARRLDXSSB)), 'ARRL DX SSB can be chosen');
+      categoriesAtStart := Categories;
+      CheckEquals('MY STATE;', Labels, 'a US call: the state row alone');
+
+      frm.SetMyCall('DL1ABC');
+      CheckEquals('MY POWER;', Labels, 'a German call: the power row alone');
+      CheckEquals(categoriesAtStart, Categories, 'the category rows keep their labels');
+      frm.SetRowText(RowCaptioned(frm, 'MY POWER'), 'KW');
+      CheckTrue(frm.btnOK.Enabled, 'KW is accepted');
+      ClearNewContestChoices;
+      QueueNewContestRows;
+      CheckEquals('KW', QueuedNewContestValue('MY POWER'), 'and queued as MY POWER');
+      CheckEquals('', QueuedNewContestValue('MY STATE'), 'with no state');
+
+      (* A value the setting would refuse must stop here: queued, it was
+        only a line in the log and no power at all. *)
+      frm.SetRowText(RowCaptioned(frm, 'MY POWER'), '1 KW');
+      CheckFalse(frm.btnOK.Enabled, '"1 KW" is refused');
+      CheckEquals(SStationFieldPower, frm.lblComment.Caption, 'and the dialog says why');
+      frm.SetRowText(RowCaptioned(frm, 'MY POWER'), 'KW');
+      CheckTrue(frm.btnOK.Enabled, 'KW again: OK');
+
+      frm.SetMyCall('DL1ABD');
+      CheckEquals('KW', frm.RowText(RowCaptioned(frm, 'MY POWER')),
+                  'a call that asks the same rows keeps what was entered');
+
+      frm.SetMyCall('NY4I');
+      CheckEquals('MY STATE;', Labels, 'back to the state row alone');
+      CheckEquals(categoriesAtStart, Categories, 'and the categories still stand');
+
+      frm.SetMyCall('');
+      CheckEquals('MY STATE;MY POWER;', Labels, 'no call: both rows, once each');
+   finally
+      ClearNewContestChoices;
+      FreeDialog(frm);
+   end;
+end;
+
 procedure TNewContestHostAreaTests.Test_TickingKeepsTheOtherRows;
 var
    frm: TfrmNewContest;
@@ -625,6 +708,7 @@ begin
    Test_APartyWithoutTheBoxKeepsFreeEntry;
    Test_ALicenseYearRowQueuesMyLicenseYear;
    Test_ACWTMemberRowQueuesMyState;
+   Test_ChangingTheCallSwapsARRLDXsOneRow;
 end;
 
 end.

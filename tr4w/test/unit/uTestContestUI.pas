@@ -55,6 +55,9 @@ type
    private
       procedure Test_ChoicesListEveryContestOnce;
       procedure Test_IARUSendsASocietyOnlyWhenStatedForTheContest;
+      procedure Test_ARRLDXSendsItsPowerOutsideWAndVE;
+      procedure Test_ARRLDXAsksTheRowItsCallCallsFor;
+      procedure Test_OnlyTheALLJALimitsThePowerToItsLetters;
       procedure Test_ChoicesActiveFirstThenByDisplayName;
       procedure Test_ChoicesShowDisplayNamesAndMarkInactive;
       procedure Test_ChoiceCaptionsAreUnique;
@@ -157,6 +160,98 @@ begin
    CheckEquals('', sent, 'and sends nothing there, so the zone is sent');
    CheckFalse(SessionFor(True, sent),
               'a value stated for this contest is left to be sent');
+end;
+
+(* NY4I, 2026-11-27: an ARRL DX station outside the USA and Canada sends its
+  POWER, from MY POWER. The session sends it where a sent state goes, so the
+  function keys and the QSO's record carry it; the everyday state never does. *)
+procedure TContestUITests.Test_ARRLDXSendsItsPowerOutsideWAndVE;
+
+   function SentBy(const aCountry, aState, aPower: string; aStated: boolean): string;
+   var
+      station: TStationContext;
+      session: TSessionDefaults;
+   begin
+      station := Default(TStationContext);
+      station.MyCountry := UTF8Encode(aCountry);
+      station.MyState := aState;
+      station.MyPowerClass := aPower;
+      station.MyStateStatedForContest := aStated;
+      session := TSessionDefaults.Create;
+      try
+         ContestIdentity(ARRLDXSSB).DescribeSession(station, session);
+         if session.IsStated(svSentState) then
+            begin
+            Result := session.SentState;
+            end
+         else
+            begin
+            Result := '(unchanged)';
+            end;
+      finally
+         session.Free;
+      end;
+   end;
+
+begin
+   BeginTest('Test_ARRLDXSendsItsPowerOutsideWAndVE');
+   CheckEquals('KW', SentBy('DL', '', 'KW', False), 'the power, in letters');
+   CheckEquals('100', SentBy('DL', 'BY', '100', False), 'the power, not the everyday state');
+   CheckEquals('', SentBy('DL', 'BY', '', False),
+               'no power: the everyday state is not sent as one');
+   CheckEquals('(unchanged)', SentBy('DL', '100', '', True),
+               'an older log: the state entered for the contest is its power');
+   CheckEquals('(unchanged)', SentBy('K', 'FL', '100', False),
+               'a W station sends its state, whatever MY POWER holds');
+end;
+
+procedure TContestUITests.Test_ARRLDXAsksTheRowItsCallCallsFor;
+
+   function Rows(const aCountry: string): string;
+   var
+      prompts: TNewContestPrompts;
+      i: integer;
+   begin
+      Result := '';
+      prompts := TNewContestPrompts.Create;
+      try
+         prompts.MyCountry := aCountry;
+         ContestIdentity(ARRLDXCW).DescribeNewContestPrompts(prompts);
+         for i := 0 to prompts.ChoiceCount - 1 do
+            begin
+            if prompts.Choice(i).Field = ncfMyState then
+               begin
+               Result := Result + 'state;';
+               end;
+            if prompts.Choice(i).Field = ncfMyPower then
+               begin
+               Result := Result + 'power;';
+               end;
+            end;
+      finally
+         prompts.Free;
+      end;
+   end;
+
+begin
+   BeginTest('Test_ARRLDXAsksTheRowItsCallCallsFor');
+   CheckEquals('state;', Rows('K'), 'a US call');
+   CheckEquals('state;', Rows('VE'), 'a Canadian call');
+   CheckEquals('power;', Rows('DL'), 'a German call');
+   CheckEquals('power;', Rows('KH6'), 'Hawaii is DX in this contest');
+   CheckEquals('power;', Rows('KL'), 'and so is Alaska');
+   CheckEquals('state;power;', Rows(''), 'no call yet: both');
+end;
+
+procedure TContestUITests.Test_OnlyTheALLJALimitsThePowerToItsLetters;
+begin
+   BeginTest('Test_OnlyTheALLJALimitsThePowerToItsLetters');
+   CheckEquals('', ContestIdentity(ALLJA).StationFactProblem(sfPowerClass, 'm'), 'a class letter');
+   CheckEquals('', ContestIdentity(ALLJA).StationFactProblem(sfPowerClass, ''), 'none stated');
+   CheckTrue(ContestIdentity(ALLJA).StationFactProblem(sfPowerClass, '100') <> '',
+             'a power in watts is no ALL JA class');
+   CheckEquals('', ContestIdentity(ARRLDXCW).StationFactProblem(sfPowerClass, 'KW'),
+               'ARRL DX takes it');
 end;
 
 procedure TContestUITests.Test_ChoicesListEveryContestOnce;
@@ -1140,6 +1235,9 @@ end;
 procedure TContestUITests.RunAllTests;
 begin
    Test_IARUSendsASocietyOnlyWhenStatedForTheContest;
+   Test_ARRLDXSendsItsPowerOutsideWAndVE;
+   Test_ARRLDXAsksTheRowItsCallCallsFor;
+   Test_OnlyTheALLJALimitsThePowerToItsLetters;
    Test_ChoicesListEveryContestOnce;
    Test_ChoicesActiveFirstThenByDisplayName;
    Test_ChoicesShowDisplayNamesAndMarkInactive;

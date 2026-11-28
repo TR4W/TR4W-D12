@@ -1405,7 +1405,10 @@ type
    TNewContestField = (ncfMyCheck, ncfMyFDClass, ncfMyGrid, ncfMyFOC, ncfMyIOTA,
                        ncfMyName, ncfMyPark, ncfMyPrec, ncfMyQTH, ncfMySection,
                        ncfMyState, ncfMyZone, ncfMyPostalCode, ncfMyLicenseYear,
-                       ncfMyPrefecture, ncfMyPowerClass);
+                       ncfMyPrefecture, ncfMyPowerClass,
+                       (* MY POWER, the value ARRL DX sends. The same station
+                         fact as MY POWER CLASS, asked under its other name. *)
+                       ncfMyPower);
 
    (* WHAT ONE STEP OF A PROMPT DOES, in the dialog's own terms:
         npkField             offer the field's row (the next free one);
@@ -1459,6 +1462,13 @@ type
       procedure AddChoice(aKind: TNewContestPromptKind; aField: TNewContestField;
                           const aText, aRowLabel: string);
    public
+      (* THE CTY COUNTRY OF MY CALL, as the dialog has it, for a contest whose
+         rows depend on which side the entrant is on (ARRL DX). SET BEFORE
+         DescribeNewContestPrompts. '' is "not known" -- no call typed yet, or
+         a caller asking what the contest could ever ask (/NEWCONTESTPROMPTS,
+         ContestUsesStationFact) -- and such a contest then asks every row. *)
+      MyCountry: string;
+
       (* WHEN THE CONTEST IS CHOSEN. *)
       procedure AskField(aField: TNewContestField);
       procedure AskFieldWithComment(const aComment: string; aField: TNewContestField);
@@ -3805,6 +3815,14 @@ type
          of ContestIdentity, like the prompts: a value, no station. *)
       function NewContestValueRefusal(aField: TNewContestField;
                                       const aValue: string): string; virtual;
+
+      (* MAY aValue BE THIS STATION FACT IN THIS CONTEST? '' when it may, else
+         the reason in the operator's words. For a rule narrower than the
+         station's own (uStationFieldCheck), asked where the contest is known:
+         Edit QSO and the bulk correction. The base adds no rule. The ALL JA
+         takes only its four power class letters. *)
+      function StationFactProblem(aFact: TStationFact;
+                                  const aValue: string): string; virtual;
 
       (* DOES THE STATION'S OWN QTH DEPEND ON BEING IN THE HOST AREA? --
          issue 217. True, with the answer in aArea, makes the New Contest
@@ -6438,7 +6456,8 @@ const
       sfPostalCode,   (* ncfMyPostalCode *)
       sfLicenseYear,  (* ncfMyLicenseYear *)
       sfPrefecture,   (* ncfMyPrefecture *)
-      sfPowerClass);  (* ncfMyPowerClass *)
+      sfPowerClass,   (* ncfMyPowerClass *)
+      sfPowerClass);  (* ncfMyPower *)
 
 function StartUpFieldValueAccepted(const aPattern, aValue: string): boolean;
 begin
@@ -9032,6 +9051,12 @@ begin
 end;
 
 function TContestBase.ContestOpenNotice(aCurrentYear: integer): string;
+begin
+   Result := '';
+end;
+
+function TContestBase.StationFactProblem(aFact: TStationFact;
+                                         const aValue: string): string;
 begin
    Result := '';
 end;

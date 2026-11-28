@@ -158,6 +158,8 @@ uses
   uQsoMyFacts,
   (* EditedStationFactRefusal -- the save's check of our station's values. *)
   uStationFactRecord,
+  (* TStationFact, sfPowerClass -- the contest's own check of a power. *)
+  uSettingsModel,
   (* TDeliveryStatusList -- the read-only external-logger delivery window. *)
   uExternalDelivery,
   (* Which store a log READ comes from -- step B4/B5. *)
@@ -241,9 +243,18 @@ end;
 function StationValuesAreValid: boolean;
 var
   refusal: string;
+  typed: TQsoMyFacts;
 begin
-  refusal := EditedStationFactRefusal(EditableMyFacts,
-                                      EditQSOReadMyFacts(EditableMyFacts));
+  typed := EditQSOReadMyFacts(EditableMyFacts);
+  refusal := EditedStationFactRefusal(EditableMyFacts, typed);
+  (* THE CONTEST'S NARROWER RULE, of a power the operator changed (the ALL
+    JA's four letters). *)
+  if (refusal = '') and
+     (typed.PowerClass <> EditableMyFacts.PowerClass) then
+     begin
+     refusal := ContestIdentity(EditableQSORXData.ceContest).StationFactProblem(
+        sfPowerClass, UTF8Decode(typed.PowerClass));
+     end;
   Result := refusal = '';
   if not Result then
      begin

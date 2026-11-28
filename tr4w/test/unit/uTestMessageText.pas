@@ -203,7 +203,12 @@ begin
    CheckEquals('{ALT-D}', string(MessagePickerText('ALT-D')), 'ALT-D');
    CheckEquals('#', string(MessagePickerText('#')), 'a cryptic character');
    CheckEquals('CTRL-P CTRL-F', string(MessagePickerText('CTRL-P CTRL-F')), 'a display row');
-   CheckEquals('{ROVERCALL}', string(MessagePickerText('{ROVERCALL}')), 'a token row');
+   (* The list shows the two rover words bare, as it shows a command, and
+     the picker adds the braces (NY4I, 2026-11-27). *)
+   CheckEquals('{ROVERCALL}', string(MessagePickerText('ROVERCALL')), 'a rover token');
+   CheckEquals('{ROVERQTH}', string(MessagePickerText('ROVERQTH')), 'the other one');
+   CheckEquals('{ROVERCALL}', string(MessagePickerText('{ROVERCALL}')),
+               'a word already braced is not braced twice');
 end;
 
 procedure TMessageTextTests.Test_FoundCommandTakesOutCommandsAndUnknownWords;

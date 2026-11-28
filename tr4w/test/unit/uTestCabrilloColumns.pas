@@ -1679,6 +1679,37 @@ begin
                Format('%-7s', [PinStation(aStation, aContest).MyCountry]);
       end;
 
+   (* ARRL DX OUTSIDE THE USA AND CANADA RECEIVES A STATE OR PROVINCE, and
+      the column is the one logged. These rows pinned the Power field, which
+      that entrant's parse never fills (2026-11-27). *)
+   if (aContest in [ARRLDXCW, ARRLDXSSB]) and
+      (PinStation(aStation, aContest).MyCountry <> 'K') and
+      (PinStation(aStation, aContest).MyCountry <> 'VE') then
+      begin
+      case aVariant of
+         0, 4, 5:
+            begin
+            aRec := '579 GA     ';
+            end;
+         2:
+            begin
+            aRec := '579 ABCDEFGHIJ';
+            end;
+         3:
+            begin
+            aRec := '579 TRC    ';
+            end;
+         6:
+            begin
+            aRec := '579 XY     ';
+            end;
+         7:
+            begin
+            aRec := '579        ';
+            end;
+         end;
+      end;
+
    (* IDAHO'S AND NEBRASKA'S DX ENTRANT SENDS ITS PREFIX TOO; these were
       pinned with nothing after the report. *)
    if (aContest in [IDAHOQSOPARTY, NEBRASKAQSO]) and

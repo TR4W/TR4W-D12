@@ -94,7 +94,18 @@ type
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
       procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
+   private
+      (* THE STATION AS IT SENDS: for an entrant outside the USA and Canada
+         the power takes MY STATE's place -- see the body. *)
+      function AsSent(const aMy: TMyStationExchange): TMyStationExchange;
    public
+      (* THE NEW CONTEST DIALOG'S PROMPTS -- the row follows the call. *)
+      procedure DescribeNewContestPrompts(aPrompts: TNewContestPrompts); override;
+      (* A POWER THE SETTING WOULD REFUSE STOPS AT THE DIALOG -- see the
+         body. *)
+      function NewContestValueRefusal(aField: TNewContestField;
+                                      const aValue: string): string; override;
+
 
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                        const aQso: ContestExchange;
@@ -147,16 +158,63 @@ uses
    uCabrilloExchange,
    uDXMultiplierKey,
    uExchangeFields,
+   uAppStrings,     (* the two New Contest prompts *)
+   uStationFieldCheck, (* PowerClassIsAcceptable -- the setting's rule *)
    SysUtils,
    uCanonicalExchange;
 
+(* THE SENT POWER, FROM MY POWER (NY4I, 2026-11-27: "use power"). A QSO
+   carries the power it was sent with; a log made before MY POWER existed
+   holds it in the state, which is what is left when there is no power. *)
+function TContestARRLDXBase.AsSent(const aMy: TMyStationExchange): TMyStationExchange;
+begin
+   Result := aMy;
+   if (not CountsDXMultiplier) and
+      (aMy.MyPowerClass <> '') then
+      begin
+      Result.MyState := aMy.MyPowerClass;
+      end;
+end;
+
+(* ONE ROW, CHOSEN BY THE CALL: a W or VE station sends its state or province,
+   anyone else (KH6 and KL7 included) its power. With the call not yet known
+   both are asked -- TNewContestPrompts.MyCountry. *)
+procedure TContestARRLDXBase.DescribeNewContestPrompts(aPrompts: TNewContestPrompts);
+begin
+   if (aPrompts.MyCountry = '') or
+      IsUSAOrCanadaCountry(ShortString(aPrompts.MyCountry)) then
+      begin
+      aPrompts.AskFieldWithComment(SNewContestEnterStateSent, ncfMyState);
+      end;
+   if (aPrompts.MyCountry = '') or
+      (not IsUSAOrCanadaCountry(ShortString(aPrompts.MyCountry))) then
+      begin
+      aPrompts.AskFieldWithComment(SNewContestEnterPowerSent, ncfMyPower);
+      end;
+end;
+
+(* Asked of MY POWER with the setting's own rule. A value that rule refuses
+   is not applied to the new log, which says so only in tr4w.log -- so '1 KW'
+   let OK through and left the log with no power. *)
+function TContestARRLDXBase.NewContestValueRefusal(aField: TNewContestField;
+                                                   const aValue: string): string;
+begin
+   Result := inherited NewContestValueRefusal(aField, aValue);
+   if (Result = '')             and
+      (aField = ncfMyPower)     and
+      (not PowerClassIsAcceptable(aValue)) then
+      begin
+      Result := SStationFieldPower;
+      end;
+end;
+
 (* THE EXCHANGE IS RST AND EITHER A STATE OR A POWER.
 
-   W/VE send their state or province; DX send their power. One arm serves both
-   because which one you send follows from who you are, and the exporter has
-   already resolved that: aMy.MyState holds whichever applies to us, and the
-   received side is simply the QSO's Power field, which is where the parser puts
-   a state as readily as a number.
+   W/VE send their state or province; DX send their power. Which one you send
+   follows from who you are (AsSent). WHICH ONE YOU RECEIVE is the other: a W
+   or VE entrant's QSO holds the worked station's power in Power; anyone
+   else's holds its state or province in QTHString. Until 2026-11-27 both
+   sides wrote Power, so a DX entrant's received column was blank.
 
    THE FOC MARATHON HALF OF THE LEGACY ARM IS NOT HERE. RSTPowerExchange is
    shared, and inside it sat `if Contest = FOCMARATHON` swapping in the FOC
@@ -167,20 +225,34 @@ function TContestARRLDXBase.GetCabrilloSentExchange(const aMy: TMyStationExchang
                                                     const aQso: ContestExchange;
                                                     const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
+   Result := CabrilloSentRSTState(AsSent(aMy), aQso, aCtx);
 end;
 
 function TContestARRLDXBase.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                         const aQso: ContestExchange;
                                                         const aCtx: TCabrilloQSOContext): string;
+var
+   location: string;
 begin
-   Result := CabrilloReceivedRSTPower(aMy, aQso, aCtx);
+   if CountsDXMultiplier then
+      begin
+      Result := CabrilloReceivedRSTPower(aMy, aQso, aCtx);
+      end
+   else
+      begin
+      location := string(aQso.QTHString);
+      if location = '' then
+         begin
+         location := string(aQso.DomesticQTH);
+         end;
+      Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, location]);
+      end;
 end;
 
 function TContestARRLDXBase.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                 const aQso: ContestExchange): string;
 begin
-   Result := Format('%-3d %-7s', [aQso.RSTSent, aMy.MyState]);
+   Result := Format('%-3d %-7s', [aQso.RSTSent, AsSent(aMy).MyState]);
 end;
 
 procedure TContestARRLDXBase.CalculateQSOPoints(var aQso: ContestExchange);
@@ -289,6 +361,18 @@ begin
       begin
       aSession.DomesticFile := 'S48P14DC';
       aSession.Exchange := RSTDomesticQTHExchange;
+      (* THE POWER GOES WHERE THE SENT STATE GOES, so the function keys and
+         the QSO's record send it. With no power, only a state entered for
+         THIS contest stays (an older log's power); the station's everyday
+         state is never sent as a power -- the IARU rule. *)
+      if aStation.MyPowerClass <> '' then
+         begin
+         aSession.SentState := aStation.MyPowerClass;
+         end
+      else if not aStation.MyStateStatedForContest then
+         begin
+         aSession.SentState := '';
+         end;
       end;
 
    aSession.ContestName := 'ARRL DX Test';

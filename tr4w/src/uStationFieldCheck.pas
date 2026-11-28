@@ -137,8 +137,11 @@ function LicenseYearIsDigits(const aValue: string): boolean;
   (TNewContestPrompt.Pattern). Registered with the settings model by uCFG. *)
 function PrefectureIsAcceptable(const aValue: string): boolean;
 
-(* MY POWER CLASS: nothing, or one of H, M, L, P, either case. Registered
-  with the settings model by uCFG. *)
+(* MY POWER (also MY POWER CLASS): nothing, or up to eight letters, digits
+  and decimal points -- a power ('100', '1.5KW'), an abbreviation ('K', 'KW')
+  or a class letter. A contest with a narrower rule states it
+  (TContestBase.StationFactProblem). Registered with the settings model by
+  uCFG. *)
 function PowerClassIsAcceptable(const aValue: string): boolean;
 
 (* THE MY COUNTRY RULE NEEDS CTY.DAT, which a leaf may not read, so uCFG
@@ -344,12 +347,23 @@ begin
 end;
 
 function PowerClassIsAcceptable(const aValue: string): boolean;
+const
+   POWER_MAX_LENGTH = 8;
 var
    value: string;
+   i: integer;
 begin
    value := UpperCase(Trim(aValue));
-   Result := (value = '') or (value = 'H') or (value = 'M') or (value = 'L') or
-             (value = 'P');
+   Result := Length(value) <= POWER_MAX_LENGTH;
+   for i := 1 to Length(value) do
+      begin
+      if not (IsAsciiLetter(value[i]) or
+              IsAsciiDigit(value[i])  or
+              (value[i] = '.'))       then
+         begin
+         Result := False;
+         end;
+      end;
 end;
 
 (* ONE OR MORE PARKS, SEPARATED BY COMMAS -- 'US-1234' or 'US-1234,US-5678'
@@ -585,11 +599,11 @@ begin
          Result := SStationFieldPrefecture;
          end;
       end
-   else if command = 'MY POWER CLASS' then
+   else if (command = 'MY POWER') or (command = 'MY POWER CLASS') then
       begin
       if not PowerClassIsAcceptable(text) then
          begin
-         Result := SStationFieldPowerClass;
+         Result := SStationFieldPower;
          end;
       end;
 end;

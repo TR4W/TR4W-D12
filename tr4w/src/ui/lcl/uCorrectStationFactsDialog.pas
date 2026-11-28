@@ -41,7 +41,10 @@ uses
    uSettingsModel,      (* TStationFact, Settings.My.Resolved -- the value offered *)
    uStationFactRecord,  (* the whitelist, the value rule, the captions *)
    uLogStore,           (* the plan, the correction, the log's state *)
-   uEditQSO;            (* AnnounceStationCorrection -- after the commit *)
+   uEditQSO,            (* AnnounceStationCorrection -- after the commit *)
+   VC,
+   PostUnit,            (* Contest, the open log's *)
+   uContestRegistry;    (* ContestIdentity -- its own narrower rule *)
 
 (* A message box, its text through LclText. *)
 procedure Say(const aText: string);
@@ -176,6 +179,11 @@ begin
       Exit;
       end;
    problem := StationFactBulkProblem(correction.Fact, value);
+   if problem = '' then
+      begin
+      (* The open contest's narrower rule (the ALL JA's power class letters). *)
+      problem := ContestIdentity(Contest).StationFactProblem(correction.Fact, value);
+      end;
    if problem <> '' then
       begin
       Say(problem);

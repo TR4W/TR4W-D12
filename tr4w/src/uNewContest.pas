@@ -239,7 +239,8 @@ const
     'MY POSTAL CODE',
     'MY LICENSE YEAR',
     'MY PREFECTURE',
-    'MY POWER CLASS'
+    'MY POWER CLASS',
+    'MY POWER'
     );
 
 var
@@ -256,6 +257,9 @@ var
   (* THE CONTEST'S OWN COMMENT for its rows (the prompt text), kept so a
     refusal shown in the same place can be taken down again -- Q104. *)
   NewContestPromptComment               : string;
+  (* The rows last asked on choosing -- AskAgainIfTheCallChangedTheRows. *)
+  ShownChoiceFields                     : string;
+  AskingAgain                           : boolean;
 //  NewContestAllowReturn                 : boolean;
   SelectedContest                       : TContestHandle;
   (* THE CHOSEN CONTEST'S "I AM IN <AREA>" BOX -- issue 217. Active only
@@ -368,6 +372,83 @@ begin
    end;
 end;
 
+function EnsureCountryTableForIAmIn: boolean; forward;
+procedure ShowContestPrompts(aTicked: boolean); forward;
+
+(* THE CTY COUNTRY OF THE CALL IN THE DIALOG, '' while there is no usable
+  call or no country table -- TNewContestPrompts.MyCountry's "not known". *)
+function NewContestCallCountry: string;
+var
+   call: string;
+   qth: QTHRecord;
+begin
+   Result := '';
+   call := UpperCase(Trim(frmNewContest.MyCall));
+   if (Length(call) >= 3)          and
+      IsAGoodCall(CallString(call)) and
+      EnsureCountryTableForIAmIn    and
+      ctyLocateCall(CallString(call), qth) then
+      begin
+      Result := string(qth.CountryID);
+      end;
+end;
+
+(* Which rows a contest asks on being chosen, as one comparable text. *)
+function ChoiceFieldsText(aPrompts: TNewContestPrompts): string;
+var
+   i: integer;
+begin
+   Result := '';
+   for i := 0 to aPrompts.ChoiceCount - 1 do
+      begin
+      Result := Result + IntToStr(Ord(aPrompts.Choice(i).Kind)) + ':' +
+                IntToStr(Ord(aPrompts.Choice(i).Field)) + ';';
+      end;
+end;
+
+(* DOES MY CALL NOW ASK FOR DIFFERENT ROWS? ARRL DX asks MY STATE of a W or VE
+  call and MY POWER of any other. The rows are cleared and asked again only
+  when the list itself differs, so typing in a call does not clear what the
+  operator entered. A contest with an "I am in" box does not depend on the
+  call, so its list never differs. *)
+procedure AskAgainIfTheCallChangedTheRows;
+var
+   prompts: TNewContestPrompts;
+   wanted: string;
+begin
+   if (SelectedContest = NoContest) or
+      AskingAgain then
+      begin
+      Exit;
+      end;
+   prompts := TNewContestPrompts.Create;
+   try
+      prompts.MyCountry := NewContestCallCountry;
+      ContestIdentity(SelectedContest).DescribeNewContestPrompts(prompts);
+      wanted := ChoiceFieldsText(prompts);
+   finally
+      prompts.Free;
+   end;
+   if wanted <> ShownChoiceFields then
+      begin
+      (* CLEARING A ROW RAISES THE CHANGED EVENT THAT CALLED THIS, so without
+        the flag it asked again inside itself and left rows labelled twice
+        (found on the GUI test machine). And the keyboard stays in the call
+        box: the operator is typing in it. *)
+      AskingAgain := True;
+      frmNewContest.KeepFocus := True;
+      try
+         ClearFields;
+         frmNewContest.SetComment('');
+         NewContestPromptComment := '';
+         ShowContestPrompts(False);
+      finally
+         frmNewContest.KeepFocus := False;
+         AskingAgain := False;
+      end;
+      end;
+end;
+
 (* WHAT THE CHOSEN CONTEST ASKS FOR AT ONE OF THE TWO MOMENTS -- the
   contest's own steps, in its order. The prompts object is the contest's
   answer; it is freed here. *)
@@ -378,7 +459,12 @@ var
 begin
    prompts := TNewContestPrompts.Create;
    try
+      prompts.MyCountry := NewContestCallCountry;
       ContestIdentity(SelectedContest).DescribeNewContestPrompts(prompts);
+      if not aTicked then
+         begin
+         ShownChoiceFields := ChoiceFieldsText(prompts);
+         end;
       if aTicked then
          begin
          for i := 0 to prompts.InsideCount - 1 do
@@ -600,6 +686,7 @@ end;
   the same rule said once. }
 procedure FieldsChanged;
 begin
+   AskAgainIfTheCallChangedTheRows;
    BeginNewContest;
 end;
 
