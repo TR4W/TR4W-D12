@@ -58,9 +58,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     contest exchange": NY4I's standing reading of that wording (issues 88 and
     122, 2026-11-19) is every digital submode but FT8, FT4 and FT2.
 
-  THE RECEIVED COLUMN of a DX station, for a Texas entrant, is its typed
-    entity (CabrilloReceivedRSTDomesticQTHOrDXQTH); CabrilloReceivedRSTQTHOrDXQTH
-    tests QTHString and printed an empty column for a typed "599 DL".
+  THE RECEIVED COLUMN of a DX station, for a Texas entrant, is what was
+    logged, else its prefix (the party base's DX rule, 2026-11-27).
 
   NOT BUILT, listed on #88: the 500-point bonus for each Texas mobile worked
     in five counties (the sponsor's wording of the mobile line is garbled and
@@ -133,6 +132,8 @@ type
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -317,14 +318,15 @@ function TContestTexasQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                              const aQso: ContestExchange): string;
 begin
    (* WHAT THE CABRILLO SENT COLUMN SAYS (below): an entrant who counts DX
-      sends its state, the others its state or DX. *)
+      sends its state, the others their state, or their prefix with none. *)
    if CountsDXMultiplier then
       begin
       Result := ADIFSentRSTState(aMy, aQso);
       end
    else
       begin
-      Result := ADIFSentRSTStateOrDX(aMy, aQso);
+      (* A DX entrant has no state and sends its prefix. *)
+      Result := ADIFSentRSTState(SentLocation(aMy), aQso);
       end;
 end;
 
@@ -338,7 +340,7 @@ begin
       end
    else
       begin
-      Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
+      Result := CabrilloSentRSTState(SentLocation(aMy), aQso, aCtx);
       end;
 end;
 
@@ -348,12 +350,18 @@ function TContestTexasQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchan
 begin
    if CountsDXMultiplier then
       begin
-      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
       end
    else
       begin
       Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
       end;
+end;
+
+(* The sponsor: "DX stations should send the primary prefix assigned to their country." *)
+function TContestTexasQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestTexasQP.GetInStateDomesticFileName: string;

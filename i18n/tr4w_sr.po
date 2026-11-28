@@ -13290,3 +13290,8 @@ msgstr ""
 #, fuzzy
 msgid "That QSO is with us: a QTC may not report it back"
 msgstr ""
+
+#: uappstrings.sexchangedxsendsprefix
+#, fuzzy
+msgid "A DX station sends its country prefix: %s"
+msgstr ""

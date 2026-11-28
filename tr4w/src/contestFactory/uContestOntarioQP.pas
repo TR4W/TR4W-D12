@@ -131,8 +131,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     "DX" is also acceptable". RSTDomesticOrDXQTHExchange. A DX entrant SENDS
     ITS COUNTRY PREFIX (NY4I) -- the party base's SentLocation /
     LocationOrOwnCountry, in the CQ exchange, the Cabrillo and the ADIF;
-    the received column is what the DX station sent
-    (CabrilloReceivedRSTDomesticQTHOrDXQTH since review H4).
+    the received column is what was logged, else the prefix (the party
+    base's DX rule, 2026-11-27).
 
   CABRILLO -- CONTEST: ON-QSO-PARTY (WA7BNM 357; the sponsor states none).
     The rules give no example line: the fields are RST and the sent QTH, RST
@@ -225,6 +225,8 @@ type
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
                                            const aCtx: TCabrilloQSOContext): string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
 
@@ -408,11 +410,15 @@ function TContestOntarioQP.GetCabrilloReceivedExchange(const aMy: TMyStationExch
                                                        const aQso: ContestExchange;
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   (* "county, province, state, or DXCC country abbreviation": what the
-      station sent; a DX station's DX QTH, else what it sent.
-      CabrilloReceivedRSTQTHOrDXQTH printed an EMPTY column for a typed
-      "599 DL" (review H4 follow-up, 2026-11-16). *)
-   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+   (* "county, province, state, or DXCC country abbreviation":
+      the party base's DX rule (2026-11-27). *)
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
+end;
+
+(* The sponsor: a "DXCC country abbreviation (the abbreviation DX is also acceptable)". *)
+function TContestOntarioQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestOntarioQP.GetInStateDomesticFileName: string;

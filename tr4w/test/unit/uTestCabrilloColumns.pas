@@ -959,8 +959,8 @@ begin
                '579 TRC    ',
                '579 GA     ',
                '579 GA     ',
-               '579        ',
-               '579        '],
+               '579 XY     ',   (* what was logged (2026-11-27): these *)
+               '579 ZZ     '],  (* two were pinned blank, the defect   *)
               aSent, aRec);
          (* "DX (including KP4, etc.) operators send DXCC prefix" -- the
             sponsor's rule (audit 2026-11-20, by hand): a station that states
@@ -1667,6 +1667,57 @@ begin
               aSent, aRec);
          end;
    end;
+
+   (* A DX ENTRANT IN ARIZONA, TENNESSEE, TEXAS OR THE SALMON RUN SENDS ITS
+      PREFIX, as those sponsors say; these tables pinned 'DX' (NY4I,
+      2026-11-27). *)
+   if (aContest in [ArizonaQsoParty, SALMONRUN, TENNESSEEQSOPARTY,
+                    TEXASQSOPARTY]) and
+      (aVariant in [1, 6]) and (Trim(Copy(aSent, 5, 20)) = 'DX') then
+      begin
+      aSent := Copy(aSent, 1, 4) +
+               Format('%-7s', [PinStation(aStation, aContest).MyCountry]);
+      end;
+
+   (* IDAHO'S AND NEBRASKA'S DX ENTRANT SENDS ITS PREFIX TOO; these were
+      pinned with nothing after the report. *)
+   if (aContest in [IDAHOQSOPARTY, NEBRASKAQSO]) and
+      (aVariant in [1, 6]) and (Trim(Copy(aSent, 5, 20)) = '') then
+      begin
+      aSent := Copy(aSent, 1, 4) +
+               Format('%-7s', [PinStation(aStation, aContest).MyCountry]);
+      end;
+
+   (* THEIR IN-STATE ENTRANT WRITES WHAT WAS LOGGED. These rows pinned the
+      record's DX QTH written over it. *)
+   if (aContest in [ArizonaQsoParty, SALMONRUN, TENNESSEEQSOPARTY,
+                    TEXASQSOPARTY]) and (aStation = psHost) then
+      begin
+      case aVariant of
+         0, 4, 5:
+            begin
+            aRec := '579 GA     ';
+            end;
+         2:
+            begin
+            aRec := '579 ABCDEFGHIJ';
+            end;
+         3:
+            begin
+            aRec := '579 TRC    ';
+            end;
+         6:
+            begin
+            aRec := '579 XY     ';
+            end;
+         end;
+      end;
+
+   (* IDAHO AND NEBRASKA LEFT A LOGGED LOCATION'S COLUMN BLANK. *)
+   if (aContest in [IDAHOQSOPARTY, NEBRASKAQSO]) and (aVariant = 6) then
+      begin
+      aRec := '579 XY     ';
+      end;
 end;
 
 procedure TCabrilloColumnsTests.Test_EveryContestWritesItsPinnedColumns;

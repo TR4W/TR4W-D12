@@ -80,6 +80,8 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -183,6 +185,12 @@ begin
    Result := 'westvirginia_cty';
 end;
 
+(* The sponsor: "All others send RST and State/Province/or DXCC country." *)
+function TContestWestVirginiaQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
+end;
+
 function TContestWestVirginiaQP.GetInStateDomesticFileName: string;
 begin
    Result := 'westvirginia';
@@ -248,7 +256,7 @@ end;
 function TContestWestVirginiaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
    const aQso: ContestExchange; const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
 end;
 
 procedure TContestWestVirginiaQP.CalculateQSOPoints(var aQso: ContestExchange);

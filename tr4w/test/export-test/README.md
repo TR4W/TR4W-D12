@@ -36,6 +36,18 @@ defect: several have been the case's own mistake.
 sponsor wins, and a disagreement is recorded. It has codes, not county names,
 which is all a case needs.
 
+## ADIF, and an entry that must be refused
+
+Each case's ADIF is checked too. A sponsor defines Cabrillo, not ADIF, so the
+expected `STX_STRING` and `SRX_STRING` are **derived from the case's own
+sent and received fields**. Where ADIF rightly differs, the case says so under
+`adif` (`sent`, `received` or `records`) with a `why`, and a case without one
+fails. Never fill it from output. A county line is one contact in ADIF, so its
+received fields are not compared.
+
+A case with `refused` (the text of the refusal) passes only when the entry is
+refused with it.
+
 ## The one rule
 
 **The expected fields come from the sponsor, and `source` says where.** Never
@@ -53,7 +65,7 @@ no case; it is unverified, not passed.
 | `i_am_in` | true when the case ticks the dialog's "I am in ..." box, which asks further rows |
 | `station_settings` | optional: what Preferences > Station holds (`State`, ...). **Not the same as `station`:** a value in `station` is the contest's own statement. IARU shipped sending the everyday state in place of the zone because the two were one thing to the test |
 | `worked`, `typed` | the call window and the exchange window |
-| `band`, `mode` | as TR4W shows them (`80`, `SSB`). With no radio the program starts on 160 m CW, and a contact the contest refuses is exported as `X-QSO`, so the case finds no `QSO:` line |
+| `band`, `mode` | as TR4W shows them (`80`, `SSB`; the mode is `CW`, `SSB` or `DIGI`, not `RTTY`). With no radio the program starts on 160 m CW, and a contact the contest refuses is exported as `X-QSO`, so the case finds no `QSO:` line |
 | `sent`, `received` | the fields expected after my call, and after the worked call. All-digit fields compare as numbers (`1` is `001`) |
 | `lines` | instead of `sent` and `received` when one typed contact makes several QSO lines (a county line): a list of `{sent, received}`; the lines may come in either order |
 | `source` | the sponsor's rule or sample behind `sent` and `received` |

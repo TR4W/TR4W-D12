@@ -74,6 +74,8 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -175,6 +177,12 @@ begin
    Result := 'alabama_cty';
 end;
 
+(* The sponsor: "DX stations (including KP2/KP4) send signal report and prefix of country" (NY4I, 2026-11-27: refuse DX) *)
+function TContestAlabamaQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOnly;
+end;
+
 function TContestAlabamaQP.GetInStateDomesticFileName: string;
 begin
    Result := 'alabama';
@@ -229,7 +237,7 @@ begin
    (* "DX stations ... send signal report and prefix of country": a typed
       "599 DL" carries no QTHString, so the helper that reads the DomesticQTH
       field is the one that writes the prefix (2026-11-20 audit). *)
-   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
 end;
 
 procedure TContestAlabamaQP.CalculateQSOPoints(var aQso: ContestExchange);

@@ -1,0 +1,8 @@
+# A report entered alone is written once in SRX_STRING (NY4I 2026-11-27, "definetly fix the adif"); D7 wrote 59 59
+#
+# The contact's stored exchange is '59' with no name, serial, zone or age.
+# THE GOLDEN EXPORT OF log.db CHANGED THE SAME WAY, and the export oracle
+# cannot show it: known-divergences.txt excuses this set's whole ADIF (the
+# missing sent name). This pin is the corpus's only line-exact record of it.
+-<CALL:6>TI2NSV <BAND:3>20m <QSO_DATE:8>20260211 <TIME_ON:6>003523 <TIME_OFF:6>003523 <RST_SENT:2>59 <RST_RCVD:2>59 <MODE:3>SSB <SUBMODE:3>USB <FREQ:6>14.248 <STX:5>00043 <OPERATOR:6>W1AW/4 <STX_STRING:6>59 TOM <SRX_STRING:5>59 59 <EOR>
++<CALL:6>TI2NSV <BAND:3>20m <QSO_DATE:8>20260211 <TIME_ON:6>003523 <TIME_OFF:6>003523 <RST_SENT:2>59 <RST_RCVD:2>59 <MODE:3>SSB <SUBMODE:3>USB <FREQ:6>14.248 <STX:5>00043 <OPERATOR:6>W1AW/4 <STX_STRING:6>59 TOM <SRX_STRING:2>59 <EOR>

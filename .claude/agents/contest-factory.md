@@ -602,6 +602,25 @@ the target shape, the M-step migration order and the open questions.
   string-keyed sheet is the PREFIX one, which needs `HasPrefixMultiplier`
   and so changes `uTestPrefixMultiplierKey`'s frozen sets; Florida's maritime
   multiplier waits for a ruling on that seam.
+- **FLORIDA'S DX EXCHANGE (NY4I, 2026-11-27).** A DX station sends its DXCC
+  prefix: `TContestFloridaQP.DXStationPrefix` is the one statement, read by its
+  refusal (`ParseReceivedExchange`, live entry only -- never
+  `LoggedQSORefusal`, which aborts a whole import) and its prefill
+  (`InitialExchangeFromCall`, which `/ENTERQSO` skips). TWO TRAPS, both found
+  by a sponsor-sourced export case: `aCtx.HisQTH` holds a DOMESTIC QTH only, so
+  an export that writes it for a DX station writes a blank; and `QTH.Prefix` is
+  the WPX-style prefix (`DL1`), `QTH.CountryID` the country's (`DL`). AND TWO
+  FOR ANY PARTY THAT CHECKS A TYPED PREFIX: the country follows the CALL, so a
+  location the session's table knows must be accepted from any call (a KP4
+  call in Georgia); and 29 CTY ids carry a lowercase tail (`E5/s`, `SV/a`)
+  that cannot be typed -- `59 E5/S` is read as a corrected CALLSIGN -- so cut
+  at the '/'. THE
+  RULE NOW LIVES IN THE PARTY BASE (same day, all affected parties): a party
+  states `GetDXExchangeRule` (`TDXExchangeRule`) and calls
+  `CabrilloReceivedLoggedLocation`; never copy Florida's old code. A party
+  whose DX stations send the letters DX states nothing. New England and the
+  7QP are not on that base. Maritime mobiles are logged as typed, DX when
+  nothing was, with no region multiplier (NY4I, 2026-11-27).
 - **THE ZONE MULTIPLIER IS THE CLASS'S (M11 S5, 2026-10-14).** Four
   virtuals, each with a nil-safe `Contest...` free function:
   `HasZoneMultiplier: boolean` (base False -- part 2, which DELETED

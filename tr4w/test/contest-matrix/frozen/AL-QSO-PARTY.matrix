@@ -101,16 +101,16 @@ X-QSO:  7080 RY 2026-01-15 1204 K0AAA   599 KS     W1AW           599 CT
 X-QSO: 14074 DG 2026-01-15 1205 K0AAA   599 KS     W1AW           599 CT           
 X-QSO:  1830 CW 2026-01-15 1206 K0AAA   599 KS     K4ABC          599 FL           
 X-QSO: 21300 PH 2026-01-15 1207 K0AAA   59  KS     VE3ABC         59  ON           
-X-QSO: 28025 CW 2026-01-15 1208 K0AAA   599 KS     XE1ABC         599 DX           
-X-QSO: 10110 CW 2026-01-15 1209 K0AAA   599 KS     G3ABC          599 DX           
-X-QSO:  7150 PH 2026-01-15 1210 K0AAA   59  KS     DL1ABC         59  DX           
-X-QSO: 21025 CW 2026-01-15 1211 K0AAA   599 KS     JA1ABC         599 DX           
-X-QSO:    50 PH 2026-01-15 1212 K0AAA   59  KS     PY2ABC         59  DX           
-X-QSO: 14025 CW 2026-01-15 1213 K0AAA   599 KS     VK2ABC         599 DX           
-X-QSO: 28400 PH 2026-01-15 1214 K0AAA   59  KS     ZS6ABC         59  DX           
+X-QSO: 28025 CW 2026-01-15 1208 K0AAA   599 KS     XE1ABC         599 XE           
+X-QSO: 10110 CW 2026-01-15 1209 K0AAA   599 KS     G3ABC          599 G            
+X-QSO:  7150 PH 2026-01-15 1210 K0AAA   59  KS     DL1ABC         59  DL           
+X-QSO: 21025 CW 2026-01-15 1211 K0AAA   599 KS     JA1ABC         599 JA           
+X-QSO:    50 PH 2026-01-15 1212 K0AAA   59  KS     PY2ABC         59  PY           
+X-QSO: 14025 CW 2026-01-15 1213 K0AAA   599 KS     VK2ABC         599 VK           
+X-QSO: 28400 PH 2026-01-15 1214 K0AAA   59  KS     ZS6ABC         59  ZS           
 X-QSO: 14250 PH 2026-01-15 1215 K0AAA   59  KS     KH6ABC         59  HI           
 X-QSO:  3530 CW 2026-01-15 1216 K0AAA   599 KS     W1AW           599 DX           
-X-QSO: 14250 PH 2026-01-15 1217 K0AAA   59  KS     G3ABC          59  DX           
+X-QSO: 14250 PH 2026-01-15 1217 K0AAA   59  KS     G3ABC          59  G            
 QSO: 14025 CW 2026-01-15 1237 K0AAA   599 KS     K9HQP          599 AUTA         
 == import
 imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=CT domqth=CT operator=K0AAA id=00000000000000000000000000000001 xqso=TRUE cty=K/8/NorthAmerica/W1
@@ -287,35 +287,35 @@ initialexchange.trmaster.fixture = TRUE
 iex W1AW | none=" " trmaster=" " logged=" " custom=" "
 iex K4ABC | none=" " trmaster=" " logged=" FL " custom=" FL "
 iex VE3ABC | none=" " trmaster=" " logged=" ON " custom=" ON "
-iex XE1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex G3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex DL1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex JA1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex PY2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex VK2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex ZS6ABC | none=" " trmaster=" " logged=" " custom=" "
+iex XE1ABC | none=" XE" trmaster=" XE" logged=" XE" custom=" XE"
+iex G3ABC | none=" G" trmaster=" G" logged=" G" custom=" G"
+iex DL1ABC | none=" DL" trmaster=" DL" logged=" DL" custom=" DL"
+iex JA1ABC | none=" JA" trmaster=" JA" logged=" JA" custom=" JA"
+iex PY2ABC | none=" PY" trmaster=" PY" logged=" PY" custom=" PY"
+iex VK2ABC | none=" VK" trmaster=" VK" logged=" VK" custom=" VK"
+iex ZS6ABC | none=" ZS" trmaster=" ZS" logged=" ZS" custom=" ZS"
 iex KH6ABC | none=" " trmaster=" " logged=" HI " custom=" HI "
-iex ON4ABC | none=" " trmaster=" " logged=" " custom=" "
-iex YB1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex JT1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex SM5ABC | none=" " trmaster=" " logged=" " custom=" "
-iex LA1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OH2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OH0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OX3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA9ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex RK1G | none=" " trmaster=" " logged=" " custom=" "
-iex I1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex IS0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex LZ1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UR5ABC | none=" " trmaster=" " logged=" " custom=" "
-iex 9A2ABC | none=" " trmaster=" " logged=" " custom=" "
+iex ON4ABC | none=" ON" trmaster=" ON" logged=" ON" custom=" ON"
+iex YB1ABC | none=" YB" trmaster=" YB" logged=" YB" custom=" YB"
+iex JT1ABC | none=" JT" trmaster=" JT" logged=" JT" custom=" JT"
+iex SM5ABC | none=" SM" trmaster=" SM" logged=" SM" custom=" SM"
+iex LA1ABC | none=" LA" trmaster=" LA" logged=" LA" custom=" LA"
+iex OH2ABC | none=" OH" trmaster=" OH" logged=" OH" custom=" OH"
+iex OH0ABC | none=" OH0" trmaster=" OH0" logged=" OH0" custom=" OH0"
+iex OX3ABC | none=" OX" trmaster=" OX" logged=" OX" custom=" OX"
+iex UA9ABC | none=" UA9" trmaster=" UA9" logged=" UA9" custom=" UA9"
+iex UA0ABC | none=" UA9" trmaster=" UA9" logged=" UA9" custom=" UA9"
+iex RK1G | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
+iex I1ABC | none=" I" trmaster=" I" logged=" I" custom=" I"
+iex IS0ABC | none=" IS" trmaster=" IS" logged=" IS" custom=" IS"
+iex LZ1ABC | none=" LZ" trmaster=" LZ" logged=" LZ" custom=" LZ"
+iex UR5ABC | none=" UR" trmaster=" UR" logged=" UR" custom=" UR"
+iex 9A2ABC | none=" 9A" trmaster=" 9A" logged=" 9A" custom=" 9A"
 iex KL7ABC | none=" " trmaster=" " logged=" " custom=" "
-iex HB9ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OK1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex R35AB | none=" " trmaster=" " logged=" " custom=" "
+iex HB9ABC | none=" HB" trmaster=" HB" logged=" HB" custom=" HB"
+iex OK1ABC | none=" OK" trmaster=" OK" logged=" OK" custom=" OK"
+iex UA3ABC | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
+iex R35AB | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
 iex K9ABC | none=" " trmaster=" " logged=" " custom=" "
 ### variant us-host: MY CALL=K0AAA MY STATE=AUTA MY SECTION=KS MY GRID=EM17
 == identity
@@ -521,9 +521,9 @@ parse fd.section.class W1AW Band20/CW "CT 2A" | ok=TRUE err="" token="" pending=
 parse fd.bad.class W1AW Band20/CW "2Z CT" | ok=TRUE err="" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=CT domqth=Ct dommultqth=Ct exch=2Z CT cty=K/8/NorthAmerica/W1
 parse fd.bad.section W1AW Band20/CW "2A XYZ" | ok=FALSE err="Improper domestic QTH!! (2A not in alabama.dom)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse fd.class.only W1AW Band20/CW "2A" | ok=FALSE err="Improper domestic QTH!! (2A not in alabama.dom)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=2A cty=K/8/NorthAmerica/W1
-parse fd.dx DL1ABC Band40/CW "1D DX" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=1D DX exch=1D DX cty=DL/28/Europe/DL1 dxqth=DL
-parse fd.dx.class.only DL1ABC Band40/CW "1D" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=1D exch=1D cty=DL/28/Europe/DL1 dxqth=DL
-parse fd.dx.mx DL1ABC Band40/CW "1D MX" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=1D MX exch=1D MX cty=DL/28/Europe/DL1 dxqth=DL
+parse fd.dx DL1ABC Band40/CW "1D DX" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=1D DX cty=DL/28/Europe/DL1 dxqth=DL
+parse fd.dx.class.only DL1ABC Band40/CW "1D" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=1D cty=DL/28/Europe/DL1 dxqth=DL
+parse fd.dx.mx DL1ABC Band40/CW "1D MX" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=1D MX cty=DL/28/Europe/DL1 dxqth=DL
 parse ss.full W1AW Band20/CW "123 A 99 CT" | ok=FALSE err="99 is not a signal report" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse ss.packed W1AW Band20/CW "123A 99CT" | ok=FALSE err="Improper domestic QTH!! (123A not in alabama.dom)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
 parse ss.no.precedence W1AW Band20/CW "123 99 CT" | ok=FALSE err="99 is not a signal report" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 nr.sent=1 cty=K/8/NorthAmerica/W1
@@ -539,18 +539,18 @@ parse oos.state K4ABC Band40/CW "599 GA" | ok=TRUE err="" token="" pending="" ca
 parse oos.serial.state K4ABC Band40/CW "123 GA" | ok=TRUE err="" token="" pending="" call=K4ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=123 nr.sent=1 qth=GA domqth=Ga dommultqth=Ga exch=123 GA cty=K/8/NorthAmerica/K4
 parse ve.province VE3ABC Band15/Phone "59 ON" | ok=TRUE err="" token="" pending="" call=VE3ABC band=Band15 mode=Phone/eNoMode freq=21300000 rst.sent=59 rst.rcvd=59 nr.sent=1 qth=ON domqth=ON dommultqth=ON exch=59 ON cty=VE/9/NorthAmerica/VE3
 parse ve0.serial VE0ABC Band20/CW "599 123" | ok=FALSE err="Improper domestic QTH!! (no QTH)" token="" pending="" call=VE0ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 cty=VE/9/NorthAmerica/VE0
-parse dx.dx DL1ABC Band40/CW "599 DX" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=DX exch=599 DX cty=DL/28/Europe/DL1 dxqth=DL
-parse dx.serial DL1ABC Band40/CW "599 001" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=001 exch=599 001 cty=DL/28/Europe/DL1 dxqth=DL
-parse dx.zone DL1ABC Band40/CW "599 14" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=14 exch=599 14 cty=DL/28/Europe/DL1 dxqth=DL
-parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=HANS DL exch=HANS DL cty=DL/28/Europe/DL1 dxqth=DL
+parse dx.dx DL1ABC Band40/CW "599 DX" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=DX cty=DL/28/Europe/DL1 dxqth=DL
+parse dx.serial DL1ABC Band40/CW "599 001" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=001 cty=DL/28/Europe/DL1 dxqth=DL
+parse dx.zone DL1ABC Band40/CW "599 14" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=14 cty=DL/28/Europe/DL1 dxqth=DL
+parse dx.name.country DL1ABC Band40/CW "HANS DL" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=HANS DL cty=DL/28/Europe/DL1 dxqth=DL
 parse uk.serial.only G3ABC Band20/CW "123" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=123 nr.sent=1 exch=123 cty=G/27/Europe/G3 dxqth=G
-parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 LN exch=599 123 LN cty=G/27/Europe/G3 dxqth=G
-parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=TRUE err="" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=13 exch=599 13 cty=JA/45/Asia/JA1 dxqth=JA
+parse uk.serial.district G3ABC Band20/CW "599 123 LN" | ok=FALSE err="A DX station sends its country prefix: G" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 LN cty=G/27/Europe/G3 dxqth=G
+parse ja.prefecture JA1ABC Band15/CW "599 13" | ok=FALSE err="A DX station sends its country prefix: JA" token="" pending="" call=JA1ABC band=Band15 mode=CW/eNoMode freq=21025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=13 cty=JA/45/Asia/JA1 dxqth=JA
 parse ru.oblast UA3ABC Band20/CW "599 MO" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO exch=599 MO cty=UA/29/Europe/UA3 dxqth=UA
-parse ru.serial UA3ABC Band20/CW "599 123" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 exch=599 123 cty=UA/29/Europe/UA3 dxqth=UA
-parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO12 exch=599 MO12 cty=UA/29/Europe/UA3 dxqth=UA
-parse py.state PY2ABC Band20/CW "599 SP" | ok=TRUE err="" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=SP exch=599 SP cty=PY/15/SouthAmerica/PY2 dxqth=PY
-parse f.department F5ABC Band20/CW "599 75" | ok=TRUE err="" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=75 exch=599 75 cty=F/27/Europe/F5 dxqth=F
+parse ru.serial UA3ABC Band20/CW "599 123" | ok=FALSE err="A DX station sends its country prefix: UA" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 cty=UA/29/Europe/UA3 dxqth=UA
+parse ru.rda UA3ABC Band20/CW "599 MO12" | ok=FALSE err="A DX station sends its country prefix: UA" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO12 cty=UA/29/Europe/UA3 dxqth=UA
+parse py.state PY2ABC Band20/CW "599 SP" | ok=FALSE err="A DX station sends its country prefix: PY" token="" pending="" call=PY2ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=SP cty=PY/15/SouthAmerica/PY2 dxqth=PY
+parse f.department F5ABC Band20/CW "599 75" | ok=FALSE err="A DX station sends its country prefix: F" token="" pending="" call=F5ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=75 cty=F/27/Europe/F5 dxqth=F
 == keys
 exchange.fields = QTH RST
 zones.max = 0
@@ -573,14 +573,14 @@ qso 33 9A2ABC Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALS
 qso 34 KL7ABC Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/FALSE/FALSE/FALSE cty=KL qthzone=1 cont=NorthAmerica qthpfx=KL7 pfx= dxqth= dommultqth= domqth= zone=1
 qso 35 HB9ABC Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=HB qthzone=28 cont=Europe qthpfx=HB9 pfx= dxqth=HB dommultqth= domqth= zone=14
 qso 36 OK1ABC Band20 CW/eCW full | pts=2 inhibit=FALSE mult.dom/dx/pfx/zone=FALSE/TRUE/FALSE/FALSE cty=OK qthzone=28 cont=Europe qthpfx=OK1 pfx= dxqth=OK dommultqth= domqth= zone=15
-parse iota G3ABC Band20/CW "599 123 EU005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 EU005 exch=599 123 EU005 cty=G/27/Europe/G3 dxqth=G
-parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 EU-005 exch=599 123 EU-005 cty=G/27/Europe/G3 dxqth=G
-parse iota.short G3ABC Band20/CW "599 EU5" | ok=TRUE err="" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=EU5 exch=599 EU5 cty=G/27/Europe/G3 dxqth=G
-parse dok DL1ABC Band40/CW "599 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=A01 exch=599 A01 cty=DL/28/Europe/DL1 dxqth=DL
-parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=TRUE err="" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 A01 exch=599 123 A01 cty=DL/28/Europe/DL1 dxqth=DL
+parse iota G3ABC Band20/CW "599 123 EU005" | ok=FALSE err="A DX station sends its country prefix: G" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 EU005 cty=G/27/Europe/G3 dxqth=G
+parse iota.dash G3ABC Band20/CW "599 123 EU-005" | ok=FALSE err="A DX station sends its country prefix: G" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 EU-005 cty=G/27/Europe/G3 dxqth=G
+parse iota.short G3ABC Band20/CW "599 EU5" | ok=FALSE err="A DX station sends its country prefix: G" token="" pending="" call=G3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=EU5 cty=G/27/Europe/G3 dxqth=G
+parse dok DL1ABC Band40/CW "599 A01" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=A01 cty=DL/28/Europe/DL1 dxqth=DL
+parse serial.dok DL1ABC Band40/CW "599 123 A01" | ok=FALSE err="A DX station sends its country prefix: DL" token="" pending="" call=DL1ABC band=Band40 mode=CW/eNoMode freq=7025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=123 A01 cty=DL/28/Europe/DL1 dxqth=DL
 parse grid6 W1AW Band20/CW "599 FN31PR" | ok=TRUE err="" token="" pending="" call=FN31PR band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 exch=599 cty=F/27/Europe/FN31 dxqth=F
 parse grid.field W1AW Band20/CW "599 FN" | ok=FALSE err="Improper domestic QTH!! (FN not in alabama.dom)" token="" pending="" call=W1AW band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 cty=K/8/NorthAmerica/W1
-parse rda.short UA3ABC Band20/CW "599 MO1" | ok=TRUE err="" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO1 exch=599 MO1 cty=UA/29/Europe/UA3 dxqth=UA
+parse rda.short UA3ABC Band20/CW "599 MO1" | ok=FALSE err="A DX station sends its country prefix: UA" token="" pending="" call=UA3ABC band=Band20 mode=CW/eNoMode freq=14025000 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=MO1 cty=UA/29/Europe/UA3 dxqth=UA
 == totals
 totals.qsopoints = 22
 totals.qtcs = 0
@@ -624,35 +624,35 @@ initialexchange.trmaster.fixture = TRUE
 iex W1AW | none=" " trmaster=" " logged=" " custom=" "
 iex K4ABC | none=" " trmaster=" " logged=" FL " custom=" FL "
 iex VE3ABC | none=" " trmaster=" " logged=" ON " custom=" ON "
-iex XE1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex G3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex DL1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex JA1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex PY2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex VK2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex ZS6ABC | none=" " trmaster=" " logged=" " custom=" "
+iex XE1ABC | none=" XE" trmaster=" XE" logged=" XE" custom=" XE"
+iex G3ABC | none=" G" trmaster=" G" logged=" G" custom=" G"
+iex DL1ABC | none=" DL" trmaster=" DL" logged=" DL" custom=" DL"
+iex JA1ABC | none=" JA" trmaster=" JA" logged=" JA" custom=" JA"
+iex PY2ABC | none=" PY" trmaster=" PY" logged=" PY" custom=" PY"
+iex VK2ABC | none=" VK" trmaster=" VK" logged=" VK" custom=" VK"
+iex ZS6ABC | none=" ZS" trmaster=" ZS" logged=" ZS" custom=" ZS"
 iex KH6ABC | none=" " trmaster=" " logged=" HI " custom=" HI "
-iex ON4ABC | none=" " trmaster=" " logged=" " custom=" "
-iex YB1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex JT1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex SM5ABC | none=" " trmaster=" " logged=" " custom=" "
-iex LA1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OH2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OH0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OX3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA9ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex RK1G | none=" " trmaster=" " logged=" " custom=" "
-iex I1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex IS0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex LZ1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UR5ABC | none=" " trmaster=" " logged=" " custom=" "
-iex 9A2ABC | none=" " trmaster=" " logged=" " custom=" "
+iex ON4ABC | none=" ON" trmaster=" ON" logged=" ON" custom=" ON"
+iex YB1ABC | none=" YB" trmaster=" YB" logged=" YB" custom=" YB"
+iex JT1ABC | none=" JT" trmaster=" JT" logged=" JT" custom=" JT"
+iex SM5ABC | none=" SM" trmaster=" SM" logged=" SM" custom=" SM"
+iex LA1ABC | none=" LA" trmaster=" LA" logged=" LA" custom=" LA"
+iex OH2ABC | none=" OH" trmaster=" OH" logged=" OH" custom=" OH"
+iex OH0ABC | none=" OH0" trmaster=" OH0" logged=" OH0" custom=" OH0"
+iex OX3ABC | none=" OX" trmaster=" OX" logged=" OX" custom=" OX"
+iex UA9ABC | none=" UA9" trmaster=" UA9" logged=" UA9" custom=" UA9"
+iex UA0ABC | none=" UA9" trmaster=" UA9" logged=" UA9" custom=" UA9"
+iex RK1G | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
+iex I1ABC | none=" I" trmaster=" I" logged=" I" custom=" I"
+iex IS0ABC | none=" IS" trmaster=" IS" logged=" IS" custom=" IS"
+iex LZ1ABC | none=" LZ" trmaster=" LZ" logged=" LZ" custom=" LZ"
+iex UR5ABC | none=" UR" trmaster=" UR" logged=" UR" custom=" UR"
+iex 9A2ABC | none=" 9A" trmaster=" 9A" logged=" 9A" custom=" 9A"
 iex KL7ABC | none=" " trmaster=" " logged=" " custom=" "
-iex HB9ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OK1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex R35AB | none=" " trmaster=" " logged=" " custom=" "
+iex HB9ABC | none=" HB" trmaster=" HB" logged=" HB" custom=" HB"
+iex OK1ABC | none=" OK" trmaster=" OK" logged=" OK" custom=" OK"
+iex UA3ABC | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
+iex R35AB | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
 iex K9ABC | none=" " trmaster=" " logged=" " custom=" "
 ### variant ve: MY CALL=VE3AAA MY STATE=ON MY SECTION=ON MY GRID=FN03
 == identity
@@ -757,16 +757,16 @@ X-QSO:  7080 RY 2026-01-15 1204 VE3AAA  599 ON     W1AW           599 CT
 X-QSO: 14074 DG 2026-01-15 1205 VE3AAA  599 ON     W1AW           599 CT           
 X-QSO:  1830 CW 2026-01-15 1206 VE3AAA  599 ON     K4ABC          599 FL           
 X-QSO: 21300 PH 2026-01-15 1207 VE3AAA  59  ON     VE3ABC         59  ON           
-X-QSO: 28025 CW 2026-01-15 1208 VE3AAA  599 ON     XE1ABC         599 DX           
-X-QSO: 10110 CW 2026-01-15 1209 VE3AAA  599 ON     G3ABC          599 DX           
-X-QSO:  7150 PH 2026-01-15 1210 VE3AAA  59  ON     DL1ABC         59  DX           
-X-QSO: 21025 CW 2026-01-15 1211 VE3AAA  599 ON     JA1ABC         599 DX           
-X-QSO:    50 PH 2026-01-15 1212 VE3AAA  59  ON     PY2ABC         59  DX           
-X-QSO: 14025 CW 2026-01-15 1213 VE3AAA  599 ON     VK2ABC         599 DX           
-X-QSO: 28400 PH 2026-01-15 1214 VE3AAA  59  ON     ZS6ABC         59  DX           
+X-QSO: 28025 CW 2026-01-15 1208 VE3AAA  599 ON     XE1ABC         599 XE           
+X-QSO: 10110 CW 2026-01-15 1209 VE3AAA  599 ON     G3ABC          599 G            
+X-QSO:  7150 PH 2026-01-15 1210 VE3AAA  59  ON     DL1ABC         59  DL           
+X-QSO: 21025 CW 2026-01-15 1211 VE3AAA  599 ON     JA1ABC         599 JA           
+X-QSO:    50 PH 2026-01-15 1212 VE3AAA  59  ON     PY2ABC         59  PY           
+X-QSO: 14025 CW 2026-01-15 1213 VE3AAA  599 ON     VK2ABC         599 VK           
+X-QSO: 28400 PH 2026-01-15 1214 VE3AAA  59  ON     ZS6ABC         59  ZS           
 X-QSO: 14250 PH 2026-01-15 1215 VE3AAA  59  ON     KH6ABC         59  HI           
 X-QSO:  3530 CW 2026-01-15 1216 VE3AAA  599 ON     W1AW           599 DX           
-X-QSO: 14250 PH 2026-01-15 1217 VE3AAA  59  ON     G3ABC          59  DX           
+X-QSO: 14250 PH 2026-01-15 1217 VE3AAA  59  ON     G3ABC          59  G            
 QSO: 14025 CW 2026-01-15 1237 VE3AAA  599 ON     K9HQP          599 AUTA         
 == import
 imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=CT domqth=CT operator=VE3AAA id=00000000000000000000000000000001 xqso=TRUE cty=K/8/NorthAmerica/W1
@@ -943,35 +943,35 @@ initialexchange.trmaster.fixture = TRUE
 iex W1AW | none=" " trmaster=" " logged=" " custom=" "
 iex K4ABC | none=" " trmaster=" " logged=" FL " custom=" FL "
 iex VE3ABC | none=" " trmaster=" " logged=" ON " custom=" ON "
-iex XE1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex G3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex DL1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex JA1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex PY2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex VK2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex ZS6ABC | none=" " trmaster=" " logged=" " custom=" "
+iex XE1ABC | none=" XE" trmaster=" XE" logged=" XE" custom=" XE"
+iex G3ABC | none=" G" trmaster=" G" logged=" G" custom=" G"
+iex DL1ABC | none=" DL" trmaster=" DL" logged=" DL" custom=" DL"
+iex JA1ABC | none=" JA" trmaster=" JA" logged=" JA" custom=" JA"
+iex PY2ABC | none=" PY" trmaster=" PY" logged=" PY" custom=" PY"
+iex VK2ABC | none=" VK" trmaster=" VK" logged=" VK" custom=" VK"
+iex ZS6ABC | none=" ZS" trmaster=" ZS" logged=" ZS" custom=" ZS"
 iex KH6ABC | none=" " trmaster=" " logged=" HI " custom=" HI "
-iex ON4ABC | none=" " trmaster=" " logged=" " custom=" "
-iex YB1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex JT1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex SM5ABC | none=" " trmaster=" " logged=" " custom=" "
-iex LA1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OH2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OH0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OX3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA9ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex RK1G | none=" " trmaster=" " logged=" " custom=" "
-iex I1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex IS0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex LZ1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UR5ABC | none=" " trmaster=" " logged=" " custom=" "
-iex 9A2ABC | none=" " trmaster=" " logged=" " custom=" "
+iex ON4ABC | none=" ON" trmaster=" ON" logged=" ON" custom=" ON"
+iex YB1ABC | none=" YB" trmaster=" YB" logged=" YB" custom=" YB"
+iex JT1ABC | none=" JT" trmaster=" JT" logged=" JT" custom=" JT"
+iex SM5ABC | none=" SM" trmaster=" SM" logged=" SM" custom=" SM"
+iex LA1ABC | none=" LA" trmaster=" LA" logged=" LA" custom=" LA"
+iex OH2ABC | none=" OH" trmaster=" OH" logged=" OH" custom=" OH"
+iex OH0ABC | none=" OH0" trmaster=" OH0" logged=" OH0" custom=" OH0"
+iex OX3ABC | none=" OX" trmaster=" OX" logged=" OX" custom=" OX"
+iex UA9ABC | none=" UA9" trmaster=" UA9" logged=" UA9" custom=" UA9"
+iex UA0ABC | none=" UA9" trmaster=" UA9" logged=" UA9" custom=" UA9"
+iex RK1G | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
+iex I1ABC | none=" I" trmaster=" I" logged=" I" custom=" I"
+iex IS0ABC | none=" IS" trmaster=" IS" logged=" IS" custom=" IS"
+iex LZ1ABC | none=" LZ" trmaster=" LZ" logged=" LZ" custom=" LZ"
+iex UR5ABC | none=" UR" trmaster=" UR" logged=" UR" custom=" UR"
+iex 9A2ABC | none=" 9A" trmaster=" 9A" logged=" 9A" custom=" 9A"
 iex KL7ABC | none=" " trmaster=" " logged=" " custom=" "
-iex HB9ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OK1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex R35AB | none=" " trmaster=" " logged=" " custom=" "
+iex HB9ABC | none=" HB" trmaster=" HB" logged=" HB" custom=" HB"
+iex OK1ABC | none=" OK" trmaster=" OK" logged=" OK" custom=" OK"
+iex UA3ABC | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
+iex R35AB | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
 iex K9ABC | none=" " trmaster=" " logged=" " custom=" "
 ### variant dx: MY CALL=DL1AAA MY STATE= MY SECTION=DX MY GRID=JO62
 == identity
@@ -1074,16 +1074,16 @@ X-QSO:  7080 RY 2026-01-15 1204 DL1AAA  599 DL     W1AW           599 CT
 X-QSO: 14074 DG 2026-01-15 1205 DL1AAA  599 DL     W1AW           599 CT           
 X-QSO:  1830 CW 2026-01-15 1206 DL1AAA  599 DL     K4ABC          599 FL           
 X-QSO: 21300 PH 2026-01-15 1207 DL1AAA  59  DL     VE3ABC         59  ON           
-X-QSO: 28025 CW 2026-01-15 1208 DL1AAA  599 DL     XE1ABC         599 DX           
-X-QSO: 10110 CW 2026-01-15 1209 DL1AAA  599 DL     G3ABC          599 DX           
-X-QSO:  7150 PH 2026-01-15 1210 DL1AAA  59  DL     DL1ABC         59  DX           
-X-QSO: 21025 CW 2026-01-15 1211 DL1AAA  599 DL     JA1ABC         599 DX           
-X-QSO:    50 PH 2026-01-15 1212 DL1AAA  59  DL     PY2ABC         59  DX           
-X-QSO: 14025 CW 2026-01-15 1213 DL1AAA  599 DL     VK2ABC         599 DX           
-X-QSO: 28400 PH 2026-01-15 1214 DL1AAA  59  DL     ZS6ABC         59  DX           
+X-QSO: 28025 CW 2026-01-15 1208 DL1AAA  599 DL     XE1ABC         599 XE           
+X-QSO: 10110 CW 2026-01-15 1209 DL1AAA  599 DL     G3ABC          599 G            
+X-QSO:  7150 PH 2026-01-15 1210 DL1AAA  59  DL     DL1ABC         59  DL           
+X-QSO: 21025 CW 2026-01-15 1211 DL1AAA  599 DL     JA1ABC         599 JA           
+X-QSO:    50 PH 2026-01-15 1212 DL1AAA  59  DL     PY2ABC         59  PY           
+X-QSO: 14025 CW 2026-01-15 1213 DL1AAA  599 DL     VK2ABC         599 VK           
+X-QSO: 28400 PH 2026-01-15 1214 DL1AAA  59  DL     ZS6ABC         59  ZS           
 X-QSO: 14250 PH 2026-01-15 1215 DL1AAA  59  DL     KH6ABC         59  HI           
 X-QSO:  3530 CW 2026-01-15 1216 DL1AAA  599 DL     W1AW           599 DX           
-X-QSO: 14250 PH 2026-01-15 1217 DL1AAA  59  DL     G3ABC          59  DX           
+X-QSO: 14250 PH 2026-01-15 1217 DL1AAA  59  DL     G3ABC          59  G            
 QSO: 14025 CW 2026-01-15 1237 DL1AAA  599 DL     K9HQP          599 AUTA         
 == import
 imp export.01 | parsed=TRUE call=W1AW band=Band20 mode=CW/eCW freq=14025000 time=260115 120100 rst.sent=599 rst.rcvd=599 nr.sent=1 qth=CT domqth=CT operator=DL1AAA id=00000000000000000000000000000001 xqso=TRUE cty=K/8/NorthAmerica/W1
@@ -1260,33 +1260,33 @@ initialexchange.trmaster.fixture = TRUE
 iex W1AW | none=" " trmaster=" " logged=" " custom=" "
 iex K4ABC | none=" " trmaster=" " logged=" FL " custom=" FL "
 iex VE3ABC | none=" " trmaster=" " logged=" ON " custom=" ON "
-iex XE1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex G3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex DL1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex JA1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex PY2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex VK2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex ZS6ABC | none=" " trmaster=" " logged=" " custom=" "
+iex XE1ABC | none=" XE" trmaster=" XE" logged=" XE" custom=" XE"
+iex G3ABC | none=" G" trmaster=" G" logged=" G" custom=" G"
+iex DL1ABC | none=" DL" trmaster=" DL" logged=" DL" custom=" DL"
+iex JA1ABC | none=" JA" trmaster=" JA" logged=" JA" custom=" JA"
+iex PY2ABC | none=" PY" trmaster=" PY" logged=" PY" custom=" PY"
+iex VK2ABC | none=" VK" trmaster=" VK" logged=" VK" custom=" VK"
+iex ZS6ABC | none=" ZS" trmaster=" ZS" logged=" ZS" custom=" ZS"
 iex KH6ABC | none=" " trmaster=" " logged=" HI " custom=" HI "
-iex ON4ABC | none=" " trmaster=" " logged=" " custom=" "
-iex YB1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex JT1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex SM5ABC | none=" " trmaster=" " logged=" " custom=" "
-iex LA1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OH2ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OH0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OX3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA9ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex RK1G | none=" " trmaster=" " logged=" " custom=" "
-iex I1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex IS0ABC | none=" " trmaster=" " logged=" " custom=" "
-iex LZ1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UR5ABC | none=" " trmaster=" " logged=" " custom=" "
-iex 9A2ABC | none=" " trmaster=" " logged=" " custom=" "
+iex ON4ABC | none=" ON" trmaster=" ON" logged=" ON" custom=" ON"
+iex YB1ABC | none=" YB" trmaster=" YB" logged=" YB" custom=" YB"
+iex JT1ABC | none=" JT" trmaster=" JT" logged=" JT" custom=" JT"
+iex SM5ABC | none=" SM" trmaster=" SM" logged=" SM" custom=" SM"
+iex LA1ABC | none=" LA" trmaster=" LA" logged=" LA" custom=" LA"
+iex OH2ABC | none=" OH" trmaster=" OH" logged=" OH" custom=" OH"
+iex OH0ABC | none=" OH0" trmaster=" OH0" logged=" OH0" custom=" OH0"
+iex OX3ABC | none=" OX" trmaster=" OX" logged=" OX" custom=" OX"
+iex UA9ABC | none=" UA9" trmaster=" UA9" logged=" UA9" custom=" UA9"
+iex UA0ABC | none=" UA9" trmaster=" UA9" logged=" UA9" custom=" UA9"
+iex RK1G | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
+iex I1ABC | none=" I" trmaster=" I" logged=" I" custom=" I"
+iex IS0ABC | none=" IS" trmaster=" IS" logged=" IS" custom=" IS"
+iex LZ1ABC | none=" LZ" trmaster=" LZ" logged=" LZ" custom=" LZ"
+iex UR5ABC | none=" UR" trmaster=" UR" logged=" UR" custom=" UR"
+iex 9A2ABC | none=" 9A" trmaster=" 9A" logged=" 9A" custom=" 9A"
 iex KL7ABC | none=" " trmaster=" " logged=" " custom=" "
-iex HB9ABC | none=" " trmaster=" " logged=" " custom=" "
-iex OK1ABC | none=" " trmaster=" " logged=" " custom=" "
-iex UA3ABC | none=" " trmaster=" " logged=" " custom=" "
-iex R35AB | none=" " trmaster=" " logged=" " custom=" "
+iex HB9ABC | none=" HB" trmaster=" HB" logged=" HB" custom=" HB"
+iex OK1ABC | none=" OK" trmaster=" OK" logged=" OK" custom=" OK"
+iex UA3ABC | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
+iex R35AB | none=" UA" trmaster=" UA" logged=" UA" custom=" UA"
 iex K9ABC | none=" " trmaster=" " logged=" " custom=" "

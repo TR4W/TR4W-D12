@@ -384,6 +384,12 @@ const
      r  the composite's parse, then refused: no party (IN7QPNE)
      i  both parses, then Indiana's out-of-state refusal (IN7QPNE)
      e  both parses, then Delaware's out-of-state refusal (IN7QPNE)
+     f  the plain parse, then Florida's DX rule (NY4I, 2026-11-27): a call
+        from a known country outside the USA, Canada, Hawaii and Alaska, not
+        maritime mobile, is refused when the location it gave is neither that
+        country's prefix nor a domestic key (no battery call's country has a
+        '/x' tail)
+     h  as f, but 'DX' is taken too (the prefix-or-DX parties)
      g  the plain parse, then refused when it left no grid in the domestic
         QTH -- the class requires one (Q115: the ARRL VHF runnings, CQ VHF,
         the Stew Perry)
@@ -401,6 +407,7 @@ var
    ok: boolean;
    msg: string;
    call: string;
+   country: string;
 begin
    ResetRow(aRow);
    exch := RowExchange(aRow);
@@ -422,6 +429,23 @@ begin
       'd':
          begin
          ok := PinBehaviour('ParseRSTDomesticQTH', RowText(aRow), exch);
+         end;
+      'f', 'h':
+         begin
+         ok := PinBehaviour(aHelper, RowText(aRow), exch);
+         (* THE RULE SPELLED OUT HERE, not asked of the class. *)
+         country := string(exch.QTH.CountryID);
+         if ok and (exch.QTHString <> '') and
+            (not PinIsDomesticQTH(string(exch.QTHString))) and
+            (country <> '') and (country <> 'K') and (country <> 'VE') and
+            (country <> 'KH6') and (country <> 'KL') and
+            (Pos('/MM', call) = 0) and
+            (string(exch.QTHString) <> country) and
+            ((aCode = 'f') or (string(exch.QTHString) <> 'DX')) then
+            begin
+            ok := False;
+            msg := Format(SExchangeDXSendsPrefix, [country]);
+            end;
          end;
       'n':
          begin
@@ -1396,6 +1420,19 @@ begin
          Result := CODES_IN7QPNE;
          end;
    end;
+
+   (* FLORIDA'S PLAIN PARSE CARRIES ITS DX RULE -- code f. Its other codes
+      (out of state) stand: that refusal comes first. *)
+   if aContest = FLORIDAQSOPARTY then
+      begin
+      Result := StringReplace(Result, '.', 'f', [rfReplaceAll]);
+      end;
+   (* And the parties that take a prefix or DX -- code h. *)
+   if aContest in [ArizonaQsoParty, IDAHOQSOPARTY, SALMONRUN, TENNESSEEQSOPARTY,
+                   TEXASQSOPARTY, WISCONSINQSOPARTY, NEBRASKAQSO] then
+      begin
+      Result := StringReplace(Result, '.', 'h', [rfReplaceAll]);
+      end;
 end;
 
 (* ---------------------------------------------------------------------------

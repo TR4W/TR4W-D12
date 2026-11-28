@@ -1024,6 +1024,10 @@
             ]
          }
       ],
+      "adif": {
+         "records": 2,
+         "why": "ADIF has no Canadian county list, so there is no CNTY to hold the second county and each is its own record."
+      },
       "source": "docs/ContestRules/QSOParties/AtlanticCanada/ACQP-Rules-B-V26.0.1.pdf p2-3: 'If Mobile or Portable stations operate on county/division lines/corners, a separate QSO and complete exchange must be logged for each county/division' and 'The Cabrillo log must include separate QSO entries for each county/division included in the exchange'."
    },
    {
@@ -1170,6 +1174,10 @@
             ]
          }
       ],
+      "adif": {
+         "records": 2,
+         "why": "ADIF has no Canadian county list, so there is no CNTY to hold the second county and each is its own record."
+      },
       "source": "docs/ContestRules/QSOParties/CanadianPrairies/cpqp-rules.md rule 12: 'If a rover station operates on a district line (junction between two or more districts), a separate QSO and complete exchange must be made and logged for each FED worked.'"
    },
    {
@@ -2602,5 +2610,2039 @@
          }
       ],
       "source": "docs/ContestRules/QSOParties/Iowa/IA-QSO-PARTY-Rules.txt: stations on a line or junction \"represent all counties at the intersection simultaneously ... All intersecting counties may be worked in a single exchange\" (its example: STR, MSL, HDN). One Cabrillo line per county is the author's reading: no sample is saved. Written by the test author from the sponsor text, not by a blind agent."
+   },
+   {
+      "name": "FLORIDA-QP-WORKS-DX",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "PIN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59 DL",
+      "band": "40",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "PIN"
+      ],
+      "received": [
+         "59",
+         "DL"
+      ],
+      "source": "docs/ContestRules/QSOParties/Florida/FL-QSO-PARTY-Rules.txt: \"DX (including KP4, etc.) operators send DXCC prefix.\" The Cabrillo specification's columns are rst exch for each station. DL is Germany's prefix (N1MM's export of this contact, quoted by NY4I 2026-11-27, agrees)."
+   },
+   {
+      "name": "FLORIDA-QP-WORKS-KP4",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "PIN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "KP4ABC",
+      "typed": "599 KP4",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "PIN"
+      ],
+      "received": [
+         "599",
+         "KP4"
+      ],
+      "source": "docs/ContestRules/QSOParties/Florida/FL-QSO-PARTY-Rules.txt: \"DX (including KP4, etc.) operators send DXCC prefix.\" The Cabrillo specification's columns are rst exch for each station. KP4 is the rule's own example."
+   },
+   {
+      "name": "FLORIDA-QP-WORKS-DX-NOTHING-COPIED",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "PIN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59",
+      "band": "40",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "PIN"
+      ],
+      "received": [
+         "59",
+         "DL"
+      ],
+      "adif": {
+         "received": [
+            "59"
+         ],
+         "why": "ADIF holds what was entered, and no location was (once: not 59 59)."
+      },
+      "source": "docs/ContestRules/QSOParties/Florida/FL-QSO-PARTY-Rules.txt: \"DX (including KP4, etc.) operators send DXCC prefix.\" The Cabrillo specification's columns are rst exch for each station. With no location logged the prefix follows from the call (NY4I, 2026-11-27)."
+   },
+   {
+      "name": "FLORIDA-QP-WORKS-MARITIME-MOBILE",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "PIN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC/MM",
+      "typed": "59 2",
+      "band": "40",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "PIN"
+      ],
+      "received": [
+         "59",
+         "2"
+      ],
+      "source": "docs/ContestRules/QSOParties/Florida/FL-QSO-PARTY-Rules.txt: \"Maritime mobile operators send ITU Region (1, 2 or 3).\""
+   },
+   {
+      "name": "FLORIDA-QP-WORKS-KP4-CALL-IN-GEORGIA",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "PIN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "KP4ABC",
+      "typed": "59 GA",
+      "band": "40",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "PIN"
+      ],
+      "received": [
+         "59",
+         "GA"
+      ],
+      "source": "docs/ContestRules/QSOParties/Florida/FL-QSO-PARTY-Rules.txt: \"US (including KH6/KL7) operators send State.\" The operator is in Georgia, whatever the callsign."
+   },
+   {
+      "name": "FLORIDA-QP-WORKS-SOUTH-COOKS",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "PIN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "E51ABC",
+      "typed": "59 E5",
+      "band": "40",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "PIN"
+      ],
+      "received": [
+         "59",
+         "E5"
+      ],
+      "source": "docs/ContestRules/QSOParties/Florida/FL-QSO-PARTY-Rules.txt: \"DX (including KP4, etc.) operators send DXCC prefix.\" E5 is the prefix of the South Cook Islands."
+   },
+   {
+      "name": "ALABAMA-QP-IN-WORKS-DX",
+      "contest": "AL-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "JEFF"
+      },
+      "station_settings": {
+         "State": "AL"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "JEFF"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "Alabama rules: 'a German station would send: \"599 DL (CW)'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "ARIZONA-QP-IN-WORKS-DX",
+      "contest": "ARIZONA QSO PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "APH"
+      },
+      "station_settings": {
+         "State": "AZ"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "APH"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "azqp.org Cabrillo help: qth 'must be 2-letter state or Canadian province / territory, or DXCC prefix'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "IDAHO-QP-IN-WORKS-DX",
+      "contest": "IDAHO QSO PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ADA"
+      },
+      "station_settings": {
+         "State": "ID"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ADA"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "idahoqsoparty.org rules: 'DX stations ... send your DXCC prefix/country'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "ILLINOIS-QP-IN-WORKS-DX",
+      "contest": "IL-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "COOK"
+      },
+      "station_settings": {
+         "State": "IL"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "COOK"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "2026 announcement: 'others give RS/T and state, province or country'. The token DL (rather than a country name) is NY4I's ruling. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "LOUISIANA-QP-IN-WORKS-DX",
+      "contest": "LA-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ACAD"
+      },
+      "station_settings": {
+         "State": "LA"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ACAD"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "Rules 7.1: 'send call, signal report and state/province/country'. The token DL (rather than a country name) is NY4I's ruling. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "MISSISSIPPI-QP-IN-WORKS-DX",
+      "contest": "MS-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ADA"
+      },
+      "station_settings": {
+         "State": "MS"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ADA"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "2026 rules: 'DX stations send signal report and Country.' The token DL (rather than a country name) is NY4I's ruling. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "NEBRASKA-QP-IN-WORKS-DX",
+      "contest": "NE-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ADMS"
+      },
+      "station_settings": {
+         "State": "NE"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ADMS"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "Rules: 'send State, Canadian Province or DXCC Country'. The token DL (rather than a country name) is NY4I's ruling. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "NORTH-DAKOTA-QP-IN-WORKS-DX",
+      "contest": "ND-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ADM"
+      },
+      "station_settings": {
+         "State": "ND"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ADM"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "2026 rules: 'DX Stations give RST and DX country'. The token DL (rather than a country name) is NY4I's ruling. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "OKLAHOMA-QP-IN-WORKS-DX",
+      "contest": "OK-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "MAY"
+      },
+      "station_settings": {
+         "State": "OK"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "MAY"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "2026 rules: 'DX stations (including KH2/KP4) send signal report and DXCC prefix.' Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "ONTARIO-QP-IN-WORKS-DX",
+      "contest": "ON-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ALG"
+      },
+      "station_settings": {
+         "State": "ON"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ALG"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "2026 rules: Ontario stations log 'DXCC country abbreviation (the abbreviation \"DX\" is also acceptable'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "SOUTH-DAKOTA-QP-IN-WORKS-DX",
+      "contest": "SD-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "AURO"
+      },
+      "station_settings": {
+         "State": "SD"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "AURO"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "Rules: 'signal report and state, province or DXCC country.' The token DL (rather than a country name) is NY4I's ruling. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "TENNESSEE-QP-IN-WORKS-DX",
+      "contest": "TENNESSEE QSO PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ANDE"
+      },
+      "station_settings": {
+         "State": "TN"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ANDE"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "2026 rules: 'RS(T) and ... DXCC entity'; Cabrillo template writes a prefix. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "TEXAS-QP-IN-WORKS-DX",
+      "contest": "TEXAS QSO PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ANDE"
+      },
+      "station_settings": {
+         "State": "TX"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ANDE"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "txqp.net: 'DX stations should send the primary prefix assigned to their country.' Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "SALMON-RUN-QP-IN-WORKS-DX",
+      "contest": "SALMON RUN",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ADA"
+      },
+      "station_settings": {
+         "State": "WA"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ADA"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "Rules: 'DX stations send DXCC entity prefix'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "WEST-VIRGINIA-QP-IN-WORKS-DX",
+      "contest": "WV-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "BAR"
+      },
+      "station_settings": {
+         "State": "WV"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "BAR"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "source": "2026 rules: 'All others send RST and State/Province/or DXCC country.' The token DL (rather than a country name) is NY4I's ruling. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "VERMONT-QP-IN-WORKS-DX",
+      "contest": "VT-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "ADD"
+      },
+      "station_settings": {
+         "State": "VT"
+      },
+      "worked": "DL1ABC",
+      "typed": "599",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ADD"
+      ],
+      "received": [
+         "599",
+         "DL"
+      ],
+      "adif": {
+         "received": [
+            "599"
+         ],
+         "why": "ADIF holds what was exchanged: a report only."
+      },
+      "source": "ranv.org rules: DX stations 'send signal report'; 'software will determine the DXCC country and list the official prefix'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "NEW-ENGLAND-QP-IN-WORKS-DX",
+      "i_am_in": true,
+      "contest": "NEWEQP",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "CTHAR"
+      },
+      "station_settings": {
+         "State": "CT"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DX",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "CTHAR"
+      ],
+      "received": [
+         "599",
+         "DX"
+      ],
+      "source": "neqp.org/rules: 'DX stations send signal report and \"DX\"'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "SEVENTH-AREA-QP-IN-WORKS-DX",
+      "contest": "7QP",
+      "station": {
+         "MY CALL": "W7ABC",
+         "MY STATE": "ORDES"
+      },
+      "station_settings": {
+         "State": "OR"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DX",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "ORDES"
+      ],
+      "received": [
+         "599",
+         "DX"
+      ],
+      "source": "7qp.org: 'Non-7th-area stations send signal report plus state/province/\"DX\"'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "WISCONSIN-QP-IN-WORKS-DX",
+      "contest": "WISCONSIN QSO PARTY",
+      "station": {
+         "MY CALL": "W9ABC",
+         "MY STATE": "RAC"
+      },
+      "station_settings": {
+         "State": "WI"
+      },
+      "worked": "DL1ABC",
+      "typed": "DL",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "RAC"
+      ],
+      "received": [
+         "DX"
+      ],
+      "adif": {
+         "received": [
+            "DL"
+         ],
+         "why": "ADIF holds what was copied; the sponsor asks DX in Cabrillo only."
+      },
+      "source": "warac.org/wqp/wiqp_cabrillo.htm: non-US/VE received 'should show \"DX\"'; sample 'W9HNW RAC DL6QK DX'. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "ARIZONA-QP-DX-ENTRANT",
+      "contest": "ARIZONA QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W7ABC",
+      "typed": "599 APH",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DL"
+      ],
+      "received": [
+         "599",
+         "APH"
+      ],
+      "source": "azqp.org Cabrillo help sample 'OM2VL 59 OM K6WSC 59 PMA': a DX entrant sends its prefix. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "TENNESSEE-QP-DX-ENTRANT",
+      "contest": "TENNESSEE QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W7ABC",
+      "typed": "599 ANDE",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DL"
+      ],
+      "received": [
+         "599",
+         "ANDE"
+      ],
+      "source": "2026 rules: the exchange is 'RS(T) and ... DXCC entity' (inferred from the on-air rule). Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "TEXAS-QP-DX-ENTRANT",
+      "contest": "TEXAS QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W7ABC",
+      "typed": "599 ANDE",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DL"
+      ],
+      "received": [
+         "599",
+         "ANDE"
+      ],
+      "source": "txqp.net: 'DX stations should send the primary prefix' (inferred from the on-air rule). Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "SALMON-RUN-QP-DX-ENTRANT",
+      "contest": "SALMON RUN",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W7ABC",
+      "typed": "599 ADA",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DL"
+      ],
+      "received": [
+         "599",
+         "ADA"
+      ],
+      "source": "Rules: 'DX stations send DXCC entity prefix' (inferred from the on-air rule). Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "ALABAMA-QP-REFUSES-DX",
+      "contest": "AL-QSO-PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "JEFF"
+      },
+      "station_settings": {
+         "State": "AL"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DX",
+      "band": "20",
+      "mode": "CW",
+      "refused": "A DX station sends its country prefix: DL",
+      "source": "A DX station sends its country prefix (sponsor rule); NY4I, 2026-11-27: refuse DX. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "FLORIDA-QP-REFUSES-DX",
+      "contest": "FLORIDA QSO PARTY",
+      "station": {
+         "MY CALL": "W1AW",
+         "MY STATE": "PIN"
+      },
+      "station_settings": {
+         "State": "FL"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 DX",
+      "band": "20",
+      "mode": "CW",
+      "refused": "A DX station sends its country prefix: DL",
+      "source": "A DX station sends its country prefix (sponsor rule); NY4I, 2026-11-27: refuse DX. Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "IDAHO-QP-DX-ENTRANT-SENDS-PREFIX",
+      "contest": "IDAHO QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W7ABC",
+      "typed": "599 ADA",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DL"
+      ],
+      "received": [
+         "599",
+         "ADA"
+      ],
+      "source": "idahoqsoparty.org rules: 'DX stations ... send your DXCC prefix/country' (inferred from the on-air rule). Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "NEBRASKA-QP-DX-ENTRANT-SENDS-PREFIX",
+      "contest": "NE-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC"
+      },
+      "station_settings": {},
+      "worked": "W7ABC",
+      "typed": "599 ADMS",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DL"
+      ],
+      "received": [
+         "599",
+         "ADMS"
+      ],
+      "source": "Nebraska rules: outside stations send 'State, Canadian Province or DXCC Country' (inferred from the on-air rule; DL rather than a name is NY4I's ruling). Blind agent, sponsor material only, 2026-11-27 (its startup memory held a one-line note of NY4I's earlier DX ruling, which it reported and did not cite)."
+   },
+   {
+      "name": "MO-QP-OUT",
+      "contest": "MISSOURI QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K0QZO",
+      "typed": "57 BOO",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "57",
+         "BOO"
+      ],
+      "source": "MO-QSO-PARTY-Rules.txt: 'Missouri stations will provide call sign, RST, and a three letter county code as defined in Table 1.' / 'Non-Missouri stations will provide call sign, RST, and their US state (as defined in Table 2) or Canadian province or territory'. Table 1: Boone BOO."
+   },
+   {
+      "name": "MO-QP-IN-US",
+      "contest": "MISSOURI QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "JAC"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W1QZO",
+      "typed": "599 MA",
+      "band": "40",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "JAC"
+      ],
+      "received": [
+         "599",
+         "MA"
+      ],
+      "source": "MO-QSO-PARTY-Rules.txt: Missouri stations 'RST, and a three letter county code'; Non-Missouri 'RST, and their US state'. Table 1: Jackson JAC."
+   },
+   {
+      "name": "MO-QP-IN-DX",
+      "contest": "MISSOURI QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "JAC"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59 DX",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "JAC"
+      ],
+      "received": [
+         "59",
+         "DX"
+      ],
+      "source": "MO-QSO-PARTY-Rules.txt: 'DX stations will provide callsign, RST, and the exchange \"DX\".'"
+   },
+   {
+      "name": "MO-QP-OUT-LINE",
+      "contest": "MISSOURI QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K0QZO",
+      "typed": "59 BOO/CAL",
+      "band": "20",
+      "mode": "SSB",
+      "lines": [
+         {
+            "sent": [
+               "59",
+               "FL"
+            ],
+            "received": [
+               "59",
+               "BOO"
+            ]
+         },
+         {
+            "sent": [
+               "59",
+               "FL"
+            ],
+            "received": [
+               "59",
+               "CAL"
+            ]
+         }
+      ],
+      "source": "MO-QSO-PARTY-Rules.txt: 'Expedition stations may be located at the intersection of two or more counties. County line operations must log these contacts as separate QSOs.' Table 1: Boone BOO, Callaway CAL. One Cabrillo line per county."
+   },
+   {
+      "name": "MO-QP-DXENT",
+      "contest": "MISSOURI QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY STATE": "DX"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "K0QZO",
+      "typed": "599 BOO",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "BOO"
+      ],
+      "source": "MO-QSO-PARTY-Rules.txt: 'DX stations will provide callsign, RST, and the exchange \"DX\".'"
+   },
+   {
+      "name": "NC-QP-OUT",
+      "contest": "NC QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K4QZN",
+      "typed": "WAK",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "WAK"
+      ],
+      "source": "Rules_2027_261115a.pdf: 'North Carolina (NC) stations work everyone, send call sign and NC county.' / 'Send call sign and state/province or \"DX\". Sending signal report (i.e., 59) is optional.' / 'A valid QSO logged for award credit consists of date, time, mode, call sign, and location as described in Exchange above.' WAK: NC-QSO-PARTY-Counties.txt (WAKe). DXLog NCQP.txt CABRILLO_LINE has no report column (confirmation only). NY4I, 2026-11-27: 'Optional signal reports are still added to Cabrillo', so each side carries a report (59 SSB, 599 CW), though the sponsor calls it optional."
+   },
+   {
+      "name": "NC-QP-IN-US",
+      "contest": "NC QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "WAK"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W1QZO",
+      "typed": "MA",
+      "band": "40",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "WAK"
+      ],
+      "received": [
+         "599",
+         "MA"
+      ],
+      "source": "Rules_2027_261115a.pdf: NC stations 'send call sign and NC county'; non-NC 'Send call sign and state/province or \"DX\"'; logged QSO is 'date, time, mode, call sign, and location'. NY4I, 2026-11-27: 'Optional signal reports are still added to Cabrillo', so each side carries a report (59 SSB, 599 CW), though the sponsor calls it optional."
+   },
+   {
+      "name": "NC-QP-IN-DX",
+      "contest": "NC QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "WAK"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "DX",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "WAK"
+      ],
+      "received": [
+         "59",
+         "DX"
+      ],
+      "source": "Rules_2027_261115a.pdf: 'Send call sign and state/province or \"DX\".' / 'Any location not listed above is considered DX. This includes US Territories, Mexican provinces, and DXCC countries.' NY4I, 2026-11-27: 'Optional signal reports are still added to Cabrillo', so each side carries a report (59 SSB, 599 CW), though the sponsor calls it optional."
+   },
+   {
+      "name": "NC-QP-OUT-LINE",
+      "contest": "NC QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K4QZN",
+      "typed": "WAK/DUR",
+      "band": "20",
+      "mode": "SSB",
+      "lines": [
+         {
+            "sent": [
+               "59",
+               "FL"
+            ],
+            "received": [
+               "59",
+               "WAK"
+            ]
+         },
+         {
+            "sent": [
+               "59",
+               "FL"
+            ],
+            "received": [
+               "59",
+               "DUR"
+            ]
+         }
+      ],
+      "source": "Rules_2027_261115a.pdf: 'Entering a two county QSO into the log consists of two lines in the log, one for each county with all other information on the two lines the same.' WAK, DUR: NC-QSO-PARTY-Counties.txt. NY4I, 2026-11-27: 'Optional signal reports are still added to Cabrillo', so each side carries a report (59 SSB, 599 CW), though the sponsor calls it optional."
+   },
+   {
+      "name": "NC-QP-DXENT",
+      "contest": "NC QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY STATE": "DX"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "K4QZN",
+      "typed": "WAK",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "WAK"
+      ],
+      "source": "Rules_2027_261115a.pdf: 'Send call sign and state/province or \"DX\".' / 'Any location not listed above is considered DX. This includes US Territories, Mexican provinces, and DXCC countries.' NY4I, 2026-11-27: 'Optional signal reports are still added to Cabrillo', so each side carries a report (59 SSB, 599 CW), though the sponsor calls it optional."
+   },
+   {
+      "name": "OH-QP-OUT",
+      "contest": "OHIO QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K8QZO",
+      "typed": "57 FRAN",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "57",
+         "FRAN"
+      ],
+      "source": "OH-QSO-PARTY-Rules.txt: 'Ohio stations send RST and their Ohio county.' / 'Non Ohio W/VE stations (including KH6/KL7) send RST and their state or province.' Cabrillo Info.txt: 'SentCall, SentRST, SentQth, RcvCall, RcvRST, RcvQth.' FRAN: Multiplier for OH stations.pdf."
+   },
+   {
+      "name": "OH-QP-IN-US",
+      "contest": "OHIO QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FRAN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W1QZO",
+      "typed": "599 MA",
+      "band": "40",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "FRAN"
+      ],
+      "received": [
+         "599",
+         "MA"
+      ],
+      "source": "Cabrillo Info.txt: 'SentQTH is one of the abbreviations from the official list. Ohio stations must list county abbreviation and NOT OH or OHIO!' and the field order SentRST, SentQth, RcvCall, RcvRST, RcvQth."
+   },
+   {
+      "name": "OH-QP-IN-DX",
+      "contest": "OHIO QSO PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FRAN"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59 DX",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FRAN"
+      ],
+      "received": [
+         "59",
+         "DX"
+      ],
+      "source": "OH-QSO-PARTY-Rules.txt: 'DX stations outside of W/VE send RST and \"DX\".'"
+   },
+   {
+      "name": "OH-QP-DXENT",
+      "contest": "OHIO QSO PARTY",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY STATE": "DX"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "K8QZO",
+      "typed": "599 FRAN",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "FRAN"
+      ],
+      "source": "OH-QSO-PARTY-Rules.txt: 'DX stations outside of W/VE send RST and \"DX\".'"
+   },
+   {
+      "name": "NH-QP-OUT",
+      "contest": "NH-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "K1QZH",
+      "typed": "57 ROC",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "57",
+         "ROC"
+      ],
+      "source": "NHQP_Rules.pdf: 'NH: RS(T) + County' / 'non-NH W/VE: RS(T) + (State/Province)'; 'Rockingham (ROC)'."
+   },
+   {
+      "name": "NH-QP-IN-US",
+      "contest": "NH-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "HIL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W5QZO",
+      "typed": "599 TX",
+      "band": "40",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "HIL"
+      ],
+      "received": [
+         "599",
+         "TX"
+      ],
+      "source": "NHQP_Rules.pdf: 'NH: RS(T) + County' / 'non-NH W/VE: RS(T) + (State/Province)'; 'Hillsborough (HIL)'."
+   },
+   {
+      "name": "NH-QP-IN-DX",
+      "contest": "NH-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "HIL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59 DX",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "HIL"
+      ],
+      "received": [
+         "59",
+         "DX"
+      ],
+      "source": "NHQP_Rules.pdf: 'DX: RS(T) + \"DX\"'."
+   },
+   {
+      "name": "NH-QP-DXENT",
+      "contest": "NH-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY STATE": "DX"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "K1QZH",
+      "typed": "599 ROC",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "ROC"
+      ],
+      "source": "NHQP_Rules.pdf: 'DX: RS(T) + \"DX\"'."
+   },
+   {
+      "name": "QC-QP-OUT",
+      "contest": "QC-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "VE2QZQ",
+      "typed": "57 OTS",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "57",
+         "OTS"
+      ],
+      "source": "QC-QSO-PARTY-Rules-EN.txt: 'VE2 stations: Must send a signal report and their administrative region abbreviation' / 'Non-VE2 stations: Must send a signal report and their province, US state or DX for other entities'. Appendix I: Outaouais OTS."
+   },
+   {
+      "name": "QC-QP-IN-US",
+      "contest": "QC-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "MTL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W1QZO",
+      "typed": "599 MA",
+      "band": "40",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "MTL"
+      ],
+      "received": [
+         "599",
+         "MA"
+      ],
+      "source": "QC-QSO-PARTY-Rules-EN.txt: VE2 'Must send a signal report and their administrative region abbreviation'; 'They must log the received signal report as well as the province, US state or DX'. Appendix I: Montreal MTL."
+   },
+   {
+      "name": "QC-QP-IN-DX",
+      "contest": "QC-QSO-PARTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "MTL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59 DX",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "MTL"
+      ],
+      "received": [
+         "59",
+         "DX"
+      ],
+      "source": "QC-QSO-PARTY-Rules-EN.txt: 'DX for other entities'; Appendix II: 'Other DXCC entities must be logged as DX.'"
+   },
+   {
+      "name": "QC-QP-DXENT",
+      "contest": "QC-QSO-PARTY",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY STATE": "DX"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "VE2QZQ",
+      "typed": "599 OTS",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "DX"
+      ],
+      "received": [
+         "599",
+         "OTS"
+      ],
+      "source": "QC-QSO-PARTY-Rules-EN.txt: 'Non-VE2 stations: Must send a signal report and their province, US state or DX for other entities'."
+   },
+   {
+      "name": "ARRL-DX-SSB-WVE",
+      "contest": "ARRL-DX-SSB",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59 100",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "100"
+      ],
+      "source": "rules/ARRL-DX/DX-Rules.md rule 4.2: 'W/VE stations send a signal report and their state or province... DX stations send a signal report and power as a number or abbreviation.' Line layout from the Cabrillo QSO sample at https://wwrof.org/cabrillo/cabrillo-qso-data/ (read 2026-11-27): 'QSO:  3799 PH 1999-03-06 0711 HC8N           59 700    W1AW           59 CT     0' (ELOG.1 of the saved rules points to the Cabrillo format)."
+   },
+   {
+      "name": "ARRL-SS-CW",
+      "contest": "ARRL-SS-CW",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY PREC": "U",
+         "MY CHECK": "80",
+         "MY SECTION": "WCF"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "W1AW",
+      "typed": "43M 31 CT",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "1",
+         "U",
+         "80",
+         "WCF"
+      ],
+      "received": [
+         "43",
+         "M",
+         "31",
+         "CT"
+      ],
+      "source": "rules/ARRL-SS/ARRL-SS-Rules.txt: 'sequential serial number of the contact, your precedence..., your call sign, your check..., and the abbreviation for your ARRL or RAC section' (calls sit in the Cabrillo call columns). Sample at https://www.arrl.org/cabrillo-format-tutorial (read 2026-11-27): 'QSO: 14000 CW 2009-11-07 2100 W1AW          1 M 38 CT K8MM        1 Q 92 MI'. No signal report."
+   },
+   {
+      "name": "KVP-SLOVENIA-CW",
+      "contest": "KVP",
+      "station": {
+         "MY CALL": "S51TA",
+         "MY LICENSE YEAR": "63"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JN76AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "15"
+      },
+      "worked": "S52L",
+      "typed": "599 02",
+      "band": "80",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "63"
+      ],
+      "received": [
+         "599",
+         "02"
+      ],
+      "source": "rules/KVP/pravila_kvp_zrs_sl.txt IV: RS(T) plus the two-digit short form of the year of the first operator exam (personal station) or first club licence; sample 'QSO: 3500 CW 2005-11-20 0800 S59XXX 599 01 S52L 599 02'. Entry is for Slovenian amateurs only, so S51TA is a test station; 63 is a test value (the rules' own club example)."
+   },
+   {
+      "name": "NCCC-SPRINT",
+      "contest": "NCCC-SPRINT",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY NAME": "TOM",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "N6TR",
+      "typed": "154 TREE OR",
+      "band": "40",
+      "mode": "CW",
+      "sent": [
+         "1",
+         "TOM",
+         "FL"
+      ],
+      "received": [
+         "154",
+         "TREE",
+         "OR"
+      ],
+      "source": "DERIVED from the exchange rule, no log sample: rules/NCCCSprint/NCCC-SPRINT-Rules.txt 'Exchange: Serial Number, Name, QTH'. The same file reports scores to 3830 and mentions an NS Score Calculator that reads a Cabrillo file. NCJ's NA Sprint rules, which NS builds on, https://ncjweb.com/Sprint-Rules.pdf (read 2026-11-27): rule 7 lists serial, name, location (any order on the air); rule 13 requires Cabrillo for NCJ's own contests."
+   },
+   {
+      "name": "CWOPEN",
+      "contest": "CWOPEN",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY NAME": "TOM"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "N6TR",
+      "typed": "1 TREE",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "1",
+         "TOM"
+      ],
+      "received": [
+         "1",
+         "TREE"
+      ],
+      "source": "rules/CWOPS/cwops_cw_open_rules_2026.md (condensed copy of https://cwops.org/cwops-tests/cw-open): 'Sequential serial number and name'; sample 'QSO: 14042 CW 2022-09-03 0000 N5TJ 1 JEFF N6TR 1 TREE'."
+   },
+   {
+      "name": "RUS-WW-DIGI-DX-WORKS-RUSSIA",
+      "contest": "RUS-WW-DIGI",
+      "station": {
+         "MY CALL": "NY4I"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "UA3AAA",
+      "typed": "599 MA",
+      "band": "20",
+      "mode": "DIGI",
+      "sent": [
+         "599",
+         "001"
+      ],
+      "received": [
+         "599",
+         "MA"
+      ],
+      "source": "rules/RussianDigital/rules.md: 'Russian: RST(Q) + 2-letter abbreviation of Russian area (oblast) code... Others: RST(Q) + QSO number, starting 001'; sample 'QSO:  7043 PM 2014-10-04 1203 ZL3AZZ        599 003    UA8AAA        599 CB'. Same rule in rules/RUS-WW-DIGI."
+   },
+   {
+      "name": "RUS-WW-DIGI-DX-WORKS-DX",
+      "contest": "RUS-WW-DIGI",
+      "station": {
+         "MY CALL": "NY4I"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "SP9ZZZ",
+      "typed": "599 004",
+      "band": "20",
+      "mode": "DIGI",
+      "sent": [
+         "599",
+         "001"
+      ],
+      "received": [
+         "599",
+         "004"
+      ],
+      "source": "rules/RussianDigital/rules.md sample: 'QSO: 21091 RY 2014-10-04 1200 ZL3AZZ        599 001    SP9ZZZ        599 004'."
+   },
+   {
+      "name": "RUS-WW-DIGI-RUSSIAN",
+      "contest": "RUS-WW-DIGI",
+      "station": {
+         "MY CALL": "UA8AAA",
+         "MY STATE": "CB"
+      },
+      "i_am_in": true,
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "MO05QD",
+         "Name": "TOM",
+         "ItuZone": 30,
+         "Zone": "17"
+      },
+      "worked": "ZL3AZZ",
+      "typed": "599 001",
+      "band": "15",
+      "mode": "DIGI",
+      "sent": [
+         "599",
+         "CB"
+      ],
+      "received": [
+         "599",
+         "001"
+      ],
+      "source": "rules/RussianDigital/rules.md sample: 'QSO: 21091 RY 2014-10-04 1200 UA8AAA        599 CB     ZL3AZZ        599 001'. Test station using the sample's call and oblast."
+   },
+   {
+      "name": "RU3AX-MEMORIAL",
+      "contest": "RU3AX MEMORIAL",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY GRID": "EL88PA"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "UA3AAA",
+      "typed": "599 KO85",
+      "band": "160",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "EL88"
+      ],
+      "received": [
+         "599",
+         "KO85"
+      ],
+      "source": "DERIVED from the exchange rule, no log sample: rules/Russian160 rule 4: 'All participants send RS(T) + Four character grid square (QTH locator) Example: 599 KO85'; rule 9.1 Cabrillo only. The station's six-character grid must go out as four characters."
+   },
+   {
+      "name": "RDXC-DX-WORKS-RUSSIA",
+      "contest": "RDXC",
+      "station": {
+         "MY CALL": "NY4I"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "UA3AAA",
+      "typed": "599 MA",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "001"
+      ],
+      "received": [
+         "599",
+         "MA"
+      ],
+      "source": "DERIVED from the exchange rule, no log sample: rules/RussianDX/rules_ru.md 6.1 (Russian stations send RS(T) + two-letter oblast id) and 6.3 (stations outside Russia send RS(T) + serial starting at 001, numbered through all bands); 11.1 Cabrillo only."
+   },
+   {
+      "name": "RDXC-DX-WORKS-DX",
+      "contest": "RDXC",
+      "station": {
+         "MY CALL": "NY4I"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 123",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "001"
+      ],
+      "received": [
+         "599",
+         "123"
+      ],
+      "source": "DERIVED from the exchange rule, no log sample: rules/RussianDX/rules_ru.md 6.3 (both stations outside Russia send RS(T) + serial)."
+   },
+   {
+      "name": "RDXC-RUSSIAN",
+      "contest": "RDXC",
+      "station": {
+         "MY CALL": "UA3AAA",
+         "MY STATE": "MA"
+      },
+      "i_am_in": true,
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "KO85AA",
+         "Name": "TOM",
+         "ItuZone": 29,
+         "Zone": "16"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 004",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "MA"
+      ],
+      "received": [
+         "599",
+         "004"
+      ],
+      "source": "DERIVED from the exchange rule, no log sample: rules/RussianDX/rules_ru.md 6.1 and 6.3. UA3AAA/MA is a test station."
+   },
+   {
+      "name": "URC-DX-RTTY",
+      "contest": "URC-DX-RTTY",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FLA"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "GM2G",
+      "typed": "599 SCO",
+      "band": "20",
+      "mode": "DIGI",
+      "sent": [
+         "599",
+         "FLA"
+      ],
+      "received": [
+         "599",
+         "SCO"
+      ],
+      "source": "rules/URC/rules.md: 'Each station must send a signal report (RST) followed by a 3-letter territory code'; sample 'QSO:  7040 RY 2024-10-04 0000 UA8AAA        599 CLB     UA5GGG        599 LPK'. rules/URC/territories.md: K4 Florida FLA, GM Scotland SCO. ASSUMPTION ABOUT INPUT: MY STATE is given the sponsor's territory code FLA."
+   },
+   {
+      "name": "WRT-WVE",
+      "contest": "WRT",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY NAME": "TOM",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "N6TR",
+      "typed": "TREE OR",
+      "band": "20",
+      "mode": "DIGI",
+      "sent": [
+         "TOM",
+         "FL"
+      ],
+      "received": [
+         "TREE",
+         "OR"
+      ],
+      "source": "rules/WRT/rules.md: 'W/VE - Name and State'. Column order from the organizers' rules/WRT/WRT.udc: 'CabrilloString =SentExchPart1, 10, SentExchPart2, 10, CallSign, 13, Name, 10, Exchange1, 4' (no signal report). Format definition, not a log sample."
+   },
+   {
+      "name": "WRT-WORKS-DX",
+      "contest": "WRT",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY NAME": "TOM",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "TREE DL",
+      "band": "20",
+      "mode": "DIGI",
+      "sent": [
+         "TOM",
+         "FL"
+      ],
+      "received": [
+         "TREE",
+         "DL"
+      ],
+      "source": "rules/WRT/rules.md: 'DX - Name and Country Prefix'; order and absence of a report from rules/WRT/WRT.udc CabrilloString. Format definition, not a log sample."
+   },
+   {
+      "name": "EUROPEAN-HFC",
+      "contest": "EUROPEAN HFC",
+      "station": {
+         "MY CALL": "S51TA",
+         "MY LICENSE YEAR": "82"
+      },
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JN76AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "15"
+      },
+      "worked": "DL1ABC",
+      "typed": "599 17",
+      "band": "20",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "82"
+      ],
+      "received": [
+         "599",
+         "17"
+      ],
+      "source": "DERIVED from the exchange rule, no log sample (the sponsor's sample link could not be retrieved): rules/EuropeanHF/euhfc_rules_latest.md section 5: 'SSB: RS report / CW: RST report + two-digit number of the Year of Operator's first ever official amateur radio license'; '59(9) 82 means ... 1982, 17 means 2017'. Only European contacts count, so S51TA is a test station."
+   },
+   {
+      "name": "DARC-XMAS-GERMAN",
+      "contest": "DARC-XMAS",
+      "station": {
+         "MY CALL": "DL1ABC",
+         "MY STATE": "A01"
+      },
+      "i_am_in": true,
+      "station_settings": {
+         "State": "",
+         "Section": "",
+         "Grid": "JO31AA",
+         "Name": "TOM",
+         "ItuZone": 28,
+         "Zone": "14"
+      },
+      "worked": "OK1ABC",
+      "typed": "599 004",
+      "band": "40",
+      "mode": "CW",
+      "sent": [
+         "599",
+         "A01"
+      ],
+      "received": [
+         "599",
+         "004"
+      ],
+      "source": "DERIVED from the exchange rule, no log sample: rules/XMAS/DARC-XMAS-RULES.txt 4. DL1ABC with DOK A01 is a test station."
+   },
+   {
+      "name": "ARRL-DX-SSB-WVE-POWER-KW",
+      "contest": "ARRL-DX-SSB",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59 KW",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "KW"
+      ],
+      "source": "docs/ContestRules/ARRL/DX-Rules.md: 'DX stations send a signal report and power as a number or abbreviation.' Its sample exchange answers '59 KW'. NY4I, 2026-11-27: people send K or KW to represent it; \"We send it as we copied it so allow alpha in power\". Sent side as ARRL-DX-SSB-WVE."
+   },
+   {
+      "name": "ARRL-DX-SSB-WVE-POWER-K",
+      "contest": "ARRL-DX-SSB",
+      "station": {
+         "MY CALL": "NY4I",
+         "MY STATE": "FL"
+      },
+      "station_settings": {
+         "State": "FL",
+         "Section": "WCF",
+         "Grid": "EL88PA",
+         "Name": "TOM",
+         "ItuZone": 8,
+         "Zone": "5"
+      },
+      "worked": "DL1ABC",
+      "typed": "59 K",
+      "band": "20",
+      "mode": "SSB",
+      "sent": [
+         "59",
+         "FL"
+      ],
+      "received": [
+         "59",
+         "K"
+      ],
+      "source": "docs/ContestRules/ARRL/DX-Rules.md: 'DX stations send a signal report and power as a number or abbreviation.' Its sample exchange answers '59 KW'. NY4I, 2026-11-27: people send K or KW to represent it; \"We send it as we copied it so allow alpha in power\". Sent side as ARRL-DX-SSB-WVE."
    }
 ]

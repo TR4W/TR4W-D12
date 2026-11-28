@@ -163,6 +163,19 @@ const
    CountyLineCountiesUnlimited = High(integer);
 
 type
+   (* WHAT A PARTY TAKES AS A DX STATION'S LOCATION -- NY4I, 2026-11-27.
+
+      A party STATES one (GetDXExchangeRule); the base's answer checks nothing,
+      which is right for a party whose DX stations send the letters DX.
+        dxrNotChecked      no check, no prefill
+        dxrPrefixOrDX      the country prefix, or DX; exported as logged
+        dxrPrefixOnly      the country prefix; DX is refused, and a logged DX
+                           (an import) exports the prefix
+        dxrPrefixSupplied  a DX station sends a report only: DX is taken, and
+                           the export writes the prefix for it *)
+   TDXExchangeRule = (dxrNotChecked, dxrPrefixOrDX, dxrPrefixOnly,
+                      dxrPrefixSupplied);
+
    TContestStateQSOPartyBase = class(TContestBase)
    private
       (* ReportNoTableForYear's latch: has this object reported, and for
@@ -346,6 +359,28 @@ type
          uTestContestStateQSOPartyBase. *)
       class function LocationOrOwnCountry(const aLocation: string;
                                           const aCountry: CallString): string;
+
+      (* THE WORKED DX STATION -- see TDXExchangeRule. DXStationPrefix is the
+         one statement of "a DX station" for the refusal, the prefill and the
+         export: the prefix its CTY.DAT country gives, or '' when the call is
+         not one -- an unknown country, the USA, Canada, Hawaii or Alaska (they
+         send a state or province), or maritime mobile (NY4I, 2026-11-27: no
+         resolution; logged as typed, DX when nothing was). *)
+      class function DXStationPrefix(const aCall: string;
+                                     const aCountryID: ShortString): string;
+
+      function GetDXExchangeRule: TDXExchangeRule; virtual;
+
+      (* THE RECEIVED COLUMN, A HELPER a party with a rule calls: WHAT WAS
+         LOGGED, and the DX station's prefix when nothing was (or DX was, where
+         the rule says a DX station cannot send it).
+
+         NOT aCtx.HisQTH for a DX station: that holds a DOMESTIC QTH only, so
+         an export writing it leaves the column blank for a copied 'DL'. And
+         not CabrilloReceivedRSTDomesticQTHOrDXQTH, which writes the call's
+         DXQTH over what was typed. *)
+      function CabrilloReceivedLoggedLocation(const aMy: TMyStationExchange;
+         const aQso: ContestExchange; const aCtx: TCabrilloQSOContext): string;
       function SentLocation(const aMy: TMyStationExchange): TMyStationExchange;
 
       (* A RULE THAT CHANGES BY YEAR, ASKED FOR A YEAR IT HAS NO TABLE FOR,
@@ -519,6 +554,12 @@ type
          a QSO that scores 0 when logged another way. Stated ONCE, here,
          for every single-state party. See TContestBase.CreditsWorkedStation. *)
       function CreditsWorkedStation(const aQso: ContestExchange): boolean; override;
+
+      (* THE PREFIX IS FILLED IN FROM THE CALL for a party with a DX rule,
+         when nothing else filled the exchange. Needs no station. *)
+      function InitialExchangeFromCall(const aCall: string;
+                                       const aCountryID: string;
+                                       out aExchange: string): boolean; override;
    public
       (* THE DOMESTIC FILE -- see TContestBase.UsesDomesticFile (M11 S6). *)
       function UsesDomesticFile: boolean; override;
@@ -534,6 +575,9 @@ uses
    uAppStrings,     (* SExchangeOutOfStateWorksHostOnly *)
    uAppPaths,       (* ShippedDomFilePath -- the party's county file *)
    uDomFileKeys,    (* DomFileKeyTargets, DomFileKeyNames, DOM_EXTENSION *)
+   uCallSignRoutines, (* MaritimeMobileStation *)
+   uDXMultiplierKey,  (* IsUSACanadaHawaiiOrAlaskaCountry *)
+   uCabrilloExchange, (* CabrilloReceivedRSTDomesticQTHOrDXQTH *)
    uADIF;           (* ADIFStateOfPartyQSO -- Q76/Q89 *)
 
 function TContestStateQSOPartyBase.CallWithoutRoverCounty(const aCall: string): string;
@@ -615,6 +659,9 @@ function TContestStateQSOPartyBase.ParseReceivedExchange(const aText: string;
                                                          const aSession: TReceivedExchangeSession;
                                                          var aExch: ContestExchange;
                                                          out aErrorMessage: string): boolean;
+var
+   prefix: string;
+   typed: string;
 begin
    Result := inherited ParseReceivedExchange(aText, aSession, aExch, aErrorMessage);
    if not Result then
@@ -628,7 +675,146 @@ begin
       begin
       Result := False;
       aErrorMessage := Format(SExchangeOutOfStateWorksHostOnly, [HostState]);
+      Exit;
       end;
+
+   (* THE DX RULE -- live entry only; never LoggedQSORefusal, which would
+      abort a whole import over an older log's 'DX'. *)
+   if GetDXExchangeRule = dxrNotChecked then
+      begin
+      Exit;
+      end;
+   prefix := DXStationPrefix(string(aExch.Callsign), aExch.QTH.CountryID);
+   typed := Trim(string(aExch.QTHString));
+   (* A report with no location is taken: the export supplies the prefix. *)
+   if (prefix = '') or (typed = '') or (typed = prefix) then
+      begin
+      Exit;
+      end;
+   if (typed = 'DX') and (GetDXExchangeRule <> dxrPrefixOnly) then
+      begin
+      Exit;
+      end;
+   (* ANY LOCATION THE SESSION'S TABLE KNOWS IS TAKEN, whatever the call: the
+      country follows the CALL, and a KP4 call in Georgia or in a county of
+      the host need not sign portable. A rover's county is one of these too. *)
+   if Assigned(aSession.IsDomesticQTH) and aSession.IsDomesticQTH(typed) then
+      begin
+      Exit;
+      end;
+   Result := False;
+   aErrorMessage := UnicodeFormat(SExchangeDXSendsPrefix, [prefix]);
+end;
+
+function TContestStateQSOPartyBase.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrNotChecked;
+end;
+
+(* CTY.DAT tells entities sharing a prefix apart with a lowercase tail
+   ('E5/s', 'SV/a', 'HK0/a'). Nobody sends the tail, and it cannot be typed:
+   TR4W reads 'E5/S' in the exchange as a corrected callsign. *)
+class function TContestStateQSOPartyBase.DXStationPrefix(const aCall: string;
+   const aCountryID: ShortString): string;
+var
+   slash: integer;
+begin
+   Result := '';
+   (* A '*' ENTRY IS THE CQ LIST'S, NOT A DXCC COUNTRY ('*IT9' for Sicily),
+      and a party that counts no DX looks calls up on that list. Its DXCC
+      prefix is not known here, so nothing is offered or required. *)
+   if (aCountryID <> '') and
+      (aCountryID[1] <> '*') and
+      (not IsUSACanadaHawaiiOrAlaskaCountry(aCountryID)) and
+      (not MaritimeMobileStation(aCall)) then
+      begin
+      Result := string(aCountryID);
+      slash := Pos('/', Result);
+      if slash > 0 then
+         begin
+         Result := Copy(Result, 1, slash - 1);
+         end;
+      end;
+end;
+
+(* A '/SUFFIX' of three or more letters is a rover's county ('KG1S/MON',
+   'W9ABC/COOK'), and CTY.DAT may read such a call as a foreign one, so
+   nothing is offered for it. *)
+function TContestStateQSOPartyBase.InitialExchangeFromCall(const aCall: string;
+   const aCountryID: string; out aExchange: string): boolean;
+var
+   slash: integer;
+   i: integer;
+   letters: boolean;
+begin
+   aExchange := '';
+   Result := False;
+   if GetDXExchangeRule = dxrNotChecked then
+      begin
+      Result := inherited InitialExchangeFromCall(aCall, aCountryID, aExchange);
+      Exit;
+      end;
+   slash := Length(aCall);
+   while (slash > 0) and (aCall[slash] <> '/') do
+      begin
+      Dec(slash);
+      end;
+   if (slash > 0) and (Length(aCall) - slash >= 3) then
+      begin
+      letters := True;
+      for i := slash + 1 to Length(aCall) do
+         begin
+         if not (aCall[i] in ['A'..'Z']) then
+            begin
+            letters := False;
+            end;
+         end;
+      if letters then
+         begin
+         Exit;
+         end;
+      end;
+   aExchange := DXStationPrefix(aCall, ShortString(aCountryID));
+   Result := aExchange <> '';
+end;
+
+function TContestStateQSOPartyBase.CabrilloReceivedLoggedLocation(
+   const aMy: TMyStationExchange; const aQso: ContestExchange;
+   const aCtx: TCabrilloQSOContext): string;
+var
+   logged: string;
+   prefix: string;
+   supply: boolean;
+begin
+   logged := Trim(string(aQso.QTHString));
+   (* Does the prefix stand in for what was logged? *)
+   supply := (logged = '') or
+             ((logged = 'DX') and
+              (GetDXExchangeRule in [dxrPrefixOnly, dxrPrefixSupplied]));
+   if aQso.DomesticQTH = '' then
+      begin
+      if supply then
+         begin
+         prefix := DXStationPrefix(string(aQso.Callsign), aQso.QTH.CountryID);
+         if prefix <> '' then
+            begin
+            Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, prefix]);
+            Exit;
+            end;
+         end
+      else if not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
+         begin
+         Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, logged]);
+         Exit;
+         end;
+      end;
+   if (not supply) and
+      IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID) then
+      begin
+      Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, aCtx.HisQTH]);
+      Exit;
+      end;
+   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
 end;
 
 function TContestStateQSOPartyBase.CreditsWorkedStation(const aQso: ContestExchange): boolean;

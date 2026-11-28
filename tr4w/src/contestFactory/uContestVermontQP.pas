@@ -90,9 +90,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
         MY STATE is empty OR 'DX', which the New Contest dialog takes for a
         station outside every area (StatesNoLocation; without it the 'DX'
         went on the air and into both columns).
-      * A DX STATION'S RECEIVED COLUMN is its DXCC prefix: the DX QTH TR4W
-        resolved from the call, else as typed
-        (CabrilloReceivedRSTDomesticQTHOrDXQTH since review H4) --
+      * A DX STATION'S RECEIVED COLUMN is its DXCC prefix, even where "DX"
+        was logged (the party base's dxrPrefixSupplied, 2026-11-27) --
         not DXLog's literal "DX" (NY4I).
 
   QSO POINTS -- 7A): "Each complete non-duplicate Phone contact is worth 1
@@ -321,6 +320,8 @@ type
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
                                            const aCtx: TCabrilloQSOContext): string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       function GetRequiresCabrilloLocation: boolean; override;
@@ -685,11 +686,15 @@ function TContestVermontQP.GetCabrilloReceivedExchange(const aMy: TMyStationExch
                                                        const aQso: ContestExchange;
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   (* "Properly configured contest software will determine the DXCC country
-      and list the official prefix": the DX QTH the call resolved to, else
-      what was typed. CabrilloReceivedRSTQTHOrDXQTH printed an EMPTY column
-      for a typed "599 DL" (review H4 follow-up, 2026-11-16). *)
-   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+   (* "software will determine the DXCC country and list the official prefix":
+      the party base's DX rule (2026-11-27). *)
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
+end;
+
+(* The sponsor: "DX stations ... send signal report. Properly configured contest software will determine the DXCC country and list the official prefix." *)
+function TContestVermontQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixSupplied;
 end;
 
 function TContestVermontQP.GetInStateDomesticFileName: string;

@@ -842,6 +842,11 @@ resourcestring
      error like we would with an invalid county".  %s is the host state. *)
    SExchangeOutOfStateWorksHostOnly = 'Out of state: work %s stations only';
 
+   (* A DX STATION WHOSE LOCATION IS NOT ITS COUNTRY PREFIX, where the sponsor
+     has DX stations send the prefix (the Florida QSO Party, NY4I,
+     2026-11-27).  %s is the prefix expected of the call. *)
+   SExchangeDXSendsPrefix = 'A DX station sends its country prefix: %s';
+
    (* A COUNTY LINE OF THE IN7QPNE COMPOSITE WHOSE COUNTIES ARE NOT ALL OF ONE
      PARTY -- issue 85. NY4I, 2026-11-22: "a rover cannot operate from across
      a state line for two counties" (of two parties). %s and %s are the first

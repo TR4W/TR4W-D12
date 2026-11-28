@@ -53,6 +53,21 @@ user-facing — no file paths or source-level jargon.
   not changed.
 - **ARRL Digital sends a four-character grid square,** as the rules require, even when your station grid has
   six. Your log keeps the full grid.
+- **QSO parties: DX contacts export correctly.** Florida, Idaho, Nebraska, New England, the 7th Call Area and
+  West Virginia could leave a DX station's location blank in the Cabrillo file; Florida could also write
+  something like `DL1`.
+- **QSO parties whose DX stations send their country:** TR4W fills in the prefix from the callsign when
+  nothing else has filled the exchange, keeps what you log, and refuses another country's prefix or a typo.
+  This covers Alabama, Arizona, Florida, Idaho, Illinois, Louisiana, Mississippi, Nebraska, North Dakota,
+  Oklahoma, Ontario, South Dakota, Tennessee, Texas, Vermont, Washington (Salmon Run), West Virginia and
+  Wisconsin. Alabama and Florida also refuse `DX`. Vermont writes the prefix even when `DX` was logged.
+  Wisconsin's Cabrillo still shows `DX`. A state, province or county is accepted from any callsign, and a
+  maritime mobile as you type it.
+- **A DX entrant in Arizona, Tennessee, Texas or the Salmon Run now sends its own prefix,** not `DX`.
+- **ADIF:** entering only the signal report no longer writes it twice. ALL JA's sent exchange now includes
+  the report, and the Wisconsin QSO Party's exchanges no longer include one.
+- **ARRL Sweepstakes ADIF:** the received exchange is written with its parts spaced and in the
+  sponsor's order (`43 M 31 CT`), however you typed it.
 - **Arktika Spring is now listed as inactive.** New Contest shows it after the active contests, and your
   existing Arktika logs still open.
 

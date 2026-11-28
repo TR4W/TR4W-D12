@@ -231,6 +231,14 @@ begin
       Exit;
       end;
 
+   (* THE WISCONSIN QSO PARTY SENDS NO REPORT ON THE AIR, so its string is the
+      location alone, at every station (2026-11-27). *)
+   if aContest = WISCONSINQSOPARTY then
+      begin
+      Result := Pick(aVariant, 'FL', 'DX', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'TRC');
+      Exit;
+      end;
+
    (* A DX ENTRANT'S STX_STRING SAYS WHAT WAS SENT: "DX" (2026-10-27, NY4I).
       The ADIF STX_STRING is the information transmitted, and these contests'
       Cabrillo sent column (CabrilloSentRSTStateOrDX, uTestCabrilloColumns)
@@ -249,6 +257,13 @@ begin
         (aStation in [psDX, psPA, psJA]))) then
       begin
       Result := '59  DX     ';
+      (* Arizona, Tennessee, Texas and the Salmon Run have a DX entrant send
+         its PREFIX, as those sponsors say (NY4I, 2026-11-27). *)
+      if aContest in [ArizonaQsoParty, SALMONRUN, TENNESSEEQSOPARTY,
+                      TEXASQSOPARTY] then
+         begin
+         Result := '59  ' + Format('%-7s', [PinStation(aStation, aContest).MyCountry]);
+         end;
       Exit;
       end;
 
@@ -584,6 +599,13 @@ begin
       Result := '<not pinned>';
       end;
    end;
+
+   (* Idaho's and Nebraska's DX entrant sends its prefix (2026-11-27). *)
+   if (aContest in [IDAHOQSOPARTY, NEBRASKAQSO]) and
+      (aVariant = 1) and (Trim(Result) = '59') then
+      begin
+      Result := '59  ' + Format('%-7s', [PinStation(aStation, aContest).MyCountry]);
+      end;
 end;
 
 procedure TADIFSentExchangeTests.Test_EveryContestSendsItsPinnedSTXString;

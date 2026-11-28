@@ -444,9 +444,10 @@ function CabrilloReceivedRSTDomesticQTHOrDX(const aMy: TMyStationExchange;
    gets its DX QTH, where the QTHString test printed an empty column. A DX
    station whose contest keys no DX QTH (North Dakota: no DX multiplier)
    gets what it SENT -- the typed text, the only record of it -- and only
-   when nothing was sent, 'DX'. Ontario, Oklahoma, North Dakota and Vermont
-   use it too (review H4 follow-up, 2026-11-16: their typed "599 DL"
-   exported an empty column, measured through the real engine). *)
+   when nothing was sent, 'DX'. IT PREFERS THE CALL'S DXQTH OVER WHAT WAS
+   TYPED, so the state parties whose DX stations send a country use
+   TContestStateQSOPartyBase.CabrilloReceivedLoggedLocation instead
+   (2026-11-27); that calls this only for what it does not decide. *)
 function CabrilloReceivedRSTDomesticQTHOrDXQTH(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange;
                                                const aCtx: TCabrilloQSOContext): string;

@@ -92,8 +92,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     province or country". RSTDomesticOrDXQTHExchange, Oklahoma's helper row
     (ADDING_A_CONTEST A3): a DX entrant SENDS its own country prefix (the
     party base's SentLocation / LocationOrOwnCountry; DXLog's "DX stations
-    send DXCC prefix"); the received column of a DX station is its DXCC key,
-    else what it sent (CabrilloReceivedRSTDomesticQTHOrDXQTH, review H4).
+    send DXCC prefix"); the received column is what was logged, else the
+    prefix (the party base's DX rule, 2026-11-27).
 
   QSO POINTS -- "Phone QSO: 1 point; CW/digital QSO 2 points." CW 2, every
     digital submode credited 2, Phone and FM 1. DXLog gives FM 2 (only SSB
@@ -231,6 +231,8 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -351,6 +353,12 @@ begin
    Result := 'illinois_cty';
 end;
 
+(* The sponsor: "others give RS/T and state, province or country". *)
+function TContestIllinoisQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
+end;
+
 function TContestIllinoisQP.GetInStateDomesticFileName: string;
 begin
    Result := 'illinois';
@@ -410,7 +418,7 @@ function TContestIllinoisQP.GetCabrilloReceivedExchange(const aMy: TMyStationExc
 begin
    (* A DX station sent its country: the received column is its DX QTH,
       else what it sent (review H4). *)
-   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
 end;
 
 (* CW AND DIGITAL 2, PHONE AND FM 1. An off-band or off-mode QSO (FT8, FT4)

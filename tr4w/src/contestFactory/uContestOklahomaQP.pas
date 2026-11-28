@@ -73,8 +73,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     oklahoma_cty.dom. A DX ENTRANT SENDS ITS OWN PREFIX, NOT "DX" (NY4I): the
     party base's SentLocation / LocationOrOwnCountry, used by the CQ
     exchange, Cabrillo and ADIF -- lifted there from the North Dakota QSO
-    Party, its first user. A DX station's received column is its prefix as
-    sent (CabrilloReceivedRSTDomesticQTHOrDXQTH since review H4).
+    Party, its first user. A DX station's received column is what was
+    logged, else its prefix (the party base's DX rule, 2026-11-27).
 
   QSO POINTS -- "Count two points per phone QSO ... Count three points per
     CW QSO ... Count three points per Digital QSO (No FT8/FT4)", the same for
@@ -203,6 +203,8 @@ type
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
                                            const aCtx: TCabrilloQSOContext): string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
 
@@ -381,11 +383,15 @@ function TContestOklahomaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExc
                                                         const aQso: ContestExchange;
                                                         const aCtx: TCabrilloQSOContext): string;
 begin
-   (* A DX station sent its DXCC prefix: the received column is its DX QTH
-      (the country the call resolved to), else what it sent.
-      CabrilloReceivedRSTQTHOrDXQTH printed an EMPTY column for a typed
-      "599 DL" (review H4 follow-up, 2026-11-16). *)
-   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+   (* "DX stations ... send signal report and DXCC prefix":
+      the party base's DX rule (2026-11-27). *)
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
+end;
+
+(* The sponsor: "DX stations (including KH2/KP4) send signal report and DXCC prefix." *)
+function TContestOklahomaQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestOklahomaQP.GetInStateDomesticFileName: string;

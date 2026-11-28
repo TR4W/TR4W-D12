@@ -77,6 +77,10 @@ type
                                        const aMy: TMyStationExchange;
                                        const aQso: ContestExchange): string; override;
       function EmitADIFContestFields(const aQso: ContestExchange): string; override;
+      (* SRX_STRING IS WRITTEN FROM THE FIELDS, so '43M 31 CT' as typed is
+         written '43 M 31 CT' -- see the body. *)
+      function FormatADIFReceivedExchange(const aQso: ContestExchange;
+                                          aExchangeCarriesRST: boolean): string; override;
       procedure ApplyADIFImport(const aTemps: TADIFRecordTemps;
                                 const aSession: TADIFImportSession;
                                 var aExch: ContestExchange); override;
@@ -348,6 +352,33 @@ function TContestARRLSSBase.GetADIFSentExchange(const aMy: TMyStationExchange;
 begin
    Result := Format('%-4d %s %s %-3s ',
                     [aQso.NumberSent, aMy.MyPrec, aMy.MyCheck, aMy.MySection]);
+end;
+
+(* THE RECEIVED EXCHANGE IN THE SPONSOR'S ORDER: SERIAL, PRECEDENCE, CHECK,
+   SECTION -- NY4I, 2026-11-27: "Sweepstakes add the space in ADIF". The
+   parser needs a precedence joined to its serial when two numbers could each
+   be the serial ('43M 31 CT'), and takes the words in any order, so the text
+   as typed is not the exchange as it was sent.
+
+   A record missing a serial, a precedence or a section keeps what the base
+   writes: the typed text is then the only complete record of it. So does a
+   record with NO typed text (an imported one): it gains no SRX_STRING. *)
+function TContestARRLSSBase.FormatADIFReceivedExchange(const aQso: ContestExchange;
+                                                       aExchangeCarriesRST: boolean): string;
+begin
+   if (aQso.ExchString <> '')    and
+      (aQso.NumberReceived > 0) and
+      (aQso.Precedence <> #0)   and
+      (aQso.QTHString <> '')    then
+      begin
+      Result := UnicodeFormat('%d %s %.2d %s',
+                              [aQso.NumberReceived, string(aQso.Precedence), aQso.Check,
+                               string(aQso.QTHString)]);
+      end
+   else
+      begin
+      Result := inherited FormatADIFReceivedExchange(aQso, aExchangeCarriesRST);
+      end;
 end;
 
 function TContestARRLSSBase.SentExchangeDisplayText(const aMyCall: string;

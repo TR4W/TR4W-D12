@@ -265,6 +265,8 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -437,6 +439,12 @@ begin
    Result := 'mississippi_cty';
 end;
 
+(* The sponsor: "DX stations send signal report and Country." *)
+function TContestMississippiQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
+end;
+
 function TContestMississippiQP.GetInStateDomesticFileName: string;
 begin
    Result := 'mississippi';
@@ -527,7 +535,7 @@ begin
       begin
       (* A DX station sent its country: the received column is its DX QTH,
          else what it sent (review H4). *)
-      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
       end;
 end;
 

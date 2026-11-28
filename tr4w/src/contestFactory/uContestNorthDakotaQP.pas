@@ -147,6 +147,8 @@ type
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
                                            const aCtx: TCabrilloQSOContext): string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
 
@@ -317,12 +319,15 @@ function TContestNorthDakotaQP.GetCabrilloReceivedExchange(const aMy: TMyStation
                                                            const aQso: ContestExchange;
                                                            const aCtx: TCabrilloQSOContext): string;
 begin
-   (* "DX Stations give RST and DX country": the received column is the
-      country a DX station sent. The record's DomesticQTH decides domestic;
-      a DX station (no DX QTH here -- no DX multiplier) is what it sent.
-      CabrilloReceivedRSTQTHOrDXQTH printed an EMPTY column for a typed
-      "599 DL" (review H4 follow-up, 2026-11-16). *)
-   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+   (* "DX Stations give RST and DX country":
+      the party base's DX rule (2026-11-27). *)
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
+end;
+
+(* The sponsor: "DX Stations give RST and DX country." *)
+function TContestNorthDakotaQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestNorthDakotaQP.GetInStateDomesticFileName: string;

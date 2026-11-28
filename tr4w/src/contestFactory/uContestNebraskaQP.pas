@@ -220,6 +220,8 @@ type
       function GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange;
                                            const aCtx: TCabrilloQSOContext): string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
 
@@ -493,21 +495,29 @@ end;
 function TContestNebraskaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                 const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTState(aMy, aQso);
+   Result := ADIFSentRSTState(SentLocation(aMy), aQso);
 end;
 
 function TContestNebraskaQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                     const aQso: ContestExchange;
                                                     const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTState(aMy, aQso, aCtx);
+   (* A DX entrant has no state and sends its prefix. *)
+   Result := CabrilloSentRSTState(SentLocation(aMy), aQso, aCtx);
 end;
 
 function TContestNebraskaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                         const aQso: ContestExchange;
                                                         const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
+end;
+
+(* The sponsor: "stations outside of Nebraska send State, Canadian Province or
+   DXCC Country (S/P/C)" -- nebraskaqsoparty.com, read 2026-11-27. *)
+function TContestNebraskaQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestNebraskaQP.GetInStateDomesticFileName: string;
@@ -593,7 +603,7 @@ function TContestNebraskaQP.CQExchangeDefault(const aStation: TStationContext): 
 begin
    (* aStation.MyState is the state the session SENDS (design 7.11/7.12): a
       Nebraska station's county, anyone else's state or province. *)
-   Result := ' 5NN ' + aStation.MyState;
+   Result := ' 5NN ' + LocationOrOwnCountry(aStation.MyState, aStation.MyCountry);
 end;
 
 (* EVERY COUNTING QSO WITH A BONUS STATION PAYS -- not a dupe, on a band the

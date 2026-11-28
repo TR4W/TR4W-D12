@@ -134,6 +134,13 @@ type
       procedure WriteDefaultExchangeMessages(aMessages: TExchangeMessageWriters); override;
       function GetADIFSentExchange(const aMy: TMyStationExchange;
                                    const aQso: ContestExchange): string; override;
+   public
+      (* NO REPORT IS SENT ON THE AIR ("Wisconsin stations send County.
+         Non-Wisconsin stations send State or Province or Country."), so
+         neither ADIF exchange string carries one (2026-11-27). *)
+      function FormatADIFReceivedExchange(const aQso: ContestExchange;
+         aExchangeCarriesRST: boolean): string; override;
+   protected
       function GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                        const aQso: ContestExchange;
                                        const aCtx: TCabrilloQSOContext): string; override;
@@ -144,6 +151,8 @@ type
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -197,6 +206,7 @@ uses
    uExchangeFields,
    uCabrilloExchange,
    uADIFExchange,
+   uADIF,            (* ExchangeFromSRXString *)
    uContestRegistry;
 
 function TContestWisconsinQP.GetDisplayName: string;
@@ -314,7 +324,14 @@ end;
 function TContestWisconsinQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                  const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTStateOrDX(aMy, aQso);
+   Result := SentStateOrDX(aMy);
+end;
+
+function TContestWisconsinQP.FormatADIFReceivedExchange(
+   const aQso: ContestExchange; aExchangeCarriesRST: boolean): string;
+begin
+   (* What was typed, less a report typed in front of it. *)
+   Result := ExchangeFromSRXString(string(aQso.ExchString), aQso.RSTReceived);
 end;
 
 function TContestWisconsinQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
@@ -338,6 +355,12 @@ begin
       begin
       Result := CabrilloReceivedQTHDX(aMy, aQso, aCtx);
       end;
+end;
+
+(* The sponsor: "Non-Wisconsin stations send State or Province or Country." Its Cabrillo shows DX whatever was logged. *)
+function TContestWisconsinQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestWisconsinQP.GetInStateDomesticFileName: string;

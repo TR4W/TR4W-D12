@@ -95,17 +95,12 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     mode", added after multiplying: GetBonusStations, bsOnce, valid contacts
     only (CountsTowardBonus).
 
-  RECEIVED COLUMN, IN STATE -- CabrilloReceivedRSTDomesticQTHOrDXQTH, as
-    North Dakota and Oklahoma: the QTHString helper wrote an empty column for
-    a DX entity typed through the engine.
+  RECEIVED COLUMN, IN STATE -- the party base's
+    CabrilloReceivedLoggedLocation: what was logged, else the DX prefix
+    (2026-11-27).
 
-  NOT CHANGED, REPORTED: a DX ENTRANT SENDS ITS DXCC PREFIX, and this class
-    sends "DX" for one (the StateOrDX helpers, outside Arizona). The party
-    base's SentLocation (North Dakota's, Oklahoma's) is the fix; it moves
-    the enum-keyed sent-column pins of uTestCabrilloColumns and
-    uTestADIFSentExchange at every roster station, which this audit did not
-    re-derive without a build.
- *)
+  A DX ENTRANT SENDS ITS DXCC PREFIX (2026-11-27; until then these sent
+    columns wrote "DX" for one). *)
 unit uContestArizonaQP;
 
 {$I tr4w.inc}
@@ -171,6 +166,8 @@ type
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -337,14 +334,15 @@ function TContestArizonaQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                const aQso: ContestExchange): string;
 begin
    (* WHAT THE CABRILLO SENT COLUMN SAYS (below): the host state's entrant
-      sends its state, anyone else its state or DX. *)
+      sends its state, anyone else its state, or its prefix when it has none. *)
    if Station.InHostState then
       begin
       Result := ADIFSentRSTState(aMy, aQso);
       end
    else
       begin
-      Result := ADIFSentRSTStateOrDX(aMy, aQso);
+      (* A DX entrant has no state and sends its prefix. *)
+      Result := ADIFSentRSTState(SentLocation(aMy), aQso);
       end;
 end;
 
@@ -358,7 +356,7 @@ begin
       end
    else
       begin
-      Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
+      Result := CabrilloSentRSTState(SentLocation(aMy), aQso, aCtx);
       end;
 end;
 
@@ -366,19 +364,22 @@ function TContestArizonaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExch
                                                        const aQso: ContestExchange;
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   (* In state: a DX station's QTH is the prefix it sent, read from the
-      record's DomesticQTH, else its DX QTH -- the 2026-11-20 audit, as for
-      North Dakota and Oklahoma: CabrilloReceivedRSTQTHOrDXQTH tests
-      QTHString, and wrote an empty column for a DX entity typed through
-      the engine. Out of state every QSO is with an Arizona county. *)
+   (* In state: what was logged, else the DX station's prefix (the party
+      base). Out of state every QSO is with an Arizona county. *)
    if Station.InHostState then
       begin
-      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
       end
    else
       begin
       Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
       end;
+end;
+
+(* The sponsor: "DX stations send signal report RS(T) and DXCC prefix." *)
+function TContestArizonaQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestArizonaQP.GetInStateDomesticFileName: string;

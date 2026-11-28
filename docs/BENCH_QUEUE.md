@@ -1,5 +1,13 @@
 # Bench queue — what is waiting for a real run
 
+- [ ] **QSO parties, DX entry in the entry window (2026-11-27).** The same rule now covers the other
+  parties whose DX stations send a country (release notes); try one that accepts `DX` (Illinois: `DX`,
+  `DL` and the prefilled value all log) and Florida: The exports and the refusal are
+  tested; the prefill has been seen only by a unit test (the headless entry skips it). In a Florida log
+  with a Florida station: (1) type `DL1ABC` and move to the exchange: it holds `DL`; Enter logs it. (2)
+  `KP4ABC` gives `KP4`; `W1AW`, `VE3ABC`, `KH6ABC`, `DL1ABC/MM` and `KG1S/MON` get no country. (3) Replace
+  `DL` with `DX`, then Enter: refused with `A DX station sends its country prefix: DL`, the entry kept.
+
 - [ ] **TRMASTER.DTA and call history reload with no restart (2026-11-20).** Unit-tested
   (`uTestLiveDataSwap`) and nothing seen on a screen. (1) Open a contest, type a call so SCP has
   used the file (`W1AW`, partials show), then Help > Download TRMASTER.DTA. The status line says

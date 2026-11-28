@@ -135,8 +135,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     DX entity (DXCCKeyExceptUSACanadaHawaiiAlaska, the ten other parties').
     Until 2026-11-20 they counted as both, and took a place in the 10.
 
-  THE RECEIVED COLUMN of a DX station, for a Washington entrant, is its typed
-    entity (CabrilloReceivedRSTDomesticQTHOrDXQTH).
+  THE RECEIVED COLUMN of a DX station, for a Washington entrant, is what
+    was logged, else its prefix (the party base's DX rule, 2026-11-27).
 
   MODES -- "Contest Modes: Phone and CW. We cannot accept WJST modes" -- NY4I,
     2026-11-20, asked on #88 whether digital should be an X-QSO rather than
@@ -225,6 +225,8 @@ type
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
 
@@ -415,14 +417,15 @@ function TContestWashingtonSalmonRun.GetADIFSentExchange(const aMy: TMyStationEx
                                                          const aQso: ContestExchange): string;
 begin
    (* WHAT THE CABRILLO SENT COLUMN SAYS (below): an entrant who counts DX
-      sends its state, the others its state or DX. *)
+      sends its state, the others their state, or their prefix with none. *)
    if CountsDXMultiplier then
       begin
       Result := ADIFSentRSTState(aMy, aQso);
       end
    else
       begin
-      Result := ADIFSentRSTStateOrDX(aMy, aQso);
+      (* A DX entrant has no state and sends its prefix. *)
+      Result := ADIFSentRSTState(SentLocation(aMy), aQso);
       end;
 end;
 
@@ -436,7 +439,7 @@ begin
       end
    else
       begin
-      Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
+      Result := CabrilloSentRSTState(SentLocation(aMy), aQso, aCtx);
       end;
 end;
 
@@ -446,12 +449,18 @@ function TContestWashingtonSalmonRun.GetCabrilloReceivedExchange(const aMy: TMyS
 begin
    if CountsDXMultiplier then
       begin
-      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
       end
    else
       begin
       Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
       end;
+end;
+
+(* The sponsor: "DX stations send DXCC entity prefix". *)
+function TContestWashingtonSalmonRun.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestWashingtonSalmonRun.GetInStateDomesticFileName: string;
@@ -601,7 +610,7 @@ end;
    TContestBase.CQExchangeDefault. *)
 function TContestWashingtonSalmonRun.CQExchangeDefault(const aStation: TStationContext): string;
 begin
-   Result := ' 5NN ' + aStation.MyState;
+   Result := ' 5NN ' + LocationOrOwnCountry(aStation.MyState, aStation.MyCountry);
 end;
 
 (* THE STATION TEST -- DescribeSession's, asked of Station. See the declaration. *)

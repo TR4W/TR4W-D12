@@ -64,6 +64,16 @@ http://www.gnu.org/licenses/gpl-3.0.txt
   SCHEDULE -- "Starts the last Saturday of April", the LAST, not the 4th
     (audit 2026-11-20).
 
+  DX LOGGED (NY4I, 2026-11-27) -- a DX station sends its prefix, so "DX" is
+    not an exchange it can send. In live entry, a DX call's location must be
+    its CTY.DAT country prefix ('DL', not 'DX', 'DJ' or a typo) without the
+    CTY file's '/x' tail ('E5'), OR any location the session's table knows (a
+    KP4 call in Georgia); the exchange is filled with the prefix when nothing
+    else filled it. A report with no location is still taken. NOT CHECKED: a
+    maritime mobile (its ITU region is taken as typed), an unknown country.
+    Imports and edits are not refused (neither runs this parse) -- an N1MM or older log carrying 'DX' still loads, and
+    exports the call's prefix.
+
   MARITIME MOBILE R1/R2/R3 -- NOT BUILT (2026-11-20). "Maritime mobile
     operators send ITU Region (1, 2 or 3)" and "Maritime Mobile (ITU Regions
     R1, R2, R3)" is a multiplier. MEASURED: the DX multiplier sheet is keyed
@@ -183,6 +193,9 @@ type
       function ParseReceivedExchangeFormat(const aText: string;
                                            aParsers: TExchangeParsers;
                                            var aExch: ContestExchange): boolean; override;
+      (* "DX (including KP4, etc.) operators send DXCC prefix" -- so DX is
+         not an exchange a DX station can send (NY4I, 2026-11-27). *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -488,32 +501,17 @@ begin
    Result := CabrilloSentRSTState(SentLocation(aMy), aQso, aCtx);
 end;
 
+(* The party base's: what was logged, else the DX station's prefix. *)
 function TContestFloridaQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
                                                        const aQso: ContestExchange;
                                                        const aCtx: TCabrilloQSOContext): string;
 begin
-   (* Reproduces the legacy decision tree exactly.  aCtx.HisQTH is what the
-      exporter resolved from rx.QTHString, so the '' and 'DX' cases below are
-      the same two the legacy arm tests. *)
-   if aQso.QTHString = '' then
-      begin
-      if aQso.DXQTH = '' then
-         begin
-         Result := Format('%-3s %-7s', [aCtx.RSTReceived, 'DX']);
-         end
-      else
-         begin
-         Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.QTH.Prefix)]);
-         end;
-      end
-   else if aQso.QTHString = 'DX' then
-      begin
-      Result := Format('%-3s %-7s', [aCtx.RSTReceived, string(aQso.QTH.Prefix)]);
-      end
-   else
-      begin
-      Result := Format('%-3s %-7s', [aCtx.RSTReceived, aCtx.HisQTH]);
-      end;
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
+end;
+
+function TContestFloridaQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOnly;
 end;
 
 function TContestFloridaQP.GetADIFSentExchange(const aMy: TMyStationExchange;

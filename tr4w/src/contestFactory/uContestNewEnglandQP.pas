@@ -493,7 +493,19 @@ function TContestNewEnglandQP.GetCabrilloReceivedExchange(const aMy: TMyStationE
 begin
    if CountsDXMultiplier then
       begin
-      Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+      (* A DX CALL WITH NO DOMESTIC QTH IS "DX", which is what its station
+         sends. The shared helper writes aCtx.HisQTH, which is empty for it, so
+         a logged "DX" or prefix left the column blank (2026-11-27). *)
+      if (aCtx.HisQTH = '') and (aQso.DomesticQTH = '') and
+         (aQso.QTH.CountryID <> '') and
+         (not IsUSACanadaHawaiiOrAlaskaCountry(aQso.QTH.CountryID)) then
+         begin
+         Result := UnicodeFormat('%-3s %-7s', [aCtx.RSTReceived, 'DX']);
+         end
+      else
+         begin
+         Result := CabrilloReceivedRSTQTHOrDXQTH(aMy, aQso, aCtx);
+         end;
       end
    else
       begin

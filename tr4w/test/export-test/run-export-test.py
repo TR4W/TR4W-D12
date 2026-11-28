@@ -5,7 +5,9 @@ For each case in cases.json:
       creates one (the new-contest hand-off file),
    2. ONE contact, entered as Enter enters it (tr4w.exe <log> /ENTERQSO),
    3. a SECOND run exports Cabrillo from the log on disk,
-   4. the whole QSO: line is checked, field by field and in order.
+   4. the whole QSO: line is checked, field by field and in order,
+   5. and the ADIF record's STX_STRING and SRX_STRING hold the same fields.
+A case marked 'refused' instead expects the entry to be refused.
 
 THE EXPECTED FIELDS COME FROM THE SPONSOR, and each case records its source.
 Never fill them in from this program's output: issue 361 shipped because every
@@ -25,6 +27,7 @@ import argparse
 import io
 import json
 import os
+import re
 import shutil
 import sqlite3
 import subprocess
@@ -38,6 +41,7 @@ WORK = os.path.join(REPO, 'build-out', 'export-test')
 DEFAULT_EXE = os.path.join(REPO, 'build-out', 'app-x86_64-win64', 'tr4w_fpc.exe')
 HANDOFF_HEADER = 'TR4W NEW CONTEST HAND-OFF 1'
 TIME_LIMIT_SECONDS = 120
+EXIT_ENTRY_REFUSED = 6          # VC.EXITCODE_ENTRY_REFUSED
 PROGRAM_LOG = os.path.join(TARGET, 'tr4w.log')
 REFUSED = 'was refused and is not set'
 
@@ -212,6 +216,50 @@ def check_lines(found, case):
            ['line:     ' + l for l in found])
 
 
+def adif_records(folder):
+   found = []
+   for name in sorted(os.listdir(folder)):
+      if name.lower().endswith('.adi'):
+         text = io.open(os.path.join(folder, name), 'rb').read().decode('utf-8', 'replace')
+         body = re.split(r'(?i)<EOH>', text)[-1]
+         for record in re.split(r'(?i)<EOR>', body):
+            fields = {}
+            for tag in re.finditer(r'<([A-Za-z0-9_]+):(\d+)(?::\w)?>', record):
+               fields[tag.group(1).upper()] = record[tag.end():tag.end() + int(tag.group(2))]
+            if 'CALL' in fields:
+               found.append(fields)
+   return found
+
+
+def check_adif(folder, case):
+   """THE ADIF SIDE.  A sponsor defines Cabrillo, not ADIF, so the expected
+   ADIF is DERIVED FROM THE CASE'S OWN sponsor-sourced fields: STX_STRING is
+   the sent fields and SRX_STRING the received ones.  Where ADIF rightly
+   differs, the case says so under 'adif' -- 'sent', 'received' or 'records',
+   with 'why'.  A county line is one typed contact in ADIF, so its received
+   fields (one set per Cabrillo line) are not compared."""
+   told = case.get('adif', {})
+   if told and not told.get('why', '').strip():
+      return ["the case's 'adif' gives no 'why'"]
+   records = adif_records(folder)
+   wanted_records = told.get('records', 1)
+   if len(records) != wanted_records:
+      return ['ADIF: expected %d record(s), found %d (folder %s)'
+              % (wanted_records, len(records), folder)]
+   lines = expected_lines(case)
+   checks = [('STX_STRING', told.get('sent', lines[0]['sent']))]
+   if len(lines) == 1:
+      checks.append(('SRX_STRING', told.get('received', lines[0]['received'])))
+   problems = []
+   for tag, fields in checks:
+      for record in records:
+         got = record.get(tag, '').split()
+         if [same_form(t) for t in got] != [same_form(t) for t in fields]:
+            problems.append('ADIF %s: expected %r, got %r'
+                            % (tag, ' '.join(fields), ' '.join(got)))
+   return problems
+
+
 def run_case(exe, case):
    if not case.get('source', '').strip():
       return ['the case records no source for its expected fields']
@@ -237,6 +285,16 @@ def run_case(exe, case):
       return ['no %s, so a refused setting could not be seen' % PROGRAM_LOG]
    if refused:
       return ['a setting was refused: ' + line for line in refused]
+   if case.get('refused'):
+      if code != EXIT_ENTRY_REFUSED:
+         return ['expected the entry to be refused (exit %d), got exit %s (folder %s)'
+                 % (EXIT_ENTRY_REFUSED, code, folder)]
+      with io.open(PROGRAM_LOG, 'rb') as program_log:
+         program_log.seek(start if start <= log_size() else 0)
+         said = program_log.read().decode('utf-8', 'replace')
+      if case['refused'] not in said:
+         return ['refused, but not with %r (folder %s)' % (case['refused'], folder)]
+      return []
    if code != 0:
       return ['entering the contact: exit %s (folder %s)' % (code, folder)]
    recorded = logged_contest(log)
@@ -252,7 +310,7 @@ def run_case(exe, case):
       return (['expected %d Cabrillo QSO line(s), found %d (folder %s)'
                % (len(expected_lines(case)), len(lines), folder)] +
               ['line:     ' + line for line in lines])
-   return check_lines(lines, case)
+   return check_lines(lines, case) + check_adif(folder, case)
 
 
 def main():

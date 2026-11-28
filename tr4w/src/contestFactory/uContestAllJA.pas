@@ -312,7 +312,15 @@ end;
 function TContestAllJA.GetADIFSentExchange(const aMy: TMyStationExchange;
                                            const aQso: ContestExchange): string;
 begin
-   Result := Trim(aMy.MyPrefecture + ' ' + UpperCase(aMy.MyPowerClass));
+   (* WHAT IS SENT, AS THE CABRILLO COLUMN BELOW HAS IT: the report, then the
+      prefecture and power letter as one word ('599 10M'). Until 2026-11-27
+      this wrote '10 M', no report, while SRX_STRING carried one. *)
+   Result := aMy.MyPrefecture + UpperCase(aMy.MyPowerClass);
+   if Result <> '' then
+      begin
+      (* With nothing of ours to send the field stays left out (plan F26). *)
+      Result := UnicodeFormat('%d %s', [integer(aQso.RSTSent), Result]);
+      end;
 end;
 
 (* THE CABRILLO SENT COLUMNS: the RST we sent, then our prefecture and power

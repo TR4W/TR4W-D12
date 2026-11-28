@@ -47,6 +47,20 @@ appropriate month group below, and bump tr4w/src/Version.pas to match.
 - ARRL Digital cuts the sent grid to four characters in the Cabrillo column and `STX_STRING`.
 - Arktika Spring is inactive (NY4I).
 
+#### QSO party DX exchange and ADIF strings (`contestFactory`, `uADIF`)
+
+- `TContestStateQSOPartyBase` holds the DX station rule: a party states `TDXExchangeRule` (`GetDXExchangeRule`; base checks nothing). The base then refuses (live entry only, `SExchangeDXSendsPrefix`), prefills (`InitialExchangeFromCall`) and offers `CabrilloReceivedLoggedLocation`. `DXStationPrefix` cuts CTY.DAT's `/x` tail; any key of the session's domestic table is accepted from any call; maritime mobiles, unknown countries, imports and edits are not checked.
+- Blank received columns fixed: an export writing `aCtx.HisQTH` for a DX station writes nothing (Florida, Idaho, Nebraska, West Virginia; New England and the 7QP write `DX`).
+- `CabrilloReceivedRSTDomesticQTHOrDXQTH` wrote the call's DXQTH over what was typed; the parties with a DX rule no longer call it directly. It is unchanged, so ARRL 160 is too.
+- Arizona, Tennessee, Texas and the Salmon Run: a DX entrant's sent column and `STX_STRING` are its prefix.
+- `ResolveSRXString` doubled a report typed alone (`59 59`); it stays doubled only when the parse took the number as a serial, zone or age. ALL JA `STX_STRING` carries the report; Wisconsin's two strings carry none.
+- The export test checks ADIF too, and can expect a refusal.
+
+#### ARRL Sweepstakes ADIF received exchange (`uContestARRLSSBase`)
+
+- Sweepstakes `SRX_STRING` is built from the record (serial, precedence, check, section) when the record
+  has typed text (`TContestARRLSSBase.FormatADIFReceivedExchange`); a record with none gains no tag.
+
 #### Per-contest export test (`test/export-test`, `/ENTERQSO`) — Issue #390
 
 - A new log, one contact entered as Enter does, and the whole Cabrillo `QSO:` line checked against the sponsor's exchange. It found both defects above.

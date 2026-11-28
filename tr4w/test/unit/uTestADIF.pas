@@ -106,6 +106,8 @@ type
       procedure Test_ExchangeFromSRX_LeavesAnExchangeWithNoRST;
       procedure Test_ExchangeFromSRX_LeavesAnRSTThatIsNotTheReceivedOne;
       procedure Test_ExchangeFromSRX_AnRSTOnItsOwnIsNoExchange;
+      procedure Test_ResolveSRX_TheReportAloneIsWrittenOnce;
+      procedure Test_SweepstakesSRXIsSpacedInSponsorOrder;
    end;
 
 implementation
@@ -1784,8 +1786,72 @@ end;
 
 
 
+(* A TYPED REPORT IS NOT AN EXCHANGE TWICE (2026-11-27): '59' typed alone was
+   written '59 59'. A lone number the parse TOOK as exchange keeps the report
+   in front of it. *)
+(* NY4I, 2026-11-27: "Sweepstakes add the space in ADIF". The received
+  exchange is written from the record's fields in the sponsor's order, so how
+  it was typed does not reach the file. *)
+procedure TADIFHelperTests.Test_SweepstakesSRXIsSpacedInSponsorOrder;
+
+   function Written(const aTyped: string; aSerial: integer; aPrec: AnsiChar;
+                    aCheck: integer; const aSection: string): string;
+   var
+      rec: ContestExchange;
+   begin
+      rec := Default(ContestExchange);
+      rec.ceContest := ContestHandleOf(ARRLSSCW);
+      rec.RSTReceived := 599;
+      rec.ExchString := Str40(aTyped);
+      rec.NumberReceived := aSerial;
+      rec.Precedence := aPrec;
+      rec.Check := aCheck;
+      rec.QTHString := ShortString(aSection);
+      Result := ContestIdentity(ARRLSSCW).FormatADIFReceivedExchange(rec, False);
+   end;
+
+begin
+   BeginTest('Test_SweepstakesSRXIsSpacedInSponsorOrder');
+   (* A record with no typed text, as an imported one has, gains no field:
+      the golden corpus's D7 log writes SRX_STRING on one record of its set. *)
+   CheckEquals('', Written('', 93, 'M', 23, 'OK'), 'nothing typed: nothing written');
+   CheckEquals('43 M 31 CT', Written('43M 31 CT', 43, 'M', 31, 'CT'), 'joined, as typed');
+   CheckEquals('93 M 23 OK', Written('93M OK 23', 93, 'M', 23, 'OK'), 'section first');
+   CheckEquals('5 A 07 WCF', Written('A5 7 WCF', 5, 'A', 7, 'WCF'), 'the check keeps two digits');
+   CheckEquals('OK 23', Written('OK 23', 93, #0, 23, 'OK'), 'no precedence: as logged');
+   CheckEquals('43M', Written('43M', 43, 'M', 31, ''), 'no section: as logged');
+end;
+
+procedure TADIFHelperTests.Test_ResolveSRX_TheReportAloneIsWrittenOnce;
+
+   function Written(const aTyped: string; aRST, aSerial, aZone, aAge: integer): string;
+   var
+      rec: ContestExchange;
+   begin
+      rec := Default(ContestExchange);
+      rec.RSTReceived := aRST;
+      rec.ExchString := Str40(aTyped);
+      rec.NumberReceived := aSerial;
+      rec.Zone := aZone;
+      rec.Age := aAge;
+      Result := ResolveSRXString(rec);
+   end;
+
+begin
+   BeginTest('Test_ResolveSRX_TheReportAloneIsWrittenOnce');
+   CheckEquals('59', Written('59', 59, -1, 255, 0), 'the report alone');
+   CheckEquals('599', Written(' 599', 599, -1, 255, 0), 'a leading blank');
+   CheckEquals('59', Written('', 59, -1, 255, 0), 'nothing typed');
+   CheckEquals('59 59', Written('59', 59, 59, 255, 0), 'serial 59');
+   CheckEquals('59 59', Written('59', 59, -1, 255, 59), 'age 59');
+   CheckEquals('59 59', Written('59', 59, -1, 59, 0), 'zone 59');
+   CheckEquals('59 DL', Written('DL', 59, -1, 255, 0), 'a location');
+end;
+
 procedure TADIFHelperTests.RunAllTests;
 begin
+   Test_ResolveSRX_TheReportAloneIsWrittenOnce;
+   Test_SweepstakesSRXIsSpacedInSponsorOrder;
    Test_GetADIFBand_KnownBands;
    Test_GetADIFBand_UnknownBand;
    Test_GetADIFBand_CaseInsensitive;

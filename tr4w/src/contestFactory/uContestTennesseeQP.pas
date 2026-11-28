@@ -138,6 +138,8 @@ type
       (* STATED AT M10 S5, transcribed from the rows the base read until
          then (ContestsArray, QSOParties, ContestsBooleanArray). The
          flags: see TContestBase.GetFlags. *)
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetFlags: TContestFlags; override;
       procedure CalculateQSOPoints(var aQso: ContestExchange); override;
@@ -314,14 +316,15 @@ end;
 function TContestTennesseeQP.GetADIFSentExchange(const aMy: TMyStationExchange;
                                                  const aQso: ContestExchange): string;
 begin
-   Result := ADIFSentRSTStateOrDX(aMy, aQso);
+   (* A DX entrant has no state and sends its prefix. *)
+   Result := ADIFSentRSTState(SentLocation(aMy), aQso);
 end;
 
 function TContestTennesseeQP.GetCabrilloSentExchange(const aMy: TMyStationExchange;
                                                      const aQso: ContestExchange;
                                                      const aCtx: TCabrilloQSOContext): string;
 begin
-   Result := CabrilloSentRSTStateOrDX(aMy, aQso, aCtx);
+   Result := CabrilloSentRSTState(SentLocation(aMy), aQso, aCtx);
 end;
 
 function TContestTennesseeQP.GetCabrilloReceivedExchange(const aMy: TMyStationExchange;
@@ -332,12 +335,18 @@ begin
       column (CabrilloReceivedRSTQTHDX tests QTHString). *)
    if CountsDXMultiplier then
       begin
-      Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+      Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
       end
    else
       begin
       Result := CabrilloReceivedRSTQTHDX(aMy, aQso, aCtx);
       end;
+end;
+
+(* The sponsor: "U.S. state, Canadian province/territory, or DXCC entity". *)
+function TContestTennesseeQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
 end;
 
 function TContestTennesseeQP.GetInStateDomesticFileName: string;
@@ -449,7 +458,7 @@ end;
    TContestBase.CQExchangeDefault. *)
 function TContestTennesseeQP.CQExchangeDefault(const aStation: TStationContext): string;
 begin
-   Result := ' 5NN ' + aStation.MyState;
+   Result := ' 5NN ' + LocationOrOwnCountry(aStation.MyState, aStation.MyCountry);
 end;
 
 (* ONE SEARCH-AND-POUNCE ENTRY MAY CARRY SEVERAL QTHs, at every station --

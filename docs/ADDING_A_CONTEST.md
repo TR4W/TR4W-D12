@@ -752,6 +752,16 @@ The five exchange statements must agree. These sets are in use:
   your rules want `DX` there. Under `RSTDomesticQTHExchange` (Quebec, NC,
   Missouri ...) the DX station is looked up in the `.dom`, the record carries
   its `Dx` key and `CabrilloReceivedRSTQTHDX` is right.
+- **DX STATIONS THAT SEND A COUNTRY: state `GetDXExchangeRule`** (the party
+  base, 2026-11-27): `dxrPrefixOrDX`, `dxrPrefixOnly` (the sponsor leaves no
+  room for DX) or `dxrPrefixSupplied` (DX stations send a report only), and
+  write the received column with `CabrilloReceivedLoggedLocation`. That gives
+  the prefill, the refusal and the export together. Do not write
+  `aCtx.HisQTH` for a DX station (it is empty: a blank column) or
+  `CabrilloReceivedRSTDomesticQTHOrDXQTH` (it writes over what was typed).
+  The rows below that name those helpers describe parties before this change.
+  A party whose DX stations send `DX` states nothing. Read the sponsor's text,
+  not a class comment: Nebraska's comment said DX and its rules say country.
 - **A DX entrant's ADIF `STX_STRING` says what was sent.** MY STATE is empty
   for a DX entrant; `ADIFSentRSTState` writes it as it is (`599 `) and the
   Cabrillo `CabrilloSentRSTStateOrDX` writes `DX`. A party whose DX entrant
@@ -969,6 +979,83 @@ with `ctyLoadInCountryFile`. Enter a QSO through `ParametersOkay`, then
 **Prove the tests can fail**: break one rule at a time (a point value, a flag,
 a band, the county-line maximum), rebuild, see a failure, restore.
 
+### Write the export test cases (Cabrillo and ADIF)
+
+A new contest also gets cases in `tr4w/test/export-test/cases.json`. Each one
+makes a new log, enters one contact as Enter does, exports it, and checks the
+whole `QSO:` line and the ADIF exchange. The unit tests pin the columns your
+class writes from values the test supplies. This test also catches a value that
+reaches the export from the wrong place. **The fields, the rules and how to run
+it are in [`tr4w/test/export-test/README.md`](../tr4w/test/export-test/README.md).**
+The suggestions below come from running it on many contests.
+
+**Who writes the expected fields**
+
+- Write them from the sponsor's text, never from what TR4W exports. Do it before
+  you write the class if you can.
+- Better still, give them to someone who has not seen the code. Give that
+  person a **copy** of the sponsor's own text: several files under
+  `docs/ContestRules` also hold notes about this program, so cut those out.
+- Quote the sponsor in `source`. A Cabrillo sample line is the best evidence.
+  If there is none and you derived the fields from the exchange rule, say so.
+- **An optional signal report is still written to Cabrillo** (NY4I,
+  2026-11-27): expect one on both sides, though the sponsor calls it optional
+  and DXLog.net may leave the column out.
+- If the sponsor leaves anything else open (no stated Cabrillo layout, a column
+  it does not define), ask for a ruling. Do not choose the answer the program
+  already gives. DXLog.net's definition file can confirm a reading; it does not
+  decide one.
+
+**Which cases to write** -- one for each exchange that differs:
+
+| case | what it has caught or guards |
+|---|---|
+| out of area works in area | the usual line |
+| in area works out of area | the other side of an asymmetric exchange |
+| in area works DX | a blank received column, or a location the rules do not allow |
+| a DX entrant | its own **sent** columns: blank, or `DX` where a prefix is due |
+| the side that sends something else (a serial, a section, power, an age) | the everyday State sent in its place |
+| a county line, if the sponsor allows one | one line for each county (use `lines`). Read the wording: Virginia counts a station on a line as one QSO |
+| the report typed alone, where the rules allow it | an empty column, or a report written twice in ADIF |
+| an entry the rules forbid | it must be refused (`refused`) |
+
+**Setting the station up**
+
+- Fill in `station_settings` the way a real operator's station is filled in,
+  **State included**, even for a side that does not send a state. That is how
+  the test sees an everyday value leak into the exchange.
+- `station` holds only what New Contest asks this contest. The program lists
+  those rows (`/NEWCONTESTPROMPTS`); any run of the export test writes the list
+  to `build-out/export-test/new-contest-questions.txt`.
+- **Read the prompt, not only the row's name.** `MY STATE` is an ARRL section
+  outside Pennsylvania, the power for an ARRL DX station outside North America,
+  and the age for the Youth Championship RF. `MY LICENSE YEAR` asks for two
+  digits. If the prompt is unclear, look at the dialog; the GUI test machine
+  can take the screenshot (`tools/gui_test`).
+
+**Entering the contact**
+
+- `band` and `mode` are the program's own words. The mode is `CW`, `SSB` or
+  `DIGI`; `RTTY` is refused (`not a band and a mode`).
+- `typed` is what an operator types. Sometimes the parser needs help:
+  Sweepstakes refuses `43 M 31 CT` as ambiguous and takes `43M 31 CT`.
+- When an entry is refused, the reason is on the `[EnterQSO]` line in
+  `tr4w/target/tr4w.log`.
+
+**When a case fails**
+
+Check in this order, and change only what the check shows to be wrong:
+
+1. **How the case enters it:** mode, typing, and what each setup row means.
+   Correcting these is fine; the expected fields stay.
+2. **The sponsor's text:** the case may have misread it.
+3. **The class:** what is left is a defect. Fix it in the class, or record it.
+
+**Never edit an expected field to match the output.** Fields made only of digits
+compare as numbers (`1` is `0001`), so do not "correct" padding. A contest with
+no case gets its reason in `unverified.json` (a sponsor who wants no Cabrillo,
+or whose rules contradict their own sample).
+
 ## A6. Prove it
 
 Close TR4W first (`Get-Process -Name tr4w` must find nothing). Run the corpus,
@@ -983,6 +1070,7 @@ Close TR4W first (`Get-Process -Name tr4w` must find nothing). Run the corpus,
 | 4a | `MATRIX_FRESH_DIR=build-out/contest-matrix-work/freeze bash tr4w/test/adif-validate/validate-adif-outputs.sh matrix` | **your record's ADIF against the independent validator, before you trust the freeze.** Step 5 validates only once every record matches, and a run made before step 4 stops at `UNFROZEN` without validating at all -- so without 4a a new contest's ADIF reaches the validator only after it is frozen. A `Compliance error` here means fix the class, rebuild and freeze again (the freeze overwrites your record) |
 | 5 | `bash tr4w/test/contest-matrix/run-contest-matrix.sh` | every record: yours equals what you just froze, and **no other contest moved** |
 | 6 | `bash tr4w/test/corpus/export-d12-corpus.sh` and `bash tr4w/test/corpus/test-contest-factory.sh` | **nothing about your contest** -- no corpus log is yours. They prove you broke no other contest. Green is `0 failed` with every known divergence pinned, AND exit 0 |
+| 7 | `python tr4w/test/export-test/run-export-test.py <CASE> ...` (after step 3; nothing runs it for you) | your Cabrillo line and ADIF exchange from a new log, against the sponsor ([A5](#write-the-export-test-cases-cabrillo-and-adif)). Run it with no names for the coverage report, `build-out/export-test/status.md` |
 
 **Read the matrix record before you commit it.** It is your contest's own
 first output, so it asserts "same as the first run", never "correct". Look at

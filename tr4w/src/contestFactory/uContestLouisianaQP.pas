@@ -99,8 +99,8 @@ http://www.gnu.org/licenses/gpl-3.0.txt
     helper row (ADDING_A_CONTEST A3): a DX entrant SENDS its own country
     prefix (the party base's SentLocation / LocationOrOwnCountry; DXLog's
     "DX stations send DXCC prefix"); the received column of a DX station is
-    its DXCC key, else what it sent (CabrilloReceivedRSTDomesticQTHOrDXQTH,
-    review H4).
+    what was logged, else the prefix (the party base's DX rule,
+    2026-11-27).
 
   QSO POINTS -- 8.1.1: "two (2) points for each complete PHONE QSO"; 8.1.2:
     "four (4) points for each complete CW/Digital QSO". CW and every credited
@@ -236,6 +236,8 @@ type
       function GetQRZRUId: integer; override;
       function GetSubmissionEmail: string; override;
       function GetDomesticFileName: string; override;
+      (* THE DX STATION RULE -- see TDXExchangeRule. *)
+      function GetDXExchangeRule: TDXExchangeRule; override;
       function GetInStateDomesticFileName: string; override;
       function GetInitialExchangeKind: InitialExchangeType; override;
       function GetExchangeKind: ExchangeType; override;
@@ -374,6 +376,12 @@ begin
    Result := 'louisiana_cty';
 end;
 
+(* The sponsor: "send call, signal report and state/province/country". *)
+function TContestLouisianaQP.GetDXExchangeRule: TDXExchangeRule;
+begin
+   Result := dxrPrefixOrDX;
+end;
+
 function TContestLouisianaQP.GetInStateDomesticFileName: string;
 begin
    Result := 'louisiana';
@@ -434,7 +442,7 @@ function TContestLouisianaQP.GetCabrilloReceivedExchange(const aMy: TMyStationEx
 begin
    (* A DX station sent its country: the received column is its DX QTH,
       else what it sent (review H4). *)
-   Result := CabrilloReceivedRSTDomesticQTHOrDXQTH(aMy, aQso, aCtx);
+   Result := CabrilloReceivedLoggedLocation(aMy, aQso, aCtx);
 end;
 
 (* CW AND DIGITAL 4, PHONE AND FM 2. An off-band or off-mode QSO (FT8, FT4

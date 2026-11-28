@@ -57,6 +57,7 @@ type
       procedure Test_FloridaSpecialOneByOneHasNoMultipliers;
       procedure Test_FloridaRoverLegsAreNewStationsAndSendTheirCounty;
       procedure Test_FloridaMobileAndMaritimeRealEngine;
+      procedure Test_FloridaDXPrefixIsFilledInAndExported;
       procedure Test_FloridaStationCategoryIsTheSponsorsSetAndTheContests;
    end;
 
@@ -748,6 +749,62 @@ begin
       end;
 end;
 
+(* THE PREFIX FROM THE CALL (NY4I, 2026-11-27): filled into an empty exchange
+   for a DX call and nothing else; and written for a QSO that holds 'DX' or no
+   location -- an imported or older log, which live entry never saw. *)
+procedure TContestFloridaQPTests.Test_FloridaDXPrefixIsFilledInAndExported;
+var
+   contestObject: TContestBase;
+
+   function Filled(const aCall, aCountry: string): string;
+   begin
+      if not contestObject.InitialExchangeFromCall(aCall, aCountry, Result) then
+         begin
+         Result := '(nothing)';
+         end;
+   end;
+
+   function Column(const aTyped, aDXQTH: string): string;
+   var
+      qso: ContestExchange;
+      ctx: TCabrilloQSOContext;
+      my: TMyStationExchange;
+   begin
+      qso := FloridaQso(Band20, CW, eCW);
+      qso.QTH.CountryID := 'DL';
+      qso.QTH.Prefix := 'DL1';
+      qso.DomesticQTH := '';
+      qso.QTHString := ShortString(aTyped);
+      qso.DXQTH := ShortString(aDXQTH);
+      ctx := Default(TCabrilloQSOContext);
+      ctx.RSTReceived := '599';
+      my := Default(TMyStationExchange);
+      Result := Trim(contestObject.FormatCabrilloReceivedExchange(my, qso, ctx));
+   end;
+
+begin
+   BeginTest('Test_FloridaDXPrefixIsFilledInAndExported');
+   contestObject := Make(FLORIDAQSOPARTY, Entrant(True));
+   try
+      CheckEquals('DL', Filled('DL1ABC', 'DL'), 'a DX call');
+      CheckEquals('KP4', Filled('KP4ABC', 'KP4'), 'Puerto Rico is DX');
+      CheckEquals('DL', Filled('DL/W1ABC', 'DL'), 'a portable abroad');
+      CheckEquals('(nothing)', Filled('W1AW', 'K'), 'the USA sends a state');
+      CheckEquals('(nothing)', Filled('VE3ABC', 'VE'), 'Canada a province');
+      CheckEquals('(nothing)', Filled('KH6ABC', 'KH6'), 'Hawaii a state');
+      CheckEquals('(nothing)', Filled('KL7ABC', 'KL'), 'Alaska a state');
+      CheckEquals('(nothing)', Filled('DL1ABC/MM', 'DL'), 'a maritime mobile its region');
+      CheckEquals('(nothing)', Filled('KG1S/MON', 'G'), 'a rover''s county call');
+      CheckEquals('(nothing)', Filled('QQ9ABC', ''), 'an unknown country');
+
+      CheckEquals('599 DL', Column('DX', 'DL'), 'an imported DX: the prefix, not DL1');
+      CheckEquals('599 DL', Column('', 'DL'), 'no location: the prefix');
+      CheckEquals('599 DL', Column('DL', 'DL'), 'the prefix as logged');
+   finally
+      contestObject.Free;
+   end;
+end;
+
 (* A FLORIDA MOBILE, THROUGH THE REAL ENGINE (ParametersOkay and the sheets,
    the in-state florida.dom): "Mobile and Expedition scores are based on
    cumulative QSOs and multipliers counted once overall" -- each county is a
@@ -780,6 +837,10 @@ var
    accepted: boolean;
    dupe: boolean;
    i: integer;
+   identity: TContestBase;
+   offered: string;
+   clean: boolean;
+   j: integer;
 begin
    BeginTest('Test_FloridaMobileAndMaritimeRealEngine');
    h := ContestHandleOf(FLORIDAQSOPARTY);
@@ -877,6 +938,61 @@ begin
       dupe := EnterFloridaLeg('DL1AAA', '599 DL', Band20, CW, '', accepted, rx);
       CheckTrue(accepted, 'a DX station is taken: ' + string(ExchangeErrorMessage));
       CheckTrue(rx.DXMult, 'Germany is a DX multiplier');
+
+      (* A DX STATION SENDS ITS PREFIX (NY4I, 2026-11-27): "DX" is not an
+         exchange it can send, and nor is another prefix or a typo. A report
+         alone is still taken; so is a maritime mobile's region. *)
+      EnterFloridaLeg('DL2BBB', '599 DX', Band20, CW, '', accepted, rx);
+      CheckFalse(accepted, 'a DX station cannot send DX');
+      CheckEquals('A DX station sends its country prefix: DL',
+                  string(ExchangeErrorMessage), 'and the refusal says what it sends');
+      EnterFloridaLeg('DL3CCC', '599 DJ', Band20, CW, '', accepted, rx);
+      CheckFalse(accepted, 'nor an alternative prefix');
+      EnterFloridaLeg('DL4DDD', '599 XYZZY', Band20, CW, '', accepted, rx);
+      CheckFalse(accepted, 'nor a typo');
+      EnterFloridaLeg('KP4AAA', '599 KP4', Band20, CW, '', accepted, rx);
+      CheckTrue(accepted, 'the rule''s own example: ' + string(ExchangeErrorMessage));
+      EnterFloridaLeg('DL5EEE', '599', Band20, CW, '', accepted, rx);
+      CheckTrue(accepted, 'a report alone: ' + string(ExchangeErrorMessage));
+      EnterFloridaLeg('DL6FFF/MM', '599 2', Band20, CW, '', accepted, rx);
+      CheckTrue(accepted, 'a DX maritime mobile''s region: ' + string(ExchangeErrorMessage));
+
+      (* THE COUNTRY FOLLOWS THE CALL, NOT THE STATION: a Puerto Rico call in
+         Connecticut or in a Florida county need not sign portable. *)
+      EnterFloridaLeg('KP4BBB', '599 CT', Band20, CW, '', accepted, rx);
+      CheckTrue(accepted, 'a KP4 call in a state: ' + string(ExchangeErrorMessage));
+      EnterFloridaLeg('WP4CCC', '599 LEE', Band20, CW, '', accepted, rx);
+      CheckTrue(accepted, 'a WP4 call in a county: ' + string(ExchangeErrorMessage));
+
+      (* CTY.DAT's '/x' tail is never sent (E5/s is the South Cooks). *)
+      EnterFloridaLeg('E51ABC', '599 E5', Band20, CW, '', accepted, rx);
+      CheckTrue(accepted, 'E5 for an E5/s call: ' + string(ExchangeErrorMessage));
+      CheckEquals('E51ABC', string(rx.Callsign), 'and the call stays as it was');
+
+      (* EVERY PREFIX THE PREFILL CAN OFFER CAN BE TYPED BACK: for every
+         entity of the loaded country file, '*' entries included, only capital
+         letters and digits. *)
+      identity := Make(FLORIDAQSOPARTY, Entrant(True));
+      try
+         for i := 0 to ctyGetTotalCountries - 1 do
+            begin
+            if identity.InitialExchangeFromCall('Q1ABC',
+                  string(ctyGetCountryIdByIndex(i)), offered) then
+               begin
+               clean := offered <> '';
+               for j := 1 to Length(offered) do
+                  begin
+                  if not (offered[j] in ['A'..'Z', '0'..'9']) then
+                     begin
+                     clean := False;
+                     end;
+                  end;
+               CheckTrue(clean, 'can be typed back: ' + offered);
+               end;
+            end;
+      finally
+         identity.Free;
+      end;
    finally
       DomesticCountries.Clear;
       for i := 0 to savedCountries.Count - 1 do
@@ -997,7 +1113,8 @@ begin
    Test_FloridaSpecialOneByOneHasNoMultipliers;
    Test_FloridaRoverLegsAreNewStationsAndSendTheirCounty;
    Test_FloridaMobileAndMaritimeRealEngine;
-   Test_FloridaStationCategoryIsTheSponsorsSetAndTheContests;
+   Test_FloridaDXPrefixIsFilledInAndExported;
+Test_FloridaStationCategoryIsTheSponsorsSetAndTheContests;
 end;
 
 end.

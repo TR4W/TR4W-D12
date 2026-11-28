@@ -2556,8 +2556,17 @@ begin
       begin
       Result := exch
       end
-   else if exch = '' then
+   else if (exch = '') or
+           ((Trim(exch) = rstStr)               and
+            (rec.QTHString = '')                and
+            (rec.NumberReceived <> rec.RSTReceived) and
+            (rec.Zone <> rec.RSTReceived)       and
+            (rec.Age <> rec.RSTReceived)) then
       begin
+      (* THE REPORT ALONE WAS ENTERED: written once. Until 2026-11-27 a typed
+         '59' was written '59 59'. A lone number that the parse took as a
+         serial, a zone or an age ('59' is a likely age) is exchange, and the
+         report goes in front of it below. *)
       Result := rstStr
       end
    else
