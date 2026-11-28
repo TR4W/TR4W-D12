@@ -44,6 +44,12 @@ month group below, and bump tr4w/src/Version.pas to match. Keep entries
 user-facing — no file paths or source-level jargon.
 -->
 
+---
+
+## 5.1.x — November 2026
+
+### 5.1.7 (2026-11-27) - NY4I
+
 #### Contests
 
 - **IARU HF now sends your ITU zone.** If your station settings held a state, it was sent in place of the
@@ -74,15 +80,14 @@ user-facing — no file paths or source-level jargon.
   working.
 - **ARRL DX: the Cabrillo file of a station outside the US and Canada was missing the state or province you
   received.** If you made one with an earlier 5.x release, export it again.
-- **List of commands:** the rover words are listed without braces, like the other commands, and
-  double-clicking adds them. A line under the list reminds you to type the braces when you type a command
-  yourself.
 - **Arktika Spring is now listed as inactive.** New Contest shows it after the active contests, and your
   existing Arktika logs still open.
 
----
+#### Program messages
 
-## 5.1.x — November 2026
+- **List of commands:** the rover words are listed without braces, like the other commands, and
+  double-clicking adds them. A line under the list reminds you to type the braces when you type a command
+  yourself.
 
 ### 5.1.6 (2026-11-26) - NY4I
 

@@ -41,6 +41,8 @@ rename this "## Unreleased" to "### X.X.X (YYYY-MM-DD) — HANDLE", move it unde
 appropriate month group below, and bump tr4w/src/Version.pas to match.
 -->
 
+### 5.1.7 (2026-11-27) - NY4I
+
 #### IARU HF and ARRL Digital sent exchanges (`contestFactory`)
 
 - IARU's `DescribeSession` sends nothing in MY STATE's place unless MY STATE was stated for the contest (new `TStationContext.MyStateStatedForContest`). Its writers and `CQExchangeDefault` all read the session's sent state, so the station's everyday state had replaced the ITU zone.
